@@ -1,0 +1,13 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+const root=process.cwd();
+const native='🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap';
+const course='🎓️teaching/🏛️architecture/📚️course';
+const files=[native+'/🟦️.ts',native+'/📁️temporary/🟦️.ts',native+'/🧪️tests/🧰️toolchain/🟦️.ts','🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts',course+'/🎭️e2e/🟦️.ts',course+'/🧪️tests/🧱️local-stack/🟦️.ts',course+'/🧪️tests/📖️assignment-pdfs/🟦️.ts'];
+for (const file of files) new Bun.Transpiler({loader:'ts'}).transformSync(readFileSync(join(root,file),'utf8'));
+const {runCmdStatus}=await import(pathToFileURL(join(root,'🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts')).href);
+const ps=join(root,native,'🔵️.ps1').replaceAll("'","''");
+const code=`$errors=$null; $tokens=$null; [System.Management.Automation.Language.Parser]::ParseFile('${ps}',[ref]$tokens,[ref]$errors) | Out-Null; if ($errors.Count) { $errors | ForEach-Object { Write-Error $_ }; exit 1 }; Write-Output 'PowerShell syntax passed'`;
+if(runCmdStatus('powershell.exe',['-NoProfile','-Command',code],{cwd:root})!==0) throw Error('PowerShell syntax failed');
+console.log(JSON.stringify({typescriptSyntax:files.length,powershellSyntax:1}));

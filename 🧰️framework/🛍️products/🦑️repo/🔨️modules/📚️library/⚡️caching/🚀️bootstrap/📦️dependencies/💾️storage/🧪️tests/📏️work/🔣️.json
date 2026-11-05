@@ -1,0 +1,441 @@
+{
+ "schema": {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+   "id",
+   "maximum",
+   "guardChecks",
+   "charges",
+   "cancelAt",
+   "accepted",
+   "completed",
+   "checkpoints",
+   "reason"
+  ],
+  "properties": {
+   "id": {
+    "type": "string"
+   },
+   "maximum": {
+    "type": "integer",
+    "minimum": 1,
+    "maximum": 4194304
+   },
+   "guardChecks": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 5000000
+   },
+   "charges": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 4194305
+   },
+   "cancelAt": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 10000000
+   },
+   "accepted": {
+    "type": "boolean"
+   },
+   "completed": {
+    "type": "integer",
+    "minimum": 0
+   },
+   "checkpoints": {
+    "type": "integer",
+    "minimum": 0
+   },
+   "reason": {
+    "enum": [
+     null,
+     "cancelled",
+     "capacity"
+    ]
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "guards-do-not-consume-work",
+   "maximum": 1,
+   "guardChecks": 4194305,
+   "charges": 1,
+   "cancelAt": 0,
+   "accepted": true,
+   "completed": 1,
+   "checkpoints": 4194306,
+   "reason": null
+  },
+  {
+   "id": "exact-semantic-capacity",
+   "maximum": 3,
+   "guardChecks": 100,
+   "charges": 3,
+   "cancelAt": 0,
+   "accepted": true,
+   "completed": 3,
+   "checkpoints": 103,
+   "reason": null
+  },
+  {
+   "id": "semantic-capacity-exceeded",
+   "maximum": 3,
+   "guardChecks": 100,
+   "charges": 4,
+   "cancelAt": 0,
+   "accepted": false,
+   "completed": 3,
+   "checkpoints": 104,
+   "reason": "capacity"
+  },
+  {
+   "id": "cancelled-during-native-guards",
+   "maximum": 3,
+   "guardChecks": 5,
+   "charges": 3,
+   "cancelAt": 3,
+   "accepted": false,
+   "completed": 0,
+   "checkpoints": 3,
+   "reason": "cancelled"
+  },
+  {
+   "id": "cancelled-during-semantic-work",
+   "maximum": 3,
+   "guardChecks": 2,
+   "charges": 3,
+   "cancelAt": 4,
+   "accepted": false,
+   "completed": 1,
+   "checkpoints": 4,
+   "reason": "cancelled"
+  },
+  {
+   "id": "cancellation-precedes-capacity-refusal",
+   "maximum": 2,
+   "guardChecks": 1,
+   "charges": 3,
+   "cancelAt": 4,
+   "accepted": false,
+   "completed": 2,
+   "checkpoints": 4,
+   "reason": "cancelled"
+  }
+ ],
+ "invalidMaximum": [
+  0,
+  -1,
+  1.5,
+  9007199254740992
+ ],
+ "writes": [
+  {
+   "id": "full-chunks",
+   "bytes": 10,
+   "chunkBytes": 8,
+   "counts": [
+    8,
+    2
+   ],
+   "maximum": 2,
+   "expected": {
+    "completed": 2,
+    "position": 10,
+    "reason": null
+   }
+  },
+  {
+   "id": "short-writes-charge-every-attempt",
+   "bytes": 10,
+   "chunkBytes": 8,
+   "counts": [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "maximum": 5,
+   "expected": {
+    "completed": 5,
+    "position": 10,
+    "reason": null
+   }
+  },
+  {
+   "id": "short-writes-exhaust-semantic-capacity",
+   "bytes": 10,
+   "chunkBytes": 8,
+   "counts": [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "maximum": 4,
+   "expected": {
+    "completed": 4,
+    "position": 8,
+    "reason": "capacity"
+   }
+  },
+  {
+   "id": "zero-write-refuses-progress",
+   "bytes": 10,
+   "chunkBytes": 8,
+   "counts": [
+    0
+   ],
+   "maximum": 3,
+   "expected": {
+    "completed": 1,
+    "position": 0,
+    "reason": "no-progress"
+   }
+  }
+ ],
+ "phases": [
+  {
+   "id": "three-phase-native-guard-amplification",
+   "guards": 4194305,
+   "shortWrite": 65536,
+   "expected": [
+    9,
+    14,
+    10,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "three-phase-short-writes",
+   "guards": 128,
+   "shortWrite": 2,
+   "expected": [
+    13,
+    14,
+    10,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "three-phase-short-reads",
+   "guards": 128,
+   "shortWrite": 65536,
+   "shortRead": 2,
+   "expected": [
+    9,
+    18,
+    14,
+    20,
+    20
+   ]
+  },
+  {
+   "id": "empty-files-charge-terminal-probes",
+   "guards": 128,
+   "shortWrite": 65536,
+   "empty": true,
+   "capacityByTracker": [
+    3,
+    5,
+    4,
+    7,
+    7
+   ],
+   "expected": [
+    3,
+    5,
+    4,
+    7,
+    7
+   ]
+  },
+  {
+   "id": "terminal-probe-capacity-overrun",
+   "guards": 128,
+   "shortWrite": 65536,
+   "empty": true,
+   "capacityByTracker": [
+    3,
+    4
+   ],
+   "refused": true,
+   "expected": [
+    3,
+    4
+   ]
+  },
+  {
+   "id": "representative-observed-stage-shape",
+   "guards": 128,
+   "shortWrite": 65536,
+   "shape": {
+    "roots": 6,
+    "directories": 871,
+    "files": 874,
+    "bytes": 3328255,
+    "maximumDepth": 3
+   },
+   "expected": [
+    3493,
+    5238,
+    3494,
+    5240,
+    5240
+   ]
+  },
+  {
+   "id": "directory-only-progress-cadence",
+   "guards": 128,
+   "shortWrite": 65536,
+   "shape": {
+    "roots": 6,
+    "directories": 871,
+    "files": 874,
+    "bytes": 0,
+    "maximumDepth": 3
+   },
+   "expected": [
+    2619,
+    4364,
+    2620,
+    4366,
+    4366
+   ],
+   "requireProgress": true
+  },
+  {
+   "id": "directory-only-capture-cancellation",
+   "guards": 128,
+   "shortWrite": 65536,
+   "shape": {
+    "roots": 6,
+    "directories": 871,
+    "files": 874,
+    "bytes": 0,
+    "maximumDepth": 3
+   },
+   "expected": [
+    2619,
+    4364,
+    64
+   ],
+   "cancelOnPhase": "capture",
+   "refused": true
+  }
+ ],
+ "phaseSchema": {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+   "id",
+   "guards",
+   "shortWrite",
+   "expected"
+  ],
+  "properties": {
+   "id": {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 128
+   },
+   "guards": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 5000000
+   },
+   "shortWrite": {
+    "type": "integer",
+    "minimum": 1,
+    "maximum": 65536
+   },
+   "shortRead": {
+    "type": "integer",
+    "minimum": 1,
+    "maximum": 65536
+   },
+   "empty": {
+    "type": "boolean"
+   },
+   "refused": {
+    "type": "boolean"
+   },
+   "requireProgress": {
+    "type": "boolean"
+   },
+   "cancelOnPhase": {
+    "enum": [
+     "stage",
+     "capture",
+     "replay"
+    ]
+   },
+   "capacityByTracker": {
+    "type": "array",
+    "minItems": 1,
+    "maxItems": 5,
+    "items": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 4194304
+    }
+   },
+   "expected": {
+    "type": "array",
+    "minItems": 1,
+    "maxItems": 5,
+    "items": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 4194304
+    }
+   },
+   "shape": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "roots",
+     "directories",
+     "files",
+     "bytes",
+     "maximumDepth"
+    ],
+    "properties": {
+     "roots": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64
+     },
+     "directories": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+     },
+     "files": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 32768
+     },
+     "bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 67108864
+     },
+     "maximumDepth": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64
+     }
+    }
+   }
+  }
+ }
+}

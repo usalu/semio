@@ -7,7 +7,7 @@
 # and `workspace:setup` (which installs packages). Every downloaded installer is pinned and sha256-verified before it runs,
 # from `🧬️schema/🔣️.json` next to this script; the runtime pins live in the launcher registry.
 # 🧭️Invoke from a fresh clone: `bash "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh" setup` (full
-# bootstrap); `repo setup native` routes here once the launcher exists.
+# bootstrap); `repo ./📜️script.ts setup native rust` installs only Rust and its C/C++ compiler.
 # Every step probes before it installs and never writes user-global tool configuration.
 # Native setup is rooted here and does not depend on devcontainer scripts.
 # #endregion 🔖️Header
@@ -108,15 +108,17 @@ resolve_repo_root() {
   return 1
 }
 REPO_ROOT="$(resolve_repo_root)"
-case "${1:-}" in
-setup)
+BOOTSTRAP_COMMAND="${1:-setup}"
+case "$BOOTSTRAP_COMMAND" in
+setup|rust)
   shift || true
   ;;
 *)
-  printf '%s\n' "usage: bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup" >&2
+  printf '%s\n' "usage: bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup|rust" >&2
   exit 1
   ;;
 esac
+[ "$#" -eq 0 ] || { printf '%s\n' "Native bootstrap accepts exactly one command" >&2; exit 1; }
 cd "$REPO_ROOT" || exit 1
 #endregion 🔖️Dispatch
 
@@ -755,6 +757,12 @@ ensure_native_toolchain() {
   report_missing_tools cc c++ make pkg-config curl git unzip
 }
 
+ensure_rust_profile() {
+  ensure_user_cc || return 1
+  ensure_rust_toolchain || return 1
+  link_installed_rust
+}
+
 ensure_rust_toolchain() {
   export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}" RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
   export PATH="$CARGO_HOME/bin:$PATH"
@@ -1307,6 +1315,11 @@ EOF
 if host_is_musl; then
   log "This Linux uses musl. The pinned Node.js, uv, rustup and Go archives are glibc builds and are not installed."
   exit 1
+fi
+if [ "$BOOTSTRAP_COMMAND" = rust ]; then
+  ensure_rust_profile || exit 1
+  log "Pinned Rust and the native C/C++ compiler are ready."
+  exit 0
 fi
 persist_linux_session
 ensure_native_toolchain

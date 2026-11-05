@@ -6,7 +6,8 @@
 #
 # Summary: Windows-native bootstrap for the compose monorepo. Invoke from a fresh clone with Windows PowerShell 5.1 or PowerShell 7:
 # `powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🔵️.ps1" setup`
-# `repo setup native` routes here once the launcher exists. Saved as UTF-8 with BOM: Windows PowerShell 5.1
+# `repo ./📜️script.ts setup native rust` installs only Rust and its C++ linker.
+# Saved as UTF-8 with BOM: Windows PowerShell 5.1
 # decodes a BOM-less script with the ANSI code page and would turn every emoji path literal below into a different path.
 #
 #endregion 🧲️Header
@@ -14,7 +15,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("setup")]
+    [ValidateSet("setup", "rust")]
     [string]$Command = "setup",
     [switch]$SkipMachineInstall,
     [switch]$SkipGlobalCliInstall,
@@ -160,14 +161,15 @@ function Invoke-RepoCommand {
     param(
         [string]$FilePath,
         [string[]]$ArgumentList,
-        [string]$WorkingDirectory
+        [string]$WorkingDirectory,
+        [int[]]$SuccessCodes = @(0)
     )
 
     Write-Step ("Running: {0} {1}" -f $FilePath, ($ArgumentList -join " "))
     Push-Location $WorkingDirectory
     try {
         & $FilePath @ArgumentList
-        if ($LASTEXITCODE -ne 0) {
+        if ($SuccessCodes -notcontains $LASTEXITCODE) {
             throw "Command failed: $FilePath $($ArgumentList -join ' ')"
         }
     } finally {
@@ -261,7 +263,14 @@ function Save-VerifiedDownload {
     $ProgressPreference = "SilentlyContinue"
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     Invoke-WebRequest -Uri $Url -OutFile $Destination -UseBasicParsing
-    $actual = (Get-FileHash -LiteralPath $Destination -Algorithm SHA256).Hash.ToLowerInvariant()
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    $stream = [IO.File]::OpenRead($Destination)
+    try {
+        $actual = ([BitConverter]::ToString($algorithm.ComputeHash($stream))).Replace("-", "").ToLowerInvariant()
+    } finally {
+        $stream.Dispose()
+        $algorithm.Dispose()
+    }
     if ($actual -ne $Sha256) {
         Remove-Item -LiteralPath $Destination -Force
         throw "Checksum mismatch for $Url (expected $Sha256, got $actual)."
@@ -270,8 +279,16 @@ function Save-VerifiedDownload {
 
 function New-ScratchDirectory {
     $path = Join-Path ([IO.Path]::GetTempPath()) ("semio-" + [Guid]::NewGuid().ToString("N"))
-    New-Item -ItemType Directory -Path $path -Force | Out-Null
+    New-Item -ItemType Directory -Path $path | Out-Null
     return $path
+}
+
+function Remove-ScratchDirectory {
+    param([string]$Path)
+    $resolved = [IO.Path]::GetFullPath($Path)
+    $temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (-not $resolved.StartsWith($temporaryRoot, [StringComparison]::OrdinalIgnoreCase) -or [IO.Path]::GetFileName($resolved) -notmatch '^semio-[0-9a-f]{32}$') { throw "Owned bootstrap scratch directory required" }
+    Remove-Item -LiteralPath $resolved -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 function Install-PinnedDirectory {
@@ -343,6 +360,89 @@ function Install-PinnedDotnetSdk {
     return $dotnetRoot
 }
 
+function Ensure-Rustup {
+    if (Get-FirstCommandPath @((Join-HomePath @(".cargo", "bin", "rustup.exe")), "rustup.exe")) { return }
+    $rustup = Get-PinnedAsset -Tool "rustup"
+    $scratch = New-ScratchDirectory
+    try {
+        $installer = Join-Path $scratch "rustup-init.exe"
+        Save-VerifiedDownload -Url $rustup.url -Sha256 $rustup.sha256 -Destination $installer
+        Write-Step "Installing rustup $($rustup.version)..."
+        & $installer -y --no-modify-path --profile minimal --default-toolchain none | Out-Host
+        if ($LASTEXITCODE -ne 0) { throw "rustup-init failed with exit code $LASTEXITCODE" }
+    } finally {
+        Remove-ScratchDirectory -Path $scratch
+    }
+}
+
+function Ensure-RustToolchain {
+    param([string]$repoRoot)
+    $rustupPath = Get-CommandPathOrThrow -Label "rustup" -Candidates @((Join-HomePath @(".cargo", "bin", "rustup.exe")), "rustup.exe")
+    $previousRustupToolchain = $env:RUSTUP_TOOLCHAIN
+    Remove-Item Env:RUSTUP_TOOLCHAIN -ErrorAction SilentlyContinue
+    try {
+        Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("toolchain", "install", "--no-self-update") -WorkingDirectory $repoRoot
+    } finally {
+        if ($null -ne $previousRustupToolchain) { $env:RUSTUP_TOOLCHAIN = $previousRustupToolchain }
+    }
+}
+
+function Get-MsvcInstallation {
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
+    if (-not (Test-Path -LiteralPath $vswhere -PathType Leaf)) { return $null }
+    return (& $vswhere -latest -products '*' -property installationPath | Select-Object -First 1)
+}
+
+function Test-MsvcLinker {
+    param([string]$Path)
+    if (-not $Path) { return $false }
+    $tools = Join-Path $Path "VC\Tools\MSVC"
+    $architecture = Get-HostArchitecture
+    foreach ($version in (Get-ChildItem -LiteralPath $tools -Directory -ErrorAction SilentlyContinue)) {
+        if (Test-Path -LiteralPath (Join-Path $version.FullName "bin\Host$architecture\$architecture\link.exe") -PathType Leaf) { return $true }
+    }
+    return $false
+}
+
+function Get-CppBootstrap {
+    return (Get-Content -LiteralPath $script:PinsFile -Raw -Encoding UTF8 | ConvertFrom-Json).definitions.MsvcBootstrap.const
+}
+
+function Install-CppBuildTools {
+    $plan = Get-CppBootstrap
+    $scratch = New-ScratchDirectory
+    try {
+        $installer = Join-Path $scratch $plan.file
+        Save-VerifiedDownload -Url $plan.url -Sha256 $plan.sha256 -Destination $installer
+        Write-Step "Installing C++ Build Tools bootstrapper release $($plan.release)..."
+        Invoke-RepoCommand -FilePath $installer -ArgumentList @("--wait", "--quiet", "--norestart", "--add", $plan.workload, "--includeRecommended") -WorkingDirectory $repoRoot -SuccessCodes @(0, 3010)
+    } finally {
+        Remove-ScratchDirectory -Path $scratch
+    }
+}
+
+function Ensure-CppBuildTools {
+    $installation = Get-MsvcInstallation
+    if ($installation -and (Test-MsvcLinker -Path $installation)) { return }
+    $plan = Get-CppBootstrap
+    if ($installation) {
+        $installer = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\setup.exe"
+        if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) { throw "Visual Studio Installer is missing for $installation" }
+        $result = Start-Process -FilePath $installer -ArgumentList @("modify", "--installPath", ('"' + $installation + '"'), "--add", $plan.workload, "--includeRecommended", "--quiet", "--norestart") -Wait -PassThru -WindowStyle Hidden
+        if ($result.ExitCode -ne 0 -and $result.ExitCode -ne 3010) { throw "C++ Build Tools workload installation failed with exit code $($result.ExitCode)" }
+    } else {
+        Install-CppBuildTools
+    }
+    if (-not (Test-MsvcLinker -Path (Get-MsvcInstallation))) { throw "The required native MSVC linker is missing after C++ Build Tools setup" }
+}
+
+function Install-RustProfile {
+    param([string]$repoRoot)
+    Ensure-CppBuildTools
+    Ensure-Rustup
+    Ensure-RustToolchain -repoRoot $repoRoot
+}
+
 function Install-PinnedToolchain {
     param([string]$RepoRoot)
 
@@ -383,19 +483,7 @@ function Install-PinnedToolchain {
         }
     }
 
-    if (-not (Get-FirstCommandPath @("rustup.exe"))) {
-        $rustup = Get-PinnedAsset -Tool "rustup"
-        $scratch = New-ScratchDirectory
-        try {
-            $installer = Join-Path $scratch "rustup-init.exe"
-            Save-VerifiedDownload -Url $rustup.url -Sha256 $rustup.sha256 -Destination $installer
-            Write-Step "Installing rustup $($rustup.version)..."
-            & $installer -y --no-modify-path --profile minimal --default-toolchain none | Out-Host
-            if ($LASTEXITCODE -ne 0) { throw "rustup-init failed with exit code $LASTEXITCODE" }
-        } finally {
-            Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
-        }
-    }
+    Ensure-Rustup
     $paths += (Install-PinnedDotnetSdk -RepoRoot $RepoRoot)
     return $paths
 }
@@ -493,6 +581,14 @@ Set-Location $repoRoot
 $script:PinsFile = Join-Path $repoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🧬️schema\🔣️.json"
 $script:LauncherInstall = Join-Path $repoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\🚀️launcher\📥️install\🔵️.ps1"
 $script:LauncherBin = Join-Path $env:LOCALAPPDATA "semio\launcher\bin"
+if ($Command -eq "rust") {
+    $env:SEMIO_WORKSPACE_ROOT = $repoRoot
+    Refresh-CurrentProcessPath
+    Install-RustProfile -repoRoot $repoRoot
+    Set-UserPathPriority -PreferredEntries @((Join-HomePath @(".cargo", "bin")))
+    Write-Step "Pinned Rust and the native C++ toolchain are ready."
+    exit 0
+}
 Set-RepoLocalGitConfig -RepoRoot $repoRoot
 Write-WindowsLongPathsGuidance
 Write-WindowsReadinessFacts -RepoRoot $repoRoot
@@ -514,8 +610,7 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id $debuggerPolicy.llvmPackage -Label "LLVM Native Debugger" -AdditionalArguments @("--version", $debuggerPolicy.llvmVersion, "--scope", "machine", "--location", (Join-Path $env:ProgramFiles $debuggerPolicy.llvmDirectory))
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.9" -Label ".NET SDK 9.0"
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.10" -Label ".NET SDK 10.0"
-    $msvcCppOverride = @("--override", "--wait --quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
-    Sync-WingetPackage -Id "Microsoft.VisualStudio.BuildTools" -Label "Microsoft C++ Build Tools" -AdditionalArguments $msvcCppOverride
+    Ensure-CppBuildTools
     Sync-WingetPackage -Id "f3d-app.f3d" -Label "F3D"
     $pinnedPaths = Install-PinnedToolchain -RepoRoot $repoRoot
     Set-UserPathPriority -PreferredEntries (@($pinnedPaths) + @(
@@ -553,17 +648,10 @@ Set-UserEnvironmentVariable -Name "PLAYWRIGHT_BROWSERS_PATH" -Value $playwrightP
 #region 🌐️GlobalCliInstall
 if (-not $SkipGlobalCliInstall) {
     Refresh-CurrentProcessPath
-    $rustupPath = Get-CommandPathOrThrow -Label "rustup" -Candidates @("rustup.exe")
     $uvPath = Get-CommandPathOrThrow -Label "uv" -Candidates @("uv.exe")
 
     Install-UvTool -ToolName "ruff" -UvPath $uvPath
-    $previousRustupToolchain = $env:RUSTUP_TOOLCHAIN
-    Remove-Item Env:RUSTUP_TOOLCHAIN -ErrorAction SilentlyContinue
-    try {
-        Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("toolchain", "install", "--no-self-update") -WorkingDirectory $repoRoot
-    } finally {
-        if ($null -ne $previousRustupToolchain) { $env:RUSTUP_TOOLCHAIN = $previousRustupToolchain }
-    }
+    Ensure-RustToolchain -repoRoot $repoRoot
 }
 #endregion 🌐️GlobalCliInstall
 

@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "binding": {"maximumPathUnits": 256},
   "languages": ["en", "de"],
   "tools": {
     "python": {

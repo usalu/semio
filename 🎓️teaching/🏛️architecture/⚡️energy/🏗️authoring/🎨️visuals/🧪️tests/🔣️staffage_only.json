@@ -16,6 +16,7 @@
     "primitives": ["Circle", "Rectangle", "RoundedRectangle", "Square", "Polygon", "Ellipse", "Dot", "Line", "Arc", "SurroundingRectangle", "RegularPolygon", "Triangle", "Annulus"],
     "staffage_calls": ["staffage", "fitted_staffage", "staffage_motion", "staffage_height", "staffage_parts", "_staffage", "_staffage_parts", "_staffage_motion", "_fitted_staffage", "_cast", "_use_cast", "_figure", "build", "pendant_lamp", "watt_anchor"],
     "allowed": {
+      "⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py::_brick_block": "section-material study: two adjoining masonry wall regions with four mortar courses; temperature trackers recolour the control volumes before the microscopic heat-transfer lens, not a freestanding brick object",
       "⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py::_north_window": "section: aperture cut through the section-material wall, glass from the shared window glyph",
       "⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py::_year_clock":"diagram instrument: dial of the shared clock glyph with a redrawn month hand",
       "⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py::_valve_dial": "diagram instrument: dial mark redrawn on the anchor of the staffage valve",
@@ -103,13 +104,6 @@
   "rule_b": {
     "scope": "⚡️energy",
     "allowed": {
-      "shared-desk": "furniture: desk beside the thermal figures, carries no heat",
-      "cooling-internal-gains-office-chair": "furniture: chair of the seated worker, carries no heat",
-      "cooling-heating-comparison-table": "furniture: table under the thermal toaster, carries no heat",
-      "ventilation-volume-blackboard": "furniture: board that shows the room size, carries no heat",
-      "ventilation-volume-crates-low": "storage: crate stack as volume measure, carries no heat",
-      "ventilation-volume-crates-half": "storage: crate stack as volume measure, carries no heat",
-      "ventilation-volume-crates-high": "storage: crate stack as volume measure, carries no heat",
       "demand-primary-energy-tree": "landscape: tree beside the plant, carries no heat"
     },
     "vector_allowed": { "x-desk": "furniture beside a thermal figure" },

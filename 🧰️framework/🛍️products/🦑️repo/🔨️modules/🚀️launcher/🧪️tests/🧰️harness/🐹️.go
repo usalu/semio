@@ -14,6 +14,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"flag"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -22,9 +23,32 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"unicode/utf16"
 )
 
 // #region 🧰️Harness
+
+var launcherTestRoot = flag.String("launcher-test-root", "", "Short owned temporary root for native launcher cases")
+
+func launcherSandbox(t *testing.T) string {
+	t.Helper()
+	root := *launcherTestRoot
+	if root == "" {
+		root = os.TempDir()
+	}
+	if len(utf16.Encode([]rune(root))) > 155 {
+		t.Fatal("Launcher cases require a shorter owned temporary root")
+	}
+	if err := os.MkdirAll(root, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	directory, err := os.MkdirTemp(root, "ls-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(directory) })
+	return directory
+}
 
 func testRoot(t *testing.T) string {
 	t.Helper()

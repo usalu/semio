@@ -3,9 +3,14 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, readlinkSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
 import {createRequire} from "node:module";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import corpus from "./🔣️.json";
+import bootstrapSchema from "../../🧬️schema/🔣️.json";
+import { nativeBootstrapCommandV1 } from "../../🟦️.ts";
+import { nativeTemporaryPlanV1, withNativeTemporaryDirectoryV1, type NativeTemporaryPortV1 } from "../../📁️temporary/🟦️.ts";
 const semver:{gte(actual:string,required:string):boolean}=createRequire(import.meta.url)("semver");
 
 
@@ -17,6 +22,157 @@ const generated = resolve(output, `bt-${process.pid}`);
 mkdirSync(generated, { recursive: true });
 const body = (name: string, next: string) => bootstrap.slice(bootstrap.indexOf(name + "() {"), bootstrap.indexOf(next + "() {"));
 const execute = (script: string, env: Record<string, string> = {}) => spawnSync("bash", ["-c", script], { encoding: "utf8", env: { ...process.env, ...env } });
+
+test.skipIf(process.platform !== "win32")("pinned downloads verify independent SHA256 vectors without optional PowerShell cmdlets", () => {
+  const windows = readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1"), "utf8");
+  const start = windows.indexOf("function Save-VerifiedDownload {");
+  const download = windows.slice(start, windows.indexOf("\nfunction ", start + 1));
+  const script = download + `
+function Invoke-WebRequest { param($Uri, $OutFile, [switch]$UseBasicParsing) [IO.File]::WriteAllBytes($OutFile, [Text.Encoding]::UTF8.GetBytes([string]$env:SEMIO_TEST_TEXT)) }
+function Get-FileHash { throw 'Optional hash cmdlet must not be required' }
+Save-VerifiedDownload -Url 'https://download.invalid/input' -Sha256 $env:SEMIO_TEST_SHA256 -Destination $env:SEMIO_TEST_FILE
+`;
+  for (const row of corpus.downloads) {
+    const file = join(generated, "download-vector.bin");
+    expect(bytesToHex(sha256(new TextEncoder().encode(row.text)))).toBe(row.sha256);
+    for (const expected of [row.sha256, "0".repeat(64)]) {
+      const result = spawnSync("powershell.exe", ["-NoProfile", "-Command", script], { encoding: "utf8", env: { ...process.env, SEMIO_TEST_TEXT: row.text, SEMIO_TEST_SHA256: expected, SEMIO_TEST_FILE: file } });
+      expect(result.status === 0, result.stderr).toBe(expected === row.sha256);
+      expect(existsSync(file)).toBe(expected === row.sha256);
+    }
+  }
+});
+
+test("native temporary aliases agree with the neutral corpus and independent schema", () => {
+  const ajv = new Ajv(), request = ajv.compile(bootstrapSchema.definitions.TemporaryRequest), units = ajv.compile(bootstrapSchema.definitions.TemporaryTargetCodeUnits), plan = ajv.compile(bootstrapSchema.definitions.TemporaryPlan);
+  for (const row of corpus.temporary) {
+    expect(Boolean(request({ target: row.target, candidates: row.candidates })) && Boolean(units(row.target.split("").map(character => character.charCodeAt(0))))).toBe(row.expected !== null);
+    if (row.expected === null) expect(() => nativeTemporaryPlanV1(row.target, row.candidates)).toThrow();
+    else {
+      const actual = nativeTemporaryPlanV1(row.target, row.candidates);
+      expect(actual).toEqual(row.expected);
+      expect(Boolean(plan(actual))).toBe(true);
+    }
+  }
+});
+
+test("temporary ports fall back to an owned DOS alias and close it after installer failure", () => {
+  const events: string[] = [];
+  const port: NativeTemporaryPortV1 = {
+    realpath: path => path,
+    sameDirectory: (first, second) => first === "Z:/" || first === second,
+    junction: () => { events.push("junction unavailable"); return undefined; },
+    drive: () => { events.push("drive opened"); return { path: "Z:/", close: () => { events.push("drive closed"); } }; },
+  };
+  expect(() => withNativeTemporaryDirectoryV1({ target: "D:/🎫/generated", candidates: ["C:/ascii"] }, port, path => { expect(path).toBe("Z:/"); throw Error("installer failed"); })).toThrow("installer failed");
+  expect(events).toEqual(["junction unavailable", "drive opened", "drive closed"]);
+  expect(() => withNativeTemporaryDirectoryV1({ target: "D:/outside", candidates: [], ticket: "D:/ticket" }, port, () => undefined)).toThrow("ticket");
+});
+
+test("owned DOS aliases are resolved by exact generated-directory identity before path checks", () => {
+  const generated = join("D:/ticket", "🗑️generated");
+  const port: NativeTemporaryPortV1 = {
+    realpath: path => path,
+    sameDirectory: (first, second) => first === second || (first === "Z:/" && second === generated),
+    junction: () => undefined,
+    drive: () => undefined,
+  };
+  expect(withNativeTemporaryDirectoryV1({ target: "Z:/", candidates: [], ticket: "D:/ticket" }, port, path => path)).toBe("Z:/");
+  expect(() => withNativeTemporaryDirectoryV1({ target: "Y:/", candidates: [], ticket: "D:/ticket" }, port, () => undefined)).toThrow("ticket");
+});
+
+test("native setup commands agree with the neutral corpus and independent schema validation", () => {
+  const oracle = new Ajv().compile({ type: "array", maxItems: 1, items: bootstrapSchema.definitions.BootstrapCommand });
+  for (const row of corpus.commands) {
+    expect(Boolean(oracle(row.arguments))).toBe(row.expected !== null);
+    if (row.expected === null) expect(() => nativeBootstrapCommandV1(row.arguments)).toThrow();
+    else expect(nativeBootstrapCommandV1(row.arguments)).toBe(row.expected);
+  }
+});
+
+test("the Unix Rust profile installs only its compiler and pinned Rust tools", () => {
+  const script = body("ensure_rust_profile", "ensure_rust_toolchain") + '\nensure_user_cc() { echo compiler; }\nensure_rust_toolchain() { echo rust; }\nlink_installed_rust() { echo links; }\nensure_rust_profile';
+  const result = execute(script);
+  expect(result.status, result.stderr).toBe(0);
+  expect(result.stdout.trim().split(/\r?\n/u)).toEqual(corpus.rustProfileSteps.unix);
+});
+
+test.skipIf(process.platform !== "win32")("the Windows Rust profile installs only its compiler and pinned Rust tools", () => {
+  const windows = readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1"), "utf8");
+  const start = windows.indexOf("function Install-RustProfile {");
+  expect(start).toBeGreaterThan(0);
+  const profile = windows.slice(start, windows.indexOf("\nfunction ", start + 1));
+  const script = profile + '\nfunction Ensure-CppBuildTools { Write-Output compiler }\nfunction Ensure-Rustup { Write-Output rustup }\nfunction Ensure-RustToolchain { Write-Output rust }\nInstall-RustProfile';
+  const result = spawnSync("powershell.exe", ["-NoProfile", "-Command", script], { encoding: "utf8" });
+  expect(result.status, result.stderr).toBe(0);
+  expect(result.stdout.trim().split(/\r?\n/u)).toEqual(corpus.rustProfileSteps.windows);
+  const branch = windows.slice(windows.indexOf('if ($Command -eq "rust")'), windows.indexOf("Set-RepoLocalGitConfig -RepoRoot $repoRoot"));
+  expect(branch).toContain("Install-RustProfile");
+  expect(branch).toContain("exit 0");
+});
+
+test.skipIf(process.platform !== "win32")("Rust setup repairs an installed Visual Studio instance without its required linker", () => {
+  const windows = readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1"), "utf8");
+  const start = windows.indexOf("function Ensure-CppBuildTools {");
+  expect(start).toBeGreaterThan(0);
+  const compiler = windows.slice(start, windows.indexOf("\nfunction ", start + 1));
+  const oracle = new Ajv().compile(bootstrapSchema.definitions.MsvcPreparation);
+  for (const row of corpus.msvc) {
+    const script = compiler + `
+$script:actions = @()
+$script:installed = $${row.installed}
+$script:linker = $${row.linker}
+function Get-MsvcInstallation { if ($script:installed) { return 'C:\\VS' } }
+function Test-MsvcLinker { param($Path) return $script:linker }
+function Test-Path { param($LiteralPath, $PathType) return $true }
+function Install-CppBuildTools { $script:actions += 'install'; $script:installed = $true; $script:linker = $${row.succeeds} }
+function Get-CppBootstrap { return ($env:SEMIO_TEST_CPP_POLICY | ConvertFrom-Json) }
+function Start-Process { param($FilePath, $ArgumentList, [switch]$Wait, [switch]$PassThru, $WindowStyle) $script:actions += 'modify'; $script:linker = $${row.succeeds}; return @{ ExitCode = 0 } }
+$env:ProgramFiles = 'C:\\Program Files'
+\${env:ProgramFiles(x86)} = 'C:\\Program Files (x86)'
+$result = 0
+try { Ensure-CppBuildTools } catch { $result = 1 }
+$script:actions -join ','
+exit $result
+`;
+    const result = spawnSync("powershell.exe", ["-NoProfile", "-Command", script], { encoding: "utf8", env: { ...process.env, SEMIO_TEST_CPP_POLICY: JSON.stringify(bootstrapSchema.definitions.MsvcBootstrap.const) } });
+    expect(result.status === 0, result.stderr).toBe(row.succeeds);
+    expect(result.stdout.trim()).toBe(row.actions.join(","));
+    expect(Boolean(oracle({ installed: row.installed, linker: row.linker, actions: result.stdout.trim() ? result.stdout.trim().split(",") : [] }))).toBe(true);
+  }
+});
+
+test.skipIf(process.platform !== "win32")("the pinned compiler bootstrapper is verified before its owned ASCII executable launches", () => {
+  const windows = readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1"), "utf8");
+  const start = windows.indexOf("function Install-CppBuildTools {");
+  expect(start).toBeGreaterThan(0);
+  const install = windows.slice(start, windows.indexOf("\nfunction ", start + 1));
+  for (const fail of [false, true]) {
+    const script = install + `
+$script:launched = $false
+$script:removed = $false
+function Get-CppBootstrap { return ($env:SEMIO_TEST_CPP_POLICY | ConvertFrom-Json) }
+function New-ScratchDirectory { return 'C:\\ascii\\semio-00000000000000000000000000000000' }
+function Write-Step { param($Message) }
+function Save-VerifiedDownload { param($Url, $Sha256, $Destination) if ($env:SEMIO_TEST_FAIL -eq '1') { throw 'checksum failed' }; $script:verification = @{ url = $Url; sha256 = $Sha256; path = $Destination } }
+function Invoke-RepoCommand { param($FilePath, $ArgumentList, $WorkingDirectory, $SuccessCodes) $script:launched = $true; $script:launch = @{ path = $FilePath; arguments = $ArgumentList; successCodes = $SuccessCodes } }
+function Remove-ScratchDirectory { param($Path) $script:removed = $true }
+try { Install-CppBuildTools } catch {}
+@{ launched = $script:launched; removed = $script:removed; verification = $script:verification; launch = $script:launch } | ConvertTo-Json -Compress -Depth 4
+`;
+    const policy = bootstrapSchema.definitions.MsvcBootstrap.const;
+    const result = spawnSync("powershell.exe", ["-NoProfile", "-Command", script], { encoding: "utf8", env: { ...process.env, SEMIO_TEST_CPP_POLICY: JSON.stringify(policy), SEMIO_TEST_FAIL: fail ? "1" : "0" } });
+    expect(result.status, result.stderr).toBe(0);
+    const actual = JSON.parse(result.stdout);
+    expect(actual.launched).toBe(!fail);
+    expect(actual.removed).toBe(true);
+    if (!fail) {
+      const path = join("C:/ascii/semio-00000000000000000000000000000000", corpus.msvcBootstrap.installer);
+      expect(actual.verification).toEqual({ url: policy.url, sha256: policy.sha256, path });
+      expect(actual.launch).toEqual({ path, arguments: corpus.msvcBootstrap.arguments, successCodes: corpus.msvcBootstrap.successCodes });
+    }
+  }
+});
 
 test("bootstrap version ordering is portable and agrees with the neutral corpus and semver", () => {
   expect(new Ajv().validate({ type: "array", items: { type: "object", required: ["actual", "required", "expected"], properties: { actual: { type: "string" }, required: { type: "string" }, expected: { type: "boolean" } }, additionalProperties: false } }, corpus.versions)).toBe(true);

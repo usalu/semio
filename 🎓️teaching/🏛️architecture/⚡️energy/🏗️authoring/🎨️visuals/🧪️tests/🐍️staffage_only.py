@@ -4,6 +4,7 @@ The forbidden names, the scanned tree and the forbidden paths live in ``🔣️s
 """
 
 import ast
+from functools import cache
 import importlib
 import json
 import re
@@ -15,6 +16,7 @@ CASES = json.loads(Path(__file__).with_name("🔣️staffage_only.json").read_te
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / CASES["root"]).is_dir()) / CASES["root"]
 
 
+@cache
 def clip_sources():
     """📜 Every clip script under the teaching root, outside tests and tool folders."""
     return sorted(
@@ -341,6 +343,7 @@ def literal_units(source):
     return found
 
 
+@cache
 def energy_clip_sources():
     """⚡️ Clip scripts of the energy course."""
     return [path for path in clip_sources() if CASES["rule_b"]["scope"] in path.parts]

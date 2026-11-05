@@ -1,6 +1,17 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "CaseProbe": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "platform", "kind", "probe", "expected"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "platform": {"enum": ["linux", "darwin", "win32"]},
+        "kind": {"enum": ["exchange", "journaled"]},
+        "probe": {"enum": ["sensitive", "insensitive", "caseBuild", "caseFeature", "caseAccess", "caseNotEmpty", "caseUnverified", "near-match", "unknown", "cancelled", "cleanup", "foreign"]},
+        "expected": {"enum": ["yes", "no", "fold-safe", "refused"]}
+      }
+    },
     "Platform": {
       "type": "object", "additionalProperties": false,
       "required": ["architectures", "minimumAvailableBytes", "tools", "exchange"],
@@ -34,8 +45,12 @@
         "availableBytes": {"type": "integer", "minimum": 0},
         "tools": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
         "exchange": {"enum": ["supported", "unsupported", "unprobed"]},
-        "caseSensitive": {"enum": ["yes", "no", "unprobed"]}
-      }
+        "caseSensitive": {"enum": ["yes", "no", "unprobed", "fold-safe"]}
+      },
+      "anyOf": [
+        {"properties": {"caseSensitive": {"enum": ["yes", "no", "unprobed"]}}},
+        {"properties": {"platform": {"const": "win32"}, "caseSensitive": {"const": "fold-safe"}}}
+      ]
     }
   }
 }

@@ -31,6 +31,79 @@
     }
   },
   "$defs": {
+    "SourceFenceMismatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "section",
+        "index",
+        "path",
+        "field",
+        "expected",
+        "actual"
+      ],
+      "properties": {
+        "section": {
+          "enum": [
+            "rows",
+            "parents",
+            "ancestors"
+          ]
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "field": {
+          "enum": [
+            "entry",
+            "serialization",
+            "sourceDirectory",
+            "kind",
+            "stamp",
+            "target",
+            "path",
+            "identity",
+            "stamp.dev",
+            "stamp.ino",
+            "stamp.mode",
+            "stamp.nlink",
+            "stamp.size",
+            "stamp.mtimeNs",
+            "stamp.ctimeNs",
+            "identity.dev",
+            "identity.ino",
+            "identity.mode",
+            "identity.nlink",
+            "identity.size",
+            "identity.mtimeNs",
+            "identity.ctimeNs"
+          ]
+        },
+        "expected": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2048
+        },
+        "actual": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2048
+        }
+      }
+    },
     "SourceOwnerExportsProtocol": {
       "const": {
         "version": 1,
@@ -4711,6 +4784,20 @@
         "legacy": false
       }
     },
+    "SourceNamespaceClassificationProtocol": {
+      "const": {
+        "version": 1,
+        "generationPrefixUnits": 20,
+        "receiptName": "bindings.json",
+        "rootEndpoint": "node_modules",
+        "rootScope": ".",
+        "memberDirectory": "w",
+        "maximumReceiptBytes": 33554432,
+        "authority": false,
+        "readiness": false,
+        "contentObserved": false
+      }
+    },
     "SourceOwnerReady": {
       "type": "object",
       "additionalProperties": false,
@@ -5299,7 +5386,9 @@
         "image": "actual-store-exclusive",
         "readyVersion": 2,
         "sourceBindingOwner": "unique",
-        "legacy": false
+        "legacy": false,
+        "workUnit": "semantic-entry-or-chunk-attempt",
+        "progressWorkUnits": 64
       }
     },
     "SourceOwnerStoreCase": {

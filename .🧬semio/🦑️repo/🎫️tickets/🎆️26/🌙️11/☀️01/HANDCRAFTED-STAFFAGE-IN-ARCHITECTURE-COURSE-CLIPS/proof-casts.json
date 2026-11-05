@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "casts": {
+    "person-elevation": {
+      "asset": "standing-adult",
+      "pose": "relaxed",
+      "view": "dark-line",
+      "viewpoint": "elevation",
+      "theme": "dark",
+      "scale": 50
+    },
+    "person-front": {
+      "asset": "standing-adult",
+      "pose": "relaxed",
+      "view": "dark-line",
+      "viewpoint": "front",
+      "theme": "dark",
+      "scale": 50
+    },
+    "person-plan": {
+      "asset": "standing-adult",
+      "pose": "relaxed",
+      "view": "dark-line",
+      "viewpoint": "plan",
+      "theme": "dark",
+      "scale": 50
+    },
+    "car-plan": {
+      "asset": "vintage-car-1929",
+      "pose": "parked",
+      "view": "dark-line",
+      "viewpoint": "plan",
+      "theme": "dark",
+      "scale": 50
+    },
+    "thermal-person": {
+      "asset": "standing-adult",
+      "pose": "relaxed",
+      "view": "thermal",
+      "environment": "indoor-heated-winter",
+      "viewpoint": "elevation",
+      "theme": "dark",
+      "thermalSpanK": 25,
+      "scale": 50
+    },
+    "thermal-heat-pump": {
+      "asset": "heat-pump-outdoor-unit",
+      "pose": "heating",
+      "view": "thermal",
+      "environment": "winter-overcast",
+      "viewpoint": "elevation",
+      "theme": "dark",
+      "thermalSpanK": 25,
+      "scale": 50
+    }
+  }
+}

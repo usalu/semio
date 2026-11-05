@@ -204,20 +204,19 @@ func (tool nativeLauncherTool) Run(root string, arguments []string) error {
 
 // 🏗️RunNativeScript selects the issued build invocation without rewriting its environment.
 func RunNativeScript(arguments []string, tool NativeScriptTool) error {
-	cwd, err := os.Getwd()
+	root, err := launcher.DefaultHost().Root()
 	if err != nil {
 		return err
 	}
-	return tool.Run(workspace.FindRepoRoot(cwd), arguments)
+	return tool.Run(root, arguments)
 }
 
 // 📖️runRootHelp prints the one build catalogue help (the front door of the build implementation, the same text as `bun repo --help`) and then the native commands of the command tree, so no command list is kept twice.
 func runRootHelp(arguments []string) error {
-	cwd, err := os.Getwd()
+	root, err := launcher.DefaultHost().Root()
 	if err != nil {
 		return err
 	}
-	root := workspace.FindRepoRoot(cwd)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	host := launcher.DefaultHost()

@@ -1,0 +1,43 @@
+{
+  "name": "ticket_close",
+  "arguments": {
+    "path": "26/11/01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS",
+    "no_management": true,
+    "summary": "Canonical staffage integration verified across the current course: 97 casts resolve against 152 assets. Fixed whole-animation uniform fitting, seasonal furniture lookup, catalog index consistency and long-lived media identity refresh. Added shared Python/TypeScript coverage and independent schema/geometry/media oracles. Final evidence: course coverage Python5 and TS59; course guard39; bridge61; physical-scale/invariance9; real video timing5; media freshness2; representative exports and visual QA. Generated output removed; reusable test inputs and detailed evidence retained in codex-result.md. No narrated full-course rebuild or non-Windows execution claimed.",
+    "files": [
+      "🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🎓️course-coverage/🔣️.json",
+      "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎓️course-coverage/🟦️.ts",
+      "🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔣️.json",
+      "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎞️frame-timing/🟦️.ts",
+      "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py",
+      "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py",
+      "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py",
+      "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🔣️.json",
+      "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️course_staffage.py",
+      "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️media_staffage.py",
+      "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️staffage_only.py",
+      "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️staffage_only.json",
+      "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts",
+      "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/🎫️ticket.json",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-clips-audit.md",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-coverage-audit.py",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-coverage.md",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-coverage.vitest.mjs",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-final-audit.md",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-fit.md",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-infra.md",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-mcp.cjs",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-media.md",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-proof.config.ts",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-proof.test.ts",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-result.md",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-staffage-audit.md",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/proof-casts.json",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/proof-sheet.cjs",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/test-runtime.config.ts",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/test-runtime.package.json",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-close.json"
+    ]
+  }
+}

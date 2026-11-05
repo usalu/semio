@@ -20,7 +20,8 @@ import (
 
 // #region 🛎️Command
 
-func (h Host) root() (string, error) {
+// 🏡️Root selects the same explicit or nearest paired workspace for every native launcher frontend.
+func (h Host) Root() (string, error) {
 	start, err := StartDirectory(h.Env, h.Getwd)
 	if err != nil {
 		return "", err
@@ -74,7 +75,7 @@ func (h Host) implementationVersion(root string, registry *Registry) (string, bo
 // 🔖️Version prints the versions of the launcher, of every runtime the entries use and of the implementation; the runtime is never fetched for it.
 func (h Host) Version(args []string) int {
 	values := map[string]string{"version": Version, "contract": strconv.Itoa(Contract)}
-	root, err := h.root()
+	root, err := h.Root()
 	if err != nil {
 		if !IsRootNotFound(err) {
 			return h.ReportRoot(err)
@@ -137,7 +138,7 @@ func (h Host) Main(ctx context.Context, argv []string) int {
 		return h.Version(argv)
 	}
 	plan := PlanRoute(argv)
-	root, err := h.root()
+	root, err := h.Root()
 	if err != nil {
 		return h.ReportRoot(err)
 	}

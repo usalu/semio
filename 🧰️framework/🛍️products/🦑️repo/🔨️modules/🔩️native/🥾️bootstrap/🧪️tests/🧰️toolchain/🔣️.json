@@ -1,4 +1,38 @@
 {
+  "msvcBootstrap": {
+    "installer": "cpp.exe",
+    "successCodes": [0, 3010],
+    "arguments": ["--wait", "--quiet", "--norestart", "--add", "Microsoft.VisualStudio.Workload.VCTools", "--includeRecommended"]
+  },
+  "downloads": [
+    { "text": "abc", "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" },
+    { "text": "", "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" }
+  ],
+  "temporary": [
+    { "target": "C:/ticket/generated", "candidates": ["C:/Users/Ä/semio"], "expected": { "kind": "direct", "root": "C:/ticket/generated" } },
+    { "target": "D:/🎫/generated", "candidates": ["C:/Users/Anna/semio"], "expected": { "kind": "junction", "roots": ["C:/Users/Anna/semio"] } },
+    { "target": "D:/🎫/generated", "candidates": ["C:/Users/Ä/semio"], "expected": { "kind": "drive" } },
+    { "target": "D:/🎫/generated", "candidates": ["C:/Users/Ä/semio", "C:/ascii"], "expected": { "kind": "junction", "roots": ["C:/ascii"] } },
+    { "target": "D:/🎫/generated", "candidates": [], "expected": { "kind": "drive" } },
+    { "target": "", "candidates": ["C:/ascii"], "expected": null }
+  ],
+  "commands": [
+    { "arguments": [], "expected": "setup" },
+    { "arguments": ["setup"], "expected": "setup" },
+    { "arguments": ["rust"], "expected": "rust" },
+    { "arguments": ["unknown"], "expected": null },
+    { "arguments": ["rust", "setup"], "expected": null }
+  ],
+  "rustProfileSteps": {
+    "unix": ["compiler", "rust", "links"],
+    "windows": ["compiler", "rustup", "rust"]
+  },
+  "msvc": [
+    { "installed": true, "linker": true, "succeeds": true, "actions": [] },
+    { "installed": true, "linker": false, "succeeds": true, "actions": ["modify"] },
+    { "installed": false, "linker": false, "succeeds": true, "actions": ["install"] },
+    { "installed": true, "linker": false, "succeeds": false, "actions": ["modify"] }
+  ],
   "versions": [
     {
       "actual": "0.8.0",

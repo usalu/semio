@@ -4,6 +4,8 @@ import { verifyTypologyAssignmentContentV1 } from "../../../🏙️typology/📝
 import { courseAssignmentPdfDocumentsV1 } from "../../🏗️builder/🌐️vite/📃️documents/🟦️.ts";
 import Ajv from "ajv";
 import fixture from "./🧫️cases.json";
+import course from "../../🔣️.json";
+import project from "../../📦️packages/🟦️typescript/📋️project.json";
 import channelSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📥️environment/🏃️runtime/🧬️schema/🔣️.json";
 import { readViteRuntimeChannelsV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts";
 import type { OwnedBuildMiddleware } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
@@ -11,6 +13,15 @@ import { courseAssignmentPdfsVitePlugin } from "../../🏗️builder/🌐️vite
 import { expect, test } from "vitest";
 import { createServer } from "node:http";
 import { assignmentPdfBytes, readCourseAssignmentPdfsV1 } from "../../🏗️builder/🌐️vite/📖️assignments/🟦️.ts";
+
+for (const target of fixture.consumers) test(target + " declares every localized assignment producer", () => {
+  const producers = [...new Set(course.assignments.flatMap(assignment => Object.values(assignment.documents).map(document => document.producer)))];
+  const selected = Object.entries(project.targets).find(([name]) => name === target)?.[1];
+  const dependencies = selected && "dependsOn" in selected ? selected.dependsOn : [];
+  const oracle = new Ajv().compile({ type: "array", allOf: producers.map(producer => ({ contains: { const: producer } })) });
+  expect(Boolean(oracle(dependencies))).toBe(true);
+  for (const producer of producers) expect(dependencies).toContain(producer);
+});
 
 test("PDF transport requires explicit published input and rejects non-PDF or oversized bodies", async () => {
   await expect(readCourseAssignmentPdfsV1({})).rejects.toThrow("Published assignment PDF transport required");

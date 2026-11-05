@@ -147,6 +147,7 @@
         "test-build-command-line",
         "test-build-cpu-profile",
         "test-build-doctor-preflight",
+        "test-build-preflight",
         "test-build-execution",
         "test-build-fleet-status",
         "test-build-generation-claims",
@@ -4107,6 +4108,26 @@
             "class": "live",
             "reason": "exercises-host-resources"
           }
+        }
+      }
+    },
+    "test-build-preflight": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": ["workspace:deps-python"],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites",
+        "command": "repo ./📜️script.ts test build-preflight",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {"version": 1, "kind": "source"},
+          "cache": {"version": 1, "class": "live", "reason": "exercises-host-resources"}
         }
       }
     },

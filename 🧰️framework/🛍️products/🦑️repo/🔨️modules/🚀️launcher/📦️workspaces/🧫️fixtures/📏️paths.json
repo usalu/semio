@@ -1,0 +1,8 @@
+{
+ "maximumUnits":256,
+ "cases":[
+  {"id":"ascii","unit":"x","units":1},
+  {"id":"supplementary","unit":"😀","units":2},
+  {"id":"variation-selector","unit":"📦️","units":3}
+ ]
+}

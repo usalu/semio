@@ -1,0 +1,12 @@
+{
+ "$defs":{"Protocol":{"const":{
+  "version":1,
+  "directory":"node_modules",
+  "maximumPathLength":256,
+  "maximumWorkspaces":1,
+  "maximumManifestBytes":4096,
+  "managed":{"sourceSchema":"ready.json","managerDirectory":"manager","budgetPolicy":"budget.json","nativeSchema":"native.json"},
+  "packageNamePattern":"^(@[a-z]+/)?[a-z]+$",
+  "reservedNamePattern":"(^|/|@)(CON|AUX)($|/)"
+ }}}
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "directory": "node_modules",
+        "maximumPathLength": 256,
+        "maximumWorkspaces": 4096,
+        "maximumManifestBytes": 1048576,
+        "managed": {
+          "sourceSchema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
+          "managerDirectory": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers",
+          "budgetPolicy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",
+          "nativeSchema": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json"
+        },
+        "packageNamePattern": "^(@[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9_-])?/)?[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9_-])?$",
+        "reservedNamePattern": "(^|/|@)([Cc][Oo][Nn]|[Pp][Rr][Nn]|[Aa][Uu][Xx]|[Nn][Uu][Ll]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])([.][^/]*)?($|/)"
+      }
+    },
+    "PackageName": { "type": "string", "pattern": "^(@[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9_-])?/)?[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9_-])?$", "not": { "pattern": "(^|/|@)([Cc][Oo][Nn]|[Pp][Rr][Nn]|[Aa][Uu][Xx]|[Nn][Uu][Ll]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])([.][^/]*)?($|/)" } },
+    "WorkspacePath": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\*?:<>\"|\\x00-\\x1f])(?!.*[. ](?:/|$))[^/]+(?:/[^/]+)*$", "not": { "pattern": "(^|/|@)([Cc][Oo][Nn]|[Pp][Rr][Nn]|[Aa][Uu][Xx]|[Nn][Uu][Ll]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])([.][^/]*)?($|/)" } },
+    "WorkspaceManifest": { "type": "object", "required": ["workspaces"], "properties": { "workspaces": { "type": "array", "maxItems": 4096, "uniqueItems": true, "items": { "$ref": "#/$defs/WorkspacePath" } } } },
+    "PackageManifest": { "type": "object", "required": ["name"], "properties": { "name": { "$ref": "#/$defs/PackageName" } } },
+    "PathCorpus": {
+      "type": "object", "additionalProperties": false, "required": ["maximumUnits", "cases"],
+      "properties": {
+        "maximumUnits": { "const": 256 },
+        "cases": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "type": "object", "additionalProperties": false, "required": ["id", "unit", "units"], "properties": { "id": { "type": "string" }, "unit": { "type": "string", "minLength": 1, "maxLength": 8 }, "units": { "type": "integer", "minimum": 1, "maximum": 16 } } } }
+      }
+    },
+    "NamespaceClassification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "authority", "readiness", "contentObserved"],
+      "properties": {
+        "kind": { "enum": ["cold", "unmanaged", "managed"] },
+        "authority": { "const": false }, "readiness": { "const": false }, "contentObserved": { "const": false }
+      }
+    },
+    "ManagedCase": {
+      "type": "object", "additionalProperties": false, "required": ["id", "mutation", "accepted"],
+      "properties": { "id": { "type": "string" }, "mutation": { "enum": ["none", "generation", "binding-source", "binding-target", "purpose", "version", "unknown-field", "missing-members", "path"] }, "accepted": { "type": "boolean" } }
+    },
+    "Case": {
+      "type": "object",
+      "required": ["id", "workspace", "name", "valid"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "workspace": { "type": "string" },
+        "name": { "type": "string" },
+        "valid": { "type": "boolean" }
+      }
+    },
+    "Corpus": { "type": "array", "items": { "$ref": "#/$defs/Case" } }
+  }
+}

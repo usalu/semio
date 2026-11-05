@@ -1,0 +1,11 @@
+[
+  {"name":"windows","platform":"win32","directory":"C:\\managed env","output":"C:\\managed env\\Scripts\\python.exe\r\n","expected":"C:\\managed env\\Scripts\\python.exe"},
+  {"name":"linux","platform":"linux","directory":"/managed env","output":"/managed env/bin/python\n","expected":"/managed env/bin/python"},
+  {"name":"darwin","platform":"darwin","directory":"/managed env","output":"/managed env/bin/python","expected":"/managed env/bin/python"},
+  {"name":"empty","platform":"linux","directory":"/managed","output":"\n","expected":null},
+  {"name":"relative","platform":"linux","directory":"/managed","output":"bin/python\n","expected":null},
+  {"name":"multiline","platform":"linux","directory":"/managed","output":"/managed/bin/python\n/other/python\n","expected":null},
+  {"name":"foreign","platform":"linux","directory":"/managed","output":"/other/python\n","expected":null},
+  {"name":"drive-relative","platform":"win32","directory":"C:\\managed","output":"C:python.exe\n","expected":null},
+  {"name":"rooted-relative","platform":"win32","directory":"C:\\managed","output":"\\managed\\python.exe\n","expected":null}
+]

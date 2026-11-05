@@ -14,6 +14,10 @@ import table from"../🔣️.json"with{type:"json"};
 import callerSchema from"../../🧬️schema/📥️caller.json"with{type:"json"};
 import{withBuildTestInvocationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import fixture from"./🧫️fixtures/🔣️.json"with{type:"json"};
+import preflightGate from"./🧫️fixtures/🩺️preflight.json"with{type:"json"};
+import pythonResults from"./🧫️fixtures/🐍️python.json"with{type:"json"};
+import{readWorkspaceTestPythonOutputV1}from"../🐍️python/🟦️.ts";
+import pythonQuery from"../🐍️python/🔣️.json"with{type:"json"};
 import{declareLibraryBuildTestEnvelopeV1}from"../../../🧪️testing/🪪️native-birth/🟦️.ts";
 declareLibraryBuildTestEnvelopeV1({suite:"build-route-table"});
 
@@ -26,6 +30,22 @@ const withFile=async<T>(value:unknown,use:(path:string)=>Promise<T>):Promise<T>=
 const spawns=(source:string):boolean=>fixture.spawnTokens.some(token=>source.includes(token));
 const levelOf=(suite:ProcessTestSuiteV1):string|undefined=>Object.entries(fixture.levels).find(([,budget])=>budget===suite.budgetMs)?.[0];
 const read=(path:string):unknown=>JSON.parse(readFileSync(path,"utf8"));
+
+test("the managed interpreter query admits exactly one absolute path inside its declared environment",()=>{
+ for(const row of pythonResults){
+  if(row.expected===null)expect(()=>readWorkspaceTestPythonOutputV1(row.output,row.directory,row.platform)).toThrow();
+  else expect(new Ajv({strict:true}).validate({const:row.expected},readWorkspaceTestPythonOutputV1(row.output,row.directory,row.platform)),row.name).toBe(true);
+ }
+ for(const glyph of["x","😀","🐍️"]){const prefix="/managed/",budget=pythonQuery.maximumPathUnits-prefix.length,path=prefix+glyph.repeat(Math.floor(budget/glyph.length))+"x".repeat(budget%glyph.length);expect(readWorkspaceTestPythonOutputV1(path+"\n","/managed","linux")).toBe(path);expect(()=>readWorkspaceTestPythonOutputV1(path+glyph,"/managed","linux")).toThrow();}
+});
+
+test("portable preflight contracts have one cross-platform gate independent of POSIX doctor tools",()=>{
+ const declared=readBuildTestTableV1(),suite=declared.suites.find(row=>row.id===preflightGate.suite),targets=(read(project)as{targets:Record<string,{options?:{command?:string}}>}).targets;
+ const actual={suite:suite?.id,tree:suite?.trees?.join(","),platforms:suite?.platforms,tools:suite?.tools??[],target:targets[preflightGate.target]?.options?.command===`repo ./📜️script.ts test ${preflightGate.suite}`?preflightGate.target:undefined};
+ expect(new Ajv({strict:true}).validate({const:preflightGate},actual)).toBe(true);
+ expect(actual).toEqual(preflightGate);
+ expect(declared.suites.filter(row=>row.trees?.includes(preflightGate.tree)).map(row=>row.id)).toEqual([preflightGate.suite]);
+});
 
 test("the build route table is a closed document that Ajv and the module validator both admit",()=>{
  const ajv=new Ajv({strict:true});ajv.addSchema(processSchema);

@@ -2,14 +2,18 @@
  * @see 📜️script.ts
  */
 import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts";
+import { ticketOutput } from "../../⚡️caching/🎫️output/🟦️.ts";
+import { nativeBootstrapCommandV1 } from "../../../🔩️native/🥾️bootstrap/🟦️.ts";
+import { nativeTemporarySystemPortV1, withNativeTemporaryDirectoryV1 } from "../../../🔩️native/🥾️bootstrap/📁️temporary/🟦️.ts";
 import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts";
 import { dispatchSubcommand } from "../../🚨️policy/🧭️entrypoints/🟦️.ts";
-import { runCmd } from "../../🏃️process/🟦️.ts";
+import { runCmd, runCmdStatus } from "../../🏃️process/🟦️.ts";
 import { installMicroCommitGitHooks, reportHookShellV1 } from "../📝️commit/🪝️hooks/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { existsSync, linkSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
+import { homedir, tmpdir } from "node:os";
 import { runtimePackageCommandV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 const NATIVE_BOOTSTRAP_DIR = "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap";
@@ -31,7 +35,7 @@ export function linuxHostLibcV1(): "gnu" | "musl" {
 /** 🖥️Runs the native bootstrap under `repo/native/bootstrap`. */
 export class NativeOsScript extends Script {
   run(segments: string[]): void {
-    const cmd = segments[0] ?? "setup";
+    const cmd = nativeBootstrapCommandV1(segments);
     const env = { ...process.env };
     if (process.platform === "win32") {
       const ps1 = join(this.root, NATIVE_BOOTSTRAP_DIR, "🔵️.ps1");
@@ -39,7 +43,12 @@ export class NativeOsScript extends Script {
         console.error(`[native] missing ${ps1}; expected repo/native/bootstrap/🔵️.ps1.`);
         process.exit(1);
       }
-      runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, cmd], { cwd: this.root, env });
+      const run = (temporary?: string): void => runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, cmd], { cwd: this.root, env: temporary === undefined ? env : { ...env, TEMP: temporary, TMP: temporary } });
+      if (cmd === "rust") {
+        const candidates = [...new Set([join(homedir(), ".semio", "native-temp"), join(env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"), "semio", "native-temp")])];
+        const target = env.SEMIO_TICKET_DIR ? dirname(ticketOutput(this.repoRoot, [], env)) : env.TEMP ?? env.TMP ?? tmpdir();
+        withNativeTemporaryDirectoryV1({ target, candidates, ticket: env.SEMIO_TICKET_DIR }, nativeTemporarySystemPortV1(args => runCmdStatus("subst.exe", args)), run);
+      } else run();
       return;
     }
     if (process.platform === "darwin" || process.platform === "linux") {
@@ -48,7 +57,7 @@ export class NativeOsScript extends Script {
         console.error(`[native] missing ${sh}; expected repo/native/bootstrap/🐚️.sh.`);
         process.exit(1);
       }
-      runCmd("bash", [sh, cmd], { cwd: this.root, env });
+      runCmd("bash", [sh, cmd], { cwd: this.root, env: cmd === "rust" && env.SEMIO_TICKET_DIR ? { ...env, TMPDIR: dirname(ticketOutput(this.repoRoot, [], env)) } : env });
       return;
     }
     console.error(`[native] unsupported platform ${process.platform}`);

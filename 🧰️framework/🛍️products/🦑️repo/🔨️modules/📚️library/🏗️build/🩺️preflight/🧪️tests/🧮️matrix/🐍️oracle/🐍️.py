@@ -10,7 +10,8 @@ def problems(required, facts):
         out.append("available bytes %d are below required %d" % (facts["availableBytes"], required["minimumAvailableBytes"]))
     if required["exchange"] and facts["exchange"] != "supported":
         out.append("atomic or journaled directory swap is unsupported by the host or the workspace filesystem")
-    if required["exchange"] and facts["caseSensitive"] != "yes":
+    case_safe = facts["caseSensitive"] == "yes" or facts["platform"] == "win32" and facts["caseSensitive"] == "fold-safe"
+    if required["exchange"] and not case_safe:
         out.append("a case-sensitive workspace filesystem is required for directory-backed partitions")
     for tool in required["tools"]:
         if tool not in facts["tools"]:

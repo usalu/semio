@@ -13280,6 +13280,8 @@
         "🌱️fixture-repository",
         "🗂️runtime-registry",
         "🧭️workspace-root",
+        "📦️workspaces",
+        "📦️workspace-namespace",
         "🗣️language",
         "📥️runtime-provision",
         "🏗️entry",
@@ -13509,7 +13511,8 @@
         "📮️http-transport",
         "🪄️capability-tools",
         "🗒️core-capabilities",
-        "🖥️mockups"
+        "🖥️mockups",
+        "📦️workspaces"
       ],
       "source": "registry"
     },

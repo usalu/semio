@@ -9,6 +9,7 @@ import schema from "../../🧬️schema/🔣️.json";
 import policyFile from "../../🔣️policy.json";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
+import hosts from "../../🧫️fixtures/🔣️.json";
 
 setDefaultTimeout(60000);
 
@@ -18,6 +19,11 @@ const refusal=(action:()=>unknown):string=>{try{action();return "";}catch(error)
 const subsets=<T>(items:readonly T[]):T[][]=>items.reduce<T[][]>((all,item)=>all.flatMap(set=>[set,[...set,item]]),[[]]);
 const policy=readBuildPreflightPolicyV1();
 const requirements=corpus.requirements.map(row=>({name:row.name,value:("policy" in row?(policy.platforms as Record<string,unknown>)[row.policy as string]:row.value) as any}));
+
+test("Windows storage capability cases agree with the independent decision table",()=>{
+ const rows=hosts.windows.map(row=>({required:policy.platforms.win32,facts:row.facts})),answers=ask(rows);
+ for(const[index,row]of hosts.windows.entries()){expect(answers[index],row.id).toEqual(row.problems);expect(buildPreflightProblemsV1(policy.platforms.win32,row.facts),row.id).toEqual(answers[index]);}
+});
 
 test("the corpus is closed by its schema and the authored policy is closed by the unit's schema",()=>{
  const ajv=new Ajv({strict:false});

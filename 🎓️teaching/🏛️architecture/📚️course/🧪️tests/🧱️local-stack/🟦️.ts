@@ -40,7 +40,7 @@ import proctorPathSchema from "../../🧫️fixtures/🎭️e2e-proctor/🧬️s
 import viteStorageSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/⚡️caching/🌐️vite/💾️storage/🧬️schema/🔣️json/🟦️.ts";
 import { viteDevInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🍞️bun/🟦️.ts";
 import { closeProxiedSocketWithBrowser, type ProxiedUpgradeProxy } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
-import { bootOrder, endToEndPlan, endToEndPorts, endToEndProctorPath, endToEndWorkDirectory, portFree, rehearsalBuildEnvironment, rehearsalBuildPlan } from "../../🎭️e2e/🟦️.ts";
+import { bootOrder, endToEndPlan, endToEndPorts, endToEndProctorPath, endToEndReportDirectory, endToEndRunDirectory, endToEndWorkDirectory, portFree, rehearsalBuildEnvironment, rehearsalBuildPlan } from "../../🎭️e2e/🟦️.ts";
 import { SITE_MEDIA_TYPES, awaitReady, courseFiles, httpAnswers, launchOwned, relaunchDelay, serveStaticSite } from "../../🧱️stack/🟦️.ts";
 import { cargoPackageClosure } from "../../../../🛂️proctor/🏗️bootstrap/🕸️manifest-closure/🟦️.ts";
 import { DevelopmentDataRefused, PROCTOR_DATABASE_FILE, PROCTOR_DEV_DATA_DIRECTORY, PROCTOR_STORAGE_FORMAT, developmentDataSettled, proctorDevelopmentEnvironment, proctorSourceChanged, proctorSourceDirectories, settleDevelopmentData, storedProctorFormat } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
@@ -51,6 +51,38 @@ import { CapacityWire } from "../../../../🛂️proctor/🧪️tests/🏋️cap
 
 const scratch: string[] = [];
 const closing: (() => Promise<unknown>)[] = [];
+
+for (const row of outputCases.arguments) it("keeps browser diagnostics owned for " + JSON.stringify(row.value), () => {
+  const parse = () => endToEndPlan(["--topology", "dev", "--", ...row.value]);
+  if (row.valid) expect(parse().playwright).toEqual(row.value);
+  else expect(parse).toThrow();
+});
+
+it("keeps unique E2E runs and retained Playwright diagnostics within the path budget", () => {
+  const root = directory({}), first = endToEndRunDirectory(root), second = endToEndRunDirectory(root);
+  expect(dirname(first)).toBe(root);
+  expect(first).not.toBe(second);
+  expect(first.slice(root.length + 1)).toHaveLength(outputCases.pathBudget.run.length);
+  const budget = outputCases.pathBudget;
+  const oracle = new Ajv().compile({ type: "array", maxItems: budget.maximum, items: { type: "integer", minimum: 0, maximum: 65535 } });
+  for (const host of budget.repositories) {
+    const paths = host.platform === "win32" ? win32 : posix;
+    const work = paths.join(host.root, budget.ticket, "🗑️generated", budget.run);
+    const reports = outputCases.reports.map(row => {
+      const output = endToEndReportDirectory(work, row.stack, row.phase);
+      expect(output).toBe(join(work, row.directory));
+      for (const file of budget.files) {
+        const artifact = paths.join(output, budget.testDirectory, file);
+        expect(artifact.length).toBeLessThanOrEqual(budget.maximum);
+        expect(Boolean(oracle(artifact.split("").map(character => character.charCodeAt(0))))).toBe(true);
+      }
+      return output;
+    });
+    expect(new Set(reports).size).toBe(reports.length);
+    expect(() => endToEndReportDirectory(work, "unknown", "boot")).toThrow("Unknown");
+  }
+  expect(() => endToEndReportDirectory("x".repeat(200), "dev", "boot")).toThrow("256");
+});
 
 it("releases a port probe before another process binds it", async () => {
   const server = createNetServer();

@@ -1,0 +1,15 @@
+[
+  {"id":"pending-consent","patch":{"msvcPending":true},"expected":"privileged-installer-pending"},
+  {"id":"reboot-required","patch":{"reboot":"yes"},"expected":"reboot-required"},
+  {"id":"elevation-unknown","patch":{},"expected":"elevation-required"},
+  {"id":"not-elevated","patch":{"elevation":"not-elevated"},"expected":"elevation-required"},
+  {"id":"wsl-required","patch":{"elevation":"elevated"},"expected":"wsl-install-required"},
+  {"id":"debian-import","patch":{"wsl":true},"expected":"debian-import-required"},
+  {"id":"docker-setup","patch":{"wsl":true,"debian12":true},"expected":"docker-setup-required"},
+  {"id":"windows-ready","patch":{"wsl":true,"debian12":true,"docker":true},"expected":"ready"},
+  {"id":"linux-wrong-distro","patch":{"platform":"linux"},"expected":"debian12-required"},
+  {"id":"linux-needs-docker","patch":{"platform":"linux","debian12":true},"expected":"docker-setup-required"},
+  {"id":"linux-ready","patch":{"platform":"linux","debian12":true,"docker":true},"expected":"ready"},
+  {"id":"mac-needs-linux","patch":{"platform":"darwin"},"expected":"linux-runner-required"},
+  {"id":"arm-needs-x64","patch":{"architecture":"arm64"},"expected":"linux-x64-required"}
+]

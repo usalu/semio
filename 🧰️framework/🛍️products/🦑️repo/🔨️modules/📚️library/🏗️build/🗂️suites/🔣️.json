@@ -64,7 +64,6 @@
       "typecheck": "none",
       "trees": [
         "🩺️doctor",
-        "🩺️preflight",
         "🧾️ci-report",
         "🪪️agent-sessions",
         "📐️conformance",
@@ -85,6 +84,14 @@
       "tools": [
         "bazel"
       ]
+    },
+    {
+      "id": "build-preflight",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": ["🩺️preflight"],
+      "platforms": ["darwin", "linux", "win32"],
+      "tools": ["python"]
     },
     {
       "id": "build-targets-selection",

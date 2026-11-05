@@ -1,9 +1,9 @@
 {
   "title": "Handcrafted Staffage in Architecture Course Clips",
   "emoji": "🧍",
-  "status": "open",
+  "status": "closed",
   "description": "Every clip of the architecture course must use only the handcrafted staffage archive (🎓️teaching/🏛️architecture/🧍️staffage) instead of the ad-hoc silhouettes, activity SVGs and glyphs it uses now. Extend the handcrafted staffage where assets are missing. Energy clips use the animated thermodynamic staffage views. Coordinator Opus 5.5 with a 20-agent fleet (Sonnet 5.5 execution, Haiku 5.5 audits).",
-  "summary": "Architecture course clips now draw every person, device, furniture item, machine, vehicle and building component only from the handcrafted staffage archive.\n- **Bridge:** a TS cast exporter (schema; elevation, plan and front views; theme and transport; 600-frame cap; content-keyed cache) and a Python staffage, staffage_motion, fitted_staffage and pendant_lamp API with a lazy, bounded parser.\n- **New handcrafted assets:** humans, a new appliances category, machinery for the heat-pump and DEC hardware, objects, front and plan views. The catalog check passes 144/144.\n- **Deleted:** silhouettes, person, object and lamp glyphs, radiator(), the activity SVGs and every primitive-built device.\n- **Thermal rule:** energy and optimization comfort clips use the animated thermal staffage views.\n- **Guard:** the `staffage_only` test enforces the rule.\n- **Verification:** visuals Python tests (including integration and the guard) pass, staffage vitest 994 passed, and the changed scenes were rendered and inspected.\n- **Known infra leftovers:** repo dependencies ensure refuses, optimization has a pre-existing $schema assertion failure, and the long BIM suites are not fully run.\nThe full summary is in summary.md in the ticket folder.",
+  "summary": "Canonical staffage integration verified across the current course: 97 casts resolve against 152 assets. Fixed whole-animation uniform fitting, seasonal furniture lookup, catalog index consistency and long-lived media identity refresh. Added shared Python/TypeScript coverage and independent schema/geometry/media oracles. Final evidence: course coverage Python5 and TS59; course guard39; bridge61; physical-scale/invariance9; real video timing5; media freshness2; representative exports and visual QA. Generated output removed; reusable test inputs and detailed evidence retained in codex-result.md. No narrated full-course rebuild or non-Windows execution claimed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2778"
   },
@@ -318,6 +318,116 @@
       "prompt": "Round 3: finish canonical staffage migration end to end: provenance (asset, revision, view, scale variant, pose/animation, scenario) for every depicted entity, explicit validation failures for missing combinations, central library extensions browsable in the library browser, documented thermal model for thermal lessons, canonical structural force/moment representations, deterministic scene time across player/seek/preview/export, regenerated media and cache keys, close r2 open items. Coordinator opus 5.5 medium, 20 named workers. Reopened manually (ticket_reopen permission not granted).",
       "llm": "opus-4-7",
       "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-05 02:56:05",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "39b6ae5d4aab567d4dafbc69cb0e1a9a09c9d377",
+      "summary": "Canonical staffage integration verified across the current course: 97 casts resolve against 152 assets. Fixed whole-animation uniform fitting, seasonal furniture lookup, catalog index consistency and long-lived media identity refresh. Added shared Python/TypeScript coverage and independent schema/geometry/media oracles. Final evidence: course coverage Python5 and TS59; course guard39; bridge61; physical-scale/invariance9; real video timing5; media freshness2; representative exports and visual QA. Generated output removed; reusable test inputs and detailed evidence retained in codex-result.md. No narrated full-course rebuild or non-Windows execution claimed.",
+      "files": [
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🎓️course-coverage/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎓️course-coverage/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎞️frame-timing/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️course_staffage.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️media_staffage.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️staffage_only.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️staffage_only.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/🎫️ticket.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-clips-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-coverage-audit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-coverage.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-coverage.vitest.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-final-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-fit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-infra.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-mcp.cjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-media.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-proof.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-proof.test.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-result.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-staffage-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/proof-casts.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/proof-sheet.cjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/test-runtime.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/test-runtime.package.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-close.json"
+        }
+      ]
     }
   ]
 }

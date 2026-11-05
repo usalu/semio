@@ -525,6 +525,27 @@ class Fit(unittest.TestCase):
                     self.assertAlmostEqual(fitted.width, width * case["unit"], places=6, msg=case)
                     self.assertLessEqual(fitted.height, (case["height"] or 1e9) + 1e-9)
 
+    def test_motion_fits_the_whole_clip_and_matches_an_independent_rectangle(self):
+        from manim import Rectangle
+
+        bounds = CASE["index"]["boundsM"]
+        with tempfile.TemporaryDirectory() as root:
+            folder = synthetic(Path(root))
+            with serving(folder):
+                for case in CASE["fit"]["animatedCases"]:
+                    oracle = Rectangle(width=bounds["maxX"] - bounds["minX"], height=bounds["maxY"] - bounds["minY"])
+                    oracle.scale(case["unit"])
+                    motion = V.fitted_staffage("case", width=case["width"], height=case["height"], rate=1.0)
+                    self.assertAlmostEqual(motion._source.unit, case["unit"], places=9, msg=case)
+                    for frame in range(len(CASE["frames"])):
+                        motion.seek(frame / CASE["index"]["fps"])
+                        self.assertAlmostEqual(motion.width, oracle.width, places=9, msg=case)
+                        self.assertAlmostEqual(motion.height, oracle.height, places=9, msg=case)
+                        if case["width"] is not None:
+                            self.assertLessEqual(motion.width, case["width"] + 1e-9)
+                        if case["height"] is not None:
+                            self.assertLessEqual(motion.height, case["height"] + 1e-9)
+
     def test_rate_turns_the_cast_into_a_motion_and_loop_repeats_a_clip(self):
         with tempfile.TemporaryDirectory() as root:
             folder = synthetic(Path(root))

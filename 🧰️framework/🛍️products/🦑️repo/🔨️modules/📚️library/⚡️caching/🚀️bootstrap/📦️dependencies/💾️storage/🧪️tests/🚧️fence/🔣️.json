@@ -1,83 +1,524 @@
-[
-  {
-    "id": "endpoint-time",
-    "mode": "endpoint-time",
-    "section": "endpoint",
-    "path": "/workspace/p/node_modules",
-    "fields": [
-      "mtimeNs"
-    ]
-  },
-  {
-    "id": "endpoint-target",
-    "mode": "endpoint-target",
-    "section": "endpoint",
-    "path": "/workspace/p/node_modules",
-    "fields": [
-      "target"
-    ]
-  },
-  {
-    "id": "parent-device",
-    "mode": "parent-device",
-    "section": "parent",
-    "path": "/workspace/p",
-    "fields": [
-      "dev"
-    ]
-  },
-  {
-    "id": "ancestor-inode",
-    "mode": "ancestor-inode",
-    "section": "ancestor",
-    "path": "/workspace",
-    "fields": [
-      "ino"
-    ]
-  },
-  {
-    "id": "endpoint-count",
-    "mode": "endpoint-count",
-    "section": "endpoint",
-    "path": "/workspace/p/node_modules",
-    "fields": [
-      "count"
-    ]
-  },
-  {
-    "id": "endpoint-order",
-    "mode": "endpoint-order",
-    "section": "endpoint",
-    "path": "/workspace/peer/node_modules",
-    "fields": [
-      "path"
-    ]
-  },
-  {
-    "id": "bounded-path",
-    "mode": "bounded-path",
-    "section": "endpoint",
-    "path": "/workspace/ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
-    "fields": [
-      "path"
-    ]
-  },
-  {
-    "id": "all-fields",
-    "mode": "all-fields",
-    "section": "endpoint",
-    "path": "/workspace/peer/node_modules",
-    "fields": [
-      "path",
-      "kind",
+{
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "effect",
       "target",
-      "dev",
-      "ino",
-      "mode",
-      "nlink",
-      "size",
-      "mtimeNs",
-      "ctimeNs"
-    ]
-  }
-]
+      "endpoint",
+      "full"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "effect": {
+        "enum": [
+          "none",
+          "retarget",
+          "remove",
+          "replace-with-directory",
+          "touch-link",
+          "replace-directory",
+          "add-sibling",
+          "swap-for-link",
+          "touch-directory"
+        ]
+      },
+      "target": {
+        "enum": [
+          "none",
+          "e0",
+          "e1",
+          "e2",
+          "p0",
+          "p1",
+          "g",
+          "root"
+        ]
+      },
+      "endpoint": {
+        "type": "boolean"
+      },
+      "full": {
+        "type": "boolean"
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "untouched",
+      "effect": "none",
+      "target": "none",
+      "endpoint": true,
+      "full": true
+    },
+    {
+      "id": "fenced-endpoint-retargeted",
+      "effect": "retarget",
+      "target": "e0",
+      "endpoint": false,
+      "full": false
+    },
+    {
+      "id": "fenced-endpoint-removed",
+      "effect": "remove",
+      "target": "e0",
+      "endpoint": false,
+      "full": false
+    },
+    {
+      "id": "fenced-endpoint-becomes-directory",
+      "effect": "replace-with-directory",
+      "target": "e0",
+      "endpoint": false,
+      "full": false
+    },
+    {
+      "id": "fenced-endpoint-touched",
+      "effect": "touch-link",
+      "target": "e0",
+      "endpoint": false,
+      "full": false
+    },
+    {
+      "id": "fenced-parent-replaced",
+      "effect": "replace-directory",
+      "target": "p0",
+      "endpoint": false,
+      "full": false
+    },
+    {
+      "id": "fenced-parent-gains-sibling",
+      "effect": "add-sibling",
+      "target": "p0",
+      "endpoint": true,
+      "full": true
+    },
+    {
+      "id": "ancestor-swapped-for-link",
+      "effect": "swap-for-link",
+      "target": "g",
+      "endpoint": false,
+      "full": false
+    },
+    {
+      "id": "root-touched",
+      "effect": "touch-directory",
+      "target": "root",
+      "endpoint": true,
+      "full": true
+    },
+    {
+      "id": "other-endpoint-retargeted",
+      "effect": "retarget",
+      "target": "e1",
+      "endpoint": true,
+      "full": false
+    },
+    {
+      "id": "other-endpoint-removed",
+      "effect": "remove",
+      "target": "e2",
+      "endpoint": true,
+      "full": false
+    },
+    {
+      "id": "other-endpoint-touched",
+      "effect": "touch-link",
+      "target": "e2",
+      "endpoint": true,
+      "full": false
+    },
+    {
+      "id": "other-parent-replaced",
+      "effect": "replace-directory",
+      "target": "p1",
+      "endpoint": true,
+      "full": false
+    }
+  ],
+  "compareSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "field",
+      "edit",
+      "accepted"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "field": {
+        "enum": [
+          "rows",
+          "parents",
+          "ancestors"
+        ]
+      },
+      "edit": {
+        "enum": [
+          "reverse",
+          "drop-last",
+          "add",
+          "inode",
+          "mtime",
+          "mode"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "compare": [
+    {
+      "id": "rows-reordered",
+      "field": "rows",
+      "edit": "reverse",
+      "accepted": false
+    },
+    {
+      "id": "rows-truncated",
+      "field": "rows",
+      "edit": "drop-last",
+      "accepted": false
+    },
+    {
+      "id": "parent-added",
+      "field": "parents",
+      "edit": "add",
+      "accepted": false
+    },
+    {
+      "id": "parent-inode-changed",
+      "field": "parents",
+      "edit": "inode",
+      "accepted": false
+    },
+    {
+      "id": "parent-mtime-changed",
+      "field": "parents",
+      "edit": "mtime",
+      "accepted": true
+    },
+    {
+      "id": "ancestor-removed",
+      "field": "ancestors",
+      "edit": "drop-last",
+      "accepted": false
+    },
+    {
+      "id": "ancestor-mode-changed",
+      "field": "ancestors",
+      "edit": "mode",
+      "accepted": false
+    }
+  ],
+  "publishSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "mutation",
+      "at",
+      "publish",
+      "full"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "mutation": {
+        "enum": [
+          "none",
+          "swap-lineage",
+          "swap-unrelated",
+          "retarget-endpoint"
+        ]
+      },
+      "at": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "publish": {
+        "type": "boolean"
+      },
+      "full": {
+        "type": "boolean"
+      }
+    }
+  },
+  "publish": [
+    {
+      "id": "untouched",
+      "mutation": "none",
+      "at": 1,
+      "publish": true,
+      "full": true
+    },
+    {
+      "id": "lineage-swapped-early",
+      "mutation": "swap-lineage",
+      "at": 2,
+      "publish": false,
+      "full": false
+    },
+    {
+      "id": "lineage-swapped-late",
+      "mutation": "swap-lineage",
+      "at": 40,
+      "publish": false,
+      "full": false
+    },
+    {
+      "id": "endpoint-retargeted",
+      "mutation": "retarget-endpoint",
+      "at": 3,
+      "publish": false,
+      "full": false
+    },
+    {
+      "id": "unrelated-ancestor-swapped",
+      "mutation": "swap-unrelated",
+      "at": 5,
+      "publish": true,
+      "full": false
+    }
+  ],
+  "diagnostic": [
+    {
+      "id": "unchanged",
+      "section": "rows",
+      "field": "none",
+      "expected": null
+    },
+    {
+      "id": "endpoint-stamp",
+      "section": "rows",
+      "field": "stamp",
+      "expected": {
+        "section": "rows",
+        "index": 0,
+        "path": "/p/node_modules",
+        "field": "stamp",
+        "expected": "old",
+        "actual": "new"
+      }
+    },
+    {
+      "id": "endpoint-target",
+      "section": "rows",
+      "field": "target",
+      "expected": {
+        "section": "rows",
+        "index": 0,
+        "path": "/p/node_modules",
+        "field": "target",
+        "expected": "/old",
+        "actual": "/new"
+      }
+    },
+    {
+      "id": "parent-inode",
+      "section": "parents",
+      "field": "identity",
+      "expected": {
+        "section": "parents",
+        "index": 0,
+        "path": "/p",
+        "field": "identity.ino",
+        "expected": "2",
+        "actual": "9"
+      }
+    },
+    {
+      "id": "parent-mtime",
+      "section": "parents",
+      "field": "mtime",
+      "expected": null
+    },
+    {
+      "id": "ancestor-mode",
+      "section": "ancestors",
+      "field": "identity",
+      "expected": {
+        "section": "ancestors",
+        "index": 0,
+        "path": "/",
+        "field": "identity.mode",
+        "expected": "3",
+        "actual": "9"
+      }
+    },
+    {
+      "id": "endpoint-row-missing",
+      "section": "rows",
+      "field": "missing",
+      "expected": {
+        "section": "rows",
+        "index": 1,
+        "path": "/q/node_modules",
+        "field": "entry",
+        "expected": "{\"sourceDirectory\":\"/q/node_modules\",\"kind\":\"link\",\"stamp\":\"old\",\"target\":\"/old\"}",
+        "actual": null
+      }
+    },
+    {
+      "id": "endpoint-rows-reordered",
+      "section": "rows",
+      "field": "reorder",
+      "expected": {
+        "section": "rows",
+        "index": 0,
+        "path": "/p/node_modules",
+        "field": "sourceDirectory",
+        "expected": "/p/node_modules",
+        "actual": "/q/node_modules"
+      }
+    },
+    {
+      "id": "endpoint-row-serialization",
+      "section": "rows",
+      "field": "serialization",
+      "expected": {
+        "section": "rows",
+        "index": 0,
+        "path": "/p/node_modules",
+        "field": "serialization",
+        "expected": "{\"sourceDirectory\":\"/p/node_modules\",\"kind\":\"link\",\"stamp\":\"old\",\"target\":\"/old\"}",
+        "actual": "{\"target\":\"/old\",\"stamp\":\"old\",\"kind\":\"link\",\"sourceDirectory\":\"/p/node_modules\"}"
+      }
+    },
+    {
+      "id": "endpoint-value-bounded",
+      "section": "rows",
+      "field": "long-target",
+      "expected": {
+        "section": "rows",
+        "index": 0,
+        "path": "/p/node_modules",
+        "field": "target",
+        "expected": "/old",
+        "actual": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    }
+  ],
+  "diagnosticInvalid": [
+    {
+      "id": "overlong-path",
+      "field": "path",
+      "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "id": "overlong-expected",
+      "field": "expected",
+      "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "id": "unbounded-value",
+      "field": "actual",
+      "value": {}
+    },
+    {
+      "id": "unknown-field",
+      "field": "field",
+      "value": "unexpected"
+    },
+    {
+      "id": "overlarge-index",
+      "field": "index",
+      "value": 65536
+    }
+  ],
+  "neutralDiagnostic": [
+    {
+      "id": "endpoint-time",
+      "mode": "endpoint-time",
+      "section": "endpoint",
+      "path": "/workspace/p/node_modules",
+      "fields": [
+        "mtimeNs"
+      ]
+    },
+    {
+      "id": "endpoint-target",
+      "mode": "endpoint-target",
+      "section": "endpoint",
+      "path": "/workspace/p/node_modules",
+      "fields": [
+        "target"
+      ]
+    },
+    {
+      "id": "parent-device",
+      "mode": "parent-device",
+      "section": "parent",
+      "path": "/workspace/p",
+      "fields": [
+        "dev"
+      ]
+    },
+    {
+      "id": "ancestor-inode",
+      "mode": "ancestor-inode",
+      "section": "ancestor",
+      "path": "/workspace",
+      "fields": [
+        "ino"
+      ]
+    },
+    {
+      "id": "endpoint-count",
+      "mode": "endpoint-count",
+      "section": "endpoint",
+      "path": "/workspace/p/node_modules",
+      "fields": [
+        "count"
+      ]
+    },
+    {
+      "id": "endpoint-order",
+      "mode": "endpoint-order",
+      "section": "endpoint",
+      "path": "/workspace/peer/node_modules",
+      "fields": [
+        "path"
+      ]
+    },
+    {
+      "id": "bounded-path",
+      "mode": "bounded-path",
+      "section": "endpoint",
+      "path": "/workspace/ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+      "fields": [
+        "path"
+      ]
+    },
+    {
+      "id": "all-fields",
+      "mode": "all-fields",
+      "section": "endpoint",
+      "path": "/workspace/peer/node_modules",
+      "fields": [
+        "path",
+        "kind",
+        "target",
+        "dev",
+        "ino",
+        "mode",
+        "nlink",
+        "size",
+        "mtimeNs",
+        "ctimeNs"
+      ]
+    }
+  ]
+}

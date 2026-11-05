@@ -1,0 +1,19 @@
+import {readFileSync} from "node:fs";
+import {join} from "node:path";
+import {strict as assert} from "node:assert";
+import {Database} from "bun:sqlite";
+const storage=join(process.argv[2],"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts");
+const source=readFileSync(storage,"utf8"),testSource=readFileSync(join(storage,"..","🧪️tests","🚧️fence","🟦️.ts"),"utf8"),corpus=JSON.parse(readFileSync(join(storage,"..","🧪️tests","🚧️fence","🔣️.json"),"utf8")),installSchema=JSON.parse(readFileSync(join(storage,"..","🧬️schema","📥️install.json"),"utf8"));
+const validateShape=(schema:any,value:any):boolean=>{if(schema.type){const types=Array.isArray(schema.type)?schema.type:[schema.type];if(!types.some((type:string)=>type==="null"?value===null:type==="object"?value!==null&&typeof value==="object"&&!Array.isArray(value):type==="integer"?Number.isSafeInteger(value):typeof value===type))return false;}if(schema.enum&&!schema.enum.includes(value))return false;if(typeof value==="string"&&schema.maxLength!==undefined&&[...value].length>schema.maxLength)return false;if(typeof value==="number"&&(schema.maximum!==undefined&&value>schema.maximum||schema.minimum!==undefined&&value<schema.minimum))return false;if(schema.type==="object"){if(schema.required?.some((key:string)=>!(key in value)))return false;if(schema.additionalProperties===false&&Object.keys(value).some(key=>!(key in schema.properties)))return false;return Object.entries(schema.properties).every(([key,child])=>!(key in value)||validateShape(child,value[key]));}return true;};
+const validateJsonSchemaSubset=(schema:any,value:any)=>validateShape(schema,value)?[]:["invalid"];
+function extract(name:string){const start=source.indexOf("export function "+name+"("),body=source.indexOf("{\n",start);let depth=1,end=body+1;while(depth){end++;if(source[end]==="{")depth++;if(source[end]==="}")depth--;}return source.slice(start,end+1);}
+const parent=source.match(/^export function sameJavascriptDependencyParentIdentityV1.*$/m)![0],transpiler=new Bun.Transpiler({loader:"ts"}),api=new Function("installSchema","validateJsonSchemaSubset",transpiler.transformSync((parent+"\n"+extract("javascriptDependencyPreservationSourceMismatchV1")+"\n"+extract("requireJavascriptDependencyPreservationSourceUnchangedV1")).replaceAll("export function ","function "))+";return {javascriptDependencyPreservationSourceMismatchV1,requireJavascriptDependencyPreservationSourceUnchangedV1};")(installSchema,validateJsonSchemaSubset);
+let checked=0;
+const expect=(actual:unknown,label?:string)=>({toEqual:(expected:unknown)=>assert.deepEqual(actual,expected,label),toBe:(expected:unknown)=>assert.equal(actual,expected,label)});
+const maps=(observation:any)=>({expected:new Map(observation.rows.map((row:any)=>[row.sourceDirectory,row])),parents:new Map(observation.parents.map((row:any)=>[row.path,row.identity])),ancestors:new Map(observation.ancestors.map((row:any)=>[row.path,row.identity]))});
+const accepts=(body:()=>void)=>{try{body();return true;}catch{return false;}};
+const diagnosticTest=testSource.slice(testSource.indexOf('test("dependency source mismatch diagnostics'));
+const validate=(value:any)=>validateShape(installSchema.$defs.SourceFenceMismatch,value);
+const Ajv=class{compile(){return validate;}};
+new Function("test","expect","Ajv","Database","corpus","installSchema","maps","accepts",...Object.keys(api),transpiler.transformSync(diagnosticTest))((name:string,body:()=>void)=>{body();checked++;},expect,Ajv,Database,corpus,installSchema,maps,accepts,...Object.values(api));
+console.log(JSON.stringify({passed:corpus.diagnostic.length,negativeSchemaCases:corpus.diagnosticInvalid.length,tests:checked,oracle:"SQLite JSON classifier",schema:"closed diagnostic shape checked; Ajv unavailable until sync",equality:"original exact gate retained"}));

@@ -1,0 +1,11 @@
+[
+  { "id": "projected-provider", "mutation": "none", "accepted": true },
+  { "id": "wrong-generation", "mutation": "generation", "accepted": false },
+  { "id": "wrong-source", "mutation": "binding-source", "accepted": false },
+  { "id": "wrong-target", "mutation": "binding-target", "accepted": false },
+  { "id": "wrong-purpose", "mutation": "purpose", "accepted": false },
+  { "id": "wrong-version", "mutation": "version", "accepted": false },
+  { "id": "forged-authority", "mutation": "unknown-field", "accepted": false },
+  { "id": "missing-shape", "mutation": "missing-members", "accepted": false },
+  { "id": "foreign-path", "mutation": "path", "accepted": false }
+]

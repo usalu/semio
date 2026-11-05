@@ -11,8 +11,12 @@
 package launcher
 
 import (
+	"encoding/binary"
 	"errors"
+	"os"
+	"strings"
 	"syscall"
+	"unicode/utf16"
 	"unsafe"
 )
 
@@ -103,6 +107,68 @@ func canonicalRoot(path string) string {
 // 🔁️renameTransient is true for the refusals a scanner or indexer causes for a moment by holding a fresh file open: access denied and sharing violation.
 func renameTransient(err error) bool {
 	return errors.Is(err, syscall.ERROR_ACCESS_DENIED) || errors.Is(err, errorSharingViolation)
+}
+
+// 🔗️Creates an unprivileged NTFS directory junction without invoking a shell or requiring symlink privileges.
+func createWorkspaceDirectoryLink(source, destination string) error {
+	if err := os.Mkdir(destination, 0o755); err != nil {
+		return err
+	}
+	complete := false
+	defer func() {
+		if !complete {
+			os.Remove(destination)
+		}
+	}()
+	name, err := syscall.UTF16PtrFromString(destination)
+	if err != nil {
+		return err
+	}
+	handle, err := syscall.CreateFile(name, syscall.GENERIC_WRITE, syscall.FILE_SHARE_READ|syscall.FILE_SHARE_WRITE|syscall.FILE_SHARE_DELETE, nil, syscall.OPEN_EXISTING, syscall.FILE_FLAG_BACKUP_SEMANTICS|syscall.FILE_FLAG_OPEN_REPARSE_POINT, 0)
+	if err != nil {
+		return err
+	}
+	defer syscall.CloseHandle(handle)
+	plain := strings.TrimPrefix(source, `\\?\`)
+	substitute := `\??\` + plain
+	if strings.HasPrefix(plain, `\\`) {
+		substitute = `\??\UNC\` + strings.TrimPrefix(plain, `\\`)
+	}
+	first, last := utf16.Encode([]rune(substitute)), utf16.Encode([]rune(plain))
+	buffer := make([]byte, 16+2*(len(first)+len(last)+2))
+	binary.LittleEndian.PutUint32(buffer, 0xa0000003)
+	binary.LittleEndian.PutUint16(buffer[4:], uint16(len(buffer)-8))
+	binary.LittleEndian.PutUint16(buffer[10:], uint16(2*len(first)))
+	binary.LittleEndian.PutUint16(buffer[12:], uint16(2*(len(first)+1)))
+	binary.LittleEndian.PutUint16(buffer[14:], uint16(2*len(last)))
+	for i, value := range first {
+		binary.LittleEndian.PutUint16(buffer[16+2*i:], value)
+	}
+	for i, value := range last {
+		binary.LittleEndian.PutUint16(buffer[16+2*(len(first)+1+i):], value)
+	}
+	var returned uint32
+	if err := syscall.DeviceIoControl(handle, 0x000900a4, &buffer[0], uint32(len(buffer)), nil, 0, &returned, nil); err != nil {
+		return err
+	}
+	complete = true
+	return nil
+}
+
+func publishWorkspaceDirectoryLink(source, destination string) error {
+	from, err := syscall.UTF16PtrFromString(source)
+	if err != nil {
+		return err
+	}
+	to, err := syscall.UTF16PtrFromString(destination)
+	if err != nil {
+		return err
+	}
+	result, _, failure := kernel32.NewProc("MoveFileW").Call(uintptr(unsafe.Pointer(from)), uintptr(unsafe.Pointer(to)))
+	if result == 0 {
+		return failure
+	}
+	return nil
 }
 
 // 🖥️systemLanguages lists the user locale name of Windows.

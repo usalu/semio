@@ -1,0 +1,10 @@
+[
+  {"name":"windows-bound","platform":"win32","binding":"C:\\managed tools\\🐍️\\python.exe","status":0,"stdout":"Python 3.14.0","expected":"C:\\managed tools\\🐍️\\python.exe","probes":1},
+  {"name":"posix-bound","platform":"linux","binding":"/managed tools/python","status":0,"stdout":"Python 3.14.0","expected":"/managed tools/python","probes":1},
+  {"name":"darwin-bound","platform":"darwin","binding":"/managed/python","status":0,"stdout":"Python 3.14.0","expected":"/managed/python","probes":1},
+  {"name":"wrong-program","platform":"linux","binding":"/managed/python","status":0,"stdout":"Python 2.7.0","expected":null,"probes":1},
+  {"name":"failed-program","platform":"linux","binding":"/managed/python","status":1,"stdout":"Python 3.14.0","expected":null,"probes":1},
+  {"name":"relative-refusal","platform":"win32","binding":"managed/python.exe","status":0,"stdout":"Python 3.14.0","expected":null,"probes":0},
+  {"name":"empty-refusal","platform":"linux","binding":"","status":0,"stdout":"Python 3.14.0","expected":null,"probes":0},
+  {"name":"nul-refusal","platform":"linux","binding":"/managed/py\u0000thon","status":0,"stdout":"Python 3.14.0","expected":null,"probes":0}
+]

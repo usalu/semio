@@ -1,0 +1,21 @@
+[
+  { "id": "scoped", "workspace": "packages/one", "name": "@example/one", "valid": true },
+  { "id": "plain", "workspace": "packages/two", "name": "two", "valid": true },
+  { "id": "unicode-folder", "workspace": "📦️packages/one", "name": "@example/one", "valid": true },
+  { "id": "parent", "workspace": "../one", "name": "one", "valid": false },
+  { "id": "dot", "workspace": "packages/./one", "name": "one", "valid": false },
+  { "id": "absolute", "workspace": "/one", "name": "one", "valid": false },
+  { "id": "drive", "workspace": "C:/one", "name": "one", "valid": false },
+  { "id": "glob", "workspace": "packages/*", "name": "one", "valid": false },
+  { "id": "empty-component", "workspace": "packages//one", "name": "one", "valid": false },
+  { "id": "name-parent", "workspace": "packages/one", "name": "../one", "valid": false },
+  { "id": "name-extra", "workspace": "packages/one", "name": "@example/one/extra", "valid": false },
+  { "id": "name-missing", "workspace": "packages/one", "name": "", "valid": false },
+  { "id": "windows-device", "workspace": "packages/CON", "name": "one", "valid": false },
+  { "id": "windows-dot", "workspace": "packages/one.", "name": "one", "valid": false },
+  { "id": "windows-space", "workspace": "packages/one ", "name": "one", "valid": false },
+  { "id": "name-device", "workspace": "packages/one", "name": "@example/AUX", "valid": false },
+  { "id": "name-dot", "workspace": "packages/one", "name": "one.", "valid": false },
+  { "id": "windows-pipe", "workspace": "packages/one|two", "name": "one", "valid": false },
+  { "id": "control", "workspace": "packages/one\u0001", "name": "one", "valid": false }
+]

@@ -1,0 +1,22 @@
+import { createHash } from 'node:crypto';
+import { readFileSync, realpathSync } from 'node:fs';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+const root = process.cwd(), ticket = process.env.SEMIO_TICKET_DIR;
+if (!ticket) throw Error('Ticket required');
+const expected = 'ea54b67bfac576b6dd097f84eeaf6893780d2a613f90448ff038e8a2777a0afb';
+const relativeInstaller = 'WinGet/Microsoft.VisualStudio.BuildTools.18.11.3/vs_BuildTools.exe';
+const target = realpathSync(join(ticket, '🗑️generated'));
+const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
+if (hash(join(target, relativeInstaller)) !== expected) throw Error('Verified vendor bootstrapper identity required');
+const { nativeTemporarySystemPortV1, withNativeTemporaryDirectoryV1 } = await import(pathToFileURL(join(root, '🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/📁️temporary/🟦️.ts')).href);
+const { runCmdStatus } = await import(pathToFileURL(join(root, '🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts')).href);
+const port = nativeTemporarySystemPortV1(args => runCmdStatus('subst.exe', args));
+withNativeTemporaryDirectoryV1({ target, candidates: [], ticket }, port, temporary => {
+  const installer = join(temporary, relativeInstaller);
+  if (hash(installer) !== expected) throw Error('ASCII alias must retain exact vendor bootstrapper identity');
+  console.log('[DEBUG] Launching the verified vendor bootstrapper through ' + installer);
+  const status = runCmdStatus(installer, ['--wait', '--quiet', '--norestart', '--add', 'Microsoft.VisualStudio.Workload.VCTools', '--includeRecommended'], { cwd: root, env: { ...process.env, TEMP: temporary, TMP: temporary } });
+  console.log('[DEBUG] Vendor bootstrapper exit ' + status);
+  if (status !== 0 && status !== 3010) throw Error('Vendor bootstrapper failed with ' + status);
+});

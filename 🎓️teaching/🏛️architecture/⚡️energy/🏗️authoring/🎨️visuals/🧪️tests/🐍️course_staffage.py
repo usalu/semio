@@ -89,7 +89,7 @@ def cast_issues(cast_id, cast, catalog, presets):
     elif scale not in ENUMS["scales"] or isinstance(scale, bool):
         issue("scale-preset", f"scale {scale!r} is no preset of {ENUMS['scales']}")
     else:
-        representation = asset.get("representations", {}).get(str(scale))
+        representation = asset.get("representations", {}).get(str(int(scale)))
         authored = [int(key) for key, value in asset.get("representations", {}).items() if value.get("status") == "authored"]
         if not representation or representation.get("status") != "authored":
             issue("scale-unauthored", f"asset {asset['id']} has no authored representation at 1:{scale}; authored {sorted(authored, reverse=True)}")
@@ -122,20 +122,26 @@ def cast_issues(cast_id, cast, catalog, presets):
         issue("fps-missing", "a clip or a timeline needs fps")
     elif "fps" in cast and not timed:
         issue("fps-forbidden", "a still pose has no fps")
-    elif "fps" in cast and not number(cast["fps"], 0, True):
-        issue("fps-range", f"fps {cast['fps']!r} must be a number above 0")
+    elif "fps" in cast and (not number(cast["fps"], 1) or cast["fps"] > 120 or int(cast["fps"]) != cast["fps"]):
+        issue("fps-range", f"fps {cast['fps']!r} must be an integer between 1 and 120")
     scenario = [key for key in ("environment", "timeline", "thermalSpanK", "transport", "transportAgeS", "transportStrokeMm", "transportTrailS") if key in cast]
     if style == "thermal":
         if ("environment" in cast) == ("timeline" in cast):
             issue("thermal-scenario", "the thermal view needs exactly one of environment and timeline")
-        keys = cast.get("timeline", [])
+        raw_keys = cast.get("timeline", [])
+        keys = raw_keys if isinstance(raw_keys, list) else []
+        if "timeline" in cast and (not isinstance(raw_keys, list) or not raw_keys or any(not isinstance(key, dict) for key in raw_keys)):
+            issue("timeline-key", "timeline must be a nonempty array of key objects")
+        keys = [key for key in keys if isinstance(key, dict)]
         slugs = ([cast["environment"]] if "environment" in cast else []) + [key.get("environment") for key in keys if isinstance(key, dict)]
         for slug in slugs:
-            if slug not in presets:
+            if not isinstance(slug, str) or slug not in presets:
                 issue("preset-unknown", f"environment preset {slug!r} is not in {sorted(presets)}")
         for key in keys:
             if key.get("ease") not in ENUMS["eases"]:
                 issue("ease-missing", f"timeline key at {key.get('t')!r} needs an ease of {ENUMS['eases']}")
+        if any(set(key) - {"t", "environment", "ease"} for key in keys):
+            issue("timeline-key", "timeline keys contain fields outside the schema")
         times = [key.get("t") for key in keys]
         if not all(number(time, 0) for time in times) or len(set(times)) != len(times):
             issue("timeline-key", f"timeline times {times} must be distinct numbers of at least 0")
@@ -143,12 +149,14 @@ def cast_issues(cast_id, cast, catalog, presets):
             issue("thermal-regions", f"asset {asset['id']} has no thermal regions")
         if "thermalSpanK" in cast and not number(cast["thermalSpanK"], 0, True):
             issue("span-range", f"thermalSpanK {cast['thermalSpanK']!r} must be a number above 0")
-        if "transport" in cast and (not isinstance(cast["transport"], list) or any(layer not in ENUMS["transport"] for layer in cast["transport"])):
+        if "transport" in cast and (not isinstance(cast["transport"], list) or any(layer not in ENUMS["transport"] for layer in cast["transport"]) or len(set(cast["transport"])) != len(cast["transport"])):
             issue("transport-layer", f"transport {cast['transport']!r} must list layers of {ENUMS['transport']}")
+        if "transport" in cast and "transportAgeS" not in cast:
+            issue("transport-age", "transport requires transportAgeS")
         if any(key in cast for key in ("transportAgeS", "transportStrokeMm", "transportTrailS")) and (not cast.get("transport") or (
-            "transportAgeS" in cast and ("clip" not in cast or not number(cast["transportAgeS"], 0))
-        )):
-            issue("transport-age", "transportAgeS, transportStrokeMm and transportTrailS need a transport layer, and transportAgeS a clip and a number of at least 0")
+            "transportAgeS" in cast and ("clip" not in cast or not number(cast["transportAgeS"], 0, True))
+        ) or any(key in cast and not number(cast[key], 0, True) for key in ("transportStrokeMm", "transportTrailS"))):
+            issue("transport-age", "transportAgeS, transportStrokeMm and transportTrailS need a transport layer, and transportAgeS a clip; all transport dimensions must be finite numbers above 0")
     else:
         for key in scenario:
             issue("scenario-forbidden", f"{key!r} belongs to the thermal view, not {style!r}")
@@ -166,7 +174,7 @@ def cast_issues(cast_id, cast, catalog, presets):
 
 def manifest_issues(manifest, catalog, presets):
     """📜 Problems of a whole cast manifest: version, every cast and every asset it draws."""
-    found = [] if manifest.get("version") == 1 else [f"manifest-version: version {manifest.get('version')!r} is not 1"]
+    found = [] if type(manifest.get("version")) in (int, float) and manifest.get("version") == 1 else [f"manifest-version: version {manifest.get('version')!r} is not 1"]
     drawn = set()
     for cast_id, cast in manifest["casts"].items():
         found += cast_issues(cast_id, cast, catalog, presets)
@@ -228,6 +236,8 @@ def patched(synthetic, vector):
         entry["row"] = None
     elif entry["row"] is not None:
         entry["row"].update(vector.get("row_patch", {}))
+    if vector.get("catalog_duplicate"):
+        catalog.append(copy.deepcopy(entry))
     return manifest, catalog
 
 
@@ -237,6 +247,11 @@ class CourseCoverage(unittest.TestCase):
 
     def test_the_valid_vector_has_no_issue_and_every_invalid_vector_names_its_code(self):
         self.assertEqual(manifest_issues(self.synthetic["valid"], self.synthetic["catalog"], self.presets), [])
+        for version in self.synthetic["invalid_versions"]:
+            self.assertTrue(manifest_issues({"version": version, "casts": {}}, [], set())[0].startswith("manifest-version:"))
+        manifest = copy.deepcopy(self.synthetic["valid"])
+        manifest["casts"]["sitter-still"]["scale"] = 50.0
+        self.assertEqual(manifest_issues(manifest, self.synthetic["catalog"], self.presets), [])
         for vector in self.synthetic["invalid"]:
             with self.subTest(vector["name"]):
                 manifest, catalog = patched(self.synthetic, vector)

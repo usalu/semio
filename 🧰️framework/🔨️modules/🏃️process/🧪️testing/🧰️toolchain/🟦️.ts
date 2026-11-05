@@ -1,8 +1,9 @@
 import {noticeLanguagesV1} from "../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{spawnSync}from"node:child_process";
 import{chmodSync,lstatSync,readdirSync}from"node:fs";
-import{join}from"node:path";
+import{join,posix,win32}from"node:path";
 import protocol from"./🔣️.json"with{type:"json"};
+import{pinnedTestToolVariableV1}from"./📌️pinned/🟦️.ts";
 import { runtimeWhichV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 type CandidateV1=Readonly<{command:string;arguments?:readonly string[];platforms?:readonly string[]}>;
@@ -19,6 +20,14 @@ const systemPort:TestToolchainPortV1=Object.freeze({platform:process.platform,wh
 /** 🔎️ Resolves one tool: the first declared candidate that exists on PATH and answers its probe like the wanted program (a Windows Store stub or a Python 2 answers differently and is skipped); a launcher such as `py -3` is turned into the interpreter it starts, so the answer is always one program path. */
 export function resolveTestToolV1(tool:TestToolNameV1,port:TestToolchainPortV1=systemPort):TestToolResolutionV1{
  const row=protocol.tools[tool] as ToolRowV1,tried:string[]=[];
+ const variable=pinnedTestToolVariableV1(tool),bound=port.environment[variable];
+ if(bound!==undefined){
+  tried.push(variable);
+  const absolute=port.platform==="win32"?win32.isAbsolute(bound)&&win32.parse(bound).root.length>1:posix.isAbsolute(bound);
+  if(!absolute||bound.length>protocol.binding.maximumPathUnits||bound.includes("\0"))return Object.freeze({tool,path:null,tried});
+  const probe=port.run(bound,row.probe);
+  return Object.freeze({tool,path:probe.status===0&&new RegExp(row.pattern,"u").test(probe.stdout.trim())?bound:null,tried});
+ }
  for(const candidate of row.candidates){
   if(candidate.platforms&&!candidate.platforms.includes(port.platform))continue;
   const extra=candidate.arguments??[];tried.push([candidate.command,...extra].join(" "));

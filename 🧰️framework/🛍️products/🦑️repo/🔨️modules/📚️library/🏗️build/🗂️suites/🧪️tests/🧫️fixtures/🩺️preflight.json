@@ -1,0 +1,7 @@
+{
+  "suite": "build-preflight",
+  "tree": "🩺️preflight",
+  "platforms": ["darwin", "linux", "win32"],
+  "tools": ["python"],
+  "target": "test-build-preflight"
+}

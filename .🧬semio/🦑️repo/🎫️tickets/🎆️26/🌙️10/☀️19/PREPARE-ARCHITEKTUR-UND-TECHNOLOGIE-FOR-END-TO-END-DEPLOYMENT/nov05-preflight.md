@@ -1,0 +1,15 @@
+# Windows Preflight Storage Capability
+
+Current native preflight rejects unavailable case sensitivity even when directory storage supports its declared Windows fold-safe mode. The observed host refusal was the exact caseAccess message. Storage allocation permits only protocol.foldSafeRefusals (caseBuild, caseFeature, caseAccess) on its journaled Windows port; arbitrary errors, failed verification and nonempty-volume errors stay refusals.
+
+The schema-first regression adds a fold-safe observation valid only on Windows, with neutral Windows admission/swap cases and non-Windows invalid facts. Ajv and the independent Python decision oracle express the expected verdict before changing production admission. Tests are pending dependency synchronization; no production preflight behavior has changed yet.
+
+Independent read-only review confirmed the schema closes fold-safe facts to Windows even when the macOS policy does not request exchange. Added Windows vectors retaining both toolchain and physical-capacity refusals. The exact production probe classifier still needs its own neutral regression; production remains unchanged until a meaningful red run can execute.
+
+The short pure verdict query (repo tools exec --light bun, no compilation or store operations) exited1 on windows-declared-fold-safe: actual case-sensitive refusal versus expected empty problems. This is the meaningful red result; raw output is generated/preflight-verdict-red.log. Production now recognizes the schema-declared Windows fact and classifies only exact protocol whitelist errors on a journaled Windows port. Injected boundary regressions were written before that implementation. Full Bun/Ajv and Python matrix validation remain pending dependencies.
+
+The same neutral Windows verdict query now exits0: declared fold-safe admits; unavailable/unverified capability, unsupported swap, missing MSVC/Rust and insufficient bytes still refuse. The first implementation query caught omitted public port exports; the owned facade now explicitly reexports the getter and first-party interface. The corrected query succeeded. Independent read-only review found no classifier or schema escape. Full oracles and actual host probes remain separate pending checks.
+
+Actual host scratch probes also exit0: platform win32, port journaled, directory exchange supported, case capability fold-safe. This probes real .cache beneath the checkout and cleans its scratch directories; it does not allocate a store or grant compiler authority. The remaining native preflight requirements (Rust/MSVC) are still required. Raw current run output is generated/host-storage.log.
+
+Extended short neutral query exits0 for all15injected probe cases plus both non-Windows forged fact refusals. Exact errors retain object identity on refusal; all3declared Windows conditions classify fold-safe. Seven admission vectors still pass. Full Ajv/Python suites remain pending dependency setup; these short queries are targeted evidence, not substitutes for the full gates.

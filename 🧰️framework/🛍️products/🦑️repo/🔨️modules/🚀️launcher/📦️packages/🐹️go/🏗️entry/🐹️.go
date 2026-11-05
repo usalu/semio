@@ -306,6 +306,7 @@ type Host struct {
 	Provide func(ProvisionRequest) ProvisionRequest
 	Self    func() string
 	Forward func(ctx context.Context, root, kind string, args []string) (handled bool, code int)
+	Prepare func(ctx context.Context, root string) error
 }
 
 // 🏠️DefaultHost wires the host to the real process.
@@ -320,6 +321,7 @@ func DefaultHost() Host {
 		Target:  HostTarget,
 		HandOff: handOff,
 		Self:    func() string { path, _ := os.Executable(); return path },
+		Prepare: prepareWorkspacePackageLinks,
 	}
 	host.Forward = host.ForwardResident
 	return host
@@ -439,6 +441,14 @@ func (h Host) Execute(ctx context.Context, root, kind string, args []string) int
 	install, err := request.Ensure(ctx)
 	if err != nil {
 		return talk.fail(err)
+	}
+	if h.Prepare != nil {
+		if err := h.Prepare(ctx, root); err != nil {
+			if errors.Is(err, context.Canceled) {
+				return talk.fail(Failure{ID: "cancelled"})
+			}
+			return talk.fail(err)
+		}
 	}
 	argv := LaunchArguments(install.Executable, rt, flags, script, prefix, rest)
 	directories := []string{install.Directory}

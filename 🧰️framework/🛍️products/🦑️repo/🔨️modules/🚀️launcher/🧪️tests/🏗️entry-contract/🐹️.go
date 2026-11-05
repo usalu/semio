@@ -26,7 +26,7 @@ type seeded struct {
 func seededHost(t *testing.T, env map[string]string, seed bool) seeded {
 	t.Helper()
 	root := testRoot(t)
-	cache := t.TempDir()
+	cache := launcherSandbox(t)
 	env["SEMIO_RUNTIME_CACHE"] = cache
 	env["SEMIO_WORKSPACE_ROOT"] = root
 	host, log := recordingHost(t, env)
@@ -34,7 +34,7 @@ func seededHost(t *testing.T, env map[string]string, seed bool) seeded {
 	rt := registry.Runtimes["bun"]
 	row, _ := rt.Distribution("linux", "x64", false)
 	directory := filepath.Join(cache, "bun", row.Sha256)
-	exe := filepath.Join(directory, "bun")
+	exe := filepath.Join(directory, rt.ExecutableName())
 	if seed {
 		_ = os.MkdirAll(directory, 0o755)
 		_ = os.WriteFile(exe, []byte("x"), 0o755)
@@ -61,7 +61,7 @@ func TestExecuteBuildRoute(t *testing.T) {
 	if code != 0 || setup.log.calls != 1 || strings.Join(setup.log.argv, "\x00") != strings.Join(want, "\x00") || setup.log.exe != setup.exe {
 		t.Fatalf("code=%d calls=%d argv=%q", code, setup.log.calls, setup.log.argv)
 	}
-	if got := pathOf(setup.log.env); !strings.HasPrefix(got, filepath.Dir(setup.exe)+string(os.PathListSeparator)) || !strings.Contains(got, "/self/bin") || !strings.HasSuffix(got, "/usr/bin") {
+	if got := pathOf(setup.log.env); !strings.HasPrefix(got, filepath.Dir(setup.exe)+string(os.PathListSeparator)) || !strings.Contains(got, filepath.Join("/self", "bin")) || !strings.HasSuffix(got, "/usr/bin") {
 		t.Fatalf("PATH %q", got)
 	}
 	if len(setup.log.err)+len(setup.log.out) != 0 {

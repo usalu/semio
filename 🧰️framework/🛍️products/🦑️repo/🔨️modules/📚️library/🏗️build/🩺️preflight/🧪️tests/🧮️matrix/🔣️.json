@@ -119,6 +119,20 @@
      1
     ]
    }
+  },
+  {
+   "name": "Linux cannot claim Windows fold-safe storage",
+   "patch": {
+    "platform": "linux",
+    "caseSensitive": "fold-safe"
+   }
+  },
+  {
+   "name": "macOS cannot claim Windows fold-safe storage",
+   "patch": {
+    "platform": "darwin",
+    "caseSensitive": "fold-safe"
+   }
   }
  ],
  "invalidRequirements": [

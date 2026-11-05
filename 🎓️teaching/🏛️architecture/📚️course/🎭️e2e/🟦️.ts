@@ -35,11 +35,11 @@ import { withCourseAssignmentPdfsV1 } from "../🏗️builder/🌐️vite/📦�
  * https://playwright.dev/docs/test-cli */
 import { buildModeEnvironment } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { createServer as createListener, type AddressInfo } from "node:net";
-import { dirname, isAbsolute, join, posix, resolve } from "node:path";
+import { dirname, isAbsolute, join, posix, resolve, sep } from "node:path";
 import { repoToolCacheEnv, runRepositoryCommand as runOwnedCommand } from "@semio-tech/process/execution";
 import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import type { ScriptInvocation } from "@semio-tech/process/routing";
@@ -74,7 +74,23 @@ export const COURSE_E2E_DIRECTORY = [".🧬semio", "🎓️teaching", "architect
 
 /** 🎫️ Keeps browser diagnostics within the selected ticket, or the development cache when no ticket is selected. */
 export function endToEndWorkDirectory(repoRoot: string, environment: NodeJS.ProcessEnv = process.env): string {
-  return environment.SEMIO_TICKET_DIR ? join(ticketOutput(repoRoot, [], environment), "e2e") : join(repoRoot, ...COURSE_E2E_DIRECTORY);
+  return environment.SEMIO_TICKET_DIR ? dirname(ticketOutput(repoRoot, [], environment)) : join(repoRoot, ...COURSE_E2E_DIRECTORY);
+}
+
+/** 🪺️ Creates one exclusive short run directory beneath its owned diagnostic root. */
+export function endToEndRunDirectory(root: string): string {
+  mkdirSync(root, { recursive: true });
+  return mkdtempSync(join(root, sep));
+}
+
+/** 📏️ Names each browser wave briefly and reserves room for retained Playwright artifacts. */
+export function endToEndReportDirectory(work: string, stack: string, phase: string): string {
+  const stacks: Readonly<Record<string, string>> = { dev: "d", "dev-shared": "ds", "dev-exclusive": "dx", rehearsal: "r" };
+  const phases: Readonly<Record<string, string>> = { boot: "b", shared: "s", exclusive: "x" };
+  if (!stacks[stack] || !phases[phase]) throw Error("Unknown end-to-end report stack or phase");
+  const directory = join(work, stacks[stack]! + phases[phase]!);
+  if (directory.length + 108 > 256) throw Error("End-to-end diagnostics need a shorter ticket or checkout path to stay within 256 characters");
+  return directory;
 }
 
 /** 🏭️ Carries the rehearsal proctor origin into its isolated site build child. */
@@ -120,7 +136,22 @@ export function endToEndPlan(segments: readonly string[]): { readonly topologies
       }
     }
   }
+  endToEndPlaywrightArgumentsV1(plan.playwright);
   return plan;
+}
+/** 🔐️ Preserves filter values while retaining ownership of browser diagnostics and their bounded names. */
+export function endToEndPlaywrightArgumentsV1(args: readonly string[]): void {
+  const values = new Set(["--browser", "--global-timeout", "-g", "--grep", "-G", "--grep-invert", "--max-failures", "--shard", "--test-list", "--test-list-invert", "--timeout", "--trace", "--tsconfig", "--ui-host", "--ui-port", "--update-source-method", "-j", "--workers"]);
+  for (let index = 0; index < args.length; index++) {
+    const argument = args[index]!;
+    if (argument === "--") break;
+    if (/^--(?:output|config|reporter|add-reporter|last-failed-file)(?:=|$)|^-c/u.test(argument)) throw Error("Playwright output, configuration and reporters are owned by the end-to-end gate");
+    const name = argument.split("=", 1)[0]!;
+    if (name === "--retries" || name === "--repeat-each") {
+      const value = argument.includes("=") ? argument.slice(argument.indexOf("=") + 1) : args[++index];
+      if (value === undefined || !/^\d+$/u.test(value) || Number(value) > 999 || (name === "--repeat-each" && Number(value) < 1)) throw Error("Playwright retries must be 0–999 and repeat-each must be 1–999 to keep artifact paths bounded");
+    } else if (values.has(name) && !argument.includes("=")) index++;
+  }
 }
 /** 🛤️ Where a `--proctor` executable is: absolute values stay, relative ones resolve against the repository root, never against the package directory the build tool runs the script in. */
 export function endToEndProctorPath(repoRoot: string, value: string, paths: Pick<typeof posix, "isAbsolute" | "resolve"> = { isAbsolute, resolve }): string {
@@ -151,7 +182,6 @@ interface Run {
   readonly proctor: string | ProctorArtifact;
   readonly signal: AbortSignal;
   readonly browsers: string;
-  readonly report: string;
 }
 
 /** 🍰️ One stack to boot: what it hosts and the Playwright workers of every wave it runs. */
@@ -337,7 +367,7 @@ async function ensureBrowser(invocation: ScriptInvocation, repoRoot: string, bro
 /** 🎬️ Runs `playwright test` against one stack, every output line prefixed with the stack's label; resolves with the exit status and whether Playwright found no test to run. */
 function runSpecs(stack: Stack, run: Run, output: string, forwarded: readonly string[]): Promise<{ readonly code: number; readonly empty: boolean }> {
   run.signal.throwIfAborted();
-  const env = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: run.browsers, PLAYWRIGHT_BASE_URL: stack.site, [COURSE_E2E_ENVIRONMENT.topology]: stack.topology, [COURSE_E2E_ENVIRONMENT.proctor]: stack.proctor, [COURSE_E2E_ENVIRONMENT.control]: stack.control };
+  const env = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: run.browsers, PLAYWRIGHT_BASE_URL: stack.site, PLAYWRIGHT_LAST_RUN_OUTPUT_FILE: join(output, ".last-run.json"), [COURSE_E2E_ENVIRONMENT.topology]: stack.topology, [COURSE_E2E_ENVIRONMENT.proctor]: stack.proctor, [COURSE_E2E_ENVIRONMENT.control]: stack.control };
   const child = startToolV1("node", [join(run.repoRoot, ...PLAYWRIGHT_CLI), "test", "--config", join(run.repoRoot, ...PLAYWRIGHT_CONFIG), "--output", output, ...forwarded], { cwd: run.repoRoot, env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
   const cancel = (): void => terminateOwnedChildTree(child);
   run.signal.addEventListener("abort", cancel, { once: true });
@@ -370,7 +400,7 @@ function runSpecs(stack: Stack, run: Run, output: string, forwarded: readonly st
 /** 🔥️ Runs the warm-up project (the `boot` spec) once against a stack that is up, so its dev server has transformed and optimized everything before a wave starts and the next dev server to boot finds the optimized dependencies. */
 async function warmUp(stack: Stack, run: Run): Promise<void> {
   say(`${stack.label}: warming up with the ${SHARD_TABLE.warmup} spec`);
-  const { code } = await runSpecs(stack, run, join(run.report, `${stack.label}-${SHARD_TABLE.warmup}`), ["--project", SHARD_TABLE.warmup, "--workers", "1"]);
+  const { code } = await runSpecs(stack, run, endToEndReportDirectory(run.work, stack.label, SHARD_TABLE.warmup), ["--project", SHARD_TABLE.warmup, "--workers", "1"]);
   if (code !== 0) throw new Error(`the ${stack.label} stack did not pass its ${SHARD_TABLE.warmup} spec (${code})`);
 }
 
@@ -379,7 +409,7 @@ async function warmUp(stack: Stack, run: Run): Promise<void> {
 export async function runCourseEndToEnd(invocation: ScriptInvocation, repoRoot: string, bundleRoot: string, script: string, portEnv: string, segments: readonly string[]): Promise<void> {
   const plan = endToEndPlan(segments);
   courseOriginalBuildModeV1(invocation,plan.topologies.includes("rehearsal")?"release":"dev");
-  const work = join(endToEndWorkDirectory(repoRoot), `${new Date().toISOString().replace(/[-:]|\.\d+Z$/gu, "")}-${process.pid}`);
+  let work = "";
   const browsers = repoToolCacheEnv(repoRoot).PLAYWRIGHT_BROWSERS_PATH!;
   const interruption = new AbortController();
   const signal = AbortSignal.any([invocation.control.signal, interruption.signal]);
@@ -393,13 +423,13 @@ export async function runCourseEndToEnd(invocation: ScriptInvocation, repoRoot: 
   let failure: string | undefined = "the run did not finish";
   let artifact: ProctorArtifact | undefined;
   try {
-    mkdirSync(work, { recursive: true });
+    work = endToEndRunDirectory(endToEndWorkDirectory(repoRoot));
     say(`topologies ${plan.topologies.join(", ")}${plan.serial ? " (one after the other)" : ""}; run directory ${work}`);
     await ensureBrowser(invocation, repoRoot, browsers, signal);
     const given = plan.proctor === undefined ? undefined : endToEndProctorPath(repoRoot, plan.proctor);
     say(given === undefined ? "building the proctor (a first build takes minutes)" : `running the proctor ${given} as it is`);
     if (given === undefined) artifact = await acquireProctor(repoRoot, invocation, process.env, signal);
-    const run: Run = { invocation, repoRoot, bundleRoot, script, portEnv, work, proctor: given ?? artifact!, signal, browsers, report: join(work, "report") };
+    const run: Run = { invocation, repoRoot, bundleRoot, script, portEnv, work, proctor: given ?? artifact!, signal, browsers };
     const statuses: number[] = [];
     const ran: boolean[] = [];
     const { projects: requested, rest } = splitProjectArgumentsV1(plan.playwright);
@@ -409,7 +439,9 @@ export async function runCourseEndToEnd(invocation: ScriptInvocation, repoRoot: 
     const play = async (stack: Stack): Promise<void> => {
       say(`${stack.label}: running ${stack.slot.plan.waves.map((wave) => `${wave.shard} (${wave.projects.join(", ")})`).join(", then ") || "nothing but the warm-up"} against ${stack.site}`);
       for (const [index, wave] of stack.slot.plan.waves.entries()) {
-        const { code, empty } = await runSpecs(stack, run, join(run.report, `${stack.label}-${wave.shard}`), waveArgumentsV1(plan.playwright, wave, stack.slot.workers[index]!, explicit));
+        const output = endToEndReportDirectory(run.work, stack.label, wave.shard);
+        say(`${stack.label}: ${wave.shard} diagnostics ${output}`);
+        const { code, empty } = await runSpecs(stack, run, output, waveArgumentsV1(plan.playwright, wave, stack.slot.workers[index]!, explicit));
         say(`${stack.label}: ${wave.shard} ${code === 0 ? "passed" : empty ? "found no test to run" : `failed (${code})`}`);
         statuses.push(empty ? 0 : code);
         ran.push(!empty);
@@ -430,8 +462,10 @@ export async function runCourseEndToEnd(invocation: ScriptInvocation, repoRoot: 
     try { await artifact?.close(); } catch (error) { failure = `${failure ? failure + "; " : ""}proctor artifact close failed: ${error instanceof Error ? error.message : String(error)}`; }
     for (const signal of LAUNCHER_SIGNALS) process.off(signal, interrupt);
     interruption.abort();
-    if (existsSync(work) && ((failure === undefined && !plan.keep) || readdirSync(work).length === 0)) rmSync(work, { recursive: true, force: true, maxRetries: 20, retryDelay: 200 });
-    else say(`kept ${work} (proctor and site logs per topology, report/ with traces and screenshots)`);
+    if (existsSync(work)) {
+      if ((failure === undefined && !plan.keep) || readdirSync(work).length === 0) rmSync(work, { recursive: true, force: true, maxRetries: 20, retryDelay: 200 });
+      else say(`kept ${work} (proctor and site logs per topology, compact wave directories with traces and screenshots)`);
+    }
   }
   if (failure !== undefined) throw new Error(`end-to-end gate failed after ${Math.round((Date.now() - started) / 1_000)} s: ${failure}`);
   say(`passed in ${Math.round((Date.now() - started) / 1_000)} s: ${plan.topologies.join(", ")}`);

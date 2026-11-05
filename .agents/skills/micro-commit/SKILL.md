@@ -45,6 +45,9 @@ EOF
 
 (`prepare` uses the index as it already is and does not run `git add`. Success prints **only** the commit message on stdout.)
 
+**Cold metrics scans:** preparation can take many minutes on a large checkout before printing its message. Retain the returned session ID and poll that same process through completion. Never start a second prepare while the first is running, and never interrupt solely because stdout is quiet. Check the command exit code and preserve the complete stdout before replying.
+
+
 ## Your reply
 
 | Result           | Reply                                                                                                                                                                                                                                                    |

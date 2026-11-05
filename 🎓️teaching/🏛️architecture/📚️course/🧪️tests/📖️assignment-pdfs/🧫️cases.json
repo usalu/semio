@@ -1,4 +1,5 @@
 {
+  "consumers": ["dev", "dev-site", "build", "test-e2e"],
   "channels": [
     {
       "name": "Finite authenticated local PDF transport",

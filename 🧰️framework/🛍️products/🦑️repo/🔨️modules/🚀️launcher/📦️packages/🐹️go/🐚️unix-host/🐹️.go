@@ -12,6 +12,7 @@ package launcher
 
 import (
 	"context"
+	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
@@ -42,6 +43,14 @@ func canonicalRoot(path string) string {
 
 // 🔁️renameTransient is false on POSIX: a rename there is never refused for a moment because someone holds a file open.
 func renameTransient(error) bool { return false }
+
+func createWorkspaceDirectoryLink(source, destination string) error {
+	return os.Symlink(source, destination)
+}
+
+func publishWorkspaceDirectoryLink(source, destination string) error {
+	return os.Link(source, destination)
+}
 
 // 🖥️systemLanguages lists the macOS preferred languages by the command and pattern of the language protocol; other Unix systems state theirs in the environment.
 func systemLanguages(locale OsLocale) []string {

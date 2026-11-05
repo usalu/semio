@@ -113,7 +113,7 @@ def _entry(cast: str) -> dict:
 
 @lru_cache(maxsize=None)
 def _source_digest(root: Path = _SOURCES) -> str:
-    """🔐 Hash every exporter and schema source file and the bundled print profiles once per process, in path order."""
+    """🔐 Hash every exporter and schema source file and the bundled print profiles once per provenance checkpoint, in path order."""
     digest = hashlib.sha256()
     files = sorted([file for folder in ("🔨️modules", "🧬️schema") for file in (root / folder).rglob("*") if file.is_file() and "node_modules" not in file.parts]
                    + [root / name for name in _BUNDLED if (root / name).is_file()], key=lambda file: file.relative_to(root).as_posix())
@@ -138,7 +138,7 @@ def _catalog_bytes(slug: str, root: Path = _SOURCES) -> bytes:
 
 @lru_cache(maxsize=None)
 def _presets(root: Path = _SOURCES) -> dict[str, dict]:
-    """🌤️ Read the environment presets by id once per process."""
+    """🌤️ Read the environment presets by id once per provenance checkpoint."""
     return {preset["id"]: preset for file in sorted((root / "🗂️catalog").glob(f"*environments*/{_INDEX}")) for preset in json.loads(file.read_text(encoding="utf-8"))["presets"]}
 
 
@@ -171,7 +171,6 @@ def revision_of(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(_lf(data)).hexdigest()
 
 
-@lru_cache(maxsize=None)
 def asset_revision(slug: str, root: Path = _SOURCES) -> str:
     """🔖 Return the content hash of an asset's catalog file."""
     return revision_of(_catalog_bytes(slug, root))
@@ -610,6 +609,8 @@ def ensure_casts(ids: list[str] | tuple[str, ...] | None = None, progress: Calla
 
 def casts_in(sources, manifest: dict | None = None, root: Path = _SOURCES) -> dict[str, str]:
     """🔗 Map every cast id a set of Python sources names (string literals, and every id behind a literal ending in `-`) to its content key, so a clip key changes with the catalog asset, the exporter and the viewpoint of each cast it draws."""
+    for cached in (_source_digest, _catalog_bytes, _presets):
+        cached.cache_clear()
     casts = (manifest if manifest is not None else _manifest())["casts"]
     named: set[str] = set()
     for source in sources:

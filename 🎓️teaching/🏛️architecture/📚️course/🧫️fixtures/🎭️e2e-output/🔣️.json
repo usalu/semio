@@ -1,7 +1,189 @@
 {
+  "arguments": [
+    {
+      "value": [
+        "--grep",
+        "--output"
+      ],
+      "valid": true
+    },
+    {
+      "value": [
+        "--grep=--config",
+        "--headed"
+      ],
+      "valid": true
+    },
+    {
+      "value": [
+        "--retries",
+        "999",
+        "--repeat-each=999"
+      ],
+      "valid": true
+    },
+    {
+      "value": [
+        "--output",
+        "outside"
+      ],
+      "valid": false
+    },
+    {
+      "value": [
+        "--output=outside"
+      ],
+      "valid": false
+    },
+    {
+      "value": [
+        "--config",
+        "outside"
+      ],
+      "valid": false
+    },
+    {
+      "value": [
+        "-coutside"
+      ],
+      "valid": false
+    },
+    {
+      "value": [
+        "--reporter",
+        "html"
+      ],
+      "valid": false
+    },
+    {
+      "value": [
+        "--add-reporter=html"
+      ],
+      "valid": false
+    },
+    {
+      "value": [
+        "--last-failed-file",
+        "outside"
+      ],
+      "valid": false
+    },
+    {
+      "value": [
+        "--repeat-each",
+        "1000"
+      ],
+      "valid": false
+    },
+    {
+      "value": [
+        "--repeat-each=0"
+      ],
+      "valid": false
+    },
+    {
+      "value": [
+        "--retries=1000"
+      ],
+      "valid": false
+    },
+    {
+      "value": [
+        "--retries",
+        "-1"
+      ],
+      "valid": false
+    }
+  ],
+  "reports": [
+    {
+      "stack": "dev",
+      "phase": "boot",
+      "directory": "db"
+    },
+    {
+      "stack": "dev",
+      "phase": "shared",
+      "directory": "ds"
+    },
+    {
+      "stack": "dev",
+      "phase": "exclusive",
+      "directory": "dx"
+    },
+    {
+      "stack": "dev-shared",
+      "phase": "boot",
+      "directory": "dsb"
+    },
+    {
+      "stack": "dev-shared",
+      "phase": "shared",
+      "directory": "dss"
+    },
+    {
+      "stack": "dev-exclusive",
+      "phase": "boot",
+      "directory": "dxb"
+    },
+    {
+      "stack": "dev-exclusive",
+      "phase": "exclusive",
+      "directory": "dxx"
+    },
+    {
+      "stack": "rehearsal",
+      "phase": "boot",
+      "directory": "rb"
+    },
+    {
+      "stack": "rehearsal",
+      "phase": "shared",
+      "directory": "rs"
+    },
+    {
+      "stack": "rehearsal",
+      "phase": "exclusive",
+      "directory": "rx"
+    }
+  ],
+  "pathBudget": {
+    "run": "123456",
+    "testDirectory": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt-presence-retry999-repeat999",
+    "files": [
+      "trace.zip",
+      "test-failed-1.png",
+      "error-context.md"
+    ],
+    "maximum": 256,
+    "ticket": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️19/PREPARE-ARCHITEKTUR-UND-TECHNOLOGIE-FOR-END-TO-END-DEPLOYMENT",
+    "repositories": [
+      {
+        "platform": "win32",
+        "root": "D:/semio"
+      },
+      {
+        "platform": "linux",
+        "root": "/workspaces/semio"
+      },
+      {
+        "platform": "darwin",
+        "root": "/Users/anna/semio"
+      }
+    ]
+  },
   "cases": [
-    { "ticket": null, "suffix": ".🧬semio/🎓️teaching/architecture-course-e2e" },
-    { "ticket": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️10/RELEASE", "suffix": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️10/RELEASE/🗑️generated/nx/e2e" },
-    { "ticket": "outside", "error": "Diagnostic output requires an existing repository ticket" }
+    {
+      "ticket": null,
+      "suffix": ".🧬semio/🎓️teaching/architecture-course-e2e"
+    },
+    {
+      "ticket": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️10/RELEASE",
+      "suffix": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️10/RELEASE/🗑️generated"
+    },
+    {
+      "ticket": "outside",
+      "error": "Diagnostic output requires an existing repository ticket"
+    }
   ]
 }

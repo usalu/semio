@@ -16,6 +16,59 @@
     }
   },
   "definitions": {
+    "MsvcBootstrap": {
+      "const": {
+        "release": "18.11.3",
+        "url": "https://download.visualstudio.microsoft.com/download/pr/5f474104-723f-4007-bf4c-92e42a23dcc6/ea54b67bfac576b6dd097f84eeaf6893780d2a613f90448ff038e8a2777a0afb/vs_BuildTools.exe",
+        "sha256": "ea54b67bfac576b6dd097f84eeaf6893780d2a613f90448ff038e8a2777a0afb",
+        "file": "cpp.exe",
+        "workload": "Microsoft.VisualStudio.Workload.VCTools"
+      }
+    },
+    "TemporaryPolicy": {
+      "const": { "maximumPathLength": 256, "maximumRootLength": 128, "junctionSuffixLength": 12 }
+    },
+    "TemporaryRequest": {
+      "type": "object",
+      "required": ["target", "candidates"],
+      "additionalProperties": false,
+      "properties": {
+        "target": { "type": "string", "minLength": 1 },
+        "candidates": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "TemporaryTargetCodeUnits": {
+      "type": "array", "minItems": 1, "maxItems": 128,
+      "items": { "type": "integer", "minimum": 0, "maximum": 65535 }
+    },
+    "TemporaryPlan": {
+      "oneOf": [
+        { "type": "object", "required": ["kind", "root"], "additionalProperties": false, "properties": { "kind": { "const": "direct" }, "root": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[\\u0000-\\u007f]+$" } } },
+        { "type": "object", "required": ["kind", "roots"], "additionalProperties": false, "properties": { "kind": { "const": "junction" }, "roots": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1, "maxLength": 116, "pattern": "^[\\u0000-\\u007f]+$" } } } },
+        { "type": "object", "required": ["kind"], "additionalProperties": false, "properties": { "kind": { "const": "drive" } } }
+      ]
+    },
+    "BootstrapCommand": {
+      "type": "string",
+      "enum": ["setup", "rust"]
+    },
+    "MsvcPreparation": {
+      "type": "object",
+      "required": ["installed", "linker", "actions"],
+      "additionalProperties": false,
+      "properties": {
+        "installed": { "type": "boolean" },
+        "linker": { "type": "boolean" },
+        "actions": { "type": "array", "maxItems": 1, "items": { "enum": ["install", "modify"] } }
+      },
+      "if": { "properties": { "installed": { "const": true }, "linker": { "const": true } } },
+      "then": { "properties": { "actions": { "const": [] } } },
+      "else": {
+        "if": { "properties": { "installed": { "const": true } } },
+        "then": { "properties": { "actions": { "const": ["modify"] } } },
+        "else": { "properties": { "actions": { "const": ["install"] } } }
+      }
+    },
     "Asset": {
       "type": "object",
       "additionalProperties": false,

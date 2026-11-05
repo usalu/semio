@@ -1623,12 +1623,7 @@
       },
       "heightM": 1.08,
       "widthM": 0.6,
-      "poses": [
-        "seat-low",
-        "seat-high",
-        "reclined",
-        "swivel-quarter"
-      ],
+      "poses": ["seat-low","swivel-quarter","seat-high","reclined"],
       "clips": [
         "swivel-rotation",
         "height-adjust"
@@ -5401,13 +5396,7 @@
       },
       "heightM": 3.3,
       "widthM": 1.4,
-      "poses": [
-        "dead-load",
-        "cradle-at-mid",
-        "seismic-in-plane",
-        "shaded-by-overhang",
-        "wind-suction"
-      ],
+      "poses": ["dead-load","cradle-at-mid","seismic-in-plane","wind-suction","shaded-by-overhang"],
       "clips": [
         "cradle-pass",
         "shadow-rise",

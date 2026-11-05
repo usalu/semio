@@ -298,12 +298,12 @@ def room_metre(room_height: float) -> float:
 def fitted_staffage(cast: str, *, width: float | None = None, height: float | None = None, color: str | None = None,
                     rate: float | None = None, loop: bool = False, window: tuple[float, float, float, float] | None = None,
                     mirror: bool = False):
-    """🧑‍🤝‍🧑 Draw a staffage cast at the largest uniform scale that fits ``width`` and ``height`` Manim units, feet on the origin; a ``rate`` plays its clip through scene time, repeating it when ``loop`` is set. A ``window`` (cast metres) crops the cast to that region and fits the window itself, so a tall cast can show just its head as an icon.
+    """🧑‍🤝‍🧑 Draw a staffage cast (a motion's whole clip) at the largest uniform scale that fits ``width`` and ``height`` Manim units, feet on the origin; a ``rate`` plays its clip through scene time, repeating it when ``loop`` is set. A ``window`` (cast metres) crops the cast to that region and fits the window itself, so a tall cast can show just its head as an icon.
 
     @see ./🧍️staffage/🐍️.py — the cast API this wraps
     """
     with _staffage.unrecorded():
-        probe = staffage(cast, unit=1.0)
+        probe = staffage(cast, unit=1.0) if rate is None else staffage_motion(cast, unit=1.0, rate=rate)
     extent = (window[2] - window[0], window[3] - window[1]) if window is not None else (probe.width, probe.height)
     limits = [limit / size for limit, size in ((width, extent[0]), (height, extent[1])) if limit is not None]
     unit = min(limits)

@@ -626,7 +626,9 @@
         "@semio-tech/ui-styling-tokens:generate",
         "@teaching/proctor:build",
         "@teaching/architecture-course:build-parametrization-en",
-        "@teaching/architecture-course:build-parametrization-de"
+        "@teaching/architecture-course:build-parametrization-de",
+        "@teaching/architecture-course:build-typology-en",
+        "@teaching/architecture-course:build-typology-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",

@@ -92,6 +92,14 @@
         "missing executable: cc",
         "missing executable: pkg-config"
       ]
+    },
+    {
+      "id": "windows-fold-safe",
+      "patch": {
+        "platform": "win32",
+        "caseSensitive": "fold-safe"
+      },
+      "problems": []
     }
   ],
   "neutral": [
@@ -187,6 +195,181 @@
       "problems": [
         "a case-sensitive workspace filesystem is required for directory-backed partitions"
       ]
+    },
+    {
+      "id": "windows-declared-fold-safe",
+      "platform": "win32",
+      "facts": {
+        "platform": "win32",
+        "architecture": "x64",
+        "availableBytes": 8589934592,
+        "tools": [
+          "msvc-linker",
+          "rust"
+        ],
+        "exchange": "supported",
+        "caseSensitive": "fold-safe"
+      },
+      "problems": []
+    },
+    {
+      "id": "windows-fold-safe-needs-swap",
+      "platform": "win32",
+      "facts": {
+        "platform": "win32",
+        "architecture": "x64",
+        "availableBytes": 8589934592,
+        "tools": [
+          "msvc-linker",
+          "rust"
+        ],
+        "exchange": "unsupported",
+        "caseSensitive": "fold-safe"
+      },
+      "problems": [
+        "atomic or journaled directory swap is unsupported by the host or the workspace filesystem"
+      ]
+    },
+    {
+      "id": "windows-fold-safe-still-needs-toolchain",
+      "platform": "win32",
+      "facts": {
+        "platform": "win32",
+        "architecture": "x64",
+        "availableBytes": 8589934592,
+        "tools": [],
+        "exchange": "supported",
+        "caseSensitive": "fold-safe"
+      },
+      "problems": [
+        "missing executable: msvc-linker",
+        "missing executable: rust"
+      ]
+    },
+    {
+      "id": "windows-fold-safe-still-needs-capacity",
+      "platform": "win32",
+      "facts": {
+        "platform": "win32",
+        "architecture": "x64",
+        "availableBytes": 8589934591,
+        "tools": [
+          "msvc-linker",
+          "rust"
+        ],
+        "exchange": "supported",
+        "caseSensitive": "fold-safe"
+      },
+      "problems": [
+        "available bytes 8589934591 are below required 8589934592"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "id": "case-sensitive",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "sensitive",
+      "expected": "yes"
+    },
+    {
+      "id": "failed-verification-is-not-fallback",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "insensitive",
+      "expected": "no"
+    },
+    {
+      "id": "windows-caseBuild",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "caseBuild",
+      "expected": "fold-safe"
+    },
+    {
+      "id": "windows-caseFeature",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "caseFeature",
+      "expected": "fold-safe"
+    },
+    {
+      "id": "windows-caseAccess",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "caseAccess",
+      "expected": "fold-safe"
+    },
+    {
+      "id": "refuse-caseNotEmpty",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "caseNotEmpty",
+      "expected": "refused"
+    },
+    {
+      "id": "refuse-caseUnverified",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "caseUnverified",
+      "expected": "refused"
+    },
+    {
+      "id": "refuse-near-match",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "near-match",
+      "expected": "refused"
+    },
+    {
+      "id": "refuse-unknown",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "unknown",
+      "expected": "refused"
+    },
+    {
+      "id": "refuse-cancelled",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "cancelled",
+      "expected": "refused"
+    },
+    {
+      "id": "refuse-cleanup",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "cleanup",
+      "expected": "refused"
+    },
+    {
+      "id": "refuse-foreign",
+      "platform": "win32",
+      "kind": "journaled",
+      "probe": "foreign",
+      "expected": "refused"
+    },
+    {
+      "id": "kernel-exchange-never-falls-back",
+      "platform": "win32",
+      "kind": "exchange",
+      "probe": "caseAccess",
+      "expected": "refused"
+    },
+    {
+      "id": "linux-never-falls-back",
+      "platform": "linux",
+      "kind": "journaled",
+      "probe": "caseAccess",
+      "expected": "refused"
+    },
+    {
+      "id": "macos-never-falls-back",
+      "platform": "darwin",
+      "kind": "journaled",
+      "probe": "caseAccess",
+      "expected": "refused"
     }
   ]
 }

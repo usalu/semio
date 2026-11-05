@@ -4,10 +4,36 @@ import{chmodSync,lstatSync,mkdirSync,mkdtempSync,rmSync,symlinkSync,writeFileSyn
 import{join,resolve}from"node:path";
 import{tmpdir}from"node:os";
 import fixture from"./🧫️fixtures/🔣️.json";
+import bound from"./🧫️fixtures/🏷️bound.json";
+import boundSchema from"./🧫️fixtures/🏷️bound-schema.json";
+import protocol from"../🔣️.json";
+import{pinnedTestToolVariableV1}from"../📌️pinned/🟦️.ts";
 import{describeMissingTestToolV1,makeTestTreeWritableV1,requireTestToolV1,resolveTestToolV1,testPythonV1,testToolPathV1,type TestToolchainPortV1}from"../🟦️.ts";
 
 const check=new Ajv({strict:true}).compile({type:"object",additionalProperties:false,required:["name","platform","which","runs","tool","path","tried"],properties:{name:{type:"string"},platform:{enum:["linux","darwin","win32"]},which:{type:"object",additionalProperties:{type:"string"}},runs:{type:"object",additionalProperties:{type:"array"}},tool:{enum:["python","ripgrep"]},path:{type:["string","null"]},tried:{type:"array",items:{type:"string"}}}});
 const port=(row:{platform:string;which:Record<string,string>;runs:Record<string,unknown[]>},written:string[]=[],environment:Record<string,string>={}):TestToolchainPortV1=>({platform:row.platform as NodeJS.Platform,which:command=>row.which[command]??null,run:(command,args)=>{const answer=row.runs[[command,...args].join(" ")];return answer?{status:answer[0] as number,stdout:String(answer[1])}:{status:1,stdout:""};},environment,write:text=>{written.push(text);}});
+
+test("the registered runner binding is probed as one exact program and never replaced by PATH",()=>{
+ expect(new Ajv({strict:true}).validate(boundSchema,bound)).toBe(true);
+ for(const row of bound){
+  const calls:{command:string;args:readonly string[]}[]=[],variable=pinnedTestToolVariableV1("python");
+  const selected:TestToolchainPortV1={platform:row.platform as NodeJS.Platform,environment:{[variable]:row.binding},which:()=>{throw Error("Bound tools must not consult PATH");},run:(command,args)=>{calls.push({command,args});return{status:row.status,stdout:row.stdout};},write:()=>{}};
+  const result=resolveTestToolV1("python",selected);
+  expect(new Ajv({strict:true}).validate({const:row.expected},result.path),row.name).toBe(true);
+  expect(result.tried,row.name).toEqual([variable]);expect(calls,row.name).toHaveLength(row.probes);
+  if(calls.length)expect(calls[0]).toEqual({command:row.binding,args:["--version"]});
+ }
+});
+
+test("bound path limits count UTF-16 units without splitting executable arguments",()=>{
+ for(const glyph of["x","😀","🐍️"]){
+  const variable=pinnedTestToolVariableV1("python"),budget=protocol.binding.maximumPathUnits-1,exact="/"+glyph.repeat(Math.floor(budget/glyph.length))+"x".repeat(budget%glyph.length);
+  for(const[bound,valid]of[[exact,true],[exact+glyph,false]]as const){
+   let probes=0;const result=resolveTestToolV1("python",{platform:"linux",environment:{[variable]:bound},which:()=>{throw Error("PATH fallback");},run:()=>{probes++;return{status:0,stdout:"Python 3.14.0"};},write:()=>{}});
+   expect(result.path).toBe(valid?bound:null);expect(probes).toBe(valid?1:0);
+  }
+ }
+});
 
 test("a tool is the first declared candidate that answers its probe like the wanted program, on every host",()=>{
  for(const row of fixture.resolution){

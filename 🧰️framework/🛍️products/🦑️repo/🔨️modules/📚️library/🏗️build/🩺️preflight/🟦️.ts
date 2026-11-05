@@ -6,13 +6,18 @@ import policy from "./🔣️policy.json" with { type: "json" };
 import {buildPreflightContainerV1,buildPreflightRemediesV1} from "./💊️remedies/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {defaultNativeToolchainPortsV1,nativeToolchainHostV1,probeNativeToolV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧲️native/🧰️toolchain/🟦️.ts";
-import {nativeDirectoryHostAvailableBytesV1,probeNativeDirectoryCaseCapabilityV1,probeNativeDirectoryExchangeV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
+import {nativeDirectoryHostAvailableBytesV1,nativeDirectoryProtocolV1,nativeDirectorySystemPortV1,probeNativeDirectoryCaseCapabilityV1,probeNativeDirectoryExchangeV1,type NativeDirectoryPlatformPortV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {checkScriptInvocation,requireIssuedScriptInvocationV1,advanceScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🩺️ Declares the finite per-platform requirements of the whole workspace before any store is provisioned. */
 export type BuildPreflightPlatformV1 = Readonly<{architectures:readonly("x64"|"arm64")[];minimumAvailableBytes:number;tools:readonly string[];exchange:boolean;apt?:Readonly<Record<string,readonly string[]>>}>;
 /** 🔬️ Captures read-only facts from the actual invoking process and the filesystem that will hold the stores. */
-export type BuildPreflightFactsV1 = Readonly<{platform:string;architecture:string;availableBytes:number;tools:readonly string[];exchange:"supported"|"unsupported"|"unprobed";caseSensitive:"yes"|"no"|"unprobed"}>;
+export type BuildPreflightFactsV1 = Readonly<{platform:string;architecture:string;availableBytes:number;tools:readonly string[];exchange:"supported"|"unsupported"|"unprobed";caseSensitive:"yes"|"no"|"unprobed"|"fold-safe"}>;
+
+/** 🔠️ Observes the exact journaled Windows fallback already supported by directory storage; other failures retain their identity. */
+export function probeBuildPreflightCaseV1(platform:string,kind:NativeDirectoryPlatformPortV1["kind"],probe:()=>boolean):BuildPreflightFactsV1["caseSensitive"] {
+ try{return probe()?"yes":"no";}catch(error){const protocol=nativeDirectoryProtocolV1();if(platform==="win32"&&kind==="journaled"&&error instanceof Error&&protocol.foldSafeRefusals.some(key=>(protocol.refusals as Readonly<Record<string,string>>)[key]===error.message))return"fold-safe";throw error;}
+}
 
 /** 🎯️ Accepts only the bare command; preflight has no scope, bypass or provisioning options. */
 export function readBuildPreflightArgumentsV1(args:readonly string[]):void {
@@ -29,7 +34,7 @@ export function buildPreflightProblemsV1(requirements:unknown,facts:unknown):str
  if(!(required.architectures as readonly string[]).includes(actual.architecture))problems.push(`architecture ${actual.architecture} is not one of ${required.architectures.join(", ")}`);
  if(actual.availableBytes<required.minimumAvailableBytes)problems.push(`available bytes ${actual.availableBytes} are below required ${required.minimumAvailableBytes}`);
  if(required.exchange&&actual.exchange!=="supported")problems.push("atomic or journaled directory swap is unsupported by the host or the workspace filesystem");
- if(required.exchange&&actual.caseSensitive!=="yes")problems.push("a case-sensitive workspace filesystem is required for directory-backed partitions");
+ if(required.exchange&&actual.caseSensitive!=="yes"&&!(actual.platform==="win32"&&actual.caseSensitive==="fold-safe"))problems.push("a case-sensitive workspace filesystem is required for directory-backed partitions");
  for(const tool of required.tools)if(!actual.tools.includes(tool))problems.push(`missing executable: ${tool}`);return problems;
 }
 /** 🧭️ Checks the actual host and its finite capacity before any managed allocation is attempted. */
@@ -43,7 +48,7 @@ export async function runBuildPreflightV1(root:string,args:readonly string[],inv
  const cache=resolve(root,".cache");let host=cache;for(;;){try{await stat(host);break;}catch{const parent=dirname(host);if(parent===host)break;host=parent;}}
  const availableBytes=nativeDirectoryHostAvailableBytesV1(host);let exchange:BuildPreflightFactsV1["exchange"]="unprobed",caseSensitive:BuildPreflightFactsV1["caseSensitive"]="unprobed";
  const details:string[]=[];
- if(required.exchange){try{probeNativeDirectoryExchangeV1(host);exchange="supported";}catch(error){exchange="unsupported";details.push(`exchange probe beneath ${host}: ${error instanceof Error?error.message:String(error)}`);}checkScriptInvocation(invocation);try{caseSensitive=probeNativeDirectoryCaseCapabilityV1(host)?"yes":"no";}catch(error){caseSensitive="no";details.push(`case probe beneath ${host}: ${error instanceof Error?error.message:String(error)}`);}}
+ if(required.exchange){const port=nativeDirectorySystemPortV1();try{probeNativeDirectoryExchangeV1(host,port);exchange="supported";}catch(error){exchange="unsupported";details.push(`exchange probe beneath ${host}: ${error instanceof Error?error.message:String(error)}`);}checkScriptInvocation(invocation);try{caseSensitive=probeBuildPreflightCaseV1(platform,port.kind,()=>probeNativeDirectoryCaseCapabilityV1(host,port));}catch(error){caseSensitive="no";details.push(`case probe beneath ${host}: ${error instanceof Error?error.message:String(error)}`);}}
  checkScriptInvocation(invocation);const facts={platform,architecture:process.arch,availableBytes,tools,exchange,caseSensitive},problems=buildPreflightProblemsV1(required,facts);
  if(problems.length)throw Error(`Repository preflight refused before store allocation:\n${[...problems,...details,...buildPreflightRemediesV1(facts,required.tools,required.exchange,{container:buildPreflightContainerV1()})].join("\n")}`);
  await advanceScriptInvocation(invocation,"preflight","complete");

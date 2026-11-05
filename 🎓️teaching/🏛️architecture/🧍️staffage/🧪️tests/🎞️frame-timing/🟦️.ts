@@ -1,16 +1,25 @@
 /** 🎞️ Frame schedule exactness and the encoded videos re-read with ffprobe/ffmpeg. */
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { frameSchedule } from "../../🔨️modules/📤️export/🎞️frames/🟦️.ts";
 import { encodeClip, videoCapabilities, type VideoFrame } from "../../🔨️modules/📤️export/🎥️video/🟦️.ts";
-import { parseArguments, runExport } from "../../🔨️modules/📤️export/🎬️cli/🟦️.ts";
-import { requireTool, tool, withScratch } from "../🧰️support/🧰️.ts";
+import { parseArguments, runExport, type ToolPort } from "../../🔨️modules/📤️export/🎬️cli/🟦️.ts";
+import { requireTool, tool, toolBytes, withScratch } from "../🧰️support/🧰️.ts";
 
 type Probe = { streams: { pix_fmt: string; r_frame_rate: string; nb_read_frames: string; tags?: Record<string, string>; codec_name: string; width: number; height: number }[]; format: { duration: string }; packets?: { pts_time: string }[] };
 const probe = (file: string, extra: readonly string[] = []): Probe => JSON.parse(tool("ffprobe", ["-v", "error", ...extra, "-count_frames", "-show_streams", "-show_format", "-show_packets", "-of", "json", file])) as Probe;
 
-const CLI = (format: string, out: string): string[] => ["--asset", "walking-commuter", "--clip", "walk-cycle", "--view", "dark-solid", "--scale", "100", "--fps", "12", "--format", format, "--out", out, "--lang", "en", "--px-per-mm", "4"];
+const execute = promisify(execFile);
+const tinyTools: ToolPort = { run: async (name, args, signal) => {
+  const [command, argv] = name === "ffmpeg" ? ["repo", ["tools", "exec", "--light", name, "--", ...args]] : [name, [...args]];
+  const { stdout, stderr } = await execute(command!, argv as string[], { encoding: "utf8", ...(signal ? { signal } : {}) });
+  return stdout + stderr;
+} };
+
+const CLI = (format: string, out: string): string[] => ["--asset", "walking-commuter", "--clip", "walk-cycle", "--view", "dark-solid", "--viewpoint", "elevation", "--scale", "50", "--fps", "12", "--format", format, "--out", out, "--lang", "en", "--px-per-mm", "4"];
 
 function spacing(file: Probe): number[] {
   const times = file.packets!.map((packet) => Number(packet.pts_time)).sort((a, b) => a - b);
@@ -36,7 +45,7 @@ requireTool("ffprobe");
 describe("🎬️ encoded clips", () => {
   it("MP4 from the CLI: 12 fps constant, scheduled frame count, yuv420p", async () => {
     await withScratch(async (out) => {
-      const [file] = await runExport(parseArguments(CLI("mp4", out)));
+      const [file] = await runExport(parseArguments(CLI("mp4", out)), tinyTools);
       const expected = 14;
       const info = probe(file!);
       const video = info.streams[0]!;
@@ -49,17 +58,20 @@ describe("🎬️ encoded clips", () => {
     });
   });
 
-  it("WebM from the CLI: VP9 with the alpha tag, decoded as yuva420p", async () => {
+  it("WebM from the CLI: VP9 with the alpha tag and independently decoded transparent RGBA", async () => {
     await withScratch(async (out) => {
-      const [file] = await runExport(parseArguments(CLI("webm", out)));
+      const [file] = await runExport(parseArguments(CLI("webm", out)), tinyTools);
       const info = probe(file!);
       const video = info.streams[0]!;
       expect(video.codec_name).toBe("vp9");
       expect(video.r_frame_rate).toBe("12/1");
       expect(video.tags?.alpha_mode ?? video.tags?.ALPHA_MODE).toBe("1");
       expect(Number(video.nb_read_frames)).toBe(14);
-      const decoded = probe(file!, ["-c:v", "libvpx-vp9"]).streams[0]!;
-      expect(decoded.pix_fmt).toBe("yuva420p");
+      const decoded = toolBytes("ffmpeg", ["-v", "error", "-c:v", "libvpx-vp9", "-i", file!, "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgba", "pipe:1"]);
+      expect(decoded.length).toBe(video.width * video.height * 4);
+      const alpha = decoded.filter((_, index) => index % 4 === 3);
+      expect(alpha.some(value => value === 0)).toBe(true);
+      expect(alpha.some(value => value === 255)).toBe(true);
       for (const gap of spacing(info)) expect(Math.abs(gap - 1 / 12)).toBeLessThan(0.001);
     });
   });
