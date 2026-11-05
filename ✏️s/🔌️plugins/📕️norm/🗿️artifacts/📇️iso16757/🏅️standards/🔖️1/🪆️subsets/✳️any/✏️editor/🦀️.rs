@@ -191,6 +191,12 @@ impl ArtifactEditor for Iso16757PlayApp {
 semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory!(Iso16757BoundedCommandJobFactory, Iso16757PlayApp);
 
 impl semio_s_plugin_norm_app_surface::NormRetainedEditor for Iso16757PlayApp {
+    fn inspector_rules() -> &'static semio_s_plugin_norm_app_surface::NormEditRules { &semio_s_artifact_norm_iso16757_mutations::EDIT_RULES }
+
+    fn inspector_resolve(document: &Self::Snapshot, edit: &semio_s_plugin_norm_app_surface::NormEdit) -> Result<Vec<Self::Mutation>, String> {
+        semio_s_artifact_norm_iso16757_mutations::resolve_edit(document, edit)
+    }
+
     type Family = Iso16757Family;
 
     type ResultsWindowConfigOwner = results::ResultsWindowConfigOwner;
@@ -342,3 +348,7 @@ pub mod presence {
     pub mod schema;
 }
 //#endregion 🪢️Mounts
+
+#[cfg(test)]
+#[path = "🧪️tests/🧩️nested/🦀️.rs"]
+mod nested_business_tests;

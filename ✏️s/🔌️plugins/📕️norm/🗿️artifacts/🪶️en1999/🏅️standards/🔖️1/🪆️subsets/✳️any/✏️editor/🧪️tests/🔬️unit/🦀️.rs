@@ -157,3 +157,9 @@ fn the_aluminium_showcase_asset_decodes_to_the_showcase_fixture_and_evaluates_wi
     assert!(!scene.entities.is_empty());
     assert!(!semio_s_artifact_norm_en1999_scene::diagrams(&document, &report, None).is_empty());
 }
+
+#[test]
+fn compiled_input_metadata_matches_all_native_schema_rows() {
+    let findings = semio_s_plugin_norm_app_surface::norm_compiled_input_findings::<En1999PlayApp>();
+    assert!(findings.is_empty(), "{}", findings.join("\n"));
+}

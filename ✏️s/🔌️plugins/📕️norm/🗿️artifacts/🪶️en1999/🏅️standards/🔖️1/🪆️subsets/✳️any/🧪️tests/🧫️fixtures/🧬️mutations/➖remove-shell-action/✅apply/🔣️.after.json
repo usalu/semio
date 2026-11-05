@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC2",
   "materials": [
     {
       "id": "mat-6082",
@@ -275,13 +274,6 @@
       ]
     }
   ],
-  "placements": [],
-  "weldRuns": [],
-  "outlineVertices": [],
-  "fatigueCategories": [],
-  "patchLoads": [],
-  "ringStiffeners": [],
-  "transverseStiffeners": [],
   "shells": [
     {
       "id": "shell-pass",
@@ -293,5 +285,13 @@
       "fabricationClass": "b",
       "actions": []
     }
-  ]
+  ],
+  "placements": [],
+  "weldRuns": [],
+  "outlineVertices": [],
+  "fatigueCategories": [],
+  "patchLoads": [],
+  "ringStiffeners": [],
+  "transverseStiffeners": [],
+  "reliabilityClass": "RC2"
 }

@@ -118,14 +118,18 @@
         },
         {
           "pointer": "/nativeCodecs/27/protocolSourceSha256",
-          "path": "../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
+          "path": "../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
         },
         {
           "pointer": "/nativeCodecs/28/protocolSourceSha256",
-          "path": "../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
+          "path": "../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
         },
         {
           "pointer": "/nativeCodecs/29/protocolSourceSha256",
+          "path": "../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
+        },
+        {
+          "pointer": "/nativeCodecs/30/protocolSourceSha256",
           "path": "../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
         },
         {

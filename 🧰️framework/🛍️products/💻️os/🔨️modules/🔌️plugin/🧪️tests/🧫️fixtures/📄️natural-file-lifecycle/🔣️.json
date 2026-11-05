@@ -2,17 +2,31 @@
   "schema": "semio.framework.os.plugin.natural-file-lifecycle/v1",
   "formats": [
     {
-      "appId": "s.stdio.csv@rfc4180/*#editor",
-      "formatKind": "s.stdio.csv@rfc4180",
-      "extension": ".csv",
-      "mediaType": "text/csv",
+      "appId": "s.energy.model@1/*#editor",
+      "formatKind": "s.stdio.idf@25.2",
+      "extension": ".idf",
+      "mediaType": "text/plain",
       "binary": false
     },
     {
-      "appId": "s.stdio.png@1.2/*#editor",
-      "formatKind": "s.stdio.png@1.2",
-      "extension": ".png",
-      "mediaType": "image/png",
+      "appId": "s.stdio.avi@1.0/*#editor",
+      "formatKind": "s.stdio.avi@1.0",
+      "extension": ".avi",
+      "mediaType": "video/x-msvideo",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.bcf@2.1/*#editor",
+      "formatKind": "s.stdio.bcf@2.1",
+      "extension": ".bcf",
+      "mediaType": "application/vnd.bcf+xml",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.binary@raw/*#editor",
+      "formatKind": "s.stdio.binary@raw",
+      "extension": ".bin",
+      "mediaType": "application/octet-stream",
       "binary": true
     },
     {
@@ -23,11 +37,144 @@
       "binary": true
     },
     {
-      "appId": "s.stdio.wav@riff-pcm/*#editor",
-      "formatKind": "s.stdio.wav@riff-pcm",
-      "extension": ".wav",
-      "mediaType": "audio/wav",
+      "appId": "s.stdio.csv@rfc4180/*#editor",
+      "formatKind": "s.stdio.csv@rfc4180",
+      "extension": ".csv",
+      "mediaType": "text/csv",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.deflate@rfc1950/*#editor",
+      "formatKind": "s.stdio.deflate@rfc1950",
+      "extension": ".zz",
+      "mediaType": "application/zlib",
       "binary": true
+    },
+    {
+      "appId": "s.stdio.docx@ecma-376/*#editor",
+      "formatKind": "s.stdio.docx@ecma-376",
+      "extension": ".docx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.docx@ecma-376/strict#editor",
+      "formatKind": "s.stdio.docx@ecma-376",
+      "extension": ".docx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.docx@ecma-376/transitional#editor",
+      "formatKind": "s.stdio.docx@ecma-376",
+      "extension": ".docx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.dwg@ac1018/*#editor",
+      "formatKind": "s.stdio.dwg@ac1018",
+      "extension": ".dwg",
+      "mediaType": "image/vnd.dwg",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.dwg@ac1024/*#editor",
+      "formatKind": "s.stdio.dwg@ac1024",
+      "extension": ".dwg",
+      "mediaType": "image/vnd.dwg",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.dxf@r12/*#editor",
+      "formatKind": "s.stdio.dxf@r12",
+      "extension": ".dxf",
+      "mediaType": "image/vnd.dxf",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.epw@energyplus/*#editor",
+      "formatKind": "s.stdio.epw@energyplus",
+      "extension": ".epw",
+      "mediaType": "text/plain",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.gif@87a/*#editor",
+      "formatKind": "s.stdio.gif@87a",
+      "extension": ".gif",
+      "mediaType": "image/gif",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.gif@89a/*#editor",
+      "formatKind": "s.stdio.gif@89a",
+      "extension": ".gif",
+      "mediaType": "image/gif",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.gltf@2.0/*#editor",
+      "formatKind": "s.stdio.gltf@2.0",
+      "extension": ".gltf",
+      "mediaType": "model/gltf+json",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.html@5/*#editor",
+      "formatKind": "s.stdio.html@5",
+      "extension": ".html",
+      "mediaType": "text/html",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.idml@8.0/*#editor",
+      "formatKind": "s.stdio.idml@8.0",
+      "extension": ".idml",
+      "mediaType": "application/vnd.adobe.indesign-idml-package",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.ifc@2x3/*#editor",
+      "formatKind": "s.stdio.ifc@2x3",
+      "extension": ".ifc",
+      "mediaType": "application/x-ifc",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.ifc@2x3/cobie#editor",
+      "formatKind": "s.stdio.ifc@2x3/cobie",
+      "extension": ".ifc",
+      "mediaType": "application/x-ifc",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.ifc@2x3/cv20#editor",
+      "formatKind": "s.stdio.ifc@2x3/cv20",
+      "extension": ".ifc",
+      "mediaType": "application/x-ifc",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.ifc@2x3/sav#editor",
+      "formatKind": "s.stdio.ifc@2x3/sav",
+      "extension": ".ifc",
+      "mediaType": "application/x-ifc",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.ifc@4/*#editor",
+      "formatKind": "s.stdio.ifc@4",
+      "extension": ".ifc",
+      "mediaType": "application/x-ifc",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.ifc@4x3/*#editor",
+      "formatKind": "s.stdio.ifc@4x3",
+      "extension": ".ifc",
+      "mediaType": "application/x-ifc",
+      "binary": false
     },
     {
       "appId": "s.stdio.jpg@jfif-1.01/*#editor",
@@ -44,104 +191,6 @@
       "binary": true
     },
     {
-      "appId": "s.stdio.mp3@mpeg1-layer3/*#editor",
-      "formatKind": "s.stdio.mp3@mpeg1-layer3",
-      "extension": ".mp3",
-      "mediaType": "audio/mpeg",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.mp4@isobmff/*#editor",
-      "formatKind": "s.stdio.mp4@isobmff",
-      "extension": ".mp4",
-      "mediaType": "video/mp4",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.avi@1.0/*#editor",
-      "formatKind": "s.stdio.avi@1.0",
-      "extension": ".avi",
-      "mediaType": "video/x-msvideo",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.docx@ecma-376/base#editor",
-      "formatKind": "s.stdio.docx@ecma-376",
-      "extension": ".docx",
-      "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.pdf@1.7/*#editor",
-      "formatKind": "s.stdio.pdf@1.7",
-      "extension": ".pdf",
-      "mediaType": "application/pdf",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.md@commonmark/*#editor",
-      "formatKind": "s.stdio.md@commonmark",
-      "extension": ".md",
-      "mediaType": "text/markdown",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.html@5/*#editor",
-      "formatKind": "s.stdio.html@5",
-      "extension": ".html",
-      "mediaType": "text/html",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.svg@1.1/*#editor",
-      "formatKind": "s.stdio.svg@1.1",
-      "extension": ".svg",
-      "mediaType": "image/svg+xml",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.svg@1.1/basic#editor",
-      "formatKind": "s.stdio.svg@1.1",
-      "extension": ".svg",
-      "mediaType": "image/svg+xml",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.svg@1.1/tiny#editor",
-      "formatKind": "s.stdio.svg@1.1",
-      "extension": ".svg",
-      "mediaType": "image/svg+xml",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.tsv@iana/*#editor",
-      "formatKind": "s.stdio.tsv@iana",
-      "extension": ".tsv",
-      "mediaType": "text/tab-separated-values",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.txt@utf-8/*#editor",
-      "formatKind": "s.stdio.txt@utf-8",
-      "extension": ".txt",
-      "mediaType": "text/plain",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.xml@1.0/*#editor",
-      "formatKind": "s.stdio.xml@1.0",
-      "extension": ".xml",
-      "mediaType": "application/xml",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.xml@1.0/valid#editor",
-      "formatKind": "s.stdio.xml@1.0",
-      "extension": ".xml",
-      "mediaType": "application/xml",
-      "binary": false
-    },
-    {
       "appId": "s.stdio.json@rfc8259/*#editor",
       "formatKind": "s.stdio.json@rfc8259",
       "extension": ".json",
@@ -156,35 +205,126 @@
       "binary": false
     },
     {
-      "appId": "s.stdio.xlsx@ecma-376/*#editor",
-      "formatKind": "s.stdio.xlsx@ecma-376",
-      "extension": ".xlsx",
-      "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "appId": "s.stdio.las@1.0/*#editor",
+      "formatKind": "s.stdio.las@1.0",
+      "extension": ".las",
+      "mediaType": "application/vnd.las",
       "binary": true
     },
     {
-      "appId": "s.stdio.xlsx@ecma-376/transitional#editor",
-      "formatKind": "s.stdio.xlsx@ecma-376",
-      "extension": ".xlsx",
-      "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "appId": "s.stdio.md@commonmark/*#editor",
+      "formatKind": "s.stdio.md@commonmark",
+      "extension": ".md",
+      "mediaType": "text/markdown",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.mp3@mpeg1-layer3/*#editor",
+      "formatKind": "s.stdio.mp3@mpeg1-layer3",
+      "extension": ".mp3",
+      "mediaType": "audio/mpeg",
       "binary": true
     },
     {
-      "appId": "s.stdio.xlsx@ecma-376/strict#editor",
-      "formatKind": "s.stdio.xlsx@ecma-376",
-      "extension": ".xlsx",
-      "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "appId": "s.stdio.mp4@isobmff/*#editor",
+      "formatKind": "s.stdio.mp4@isobmff",
+      "extension": ".mp4",
+      "mediaType": "video/mp4",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.obj@3.0/*#editor",
+      "formatKind": "s.stdio.obj@3.0",
+      "extension": ".obj",
+      "mediaType": "model/obj",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.pdf@1.4/*#editor",
+      "formatKind": "s.stdio.pdf@1.4",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pdf@1.4/a#editor",
+      "formatKind": "s.stdio.pdf@1.4/a",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pdf@1.4/x#editor",
+      "formatKind": "s.stdio.pdf@1.4/x",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pdf@1.7/*#editor",
+      "formatKind": "s.stdio.pdf@1.7",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pdf@1.7/a#editor",
+      "formatKind": "s.stdio.pdf@1.7/a",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pdf@1.7/e#editor",
+      "formatKind": "s.stdio.pdf@1.7/e",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pdf@1.7/h#editor",
+      "formatKind": "s.stdio.pdf@1.7/h",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pdf@1.7/ua#editor",
+      "formatKind": "s.stdio.pdf@1.7/ua",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pdf@1.7/vt#editor",
+      "formatKind": "s.stdio.pdf@1.7/vt",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pdf@1.7/x#editor",
+      "formatKind": "s.stdio.pdf@1.7/x",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.ply@1.0/*#editor",
+      "formatKind": "s.stdio.ply@1.0",
+      "extension": ".ply",
+      "mediaType": "model/ply",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.png@1.2/*#editor",
+      "formatKind": "s.stdio.png@1.2",
+      "extension": ".png",
+      "mediaType": "image/png",
       "binary": true
     },
     {
       "appId": "s.stdio.pptx@ecma-376/*#editor",
-      "formatKind": "s.stdio.pptx@ecma-376",
-      "extension": ".pptx",
-      "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.pptx@ecma-376/transitional#editor",
       "formatKind": "s.stdio.pptx@ecma-376",
       "extension": ".pptx",
       "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -198,73 +338,143 @@
       "binary": true
     },
     {
-      "appId": "s.stdio.epw@energyplus/*#editor",
-      "formatKind": "s.stdio.epw@energyplus",
-      "extension": ".epw",
-      "mediaType": "text/plain",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.bcf@2.1/*#editor",
-      "formatKind": "s.stdio.bcf@2.1",
-      "extension": ".bcf",
-      "mediaType": "application/vnd.bcf+xml",
+      "appId": "s.stdio.pptx@ecma-376/transitional#editor",
+      "formatKind": "s.stdio.pptx@ecma-376",
+      "extension": ".pptx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       "binary": true
     },
     {
-      "appId": "s.stdio.zip@2.0/*#editor",
-      "formatKind": "s.stdio.zip@2.0",
-      "extension": ".zip",
-      "mediaType": "application/zip",
+      "appId": "s.stdio.semio@v1/*#editor",
+      "formatKind": "stdio.semio@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
       "binary": true
     },
     {
-      "appId": "s.stdio.deflate@rfc1950/*#editor",
-      "formatKind": "s.stdio.deflate@rfc1950",
-      "extension": ".zz",
-      "mediaType": "application/zlib",
+      "appId": "s.stdio.semio@v1/animation#editor",
+      "formatKind": "stdio.semio.animation@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
       "binary": true
     },
     {
-      "appId": "s.stdio.binary@raw/*#editor",
-      "formatKind": "s.stdio.binary@raw",
-      "extension": ".bin",
-      "mediaType": "application/octet-stream",
+      "appId": "s.stdio.semio@v1/audio#editor",
+      "formatKind": "stdio.semio.audio@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
       "binary": true
     },
     {
-      "appId": "s.stdio.obj@3.0/*#editor",
-      "formatKind": "s.stdio.obj@3.0",
-      "extension": ".obj",
-      "mediaType": "model/obj",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.stl@ascii/*#editor",
-      "formatKind": "s.stdio.stl@ascii",
-      "extension": ".stl",
-      "mediaType": "model/stl",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.ply@1.0/*#editor",
-      "formatKind": "s.stdio.ply@1.0",
-      "extension": ".ply",
-      "mediaType": "model/ply",
+      "appId": "s.stdio.semio@v1/brep#editor",
+      "formatKind": "stdio.semio.brep@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
       "binary": true
     },
     {
-      "appId": "s.stdio.gltf@2.0/*#editor",
-      "formatKind": "s.stdio.gltf@2.0",
-      "extension": ".gltf",
-      "mediaType": "model/gltf+json",
-      "binary": false
+      "appId": "s.stdio.semio@v1/cad#editor",
+      "formatKind": "stdio.semio.cad@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
     },
     {
-      "appId": "s.stdio.las@1.0/*#editor",
-      "formatKind": "s.stdio.las@1.0",
-      "extension": ".las",
-      "mediaType": "application/vnd.las",
+      "appId": "s.stdio.semio@v1/document#editor",
+      "formatKind": "stdio.semio.document@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/drawing#editor",
+      "formatKind": "stdio.semio.drawing@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/flow#editor",
+      "formatKind": "stdio.semio.flow@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/graph#editor",
+      "formatKind": "stdio.semio.graph@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/image#editor",
+      "formatKind": "stdio.semio.image@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/kit#editor",
+      "formatKind": "stdio.semio.kit@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/mesh#editor",
+      "formatKind": "stdio.semio.mesh@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/model#editor",
+      "formatKind": "stdio.semio.model@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/object#editor",
+      "formatKind": "stdio.semio.object@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/presentation#editor",
+      "formatKind": "stdio.semio.presentation@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/table#editor",
+      "formatKind": "stdio.semio.table@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/text#editor",
+      "formatKind": "stdio.semio.text@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/value#editor",
+      "formatKind": "stdio.semio.value@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.semio@v1/video#editor",
+      "formatKind": "stdio.semio.video@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
       "binary": true
     },
     {
@@ -317,45 +527,31 @@
       "binary": false
     },
     {
-      "appId": "s.stdio.ifc@4/*#editor",
-      "formatKind": "s.stdio.ifc@4",
-      "extension": ".ifc",
-      "mediaType": "application/x-ifc",
+      "appId": "s.stdio.stl@ascii/*#editor",
+      "formatKind": "s.stdio.stl@ascii",
+      "extension": ".stl",
+      "mediaType": "model/stl",
       "binary": false
     },
     {
-      "appId": "s.stdio.ifc@2x3/*#editor",
-      "formatKind": "s.stdio.ifc@2x3",
-      "extension": ".ifc",
-      "mediaType": "application/x-ifc",
+      "appId": "s.stdio.svg@1.1/*#editor",
+      "formatKind": "s.stdio.svg@1.1",
+      "extension": ".svg",
+      "mediaType": "image/svg+xml",
       "binary": false
     },
     {
-      "appId": "s.energy.model@1/*#editor",
-      "formatKind": "s.stdio.idf@25.2",
-      "extension": ".idf",
-      "mediaType": "text/plain",
+      "appId": "s.stdio.svg@1.1/basic#editor",
+      "formatKind": "s.stdio.svg@1.1",
+      "extension": ".svg",
+      "mediaType": "image/svg+xml",
       "binary": false
     },
     {
-      "appId": "s.stdio.ifc@2x3/cobie#editor",
-      "formatKind": "s.stdio.ifc@2x3/cobie",
-      "extension": ".ifc",
-      "mediaType": "application/x-ifc",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.ifc@2x3/cv20#editor",
-      "formatKind": "s.stdio.ifc@2x3/cv20",
-      "extension": ".ifc",
-      "mediaType": "application/x-ifc",
-      "binary": false
-    },
-    {
-      "appId": "s.stdio.ifc@2x3/sav#editor",
-      "formatKind": "s.stdio.ifc@2x3/sav",
-      "extension": ".ifc",
-      "mediaType": "application/x-ifc",
+      "appId": "s.stdio.svg@1.1/tiny#editor",
+      "formatKind": "s.stdio.svg@1.1",
+      "extension": ".svg",
+      "mediaType": "image/svg+xml",
       "binary": false
     },
     {
@@ -373,108 +569,73 @@
       "binary": true
     },
     {
-      "appId": "s.stdio.gif@87a/*#editor",
-      "formatKind": "s.stdio.gif@87a",
-      "extension": ".gif",
-      "mediaType": "image/gif",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.gif@89a/*#editor",
-      "formatKind": "s.stdio.gif@89a",
-      "extension": ".gif",
-      "mediaType": "image/gif",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.dxf@r12/*#editor",
-      "formatKind": "s.stdio.dxf@r12",
-      "extension": ".dxf",
-      "mediaType": "image/vnd.dxf",
+      "appId": "s.stdio.tsv@iana/*#editor",
+      "formatKind": "s.stdio.tsv@iana",
+      "extension": ".tsv",
+      "mediaType": "text/tab-separated-values",
       "binary": false
     },
     {
-      "appId": "s.stdio.dwg@ac1018/*#editor",
-      "formatKind": "s.stdio.dwg@ac1018",
-      "extension": ".dwg",
-      "mediaType": "image/vnd.dwg",
+      "appId": "s.stdio.txt@utf-8/*#editor",
+      "formatKind": "s.stdio.txt@utf-8",
+      "extension": ".txt",
+      "mediaType": "text/plain",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.wav@riff-pcm/*#editor",
+      "formatKind": "s.stdio.wav@riff-pcm",
+      "extension": ".wav",
+      "mediaType": "audio/wav",
       "binary": true
     },
     {
-      "appId": "s.stdio.dwg@ac1024/*#editor",
-      "formatKind": "s.stdio.dwg@ac1024",
-      "extension": ".dwg",
-      "mediaType": "image/vnd.dwg",
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "formatKind": "s.stdio.xlsx@ecma-376",
+      "extension": ".xlsx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "binary": true
     },
     {
-      "appId": "s.stdio.pdf@1.7/a#editor",
-      "formatKind": "s.stdio.pdf@1.7/a",
-      "extension": ".pdf",
-      "mediaType": "application/pdf",
+      "appId": "s.stdio.xlsx@ecma-376/strict#editor",
+      "formatKind": "s.stdio.xlsx@ecma-376",
+      "extension": ".xlsx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "binary": true
     },
     {
-      "appId": "s.stdio.pdf@1.7/e#editor",
-      "formatKind": "s.stdio.pdf@1.7/e",
-      "extension": ".pdf",
-      "mediaType": "application/pdf",
+      "appId": "s.stdio.xlsx@ecma-376/transitional#editor",
+      "formatKind": "s.stdio.xlsx@ecma-376",
+      "extension": ".xlsx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "binary": true
     },
     {
-      "appId": "s.stdio.pdf@1.7/h#editor",
-      "formatKind": "s.stdio.pdf@1.7/h",
-      "extension": ".pdf",
-      "mediaType": "application/pdf",
+      "appId": "s.stdio.xml@1.0/*#editor",
+      "formatKind": "s.stdio.xml@1.0",
+      "extension": ".xml",
+      "mediaType": "application/xml",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.xml@1.0/valid#editor",
+      "formatKind": "s.stdio.xml@1.0",
+      "extension": ".xml",
+      "mediaType": "application/xml",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.zip@2.0/*#editor",
+      "formatKind": "s.stdio.zip@2.0",
+      "extension": ".zip",
+      "mediaType": "application/zip",
       "binary": true
     },
     {
-      "appId": "s.stdio.pdf@1.7/ua#editor",
-      "formatKind": "s.stdio.pdf@1.7/ua",
-      "extension": ".pdf",
-      "mediaType": "application/pdf",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.pdf@1.7/vt#editor",
-      "formatKind": "s.stdio.pdf@1.7/vt",
-      "extension": ".pdf",
-      "mediaType": "application/pdf",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.pdf@1.7/x#editor",
-      "formatKind": "s.stdio.pdf@1.7/x",
-      "extension": ".pdf",
-      "mediaType": "application/pdf",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.pdf@1.4/*#editor",
-      "formatKind": "s.stdio.pdf@1.4",
-      "extension": ".pdf",
-      "mediaType": "application/pdf",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.pdf@1.4/a#editor",
-      "formatKind": "s.stdio.pdf@1.4/a",
-      "extension": ".pdf",
-      "mediaType": "application/pdf",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.pdf@1.4/x#editor",
-      "formatKind": "s.stdio.pdf@1.4/x",
-      "extension": ".pdf",
-      "mediaType": "application/pdf",
-      "binary": true
-    },
-    {
-      "appId": "s.stdio.idml@8.0/*#editor",
-      "formatKind": "s.stdio.idml@8.0",
-      "extension": ".idml",
-      "mediaType": "application/vnd.adobe.indesign-idml-package",
+      "appId": "s.stdio.zip@2.0/iso21320#editor",
+      "formatKind": "s.stdio.zip@2.0",
+      "extension": ".zip",
+      "mediaType": "application/zip",
       "binary": true
     }
   ],
@@ -538,5 +699,6 @@
       "openedInstanceId": 8,
       "openedHistoryEntries": 0
     }
-  }
+  },
+  "capabilityGaps": []
 }

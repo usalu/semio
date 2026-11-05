@@ -2,7 +2,7 @@
  * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireArray, normWireBoolean, normWireInteger, normWireLiteral, normWireNullable, normWireNumber, normWireObject, normWireOptional, normWireRange, normWireRef, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
-import { type AccidentalCase, parseAccidentalCase, type AccidentalExplosion, parseAccidentalExplosion, type AccidentalImpact, parseAccidentalImpact, type BridgeLane, parseBridgeLane, type BulkSolid, parseBulkSolid, type CaseNumber, parseCaseNumber, type CaseRow, parseCaseRow, type CaseText, parseCaseText, type ConstructionLoad, parseConstructionLoad, type ConstructionStage, parseConstructionStage, type CraneHoist, parseCraneHoist, type DerailmentCase, parseDerailmentCase, type DynamicElement, parseDynamicElement, type En1991FireOccupancy, parseEn1991FireOccupancy, type ExecutionImperfection, parseExecutionImperfection, type FallingLoad, parseFallingLoad, type FatigueModel, parseFatigueModel, type FloorArea, parseFloorArea, type Footbridge, parseFootbridge, type HelicopterLanding, parseHelicopterLanding, type ImpactAction, parseImpactAction, type InternalExplosion, parseInternalExplosion, type LoadDispersal, parseLoadDispersal, type LocalFire, parseLocalFire, type Placement, parsePlacement, type RailDynamic, parseRailDynamic, type RoofArea, parseRoofArea, type RoofSurface, parseRoofSurface, type RotatingMachine, parseRotatingMachine, type SelfWeightElement, parseSelfWeightElement, type SnowGuard, parseSnowGuard, type SpecialVehicle, parseSpecialVehicle, type SupportCollision, parseSupportCollision, type ThermalSection, parseThermalSection, type TieRun, parseTieRun, type WindBridge, parseWindBridge, type WindFace, parseWindFace } from "../📸️snapshot/🟦️.ts";
+import { type AccidentalCase, parseAccidentalCase, type AccidentalExplosion, parseAccidentalExplosion, type AccidentalImpact, parseAccidentalImpact, type BridgeLane, parseBridgeLane, type BulkSolid, parseBulkSolid, type CaseNumber, parseCaseNumber, type CaseRow, parseCaseRow, type CaseText, parseCaseText, type ConstructionLoad, parseConstructionLoad, type ConstructionStage, parseConstructionStage, type CraneHoist, parseCraneHoist, type DerailmentCase, parseDerailmentCase, type DustExplosion, parseDustExplosion, type DynamicElement, parseDynamicElement, type En1991FireOccupancy, parseEn1991FireOccupancy, type ExecutionImperfection, parseExecutionImperfection, type FallingLoad, parseFallingLoad, type FatigueModel, parseFatigueModel, type FloorArea, parseFloorArea, type Footbridge, parseFootbridge, type HelicopterLanding, parseHelicopterLanding, type ImpactAction, parseImpactAction, type InternalExplosion, parseInternalExplosion, type LoadDispersal, parseLoadDispersal, type LocalFire, parseLocalFire, type Placement, parsePlacement, type RailDerailment, parseRailDerailment, type RailDynamic, parseRailDynamic, type RailLoadGroup, parseRailLoadGroup, type RoofArea, parseRoofArea, type RoofSurface, parseRoofSurface, type RotatingMachine, parseRotatingMachine, type SelfWeightElement, parseSelfWeightElement, type SnowGuard, parseSnowGuard, type SpecialVehicle, parseSpecialVehicle, type SupportCollision, parseSupportCollision, type ThermalSection, parseThermalSection, type TieRun, parseTieRun, type WindBridge, parseWindBridge, type WindFace, parseWindFace } from "../📸️snapshot/🟦️.ts";
 
 export interface En1991Diff {
   /** @state artifact */
@@ -219,6 +219,12 @@ export interface En1991Diff {
   bulkSolids: En1991BulkSolidDelta;
   /** @state artifact */
   rotatingMachines: En1991RotatingMachineDelta;
+  /** @state artifact */
+  dustExplosions: En1991DustExplosionDelta;
+  /** @state artifact */
+  railLoadGroups: En1991RailLoadGroupDelta;
+  /** @state artifact */
+  railDerailments: En1991RailDerailmentDelta;
   /** @state artifact */
   fatigueModels?: En1991FatigueModelDelta;
   /** @state artifact */
@@ -841,8 +847,8 @@ export interface CaseRowPatch {
   labelEn?: string | null;
   labelDe?: string | null;
   entryId?: string | null;
-  numbers: CaseNumberDelta;
-  texts: CaseTextDelta;
+  numbers?: CaseNumberDelta;
+  texts?: CaseTextDelta;
 }
 
 export interface CaseRowRemoval {
@@ -1132,6 +1138,7 @@ export interface En1991FootbridgePatch {
   loadedLength?: number | null;
   deckWidth?: number | null;
   naturalFrequency?: number | null;
+  assumedServiceAxle?: number | null;
 }
 
 export interface En1991FootbridgeRemoval {
@@ -1437,7 +1444,118 @@ export interface En1991SnowGuardPatch {
   assumedForce?: number | null;
 }
 
-export const parseEn1991Diff: NormWireReader<En1991Diff> = normWireObject<En1991Diff>({ annex: normWireOptional(normWireNullable(normWireLiteral("En", "De"))), snowZone: normWireOptional(normWireNullable(normWireString)), altitude: normWireOptional(normWireNullable(normWireNumber)), enSk: normWireOptional(normWireNullable(normWireNumber)), northGermanLowlandSnow: normWireOptional(normWireNullable(normWireBoolean)), windZone: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), enVb: normWireOptional(normWireNullable(normWireNumber)), terrainCategory: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), mixedTerrainUpwind: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), mixedTerrainDistance: normWireOptional(normWireNullable(normWireNumber)), orographyFactor: normWireOptional(normWireNullable(normWireNumber)), coastOrIsland: normWireOptional(normWireNullable(normWireBoolean)), airDensity: normWireOptional(normWireNullable(normWireNumber)), height: normWireOptional(normWireNullable(normWireNumber)), width: normWireOptional(normWireNullable(normWireNumber)), depth: normWireOptional(normWireNullable(normWireNumber)), assumedDeltaT: normWireOptional(normWireNullable(normWireNumber)), tMax: normWireOptional(normWireNullable(normWireNumber)), tMin: normWireOptional(normWireNullable(normWireNumber)), t0: normWireOptional(normWireNullable(normWireNumber)), thermalElementType: normWireOptional(normWireNullable(normWireString)), thermalBridgeType: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), deltaTM: normWireOptional(normWireNullable(normWireNumber)), storeyCount: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), fireMode: normWireOptional(normWireNullable(normWireLiteral("none", "nominal", "parametric"))), fireCurve: normWireOptional(normWireNullable(normWireLiteral("standard", "external", "hydrocarbon", "parametric"))), fireDuration: normWireOptional(normWireNullable(normWireNumber)), assumedGasTemperature: normWireOptional(normWireNullable(normWireNumber)), assumedHNet: normWireOptional(normWireNullable(normWireNumber)), fireCompartmentArea: normWireOptional(normWireNullable(normWireNumber)), fireCompartmentHeight: normWireOptional(normWireNullable(normWireNumber)), fireOpeningFactor: normWireOptional(normWireNullable(normWireNumber)), fireThermalInertia: normWireOptional(normWireNullable(normWireNumber)), fireOccupancy: normWireOptional(normWireNullable(parseEn1991FireOccupancy)), fireLoadDensityQf: normWireOptional(normWireNullable(normWireNumber)), assumedQfD: normWireOptional(normWireNullable(normWireNumber)), constructionActivity: normWireOptional(normWireNullable(normWireString)), assumedConstructionQk: normWireOptional(normWireNullable(normWireNumber)), structureKind: normWireOptional(normWireNullable(normWireLiteral("building", "bridge"))), bridgeLane: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), bridgeSpan: normWireOptional(normWireNullable(normWireNumber)), bridgeLaneWidth: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeTandem: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeUdl: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeLm2: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeFootway: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeLm3: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeLm4: normWireOptional(normWireNullable(normWireNumber)), bridgeLoadGroup: normWireOptional(normWireNullable(normWireString)), craneClaimed: normWireOptional(normWireNullable(normWireBoolean)), craneClass: normWireOptional(normWireNullable(normWireString)), hoistClass: normWireOptional(normWireNullable(normWireString)), hoistingSpeed: normWireOptional(normWireNullable(normWireNumber)), assumedCraneWheel: normWireOptional(normWireNullable(normWireNumber)), assumedCraneHorizontal: normWireOptional(normWireNullable(normWireNumber)), siloClaimed: normWireOptional(normWireNullable(normWireBoolean)), siloKind: normWireOptional(normWireNullable(normWireString)), siloBulkDensity: normWireOptional(normWireNullable(normWireNumber)), siloHeight: normWireOptional(normWireNullable(normWireNumber)), siloHydraulicRadius: normWireOptional(normWireNullable(normWireNumber)), siloMu: normWireOptional(normWireNullable(normWireNumber)), siloK: normWireOptional(normWireNullable(normWireNumber)), assumedSiloPressure: normWireOptional(normWireNullable(normWireNumber)), assumedSiloPatch: normWireOptional(normWireNullable(normWireNumber)), assumedSiloWallFriction: normWireOptional(normWireNullable(normWireNumber)), bridgeTandemX: normWireOptional(normWireNullable(normWireNumber)), railAlpha: normWireOptional(normWireNullable(normWireNumber)), assumedRailLm71: normWireOptional(normWireNullable(normWireNumber)), assumedRailLm71Udl: normWireOptional(normWireNullable(normWireNumber)), assumedRailSw0: normWireOptional(normWireNullable(normWireNumber)), assumedRailSw2: normWireOptional(normWireNullable(normWireNumber)), craneX: normWireOptional(normWireNullable(normWireNumber)), craneRunwayLength: normWireOptional(normWireNullable(normWireNumber)), craneWheelBase: normWireOptional(normWireNullable(normWireNumber)), siloDiameter: normWireOptional(normWireNullable(normWireNumber)), siloEccentricity: normWireOptional(normWireNullable(normWireNumber)), siloHopperAngleDeg: normWireOptional(normWireNullable(normWireNumber)), bridgeCurveRadius: normWireOptional(normWireNullable(normWireNumber)), fireLoadBasis: normWireOptional(normWireNullable(normWireLiteral("occupancyTable", "userSpecified"))), floors: normWireRequired(normWireRef(() => parseEn1991FloorDelta)), selfWeightElements: normWireRequired(normWireRef(() => parseEn1991SelfWeightElementDelta)), roofs: normWireRequired(normWireRef(() => parseEn1991RoofDelta)), windFaces: normWireRequired(normWireRef(() => parseEn1991WindFaceDelta)), accidentalCases: normWireRequired(normWireRef(() => parseEn1991AccidentalCaseDelta)), bridgeLanes: normWireRequired(normWireRef(() => parseEn1991BridgeLaneDelta)), constructionStages: normWireRequired(normWireRef(() => parseEn1991ConstructionStageDelta)), roofSurfaces: normWireRequired(normWireRef(() => parseEn1991RoofSurfaceDelta)), placements: normWireRequired(normWireRef(() => parseEn1991PlacementDelta)), specialVehicles: normWireRequired(normWireRef(() => parseEn1991SpecialVehicleDelta)), windBridges: normWireRequired(normWireRef(() => parseEn1991WindBridgeDelta)), dynamicElements: normWireRequired(normWireRef(() => parseEn1991DynamicElementDelta)), impactActions: normWireRequired(normWireRef(() => parseEn1991ImpactActionDelta)), internalExplosions: normWireRequired(normWireRef(() => parseEn1991InternalExplosionDelta)), thermalSections: normWireRequired(normWireRef(() => parseEn1991ThermalSectionDelta)), cases: normWireRequired(normWireRef(() => parseCaseRowDelta)), helicopterLandings: normWireRequired(normWireRef(() => parseEn1991HelicopterLandingDelta)), tieRuns: normWireRequired(normWireRef(() => parseEn1991TieRunDelta)), constructionLoads: normWireRequired(normWireRef(() => parseEn1991ConstructionLoadDelta)), fallingLoads: normWireRequired(normWireRef(() => parseEn1991FallingLoadDelta)), executionImperfections: normWireRequired(normWireRef(() => parseEn1991ExecutionImperfectionDelta)), derailmentCases: normWireRequired(normWireRef(() => parseEn1991DerailmentCaseDelta)), craneHoists: normWireRequired(normWireRef(() => parseEn1991CraneHoistDelta)), footbridges: normWireRequired(normWireRef(() => parseEn1991FootbridgeDelta)), railDynamics: normWireRequired(normWireRef(() => parseEn1991RailDynamicDelta)), loadDispersals: normWireRequired(normWireRef(() => parseEn1991LoadDispersalDelta)), bulkSolids: normWireRequired(normWireRef(() => parseEn1991BulkSolidDelta)), rotatingMachines: normWireRequired(normWireRef(() => parseEn1991RotatingMachineDelta)), fatigueModels: normWireOptional(normWireRef(() => parseEn1991FatigueModelDelta)), supportCollisions: normWireOptional(normWireRef(() => parseEn1991SupportCollisionDelta)), localFires: normWireOptional(normWireRef(() => parseEn1991LocalFireDelta)), snowGuards: normWireOptional(normWireRef(() => parseEn1991SnowGuardDelta)) });
+export interface En1991RailDerailmentRemoval {
+  id: string;
+  index: number;
+}
+
+export interface En1991RailDerailmentInsertion {
+  index: number;
+  row: RailDerailment;
+}
+
+export interface En1991RailDerailmentRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1991RailDerailmentModification {
+  id: string;
+  patch: En1991RailDerailmentPatch;
+}
+
+export interface En1991RailDerailmentDelta {
+  removed: En1991RailDerailmentRemoval[];
+  inserted: En1991RailDerailmentInsertion[];
+  moved: En1991RailDerailmentRelocation[];
+  modified: En1991RailDerailmentModification[];
+}
+
+export interface En1991RailDerailmentPatch {
+  situation?: string | null;
+  assumedLineLoad?: number | null;
+  loadedLength?: number | null;
+  offset?: number | null;
+}
+
+export interface En1991RailLoadGroupRemoval {
+  id: string;
+  index: number;
+}
+
+export interface En1991RailLoadGroupInsertion {
+  index: number;
+  row: RailLoadGroup;
+}
+
+export interface En1991RailLoadGroupRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1991RailLoadGroupModification {
+  id: string;
+  patch: En1991RailLoadGroupPatch;
+}
+
+export interface En1991RailLoadGroupDelta {
+  removed: En1991RailLoadGroupRemoval[];
+  inserted: En1991RailLoadGroupInsertion[];
+  moved: En1991RailLoadGroupRelocation[];
+  modified: En1991RailLoadGroupModification[];
+}
+
+export interface En1991RailLoadGroupPatch {
+  loadGroup?: string | null;
+  factorVertical?: number | null;
+  factorLongitudinal?: number | null;
+  factorLateral?: number | null;
+  assumedAxleLoad?: number | null;
+  assumedUdl?: number | null;
+  assumedLongitudinal?: number | null;
+  assumedLateral?: number | null;
+}
+
+export interface En1991DustExplosionRemoval {
+  id: string;
+  index: number;
+}
+
+export interface En1991DustExplosionInsertion {
+  index: number;
+  row: DustExplosion;
+}
+
+export interface En1991DustExplosionRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1991DustExplosionModification {
+  id: string;
+  patch: En1991DustExplosionPatch;
+}
+
+export interface En1991DustExplosionDelta {
+  removed: En1991DustExplosionRemoval[];
+  inserted: En1991DustExplosionInsertion[];
+  moved: En1991DustExplosionRelocation[];
+  modified: En1991DustExplosionModification[];
+}
+
+export interface En1991DustExplosionPatch {
+  kst?: number | null;
+  pMax?: number | null;
+  volume?: number | null;
+  ventArea?: number | null;
+  staticOpeningPressure?: number | null;
+  designPressure?: number | null;
+}
+
+export const parseEn1991Diff: NormWireReader<En1991Diff> = normWireObject<En1991Diff>({ annex: normWireOptional(normWireNullable(normWireLiteral("En", "De"))), snowZone: normWireOptional(normWireNullable(normWireString)), altitude: normWireOptional(normWireNullable(normWireNumber)), enSk: normWireOptional(normWireNullable(normWireNumber)), northGermanLowlandSnow: normWireOptional(normWireNullable(normWireBoolean)), windZone: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), enVb: normWireOptional(normWireNullable(normWireNumber)), terrainCategory: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), mixedTerrainUpwind: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), mixedTerrainDistance: normWireOptional(normWireNullable(normWireNumber)), orographyFactor: normWireOptional(normWireNullable(normWireNumber)), coastOrIsland: normWireOptional(normWireNullable(normWireBoolean)), airDensity: normWireOptional(normWireNullable(normWireNumber)), height: normWireOptional(normWireNullable(normWireNumber)), width: normWireOptional(normWireNullable(normWireNumber)), depth: normWireOptional(normWireNullable(normWireNumber)), assumedDeltaT: normWireOptional(normWireNullable(normWireNumber)), tMax: normWireOptional(normWireNullable(normWireNumber)), tMin: normWireOptional(normWireNullable(normWireNumber)), t0: normWireOptional(normWireNullable(normWireNumber)), thermalElementType: normWireOptional(normWireNullable(normWireString)), thermalBridgeType: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), deltaTM: normWireOptional(normWireNullable(normWireNumber)), storeyCount: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), fireMode: normWireOptional(normWireNullable(normWireLiteral("none", "nominal", "parametric"))), fireCurve: normWireOptional(normWireNullable(normWireLiteral("standard", "external", "hydrocarbon", "parametric"))), fireDuration: normWireOptional(normWireNullable(normWireNumber)), assumedGasTemperature: normWireOptional(normWireNullable(normWireNumber)), assumedHNet: normWireOptional(normWireNullable(normWireNumber)), fireCompartmentArea: normWireOptional(normWireNullable(normWireNumber)), fireCompartmentHeight: normWireOptional(normWireNullable(normWireNumber)), fireOpeningFactor: normWireOptional(normWireNullable(normWireNumber)), fireThermalInertia: normWireOptional(normWireNullable(normWireNumber)), fireOccupancy: normWireOptional(normWireNullable(parseEn1991FireOccupancy)), fireLoadDensityQf: normWireOptional(normWireNullable(normWireNumber)), assumedQfD: normWireOptional(normWireNullable(normWireNumber)), constructionActivity: normWireOptional(normWireNullable(normWireString)), assumedConstructionQk: normWireOptional(normWireNullable(normWireNumber)), structureKind: normWireOptional(normWireNullable(normWireLiteral("building", "bridge"))), bridgeLane: normWireOptional(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255}))), bridgeSpan: normWireOptional(normWireNullable(normWireNumber)), bridgeLaneWidth: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeTandem: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeUdl: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeLm2: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeFootway: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeLm3: normWireOptional(normWireNullable(normWireNumber)), assumedBridgeLm4: normWireOptional(normWireNullable(normWireNumber)), bridgeLoadGroup: normWireOptional(normWireNullable(normWireString)), craneClaimed: normWireOptional(normWireNullable(normWireBoolean)), craneClass: normWireOptional(normWireNullable(normWireString)), hoistClass: normWireOptional(normWireNullable(normWireString)), hoistingSpeed: normWireOptional(normWireNullable(normWireNumber)), assumedCraneWheel: normWireOptional(normWireNullable(normWireNumber)), assumedCraneHorizontal: normWireOptional(normWireNullable(normWireNumber)), siloClaimed: normWireOptional(normWireNullable(normWireBoolean)), siloKind: normWireOptional(normWireNullable(normWireString)), siloBulkDensity: normWireOptional(normWireNullable(normWireNumber)), siloHeight: normWireOptional(normWireNullable(normWireNumber)), siloHydraulicRadius: normWireOptional(normWireNullable(normWireNumber)), siloMu: normWireOptional(normWireNullable(normWireNumber)), siloK: normWireOptional(normWireNullable(normWireNumber)), assumedSiloPressure: normWireOptional(normWireNullable(normWireNumber)), assumedSiloPatch: normWireOptional(normWireNullable(normWireNumber)), assumedSiloWallFriction: normWireOptional(normWireNullable(normWireNumber)), bridgeTandemX: normWireOptional(normWireNullable(normWireNumber)), railAlpha: normWireOptional(normWireNullable(normWireNumber)), assumedRailLm71: normWireOptional(normWireNullable(normWireNumber)), assumedRailLm71Udl: normWireOptional(normWireNullable(normWireNumber)), assumedRailSw0: normWireOptional(normWireNullable(normWireNumber)), assumedRailSw2: normWireOptional(normWireNullable(normWireNumber)), craneX: normWireOptional(normWireNullable(normWireNumber)), craneRunwayLength: normWireOptional(normWireNullable(normWireNumber)), craneWheelBase: normWireOptional(normWireNullable(normWireNumber)), siloDiameter: normWireOptional(normWireNullable(normWireNumber)), siloEccentricity: normWireOptional(normWireNullable(normWireNumber)), siloHopperAngleDeg: normWireOptional(normWireNullable(normWireNumber)), bridgeCurveRadius: normWireOptional(normWireNullable(normWireNumber)), fireLoadBasis: normWireOptional(normWireNullable(normWireLiteral("occupancyTable", "userSpecified"))), floors: normWireRequired(normWireRef(() => parseEn1991FloorDelta)), selfWeightElements: normWireRequired(normWireRef(() => parseEn1991SelfWeightElementDelta)), roofs: normWireRequired(normWireRef(() => parseEn1991RoofDelta)), windFaces: normWireRequired(normWireRef(() => parseEn1991WindFaceDelta)), accidentalCases: normWireRequired(normWireRef(() => parseEn1991AccidentalCaseDelta)), bridgeLanes: normWireRequired(normWireRef(() => parseEn1991BridgeLaneDelta)), constructionStages: normWireRequired(normWireRef(() => parseEn1991ConstructionStageDelta)), roofSurfaces: normWireRequired(normWireRef(() => parseEn1991RoofSurfaceDelta)), placements: normWireRequired(normWireRef(() => parseEn1991PlacementDelta)), specialVehicles: normWireRequired(normWireRef(() => parseEn1991SpecialVehicleDelta)), windBridges: normWireRequired(normWireRef(() => parseEn1991WindBridgeDelta)), dynamicElements: normWireRequired(normWireRef(() => parseEn1991DynamicElementDelta)), impactActions: normWireRequired(normWireRef(() => parseEn1991ImpactActionDelta)), internalExplosions: normWireRequired(normWireRef(() => parseEn1991InternalExplosionDelta)), thermalSections: normWireRequired(normWireRef(() => parseEn1991ThermalSectionDelta)), cases: normWireRequired(normWireRef(() => parseCaseRowDelta)), helicopterLandings: normWireRequired(normWireRef(() => parseEn1991HelicopterLandingDelta)), tieRuns: normWireRequired(normWireRef(() => parseEn1991TieRunDelta)), constructionLoads: normWireRequired(normWireRef(() => parseEn1991ConstructionLoadDelta)), fallingLoads: normWireRequired(normWireRef(() => parseEn1991FallingLoadDelta)), executionImperfections: normWireRequired(normWireRef(() => parseEn1991ExecutionImperfectionDelta)), derailmentCases: normWireRequired(normWireRef(() => parseEn1991DerailmentCaseDelta)), craneHoists: normWireRequired(normWireRef(() => parseEn1991CraneHoistDelta)), footbridges: normWireRequired(normWireRef(() => parseEn1991FootbridgeDelta)), railDynamics: normWireRequired(normWireRef(() => parseEn1991RailDynamicDelta)), loadDispersals: normWireRequired(normWireRef(() => parseEn1991LoadDispersalDelta)), bulkSolids: normWireRequired(normWireRef(() => parseEn1991BulkSolidDelta)), rotatingMachines: normWireRequired(normWireRef(() => parseEn1991RotatingMachineDelta)), dustExplosions: normWireRequired(normWireRef(() => parseEn1991DustExplosionDelta)), railLoadGroups: normWireRequired(normWireRef(() => parseEn1991RailLoadGroupDelta)), railDerailments: normWireRequired(normWireRef(() => parseEn1991RailDerailmentDelta)), fatigueModels: normWireOptional(normWireRef(() => parseEn1991FatigueModelDelta)), supportCollisions: normWireOptional(normWireRef(() => parseEn1991SupportCollisionDelta)), localFires: normWireOptional(normWireRef(() => parseEn1991LocalFireDelta)), snowGuards: normWireOptional(normWireRef(() => parseEn1991SnowGuardDelta)) });
 export const parseEn1991FloorPatch: NormWireReader<En1991FloorPatch> = normWireObject<En1991FloorPatch>({ category: normWireOptional(normWireNullable(normWireString)), area: normWireOptional(normWireNullable(normWireNumber)), assumedQk: normWireOptional(normWireNullable(normWireNumber)), assumedQkConcentrated: normWireOptional(normWireNullable(normWireNumber)), assumedPartitions: normWireOptional(normWireNullable(normWireNumber)) });
 export const parseEn1991FloorRemoval: NormWireReader<En1991FloorRemoval> = normWireObject<En1991FloorRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
 export const parseEn1991FloorInsertion: NormWireReader<En1991FloorInsertion> = normWireObject<En1991FloorInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseFloorArea) });
@@ -1540,7 +1658,7 @@ export const parseCaseTextInsertion: NormWireReader<CaseTextInsertion> = normWir
 export const parseCaseTextRelocation: NormWireReader<CaseTextRelocation> = normWireObject<CaseTextRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
 export const parseCaseTextModification: NormWireReader<CaseTextModification> = normWireObject<CaseTextModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseCaseTextPatch)) });
 export const parseCaseTextDelta: NormWireReader<CaseTextDelta> = normWireObject<CaseTextDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseCaseTextRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseCaseTextInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseCaseTextRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseCaseTextModification))) });
-export const parseCaseRowPatch: NormWireReader<CaseRowPatch> = normWireObject<CaseRowPatch>({ labelEn: normWireOptional(normWireNullable(normWireString)), labelDe: normWireOptional(normWireNullable(normWireString)), entryId: normWireOptional(normWireNullable(normWireString)), numbers: normWireRequired(normWireRef(() => parseCaseNumberDelta)), texts: normWireRequired(normWireRef(() => parseCaseTextDelta)) });
+export const parseCaseRowPatch: NormWireReader<CaseRowPatch> = normWireObject<CaseRowPatch>({ labelEn: normWireOptional(normWireNullable(normWireString)), labelDe: normWireOptional(normWireNullable(normWireString)), entryId: normWireOptional(normWireNullable(normWireString)), numbers: normWireOptional(normWireRef(() => parseCaseNumberDelta)), texts: normWireOptional(normWireRef(() => parseCaseTextDelta)) });
 export const parseCaseRowRemoval: NormWireReader<CaseRowRemoval> = normWireObject<CaseRowRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
 export const parseCaseRowInsertion: NormWireReader<CaseRowInsertion> = normWireObject<CaseRowInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseCaseRow) });
 export const parseCaseRowRelocation: NormWireReader<CaseRowRelocation> = normWireObject<CaseRowRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
@@ -1588,7 +1706,7 @@ export const parseEn1991CraneHoistInsertion: NormWireReader<En1991CraneHoistInse
 export const parseEn1991CraneHoistRelocation: NormWireReader<En1991CraneHoistRelocation> = normWireObject<En1991CraneHoistRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
 export const parseEn1991CraneHoistModification: NormWireReader<En1991CraneHoistModification> = normWireObject<En1991CraneHoistModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1991CraneHoistPatch)) });
 export const parseEn1991CraneHoistDelta: NormWireReader<En1991CraneHoistDelta> = normWireObject<En1991CraneHoistDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1991CraneHoistRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1991CraneHoistInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1991CraneHoistRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1991CraneHoistModification))) });
-export const parseEn1991FootbridgePatch: NormWireReader<En1991FootbridgePatch> = normWireObject<En1991FootbridgePatch>({ loadedLength: normWireOptional(normWireNullable(normWireNumber)), deckWidth: normWireOptional(normWireNullable(normWireNumber)), naturalFrequency: normWireOptional(normWireNullable(normWireNumber)) });
+export const parseEn1991FootbridgePatch: NormWireReader<En1991FootbridgePatch> = normWireObject<En1991FootbridgePatch>({ loadedLength: normWireOptional(normWireNullable(normWireNumber)), deckWidth: normWireOptional(normWireNullable(normWireNumber)), naturalFrequency: normWireOptional(normWireNullable(normWireNumber)), assumedServiceAxle: normWireOptional(normWireNullable(normWireNumber)) });
 export const parseEn1991FootbridgeRemoval: NormWireReader<En1991FootbridgeRemoval> = normWireObject<En1991FootbridgeRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
 export const parseEn1991FootbridgeInsertion: NormWireReader<En1991FootbridgeInsertion> = normWireObject<En1991FootbridgeInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseFootbridge) });
 export const parseEn1991FootbridgeRelocation: NormWireReader<En1991FootbridgeRelocation> = normWireObject<En1991FootbridgeRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
@@ -1642,3 +1760,21 @@ export const parseEn1991SnowGuardRelocation: NormWireReader<En1991SnowGuardReloc
 export const parseEn1991SnowGuardModification: NormWireReader<En1991SnowGuardModification> = normWireObject<En1991SnowGuardModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1991SnowGuardPatch)) });
 export const parseEn1991SnowGuardDelta: NormWireReader<En1991SnowGuardDelta> = normWireObject<En1991SnowGuardDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1991SnowGuardRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1991SnowGuardInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1991SnowGuardRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1991SnowGuardModification))) });
 export const parseEn1991SnowGuardPatch: NormWireReader<En1991SnowGuardPatch> = normWireObject<En1991SnowGuardPatch>({ roofId: normWireOptional(normWireNullable(normWireString)), slopeLength: normWireOptional(normWireNullable(normWireNumber)), assumedForce: normWireOptional(normWireNullable(normWireNumber)) });
+export const parseEn1991RailDerailmentRemoval: NormWireReader<En1991RailDerailmentRemoval> = normWireObject<En1991RailDerailmentRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseEn1991RailDerailmentInsertion: NormWireReader<En1991RailDerailmentInsertion> = normWireObject<En1991RailDerailmentInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseRailDerailment) });
+export const parseEn1991RailDerailmentRelocation: NormWireReader<En1991RailDerailmentRelocation> = normWireObject<En1991RailDerailmentRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseEn1991RailDerailmentModification: NormWireReader<En1991RailDerailmentModification> = normWireObject<En1991RailDerailmentModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1991RailDerailmentPatch)) });
+export const parseEn1991RailDerailmentDelta: NormWireReader<En1991RailDerailmentDelta> = normWireObject<En1991RailDerailmentDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1991RailDerailmentRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1991RailDerailmentInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1991RailDerailmentRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1991RailDerailmentModification))) });
+export const parseEn1991RailDerailmentPatch: NormWireReader<En1991RailDerailmentPatch> = normWireObject<En1991RailDerailmentPatch>({ situation: normWireOptional(normWireNullable(normWireString)), assumedLineLoad: normWireOptional(normWireNullable(normWireNumber)), loadedLength: normWireOptional(normWireNullable(normWireNumber)), offset: normWireOptional(normWireNullable(normWireNumber)) });
+export const parseEn1991RailLoadGroupRemoval: NormWireReader<En1991RailLoadGroupRemoval> = normWireObject<En1991RailLoadGroupRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseEn1991RailLoadGroupInsertion: NormWireReader<En1991RailLoadGroupInsertion> = normWireObject<En1991RailLoadGroupInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseRailLoadGroup) });
+export const parseEn1991RailLoadGroupRelocation: NormWireReader<En1991RailLoadGroupRelocation> = normWireObject<En1991RailLoadGroupRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseEn1991RailLoadGroupModification: NormWireReader<En1991RailLoadGroupModification> = normWireObject<En1991RailLoadGroupModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1991RailLoadGroupPatch)) });
+export const parseEn1991RailLoadGroupDelta: NormWireReader<En1991RailLoadGroupDelta> = normWireObject<En1991RailLoadGroupDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1991RailLoadGroupRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1991RailLoadGroupInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1991RailLoadGroupRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1991RailLoadGroupModification))) });
+export const parseEn1991RailLoadGroupPatch: NormWireReader<En1991RailLoadGroupPatch> = normWireObject<En1991RailLoadGroupPatch>({ loadGroup: normWireOptional(normWireNullable(normWireString)), factorVertical: normWireOptional(normWireNullable(normWireNumber)), factorLongitudinal: normWireOptional(normWireNullable(normWireNumber)), factorLateral: normWireOptional(normWireNullable(normWireNumber)), assumedAxleLoad: normWireOptional(normWireNullable(normWireNumber)), assumedUdl: normWireOptional(normWireNullable(normWireNumber)), assumedLongitudinal: normWireOptional(normWireNullable(normWireNumber)), assumedLateral: normWireOptional(normWireNullable(normWireNumber)) });
+export const parseEn1991DustExplosionRemoval: NormWireReader<En1991DustExplosionRemoval> = normWireObject<En1991DustExplosionRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseEn1991DustExplosionInsertion: NormWireReader<En1991DustExplosionInsertion> = normWireObject<En1991DustExplosionInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseDustExplosion) });
+export const parseEn1991DustExplosionRelocation: NormWireReader<En1991DustExplosionRelocation> = normWireObject<En1991DustExplosionRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseEn1991DustExplosionModification: NormWireReader<En1991DustExplosionModification> = normWireObject<En1991DustExplosionModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1991DustExplosionPatch)) });
+export const parseEn1991DustExplosionDelta: NormWireReader<En1991DustExplosionDelta> = normWireObject<En1991DustExplosionDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1991DustExplosionRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1991DustExplosionInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1991DustExplosionRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1991DustExplosionModification))) });
+export const parseEn1991DustExplosionPatch: NormWireReader<En1991DustExplosionPatch> = normWireObject<En1991DustExplosionPatch>({ kst: normWireOptional(normWireNullable(normWireNumber)), pMax: normWireOptional(normWireNullable(normWireNumber)), volume: normWireOptional(normWireNullable(normWireNumber)), ventArea: normWireOptional(normWireNullable(normWireNumber)), staticOpeningPressure: normWireOptional(normWireNullable(normWireNumber)), designPressure: normWireOptional(normWireNullable(normWireNumber)) });

@@ -1,41 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC2",
-  "cases": [
-    {
-      "id": "case-c94-09",
-      "labelEn": "Floor beam natural frequency",
-      "labelDe": "Eigenfrequenz Deckenträger",
-      "entryId": "C94-04",
-      "numbers": [
-        {
-          "id": "l_span",
-          "value": 8.0
-        },
-        {
-          "id": "g_line",
-          "value": 10000.0
-        },
-        {
-          "id": "q_line",
-          "value": 15000.0
-        },
-        {
-          "id": "psi_vib",
-          "value": 0.3
-        },
-        {
-          "id": "i_short",
-          "value": 0.0006
-        },
-        {
-          "id": "f_min",
-          "value": 3.0
-        }
-      ],
-      "texts": []
-    }
-  ],
   "structureKind": "building",
   "steelFYPa": 355000000.0,
   "beams": [
@@ -264,6 +228,7 @@
   "fireRating": "r60",
   "insulationThicknessM": 0.025,
   "fatigueDetail": "studWelded",
+  "reliabilityClass": "RC2",
   "studs": [
     {
       "id": "beam-B1-stud-0",
@@ -584,6 +549,41 @@
       "diameterM": 0.019,
       "heightM": 0.095,
       "fUPa": 450000000.0
+    }
+  ],
+  "cases": [
+    {
+      "id": "case-c94-09",
+      "labelEn": "Floor beam natural frequency",
+      "labelDe": "Eigenfrequenz Deckenträger",
+      "entryId": "C94-04",
+      "numbers": [
+        {
+          "id": "l_span",
+          "value": 8.0
+        },
+        {
+          "id": "g_line",
+          "value": 10000.0
+        },
+        {
+          "id": "q_line",
+          "value": 15000.0
+        },
+        {
+          "id": "psi_vib",
+          "value": 0.3
+        },
+        {
+          "id": "i_short",
+          "value": 0.0006
+        },
+        {
+          "id": "f_min",
+          "value": 3.0
+        }
+      ],
+      "texts": []
     }
   ]
 }

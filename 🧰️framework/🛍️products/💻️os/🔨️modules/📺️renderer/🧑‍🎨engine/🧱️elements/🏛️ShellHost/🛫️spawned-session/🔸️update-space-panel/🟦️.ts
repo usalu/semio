@@ -1,4 +1,5 @@
 /** 🔸️ The update space panel phase of useSpawnedSession. */
+import { captureProgramRetirementOwnersV1, sameProgramRetirementOwnersV1, type ProgramRetirementRequestV1 } from "../../🚪️program-retirement/🟦️.ts";
 import { useCallback, useEffect, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { shellHumanChangeRecoveryV1, type ShellHumanV1 } from "../../🔀️surface-switch/🟦️.ts";
 import { renameLayoutWindowIdsV1, spawnedLayoutRenameV1 } from "../../🪟️spawned-program/🟦️.ts";
@@ -12,7 +13,7 @@ import { SPAWNED_FOCUS_FRAME_BUDGET, withLocalizedWindowKindLabels } from "../..
 import type { useDocumentServicesState } from "../🔶️document-services/🟦️.ts";
 
 /** 🔹 Builds updateSpacePanel, retireSessionInstance, sessionHumanRef of useSpawnedSession. */
-export function useUpdateSpacePanelState({ session, seededFocusedProgramKeyRef, focusedProgramKey, activeToolIdRef, writeToolRegister, focusedSpawnedId, focusedApp, sessionLayoutBeforeSpawnRef, shellLayout, activeWindowIdRef, appLabelsOverlay, uiTerminology, uiLocale, dispatch, scope, loadedPluginsRef, openDocumentSessionsRef, closeDocumentRef, documentAttachmentLanesRef, identity, sessionRef, shellSessionLaneRef, refreshUi, reportRefreshFault, establishPrimaryWithShardRetry, pluginSupervisorByIdRef, sessionHumanKey }: Pick<ReturnType<typeof useDocumentServicesState>, "session" | "seededFocusedProgramKeyRef" | "focusedProgramKey" | "activeToolIdRef" | "writeToolRegister" | "focusedSpawnedId" | "focusedApp" | "sessionLayoutBeforeSpawnRef" | "shellLayout" | "activeWindowIdRef" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "dispatch" | "scope" | "loadedPluginsRef" | "openDocumentSessionsRef" | "closeDocumentRef" | "documentAttachmentLanesRef" | "identity" | "sessionRef" | "shellSessionLaneRef" | "refreshUi" | "reportRefreshFault" | "establishPrimaryWithShardRetry" | "pluginSupervisorByIdRef" | "sessionHumanKey">) {
+export function useUpdateSpacePanelState({ admitProgramRetirementRef, session, seededFocusedProgramKeyRef, focusedProgramKey, activeToolIdRef, writeToolRegister, focusedSpawnedId, focusedApp, sessionLayoutBeforeSpawnRef, shellLayout, activeWindowIdRef, appLabelsOverlay, uiTerminology, uiLocale, dispatch, scope, loadedPluginsRef, openDocumentSessionsRef, closeDocumentRef, documentAttachmentLanesRef, identity, sessionRef, shellSessionLaneRef, refreshUi, reportRefreshFault, establishPrimaryWithShardRetry, pluginSupervisorByIdRef, sessionHumanKey }: Pick<ReturnType<typeof useDocumentServicesState>, "session" | "seededFocusedProgramKeyRef" | "focusedProgramKey" | "activeToolIdRef" | "writeToolRegister" | "focusedSpawnedId" | "focusedApp" | "sessionLayoutBeforeSpawnRef" | "shellLayout" | "activeWindowIdRef" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "dispatch" | "scope" | "loadedPluginsRef" | "openDocumentSessionsRef" | "closeDocumentRef" | "documentAttachmentLanesRef" | "identity" | "sessionRef" | "shellSessionLaneRef" | "refreshUi" | "reportRefreshFault" | "establishPrimaryWithShardRetry" | "pluginSupervisorByIdRef" | "sessionHumanKey"> & { readonly admitProgramRetirementRef: { current: ProgramRetirementRequestV1 } }) {
   const shellLayoutRef = useRef(shellLayout);
   shellLayoutRef.current = shellLayout;
   useEffect(() => {
@@ -135,14 +136,18 @@ export function useUpdateSpacePanelState({ session, seededFocusedProgramKeyRef, 
       }
       const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === active.pluginId)?.handle;
       if (!handle) return;
+      const owners = captureProgramRetirementOwnersV1(loadedPluginsRef.current, active);
+      const retirement = await admitProgramRetirementRef.current(owners, () => sessionRef.current?.pluginId === active.pluginId && sessionRef.current.app.id === active.app.id && sessionRef.current.instanceId === active.instanceId && sameProgramRetirementOwnersV1(owners, captureProgramRetirementOwnersV1(loadedPluginsRef.current, sessionRef.current)));
+      if (retirement === null) return;
       try {
+        if (!await retirement.retire()) return;
+        dispatch({ type: "SET_SESSION", value: null });
         await establishPrimaryWithShardRetry(handle);
       } catch (error) {
         const fault = windowFaultFromError(error, pluginSupervisorByIdRef.current[active.pluginId]);
         dispatch({ type: "SET_ERROR", value: fault.message, fault });
         return;
-      }
-      await retireSessionInstance(active).catch((retireError: unknown) => console.warn(`[os-shell] superseded instance ${active.pluginId}#${active.instanceId} could not be retired`, retireError));
+      } finally { retirement.release(); }
     });
   }, [sessionHumanKey, establishPrimaryWithShardRetry, retireSessionInstance, refreshUi, reportRefreshFault]);
   return { retireSessionInstance, updateSpacePanel, updateSpacePanelFrom };

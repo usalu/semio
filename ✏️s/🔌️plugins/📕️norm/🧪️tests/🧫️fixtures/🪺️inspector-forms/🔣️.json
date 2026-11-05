@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "locales": [
+    "en",
+    "de"
+  ],
+  "collections": [
+    {
+      "id": "iso-products",
+      "family": "iso16757",
+      "path": "catalogue.products",
+      "row": "catalogue.products[id=P1]",
+      "insert": {
+        "kind": "introduce-product",
+        "item": "product"
+      },
+      "remove": "identity",
+      "setter": false
+    },
+    {
+      "id": "iso-constraints",
+      "family": "iso16757",
+      "path": "selection.constraints",
+      "row": "selection.constraints[0]",
+      "insert": {
+        "kind": "add-selection-constraint",
+        "item": "constraint"
+      },
+      "remove": "index",
+      "setter": false
+    },
+    {
+      "id": "vdi-products",
+      "family": "vdi3805",
+      "path": "catalog.products",
+      "row": "catalog.products[id=RAD-600]",
+      "insert": {
+        "kind": "add-product",
+        "item": "product"
+      },
+      "remove": "identity",
+      "setter": false
+    },
+    {
+      "id": "vdi-records",
+      "family": "vdi3805",
+      "path": "catalog.products[id=RAD-600].records",
+      "row": "catalog.products[id=RAD-600].records[0]",
+      "insert": null,
+      "remove": null,
+      "setter": false
+    },
+    {
+      "id": "vdi-function-references",
+      "family": "vdi3805",
+      "path": "catalog.products[id=RAD-600].configuration.functionRefs",
+      "row": "catalog.products[id=RAD-600].configuration.functionRefs[0]",
+      "insert": null,
+      "remove": null,
+      "setter": true
+    },
+    {
+      "id": "vdi-curve-points",
+      "family": "vdi3805",
+      "path": "curves.pressure.points",
+      "row": "curves.pressure.points[0]",
+      "insert": null,
+      "remove": null,
+      "setter": false
+    }
+  ],
+  "law": {
+    "missingItem": "stage",
+    "schemaSeed": "draft-only",
+    "invalidDraft": "preserve",
+    "domainRefusal": "preserve",
+    "cancel": "discard-without-emission",
+    "accept": "one-existing-mutation"
+  },
+  "variant": {
+    "before": {
+      "kind": "solid",
+      "label": "Member A",
+      "radius": 1
+    },
+    "switchTo": "tube",
+    "expectedDraft": {
+      "kind": "tube",
+      "label": "Member A"
+    },
+    "required": [
+      "outerRadius",
+      "wallThickness"
+    ],
+    "completed": {
+      "kind": "tube",
+      "label": "Member A",
+      "outerRadius": 2,
+      "wallThickness": 0.25
+    },
+    "schema": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label",
+            "radius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "solid"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label",
+            "outerRadius",
+            "wallThickness"
+          ],
+          "properties": {
+            "kind": {
+              "const": "tube"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "outerRadius": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "wallThickness": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      ]
+    }
+  }
+}

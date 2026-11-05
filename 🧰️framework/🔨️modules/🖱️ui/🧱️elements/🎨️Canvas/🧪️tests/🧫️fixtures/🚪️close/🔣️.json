@@ -1,0 +1,7 @@
+{
+  "cases": [
+    { "decision": "accept", "remaining": ["b"] },
+    { "decision": "refuse", "remaining": ["a", "b"] },
+    { "decision": "reject", "remaining": ["a", "b"] }
+  ]
+}

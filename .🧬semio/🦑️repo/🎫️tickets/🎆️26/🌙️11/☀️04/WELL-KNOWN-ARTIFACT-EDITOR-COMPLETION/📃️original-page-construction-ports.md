@@ -1,0 +1,25 @@
+# Original Page Construction and Canceled Framing APIs
+
+Current exact construction port is job/🏭️construction/🦀️.rs:
+admit_original_construction<O>(&mut StepContext, &mut Option<O>, OriginalConstructionDemand, FnOnce(&mut NativeDecodeControl)->RetainedWorkOutcome<(O,RetainedCloneProgress)>) -> Result<bool,OriginalTurnFailure>.
+There is no current with_tool_construction symbol. Action-bus OriginalToolConstructionScope exposes identity() and admit_owner(RetirementDemand), not a NativeEncodeControl. Its scoped wrapper sets work from result.is_ok, so prefer the direct job port when a fallible writer can do work before error.
+
+Construction first requires an empty destination, no outstanding receiving scope, admitted recipient, noncanceled/non-yielded context and a full five-axis demand. It lends the actual original decoder. Candidate moves into output before quote/allocation receipt reconciliation; quote/error/receipt/work are preserved through NativeConstructionStepResult and OriginalReceivingPrimary. Errors use error.retained_progress, so the callback must attach actual partial effects with ValueError::with_retained_progress. Work is independent and must remain nonzero if actual bounded work happened before refusal.
+
+Actual Decode-to-Encode bridge exists at value/🛬️decode/🦀️.rs:
+with_encoding_receiver<T,E:From<ValueError>>(&mut self, FnOnce(usize,&mut dyn FnMut(NativeEncodeProgress)->bool,&mut NativeEncodeAllocationPort)->Result<T,E>)->Result<T,E>.
+Inside that callback NativeEncodeControl::new_forwarded(remaining,observer,allocation) borrows the real parent stock. scoped_encoding_receiver macro in value/🫴️receiving/🦀️.rs forwards every allocation and observer update to the exact original ledger; this is not new independent admission. Canonical tests in value/🫴️receiving/🧪️tests cover Decode and Encode original owners, error, cancelAfter, invalidOffset and unwind while checking cumulative charges.
+
+Therefore a normal zero-heap borrowed JSON write can run through the actual construction decoder's with_encoding_receiver and the existing source-sink writer into already-owned page storage. A copy<=4096/capacity0 demand is valid only when it includes the actual bounded copy and metadata, with no hidden source tree/String/vector allocation. The writer returns written length, not an automatic retained copy receipt. Track actual sink length outside fallible calls and attach partial copied bytes/work on error. Preserve both original semantic source and any partially written backing before returning a refusal. Separate backing birth from zero-allocation encoding avoids a local newly allocated Vec being dropped if encoding fails before construction returns a candidate.
+
+Cancellation cleanup is different. admit_original_construction always returns false when cx.is_cancelled, even inside with_original_retirement. That wrapper changes retirement deadline handling, not is_cancelled. It cannot be used as canceled terminal-page birth by wrapping it alone.
+
+Existing paid close port, job/♻️retirement/🎟️context:
+close_original_retained_step(&mut StepContext, RetirementDemand, FnOnce(RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>) -> Result<InteractiveJobCloseStep,OriginalTurnFailure>.
+Under cx.with_original_retirement it validates the same original parent/context and grants new cleanup backing only when all five remaining currencies admit. It has no cancellation gate. retirement_should_yield still respects fuel, and semantic deadline is bypassed only by the actual original-retirement loan; source stock is never renewed. A raw Vec4096 birth/initialization for the cancellation frame may follow this explicit retained cleanup quote, storing the born owner before returning success/error and reporting capacity/copy/work exactly. receive_original_work posts actual effects and fuel once, retaining semantic/receipt/context refusals together.
+
+That paid close port posts the Job retained ledger; it does not automatically charge NativeDecodeControl::owned_bytes. If decoder receiving custody is additionally required, StepContext::with_native_retirement lends NativeRetirementDecodeControl, whose charge method debits the same original decoder/recipient and paid cleanup capacity even after cancellation. It deliberately exposes no general encoder/checkpoint/parser. Do not invent a fresh encoder or turn that restricted cleanup port into ordinary semantic authoring.
+
+Canonical physical close examples: job/♻️retirement/🎟️context/🧪️tests/🎟️work drives ControlledRetirement cursor births/steps under exact quote and compares actual heap to returned capacity/release/work on denial and error. job/📬️outcome/📤️publication/⚠️fault/🧪️tests uses original-retirement loans to close real typed fault publication frames and verifies physical receipt conservation. No existing correctly funded canceled terminal-result page birth regression was found; current cold page path is exactly the missing test/implementation boundary.
+
+No production code or heavy job was changed/launched in this audit.

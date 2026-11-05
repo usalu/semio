@@ -196,3 +196,11 @@ pub fn norm_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
     NOTICES.as_slice()
 }
 //#endregion 🔖️FaultNotices
+
+/// 🖐️ The window actions that open and close the touch Edit menu (the shell answers a long press with the first); both become `viewportTouchMenu` of `viewportAct`.
+pub const TOUCH_MENU_OPEN: &str = "norm.touch.menu-open";
+pub const TOUCH_MENU_CLOSE: &str = "norm.touch.menu-close";
+
+/// 🖐️ The window action a double tap raises: it toggles the camera between the whole scene and the selected entities (`viewportTouchFrame` of `viewportAct`).
+pub const TOUCH_FRAME_SELECTION: &str = "norm.touch.frame-selection";
+

@@ -694,7 +694,7 @@ async fn command_and_action_invocations_round_trip_owner_qualified_addresses() {
     assert_eq!(command_json, r#"{"address":{"owner":{"mode":{"pluginId":"flow","appId":"flow","modeId":"generate"}},"commandId":"addGeneration"},"arguments":{"name":"A"}}"#);
     assert_eq!(semio_framework_pack_json::from_json_str::<CommandInvocation>(&command_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), command);
 
-    let action = ActionInvocation {
+    let action = ActionInvocation { expected_document_revision:None,
         address: ActionAddress { plugin_id: "flow".into(), app_id: "flow".into(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-1".into(), action_id: "select".into() },
         arguments: [("id".into(), semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!("node-1")))].into_iter().collect(),
     };

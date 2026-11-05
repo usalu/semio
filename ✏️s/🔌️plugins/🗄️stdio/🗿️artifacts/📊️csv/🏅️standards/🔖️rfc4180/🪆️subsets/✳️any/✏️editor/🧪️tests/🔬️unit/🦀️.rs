@@ -346,7 +346,7 @@ fn natural_file_route_exports_edited_csv_bytes_and_reopens_them() {
     assert_eq!(reopened.records[row].fields[0].value, "Natural Open Save");
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", CsvEditor, || semio_framework_plugin::App { definition: create_csv_editor(), examples: Vec::new() }, "../..");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", CsvEditor, || semio_framework_plugin::App { definition: create_csv_editor(), examples: Vec::new() }, "../../..");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_cell() {

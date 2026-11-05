@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-dynamic-log-decrement",
   "semanticKind": "change-dynamic-log-decrement",
-  "displayName": "Change Dynamic Log Decrement",
+  "displayName": "Change logarithmic decrement of structural damping of the dynamic element",
   "emoji": "🌀",
   "aggregateVariant": "ChangeDynamicLogDecrement",
   "payloadSchema": "🧬️schema/🔣️.json",

@@ -169,6 +169,113 @@ where
     pub(super) fn discarded_has_physical_capacity(&self)->bool{size_of::<Mu>()!=0&&self.discarded.capacity()!=0}
     pub(super) fn discarded_terminal_is_empty(&self)->bool{self.discarded.is_empty()&&!self.discarded_has_physical_capacity()}
 
+
+
+    /// 🧾️ Every field retains one place in the original initialization cursor.
+    pub const INITIAL_FIELDS: usize = 41;
+
+    /// 📐️ Quotes only the next bounded destination slice or complete small metadata field.
+    pub fn initial_field_demands(field: usize, byte: usize, body: usize) -> Result<RetirementDemand, ValueError> {
+        let copy_bytes = match field {
+            0 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(), byte, body.max(1))?,
+            1 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Mu>(), byte, body.max(1))?,
+            2 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::ArtifactMutationSource<Mu>>(), byte, body.max(1))?,
+            3 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<semio_framework_value::retained_clone::RetainedOwnedProjection<Mu>>(), byte, body.max(1))?,
+            4 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::ArtifactDerivedOperation<P,Mu>>(), byte, body.max(1))?,
+            5 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<dyn store::ErasedSnapshotRetirement>>(), byte, body.max(1))?,
+            6 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<dyn store::ErasedSnapshotRetirement>>(), byte, body.max(1))?,
+            7 => 2 * size_of::<bool>(),
+            8 => 2 * size_of::<bool>(),
+            9 => 2 * size_of::<bool>(),
+            10 => 2 * size_of::<bool>(),
+            11 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<discard_decision::TimeTravelDiscardStoreEffects<P,Mu>>>(), byte, body.max(1))?,
+            12 => 2 * size_of::<fn(&Mu) -> LocalizedLabel>(),
+            13 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Mu>(), byte, body.max(1))?,
+            14 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Mu>(), byte, body.max(1))?,
+            15 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<&'static str>(), byte, body.max(1))?,
+            16 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<&'static str>(), byte, body.max(1))?,
+            17 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(), byte, body.max(1))?,
+            18 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::snapshot_read::ArtifactDerivedHistoryPreview<P, Mu>>(), byte, body.max(1))?,
+            19 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<protocol::InputReplacement>(), byte, body.max(1))?,
+            20 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>>(), byte, body.max(1))?,
+            21 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::replay::EditReplayResult<P, Mu>>(), byte, body.max(1))?,
+            22 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::HistoryFinalization>(), byte, body.max(1))?,
+            23 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<semio_framework_os_store_engine_replay::OriginalReplayPublication<P,Mu>>>(), byte, body.max(1))?,
+            24 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<semio_framework_os_store_engine_replay::OriginalReplayPublicationReceipt>(), byte, body.max(1))?,
+            25 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<TimeTravelCommit>(), byte, body.max(1))?,
+            26 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<semio_framework_job::OriginalTurnFailure>(), byte, body.max(1))?,
+            27 => 2 * size_of::<semio_framework_value::retained_clone::RetainedCloneClose>(),
+            28 => 2 * size_of::<u8>(),
+            29 => 2 * size_of::<bool>(),
+            30 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(), byte, body.max(1))?,
+            31 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_array_bytes::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>, 8>(), byte, body.max(1))?,
+            32 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>(), byte, body.max(1))?,
+            33 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<dyn store::ErasedSnapshotRetirement>>(), byte, body.max(1))?,
+            34 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_array_bytes::<semio_framework_value::FactoryAuthority, 2>(), byte, body.max(1))?,
+            35 => 2 * size_of::<VecDeque<Box<dyn store::ErasedSnapshotRetirement>>>(),
+            36 => 2 * size_of::<Vec<Mu>>(),
+            37 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Mu>(), byte, body.max(1))?,
+            38 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<dyn store::ErasedSnapshotRetirement>>(), byte, body.max(1))?,
+            39 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>>(), byte, body.max(1))?,
+            40 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<semio_framework_value::FactoryAuthority>(), byte, body.max(1))?,
+            _ => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial store field cursor exceeds its inventory")),
+        };
+        Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() })
+    }
+
+    /// 🧱️ Initializes the selected original store field without an aggregate absent-value temporary.
+    ///
+    /// # Safety
+    /// The destination must remain private and uninitialized until every field and byte range has completed exactly once.
+    pub unsafe fn initialize_field_at(target: *mut Self, label_of: fn(&Mu) -> LocalizedLabel, field: usize, byte: usize, count: usize) -> Result<bool, ValueError> {
+        unsafe { match field {
+            0 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(std::ptr::addr_of_mut!((*target).preview_base), byte, count),
+            1 => semio_framework_value::initialization::initialize_absent_field_at::<Mu>(std::ptr::addr_of_mut!((*target).preview_original), byte, count),
+            2 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::ArtifactMutationSource<Mu>>(std::ptr::addr_of_mut!((*target).preview_source), byte, count),
+            3 => semio_framework_value::initialization::initialize_absent_field_at::<semio_framework_value::retained_clone::RetainedOwnedProjection<Mu>>(std::ptr::addr_of_mut!((*target).preview_native_input), byte, count),
+            4 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::ArtifactDerivedOperation<P,Mu>>(std::ptr::addr_of_mut!((*target).preview_derived), byte, count),
+            5 => semio_framework_value::initialization::initialize_absent_field_at::<Box<dyn store::ErasedSnapshotRetirement>>(std::ptr::addr_of_mut!((*target).preview_input_close), byte, count),
+            6 => semio_framework_value::initialization::initialize_absent_field_at::<Box<dyn store::ErasedSnapshotRetirement>>(std::ptr::addr_of_mut!((*target).preview_original_close), byte, count),
+            7 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).preview_cancelled).write(false); Ok(true) },
+            8 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).preview_job_closing).write(false); Ok(true) },
+            9 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).replay_cancelled).write(false); Ok(true) },
+            10 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).finished_cancelled).write(false); Ok(true) },
+            11 => semio_framework_value::initialization::initialize_absent_field_at::<Box<discard_decision::TimeTravelDiscardStoreEffects<P,Mu>>>(std::ptr::addr_of_mut!((*target).discard_effects), byte, count),
+            12 => { if byte != 0 || count < 2 * size_of::<fn(&Mu) -> LocalizedLabel>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).label_of).write(label_of); Ok(true) },
+            13 => semio_framework_value::initialization::initialize_absent_field_at::<Mu>(std::ptr::addr_of_mut!((*target).staged), byte, count),
+            14 => semio_framework_value::initialization::initialize_absent_field_at::<Mu>(std::ptr::addr_of_mut!((*target).kind), byte, count),
+            15 => semio_framework_value::initialization::initialize_absent_field_at::<&'static str>(std::ptr::addr_of_mut!((*target).kind_fallback), byte, count),
+            16 => semio_framework_value::initialization::initialize_absent_field_at::<&'static str>(std::ptr::addr_of_mut!((*target).staged_fallback), byte, count),
+            17 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(std::ptr::addr_of_mut!((*target).preview), byte, count),
+            18 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::snapshot_read::ArtifactDerivedHistoryPreview<P, Mu>>(std::ptr::addr_of_mut!((*target).preview_job), byte, count),
+            19 => semio_framework_value::initialization::initialize_absent_field_at::<protocol::InputReplacement>(std::ptr::addr_of_mut!((*target).preview_input), byte, count),
+            20 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>>(std::ptr::addr_of_mut!((*target).replay), byte, count),
+            21 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::replay::EditReplayResult<P, Mu>>(std::ptr::addr_of_mut!((*target).finished), byte, count),
+            22 => semio_framework_value::initialization::initialize_absent_field_at::<store::HistoryFinalization>(std::ptr::addr_of_mut!((*target).commit_request), byte, count),
+            23 => semio_framework_value::initialization::initialize_absent_field_at::<Box<semio_framework_os_store_engine_replay::OriginalReplayPublication<P,Mu>>>(std::ptr::addr_of_mut!((*target).commit_publisher), byte, count),
+            24 => semio_framework_value::initialization::initialize_absent_field_at::<semio_framework_os_store_engine_replay::OriginalReplayPublicationReceipt>(std::ptr::addr_of_mut!((*target).commit_receipt), byte, count),
+            25 => semio_framework_value::initialization::initialize_absent_field_at::<TimeTravelCommit>(std::ptr::addr_of_mut!((*target).commit_outcome), byte, count),
+            26 => semio_framework_value::initialization::initialize_absent_field_at::<semio_framework_job::OriginalTurnFailure>(std::ptr::addr_of_mut!((*target).commit_failure), byte, count),
+            27 => { if byte != 0 || count < 2 * size_of::<semio_framework_value::retained_clone::RetainedCloneClose>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).commit_request_close).write(Default::default()); Ok(true) },
+            28 => { if byte != 0 || count < 2 * size_of::<u8>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).commit_stage).write(0); Ok(true) },
+            29 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).commit_closing).write(false); Ok(true) },
+            30 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(std::ptr::addr_of_mut!((*target).head), byte, count),
+            31 => semio_framework_value::initialization::initialize_absent_array_at::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>, 8>(std::ptr::addr_of_mut!((*target).snapshot_aliases).cast::<[Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>; 8]>(), byte, count),
+            32 => semio_framework_value::initialization::initialize_absent_field_at::<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>(std::ptr::addr_of_mut!((*target).snapshot_issuers).cast::<Option<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>>(), byte, count),
+            33 => semio_framework_value::initialization::initialize_absent_field_at::<Box<dyn store::ErasedSnapshotRetirement>>(std::ptr::addr_of_mut!((*target).snapshot_close).cast::<Option<Box<dyn store::ErasedSnapshotRetirement>>>(), byte, count),
+            34 => semio_framework_value::initialization::initialize_absent_array_at::<semio_framework_value::FactoryAuthority, 2>(std::ptr::addr_of_mut!((*target).snapshot_issuer_close), byte, count),
+            35 => { if byte != 0 || count < 2 * size_of::<VecDeque<Box<dyn store::ErasedSnapshotRetirement>>>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).retirements).write(VecDeque::new()); Ok(true) },
+            36 => { if byte != 0 || count < 2 * size_of::<Vec<Mu>>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).discarded).write(Vec::new()); Ok(true) },
+            37 => semio_framework_value::initialization::initialize_absent_field_at::<Mu>(std::ptr::addr_of_mut!((*target).discarded_pending), byte, count),
+            38 => semio_framework_value::initialization::initialize_absent_field_at::<Box<dyn store::ErasedSnapshotRetirement>>(std::ptr::addr_of_mut!((*target).discarded_active), byte, count),
+            39 => semio_framework_value::initialization::initialize_absent_field_at::<Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>>(std::ptr::addr_of_mut!((*target).discarded_factory), byte, count),
+            40 => semio_framework_value::initialization::initialize_absent_field_at::<semio_framework_value::FactoryAuthority>(std::ptr::addr_of_mut!((*target).discarded_factory_close), byte, count),
+            _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial store field cursor exceeds its inventory")),
+        } }
+    }
+
+
+
     /// 🏗️ Owners at rest, labelling the store's operations with `label_of`.
     pub fn new(label_of: fn(&Mu) -> LocalizedLabel) -> Self {
         Self { discard_effects:None,label_of, staged: None, kind: None,kind_fallback:None,staged_fallback:None, preview: None, preview_job: None, preview_input: None, preview_base:None,preview_original:None,preview_source:None,preview_native_input:None,preview_derived:None,preview_input_close:None,preview_original_close:None,preview_cancelled:false,preview_job_closing:false,replay_cancelled:false,finished_cancelled:false,replay: None, finished: None, commit_request:None,commit_publisher:None,commit_receipt:None,commit_outcome:None,commit_failure:None,commit_request_close:Default::default(),commit_stage:0,commit_closing:false, head: None, snapshot_aliases: ManuallyDrop::new(std::array::from_fn(|_|None)), snapshot_issuers: ManuallyDrop::new(None), snapshot_close: ManuallyDrop::new(None), snapshot_issuer_close: std::array::from_fn(|_|None), retirements: VecDeque::new(), discarded: Vec::new(), discarded_pending: None, discarded_active: None, discarded_factory: None, discarded_factory_close: None }

@@ -182,9 +182,9 @@ export interface LtbMember {
   endI: LtbEnd;
   endJ: LtbEnd;
   restraints: LtbRestraint[];
-  moment: Vec<(f64;
-  lineLoad: Vec<(f64;
-  pointLoads: Vec<(f64;
+  moment: [number, number][];
+  lineLoad: [number, number][];
+  pointLoads: [number, number][];
   loadHeight: number;
   elements: number;
 }

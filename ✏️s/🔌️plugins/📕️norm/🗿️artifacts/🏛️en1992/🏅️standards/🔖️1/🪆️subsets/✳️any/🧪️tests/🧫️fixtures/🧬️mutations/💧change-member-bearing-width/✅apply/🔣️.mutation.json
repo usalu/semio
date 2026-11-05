@@ -1,6 +1,6 @@
 {
   "ChangeMemberBearingWidth": {
     "memberId": "member",
-    "newValue": 1.5
+    "newValue": 0.8
   }
 }

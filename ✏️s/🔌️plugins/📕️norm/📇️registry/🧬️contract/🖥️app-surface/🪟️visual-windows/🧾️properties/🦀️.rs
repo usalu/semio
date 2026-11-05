@@ -7,9 +7,6 @@ use semio_framework_value::DslValue;
 mod controls;
 pub use controls::*;
 
-#[path = "✅️field-feedback/🦀️.rs"]
-mod field_feedback;
-pub use field_feedback::*;
 
 #[path = "🗃️bulk-inspector/🦀️.rs"]
 mod bulk_inspector;
@@ -18,6 +15,10 @@ pub use bulk_inspector::*;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️admission/🦀️.rs"]
+mod admission_tests;
 
 //#region 🧾️Options
 /// 🧾️ Window-level inspector options: the unit system, the disclosure tier, whether clause rows open the clause panel, the outliner state fed by the host and the selected check whose parameters get a section.
@@ -104,6 +105,7 @@ pub fn field_view(path: &str, value: &DslValue, root: &DslValue, locale: Locale,
         _ => inferred_control(leaf_key(path), value, root),
     };
     let mut view = FieldView::new(path, label, control);
+    view.read_only = spec.is_none_or(|spec| spec.read_only);
     view.precision = match (&view.control, spec) {
         (FieldControl::Int, _) => 0,
         (_, Some(spec)) => u16::from(spec.precision),
@@ -166,7 +168,7 @@ fn field_row(context: &InspectorContext<'_, '_>, field: &FieldView, value: &DslV
         let clause = ClauseId::new(clause.family, clause.part, clause.section);
         item = item.try_child(clause_link_row(format!("{row_id}.clause"), &clause, locale, context.clause_links.then_some(controller_id))?).map_err(|_| ui_error("ui.node.child"))?;
     }
-    if let Some(default) = field.ndp.as_ref().and_then(|ndp| ndp.default) {
+    if let Some(default) = field.ndp.as_ref().and_then(|ndp| ndp.default).filter(|_| !field.read_only) {
         if !matches!(value, DslValue::Number(number) if (number.as_f64() - default).abs() < f64::EPSILON) {
             let args = action_args_map(vec![("path", ui_value_text(&field.path)?), ("value", UiValue::Number(default))])?;
             let reset = tree_item_with_action(format!("{row_id}.ndp-reset"), norm_ui_label(chrome("Reset to annex default", "Auf Anhangswert zurücksetzen", locale))?, None, norm_action(controller_id, "setField", Some(args))?)?;
@@ -176,7 +178,9 @@ fn field_row(context: &InspectorContext<'_, '_>, field: &FieldView, value: &DslV
     if let Some(feedback) = field_feedback(context.outliner.report, &field.path, locale) {
         item = item.try_child(utilization_bar(format!("{row_id}.utilisation"), feedback.status, feedback.utilization, &feedback.title, locale)?).map_err(|_| ui_error("ui.node.child"))?;
         if let Some(chip) = &feedback.remedy {
-            item = item.try_child(remedy_chip(format!("{row_id}.remedy"), chip, controller_id, locale)?).map_err(|_| ui_error("ui.node.child"))?;
+            let mut chip = chip.clone();
+            chip.applicable &= !field.read_only;
+            item = item.try_child(remedy_chip(format!("{row_id}.remedy"), &chip, controller_id, locale)?).map_err(|_| ui_error("ui.node.child"))?;
             if chip.applicable && controller_is_live(controller_id) {
                 item = item.try_child(preview_row(format!("{row_id}.remedy.preview"), &chip.check_id, chip.remedy_index, 0, &chip.action, controller_id, locale)?).map_err(|_| ui_error("ui.node.child"))?;
                 item = item.try_child(clear_preview_row(format!("{row_id}.remedy.preview-clear"), controller_id, locale)?).map_err(|_| ui_error("ui.node.child"))?;
@@ -216,10 +220,12 @@ fn scalar_list(context: &InspectorContext<'_, '_>, path: &str, label: String, it
         &indexed,
         |(index, child)| {
             let child_path = list_element_path(path, child, *index);
-            let remove_args = action_args_map(vec![("path", ui_value_text(&child_path)?), ("index", UiValue::Number(0.0))])?;
+            let remove_args = action_args_map(vec![("path", ui_value_text(path)?), ("index", UiValue::Number(*index as f64))])?;
             let mut row = UiFixedList::default();
             row.try_push(render_node(context, &child_path, child, depth + 1)?).map_err(|_| ui_error("ui.fixed-capacity"))?;
+            if context.meta_fn.and_then(|lookup| lookup(path)).is_some_and(|meta| meta.can_remove) {
             row.try_push(tree_item_with_action(format!("norm-inputs.{path}.remove-{index}"), norm_ui_label(chrome("Remove", "Entfernen", locale))?, None, norm_action(controller_id, "removeItem", Some(remove_args))?)?).map_err(|_| ui_error("ui.fixed-capacity"))?;
+            }
             tree_group(format!("norm-inputs.{path}.row-{index}"), norm_ui_label(list_element_selector(child, *index))?, false, row)
         },
         norm_ui_label(chrome("Empty list", "Leere Liste", locale))?,
@@ -227,11 +233,13 @@ fn scalar_list(context: &InspectorContext<'_, '_>, path: &str, label: String, it
     if !context.outliner.windows.is_open(&section_id, false) {
         return Ok(list);
     }
-    let insert_args = action_args_map(vec![("path", ui_value_text(path)?), ("index", UiValue::Number(items.len() as f64))])?;
-    let add = tree_item_with_action(format!("norm-inputs.{path}.add"), norm_ui_label(chrome("Add item", "Eintrag hinzufügen", locale))?, None, norm_action(controller_id, "insertItem", Some(insert_args))?)?;
     let mut children = UiFixedList::default();
     children.try_push(list).map_err(|_| ui_error("ui.fixed-capacity"))?;
-    children.try_push(add).map_err(|_| ui_error("ui.fixed-capacity"))?;
+    if context.meta_fn.and_then(|lookup| lookup(path)).is_some_and(|meta| meta.can_insert) {
+    let insert_args = action_args_map(vec![("path", ui_value_text(path)?), ("index", UiValue::Number(items.len() as f64))])?;
+    let add = tree_item_with_action(format!("norm-inputs.{path}.add"), norm_ui_label(chrome("Add item", "Eintrag hinzufügen", locale))?, None, norm_action(controller_id, "insertItem", Some(insert_args))?)?;
+        children.try_push(add).map_err(|_| ui_error("ui.fixed-capacity"))?;
+    }
     tree_group(format!("norm-inputs.{path}.editor"), norm_ui_label(label)?, true, children)
 }
 
@@ -244,7 +252,7 @@ fn render_node(context: &InspectorContext<'_, '_>, path: &str, value: &DslValue,
     let label = field_label(path, meta, locale);
     match value {
         DslValue::Object(entries) => entries_section(context, path, if path.is_empty() { chrome("Document", "Dokument", locale) } else { label }, entries, path.is_empty(), depth),
-        DslValue::Array(items) if is_entity_collection(items) => render_collection(&context.outliner, path, &label, items, false, |row| {
+        DslValue::Array(items) if is_entity_collection(items) => render_collection(&context.outliner, path, &label, items, false, context.meta_fn, |row| {
             let selected = context.outliner.state.selected.iter().any(|selected| *selected == row.path || (!row.id.is_empty() && *selected == row.id));
             let DslValue::Object(entries) = row.value else { return render_node(context, &row.path, row.value, depth + 1) };
             entries_section(context, &row.path, chrome("Properties", "Eigenschaften", locale), entries, selected, depth + 1)
@@ -293,7 +301,7 @@ fn bound_fields(context: &InspectorContext<'_, '_>, path: &str, value: &DslValue
             }
         }
         DslValue::Number(number) => {
-            if let Some(id) = resolve_field_meta(path, context.meta_fn).and_then(|spec| spec.ndp).and_then(|ndp| ndp.id) {
+            if let Some(id) = resolve_field_meta(path, context.meta_fn).filter(|spec| !spec.read_only).and_then(|spec| spec.ndp).and_then(|ndp| ndp.id) {
                 out.push((id, path.to_string(), number.as_f64()));
             }
         }

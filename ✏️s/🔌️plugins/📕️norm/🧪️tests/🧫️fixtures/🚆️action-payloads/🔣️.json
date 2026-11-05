@@ -1,0 +1,51 @@
+{
+  "cases": [
+    {
+      "leaf": "⚙️insert-rail-derailment",
+      "reader": "parseInsertRailDerailment",
+      "item": {
+        "id": "derailment",
+        "situation": "i",
+        "assumedLineLoad": 80000,
+        "loadedLength": 20,
+        "offset": 1.2
+      }
+    },
+    {
+      "leaf": "⚙️insert-dust-explosion",
+      "reader": "parseInsertDustExplosion",
+      "item": {
+        "id": "dust",
+        "kst": 150,
+        "pMax": 800000,
+        "volume": 100,
+        "ventArea": 8,
+        "staticOpeningPressure": 10000,
+        "designPressure": 20000
+      }
+    },
+    {
+      "leaf": "⚙️insert-rail-load-group",
+      "reader": "parseInsertRailLoadGroup",
+      "item": {
+        "id": "group",
+        "loadGroup": "gr11",
+        "factorVertical": 1,
+        "factorLongitudinal": 0.5,
+        "factorLateral": 1,
+        "assumedAxleLoad": 250000,
+        "assumedUdl": 80000,
+        "assumedLongitudinal": 10000,
+        "assumedLateral": 100000
+      }
+    }
+  ],
+  "foreignItem": {
+    "id": "rotor",
+    "mass": 100,
+    "eccentricity": 0.01,
+    "frequency": 50
+  },
+  "expectedProjections": 15,
+  "expectedSnapshotConsumers": 14
+}

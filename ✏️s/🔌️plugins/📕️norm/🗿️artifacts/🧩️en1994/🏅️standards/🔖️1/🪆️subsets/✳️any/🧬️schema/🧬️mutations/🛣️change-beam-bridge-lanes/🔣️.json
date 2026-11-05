@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️change-beam-bridge-lanes",
   "semanticKind": "change-beam-bridge-lanes",
-  "displayName": "ChangeBeamBridgeLanes",
+  "displayName": "Change notional lanes loading the girder (0 = from the girder spacing)",
   "emoji": "🛣️",
   "aggregateVariant": "ChangeBeamBridgeLanes",
   "payloadSchema": "🧬️schema/🔣️.json",

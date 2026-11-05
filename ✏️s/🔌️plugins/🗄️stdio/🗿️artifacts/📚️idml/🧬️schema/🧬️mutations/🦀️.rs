@@ -1,7 +1,6 @@
 //! 🧬️ IDML package replacement and member editing publish validated sparse diffs.
 use semio_framework_os_kernel as protocol;
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
-use semio_framework_value_derive::{FromValue, ToValue};
 use crate::{IdmlSnapshot, IdmlDiff};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]

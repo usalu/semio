@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "familyCounts": {
+    "din16798": 39,
+    "din18599": 19,
+    "din4108": 42,
+    "en1990": 134,
+    "en1991": 324,
+    "en1992": 161,
+    "en1993": 694,
+    "en1994": 130,
+    "en1995": 206,
+    "en1996": 143,
+    "en1997": 207,
+    "en1998": 321,
+    "en1999": 205,
+    "iso16757": 24,
+    "vdi3805": 8
+  },
+  "arguments": [
+    {
+      "family": "en1999",
+      "path": "members[].bucklingLengthZ",
+      "kind": "change-member-buckling-length",
+      "argument": "axis",
+      "source": {
+        "type": "text",
+        "value": "z"
+      }
+    },
+    {
+      "family": "en1999",
+      "path": "connections[].bolts.rows",
+      "kind": "change-bolt-count",
+      "argument": "newBoltsPerRow",
+      "source": {
+        "type": "sibling",
+        "path": "boltsPerRow"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "declared-z-axis",
+      "rules": "axis",
+      "tree": {
+        "members": [
+          {
+            "id": "M-1",
+            "bucklingLengthY": 2,
+            "bucklingLengthZ": 3,
+            "bucklingLengthT": 4
+          }
+        ]
+      },
+      "edit": {
+        "path": "members[id=M-1].bucklingLengthZ",
+        "value": 3.5
+      },
+      "expected": {
+        "kind": "change-member-buckling-length",
+        "payload": {
+          "memberId": "M-1",
+          "axis": "z",
+          "newLength": 3.5
+        }
+      },
+      "siblingPointer": "/members/0/bucklingLengthY",
+      "siblingValue": 2
+    },
+    {
+      "name": "preserved-bolts-per-row",
+      "rules": "bolts",
+      "tree": {
+        "connections": [
+          {
+            "id": "C-1",
+            "bolts": {
+              "rows": 2,
+              "boltsPerRow": 3
+            }
+          }
+        ]
+      },
+      "edit": {
+        "path": "connections[id=C-1].bolts.rows",
+        "value": 4
+      },
+      "expected": {
+        "kind": "change-bolt-count",
+        "payload": {
+          "connectionId": "C-1",
+          "newRows": 4,
+          "newBoltsPerRow": 3
+        }
+      },
+      "siblingPointer": "/connections/0/bolts/boltsPerRow",
+      "siblingValue": 3
+    },
+    {
+      "name": "missing-bolt-sibling-refuses",
+      "rules": "bolts",
+      "tree": {
+        "connections": [
+          {
+            "id": "C-1",
+            "bolts": {
+              "rows": 2
+            }
+          }
+        ]
+      },
+      "edit": {
+        "path": "connections[id=C-1].bolts.rows",
+        "value": 4
+      },
+      "errorContains": "boltsPerRow"
+    }
+  ]
+}

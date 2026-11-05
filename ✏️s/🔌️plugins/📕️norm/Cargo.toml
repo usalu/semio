@@ -3,6 +3,12 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "📇️registry/🧬️contract/🖥️app-surface/🪺️inspector-forms/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/✏️edit-rules/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/🌲️outliner/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/🧰️entity-editing/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/🔌️shell-hooks/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/🧰️entity-editing/🧭️interaction-topology/📦️packages/🦀️rust",
     "🧮️mechanics/🧱️applied/📦️packages/🦀️rust",
     "⚖️compliance/📜️annex-and-tables/🔖️ndp/📦️packages/🦀️rust",
     "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1990/📦️packages/🦀️rust",
@@ -147,6 +153,9 @@ path = "📇️registry/🧬️contract/🖥️app-surface/🖼️visual-chrome/
 [workspace.dependencies.semio-s-plugin-norm-app-surface-live-core]
 path = "📇️registry/🧬️contract/🖥️app-surface/🧲️live-core/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-plugin-norm-app-surface-edit-rules]
+path = "📇️registry/🧬️contract/🖥️app-surface/✏️edit-rules/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-plugin-norm-app-surface-panels]
 path = "📇️registry/🧬️contract/🖥️app-surface/🧾️panels/📦️packages/🦀️rust"
 
@@ -226,3 +235,15 @@ redundant_clone = "warn"
   [workspace.lints.clippy.all]
   level = "warn"
   priority = -1
+
+[workspace.dependencies.semio-s-plugin-norm-app-surface-interaction-topology]
+path = "📇️registry/🧬️contract/🖥️app-surface/🧰️entity-editing/🧭️interaction-topology/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-app-surface-shell-hooks]
+path = "📇️registry/🧬️contract/🖥️app-surface/🔌️shell-hooks/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-app-surface-entity-editing]
+path = "📇️registry/🧬️contract/🖥️app-surface/🧰️entity-editing/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-app-surface-outliner]
+path = "📇️registry/🧬️contract/🖥️app-surface/🌲️outliner/📦️packages/🦀️rust"

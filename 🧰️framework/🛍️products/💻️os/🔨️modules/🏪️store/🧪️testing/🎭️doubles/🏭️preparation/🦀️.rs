@@ -140,6 +140,7 @@ impl DemoOneItemPreparationFactory {
 
 
 pub struct DemoOneItemPreparation {
+    pub last_work:u64,
     pub base: Option<SnapshotRead<DemoSnapshot>>,
     pub mutation: Option<DemoMutation>,
     pub authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
@@ -191,6 +192,7 @@ impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for Demo
         let stamped_mutation_id = self.stamped_mutation_id.clone();
         progress.retained_capacity_bytes = std::mem::size_of::<DemoOneItemPreparation>() + stamped_mutation_id.as_ref().map_or(0, |identity| identity.0.capacity());
         Ok((Box::new(DemoOneItemPreparation {
+            last_work:0,
             base: Some(request.base),
             mutation: Some(request.mutation),
             authority: Some(request.authority),
@@ -234,6 +236,7 @@ impl DemoOneItemPreparation {
 
 impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItemPreparation {
     fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+        self.last_work=0;let before=receiving.actual_work();let result=(||{
         if !grant.permits_one() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -245,9 +248,11 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
             return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
         if let Some(sealer)=self.sealer.as_mut(){
-            let step=sealer.advance(grant,receiving)?;
+            let result=sealer.advance(grant,receiving);self.last_work=sealer.last_turn_work();let step=result?;
             let progress=step.ownership_progress();
-            if let Some(mut prepared)=sealer.take_prepared(){
+            if sealer.prepared().is_some(){
+                if !receiving.prepare_work(1)?{return Ok(match step{ArtifactStoreOneItemPreparationStep::Blocked=>step,_=>ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,progress)});}self.last_work=self.last_work.saturating_add(1);
+                let mut prepared=sealer.take_prepared().unwrap();
                 if self.forge_digest{prepared.sealed_parts_mut().1[0]^=0xff;}
                 self.checkpoint=ArtifactStoreOneItemCheckpoint{cursor:1,completed_items:1,completed_bytes:1,digest:prepared.edit_digest()};
                 self.prepared=Some(prepared);
@@ -258,6 +263,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         if self.pending_edit.is_some(){
             let demand=ArtifactStoreOneItemSealer::<DemoSnapshot,DemoMutation>::constructor_demand();
             if demand.capacity_bytes>grant.maximum_capacity_bytes||demand.depth>grant.maximum_depth||ArtifactStoreOneItemSealer::<DemoSnapshot,DemoMutation>::constructor_copy_byte_demand()>grant.maximum_copy_bytes{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+            if !receiving.prepare_work(1)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}self.last_work=1;
             let authority=Arc::clone(self.authority.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "demo preparation lost its live Store authority"))?);
             let edit=self.pending_edit.take().expect("original pending edit");let post=self.pending_post.take().expect("original pending post");
             let mutations=Arc::clone(self.mutation_retirement.as_ref().expect("original pending mutation issuer"));let snapshots=Arc::clone(self.snapshot_retirement.as_ref().expect("original pending snapshot issuer"));
@@ -277,9 +283,10 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         let capacity=semio_framework_value::shared_retirement_allocation_bytes::<DemoSnapshot>()+id_capacity+mutation_identity_capacity+group_capacity+3*mutation_bytes+std::mem::size_of::<MutationMeta>()+inverse_metadata;
         let copied_bytes=std::mem::size_of::<Edit<DemoMutation>>()+std::mem::size_of::<DemoSnapshot>()+2*std::mem::size_of::<semio_framework_value::SharedUtf8>()+id_capacity+mutation_identity_capacity+group_capacity;
         if capacity>grant.maximum_capacity_bytes||copied_bytes>grant.maximum_copy_bytes||mutation_bytes>grant.maximum_release_bytes||grant.maximum_depth<3{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+        if !receiving.prepare_work(1)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes:capacity,released_bytes:mutation_bytes};
         let mutation = self.mutation.take().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "demo preparation lost its mutation"))?;
-        let outcome = mutation.diff(base.get());
+        self.last_work=1;let outcome = mutation.diff(base.get());
         if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
             self.mutation=Some(mutation);
             return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "demo retained mutation rejected against its base"));
@@ -329,7 +336,11 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         self.published_root.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "demo preparation lost its original witness"))?.publish(&post_snapshot);
         self.pending_edit=Some(edit);self.pending_post=Some(post_snapshot);
         Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,progress))
+    
+        })();let observed=receiving.actual_work().saturating_sub(before);let reported=self.last_work;self.last_work=reported.max(observed);let work=original_one_item_turn_work(reported,observed,false)?;if work>observed{receiving.commit_work(work-observed)?;}self.last_work=work;result
     }
+
+    fn last_turn_work(&self)->u64{self.last_work}
 
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint {
         self.checkpoint

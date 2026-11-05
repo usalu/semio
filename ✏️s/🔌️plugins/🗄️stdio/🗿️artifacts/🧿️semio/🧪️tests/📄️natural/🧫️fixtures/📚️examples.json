@@ -1,0 +1,444 @@
+{
+  "version": 1,
+  "unknownIds": [
+    "",
+    "unknown-example",
+    "demo"
+  ],
+  "malformedSources": [
+    "",
+    "not a semio document"
+  ],
+  "rows": [
+    {
+      "subset": "audio",
+      "id": "tone",
+      "schema": "stdio.semio.audio",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎵️tone/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::tone",
+      "folder": "🔊️audio",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎵️tone/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎵️tone/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-audio",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎵️tone/🖼️assets/🗣️.dsl.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🖼️assets/🎵️tone/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎵️tone/🖼️assets/🎒️.pack.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/📚️examples/🎵️tone/🖼️assets/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "✏️editor/🦀️.rs"
+    },
+    {
+      "subset": "animation",
+      "id": "walk",
+      "schema": "stdio.semio.animation",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🚶️walk/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::walk",
+      "folder": "🎞️animation",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🚶️walk/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-animation-editor",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🖼️assets/🚶️walk/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🚶️walk/🖼️assets/🎒️.pack.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/📚️examples/🚶️walk/🖼️assets/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../🦀️.rs"
+    },
+    {
+      "subset": "brep",
+      "id": "solid",
+      "schema": "stdio.semio.brep",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/📚️examples/🧊️solid/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_brep_examples::examples::solid",
+      "folder": "🧊️brep",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🖼️assets/🧊️solid/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🖼️assets/🧊️solid/🎒️.pack.semio",
+      "commandEncoding": "snapshot-native",
+      "editorPackage": "semio-s-artifact-stdio-semio-brep-io",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🖼️assets/🧊️solid/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🧊️solid/🖼️assets/🎒️.pack.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🖼️assets/🧊️solid/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../../✏️editor/🦀️.rs"
+    },
+    {
+      "subset": "document",
+      "id": "memo",
+      "schema": "stdio.semio.document",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/📑️document/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🗒️memo/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::memo",
+      "folder": "📑️document",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🗒️memo/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🗒️memo/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-document-editor",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🗒️memo/🖼️assets/🗣️.dsl.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/📑️document/🖼️assets/🗒️memo/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🗒️memo/🖼️assets/🎒️.pack.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/📑️document/🖼️assets/🗒️memo/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/📑️document/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../🦀️.rs"
+    },
+    {
+      "subset": "drawing",
+      "id": "sketch",
+      "schema": "stdio.semio.drawing",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖍️sketch/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::sketch",
+      "folder": "🖊️drawing",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖍️sketch/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖍️sketch/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-drawing-editor",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖍️sketch/🖼️assets/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖍️sketch/🖼️assets/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../🦀️.rs"
+    },
+    {
+      "subset": "value",
+      "id": "graph",
+      "schema": "stdio.semio.value",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🔢️value/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🕸️graph/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::graph",
+      "folder": "🔢️value",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-value",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🖼️assets/🕸️graph/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🖼️assets/🕸️graph/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "✏️editor/🦀️.rs"
+    },
+    {
+      "subset": "text",
+      "id": "note",
+      "schema": "stdio.semio.text",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🔤️text/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📃️note/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::note",
+      "folder": "🔤️text",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📃️note/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📃️note/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-text",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📃️note/🖼️assets/🗣️.dsl.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🖼️assets/📃️note/🗣️.dsl.semio",
+        "📚️examples/📃️note/🖼️assets/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📃️note/🖼️assets/🎒️.pack.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🖼️assets/📃️note/🎒️.pack.semio",
+        "📚️examples/📃️note/🖼️assets/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🔤️text/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "✏️editor/🦀️.rs"
+    },
+    {
+      "subset": "mesh",
+      "id": "cube",
+      "schema": "stdio.semio.mesh",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📚️examples/🧊️cube/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_mesh_examples::examples::cube",
+      "folder": "🔺️mesh",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📚️examples/🧊️cube/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📚️examples/🧊️cube/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "snapshot-native",
+      "editorPackage": "semio-s-artifact-stdio-semio-mesh-editor",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📚️examples/🧊️cube/🖼️assets/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📚️examples/🧊️cube/🖼️assets/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../🦀️.rs"
+    },
+    {
+      "subset": "cad",
+      "id": "drawing",
+      "schema": "stdio.semio.cad",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/📐️cad/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📐️drawing/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::drawing",
+      "folder": "📐️cad",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📐️drawing/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📐️drawing/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-cad-editor",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📐️drawing/🖼️assets/🗣️.dsl.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🖼️assets/📐️drawing/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📐️drawing/🖼️assets/🎒️.pack.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🖼️assets/📐️drawing/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/📐️cad/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../🦀️.rs"
+    },
+    {
+      "subset": "video",
+      "id": "clip",
+      "schema": "stdio.semio.video",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🎬️video/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎥️clip/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::clip",
+      "folder": "🎬️video",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎥️clip/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎥️clip/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-video",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎥️clip/🖼️assets/🗣️.dsl.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🖼️assets/🎥️clip/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎥️clip/🖼️assets/🎒️.pack.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🎬️video/📚️examples/🎥️clip/🖼️assets/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🎬️video/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "✏️editor/🦀️.rs"
+    },
+    {
+      "subset": "image",
+      "id": "swatch",
+      "schema": "stdio.semio.image",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🖼️image/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖼️swatch/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::swatch",
+      "folder": "🖼️image",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖼️swatch/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖼️swatch/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-image-editor",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖼️swatch/🖼️assets/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖼️swatch/🖼️assets/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🖼️image/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../🦀️.rs"
+    },
+    {
+      "subset": "presentation",
+      "id": "deck",
+      "schema": "stdio.semio.presentation",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📽️deck/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::deck",
+      "folder": "📽️presentation",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📽️deck/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📽️deck/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-presentation-io",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📽️deck/🖼️assets/🗣️.dsl.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🖼️assets/📽️deck/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📽️deck/🖼️assets/🎒️.pack.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🖼️assets/📽️deck/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../../✏️editor/🦀️.rs"
+    },
+    {
+      "subset": "graph",
+      "id": "wires",
+      "schema": "stdio.semio.graph",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/📚️examples/🕸️wires/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_graph_examples::examples::wires",
+      "folder": "🕸️graph",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🖼️assets/🕸️wires/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🖼️assets/🕸️wires/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-graph-editor",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🖼️assets/🕸️wires/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🖼️assets/🕸️wires/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../🦀️.rs"
+    },
+    {
+      "subset": "flow",
+      "id": "pipeline",
+      "schema": "stdio.semio.flow",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🌊️pipeline/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::pipeline",
+      "folder": "🌊️flow",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-flow-io",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🖼️assets/🌊️pipeline/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🖼️assets/🌊️pipeline/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../../✏️editor/🦀️.rs"
+    },
+    {
+      "subset": "object",
+      "id": "crate",
+      "schema": "stdio.semio.object",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/📦️object/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/📦️object/📚️examples/📦️crate/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_object_examples::examples::crate_",
+      "folder": "📦️object",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/📦️object/🖼️assets/📦️crate/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/📦️object/🖼️assets/📦️crate/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-object-editor",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/📦️object/🖼️assets/📦️crate/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/📦️object/🖼️assets/📦️crate/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/📦️object/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../🦀️.rs"
+    },
+    {
+      "subset": "model",
+      "id": "building",
+      "schema": "stdio.semio.model",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🏛️model/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🏢️building/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::building",
+      "folder": "🏛️model",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🏢️building/🖼️assets/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🏢️building/🖼️assets/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-model-io",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🏢️building/🖼️assets/🗣️.dsl.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🖼️assets/🏢️building/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🏢️building/🖼️assets/🎒️.pack.semio",
+        "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🖼️assets/🏢️building/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../../✏️editor/🦀️.rs"
+    },
+    {
+      "subset": "*",
+      "id": "envelope",
+      "schema": "stdio.semio",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🌐️envelope/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_base_examples::examples::envelope",
+      "folder": "✉️base",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/✉️base/🖼️assets/🌐️envelope/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/🖼️assets/🌐️envelope/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-editor",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/🖼️assets/🌐️envelope/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/✉️base/🖼️assets/🌐️envelope/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../🦀️.rs"
+    },
+    {
+      "subset": "kit",
+      "id": "furniture",
+      "schema": "stdio.semio.kit",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/📚️examples/🪑️furniture/🦀️.rs",
+      "module": "semio_s_artifact_stdio_semio_kit_examples::examples::furniture",
+      "folder": "🧰️kit",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🖼️assets/🪑️furniture/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🖼️assets/🪑️furniture/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-kit-editor",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🖼️assets/🪑️furniture/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🖼️assets/🪑️furniture/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "../../🦀️.rs"
+    },
+    {
+      "subset": "table",
+      "id": "sheet",
+      "schema": "stdio.semio.table",
+      "editor": "🏅️standards/🔖️v1/🪆️subsets/📊️table/✏️editor/🦀️.rs",
+      "source": "🏅️standards/🔖️v1/🪆️subsets/📊️table/📚️examples/📃️sheet/🦀️.rs",
+      "module": "crate::examples::sheet",
+      "folder": "📊️table",
+      "asset": "🏅️standards/🔖️v1/🪆️subsets/📊️table/🖼️assets/📃️sheet/🗣️.dsl.semio",
+      "pack": "🏅️standards/🔖️v1/🪆️subsets/📊️table/🖼️assets/📃️sheet/🎒️.pack.semio",
+      "commandEncoding": "json",
+      "editorPackage": "semio-s-artifact-stdio-semio-table",
+      "assetCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/📊️table/🖼️assets/📃️sheet/🗣️.dsl.semio"
+      ],
+      "packCopies": [
+        "🏅️standards/🔖️v1/🪆️subsets/📊️table/🖼️assets/📃️sheet/🎒️.pack.semio"
+      ],
+      "editorManifest": "🏅️standards/🔖️v1/🪆️subsets/📊️table/📦️packages/🦀️rust/Cargo.toml",
+      "editorMount": "✏️editor/🦀️.rs"
+    }
+  ],
+  "pickerAction": "setActiveExample",
+  "publicationLane": "hostOnly",
+  "selectorTest": {
+    "filter": "typed_example_selection_refuses_unknown_and_malformed_sources",
+    "expectedTests": 19,
+    "libraryOnly": true
+  }
+}

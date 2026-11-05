@@ -1,0 +1,17 @@
+# Unload Identity Lifetime Audit
+
+Root reports the latest broad host suite passes288tests across33files in60.92seconds, including surface-switch. This audit is source review only.
+
+VcsArtifactApp initialization creates a nonempty UUID document envelope before returning the instance (instance/staging/ingress71). Its PluginApp implementation returns the envelope ID (instance/plugin-app-impl692–694), including for initially empty artifact snapshots. Well-known editors therefore have document identity at birth; null is not a temporary initialization state on this path. Natural imports preserve that identity; full archive loading may replace it with another nonempty archived ID. Both require an unload warning while unbound.
+
+The documentless lifetime assumption is not a general PluginApp contract. document_identity takes &self but may read interior mutable app state, and there is no immutable-documentless capability or invalidation event. A cached successful null could become stale after an action or archive load without changing handle/app/instance. Such caching needs an explicit permanent capability, or invalidation/re-read after owned mutation-bearing acknowledgments. Exact instance scoping protects reincarnation but does not establish lifetime immutability.
+
+There is also a wire detail: reactor/app417 defaults identity to None, but421 defaults document_base_revision to an unavailable error. ReadDocumentIdentity in document-archive-commands117 always calls document_base_revision()? even for None. Thus using the default documentless PluginApp does not yield a successful null identity; it yields a fault. The guard must remain conservative on this failure. Framework-wide literal method search found only the default and VcsArtifactApp implementations; a specific Home factory/delegated implementation has not yet been proven to return successful null. Do not add a Home exception based solely on application name.
+
+## Scoped Metadata Guard Review
+
+The revised guard can classify authored artifact owners through io.artifactSchema without identity polling. All91 native codec roster owners are typed ArtifactEditor surfaces (90stdio plus energy). The common source declaration paths stamp an empty AppDefinition.io.artifact_schema from E::DOCUMENT_SCHEMA: builder/surfaces11 and builder499–500, and lifted/tree40. Viewer counterparts stamp V::DOCUMENT_SCHEMA at21,433–434 and64. Thus a nonempty artifact schema is a source-authored surface classification, including initially empty drafts; it does not claim the actor has a durable attachment.
+
+Publication remains a separate required dependency. Last verified committed family descriptors expose88stdio editors, omitting IDML and IFC4x3, while19Semio descriptors have nonempty but stale schema/actions. The conservative nonempty-schema guard still classifies those currently published Semio owners as artifacts; it does not repair their natural-file actions or missing publication. The authoritative stdio-office/std io-semio/std io-bim description refresh is runtime-owned and pending verification. No generated descriptor was edited by this audit.
+
+The existing source roster law verifies91 source editor/viewer pairs and91 declared codec rows independently of descriptor publication. Its latest focused result was6tests,274assertions,0failures after ISOZIP source landed. This is source metadata evidence; it is not91 compiled codec or browser journey evidence.

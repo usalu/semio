@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "locales",
+    "collections",
+    "law",
+    "variant"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "locales": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "collections": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "family",
+          "path",
+          "row",
+          "insert",
+          "remove",
+          "setter"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "family": {
+            "enum": [
+              "iso16757",
+              "vdi3805"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "row": {
+            "type": "string",
+            "minLength": 1
+          },
+          "insert": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "item"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "item": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          },
+          "remove": {
+            "enum": [
+              "identity",
+              "index",
+              null
+            ]
+          },
+          "setter": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "law": {
+      "const": {
+        "missingItem": "stage",
+        "schemaSeed": "draft-only",
+        "invalidDraft": "preserve",
+        "domainRefusal": "preserve",
+        "cancel": "discard-without-emission",
+        "accept": "one-existing-mutation"
+      }
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before",
+        "switchTo",
+        "expectedDraft",
+        "required",
+        "completed",
+        "schema"
+      ],
+      "properties": {
+        "before": {
+          "type": "object"
+        },
+        "switchTo": {
+          "type": "string"
+        },
+        "expectedDraft": {
+          "type": "object"
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "completed": {
+          "type": "object"
+        },
+        "schema": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

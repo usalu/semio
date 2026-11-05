@@ -27,6 +27,8 @@ pub struct PresenceStore<P, Mutation> {
 }
 
 impl<P,Mutation> PresenceStore<P,Mutation>{
+    /// 🌱️ Original initialization borrows its same admitted local root when constructing the concrete terminal disposer.
+    pub fn original_local_root(&self)->Option<&Arc<P>>{self.local.as_ref()}
     /// 📏️ Quotes the original typed local root, empty peer root and fixed Store header; the read registry remains separately admitted.
     pub fn original_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<Self>()+size_of::<P>(),capacity_bytes:semio_framework_value::shared_retirement_allocation_bytes::<P>()+semio_framework_value::shared_retirement_allocation_bytes::<PresencePeersRoot<P>>(),depth:2,..Default::default()}}
 

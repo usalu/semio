@@ -3,6 +3,7 @@ export * from './limits.ts';
 export * from './refresh.ts';
 export * from './page.ts';
 export * from './handoff.ts';
+export * from './reference.ts';
 export type StagedValue=null|boolean|number|string|StagedValue[]|{[key:string]:StagedValue};
 export type StagedArgs=Readonly<Record<string,StagedValue>>;
 export interface StagedFormToken {readonly action:string;readonly generation:string;readonly revision:string;readonly window:string}
@@ -21,12 +22,12 @@ export interface StagedFormDiagnostic {readonly path:StagedFormPath;readonly cod
 export interface StagedFormRequest {readonly token:StagedFormToken;readonly args:StagedArgs;readonly locale:'en'|'de';readonly page?:import('./page.ts').StagedFormPage}
 export interface StagedFormResponse {readonly token:StagedFormToken;readonly fields:readonly StagedFormField[];readonly diagnostics:readonly StagedFormDiagnostic[];readonly ready:boolean}
 export interface StagedActionDefinition {readonly bodyKey:string;readonly limits?:import('./limits.ts').StagedFormLimits}
-export interface StagedFormStatus {readonly token:StagedFormToken;readonly ready:boolean;readonly diagnostics:readonly StagedFormDiagnostic[];readonly diagnosticOffset:string;readonly diagnosticTotal:string}
+export interface StagedFormStatus {readonly token:StagedFormToken;readonly ready:boolean;readonly commitArgs:StagedArgs|null;readonly diagnostics:readonly StagedFormDiagnostic[];readonly diagnosticOffset:string;readonly diagnosticTotal:string}
 export const STAGED_FORM_BODY_KEY='framework.action.form';
 export const STAGED_FORM_STATUS_EXTENSION='framework.stagedFormStatus';
 export const STAGED_FORM_EVENT_ACTION='framework.stageActionForm';
 /** 🚦️ Publish bounded status pages while retaining the original complete diagnostic address space. */
-export function stagedFormStatus(response:StagedFormResponse,offset=0):StagedFormStatus{if(!stagedFormToken(response.token))throw new Error('staging.token');if(!Number.isSafeInteger(offset)||offset<0||offset>response.diagnostics.length)throw new Error('staging.diagnostic-page');return {token:response.token,ready:response.ready,diagnostics:response.diagnostics.slice(offset,offset+16),diagnosticOffset:String(offset),diagnosticTotal:String(response.diagnostics.length)};}
+export function stagedFormStatus(response:StagedFormResponse,offset=0,commitArgs:StagedArgs|null=null):StagedFormStatus{if(!stagedFormToken(response.token))throw new Error('staging.token');if(response.ready!==(commitArgs!==null))throw new Error('staging.commit-args');if(!Number.isSafeInteger(offset)||offset<0||offset>response.diagnostics.length)throw new Error('staging.diagnostic-page');return {token:response.token,ready:response.ready,commitArgs,diagnostics:response.diagnostics.slice(offset,offset+16),diagnosticOffset:String(offset),diagnosticTotal:String(response.diagnostics.length)};}
 export type StagedFormEdit={readonly kind:'set'|'append';readonly path:StagedFormPath;readonly value:StagedValue}|{readonly kind:'remove';readonly path:StagedFormPath};
 export interface StagedFormEvent {readonly token:StagedFormToken;readonly edits:readonly StagedFormEdit[]}
 export type StagedFormBindingEdit={readonly source:'fixed';readonly edit:StagedFormEdit}|{readonly source:'text';readonly path:StagedFormPath}|{readonly source:'choice';readonly kind:'set'|'append';readonly path:StagedFormPath;readonly options:readonly {readonly key:string;readonly value:StagedValue}[]};

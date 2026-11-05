@@ -64,7 +64,7 @@ pub fn gumball_step(
 ) -> Result<ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, Fault> {
     let phase = GesturePhase::parse(phase, reason).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.gumball.phase-unknown"), "unknown gumball phase or abort reason"))?;
     let tick = fem2d_gumball_tick(snapshot, if ids.is_empty() { selected } else { ids }, motion);
-    let window = context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.window_id.clone()).unwrap_or_default();
+    let window = context.and_then(|context| context.view_state.as_deref()).and_then(|view| view.window_id.clone()).unwrap_or_default();
     let transient = context.map(|context| context.transient.as_ref().clone()).unwrap_or_default();
     let base_revision: String = operation.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect();
     let drive = fem_gumball_drive::<Fem2dGumballTool>(&transient, &window, verb, phase, tick, &operation.authoring_seed, &base_revision)?;

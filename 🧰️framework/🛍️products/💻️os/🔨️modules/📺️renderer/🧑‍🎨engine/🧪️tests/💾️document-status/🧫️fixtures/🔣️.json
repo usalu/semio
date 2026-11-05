@@ -1,0 +1,109 @@
+{
+  "schema": {
+    "type": "array",
+    "minItems": 3,
+    "items": {
+      "type": "object",
+      "required": [
+        "name",
+        "client",
+        "status",
+        "accepted",
+        "saved"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "status": {
+          "type": "object",
+          "required": [
+            "persisted",
+            "pendingMutations",
+            "remote"
+          ],
+          "properties": {
+            "persisted": {
+              "type": "boolean"
+            },
+            "pendingMutations": {
+              "type": "integer"
+            },
+            "remote": {
+              "type": "null"
+            },
+            "writeFailure": {
+              "type": "object",
+              "required": [
+                "code"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "saved": {
+          "enum": [
+            "saved",
+            "unsaved"
+          ]
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "failed acknowledged write stays unsaved",
+      "client": "live",
+      "status": {
+        "persisted": true,
+        "pendingMutations": 0,
+        "remote": null,
+        "writeFailure": {
+          "code": "folder-write-failed",
+          "message": "disk full"
+        }
+      },
+      "accepted": true,
+      "saved": "unsaved"
+    },
+    {
+      "name": "successful receipt clears the absent failure",
+      "client": "live",
+      "status": {
+        "persisted": true,
+        "pendingMutations": 0,
+        "remote": null
+      },
+      "accepted": true,
+      "saved": "saved"
+    },
+    {
+      "name": "stale client cannot alter current saved status",
+      "client": "old",
+      "status": {
+        "persisted": true,
+        "pendingMutations": 0,
+        "remote": null,
+        "writeFailure": {
+          "code": "quota-exceeded"
+        }
+      },
+      "accepted": false,
+      "saved": "unsaved"
+    }
+  ]
+}

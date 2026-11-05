@@ -69,6 +69,7 @@ pub struct ArtifactStoreOneItemSealer<P, M> {
     native_identities_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<(semio_framework_value::paged::PagedUtf8<{usize::MAX}>,semio_framework_value::paged::PagedUtf8<{usize::MAX}>,semio_framework_value::paged::PagedUtf8<{usize::MAX}>)>>,
     prepared_digest: Option<[u8;32]>,
     pub ownership: RetainedCloneProgress,
+    last_work:u64,
     pub authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
     pub edit: Option<Box<Edit<M>>>,
     unboxed_edit: Option<Edit<M>>,
@@ -127,6 +128,7 @@ impl<P, M> ArtifactStoreOneItemSealer<P, M> {
     pub(super) fn new(authority: Arc<ArtifactStoreOneItemLiveAuthority>, edit: Edit<M>, post: Arc<P>, mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>) -> Self where M: semio_framework_value::retirement::RetireOwned+Sync+ArtifactCanonicalJsonTree {
         Self {
             native: Some(Box::new(ArtifactStoreCanonicalSource::new(Arc::clone(&authority),Box::new(edit)))),
+            last_work:0,
             native_frame_bytes:size_of::<ArtifactStoreCanonicalSource<M>>(),
             native_identities:None,
             native_identities_close:None,
@@ -306,24 +308,29 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
     }
     /// 🧾️ Returns every actual currency from the preceding canonical preparation turn.
     pub fn ownership_progress(&self)->RetainedCloneProgress{self.ownership}
+    /// 🧮️ Includes every native child and publication transition from the latest advance call.
+    pub fn last_turn_work(&self)->u64{self.last_work}
     pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
-        self.ownership=Default::default();self.last_length=0;self.last_canonical=false;
+        self.ownership=Default::default();self.last_work=0;self.last_length=0;self.last_canonical=false;
         if self.cancelled||self.closing{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         if self.prepared.is_some(){return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.progress(),self.ownership));}
         if !grant.permits_one(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         if self.replay.is_some(){self.cancelled=true;return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.native-checkpoint-unsupported"));}
         let demand=match self.preparation_demands(){Ok(demand)=>demand,Err(error)=>{self.cancelled=true;self.ownership=error.retained_progress();return Err(error)}};
         if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+        let work_demand=match self.native.as_ref(){Some(owner)if !owner.terminal_is_empty()&&!owner.ready()=>owner.next_work_demand()?,_=>1};
+        if !receiving.prepare_work(work_demand)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+        self.last_work=1;
         let retained=grant.retained_grant();
         let result=(||->Result<RetainedCloneProgress,ValueError>{
             if let Some(owner)=self.native.as_mut(){
                 if owner.terminal_is_empty(){self.native=None;self.phase=5;return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()});}
                 let child=RetainedCloneGrant{maximum_items:1,maximum_depth:retained.maximum_depth-1,..retained};
                 if owner.ready(){
-                    let(edit,identities,digest,receipt)=owner.take(child)?.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.original-return-refused"))?;
+                    let turn=owner.take(child);self.last_work=owner.last_turn_work();let(edit,identities,digest,receipt)=turn?.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.original-return-refused"))?;
                     self.edit=Some(edit);self.native_identities=Some(identities);self.prepared_digest=Some(digest);return Ok(receipt);
                 }
-                return Ok(owner.advance(child)?.progress());
+                let turn=owner.advance(child);self.last_work=owner.last_turn_work();return Ok(turn?.progress());
             }
             if self.authority.is_none()||self.edit.is_none()||self.post.is_none()||self.native_identities.is_none()||self.prepared_digest.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.original-prepared-owners-missing"));}
             let authority=self.authority.as_ref().expect("validated original publication authority");
@@ -336,6 +343,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         })();
         let (progress,error)=match result{Ok(progress)=>(progress,None),Err(error)=>(error.retained_progress(),Some(error))};
         self.ownership=progress;
+        receiving.commit_work(self.last_work).map_err(|error|error.with_retained_progress(progress))?;
         if error.is_some()||!progress.fits(retained){self.cancelled=true;}
         let bytes=progress.copied_bytes.checked_add(progress.retained_capacity_bytes).and_then(|bytes|bytes.checked_add(progress.released_bytes)).and_then(|bytes|u64::try_from(bytes).ok());
         if progress!=RetainedCloneProgress::default(){
@@ -367,16 +375,18 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         Ok(Default::default())
     }
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.last_work=0;
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "canonical sealer exceeds admitted depth")); }
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(owner)=self.native.as_mut(){if owner.terminal_is_empty(){self.native=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return owner.advance(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        self.last_work=1;
+        if let Some(owner)=self.native.as_mut(){if owner.terminal_is_empty(){self.native=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let turn=owner.advance(child);self.last_work=owner.last_turn_work();return turn.map(|step|RetainedCloneStep::Progress(step.progress()));}
         if let Some([a,b,c])=self.native_identities.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new((a,b,c)){Ok(owner)=>self.native_identities_close=Some(owner),Err((error,(a,b,c)))=>{self.native_identities=Some([a,b,c]);return Err(error);}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-        if let Some(owner)=self.native_identities_close.as_mut(){if owner.terminal_is_empty(){self.native_identities_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return owner.step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if let Some(owner)=self.native_identities_close.as_mut(){if owner.terminal_is_empty(){self.native_identities_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let turn=owner.step(child);self.last_work=owner.last_turn_work();return turn.map(|step|RetainedCloneStep::Progress(step.progress()));}
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active_retirement.is_some() { return artifact_retirement_box_close_step(&mut self.active_retirement, child).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active_retirement.is_some() { let turn=artifact_retirement_box_close_step(&mut self.active_retirement, child);self.last_work=turn.work;return turn.result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(bytes) = self.identities.iter_mut().find(|bytes| bytes.capacity() != 0) {
             let released_bytes = bytes.capacity();
             *bytes = Vec::new();

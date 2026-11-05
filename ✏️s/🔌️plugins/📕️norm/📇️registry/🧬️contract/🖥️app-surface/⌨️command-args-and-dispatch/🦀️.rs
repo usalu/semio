@@ -80,6 +80,7 @@ pub fn dispatch_apply_remedy<Fam, Map>(document: &Fam::Document, check_id: &str,
 where
     Fam: NormFamily,
     Fam::Document: Clone + semio_framework_value::ToValue,
+    Fam::Mutation: protocol::ColdMutation<Fam::Document> + semio_framework_value::retirement::RetireOwned,
     Map: FnOnce(&Fam::Document, &NormEdit) -> Result<Vec<Fam::Mutation>, String>,
 {
     handle_apply_remedy::<Fam, Map>(document, check_id, remedy_index, resolve)
@@ -313,6 +314,7 @@ pub fn dispatch_live_command<Fam, Map>(document: &Fam::Document, command: &LiveC
 where
     Fam: NormFamily,
     Fam::Document: Clone + semio_framework_value::ToValue,
+    Fam::Mutation: protocol::Mutation<Fam::Document> + protocol::ColdMutation<Fam::Document> + semio_framework_value::retirement::RetireOwned,
     Map: FnMut(&Fam::Document, &NormEdit) -> Result<Vec<Fam::Mutation>, String>,
 {
     match command {
@@ -334,3 +336,16 @@ where
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod live_command_tests;
+
+/// 🧾️ Every tool id of a live Eurocode editor: the five retained tools, six live tools and five entity tools, in `app_commands!` row order.
+pub const NORM_EDITOR_TOOL_IDS: &[&str] = &["setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy", "setFields", "previewRemedy", "clearPreview", "cancelEvaluation", "evaluateUnits", "viewportAct", "copyEntities", "duplicateEntities", "pasteEntities", "moveEntity", "deleteEntities"];
+
+/// ↕️ The `MoveItem` edit of a move target against the document tree.
+pub fn move_edit(tree: &semio_framework_value::DslValue, path: &str, id: &str, target: &crate::MoveTarget) -> Result<NormEdit, String> {
+    match target {
+        crate::MoveTarget::To(to) => crate::move_item_edit(tree, path, id, *to),
+        crate::MoveTarget::Over(over) => crate::move_item_over_edit(tree, path, id, over),
+        crate::MoveTarget::Step(delta) => crate::move_item_step_edit(tree, path, id, *delta),
+    }
+}
+

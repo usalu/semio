@@ -23,7 +23,7 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSystemAlphaUOverAl
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change αu/α1", "αu/α1 ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change structural overstrength ratio αu/α1", "Tragwerksüberfestigkeitsverhältnis αu/α1 ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-system-alpha-u-over-alpha1".into()]

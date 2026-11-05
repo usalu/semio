@@ -75,7 +75,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for BimCommandWork {
         let window_config = input.context.and_then(|context| context.window_config.as_ref());
         let cfg = ConfigView { snapshot: input.config, window: window_config };
         let selection = |domain: &str| input.interaction.selection.get(domain).map(|selection| selection.ids.clone()).unwrap_or_default();
-        let view = input.context.and_then(|context| context.view_state.as_ref());
+        let view = input.context.and_then(|context| context.view_state.as_deref());
         let presence = input.context.and_then(|context| context.presence_view()).map(|presence| presence.local.clone());
         let mut ctx = BimDispatchCtx::new(selection(semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN), selection(semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN), view, window_config, presence.as_ref());
         ctx.gestures = Some(self.owner.clone());

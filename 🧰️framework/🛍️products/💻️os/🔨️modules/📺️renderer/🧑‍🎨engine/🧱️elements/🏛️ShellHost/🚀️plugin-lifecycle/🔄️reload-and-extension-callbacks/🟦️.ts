@@ -1,4 +1,5 @@
 /** 🔄️ The plugin reload, space extension operation and extension install, uninstall and enable callbacks. */
+import { captureProgramRetirementOwnersV1, sameProgramRetirementOwnersV1, type ProgramRetirementLeaseV1 } from "../../🚪️program-retirement/🟦️.ts";
 import { useCallback, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
 import { type ProgramHotSwapEvent, retireContributorInstances, panelViewContext } from "@semio-tech/framework";
 import { loadPluginModuleResilient } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
@@ -31,6 +32,7 @@ export function usePluginReloadCallbacks({ pluginOpInFlightRef, loadedPluginsRef
       dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "restarting" });
       let newHandle: PluginWasmHandle | null = null;
       let committed = false;
+      let retirement: ProgramRetirementLeaseV1 | null = null;
       let ownsSession = false;
       try {
         const acquired = await pluginSource.acquireModule(pluginId, rebuiltAt, { signal: new AbortController().signal });
@@ -52,6 +54,16 @@ export function usePluginReloadCallbacks({ pluginOpInFlightRef, loadedPluginsRef
           removedApps: [...oldAppIds].filter((id) => !newAppIds.has(id)),
         };
 
+        const owners = captureProgramRetirementOwnersV1(loadedPluginsRef.current, activeSession, pluginId);
+        const currentOwner = (): boolean => loadedPluginsRef.current.some(entry => entry.handle === current.handle) && sameProgramRetirementOwnersV1(owners, captureProgramRetirementOwnersV1(loadedPluginsRef.current, sessionRef.current, pluginId));
+        retirement = await core.admitProgramRetirementRef.current(owners, currentOwner);
+        if (retirement === null || !await retirement.retire()) {
+          await newHandle.dispose(); newHandle = null;
+          dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
+          dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: ownsSession ? "running" : "loaded" });
+          return;
+        }
+
         const directoryHomeOwner = directoryHomeOwnerRef.current;
         if (directoryHomeOwner?.plugin.pluginId === pluginId) {
           directoryHomeOwnerRef.current = null;
@@ -61,10 +73,6 @@ export function usePluginReloadCallbacks({ pluginOpInFlightRef, loadedPluginsRef
 
         if (ownsSession && activeSession) {
           dispatch({ type: "SET_SESSION", value: null });
-          await current.handle.destroyApp(activeSession.instanceId).catch(() => {});
-        }
-        for (const spawned of core.spawnedAppsRef.current.filter((entry) => entry.pluginId === pluginId)) {
-          await current.handle.destroyApp(spawned.instanceId).catch(() => {});
         }
         await retireContributorInstances(contributorInstancesRef.current, (entry) => entry.pluginId === pluginId);
         if (hostMode && activeSession) {
@@ -76,7 +84,14 @@ export function usePluginReloadCallbacks({ pluginOpInFlightRef, loadedPluginsRef
             const nextPanel = { ...currentPanel, spawnedApps: survivingSpawned, activeSpawnedId };
             dispatch({
               type: "SET_SESSION",
-              value: (nextSession) => (nextSession ? { ...nextSession, viewState: { ...nextSession.viewState, panelJson: panelJsonFromState(nextPanel) } } : nextSession),
+              value: (nextSession) => {
+                if (!nextSession) return nextSession;
+                const latest = parsePanelState(nextSession.viewState);
+                if (!latest) return nextSession;
+                const spawnedApps = latest.spawnedApps.filter(entry => !owners.some(owner => owner.session.pluginId === entry.pluginId && owner.session.app.id === entry.appId && owner.session.instanceId === entry.instanceId));
+                const activeSpawnedId = spawnedApps.some(entry => entry.id === latest.activeSpawnedId) ? latest.activeSpawnedId : undefined;
+                return { ...nextSession, viewState: { ...nextSession.viewState, panelJson: panelJsonFromState({ ...latest, spawnedApps, activeSpawnedId }) } };
+              },
             });
           }
         }
@@ -91,6 +106,7 @@ export function usePluginReloadCallbacks({ pluginOpInFlightRef, loadedPluginsRef
         dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: ownsSession ? "running" : "loaded" });
 
         await current.handle.dispose();
+        core.sealedInstancesRef.current.forget(current.handle);
       } catch (error) {
         if (committed) {
           console.warn(`hot-swap ${pluginId} retained its committed handle; predecessor retirement failed`, error);
@@ -102,6 +118,7 @@ export function usePluginReloadCallbacks({ pluginOpInFlightRef, loadedPluginsRef
           dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
         }
       } finally {
+        retirement?.release();
         pluginOpInFlightRef.current.delete(pluginId);
       }
     },
@@ -125,10 +142,11 @@ export function usePluginReloadCallbacks({ pluginOpInFlightRef, loadedPluginsRef
         return;
       }
       pluginOpInFlightRef.current.add(pluginId);
+      let retirement: ProgramRetirementLeaseV1 | null = null;
       try {
-        for (const spawned of core.spawnedAppsRef.current.filter((entry) => entry.pluginId === pluginId)) {
-          await current.handle.destroyApp(spawned.instanceId).catch(() => {});
-        }
+        const owners = captureProgramRetirementOwnersV1(loadedPluginsRef.current, sessionRef.current, pluginId);
+        retirement = await core.admitProgramRetirementRef.current(owners, () => loadedPluginsRef.current.some(entry => entry.handle === current.handle) && sameProgramRetirementOwnersV1(owners, captureProgramRetirementOwnersV1(loadedPluginsRef.current, sessionRef.current, pluginId)));
+        if (retirement === null || !await retirement.retire()) return;
         await retireContributorInstances(contributorInstancesRef.current, (entry) => entry.pluginId === pluginId);
         if (hostMode && sessionRef.current) {
           const activeSession = sessionRef.current;
@@ -140,16 +158,25 @@ export function usePluginReloadCallbacks({ pluginOpInFlightRef, loadedPluginsRef
             const nextPanel = { ...currentPanel, spawnedApps: survivingSpawned, activeSpawnedId };
             dispatch({
               type: "SET_SESSION",
-              value: (nextSession) => (nextSession ? { ...nextSession, viewState: { ...nextSession.viewState, panelJson: panelJsonFromState(nextPanel) } } : nextSession),
+              value: (nextSession) => {
+                if (!nextSession) return nextSession;
+                const latest = parsePanelState(nextSession.viewState);
+                if (!latest) return nextSession;
+                const spawnedApps = latest.spawnedApps.filter(entry => !owners.some(owner => owner.session.pluginId === entry.pluginId && owner.session.app.id === entry.appId && owner.session.instanceId === entry.instanceId));
+                const activeSpawnedId = spawnedApps.some(entry => entry.id === latest.activeSpawnedId) ? latest.activeSpawnedId : undefined;
+                return { ...nextSession, viewState: { ...nextSession.viewState, panelJson: panelJsonFromState({ ...latest, spawnedApps, activeSpawnedId }) } };
+              },
             });
           }
         }
         dispatch({ type: "REMOVE_LOADED_PLUGIN", pluginId });
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "available" });
         await current.handle.dispose();
+        core.sealedInstancesRef.current.forget(current.handle);
         pluginModuleUrlByIdRef.current.delete(pluginId);
         pluginArtifactRebuiltAtRef.current.delete(pluginId);
       } finally {
+        retirement?.release();
         pluginOpInFlightRef.current.delete(pluginId);
       }
     },

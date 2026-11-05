@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "name": "concurrent panel change", "change": "panel", "spawned": ["sibling", "stdio-2"], "retired": 0 },
+    { "name": "host generation replaced", "change": "host", "spawned": [], "retired": 1 },
+    { "name": "plugin generation replaced", "change": "plugin", "spawned": [], "retired": 1 },
+    { "name": "panel unavailable", "change": "unavailable", "spawned": [], "retired": 1 }
+  ]
+}

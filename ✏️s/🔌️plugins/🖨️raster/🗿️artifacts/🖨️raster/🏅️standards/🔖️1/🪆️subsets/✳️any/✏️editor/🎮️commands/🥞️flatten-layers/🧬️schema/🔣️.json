@@ -3,6 +3,7 @@
   "title": "Flatten Raster Layers",
   "description": "Replaces all original layers with one pixel layer containing the visible composite at the same world position. Hidden layers are removed; undo restores the complete original layer tree and assets.",
   "type": "object",
+  "x-semio-execution": {"shape":"resumable","maximumRawBytes":65536,"maximumWorkUnitsPerStep":1024,"maximumOutputBytes":372842496,"maximumSelectedLayerNodes":1024,"maximumLayerNodes":4096,"publicationLane":"artifact"},
   "required": [
     "name"
   ],

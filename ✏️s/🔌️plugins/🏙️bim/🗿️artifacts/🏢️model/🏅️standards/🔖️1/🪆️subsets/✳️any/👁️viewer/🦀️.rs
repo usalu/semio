@@ -243,7 +243,7 @@ fn bim_view_reduce(
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<BimModelViewer>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<ModelMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    view_emit(command, context.and_then(|context| context.view_state.as_ref()), context.and_then(|context| context.window_config.as_ref()))
+    view_emit(command, context.and_then(|context| context.view_state.as_deref()), context.and_then(|context| context.window_config.as_ref()))
 }
 
 struct BimViewCommandJobFactory {

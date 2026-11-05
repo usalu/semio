@@ -51,7 +51,7 @@ async fn a_transform_gesture_moves_every_triangle_and_rotates_its_normal() {
     let event = editing::SnapshotEditEvent::SetValue { path: editing::TRANSFORM_PATH.into(), value: semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"translate":[0,0,5],"scale":[2,2,2]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) };
     let emit = <StlAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).expect("the transform resolves");
     let mut state = base.clone();
-    emit.artifact_mutations.iter().for_each(|mutation| apply_mutation(&mut state, mutation));
+    emit.artifact_mutations.iter().for_each(|mutation| { apply_mutation(&mut state, mutation); });
     assert_eq!(state.triangles[0].vertices, [[0.0, 0.0, 5.0], [2.0, 0.0, 5.0], [0.0, 2.0, 5.0]]);
     assert_eq!(state.triangles[0].normal, [1.0, 0.0, 0.0]);
     assert_eq!(state.solid_name, "part");
@@ -71,7 +71,7 @@ fn natural_stl_round_trips_edits_agrees_with_an_independent_text_reader_and_read
     let event = editing::SnapshotEditEvent::SetValue { path: editing::TRANSFORM_PATH.into(), value: semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"translate":[5,0,0]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) };
     let emit = <StlAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("transform resolves");
     let mut edited = snapshot.clone();
-    emit.artifact_mutations.iter().for_each(|mutation| apply_mutation(&mut edited, mutation));
+    emit.artifact_mutations.iter().for_each(|mutation| { apply_mutation(&mut edited, mutation); });
     let saved = <StlAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("stl saves");
     let numbers = |line: &str| line.split_whitespace().skip(1).map(|token| token.parse::<f64>().expect("a decimal coordinate")).collect::<Vec<f64>>();
     let text = String::from_utf8(saved.clone()).expect("ascii stl is text");
@@ -80,7 +80,7 @@ fn natural_stl_round_trips_edits_agrees_with_an_independent_text_reader_and_read
     assert!(text.starts_with("solid part") && text.trim_end().ends_with("endsolid part"));
     let reopened = <StlAnyEditor as ArtifactEditor>::decode_natural_file(&saved).expect("the saved file reopens");
     assert_eq!(reopened.triangles[0].vertices, [[5.0, 0.0, 0.0], [6.0, 0.0, 0.0], [5.0, 1.0, 0.0]]);
-    let binary = crate::engine::encode_stl_binary(&edited);
+    let binary = semio_s_artifact_stdio_stl_mutations::standards::v_ascii::subsets::any::io::encode_stl_binary(&edited);
     assert_eq!(<StlAnyEditor as ArtifactEditor>::decode_natural_file(&binary).expect("binary stl opens").triangles[0].vertices, reopened.triangles[0].vertices);
     assert!(<StlAnyEditor as ArtifactEditor>::decode_natural_file(include_bytes!("../🧫️fixtures/📂️natural/invalid.stl")).is_err());
 }
@@ -88,7 +88,7 @@ fn natural_stl_round_trips_edits_agrees_with_an_independent_text_reader_and_read
 #[test]
 fn the_scene_draws_the_files_own_triangles() {
     let snapshot = <StlAnyEditor as ArtifactEditor>::decode_natural_file(include_bytes!("../🧫️fixtures/📂️natural/sample.stl")).expect("stl opens");
-    let (positions, triangles, markers) = crate::engine::scene_geometry(&snapshot);
+    let (positions, triangles, markers) = semio_s_artifact_stdio_stl_inferences::schema::inferences::scene_geometry(&snapshot);
     assert_eq!((positions, triangles, markers.len()), (vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], vec![0, 1, 2], 0));
 }
 
@@ -99,7 +99,7 @@ async fn a_details_edit_of_one_vertex_coordinate_changes_only_that_vertex() {
     let event = editing::SnapshotEditEvent::SetValue { path: "/triangles/0/vertices/1/2".into(), value };
     let emit = <StlAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("the coordinate edit resolves");
     let mut edited = snapshot.clone();
-    emit.artifact_mutations.iter().for_each(|mutation| apply_mutation(&mut edited, mutation));
+    emit.artifact_mutations.iter().for_each(|mutation| { apply_mutation(&mut edited, mutation); });
     assert_eq!(edited.triangles[0].vertices, [[0.0, 0.0, 0.0], [1.0, 0.0, 7.5], [0.0, 1.0, 0.0]]);
     assert_eq!(edited.triangles[0].normal, snapshot.triangles[0].normal);
     assert_eq!(edited.solid_name, snapshot.solid_name);
@@ -133,7 +133,7 @@ fn natural_stl_decodes_to_what_the_independent_reference_parser_read() {
 #[semio_framework_async_macros::async_test]
 async fn the_binary_encode_path_round_trips_through_the_natural_decoder() {
     let snapshot = <StlAnyEditor as ArtifactEditor>::decode_natural_file(include_bytes!("../🧫️fixtures/📂️natural/sample.stl")).expect("stl opens");
-    let binary = crate::engine::encode_stl_binary(&snapshot);
+    let binary = semio_s_artifact_stdio_stl_mutations::standards::v_ascii::subsets::any::io::encode_stl_binary(&snapshot);
     assert_eq!(binary.len(), 84 + 50 * snapshot.triangles.len());
     assert_eq!(u32::from_le_bytes(binary[80..84].try_into().unwrap()) as usize, snapshot.triangles.len());
     let reopened = <StlAnyEditor as ArtifactEditor>::decode_natural_file(&binary).expect("binary stl reopens");
@@ -147,8 +147,8 @@ fn stl_io_reads_the_saved_edit_and_the_binary_encoding_back_to_the_edited_model(
     let event = editing::SnapshotEditEvent::SetValue { path: editing::TRANSFORM_PATH.into(), value: semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"translate":[5,0,0]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) };
     let emit = <StlAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("transform resolves");
     let mut edited = snapshot.clone();
-    emit.artifact_mutations.iter().for_each(|mutation| apply_mutation(&mut edited, mutation));
-    for saved in [<StlAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("stl saves"), crate::engine::encode_stl_binary(&edited)] {
+    emit.artifact_mutations.iter().for_each(|mutation| { apply_mutation(&mut edited, mutation); });
+    for saved in [<StlAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("stl saves"), semio_s_artifact_stdio_stl_mutations::standards::v_ascii::subsets::any::io::encode_stl_binary(&edited)] {
         let by_stl_io = oracle_round_trip(&saved).expect("stl_io parses the saved file");
         let reopened = <StlAnyEditor as ArtifactEditor>::decode_natural_file(&by_stl_io).expect("the stl_io output reopens");
         assert_eq!(reopened.triangles.len(), edited.triangles.len());

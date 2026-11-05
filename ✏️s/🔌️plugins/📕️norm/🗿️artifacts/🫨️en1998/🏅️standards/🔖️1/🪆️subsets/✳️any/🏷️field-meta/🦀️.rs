@@ -3,7 +3,7 @@
 use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, FieldSpec, UnitId};
 
 /// 🏷️ Family field-metadata table — wire values keep codes; labels are localized prose.
-pub fn en1998_field_meta(path: &str) -> Option<FieldSpec> {
+fn describe_en1998_field(path: &str) -> Option<FieldSpec> {
     lookup_norm_field_meta(TABLE, path)
 }
 
@@ -443,3 +443,15 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("placements[].z", m!("Placement z", "Platzierung z", UnitId::Metre)),
     ("placements[].yaw", m!("Placement yaw about Z", "Platzierung Gierwinkel um Z", UnitId::Radian)),
 ];
+
+/// 🛡️ Descriptive field metadata admitted by the family's actual native setter vocabulary.
+pub fn en1998_field_meta(path: &str) -> Option<FieldSpec> {
+    semio_s_plugin_norm_app_surface::admit_list_meta(
+        semio_s_plugin_norm_app_surface::admit_field_meta(
+        describe_en1998_field(path),
+        semio_s_artifact_norm_en1998_mutations::EDIT_RULES.can_set_field(path),
+        ),
+        semio_s_artifact_norm_en1998_mutations::EDIT_RULES.can_insert_item(path),
+        semio_s_artifact_norm_en1998_mutations::EDIT_RULES.can_remove_item(path, semio_s_artifact_norm_en1998_mutations::ID_REMOVALS.iter().map(|rule| rule.path)),
+    )
+}

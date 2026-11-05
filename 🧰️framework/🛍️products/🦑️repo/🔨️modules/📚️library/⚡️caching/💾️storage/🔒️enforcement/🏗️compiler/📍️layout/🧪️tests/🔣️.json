@@ -9,14 +9,14 @@
   "cases": [
     {
       "platform": "posix",
-      "root": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m",
+      "root": "/Users/ueli/Documents/semio/.cache/b/r/m",
       "mode": "prototype",
       "build": "b/p",
       "target": "t/p"
     },
     {
       "platform": "posix",
-      "root": "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m",
+      "root": "/workspaces/semio/.cache/b/r/m",
       "mode": "release",
       "build": "b/r",
       "target": "t/r"
@@ -122,6 +122,6 @@
       "🧰️framework",
       "🧰️framework/📦️packages/🦀️rust"
     ],
-    "home": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/home"
+    "home": ".cache/b/r/m/cargo/home"
   }
 }

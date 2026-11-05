@@ -108,7 +108,7 @@ type En1998StoreyPatch {
   heightM: Float
   permanentGkN: Float
   correlatedOccupancy: Boolean
-  variables: En1998VariableActionDelta!
+  variables: En1998VariableActionDelta
   stiffnessX: Float
   stiffnessY: Float
   centreOfMassXM: Float
@@ -191,9 +191,9 @@ type En1998BuildingPatch {
   name: String
   planWidthM: Float
   planLengthM: Float
-  systems: En1998SystemDelta!
-  storeys: En1998StoreyDelta!
-  members: En1998MemberDelta!
+  systems: En1998SystemDelta
+  storeys: En1998StoreyDelta
+  members: En1998MemberDelta
   planRegular: Boolean
   elevationRegular: Boolean
   t1Method: JSON
@@ -251,7 +251,7 @@ type En1998BridgePatch {
   bearingDRdM: Float
   permanentGkN: Float
   correlatedOccupancy: Boolean
-  variables: En1998VariableActionDelta!
+  variables: En1998VariableActionDelta
   pierHeightM: Float
   pierMomentRdNm: Float
   pierShearRdN: Float
@@ -503,7 +503,7 @@ type En1998TowerPatch {
   qNominal: Float
   permanentGkN: Float
   correlatedOccupancy: Boolean
-  variables: En1998VariableActionDelta!
+  variables: En1998VariableActionDelta
   eiNm2: Float
   baseRotationalStiffnessNm: Float
 }
@@ -762,15 +762,15 @@ type En1998TieBeamModification {
   patch: En1998TieBeamPatch!
 }
 type En1998TieBeamPatch {
-  foundationAId: String
-  foundationBId: String
-  span: String
-  width: String
-  depth: String
-  steelArea: String
-  steelDesignStrength: String
-  relativeDisplacement: String
-  displacementLimit: String
+  foundationAId: JSON
+  foundationBId: JSON
+  span: JSON
+  width: JSON
+  depth: JSON
+  steelArea: JSON
+  steelDesignStrength: JSON
+  relativeDisplacement: JSON
+  displacementLimit: JSON
 }
 type En1998SlopeDelta {
   removed: [En1998SlopeRemoval!]
@@ -796,13 +796,13 @@ type En1998SlopeModification {
   patch: En1998SlopePatch!
 }
 type En1998SlopePatch {
-  governingLayerId: String
-  height: String
-  angle: String
-  frictionAngle: String
-  cohesion: String
-  topographicAmplification: String
-  circleCentreX: String
-  circleCentreZ: String
-  circleRadius: String
+  governingLayerId: JSON
+  height: JSON
+  angle: JSON
+  frictionAngle: JSON
+  cohesion: JSON
+  topographicAmplification: JSON
+  circleCentreX: JSON
+  circleCentreZ: JSON
+  circleRadius: JSON
 }

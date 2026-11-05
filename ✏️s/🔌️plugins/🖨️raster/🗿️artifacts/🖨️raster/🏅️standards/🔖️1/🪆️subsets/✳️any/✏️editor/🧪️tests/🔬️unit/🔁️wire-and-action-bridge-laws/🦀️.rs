@@ -19,7 +19,6 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::SetBrushHardness(semio_s_artifact_raster_raster_editor::commands::set_brush_hardness::SetBrushHardness { value: 0.25 }),
         RasterCommand::SetPaintTarget(semio_s_artifact_raster_raster_editor::commands::set_paint_target::SetPaintTarget{value:"mask".into()}),
         RasterCommand::SetMaskValue(semio_s_artifact_raster_raster_editor::commands::set_mask_value::SetMaskValue{value:96}),
-        RasterCommand::SetPixelSelection(semio_s_artifact_raster_raster_editor::commands::set_pixel_selection::SetPixelSelection{selection:Some(semio_s_artifact_raster_raster_editor::selection::RasterPixelSelection{layer_id:"l1".into(),target:"pixels".into(),width:2,height:2,spans:vec![]}),expected_image_key:None}),
         RasterCommand::SetCompositeViewport(semio_s_artifact_raster_raster_editor::commands::set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }),
         RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::camera::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
         RasterCommand::SetCameraZoom(semio_s_artifact_raster_raster_editor::commands::camera::set_camera_zoom::SetCameraZoom { zoom: 2.0 }),
@@ -27,13 +26,17 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::ExportPng(semio_s_artifact_raster_raster_editor::commands::export_png::ExportPng {}),
         RasterCommand::FlattenLayers(semio_s_artifact_raster_raster_editor::commands::flatten_layers::FlattenLayers {name:"Flattened Image".into()}),
         RasterCommand::MergeDown(semio_s_artifact_raster_raster_editor::commands::merge_down::MergeDown {layer_id:"l1".into()}),
-        RasterCommand::MaskFromSelection(semio_s_artifact_raster_raster_editor::commands::mask_from_selection::MaskFromSelection {layer_id:"l1".into(),expected_image_key:None,selection:vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 0, length: 1, coverage: 255 }]}),
+        RasterCommand::MaskFromSelection(semio_s_artifact_raster_raster_editor::commands::mask_from_selection::MaskFromSelection {layer_id:"l1".into(),expected_image_key:None}),
         RasterCommand::PaintStroke(semio_s_artifact_raster_raster_editor::commands::paint_stroke::PaintStroke { layer_id: "l1".into(), tool: "eraser".into(), xs: vec![0.5, 3.25], ys: vec![1.5, 2.0], phase: None, reason: None, gesture: None }),
         RasterCommand::FillRegion(semio_s_artifact_raster_raster_editor::commands::fill_region::FillRegion { layer_id: "l1".into(), x: 1.5, y: 0.25 }),
         RasterCommand::SetFillTolerance(semio_s_artifact_raster_raster_editor::commands::set_fill_tolerance::SetFillTolerance { value: 40 }),
         RasterCommand::ApplyFilter(semio_s_artifact_raster_raster_editor::commands::apply_filter::ApplyFilter { layer_id: "l1".into(), filter: "posterize".into(), amount: 4.0 }),
         RasterCommand::TransformImage(semio_s_artifact_raster_raster_editor::commands::transform_image::TransformImage { layer_id: "l1".into(), operation: "crop".into(), x: 1, y: 2, width: 3, height: 4, bilinear: false }),
         RasterCommand::FillSelection(semio_s_artifact_raster_raster_editor::commands::fill_selection::FillSelection { layer_id: "l1".into() }),
+        RasterCommand::SetFilterKind(semio_s_artifact_raster_raster_editor::commands::set_filter_kind::SetFilterKind { value: "gamma".into() }),
+        RasterCommand::SetFilterAmount(semio_s_artifact_raster_raster_editor::commands::set_filter_amount::SetFilterAmount { value: 1.25 }),
+        RasterCommand::SetImageGrid(semio_s_artifact_raster_raster_editor::commands::set_image_grid::SetImageGrid { field: "width".into(), value: "32".into() }),
+        RasterCommand::SelectPixels(semio_s_artifact_raster_raster_editor::commands::select_pixels::SelectPixels {layer_id:"l1".into(),target:"pixels".into(),expected_image_key:None,width:8,height:8,method:"rectangle".into(),mode:"replace".into(),path:"[[0,0],[4,4]]".into()}),
     ]
 }
 
@@ -42,13 +45,24 @@ fn every_command() -> Vec<RasterCommand> {
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape, ToolJobFactory};
     use std::collections::BTreeSet;
-    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 29);
-    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 30);
-    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 29);
+    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 23);
+    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 33);
+    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 23);
     assert_eq!(raster_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(raster_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
 
-    let retained: BTreeSet<&str> = RASTER_RETAINED_TOOL_IDS.iter().copied().chain(["exportPng"]).collect();
+    let retained: BTreeSet<&str> = RASTER_RETAINED_TOOL_IDS.iter().copied().chain(RASTER_PIXEL_EDIT_TOOL_IDS.iter().copied()).chain(RASTER_LAYER_BAKE_TOOL_IDS.iter().copied()).chain(["exportPng","selectPixels","maskFromSelection"]).collect();
+    let pixels=RasterPixelEditJobFactory::new(RASTER_PLAY_CONTROLLER_ID).execution_contract();assert_eq!(pixels.shape,ToolExecutionShape::Resumable);assert_eq!(pixels,raster_pixel_edit_contract());assert_eq!(RasterPixelEditJobFactory::PUBLICATION_CONTRACTS.len(),5);for id in RASTER_PIXEL_EDIT_TOOL_IDS{assert!(!RASTER_RETAINED_TOOL_IDS.contains(id));let lanes=if *id=="paintStroke"{&[ArtifactToolPublicationLane::Artifact,ArtifactToolPublicationLane::WindowTransient][..]}else{&[ArtifactToolPublicationLane::Artifact][..]};assert!(RasterPixelEditJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract|contract.tool_id==*id&&contract.lanes==lanes));}
+    let bake_fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🎮️commands/🥞️flatten-layers/🧪️tests/execution.json")).unwrap();let bake=RasterLayerBakeJobFactory::new(RASTER_PLAY_CONTROLLER_ID).execution_contract();
+    assert_eq!(bake.shape,ToolExecutionShape::Resumable);assert_eq!(bake.max_raw_wire_bytes,bake_fixture["maximumRawBytes"].as_u64().unwrap() as usize);assert_eq!(bake.max_work_units_per_step,bake_fixture["maximumWorkUnitsPerStep"].as_u64().unwrap());assert_eq!(bake.max_output_bytes,bake_fixture["maximumOutputBytes"].as_u64().unwrap() as usize);
+    let bound=bake_fixture["maximumPixels"].as_u64().unwrap()*bake_fixture["channels"].as_u64().unwrap()*bake_fixture["maximumEncodedBytesPerSample"].as_u64().unwrap()+bake_fixture["maximumLayerNodes"].as_u64().unwrap()*(bake_fixture["maximumIdentifierUtf8Bytes"].as_u64().unwrap()*bake_fixture["maximumEscapedBytesPerUtf8Byte"].as_u64().unwrap()+bake_fixture["maximumLayerRowSyntaxBytes"].as_u64().unwrap())+bake_fixture["maximumAssetEntries"].as_u64().unwrap()*(bake_fixture["maximumIdentifierUtf8Bytes"].as_u64().unwrap()*bake_fixture["maximumEscapedBytesPerUtf8Byte"].as_u64().unwrap()+bake_fixture["maximumAssetRowSyntaxBytes"].as_u64().unwrap())+bake_fixture["fixedHeaderBytes"].as_u64().unwrap();assert_eq!(bake.max_output_bytes,bound as usize);
+    assert_eq!(bake_fixture["maximumSelectedLayerNodes"],1024);assert_eq!(bake_fixture["maximumLayerNodes"],4096);
+    assert_eq!(RasterLayerBakeJobFactory::PUBLICATION_CONTRACTS.len(),2);for id in RASTER_LAYER_BAKE_TOOL_IDS{assert!(RasterLayerBakeJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract|contract.tool_id==*id&&contract.lanes==&[ArtifactToolPublicationLane::Artifact]));assert!(!RASTER_RETAINED_TOOL_IDS.contains(id));}
+    let selection=RasterSelectPixelsJobFactory::new(RASTER_PLAY_CONTROLLER_ID).execution_contract();assert_eq!(selection.shape,ToolExecutionShape::Resumable);assert!(selection.max_raw_wire_bytes>1024*1024);assert_eq!(RasterSelectPixelsJobFactory::PUBLICATION_CONTRACTS[0].lanes,&[ArtifactToolPublicationLane::Config]);
+    let selection_execution:serde_json::Value=serde_json::from_str(include_str!("../../../🎮️commands/🎯️select-pixels/🧪️tests/execution.json")).unwrap();assert_eq!(selection.max_raw_wire_bytes,selection_execution["maximumRawBytes"].as_u64().unwrap()as usize);assert_eq!(selection.max_work_units_per_step,selection_execution["maximumWorkUnitsPerStep"].as_u64().unwrap());assert_eq!(selection.max_output_bytes,selection_execution["maximumOutputBytes"].as_u64().unwrap()as usize);assert_eq!(selection.max_step_micros,selection_execution["maximumStepMicros"].as_u64().unwrap()as u32);
+    let mask_fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🎮️commands/🎭️mask-from-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let metadata=&mask_fixture["execution"];
+    let mask=RasterMaskSelectionJobFactory::new(RASTER_PLAY_CONTROLLER_ID).execution_contract();assert_eq!(mask.shape,ToolExecutionShape::Resumable);assert_eq!(mask.max_raw_wire_bytes,metadata["maximumRawBytes"].as_u64().unwrap() as usize);assert_eq!(mask.max_output_bytes,metadata["maximumOutputBytes"].as_u64().unwrap() as usize);assert_eq!(mask.max_output_bytes,metadata["maximumPixels"].as_u64().unwrap() as usize*metadata["channels"].as_u64().unwrap() as usize*metadata["maximumEncodedBytesPerSample"].as_u64().unwrap() as usize+metadata["maximumOutputEscapedFields"].as_u64().unwrap() as usize*metadata["maximumFieldUtf8Bytes"].as_u64().unwrap() as usize*metadata["maximumEscapedBytesPerUtf8Byte"].as_u64().unwrap() as usize+metadata["headerBytes"].as_u64().unwrap() as usize);assert_eq!(mask.max_raw_wire_bytes,metadata["fixedInputHeaderBytes"].as_u64().unwrap() as usize+metadata["maximumInputEscapedFields"].as_u64().unwrap() as usize*metadata["maximumFieldUtf8Bytes"].as_u64().unwrap() as usize*metadata["maximumEscapedBytesPerUtf8Byte"].as_u64().unwrap() as usize);assert_eq!(RasterMaskSelectionJobFactory::PUBLICATION_CONTRACTS.len(),1);assert_eq!(RasterMaskSelectionJobFactory::PUBLICATION_CONTRACTS[0].tool_id,"maskFromSelection");assert_eq!(RasterMaskSelectionJobFactory::PUBLICATION_CONTRACTS[0].lanes,&[ArtifactToolPublicationLane::Artifact]);
+    assert!(!RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract|contract.tool_id=="maskFromSelection"));
     assert_eq!(semio_s_artifact_raster_raster_editor::media_export::RasterDownloadJobFactory::new(RASTER_PLAY_CONTROLLER_ID).execution_contract().shape,ToolExecutionShape::Resumable);
     assert_eq!(semio_s_artifact_raster_raster_editor::media_export::RasterDownloadJobFactory::PUBLICATION_CONTRACTS[0].lanes,&[ArtifactToolPublicationLane::HostOnly]);
     assert_eq!(retained, every_command().iter().map(RasterCommand::command_id).collect::<BTreeSet<_>>(), "every RasterCommand row must be a retained route");
@@ -107,7 +121,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 #[semio_framework_async_macros::async_test]
 async fn command_wire_keywords_are_unique_across_every_row() {
     let commands = every_command();
-    assert_eq!(commands.len(), 30, "every RasterCommand row must be covered by every_command()");
+    assert_eq!(commands.len(), 33, "every RasterCommand row must be covered by every_command()");
     let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
@@ -145,7 +159,10 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
                 RasterCommand::SetPaintTarget(_)=>"paint-target",
                 RasterCommand::SetMaskValue(_)=>"mask-value",
                 RasterCommand::SetFillTolerance(_) => "fill-tolerance",
-                RasterCommand::SetPixelSelection(_)=>"pixel-selection",
+                RasterCommand::SetFilterKind(_) => "filter-kind",
+                RasterCommand::SetFilterAmount(_) => "filter-amount",
+                RasterCommand::SetImageGrid(_) => "image-grid",
+                RasterCommand::SelectPixels(_)=>"select-pixels",
                 RasterCommand::SetCompositeViewport(_) => "composite-viewport",
                 RasterCommand::SetCamera(_) => "camera",
                 RasterCommand::SetCameraZoom(_) => "camera-zoom",
@@ -209,11 +226,11 @@ fn command_from_action_round_trips_every_command_id() {
             other => other.clone(),
         };
         let camel = camel_case_keys(&payload);
-        let bridged = <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(id, Some((camel).clone()), None).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        let bridged = <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(id, &mut Some(camel), &mut None).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
         assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
         assert_eq!(bridged, command, "payload mismatch for action {id}");
     }
-    assert!(<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nonsense", None, None).is_err());
+    assert!(<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nonsense", &mut None, &mut None).is_err());
 }
 
 /// 🐫️ The shell's spelling of the payload keys.
@@ -241,11 +258,35 @@ fn camel_case_keys(value: &semio_framework_value::DslValue) -> semio_framework_v
 #[test]
 fn command_from_action_bridges_host_spellings() {
     let args = |json: &str| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON"));
-    let bridge = |action: &str, json: &str| <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some((args(json)).clone()), None).expect(action);
+    let bridge = |action: &str, json: &str| <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(action, &mut Some(args(json)), &mut None).expect(action);
+    assert_eq!(bridge("maskFromSelection",r#"{"layerId":"paint","expectedImageKey":null}"#),RasterCommand::MaskFromSelection(semio_s_artifact_raster_raster_editor::commands::mask_from_selection::MaskFromSelection {layer_id:"paint".into(),expected_image_key:None}));
+    for json in [r#"{"layerId":"paint","expectedImageKey":null,"selection":[]}"#,r#"{"layerId":"paint","selection":[]}"#] {assert!(<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("maskFromSelection",&mut Some(args(json)),&mut None).is_err());}
     assert_eq!(bridge("setActiveExample", r#"{"exampleId":"demo"}"#), RasterCommand::SetActiveExample(semio_s_artifact_raster_raster_editor::commands::set_active_example::SetActiveExample { example_id: "demo".into() }));
     assert_eq!(bridge("deleteLayer", r#"{"id":"layer-1"}"#), RasterCommand::DeleteLayer(semio_s_artifact_raster_raster_editor::commands::delete_layer::DeleteLayer { layer_id: "layer-1".into() }));
     assert_eq!(bridge("setCamera", r#"{"camera":{"x":1,"y":2,"zoom":3}}"#), RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::camera::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 1.0, y: 2.0, zoom: 3.0 } }));
     assert_eq!(bridge("setCompositeViewport", r#"{"width":640,"height":480}"#), RasterCommand::SetCompositeViewport(semio_s_artifact_raster_raster_editor::commands::set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }));
     assert_eq!(bridge("addLayer", r#"{"kind":"pixel"}"#), RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer { kind: "pixel".into() }));
+    assert_eq!(bridge("setFilterAmount", r#"{"value":"1.25"}"#), RasterCommand::SetFilterAmount(semio_s_artifact_raster_raster_editor::commands::set_filter_amount::SetFilterAmount { value: 1.25 }));
 }
 //#endregion 🔖️ActionBridge
+#[test]
+fn independent_json_serializer_fits_bake_and_mask_field_envelopes() {
+    let bake:serde_json::Value=serde_json::from_str(include_str!("../../../🎮️commands/🥞️flatten-layers/🧪️tests/execution.json")).unwrap();
+    let mask:serde_json::Value=serde_json::from_str(include_str!("../../../🎮️commands/🎭️mask-from-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let maximum=bake["maximumIdentifierUtf8Bytes"].as_u64().unwrap() as usize;
+    for character in (0..32).map(char::from).chain(['"','\\','é','🖨']) {
+        let field=character.to_string().repeat(maximum/character.len_utf8());
+        let quoted=serde_json::to_string(&field).unwrap();
+        assert!(quoted.len()<=maximum*6+2);
+        let deletion=serde_json::to_vec(&serde_json::json!({"deleteLayer":{"layerId":field}})).unwrap();
+        assert!(deletion.len()<=maximum*6+bake["maximumLayerRowSyntaxBytes"].as_u64().unwrap() as usize);
+        let removal=serde_json::to_vec(&serde_json::json!({"removeLayerAsset":{"assetId":field}})).unwrap();
+        assert!(removal.len()<=maximum*6+bake["maximumAssetRowSyntaxBytes"].as_u64().unwrap() as usize);
+        let action=serde_json::to_vec(&serde_json::json!({"layerId":field,"expectedImageKey":field,"windowId":field})).unwrap();
+        assert!(action.len()<=mask["execution"]["maximumRawBytes"].as_u64().unwrap() as usize);
+    }
+    for sample in [0u8,128,255] {
+        let encoded=serde_json::to_vec(&vec![sample;4096]).unwrap();
+        assert!(encoded.len()<=4096*bake["maximumEncodedBytesPerSample"].as_u64().unwrap() as usize+2);
+    }
+}

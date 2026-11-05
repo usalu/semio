@@ -276,3 +276,9 @@ fn the_full_showcase_populates_every_collection_and_is_in_the_palette() {
     assert!(d.investigations.iter().any(|i| !i.readings.is_empty()) && d.investigations.len() >= 3);
     assert!(En1997PlayApp::examples().iter().any(|e| e.id() == "full-showcase"));
 }
+
+#[test]
+fn compiled_input_metadata_matches_all_native_schema_rows() {
+    let findings = semio_s_plugin_norm_app_surface::norm_compiled_input_findings::<En1997PlayApp>();
+    assert!(findings.is_empty(), "{}", findings.join("\n"));
+}

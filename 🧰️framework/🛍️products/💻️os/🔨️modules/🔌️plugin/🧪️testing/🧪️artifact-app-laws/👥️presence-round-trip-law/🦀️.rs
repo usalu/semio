@@ -36,11 +36,11 @@ where A:ArtifactApp,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'sta
     let root=peer.stores.presence_store.peers_root();
     let delivered:Vec<Q>=root.peers().filter(|(name,_)|*name==actor).map(|(_,presence)|probe(presence)).collect();
     assert_eq!(delivered,vec![expected],"the peer observes exactly the source's pose under the source's actor");
-    assert_eq!(peer.roster.peer_presence.len,1,"the live peer roster names the source once");
+    assert_eq!(peer.roster.peer_presence_root().len,1,"the live peer roster names the source once");
     assert_eq!(peer.document_pack().await.expect("peer document after the roster"),document,"presence delivery changes no document");
     drop(root);
     assert!(publish_fixture_presence_roster(peer,2,Some(9),&[],2_000,cx,close_loan).await.is_none(),"the departure roster is admitted");
     assert!(peer.stores.presence_store.peers_root().is_empty(),"the departed peer's typed presence is retired");
-    assert_eq!(peer.roster.peer_presence.len,0,"the departed peer's live metadata is retired");
+    assert_eq!(peer.roster.peer_presence_root().len,0,"the departed peer's live metadata is retired");
     assert_eq!(peer.document_pack().await.expect("peer document after the departure"),document,"presence departure changes no document");
 }

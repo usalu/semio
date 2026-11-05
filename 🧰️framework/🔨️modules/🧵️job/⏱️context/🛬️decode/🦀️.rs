@@ -61,16 +61,17 @@ impl OriginalNativeDecodeSource{
  pub fn receive_step<T,E>(&mut self,cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->OriginalNativeDecodeIssued<T,E>)->Result<Option<OriginalNativeDecodeOutcome<T,E>>,OriginalTurnFailure>{
   if !self.admit_step(cx)?||cx.should_yield()||cx.is_cancelled(){return Ok(None)}
   let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}let fuel=cx.fuel_remaining();let (issued,observed)=self.with_control(cx,false,|control|run(control,grant))?;
-  Ok(Some(Self::receive_observed(cx,grant,fuel,issued,observed)))
+  Ok(Some(Self::receive_observed_work(cx,grant,fuel,issued,observed)))
  }
  /// ♻️ A retained producer borrows its authentic decoder during paid close even after original cancellation.
  pub fn close_producer_step<T,E>(&mut self,cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->OriginalNativeDecodeIssued<T,E>)->Result<Option<OriginalNativeDecodeOutcome<T,E>>,OriginalTurnFailure>{
-  if self.closing{return Err(refusal("original producer close cannot resume after native source return began").into())}if self.source.is_none()||cx.retirement_should_yield(){return Ok(None)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}let fuel=cx.fuel_remaining();let (issued,observed)=self.with_control(cx,true,|control|run(control,grant))?;Ok(Some(Self::receive_observed(cx,grant,fuel,issued,observed)))
+  if self.closing{return Err(refusal("original producer close cannot resume after native source return began").into())}if self.source.is_none()||cx.retirement_should_yield(){return Ok(None)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}let fuel=cx.fuel_remaining();let (issued,observed)=self.with_control(cx,true,|control|run(control,grant))?;Ok(Some(Self::receive_observed_work(cx,grant,fuel,issued,observed)))
  }
  fn receive_issued<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,issued:OriginalNativeDecodeIssued<T,E>)->OriginalNativeDecodeOutcome<T,E>{
-  Self::receive_observed(cx,grant,fuel,issued,0)
+  Self::receive_observed_work(cx,grant,fuel,issued,0)
  }
- fn receive_observed<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,issued:OriginalNativeDecodeIssued<T,E>,observed:u64)->OriginalNativeDecodeOutcome<T,E>{
+ /// 🧾️ Posts the actual original producer observation once while retaining its independent value and receiving refusal.
+ pub fn receive_observed_work<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,issued:OriginalNativeDecodeIssued<T,E>,observed:u64)->OriginalNativeDecodeOutcome<T,E>{
   let mut receiving_refusal=None;
   if issued.grant!=grant||!issued.progress.fits(grant){receiving_refusal=Some(OriginalTurnFailure::from(refusal("original native producer changed its supplied grant or exceeded its physical receipt").with_retained_progress(issued.progress)))}
   if issued.work>fuel&&receiving_refusal.is_none(){receiving_refusal=Some(ValueError::literal(ValueRefusalKind::WorkLimit,"original native producer exceeded the supplied caller work").with_retained_progress(issued.progress).into())}

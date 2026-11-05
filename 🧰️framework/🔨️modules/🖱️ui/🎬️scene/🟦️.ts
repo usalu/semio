@@ -9,5 +9,5 @@ export * from "./🧬️schema/🧩️block-list/🟦️.ts";
 
 export { fitCanvasFrame, type Canvas2dFraming, type Canvas2dFrameCamera } from "./📷️framing/🟦️.ts";
 export { PAINT2D_SCENE_LANES, paint2dSceneFromLanes } from "./🛤️lanes/🟦️.ts";
-export type { Canvas2dScene, Paint2dScene, TableScene } from "./📄️documents/🟦️.ts";
+export type { Canvas2dScene, Paint2dScene, Paint2dEditingOptions, Paint2dImageGrid, TableScene } from "./📄️documents/🟦️.ts";
 export type { World3dScene } from "./🌐️world3d/🟦️.ts";

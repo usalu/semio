@@ -140,6 +140,17 @@ fn node_ids(app: &Puzzle2dApp) -> Vec<String> {
     board_snapshot_nodes(&fixture_of(app)).iter().filter_map(|node| node.get("id").and_then(Value::as_str).map(str::to_string)).collect()
 }
 
+#[test]
+fn selected_node_iterator_matches_neutral_parent_identity_and_document_order(){
+    let law:Value=semio_framework_pack_json::parse(include_str!("../🧫️fixtures/selection-ids.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let snapshot=json!({"nodes":law["nodes"].clone()});
+    for row in law["cases"].as_array().unwrap(){
+        let groups:Vec<Vec<String>>=row["groups"].as_array().unwrap().iter().map(|group|group.as_array().unwrap().iter().map(|id|id.as_str().unwrap().to_string()).collect()).collect();
+        let expected:Vec<String>=row["expected"].as_array().unwrap().iter().map(|id|id.as_str().unwrap().to_string()).collect();
+        assert_eq!(puzzle2d_selected_node_ids(&snapshot,groups.iter().flat_map(|group|group.iter())),expected,"{}",row["name"].as_str().unwrap());
+    }
+}
+
 fn edge_count(app: &Puzzle2dApp) -> usize {
     board_snapshot_edges(&fixture_of(app)).len()
 }

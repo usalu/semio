@@ -126,6 +126,12 @@ message En1994Mutation {
     ChangeCaseLabelEn change_case_label_en = 122;
     ChangeCaseLabelDe change_case_label_de = 123;
     ChangeCaseEntryId change_case_entry_id = 124;
+    ChangeStudDiameterM change_stud_diameter_m = 125;
+    ChangeStudFUPa change_stud_f_u_pa = 126;
+    ChangeStudHeightM change_stud_height_m = 127;
+    ChangeStudXM change_stud_x_m = 128;
+    InsertStud insert_stud = 129;
+    RemoveStud remove_stud = 130;
   }
 }
 message ChangeAnnex {
@@ -638,4 +644,27 @@ message ChangeCaseLabelDe {
 message ChangeCaseEntryId {
   string case_id = 1;
   string new_value = 2;
+}
+message ChangeStudDiameterM {
+  string id = 1;
+  double new_diameter_m = 2;
+}
+message ChangeStudFUPa {
+  string id = 1;
+  double new_f_u_pa = 2;
+}
+message ChangeStudHeightM {
+  string id = 1;
+  double new_height_m = 2;
+}
+message ChangeStudXM {
+  string id = 1;
+  double new_x_m = 2;
+}
+message InsertStud {
+  uint64 index = 1;
+  Stud item = 2;
+}
+message RemoveStud {
+  string id = 1;
 }

@@ -51,7 +51,7 @@ fn a_range_set_rewrites_only_the_lines_it_touches_and_its_inverse_restores_the_t
 fn a_change_that_touches_nothing_answers_an_empty_diff_and_no_inverse() {
     let base = TxtSnapshot::from_body("a\nb\n");
     let mutation = SpliceTextMutation { splices: vec![TextSplice { offset: 0, delete: 1, insert: "a".into() }] };
-    assert_eq!(<SpliceTextMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).diff(), &crate::schema::diff::TxtDiff::default());
+    assert_eq!(<SpliceTextMutation as protocol::ColdMutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).diff(), &crate::schema::diff::TxtDiff::default());
     assert!(<TxtMutation as ColdMutation<TxtSnapshot>>::inverse(&TxtMutation::SpliceText(mutation), &base).unwrap().is_empty());
 }
 
@@ -64,7 +64,7 @@ fn refuses_ranges_that_leave_the_text_overlap_or_leave_the_native_shape() {
         vec![TextSplice { offset: 1, delete: 0, insert: "\r".into() }],
     ] {
         let mutation = SpliceTextMutation { splices };
-        assert!(!<SpliceTextMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
+        assert!(!<SpliceTextMutation as protocol::ColdMutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
         assert!(<TxtMutation as ColdMutation<TxtSnapshot>>::inverse(&TxtMutation::SpliceText(mutation), &base).unwrap().is_empty());
     }
     assert!(semio_framework_pack_json::from_json_str::<SpliceTextMutation>(r#"{"splices":[],"unknown":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());

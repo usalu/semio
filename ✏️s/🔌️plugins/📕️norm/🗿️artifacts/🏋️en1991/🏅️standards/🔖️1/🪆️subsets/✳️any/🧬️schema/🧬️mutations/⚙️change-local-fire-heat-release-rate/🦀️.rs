@@ -22,7 +22,7 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeLocalFireHeatRelea
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change localised fire: Heat release rate Q", "lokaler Brand: Wärmefreisetzungsrate Q ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change heat release rate of the localised fire", "Wärmefreisetzungsrate des lokalen Brandes ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

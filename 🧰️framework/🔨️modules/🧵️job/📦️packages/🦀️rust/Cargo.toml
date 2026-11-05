@@ -142,3 +142,8 @@ path = "../../📬️outcome/📦️builder/📏️limit/🧪️tests/🦀️.rs
 name = "original-page-return"
 required-features = ["testkit"]
 path = "../../📬️outcome/📮️return/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-native-progress"
+required-features = ["testkit"]
+path = "../../⏱️context/🧪️tests/📊️native-progress/🦀️.rs"

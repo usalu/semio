@@ -78,7 +78,7 @@ impl OriginalShardIdentity{
   runtime.restore(instance,state,&mut *identity).await
  }
  /// 🏃️ Retains the same caller admission after successful, yielded and refused actor turns.
- pub async fn execute_turn(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,events:&[semio_framework::kernel::Event],budget:semio_framework::kernel::Budget)->Result<semio_framework::kernel::TurnResult,TurnFault>{
+ pub async fn execute_turn(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,events:&mut [semio_framework::kernel::Event],budget:semio_framework::kernel::Budget)->Result<semio_framework::kernel::TurnResult,TurnFault>{
   let mut identity=self.loan().map_err(semio_framework_plugin_guest_contract::identity_turn_fault)?;
   runtime.execute_turn(instance,events,budget,&mut *identity).await
  }

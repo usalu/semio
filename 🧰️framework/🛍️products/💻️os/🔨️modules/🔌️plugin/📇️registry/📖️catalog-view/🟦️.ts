@@ -92,7 +92,7 @@ export type PlaygroundBuildTarget=PlaygroundEntry;
 /** 🎮️ Rejects malformed configured playground rows before a host resolves them. */
 export function parseProjectedPlaygroundV1(value:unknown):PlaygroundEntry{
   if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Malformed projected playground");
-  const row=value as Record<string,unknown>,keys=["variant","pluginId","cratePath","catalogDefault","app","brand","devContribution","compositionConfigPath","nativeHost","mcpHost","distDir","aliases","ports","userPorts","hub","dataDir","userDataDir","localOnly","viewerPath","examples","engines","assets"];
+  const row=value as Record<string,unknown>,keys=["variant","pluginId","cratePath","catalogDefault","app","brand","devContribution","compositionConfigPath","nativeLaunchPolicy","nativeHost","mcpHost","distDir","aliases","ports","userPorts","hub","dataDir","userDataDir","localOnly","viewerPath","examples","engines","assets"];
   if(Object.keys(row).some(key=>!keys.includes(key)))throw Error("Unknown projected playground field");
   for(const key of ["variant","pluginId","cratePath"])if(typeof row[key]!=="string"||!row[key])throw Error("Invalid projected playground "+key);
   for(const key of ["aliases","examples","engines"])if(!Array.isArray(row[key])||(row[key] as unknown[]).some(item=>typeof item!=="string"))throw Error("Invalid projected playground "+key);
@@ -100,7 +100,7 @@ export function parseProjectedPlaygroundV1(value:unknown):PlaygroundEntry{
   if(!ports||typeof ports!=="object"||Array.isArray(ports)||Object.keys(ports).some(key=>!["react","wgpu"].includes(key))||![ports.react,ports.wgpu].every(port=>Number.isInteger(port)&&Number(port)>0&&Number(port)<=65535))throw Error("Invalid projected playground ports");
   if(!Array.isArray(row.assets))throw Error("Invalid projected playground assets");
   for(const key of ["catalogDefault","localOnly"])if(row[key]!==undefined&&typeof row[key]!=="boolean")throw Error("Invalid projected playground "+key);
-  for(const key of ["app","brand","devContribution","compositionConfigPath","distDir","hub","dataDir","userDataDir","viewerPath"])if(row[key]!==undefined&&typeof row[key]!=="string")throw Error("Invalid projected playground "+key);
+  for(const key of ["app","brand","devContribution","compositionConfigPath","nativeLaunchPolicy","distDir","hub","dataDir","userDataDir","viewerPath"])if(row[key]!==undefined&&typeof row[key]!=="string")throw Error("Invalid projected playground "+key);
   return row as unknown as PlaygroundEntry;
 }
 

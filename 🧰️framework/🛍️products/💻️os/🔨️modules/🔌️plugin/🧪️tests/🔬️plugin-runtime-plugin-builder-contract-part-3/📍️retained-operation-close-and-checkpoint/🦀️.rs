@@ -27,7 +27,7 @@
         app.bind_instance_id(id).await;
         let value = fixture["command"]["value"].as_i64().unwrap() as i32;
         let command = TestCommand::CompositeEdit { slot: String::new(), child_id: fixture["command"]["target"].as_str().unwrap().into(), child_value: value };
-        semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &command, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.unwrap();
+        semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &command, &ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: id, view_state: None }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.unwrap();
         let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
@@ -267,16 +267,16 @@
         let typed_root = app.stores.presence_store.peers_root();
         assert_eq!(typed_root.peers().count(), 1, "only the peer carrying a presence_pack adopts into presence_store");
         assert_eq!(typed_root.peers().next().unwrap().0, "user:alice#s1");
-        assert_eq!(app.roster.peer_presence.len(), 2, "both peers upsert into peer_presence regardless of presence_pack");
-        assert_eq!(app.roster.peer_presence.get("user:alice#s1").unwrap().color, Some(3));
-        assert_eq!(app.roster.peer_presence.get("user:bob#s1").unwrap().color, Some(5));
+        assert_eq!(app.roster.peer_presence_root().len(), 2, "both peers upsert into peer_presence regardless of presence_pack");
+        assert_eq!(app.roster.peer_presence_root().get("user:alice#s1").unwrap().color, Some(3));
+        assert_eq!(app.roster.peer_presence_root().get("user:bob#s1").unwrap().color, Some(5));
         drop(typed_root);
 
         assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000,cx).await.fault.is_none());
         assert_eq!(app.stores.presence_store.peers_root().peers().count(), 1);
-        assert_eq!(app.roster.peer_presence.len(), 1);
-        assert!(app.roster.peer_presence.contains_key("user:alice#s1"));
-        assert!(!app.roster.peer_presence.contains_key("user:bob#s1"), "an actor absent from the roster must be dropped, not left stale");
+        assert_eq!(app.roster.peer_presence_root().len(), 1);
+        assert!(app.roster.peer_presence_root().contains_key("user:alice#s1"));
+        assert!(!app.roster.peer_presence_root().contains_key("user:bob#s1"), "an actor absent from the roster must be dropped, not left stale");
         drain_and_close_fixture(&mut app, mounted_policy,cx);
 
 

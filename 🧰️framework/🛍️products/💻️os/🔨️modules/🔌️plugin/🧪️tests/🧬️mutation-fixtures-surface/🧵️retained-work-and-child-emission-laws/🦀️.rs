@@ -1,5 +1,29 @@
 /// 🧵️ Retained work and child emission laws of the surface fixture: the retained command fuel and fallback charges, the exact birth admission and the private typed lanes and group row frames of child emission.
 
+#[test]
+fn work_fixture_close_reconciles_the_actual_original_job_and_allocator_once(){
+ use crate::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
+ use semio_framework_job::{InteractiveJobCloseStep,OriginalTurnFailure};
+ use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome,ValueError,ValueRefusalKind};
+ struct CloseProbe{bytes:Vec<u8>,mode:u8}
+ impl ArtifactCommandWork<EditorApp<SurfaceEditorFixture>> for CloseProbe{
+  fn tool_id(&self)->&'static str{SURFACE_TOOL_ID}
+  fn extent(&self,_:&SurfaceEditorCommand,_:&SurfaceSnapshot,_:&protocol::InteractionState,_:Option<&crate::tool_contract::ArtifactOwnedToolJobContext<EditorApp<SurfaceEditorFixture>>>)->Option<usize>{Some(1)}
+  fn step(&mut self,_:&ArtifactCommandInputs<'_,EditorApp<SurfaceEditorFixture>>,_:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<EditorApp<SurfaceEditorFixture>>,OriginalTurnFailure>{Ok(ArtifactCommandWorkStep::Complete(Emit::default()))}
+  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(std::mem::size_of::<Vec<u8>>())}
+  fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
+  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.bytes.capacity())}
+  fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(1)}
+  fn terminal_is_empty(&self)->bool{self.bytes.capacity()==0}
+  fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{let bytes=self.bytes.capacity();drop(std::mem::take(&mut self.bytes));cx.consume_fuel(3);let p=RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Vec<u8>>(),released_bytes:bytes,..Default::default()};if self.mode==1{cx.consume_retained(p)?}if self.mode==2{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original close probe failed after its physical release").with_retained_progress(p).into())}Ok(InteractiveJobCloseStep::Complete{progress:p})}
+ }
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️testing/🎟️caller/👷️work/🧪️tests/close-fixture.json")).unwrap();let bytes=law["payloadBytes"].as_u64().unwrap()as usize;
+ for row in law["cases"].as_array().unwrap(){let mut caller=crate::app_testing::artifact_app_laws::OriginalWorkFixture::new();let grant=crate::app_testing::artifact_app_laws::OriginalWorkFixture::stock();let mode=match row["mode"].as_str().unwrap(){"unposted"=>0,"posted"=>1,_=>2};let mut work=None;
+  caller.turn(grant,|cx|{let copy=2*std::mem::size_of::<CloseProbe>()+bytes;semio_framework_job::admit_original_construction(cx,&mut work,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:bytes,release_bytes:0,depth:1},|_|{let mut payload=Vec::with_capacity(bytes);payload.resize(bytes,7);RetainedWorkOutcome{result:Ok((CloseProbe{bytes:payload,mode},RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:bytes,..Default::default()})),work:1}})?;Ok(())}).unwrap();let mut work=work.unwrap();
+  let before=caller.turn(grant,|cx|Ok((cx.retained_progress(),cx.fuel_remaining()))).unwrap();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.close::<EditorApp<SurfaceEditorFixture>,_>(&mut work,grant));let after=caller.turn(grant,|cx|Ok((cx.retained_progress(),cx.fuel_remaining()))).unwrap();assert_eq!(after.0.released_bytes-before.0.released_bytes,heap.released_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,bytes));assert_eq!(after.0.copied_bytes-before.0.copied_bytes,law["headerWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>());assert_eq!(before.1-after.1,law["work"].as_u64().unwrap());assert_eq!(result.is_err(),row["fails"].as_bool().unwrap());assert!(work.terminal_is_empty());if let Err(error)=result{assert_eq!(error.effects.released_bytes,bytes);caller.retire_owned(error,grant);}caller.finish();
+ }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn retained_command_work_borrows_original_fuel_and_fallback_charges_once() {
     use crate::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};

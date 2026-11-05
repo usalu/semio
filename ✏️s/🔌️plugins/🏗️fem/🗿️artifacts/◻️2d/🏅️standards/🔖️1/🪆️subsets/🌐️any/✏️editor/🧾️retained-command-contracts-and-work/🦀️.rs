@@ -139,7 +139,7 @@ fn fem2d_retained_reduce(
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
-    let view = context.and_then(|context| context.view_state.as_ref());
+    let view = context.and_then(|context| context.view_state.as_deref());
     match command {
         Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, &cfg, view.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
         Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, &cfg, view.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
@@ -190,14 +190,14 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
             Fem2dCommand::ScaleSelection(payload) => crate::editor::fem2d::commands::gumball::gumball_step("scaleSelection", Fem2dGumballMotion::Scale { sx: payload.sx, sy: payload.sy }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected, context, operation),
             Fem2dCommand::ResultAnimationTick(payload) => {
                 let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
-                let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("fem2d.result-animation-tick.window-context-required"))?;
+                let view = context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("fem2d.result-animation-tick.window-context-required"))?;
                 let clock = results_window::transient::required_clock::<results_window::transient::Fem2dResultsWindowTransientOwner>(context.and_then(|context| context.window_transient.as_ref()), &payload.window_id)?;
                 let step = result_animation_tick::result_animation_tick_step::<set_result_animation::Fem2dResultsPlayback>(payload, &cfg, view, clock)?;
                 Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step.emit, ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: step.window_transient } })
             }
             Fem2dCommand::SetResultAnimation(payload) => {
                 let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
-                let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("fem2d.result-animation.window-context-required"))?;
+                let view = context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("fem2d.result-animation.window-context-required"))?;
                 let clock = payload.window_id.as_deref().filter(|id| !id.is_empty()).and_then(|id| context.and_then(|context| results_window::transient::captured_clock::<results_window::transient::Fem2dResultsWindowTransientOwner>(context.window_transient.as_ref(), id)));
                 let step = set_result_animation::set_result_animation_step::<set_result_animation::Fem2dResultsPlayback>(payload, &cfg, view, clock)?;
                 Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step.emit, ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: step.window_transient } })

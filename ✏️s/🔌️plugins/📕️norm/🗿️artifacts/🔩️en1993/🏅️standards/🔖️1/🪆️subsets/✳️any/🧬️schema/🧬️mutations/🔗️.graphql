@@ -1,4 +1,4 @@
-union En1993Mutation = ChangeAnnex | ChangeReliabilityClass | InsertMaterial | RemoveMaterial | InsertSection | RemoveSection | InsertMember | RemoveMember | InsertLoadCase | RemoveLoadCase | InsertMemberAction | RemoveMemberAction | InsertJoint | RemoveJoint | InsertFatigueDetail | RemoveFatigueDetail | InsertFireExposure | RemoveFireExposure | InsertColdFormedMember | RemoveColdFormedMember | InsertPlatedPanel | RemovePlatedPanel | InsertSiloShell | RemoveSiloShell | InsertTensionComponent | RemoveTensionComponent | InsertBridgeFatigue | RemoveBridgeFatigue | InsertTowerLeg | RemoveTowerLeg | InsertPile | RemovePile | InsertCraneRunway | RemoveCraneRunway | InsertStorey | RemoveStorey | InsertRestraint | RemoveRestraint | InsertBuiltUpMember | RemoveBuiltUpMember | InsertWeldGroup | RemoveWeldGroup | InsertParametricSection | RemoveParametricSection | InsertHollowJoint | RemoveHollowJoint | InsertJointRow | RemoveJointRow | ChangeMaterialGrade | ChangeMaterialFy | ChangeMaterialFu | ChangeMaterialEModulus | ChangeMaterialGModulus | ChangeMaterialSubgrade | ChangeMaterialKind | ChangeSectionDesignation | ChangeSectionKind | ChangeSectionH | ChangeSectionB | ChangeSectionTw | ChangeSectionTf | ChangeSectionR | ChangeSectionArea | ChangeSectionShearAreaY | ChangeSectionShearAreaZ | ChangeSectionIy | ChangeSectionIz | ChangeSectionIt | ChangeSectionIw | ChangeSectionWElY | ChangeSectionWElZ | ChangeSectionWPlY | ChangeSectionWPlZ | ChangeSectionAreaNet | ChangeMemberLabel | ChangeMemberMemberType | ChangeMemberSectionId | ChangeMemberMaterialId | ChangeMemberLength | ChangeMemberBucklingLengthY | ChangeMemberBucklingLengthZ | ChangeMemberLtbLength | ChangeMemberLtbRestSpacing | ChangeMemberLoadApplication | ChangeMemberEndMomentRatioPsi | ChangeMemberMomentDiagram | ChangeMemberDeflLimitRatio | ChangeMemberAnalysis | ChangeMemberStainlessForming | ChangeMemberDesignTemperature | ChangeMemberToughStressRatio | ChangeMemberRadiationShift | ChangeMemberStressShift | ChangeMemberMarginShift | ChangeMemberStrainRateShift | ChangeMemberColdFormingRadius | ChangeLoadCaseName | ChangeLoadCaseKind | ChangeLoadCaseCategory | ChangeActionMemberId | ChangeActionLoadCaseId | ChangeActionN | ChangeActionVy | ChangeActionVz | ChangeActionMy | ChangeActionMz | ChangeActionT | ChangeJointKind | ChangeJointMemberId | ChangeJointBoltClass | ChangeJointBoltDiameter | ChangeJointBoltRows | ChangeJointBoltsPerRow | ChangeJointPitch | ChangeJointGauge | ChangeJointEndDistance | ChangeJointEdgeDistance | ChangeJointShearPlanes | ChangeJointPlateThickness | ChangeJointPlateFu | ChangeJointWeldThroat | ChangeJointWeldLength | ChangeJointWeldFu | ChangeJointWeldGrade | ChangeJointCategory | ChangeJointFrictionMu | ChangeJointPreloadForce | ChangeJointSlipFactorKs | ChangeJointFrictionSurfaces | ChangeJointPlateFy | ChangeJointPlateWidth | ChangeJointBoltToWeb | ChangeJointExtensionToFlange | ChangeJointExtensionEdge | ChangeJointAlphaFactor | ChangeJointBoltStressArea | ChangeJointBoltGripLength | ChangeJointColumnFlangeThk | ChangeJointColumnWebThickness | ChangeJointColumnWebDepth | ChangeJointColumnWebShearArea | ChangeJointColumnRootRadius | ChangeJointColumnFy | ChangeJointColumnWebStress | ChangeJointBeamFlangeThickness | ChangeJointCompressionLever | ChangeJointMomentDemand | ChangeJointBeamMomentRes | ChangeJointColumnMomentRes | ChangeJointBeamInertia | ChangeJointBeamSpan | ChangeJointBracedFrame | ChangeJointStiffnessRatio | ChangeJointXformParameter | ChangeJointAssumedClass | ChangeJointBasePlateLength | ChangeJointConcreteFcd | ChangeJointConcreteModulus | ChangeJointConcreteAreaA0 | ChangeJointConcreteAreaA1 | ChangeJointJointCoefficient | ChangeJointAnchorArea | ChangeJointAnchorLength | ChangeJointBaseNormalForce | ChangeJointBaseMoment | ChangeJointBaseLeverLeft | ChangeJointBaseLeverRight | ChangeFatigueMemberId | ChangeFatigueCategory | ChangeFatigueMethod | ChangeFireMemberId | ChangeFireRating | ChangeFireProtectionThickness | ChangeFireSectionFactor | ChangeFireMu0 | ChangeFireDesignTemperature | ChangeFireProtConductivity | ChangeFireProtectionDensity | ChangeFireProtSpecificHeat | ChangeCfBBar | ChangeCfThickness | ChangeCfKSigma | ChangeCfPsi | ChangeCfFy | ChangeCfGrossResistance | ChangeCfFlangeWidth | ChangeCfLipLength | ChangeCfWebHeight | ChangeCfWebSlope | ChangeCfOppositeFlangeWidth | ChangeCfSpringFactor | ChangeCfCornerRadius | ChangeCfFlangeStress | ChangeCfShearForce | ChangeCfSupportReaction | ChangeCfSupportLength | ChangeCfCripplingCategory | ChangeCfStiffenedSupport | ChangeCfBendingMoment | ChangeCfMomentResistance | ChangeCfSheetingStiffness | ChangeCfRequiredRestraintStiff | ChangePlatedA | ChangePlatedB | ChangePlatedThickness | ChangePlatedFy | ChangePlatedKSigma | ChangePlatedStiffenerInertia | ChangePlatedStiffenerArea | ChangePlatedStiffenerEcc | ChangePlatedStiffenerAlpha | ChangePlatedCompressionStress | ChangePlatedHalfWidth | ChangePlatedEquivalentSpan | ChangePlatedHogging | ChangePlatedPatchType | ChangePlatedPatchForce | ChangePlatedPatchLength | ChangePlatedPatchOffset | ChangePlatedFlangeThickness | ChangePlatedFlangeWidth | ChangePlatedFlangeFy | ChangePlatedLongitudinalOffset | ChangePlatedLongitudinalInertia | ChangePlatedPatchMoment | ChangePlatedPatchMomentRes | ChangePlatedBendingMoment | ChangePlatedPlasticMoment | ChangePlatedFlangeMoment | ChangePlatedShearForce | ChangePlatedTransStiffInert | ChangePlatedFlangeInducedK | ChangePlatedFlangeArea | ChangePlatedStressX | ChangePlatedStressZ | ChangePlatedShearStress | ChangePlatedAlphaCr | ChangeSiloThickness | ChangeSiloRadius | ChangeSiloDepth | ChangeSiloK | ChangeSiloGamma | ChangeSiloFy | ChangeSiloLength | ChangeSiloFabricationClass | ChangeSiloMeridionalStress | ChangeSiloHoopStress | ChangeSiloShellShearStress | ChangeSiloBoundaryFactorAxial | ChangeSiloBoundaryFactorHoop | ChangeSiloBoundaryFactorShear | ChangeSiloWallFriction | ChangeSiloPlanArea | ChangeSiloPlanPerimeter | ChangeSiloLiquidDensity | ChangeSiloLiquidHeight | ChangeSiloCourseElevation | ChangeSiloInternalPressure | ChangeSiloExternalPressure | ChangeSiloTemperatureChange | ChangeTensionFUk | ChangeTensionFK | ChangeTensionPartialFactor | ChangeTensionCableLength | ChangeTensionCableWeight | ChangeTensionCableHorizForce | ChangeTensionCableModulus | ChangeTensionCableStress | ChangeTensionCableUnitWeight | ChangeTensionThreadFactor | ChangeTensionRodStressArea | ChangeTensionRodFu | ChangeTensionPinDiameter | ChangeTensionPinPlateThickness | ChangeTensionPinGap | ChangeTensionPinOuterThickness | ChangeTensionPinInnerThickness | ChangeTensionPinFup | ChangeTensionPinFyp | ChangeTensionPinPlateFy | ChangeBridgeMemberId | ChangeBridgeLambda | ChangeBridgePhi2 | ChangeBridgeDeltaSigmaP | ChangeBridgeCategory | ChangeBridgeMethod | ChangeBridgeHeavyVehicleWeight | ChangeBridgeReferenceWeight | ChangeBridgeObservedTraffic | ChangeBridgeDesignLife | ChangeBridgeSecondLaneTraffic | ChangeBridgeSecondLaneWeight | ChangeBridgeLambda1 | ChangeBridgeLambdaMax | ChangeBridgeDetailId | ChangeBridgePlateThickness | ChangeTowerMemberId | ChangeTowerForceCoefficient | ChangeTowerDynamicFactor | ChangeTowerLatticeKind | ChangeTowerSlenderness | ChangeTowerDiameter | ChangeTowerHeight | ChangeTowerBendingStiffness | ChangeTowerMassPerLength | ChangeTowerStrouhal | ChangeTowerLogDecrement | ChangeTowerAirDensity | ChangeTowerMeanWindSpeed | ChangeTowerCrossingRate | ChangeTowerDesignLife | ChangeTowerKFactor | ChangeTowerKwFactor | ChangeTowerLateralForceCoef | ChangeTowerPermAmplitudeRatio | ChangeTowerRingMode | ChangeTowerShellThickness | ChangeTowerGuyArea | ChangeTowerGuyAngle | ChangeTowerGuyLength | ChangePileSectionId | ChangePileMaterialId | ChangePileDrivingStress | ChangePileEmbeddedLength | ChangePileShaftPerimeter | ChangePileEnvironment | ChangePileDesignLife | ChangePileWallThickness | ChangePileIlockBendingFactor | ChangePileInterlockStiffFactor | ChangePileSectionModulus | ChangePileShearArea | ChangePileDesignMoment | ChangePileDesignShear | ChangePileInterlockShear | ChangeCraneMemberId | ChangeCraneWheelContactLength | ChangeCraneDispersion | ChangeCraneWebThickness | ChangeCraneFy | ChangeCranePhi | ChangeCraneMaxWheelLoad | ChangeCraneLoadFactor | ChangeCraneRailInertia | ChangeCraneRailFixed | ChangeCraneFlangeEffWidth | ChangeCraneFlangeThickness | ChangeCraneWheelEccentricity | ChangeCraneTorsionConstant | ChangeCraneLongitudinalStress | ChangeCraneRailRadius | ChangeCraneRailContactWidth | ChangeCraneCraneNu | ChangeCraneCraneKq | ChangeCraneDamageExponent | ChangeCraneStressRange | ChangeCraneDetailCatStress | ChangeCraneFatiguePhi | ChangeStoreyMemberId | ChangeStoreyLabel | ChangeStoreyHeight | ChangeStoreyVerticalLoad | ChangeStoreyHorizontalLoad | ChangeStoreyDrift | ChangeStoreyColumns | ChangeStoreyPlasticAnalysis | ChangeStoreyBuildingHeight | ChangeStoreyBracingLoad | ChangeStoreyBracingLength | ChangeStoreyBracingDeflection | ChangeRestraintMemberId | ChangeRestraintLabel | ChangeRestraintStartSupport | ChangeRestraintEndSupport | ChangeRestIntermediatePosition | ChangeRestraintTorsionalSpring | ChangeRestLatSpringPosition | ChangeRestLateralSpringStiff | ChangeRestraintLoadHeight | ChangeRestraintLoadDistribution | ChangeRestraintDesignMoment | ChangeRestraintDesignAxial | ChangeRestraintGeneralMethod | ChangeRestHingeToRest | ChangeBuiltUpMemberId | ChangeBuiltUpLabel | ChangeBuiltUpKind | ChangeBuiltUpChordArea | ChangeBuiltUpChordInertia | ChangeBuiltUpChordDistance | ChangeBuiltUpPanelSpacing | ChangeBuiltUpPlanes | ChangeBuiltUpBattenInertia | ChangeBuiltUpDiagonalArea | ChangeBuiltUpDiagonalLength | ChangeBuiltUpDesignAxial | ChangeBuiltUpDesignMoment | ChangeBuiltUpBackToBack | ChangeBuiltUpMinRadius | ChangeBuiltUpChainSpacing | ChangeWeldMemberId | ChangeWeldLabel | ChangeWeldPattern | ChangeWeldThroat | ChangeWeldWidth | ChangeWeldDepth | ChangeWeldShearForce | ChangeWeldEccentricity | ChangeWeldSteelFu | ChangeWeldBetaW | ChangeParamSectionId | ChangeParamLabel | ChangeParamShape | ChangeParamHeight | ChangeParamWidth | ChangeParamWebThickness | ChangeParamFlangeThickness | ChangeParamTolerance | ChangeHollowMemberId | ChangeHollowLabel | ChangeHollowChordWidth | ChangeHollowChordHeight | ChangeHollowChordThickness | ChangeHollowChordFy | ChangeHollowChordStress | ChangeHollowBrace1Width | ChangeHollowBrace1Height | ChangeHollowBrace1Thickness | ChangeHollowBrace1Angle | ChangeHollowBrace1Force | ChangeHollowBrace2Width | ChangeHollowBrace2Height | ChangeHollowBrace2Thickness | ChangeHollowBrace2Angle | ChangeHollowBrace2Force | ChangeHollowGap | ChangeHollowBraceFy | ChangeRowJointId | ChangeRowLabel | ChangeRowRowType | ChangeRowLever | ChangeRowBoltToWeb | ChangeRowEdgeDistance | ChangeRowExtensionToFlange | ChangeRowExtensionEdge | ChangeRowAlphaFactor | ChangeRowPitchToPrevious | ChangeRowBolts | ChangeRowBoltDiameter | ChangeRowBoltStressArea | ChangeRowGripLength | ChangeRowBoltClass | ChangeRowGroupWithPrevious | InsertJointAction | RemoveJointAction | ChangeJointActionLoadCaseId | ChangeJointActionShear | ChangeJointActionTension | InsertFatigueBand | RemoveFatigueBand | ChangeFatigueBandDeltaSigma | ChangeFatigueBandCycles | InsertCfAction | RemoveCfAction | ChangeCfActionLoadCaseId | ChangeCfActionForce | InsertPlatedAction | RemovePlatedAction | ChangePlatedActionLoadCaseId | ChangePlatedActionForce | InsertTensionAction | RemoveTensionAction | ChangeTensionActionLoadCaseId | ChangeTensionActionForce | InsertTowerAction | RemoveTowerAction | ChangeTowerActionLoadCaseId | ChangeTowerActionForce | InsertPileAction | RemovePileAction | ChangePileActionLoadCaseId | ChangePileActionForce | InsertCraneAction | RemoveCraneAction | ChangeCraneActionLoadCaseId | ChangeCraneActionForce | InsertFrameNode | RemoveFrameNode | InsertFrameBar | RemoveFrameBar | InsertPlacement | RemovePlacement | ChangeMaterialRambergOsgoodN | ChangeFrameNodeLabel | ChangeFrameNodeX | ChangeFrameNodeZ | ChangeFrameNodeSupport | ChangeFrameNodeLoadX | ChangeFrameNodeLoadZ | ChangeFrameBarMemberId | ChangeFrameBarLabel | ChangeFrameBarStartNodeId | ChangeFrameBarEndNodeId | ChangeFrameBarReleaseStart | ChangeFrameBarReleaseEnd | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | ChangeCfPurlinSpan | ChangeCfPurlinLoad | ChangeCfPurlinLateralRatio | ChangePlatedCorrugationFlat | ChangePlatedCorrProjection | ChangePlatedCorrugationDepth | ChangePlatedWebHeight | ChangeSiloRingSpacing | ChangeSiloRingArea | ChangeSiloRingInertia | ChangeSiloRingOffset | ChangeBridgeDeckThickness | ChangeBridgeTroughSpacing | ChangeBridgeTroughWidth | ChangeBridgeTroughThickness | ChangeBridgeCrossbeamSpacing | ChangeBridgeSurfacingThickness | ChangeBridgeWheelLoad | ChangeBridgeWheelPatch | ChangePlatedStiffenerSpacing | ChangeBuiltUpChordShape | ChangeBuiltUpChordDepth | ChangeBuiltUpChordWidth | ChangeBuiltUpChordFlangeThk | ChangeBuiltUpChordWebThk | ChangeMemberWebMaterialId | ChangeMemberTorsionLoad | ChangeMemberTorquePosition | ChangeFatigueStressHistory | ChangePlatedStiffenerShape | ChangePlatedStiffenerDepth | ChangePlatedStiffenerThickness | ChangePlatedStiffFlangeWidth | ChangePlatedStiffenerFlangeThk | ChangePlatedLateralPressure | ChangePlatedLatPressureCoef | ChangeMemberWarpingSupport | InsertJointPlate | RemoveJointPlate | InsertFoundationBlock | RemoveFoundationBlock | ChangeMemberLtbRestraintSpacing | ChangeMemberDeflectionLimitRatio | ChangeMemberToughnessStressRatio | ChangeJointColumnFlangeThickness | ChangeJointBeamMomentResistance | ChangeJointColumnMomentResistance | ChangeJointTransformationParameter | ChangeFireProtectionConductivity | ChangeFireProtectionSpecificHeat | ChangeCfRequiredRestraintStiffness | ChangePlatedStiffenerEccentricity | ChangePlatedPatchMomentResistance | ChangePlatedTransverseStiffenerInertia | ChangePlatedCorrugationProjection | ChangePlatedStiffenerFlangeWidth | ChangePlatedStiffenerFlangeThickness | ChangePlatedLateralPressureCoefficient | ChangeTensionCableHorizontalForce | ChangeTowerLateralForceCoefficient | ChangeTowerPermittedAmplitudeRatio | ChangePileInterlockBendingFactor | ChangePileInterlockStiffnessFactor | ChangeCraneFlangeEffectiveWidth | ChangeCraneDetailCategoryStress | ChangeRestraintIntermediatePosition | ChangeRestraintLatSpringPosition | ChangeRestraintLatSpringStiffness | ChangeRestraintHingeToRestraint | ChangeBuiltUpChordFlangeThickness | ChangeBuiltUpChordWebThickness | ChangeJointPlateJointId | ChangeJointPlateLabel | ChangeJointPlateRole | ChangeJointPlatePlateHeight | ChangeJointPlatePlateWidth | ChangeJointPlatePlateThickness | ChangeJointPlatePlateCount | ChangeJointPlatePlateFy | ChangeJointPlatePlateFu | ChangeJointPlateBoltClass | ChangeJointPlateBoltDiameter | ChangeJointPlateHoleDiameter | ChangeJointPlateBoltRows | ChangeJointPlateBoltsPerRow | ChangeJointPlatePitch | ChangeJointPlateGauge | ChangeJointPlateEndDistance | ChangeJointPlateEdgeDistance | ChangeJointPlateShearPlanes | ChangeJointPlateEccentricity | ChangeJointPlateWeldThroat | ChangeJointPlateWeldFu | ChangeJointPlateWeldBetaW | ChangeFoundationJointId | ChangeFoundationLabel | ChangeFoundationBlockLength | ChangeFoundationBlockWidth | ChangeFoundationBlockDepth | ChangeFoundationConcreteFck | ChangeFoundationGroutFck | ChangeFoundationGroutThickness | ChangeFoundationAnchorCount | ChangeFoundationAnchorClass | ChangeFoundationAnchorDiameter | ChangeFoundationAnchorStressArea | ChangeFoundationAnchorEmbedment | ChangeFoundationAnchorEdgeDistance
+union En1993Mutation = ChangeAnnex | ChangeReliabilityClass | InsertMaterial | RemoveMaterial | InsertSection | RemoveSection | InsertMember | RemoveMember | InsertLoadCase | RemoveLoadCase | InsertMemberAction | RemoveMemberAction | InsertJoint | RemoveJoint | InsertFatigueDetail | RemoveFatigueDetail | InsertFireExposure | RemoveFireExposure | InsertColdFormedMember | RemoveColdFormedMember | InsertPlatedPanel | RemovePlatedPanel | InsertSiloShell | RemoveSiloShell | InsertTensionComponent | RemoveTensionComponent | InsertBridgeFatigue | RemoveBridgeFatigue | InsertTowerLeg | RemoveTowerLeg | InsertPile | RemovePile | InsertCraneRunway | RemoveCraneRunway | InsertStorey | RemoveStorey | InsertRestraint | RemoveRestraint | InsertBuiltUpMember | RemoveBuiltUpMember | InsertWeldGroup | RemoveWeldGroup | InsertParametricSection | RemoveParametricSection | InsertHollowJoint | RemoveHollowJoint | InsertJointRow | RemoveJointRow | ChangeMaterialGrade | ChangeMaterialFy | ChangeMaterialFu | ChangeMaterialEModulus | ChangeMaterialGModulus | ChangeMaterialSubgrade | ChangeMaterialKind | ChangeSectionDesignation | ChangeSectionKind | ChangeSectionH | ChangeSectionB | ChangeSectionTw | ChangeSectionTf | ChangeSectionR | ChangeSectionArea | ChangeSectionShearAreaY | ChangeSectionShearAreaZ | ChangeSectionIy | ChangeSectionIz | ChangeSectionIt | ChangeSectionIw | ChangeSectionWElY | ChangeSectionWElZ | ChangeSectionWPlY | ChangeSectionWPlZ | ChangeSectionAreaNet | ChangeMemberLabel | ChangeMemberMemberType | ChangeMemberSectionId | ChangeMemberMaterialId | ChangeMemberLength | ChangeMemberBucklingLengthY | ChangeMemberBucklingLengthZ | ChangeMemberLtbLength | ChangeMemberLtbRestSpacing | ChangeMemberLoadApplication | ChangeMemberEndMomentRatioPsi | ChangeMemberMomentDiagram | ChangeMemberDeflLimitRatio | ChangeMemberAnalysis | ChangeMemberStainlessForming | ChangeMemberDesignTemperature | ChangeMemberToughStressRatio | ChangeMemberRadiationShift | ChangeMemberStressShift | ChangeMemberMarginShift | ChangeMemberStrainRateShift | ChangeMemberColdFormingRadius | ChangeLoadCaseName | ChangeLoadCaseKind | ChangeLoadCaseCategory | ChangeActionMemberId | ChangeActionLoadCaseId | ChangeActionN | ChangeActionVy | ChangeActionVz | ChangeActionMy | ChangeActionMz | ChangeActionT | ChangeJointKind | ChangeJointMemberId | ChangeJointBoltClass | ChangeJointBoltDiameter | ChangeJointBoltRows | ChangeJointBoltsPerRow | ChangeJointPitch | ChangeJointGauge | ChangeJointEndDistance | ChangeJointEdgeDistance | ChangeJointShearPlanes | ChangeJointPlateThickness | ChangeJointPlateFu | ChangeJointWeldThroat | ChangeJointWeldLength | ChangeJointWeldFu | ChangeJointWeldGrade | ChangeJointCategory | ChangeJointFrictionMu | ChangeJointPreloadForce | ChangeJointSlipFactorKs | ChangeJointFrictionSurfaces | ChangeJointPlateFy | ChangeJointPlateWidth | ChangeJointBoltToWeb | ChangeJointExtensionToFlange | ChangeJointExtensionEdge | ChangeJointAlphaFactor | ChangeJointBoltStressArea | ChangeJointBoltGripLength | ChangeJointColumnFlangeThk | ChangeJointColumnWebThickness | ChangeJointColumnWebDepth | ChangeJointColumnWebShearArea | ChangeJointColumnRootRadius | ChangeJointColumnFy | ChangeJointColumnWebStress | ChangeJointBeamFlangeThickness | ChangeJointCompressionLever | ChangeJointMomentDemand | ChangeJointBeamMomentRes | ChangeJointColumnMomentRes | ChangeJointBeamInertia | ChangeJointBeamSpan | ChangeJointBracedFrame | ChangeJointStiffnessRatio | ChangeJointXformParameter | ChangeJointAssumedClass | ChangeJointBasePlateLength | ChangeJointConcreteFcd | ChangeJointConcreteModulus | ChangeJointConcreteAreaA0 | ChangeJointConcreteAreaA1 | ChangeJointJointCoefficient | ChangeJointAnchorArea | ChangeJointAnchorLength | ChangeJointBaseNormalForce | ChangeJointBaseMoment | ChangeJointBaseLeverLeft | ChangeJointBaseLeverRight | ChangeFatigueMemberId | ChangeFatigueCategory | ChangeFatigueMethod | ChangeFireMemberId | ChangeFireRating | ChangeFireProtectionThickness | ChangeFireSectionFactor | ChangeFireMu0 | ChangeFireDesignTemperature | ChangeFireProtConductivity | ChangeFireProtectionDensity | ChangeFireProtSpecificHeat | ChangeCfBBar | ChangeCfThickness | ChangeCfKSigma | ChangeCfPsi | ChangeCfFy | ChangeCfGrossResistance | ChangeCfFlangeWidth | ChangeCfLipLength | ChangeCfWebHeight | ChangeCfWebSlope | ChangeCfOppositeFlangeWidth | ChangeCfSpringFactor | ChangeCfCornerRadius | ChangeCfFlangeStress | ChangeCfShearForce | ChangeCfSupportReaction | ChangeCfSupportLength | ChangeCfCripplingCategory | ChangeCfStiffenedSupport | ChangeCfBendingMoment | ChangeCfMomentResistance | ChangeCfSheetingStiffness | ChangeCfRequiredRestraintStiff | ChangePlatedA | ChangePlatedB | ChangePlatedThickness | ChangePlatedFy | ChangePlatedKSigma | ChangePlatedStiffenerInertia | ChangePlatedStiffenerArea | ChangePlatedStiffenerEcc | ChangePlatedStiffenerAlpha | ChangePlatedCompressionStress | ChangePlatedHalfWidth | ChangePlatedEquivalentSpan | ChangePlatedHogging | ChangePlatedPatchType | ChangePlatedPatchForce | ChangePlatedPatchLength | ChangePlatedPatchOffset | ChangePlatedFlangeThickness | ChangePlatedFlangeWidth | ChangePlatedFlangeFy | ChangePlatedLongitudinalOffset | ChangePlatedLongitudinalInertia | ChangePlatedPatchMoment | ChangePlatedPatchMomentRes | ChangePlatedBendingMoment | ChangePlatedPlasticMoment | ChangePlatedFlangeMoment | ChangePlatedShearForce | ChangePlatedTransStiffInert | ChangePlatedFlangeInducedK | ChangePlatedFlangeArea | ChangePlatedStressX | ChangePlatedStressZ | ChangePlatedShearStress | ChangePlatedAlphaCr | ChangeSiloThickness | ChangeSiloRadius | ChangeSiloDepth | ChangeSiloK | ChangeSiloGamma | ChangeSiloFy | ChangeSiloLength | ChangeSiloFabricationClass | ChangeSiloMeridionalStress | ChangeSiloHoopStress | ChangeSiloShellShearStress | ChangeSiloBoundaryFactorAxial | ChangeSiloBoundaryFactorHoop | ChangeSiloBoundaryFactorShear | ChangeSiloWallFriction | ChangeSiloPlanArea | ChangeSiloPlanPerimeter | ChangeSiloLiquidDensity | ChangeSiloLiquidHeight | ChangeSiloCourseElevation | ChangeSiloInternalPressure | ChangeSiloExternalPressure | ChangeSiloTemperatureChange | ChangeTensionFUk | ChangeTensionFK | ChangeTensionPartialFactor | ChangeTensionCableLength | ChangeTensionCableWeight | ChangeTensionCableHorizForce | ChangeTensionCableModulus | ChangeTensionCableStress | ChangeTensionCableUnitWeight | ChangeTensionThreadFactor | ChangeTensionRodStressArea | ChangeTensionRodFu | ChangeTensionPinDiameter | ChangeTensionPinPlateThickness | ChangeTensionPinGap | ChangeTensionPinOuterThickness | ChangeTensionPinInnerThickness | ChangeTensionPinFup | ChangeTensionPinFyp | ChangeTensionPinPlateFy | ChangeBridgeMemberId | ChangeBridgeLambda | ChangeBridgePhi2 | ChangeBridgeDeltaSigmaP | ChangeBridgeCategory | ChangeBridgeMethod | ChangeBridgeHeavyVehicleWeight | ChangeBridgeReferenceWeight | ChangeBridgeObservedTraffic | ChangeBridgeDesignLife | ChangeBridgeSecondLaneTraffic | ChangeBridgeSecondLaneWeight | ChangeBridgeLambda1 | ChangeBridgeLambdaMax | ChangeBridgeDetailId | ChangeBridgePlateThickness | ChangeTowerMemberId | ChangeTowerForceCoefficient | ChangeTowerDynamicFactor | ChangeTowerLatticeKind | ChangeTowerSlenderness | ChangeTowerDiameter | ChangeTowerHeight | ChangeTowerBendingStiffness | ChangeTowerMassPerLength | ChangeTowerStrouhal | ChangeTowerLogDecrement | ChangeTowerAirDensity | ChangeTowerMeanWindSpeed | ChangeTowerCrossingRate | ChangeTowerDesignLife | ChangeTowerKFactor | ChangeTowerKwFactor | ChangeTowerLateralForceCoef | ChangeTowerPermAmplitudeRatio | ChangeTowerRingMode | ChangeTowerShellThickness | ChangeTowerGuyArea | ChangeTowerGuyAngle | ChangeTowerGuyLength | ChangePileSectionId | ChangePileMaterialId | ChangePileDrivingStress | ChangePileEmbeddedLength | ChangePileShaftPerimeter | ChangePileEnvironment | ChangePileDesignLife | ChangePileWallThickness | ChangePileIlockBendingFactor | ChangePileInterlockStiffFactor | ChangePileSectionModulus | ChangePileShearArea | ChangePileDesignMoment | ChangePileDesignShear | ChangePileInterlockShear | ChangeCraneMemberId | ChangeCraneWheelContactLength | ChangeCraneDispersion | ChangeCraneWebThickness | ChangeCraneFy | ChangeCranePhi | ChangeCraneMaxWheelLoad | ChangeCraneLoadFactor | ChangeCraneRailInertia | ChangeCraneRailFixed | ChangeCraneFlangeEffWidth | ChangeCraneFlangeThickness | ChangeCraneWheelEccentricity | ChangeCraneTorsionConstant | ChangeCraneLongitudinalStress | ChangeCraneRailRadius | ChangeCraneRailContactWidth | ChangeCraneCraneNu | ChangeCraneCraneKq | ChangeCraneDamageExponent | ChangeCraneStressRange | ChangeCraneDetailCatStress | ChangeCraneFatiguePhi | ChangeStoreyMemberId | ChangeStoreyLabel | ChangeStoreyHeight | ChangeStoreyVerticalLoad | ChangeStoreyHorizontalLoad | ChangeStoreyDrift | ChangeStoreyColumns | ChangeStoreyPlasticAnalysis | ChangeStoreyBuildingHeight | ChangeStoreyBracingLoad | ChangeStoreyBracingLength | ChangeStoreyBracingDeflection | ChangeRestraintMemberId | ChangeRestraintLabel | ChangeRestraintStartSupport | ChangeRestraintEndSupport | ChangeRestIntermediatePosition | ChangeRestraintTorsionalSpring | ChangeRestLatSpringPosition | ChangeRestLateralSpringStiff | ChangeRestraintLoadHeight | ChangeRestraintLoadDistribution | ChangeRestraintDesignMoment | ChangeRestraintDesignAxial | ChangeRestraintGeneralMethod | ChangeRestHingeToRest | ChangeBuiltUpMemberId | ChangeBuiltUpLabel | ChangeBuiltUpKind | ChangeBuiltUpChordArea | ChangeBuiltUpChordInertia | ChangeBuiltUpChordDistance | ChangeBuiltUpPanelSpacing | ChangeBuiltUpPlanes | ChangeBuiltUpBattenInertia | ChangeBuiltUpDiagonalArea | ChangeBuiltUpDiagonalLength | ChangeBuiltUpDesignAxial | ChangeBuiltUpDesignMoment | ChangeBuiltUpBackToBack | ChangeBuiltUpMinRadius | ChangeBuiltUpChainSpacing | ChangeWeldMemberId | ChangeWeldLabel | ChangeWeldPattern | ChangeWeldThroat | ChangeWeldWidth | ChangeWeldDepth | ChangeWeldShearForce | ChangeWeldEccentricity | ChangeWeldSteelFu | ChangeWeldBetaW | ChangeParamSectionId | ChangeParamLabel | ChangeParamShape | ChangeParamHeight | ChangeParamWidth | ChangeParamWebThickness | ChangeParamFlangeThickness | ChangeParamTolerance | ChangeHollowMemberId | ChangeHollowLabel | ChangeHollowChordWidth | ChangeHollowChordHeight | ChangeHollowChordThickness | ChangeHollowChordFy | ChangeHollowChordStress | ChangeHollowBrace1Width | ChangeHollowBrace1Height | ChangeHollowBrace1Thickness | ChangeHollowBrace1Angle | ChangeHollowBrace1Force | ChangeHollowBrace2Width | ChangeHollowBrace2Height | ChangeHollowBrace2Thickness | ChangeHollowBrace2Angle | ChangeHollowBrace2Force | ChangeHollowGap | ChangeHollowBraceFy | ChangeRowJointId | ChangeRowLabel | ChangeRowRowType | ChangeRowLever | ChangeRowBoltToWeb | ChangeRowEdgeDistance | ChangeRowExtensionToFlange | ChangeRowExtensionEdge | ChangeRowAlphaFactor | ChangeRowPitchToPrevious | ChangeRowBolts | ChangeRowBoltDiameter | ChangeRowBoltStressArea | ChangeRowGripLength | ChangeRowBoltClass | ChangeRowGroupWithPrevious | InsertJointAction | RemoveJointAction | ChangeJointActionLoadCaseId | ChangeJointActionShear | ChangeJointActionTension | InsertFatigueBand | RemoveFatigueBand | ChangeFatigueBandDeltaSigma | ChangeFatigueBandCycles | InsertCfAction | RemoveCfAction | ChangeCfActionLoadCaseId | ChangeCfActionForce | InsertPlatedAction | RemovePlatedAction | ChangePlatedActionLoadCaseId | ChangePlatedActionForce | InsertTensionAction | RemoveTensionAction | ChangeTensionActionLoadCaseId | ChangeTensionActionForce | InsertTowerAction | RemoveTowerAction | ChangeTowerActionLoadCaseId | ChangeTowerActionForce | InsertPileAction | RemovePileAction | ChangePileActionLoadCaseId | ChangePileActionForce | InsertCraneAction | RemoveCraneAction | ChangeCraneActionLoadCaseId | ChangeCraneActionForce | InsertFrameNode | RemoveFrameNode | InsertFrameBar | RemoveFrameBar | InsertPlacement | RemovePlacement | ChangeMaterialRambergOsgoodN | ChangeFrameNodeLabel | ChangeFrameNodeX | ChangeFrameNodeZ | ChangeFrameNodeSupport | ChangeFrameNodeLoadX | ChangeFrameNodeLoadZ | ChangeFrameBarMemberId | ChangeFrameBarLabel | ChangeFrameBarStartNodeId | ChangeFrameBarEndNodeId | ChangeFrameBarReleaseStart | ChangeFrameBarReleaseEnd | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | ChangeCfPurlinSpan | ChangeCfPurlinLoad | ChangeCfPurlinLateralRatio | ChangePlatedCorrugationFlat | ChangePlatedCorrProjection | ChangePlatedCorrugationDepth | ChangePlatedWebHeight | ChangeSiloRingSpacing | ChangeSiloRingArea | ChangeSiloRingInertia | ChangeSiloRingOffset | ChangeBridgeDeckThickness | ChangeBridgeTroughSpacing | ChangeBridgeTroughWidth | ChangeBridgeTroughThickness | ChangeBridgeCrossbeamSpacing | ChangeBridgeSurfacingThickness | ChangeBridgeWheelLoad | ChangeBridgeWheelPatch | ChangePlatedStiffenerSpacing | ChangeBuiltUpChordShape | ChangeBuiltUpChordDepth | ChangeBuiltUpChordWidth | ChangeBuiltUpChordFlangeThk | ChangeBuiltUpChordWebThk | ChangeMemberWebMaterialId | ChangeMemberTorsionLoad | ChangeMemberTorquePosition | ChangeFatigueStressHistory | ChangePlatedStiffenerShape | ChangePlatedStiffenerDepth | ChangePlatedStiffenerThickness | ChangePlatedStiffFlangeWidth | ChangePlatedStiffenerFlangeThk | ChangePlatedLateralPressure | ChangePlatedLatPressureCoef | ChangeMemberWarpingSupport | InsertJointPlate | RemoveJointPlate | InsertFoundationBlock | RemoveFoundationBlock | ChangeMemberLtbRestraintSpacing | ChangeMemberDeflectionLimitRatio | ChangeMemberToughnessStressRatio | ChangeJointColumnFlangeThickness | ChangeJointBeamMomentResistance | ChangeJointColumnMomentResistance | ChangeJointTransformationParameter | ChangeFireProtectionConductivity | ChangeFireProtectionSpecificHeat | ChangeCfRequiredRestraintStiffness | ChangePlatedStiffenerEccentricity | ChangePlatedPatchMomentResistance | ChangePlatedCorrugationProjection | ChangePlatedStiffenerFlangeWidth | ChangeTensionCableHorizontalForce | ChangeTowerLateralForceCoefficient | ChangeTowerPermittedAmplitudeRatio | ChangePileInterlockBendingFactor | ChangePileInterlockStiffnessFactor | ChangeCraneFlangeEffectiveWidth | ChangeCraneDetailCategoryStress | ChangeRestraintIntermediatePosition | ChangeRestraintLatSpringPosition | ChangeRestraintLatSpringStiffness | ChangeRestraintHingeToRestraint | ChangeBuiltUpChordFlangeThickness | ChangeBuiltUpChordWebThickness | ChangeJointPlateJointId | ChangeJointPlateLabel | ChangeJointPlateRole | ChangeJointPlatePlateHeight | ChangeJointPlatePlateWidth | ChangeJointPlatePlateThickness | ChangeJointPlatePlateCount | ChangeJointPlatePlateFy | ChangeJointPlatePlateFu | ChangeJointPlateBoltClass | ChangeJointPlateBoltDiameter | ChangeJointPlateHoleDiameter | ChangeJointPlateBoltRows | ChangeJointPlateBoltsPerRow | ChangeJointPlatePitch | ChangeJointPlateGauge | ChangeJointPlateEndDistance | ChangeJointPlateEdgeDistance | ChangeJointPlateShearPlanes | ChangeJointPlateEccentricity | ChangeJointPlateWeldThroat | ChangeJointPlateWeldFu | ChangeJointPlateWeldBetaW | ChangeFoundationJointId | ChangeFoundationLabel | ChangeFoundationBlockLength | ChangeFoundationBlockWidth | ChangeFoundationBlockDepth | ChangeFoundationConcreteFck | ChangeFoundationGroutFck | ChangeFoundationGroutThickness | ChangeFoundationAnchorCount | ChangeFoundationAnchorClass | ChangeFoundationAnchorDiameter | ChangeFoundationAnchorStressArea | ChangeFoundationAnchorEmbedment | ChangeFoundationAnchorEdgeDistance | ChangeBridgeConsequence | ChangeBucklingLengthBeamStiffnessA | ChangeBucklingLengthBeamStiffnessB | ChangeBucklingLengthColumnStiffnessA | ChangeBucklingLengthColumnStiffnessB | ChangeBucklingLengthMemberId | ChangeBucklingLengthPlane | ChangeBucklingLengthRestraintA | ChangeBucklingLengthRestraintB | ChangeBucklingLengthSway | ChangeFastenedJointBaseStrength | ChangeFastenedJointBaseThickness | ChangeFastenedJointCount | ChangeFastenedJointDiameter | ChangeFastenedJointEdgeDistance | ChangeFastenedJointEndDistance | ChangeFastenedJointGauge | ChangeFastenedJointHeadStrength | ChangeFastenedJointHeadThickness | ChangeFastenedJointKind | ChangeFastenedJointMemberId | ChangeFastenedJointPerRow | ChangeFastenedJointPitch | ChangeFastenedJointShearForce | ChangeFastenedJointShearResistance | ChangeFastenedJointSheetWidth | ChangeFastenedJointTensionForce | ChangeFastenedJointWasherDiameter | ChangeFatigueConsequence | ChangeFatigueStressConcentration | ChangeFatigueStressCycles | ChangeFatigueStressDetailId | ChangeFatigueStressFibreY | ChangeFatigueStressFibreZ | ChangeFatigueStressMaxCaseId | ChangeFatigueStressMinCaseId | ChangeFatigueStressRelief | ChangeFatigueStressThickness | ChangeFormingGainBends | ChangeFormingGainForming | ChangeFormingGainGrossArea | ChangeFormingGainMemberId | ChangeFormingGainUltimateStrength | ChangeFormingGainUsedYield | ChangeFrameActionEndRatio | ChangeFrameActionFx | ChangeFrameActionFz | ChangeFrameActionKind | ChangeFrameActionLoadCaseId | ChangeFrameActionMy | ChangeFrameActionStartRatio | ChangeFrameActionTargetId | ChangeFrameMemberBasisBasis | ChangeFrameMemberBasisMemberId | ChangeJointBeamWebFy | ChangeJointBeamWebThickness | ChangeJointPlateGroupMethod | ChangeJointWeldForceLongitudinal | ChangeJointWeldForceTransverse | ChangeMaterialDuctilityElongation | ChangeMaterialDuctilityMaterialId | ChangeMaterialDuctilityUltimateStrain | ChangePanelDesignTemperature | ChangePanelSteelGrade | ChangePanelSteelSubgrade | ChangeSectionFabrication | InsertBucklingLength | InsertFastenedJoint | InsertFatigueStress | InsertFormingGain | InsertFrameAction | InsertFrameMemberBasis | InsertMaterialDuctility | RemoveBucklingLength | RemoveFastenedJoint | RemoveFatigueStress | RemoveFormingGain | RemoveFrameAction | RemoveFrameMemberBasis | RemoveMaterialDuctility
 type ChangeAnnex {
   newAnnex: AnnexChoice!
 }
@@ -2242,10 +2242,6 @@ type ChangePlatedPatchMomentResistance {
   id: String!
   newPatchMomentResistance: Float!
 }
-type ChangePlatedTransverseStiffenerInertia {
-  id: String!
-  newTransverseStiffenerInertia: Float!
-}
 type ChangePlatedCorrugationProjection {
   id: String!
   newCorrugationProjection: Float!
@@ -2253,14 +2249,6 @@ type ChangePlatedCorrugationProjection {
 type ChangePlatedStiffenerFlangeWidth {
   id: String!
   newStiffenerFlangeWidth: Float!
-}
-type ChangePlatedStiffenerFlangeThickness {
-  id: String!
-  newStiffenerFlangeThickness: Float!
-}
-type ChangePlatedLateralPressureCoefficient {
-  id: String!
-  newLateralPressureCoefficient: Float!
 }
 type ChangeTensionCableHorizontalForce {
   id: String!
@@ -2461,4 +2449,317 @@ type ChangeFoundationAnchorEmbedment {
 type ChangeFoundationAnchorEdgeDistance {
   id: String!
   newAnchorEdgeDistance: Float!
+}
+type ChangeBridgeConsequence {
+  id: String!
+  newConsequence: FatigueConsequence!
+}
+type ChangeBucklingLengthBeamStiffnessA {
+  id: String!
+  newBeamStiffnessA: Float!
+}
+type ChangeBucklingLengthBeamStiffnessB {
+  id: String!
+  newBeamStiffnessB: Float!
+}
+type ChangeBucklingLengthColumnStiffnessA {
+  id: String!
+  newColumnStiffnessA: Float!
+}
+type ChangeBucklingLengthColumnStiffnessB {
+  id: String!
+  newColumnStiffnessB: Float!
+}
+type ChangeBucklingLengthMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeBucklingLengthPlane {
+  id: String!
+  newPlane: BucklingPlane!
+}
+type ChangeBucklingLengthRestraintA {
+  id: String!
+  newRestraintA: NodeARestraint!
+}
+type ChangeBucklingLengthRestraintB {
+  id: String!
+  newRestraintB: NodeBRestraint!
+}
+type ChangeBucklingLengthSway {
+  id: String!
+  newSway: FrameSway!
+}
+type ChangeFastenedJointBaseStrength {
+  id: String!
+  newBaseStrength: Float!
+}
+type ChangeFastenedJointBaseThickness {
+  id: String!
+  newBaseThickness: Float!
+}
+type ChangeFastenedJointCount {
+  id: String!
+  newCount: Int!
+}
+type ChangeFastenedJointDiameter {
+  id: String!
+  newDiameter: Float!
+}
+type ChangeFastenedJointEdgeDistance {
+  id: String!
+  newEdgeDistance: Float!
+}
+type ChangeFastenedJointEndDistance {
+  id: String!
+  newEndDistance: Float!
+}
+type ChangeFastenedJointGauge {
+  id: String!
+  newGauge: Float!
+}
+type ChangeFastenedJointHeadStrength {
+  id: String!
+  newHeadStrength: Float!
+}
+type ChangeFastenedJointHeadThickness {
+  id: String!
+  newHeadThickness: Float!
+}
+type ChangeFastenedJointKind {
+  id: String!
+  newKind: FastenerKind!
+}
+type ChangeFastenedJointMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeFastenedJointPerRow {
+  id: String!
+  newPerRow: Int!
+}
+type ChangeFastenedJointPitch {
+  id: String!
+  newPitch: Float!
+}
+type ChangeFastenedJointShearForce {
+  id: String!
+  newShearForce: Float!
+}
+type ChangeFastenedJointShearResistance {
+  id: String!
+  newShearResistance: Float!
+}
+type ChangeFastenedJointSheetWidth {
+  id: String!
+  newSheetWidth: Float!
+}
+type ChangeFastenedJointTensionForce {
+  id: String!
+  newTensionForce: Float!
+}
+type ChangeFastenedJointWasherDiameter {
+  id: String!
+  newWasherDiameter: Float!
+}
+type ChangeFatigueConsequence {
+  id: String!
+  newConsequence: FatigueConsequence!
+}
+type ChangeFatigueStressConcentration {
+  id: String!
+  newConcentration: Float!
+}
+type ChangeFatigueStressCycles {
+  id: String!
+  newCycles: Float!
+}
+type ChangeFatigueStressDetailId {
+  id: String!
+  newDetailId: String!
+}
+type ChangeFatigueStressFibreY {
+  id: String!
+  newFibreY: Float!
+}
+type ChangeFatigueStressFibreZ {
+  id: String!
+  newFibreZ: Float!
+}
+type ChangeFatigueStressMaxCaseId {
+  id: String!
+  newMaxCaseId: String!
+}
+type ChangeFatigueStressMinCaseId {
+  id: String!
+  newMinCaseId: String!
+}
+type ChangeFatigueStressRelief {
+  id: String!
+  newRelief: StressRelief!
+}
+type ChangeFatigueStressThickness {
+  id: String!
+  newThickness: Float!
+}
+type ChangeFormingGainBends {
+  id: String!
+  newBends: Int!
+}
+type ChangeFormingGainForming {
+  id: String!
+  newForming: FormingProcess!
+}
+type ChangeFormingGainGrossArea {
+  id: String!
+  newGrossArea: Float!
+}
+type ChangeFormingGainMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeFormingGainUltimateStrength {
+  id: String!
+  newUltimateStrength: Float!
+}
+type ChangeFormingGainUsedYield {
+  id: String!
+  newUsedYield: Float!
+}
+type ChangeFrameActionEndRatio {
+  id: String!
+  newEndRatio: Float!
+}
+type ChangeFrameActionFx {
+  id: String!
+  newFx: Float!
+}
+type ChangeFrameActionFz {
+  id: String!
+  newFz: Float!
+}
+type ChangeFrameActionKind {
+  id: String!
+  newKind: FrameActionKind!
+}
+type ChangeFrameActionLoadCaseId {
+  id: String!
+  newLoadCaseId: String!
+}
+type ChangeFrameActionMy {
+  id: String!
+  newMy: Float!
+}
+type ChangeFrameActionStartRatio {
+  id: String!
+  newStartRatio: Float!
+}
+type ChangeFrameActionTargetId {
+  id: String!
+  newTargetId: String!
+}
+type ChangeFrameMemberBasisBasis {
+  id: String!
+  newBasis: MemberForceBasis!
+}
+type ChangeFrameMemberBasisMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeJointBeamWebFy {
+  id: String!
+  newBeamWebFy: Float!
+}
+type ChangeJointBeamWebThickness {
+  id: String!
+  newBeamWebThickness: Float!
+}
+type ChangeJointPlateGroupMethod {
+  id: String!
+  newGroupMethod: BoltGroupMethod!
+}
+type ChangeJointWeldForceLongitudinal {
+  id: String!
+  newWeldForceLongitudinal: Float!
+}
+type ChangeJointWeldForceTransverse {
+  id: String!
+  newWeldForceTransverse: Float!
+}
+type ChangeMaterialDuctilityElongation {
+  id: String!
+  newElongation: Float!
+}
+type ChangeMaterialDuctilityMaterialId {
+  id: String!
+  newMaterialId: String!
+}
+type ChangeMaterialDuctilityUltimateStrain {
+  id: String!
+  newUltimateStrain: Float!
+}
+type ChangePanelDesignTemperature {
+  id: String!
+  newDesignTemperature: Float!
+}
+type ChangePanelSteelGrade {
+  id: String!
+  newSteelGrade: String!
+}
+type ChangePanelSteelSubgrade {
+  id: String!
+  newSteelSubgrade: String!
+}
+type ChangeSectionFabrication {
+  id: String!
+  newFabrication: HollowFabrication!
+}
+type InsertBucklingLength {
+  index: Int
+  bucklingLength: BucklingLength!
+}
+type InsertFastenedJoint {
+  index: Int
+  fastenedJoint: FastenedJoint!
+}
+type InsertFatigueStress {
+  index: Int
+  fatigueStress: FatigueStress!
+}
+type InsertFormingGain {
+  index: Int
+  formingGain: FormingGain!
+}
+type InsertFrameAction {
+  index: Int
+  frameAction: FrameAction!
+}
+type InsertFrameMemberBasis {
+  index: Int
+  frameMemberBasis: FrameMemberBasis!
+}
+type InsertMaterialDuctility {
+  index: Int
+  materialDuctility: MaterialDuctility!
+}
+type RemoveBucklingLength {
+  index: Int!
+}
+type RemoveFastenedJoint {
+  index: Int!
+}
+type RemoveFatigueStress {
+  index: Int!
+}
+type RemoveFormingGain {
+  index: Int!
+}
+type RemoveFrameAction {
+  index: Int!
+}
+type RemoveFrameMemberBasis {
+  index: Int!
+}
+type RemoveMaterialDuctility {
+  index: Int!
 }

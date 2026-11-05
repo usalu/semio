@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-column-introduced-force-n",
   "semanticKind": "change-column-introduced-force-n",
-  "displayName": "ChangeColumnIntroducedForceN",
+  "displayName": "Change force introduced into the concrete (0 = from the actions)",
   "emoji": "⬇️",
   "aggregateVariant": "ChangeColumnIntroducedForceN",
   "payloadSchema": "🧬️schema/🔣️.json",

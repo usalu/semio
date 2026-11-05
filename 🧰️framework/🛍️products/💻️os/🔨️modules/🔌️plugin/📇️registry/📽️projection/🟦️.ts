@@ -136,7 +136,7 @@ export function emitPlaygroundsTypeScript(playgrounds: readonly PlaygroundEntry[
       const devContribution = entry.devContribution !== undefined ? `, devContribution: ${JSON.stringify(entry.devContribution)}` : "";
       const composition = entry.compositionConfigPath === undefined ? "" : `, compositionConfigPath: ${JSON.stringify(entry.compositionConfigPath)}`;
       const mcpHost = entry.mcpHost !== undefined ? `, mcpHost: ${JSON.stringify(entry.mcpHost)}` : "";
-      const nativeHost = entry.nativeHost !== undefined ? `, nativeHost: ${JSON.stringify(entry.nativeHost)}` : "";
+      const nativeHost = (entry.nativeHost !== undefined ? `, nativeHost: ${JSON.stringify(entry.nativeHost)}` : "")+(entry.nativeLaunchPolicy!==undefined?`, nativeLaunchPolicy: ${JSON.stringify(entry.nativeLaunchPolicy)}`:"");
       const distDir = entry.distDir !== undefined ? `, distDir: ${JSON.stringify(entry.distDir)}` : "";
       const userPorts = entry.userPorts !== undefined ? `, userPorts: { react: ${JSON.stringify(entry.userPorts.react)}, wgpu: ${JSON.stringify(entry.userPorts.wgpu)} }` : "";
       const facts = [["hub", entry.hub], ["dataDir", entry.dataDir], ["userDataDir", entry.userDataDir], ["localOnly", entry.localOnly], ["viewerPath", entry.viewerPath]].filter(([, value]) => value !== undefined).map(([key, value]) => `, ${key}: ${JSON.stringify(value)}`).join("");
@@ -157,6 +157,7 @@ export type PlaygroundBuildTarget = {
 \treadonly devContribution?: string;
 \treadonly compositionConfigPath?: string;
 \treadonly nativeHost?: { readonly cratePath: string; readonly project: string; readonly package: string; readonly binary: string; readonly target: string };
+\treadonly nativeLaunchPolicy?: string;
 \treadonly mcpHost?: { readonly cratePath: string; readonly project: string; readonly package: string; readonly binary: string; readonly target: string };
 \treadonly distDir?: string;
 \treadonly aliases: readonly string[];

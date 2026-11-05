@@ -3,5 +3,17 @@
   "tags": [
     "scope:framework",
     "language:rust"
-  ]
+  ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🧫️fixtures/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🪆️binding/📝️shared-utf8/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️receive/🧪️tests/🧫️fixtures/📦️bytes.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🌳️intrinsic/🧪️tests/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🎟️work/📐️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/📋️persistent/🧪️tests/🧫️fixtures/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/🧪️tests/scalar.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json"
+    ]
+  }
 }

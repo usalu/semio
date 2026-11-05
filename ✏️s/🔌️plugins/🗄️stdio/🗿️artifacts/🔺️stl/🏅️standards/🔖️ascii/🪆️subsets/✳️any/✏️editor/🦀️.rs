@@ -187,11 +187,11 @@ impl ArtifactEditor for StlAnyEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        Ok(crate::engine::encode_stl_ascii(snapshot).into_bytes())
+        Ok(semio_s_artifact_stdio_stl_mutations::standards::v_ascii::subsets::any::io::encode_stl_ascii(snapshot).into_bytes())
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        crate::engine::decode_stl_auto(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+        semio_s_artifact_stdio_stl_mutations::standards::v_ascii::subsets::any::io::decode_stl_auto(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
     fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {

@@ -1,0 +1,13 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "type":"object","additionalProperties":false,
+ "required":["root","partition","lane","profile","platform","maximumUnits","admitted","dependencies","additional","roots"],
+ "properties":{
+  "root":{"type":"string"},"partition":{"const":".cache/b/r"},"lane":{"type":"string"},"profile":{"type":"string"},"platform":{"type":"string"},"maximumUnits":{"const":256},
+  "admitted":{"type":"array","minItems":1075,"maxItems":1075,"items":{"$ref":"#/definitions/unit"}},
+  "dependencies":{"type":"array","minItems":116,"maxItems":116,"items":{"$ref":"#/definitions/unit"}},
+  "additional":{"type":"array","minItems":2,"items":{"$ref":"#/definitions/unit"}},
+  "roots":{"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["root","flavor"],"properties":{"root":{"type":"string"},"flavor":{"enum":["posix","win32"]}}}}
+ },
+ "definitions":{"unit":{"type":"object","additionalProperties":false,"required":["packageName","crateName"],"properties":{"packageName":{"type":"string","minLength":1},"crateName":{"type":"string","minLength":1},"profile":{"type":"string","minLength":1},"platform":{"type":["string","null"]}}}}
+}

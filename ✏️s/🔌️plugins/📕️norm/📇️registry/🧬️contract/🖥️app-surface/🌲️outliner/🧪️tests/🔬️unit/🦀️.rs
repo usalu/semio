@@ -61,14 +61,15 @@ fn a_collection_renders_rows_with_status_selection_add_remove_and_an_optional_fi
     let state = OutlinerState { selected: vec!["c2".into()], filter: String::new(), filter_action: Some("setOutlinerFilter"), ..Default::default() };
     let windows = TreeWindows::unhosted();
     let context = OutlinerContext { report: &report, locale: Locale::En, controller_id: "norm.mock", windows: &windows, state: &state };
-    let node = render_collection(&context, "members", "Members", &items, true, |row| tree_item_desc(format!("body.{}", row.id), norm_ui_label("body").expect("label"), None)).expect("collection");
+    let node = render_collection(&context, "members", "Members", &items, true, Some(admitted_list_meta), |row| tree_item_desc(format!("body.{}", row.id), norm_ui_label("body").expect("label"), None)).expect("collection");
     let json = project(node);
     assert!(json.contains("Members (2)") && json.contains("b1 — Main beam · ✗ 120 %"), "{json}");
     assert!(json.contains("norm-outliner.members[id=c2]") && json.contains("body.c2"), "{json}");
     assert!(json.contains("insertItem") && json.contains("removeItem") && json.contains("setOutlinerFilter"), "{json}");
     let plain = OutlinerState::default();
-    let context = OutlinerContext { state: &plain, ..context };
-    let json = project(render_collection(&context, "members", "Members", &items, true, |row| tree_item_desc(format!("body.{}", row.id), norm_ui_label("body").expect("label"), None)).expect("collection"));
+    let windows = TreeWindows::unhosted();
+    let context = OutlinerContext { state: &plain, windows: &windows, ..context };
+    let json = project(render_collection(&context, "members", "Members", &items, true, Some(admitted_list_meta), |row| tree_item_desc(format!("body.{}", row.id), norm_ui_label("body").expect("label"), None)).expect("collection"));
     assert!(!json.contains("setOutlinerFilter") && !json.contains(".filter"), "{json}");
 }
 
@@ -79,7 +80,7 @@ fn a_filtered_collection_reports_shown_over_total() {
     let windows = TreeWindows::unhosted();
     let report = CheckReport::default();
     let context = OutlinerContext { report: &report, locale: Locale::De, controller_id: "norm.mock", windows: &windows, state: &state };
-    let json = project(render_collection(&context, "members", "Bauteile", &items, true, |row| tree_item_desc(format!("body.{}", row.id), norm_ui_label("x").expect("label"), None)).expect("collection"));
+    let json = project(render_collection(&context, "members", "Bauteile", &items, true, Some(admitted_list_meta), |row| tree_item_desc(format!("body.{}", row.id), norm_ui_label("x").expect("label"), None)).expect("collection"));
     assert!(json.contains("Bauteile (1/2)") && json.contains("body.b1") && !json.contains("body.c2"), "{json}");
     assert!(json.contains("Entfernen") && json.contains("Eintrag hinzufügen"), "{json}");
 }
@@ -104,25 +105,6 @@ fn the_document_outliner_lists_entity_kinds_first_then_supporting_tables_and_mar
     assert!(json.contains("norm-outliner.members[id=c2]") && json.contains("b1 — Main beam"), "{json}");
 }
 
-#[test]
-fn rows_of_an_interaction_domain_are_scoped_pick_targets_the_selection_mirror_resolves() {
-    let tree = DslValue::object([("members".into(), DslValue::Array(vec![entity("b1", Some("Main beam")), entity("c2", None)])), ("loads".into(), DslValue::Array(vec![entity("b1", None)]))]);
-    let entities = [OutlinedCollection { path: "members", label_en: "Members", label_de: "Stäbe" }, OutlinedCollection { path: "loads", label_en: "Loads", label_de: "Lasten" }];
-    let state = OutlinerState { interaction_domain: Some("norm.mock"), ..Default::default() };
-    let windows = TreeWindows::unhosted();
-    let report = CheckReport::default();
-    let context = OutlinerContext { report: &report, locale: Locale::En, controller_id: "norm.mock", windows: &windows, state: &state };
-    let json = project(render_outliner_document(&tree, &entities, None, &context).expect("outliner"));
-    let member = crate::protocol::wire::encode_scoped_identity(&["members", "b1"]).expect("address");
-    let load = crate::protocol::wire::encode_scoped_identity(&["loads", "b1"]).expect("address");
-    assert_ne!(member, load, "equal ids of different collections stay distinct");
-    assert!(json.contains(&member) && json.contains(&load) && json.contains("\"entity\""), "{json}");
-    let row = EntityRow { path: "members[id=b1]".into(), id: "b1".into(), title: "b1".into(), index: 0, value: &entity("b1", None) };
-    assert_eq!(row_address(&row), Some(member.clone()));
-    let picked = NormSelection::resolve(&report, None, &[member]);
-    assert_eq!(picked.entities, ["b1"], "the mirror resolves the scoped row address to the entity");
-    assert_eq!(picked.outliner_state_in("norm.mock").interaction_domain, Some("norm.mock"));
-}
 
 #[test]
 fn a_reorderable_collection_offers_drag_drop_and_up_down_steps_that_raise_move_entity() {
@@ -130,9 +112,10 @@ fn a_reorderable_collection_offers_drag_drop_and_up_down_steps_that_raise_move_e
     let report = CheckReport::default();
     let windows = TreeWindows::unhosted();
     let render = |reorderable: Vec<&'static str>, locale| {
+        let windows = TreeWindows::unhosted();
         let state = OutlinerState { reorderable, ..Default::default() };
         let context = OutlinerContext { report: &report, locale, controller_id: "norm.mock", windows: &windows, state: &state };
-        project(render_collection(&context, "members", "Members", &items, true, |row| tree_item_desc(format!("body.{}", row.id), norm_ui_label("body").expect("label"), None)).expect("collection"))
+        project(render_collection(&context, "members", "Members", &items, true, Some(admitted_list_meta), |row| tree_item_desc(format!("body.{}", row.id), norm_ui_label("body").expect("label"), None)).expect("collection"))
     };
     let plain = render(Vec::new(), Locale::En);
     assert!(!plain.contains("moveEntity") && !plain.contains(ROW_DRAG_MIME), "a collection without a reorder rule offers nothing: {plain}");
@@ -149,6 +132,7 @@ fn a_reorderable_collection_offers_drag_drop_and_up_down_steps_that_raise_move_e
 #[test]
 fn the_reorderable_collections_are_the_top_level_lists_of_the_move_rules() {
     const RULES: NormEditRules = NormEditRules {
+        set_field_arguments: &[],
         move_item: &[MoveItemRule { path: "members", kind: "change-member-order", selectors: &[], from: "fromIndex", to: "toIndex" }, MoveItemRule { path: "groups[].items", kind: "change-group-item-order", selectors: &[SelectorKey::Id("groupId")], from: "fromIndex", to: "toIndex" }],
         set_field: &[],
         insert_item: &[],
@@ -156,4 +140,23 @@ fn the_reorderable_collections_are_the_top_level_lists_of_the_move_rules() {
     };
     assert_eq!(OutlinerState::default().with_reorderable(&RULES).reorderable, ["members"], "a nested list is not an outliner collection");
     assert!(OutlinerState::default().reorderable.is_empty());
+}
+
+#[test]
+fn unsupported_list_controls_preserve_rows_without_offering_mutating_actions() {
+    let tree = DslValue::object([("unsupported".into(), DslValue::Array(vec![entity("row-1", Some("Visible record"))]))]);
+    let report = CheckReport::default();
+    let state = OutlinerState::default();
+    let windows = TreeWindows::unhosted();
+    let kinds = [OutlinedCollection { path: "unsupported", label_en: "Unsupported collection", label_de: "Nicht bearbeitbare Liste" }];
+    for locale in [Locale::En, Locale::De] {
+        let context = OutlinerContext { report: &report, locale, controller_id: "norm.mock", windows: &windows, state: &state };
+        let json = project(render_outliner_document(&tree, &kinds, Some(empty_field_meta), &context).expect("read-only list"));
+        assert!(json.contains("row-1") && json.contains("Visible record"), "{json}");
+        assert!(!json.contains("insertItem") && !json.contains("removeItem"), "{json}");
+    }
+}
+
+fn admitted_list_meta(_: &str) -> Option<FieldSpec> {
+    Some(FieldSpec { can_insert: true, can_remove: true, ..FieldSpec::EMPTY })
 }

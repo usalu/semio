@@ -248,8 +248,8 @@
       "rKN": 500000.0,
       "gammaEl": 1.0,
       "chordRotationDemandRad": 0.0,
-      "chordRotationUltimateRad": 0.0,
       "chordRotationYieldRad": 0.0,
+      "chordRotationUltimateRad": 0.0,
       "sectionDepthM": 0.0,
       "sectionWidthM": 0.0,
       "effectiveDepthM": 0.0,
@@ -371,6 +371,23 @@
       "baseRotationalStiffnessNm": 0.0
     }
   ],
+  "soilLayers": [],
+  "diaphragms": [],
+  "accelerograms": [],
+  "piers": [],
+  "bearings": [
+    {
+      "id": "bear-1",
+      "bridgeId": "br-1",
+      "pierId": "pier-1",
+      "device": "elastomeric",
+      "xM": 0.0,
+      "stiffnessNPerM": 20000000.0,
+      "dRdM": 0.2,
+      "seatLengthM": 0.6,
+      "minSupportLengthM": 0.4
+    }
+  ],
   "joints": [
     {
       "id": "joint-1",
@@ -395,23 +412,6 @@
       "beamMomentRdNm": 4000000.0
     }
   ],
-  "bearings": [
-    {
-      "id": "bear-1",
-      "bridgeId": "br-1",
-      "pierId": "pier-1",
-      "device": "elastomeric",
-      "xM": 0.0,
-      "stiffnessNPerM": 20000000.0,
-      "dRdM": 0.2,
-      "seatLengthM": 0.6,
-      "minSupportLengthM": 0.4
-    }
-  ],
-  "piers": [],
-  "accelerograms": [],
-  "diaphragms": [],
-  "soilLayers": [],
   "placements": [],
   "tieBeams": [],
   "slopes": []

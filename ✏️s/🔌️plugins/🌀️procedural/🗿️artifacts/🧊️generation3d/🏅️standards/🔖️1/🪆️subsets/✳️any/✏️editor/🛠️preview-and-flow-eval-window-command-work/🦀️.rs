@@ -46,14 +46,14 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
                 let cfg = ConfigView { snapshot: input.config, window: None };
                 let mut emit = set_active_example::emit(payload, &doc, &cfg)?;
                 if !emit.artifact_mutations.is_empty() {
-                    self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_ref()), servable, &mut emit, input.operation.retained)?;
+                    self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_deref()), servable, &mut emit, input.operation.retained)?;
                 }
                 self.emit = Some(emit);
                 return self.complete();
             }
             let result = generation_command_result_for(input.command, input.snapshot, input.config).ok_or_else(|| Fault::from("generation3d-preview-command-unowned"))?;
             let mut emit = result.emit;
-            self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_ref()), servable, &mut emit, input.operation.retained)?;
+            self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_deref()), servable, &mut emit, input.operation.retained)?;
             if let Some(fixture) = result.preview_fixture {
                 fixture.retire_cold();
             }

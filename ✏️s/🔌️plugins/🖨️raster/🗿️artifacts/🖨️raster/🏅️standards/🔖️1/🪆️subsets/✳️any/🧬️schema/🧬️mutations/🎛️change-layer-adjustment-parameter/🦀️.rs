@@ -14,7 +14,10 @@ pub struct ChangeLayerAdjustmentParameter {
     pub value: Option<semio_s_artifact_raster_raster_model::RasterAdjustmentNumber>,
 }
 pub fn validate(payload: &ChangeLayerAdjustmentParameter, base: &RasterSnapshot) -> Result<(), protocol::OutcomeCode> {
-    let Some(RasterLayerNode::Adjustment { adjustment_kind, params, .. }) = find_layer(&base.layers, &payload.layer_id) else { return Err(protocol::OutcomeCode::TargetMissing); };
+    let layer=find_layer(&base.layers,&payload.layer_id).ok_or(protocol::OutcomeCode::TargetMissing)?;validate_target(payload,layer)
+}
+pub fn validate_target(payload:&ChangeLayerAdjustmentParameter,layer:&RasterLayerNode)->Result<(),protocol::OutcomeCode>{
+    let RasterLayerNode::Adjustment { adjustment_kind, params, .. } = layer else { return Err(protocol::OutcomeCode::TargetMissing); };
     if !matches!(payload.parameter.as_str(), "brightness" | "contrast") || [payload.expected,payload.value].into_iter().flatten().any(|value| !value.get().is_finite() || !(-1.0..=1.0).contains(&value.get())) { return Err(protocol::OutcomeCode::Invariant); }
     if adjustment_kind != "brightnessContrast" { return Err(protocol::OutcomeCode::TargetMismatch); }
     let previous = params.get(&payload.parameter);

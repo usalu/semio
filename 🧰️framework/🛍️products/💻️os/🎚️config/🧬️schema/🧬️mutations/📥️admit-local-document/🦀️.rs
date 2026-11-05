@@ -19,6 +19,66 @@ pub enum LocalDocumentStorage {
     File,
 }
 
+/// 🪟️ The selected presentation coordinate of a kept artifact.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase", try_from = "LocalDocumentSurfaceFields")]
+#[value(rename_all = "camelCase", deny_unknown_fields, validate = "validate_surface", validate_controlled = "validate_surface_controlled")]
+pub struct LocalDocumentSurface {
+    pub plugin_id: String,
+    pub app_id: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct LocalDocumentSurfaceFields { plugin_id: String, app_id: String }
+
+fn validate_surface(surface: &LocalDocumentSurface) -> Result<(), semio_framework_value::ValueError> {
+    if [&surface.plugin_id, &surface.app_id].into_iter().any(|id| id.is_empty() || id.len() > 1024 || id.chars().count() > 256) {
+        return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "selected surface ids require 1 to 256 characters"));
+    }
+    Ok(())
+}
+
+fn validate_surface_controlled(surface: &LocalDocumentSurface, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), semio_framework_value::ValueError> {
+    let work = surface.plugin_id.len().saturating_add(surface.app_id.len()).saturating_add(2);
+    control.begin_stage(work)?;
+    control.advance(work)?;
+    validate_surface(surface)
+}
+
+impl TryFrom<LocalDocumentSurfaceFields> for LocalDocumentSurface {
+    type Error = semio_framework_value::ValueError;
+    fn try_from(value: LocalDocumentSurfaceFields) -> Result<Self, Self::Error> {
+        let surface = Self { plugin_id: value.plugin_id, app_id: value.app_id };
+        validate_surface(&surface)?;
+        Ok(surface)
+    }
+}
+
+fn deserialize_surface<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<LocalDocumentSurface>, D::Error> {
+    LocalDocumentSurface::deserialize(deserializer).map(Some)
+}
+
+fn surface_from_value(value: semio_framework_value::DslValue) -> Result<Option<LocalDocumentSurface>, semio_framework_value::ValueError> {
+    <LocalDocumentSurface as semio_framework_value::FromValue>::from_value(value).map(Some)
+}
+
+fn surface_from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<LocalDocumentSurface>, semio_framework_value::ValueError> {
+    <LocalDocumentSurface as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Some)
+}
+
+fn surface_default_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<LocalDocumentSurface>, semio_framework_value::ValueError> {
+    control.scoped_stage(|control| {
+        control.begin_stage(1)?;
+        control.step()?;
+        Ok(None)
+    })
+}
+
+fn retire_surface(value: Option<LocalDocumentSurface>) {
+    if let Some(surface) = value { <LocalDocumentSurface as semio_framework_value::FromValue>::retire_decoded(surface); }
+}
+
 /// 📄️ One document this device keeps locally: its id, artifact schema, name and where its events persist.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -30,6 +90,9 @@ pub struct LocalDocument {
     pub storage: LocalDocumentStorage,
     pub target: String,
     pub admitted_at_ms: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_surface")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "surface_from_value", deserialize_controlled_with = "surface_from_value_controlled", default_controlled = "surface_default_controlled", retire_with = "retire_surface")]
+    pub surface: Option<LocalDocumentSurface>,
 }
 
 /// 🗂️ `os.config.local-catalog` — every document this device keeps locally (persisted local-only), ordered by id.
@@ -104,6 +167,9 @@ pub struct AdmitLocalDocument {
     pub storage: LocalDocumentStorage,
     pub target: String,
     pub admitted_at_ms: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_surface")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "surface_from_value", deserialize_controlled_with = "surface_from_value_controlled", default_controlled = "surface_default_controlled", retire_with = "retire_surface")]
+    pub surface: Option<LocalDocumentSurface>,
 }
 
 /// 🏗️ Wraps an admit payload in the local-catalog dispatch enum.
@@ -113,13 +179,13 @@ pub fn admit_local_document(document: LocalDocument) -> LocalCatalogConfigMutati
 
 impl From<LocalDocument> for AdmitLocalDocument {
     fn from(document: LocalDocument) -> Self {
-        Self { document_id: document.document_id, schema: document.schema, name: document.name, storage: document.storage, target: document.target, admitted_at_ms: document.admitted_at_ms }
+        Self { document_id: document.document_id, schema: document.schema, name: document.name, storage: document.storage, target: document.target, admitted_at_ms: document.admitted_at_ms, surface: document.surface }
     }
 }
 
 impl From<&AdmitLocalDocument> for LocalDocument {
     fn from(payload: &AdmitLocalDocument) -> Self {
-        Self { document_id: payload.document_id.clone(), schema: payload.schema.clone(), name: payload.name.clone(), storage: payload.storage, target: payload.target.clone(), admitted_at_ms: payload.admitted_at_ms }
+        Self { document_id: payload.document_id.clone(), schema: payload.schema.clone(), name: payload.name.clone(), storage: payload.storage, target: payload.target.clone(), admitted_at_ms: payload.admitted_at_ms, surface: payload.surface.clone() }
     }
 }
 

@@ -12,18 +12,19 @@ use std::mem::size_of;
 fn selection_json_bytes(original:Option<&str>)->Option<usize>{match original{None=>Some(4),Some(text)=>text.chars().try_fold(2usize,|bytes,ch|bytes.checked_add(match ch{'"'|'\\'|'\u{8}'|'\t'|'\n'|'\u{c}'|'\r'=>2,ch if ch<='\u{1f}'=>6,ch=>ch.len_utf8()}))}}
 fn selection_binary_bytes(original:Option<&str>)->Option<usize>{original.map_or(Some(2),|text|text.len().checked_add(6))}
 #[doc(hidden)]
-pub fn selection_prepared_bytes(base:Option<&str>,next:Option<&str>)->Option<usize>{13usize.checked_add(selection_json_bytes(next)?).and_then(|bytes|bytes.checked_add(selection_binary_bytes(next)?)).and_then(|bytes|bytes.checked_add(selection_binary_bytes(base)?))}
+pub fn selection_prepared_bytes(base:Option<&str>,next:Option<&str>)->Option<usize>{selection_prepared_work(base,next).0}
+fn selection_prepared_work(base:Option<&str>,next:Option<&str>)->(Option<usize>,u64){let mut work=0;let result=(||{let json=match next{None=>Some(4),Some(text)=>text.chars().try_fold(2usize,|bytes,ch|{work+=1;bytes.checked_add(match ch{'"'|'\\'|'\u{8}'|'\t'|'\n'|'\u{c}'|'\r'=>2,ch if ch<='\u{1f}'=>6,ch=>ch.len_utf8()})})};13usize.checked_add(json?).and_then(|bytes|bytes.checked_add(selection_binary_bytes(next)?)).and_then(|bytes|bytes.checked_add(selection_binary_bytes(base)?))})();(result,work)}
 type Fields=(Option<ControlledRetirement<Option<String>>>,Option<Option<String>>,Option<Vec<Mutation>>);
 #[doc(hidden)]
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct SelectionRetainedEdit;
-pub struct SelectionRetainedEditCursor{pub phase:u8,pub offset:usize,pub allocated:bool,pub cancelled:bool,pub custody:RetainedEditCustody<Fields>}
+pub struct SelectionRetainedEditCursor{pub phase:u8,pub offset:usize,pub allocated:bool,pub cancelled:bool,pub custody:RetainedEditCustody<Fields>,pub last_work:u64}
 impl RetainedCloneEdit<State,Mutation> for SelectionRetainedEdit{
  type Cursor=SelectionRetainedEditCursor;
  fn preflight(&self,mutation:&Mutation,lane:store::os_store::store_schema::HistoryLane)->Result<store::os_store::one_item::ArtifactStoreOneItemFootprint,&'static str>{let Mutation::ChangeTestConfigSelection(value)=mutation;let bytes=value.selected.as_ref().map_or(0,String::len);let retained_bytes=bytes.checked_mul(4).and_then(|bytes|bytes.checked_add(65536)).ok_or("original selection preparation footprint overflow")?;if lane!=store::os_store::store_schema::HistoryLane::Document||retained_bytes>store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES||selection_prepared_bytes(None,value.selected.as_deref()).is_none_or(|bytes|bytes>1024){return Err("original selection preparation exceeds lane or physical bound".into());}Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint{work_items:2,retained_bytes})}
  fn begin_demand(&self)->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:0,depth:1}}
  fn snapshot_cursor_birth_demand(&self)->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:0,depth:1}}
- fn begin(&self,grant:RetainedCloneGrant)->Result<(Self::Cursor,RetainedCloneProgress),ValueError>{let mut receipt=self.begin_demand().admit(grant)?;receipt.copied_bytes=size_of::<Self::Cursor>();if !receipt.fits(grant){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original selection cursor transfer exceeds copy grant"));}Ok((SelectionRetainedEditCursor{phase:0,offset:0,allocated:false,cancelled:false,custody:RetainedEditCustody::new((None,None,None))},receipt))}
+ fn begin(&self,grant:RetainedCloneGrant)->Result<(Self::Cursor,RetainedCloneProgress),ValueError>{let mut receipt=self.begin_demand().admit(grant)?;receipt.copied_bytes=size_of::<Self::Cursor>();if !receipt.fits(grant){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original selection cursor transfer exceeds copy grant"));}Ok((SelectionRetainedEditCursor{phase:0,offset:0,allocated:false,cancelled:false,custody:RetainedEditCustody::new((None,None,None)),last_work:0},receipt))}
 }
 impl SelectionRetainedEditCursor{
  pub fn normal_demand(&self,base:&State,mutation:&Mutation,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{use semio_framework_value::RetirementDemand;Ok(match self.phase{
@@ -38,11 +39,15 @@ impl SelectionRetainedEditCursor{
  }
 }
 impl RetainedCloneEditCursor<State,Mutation> for SelectionRetainedEditCursor{
+ fn next_work_demand(&self,base:RetainedCloneRef<'_,State>,_:&State,mutation:RetainedCloneRef<'_,Mutation>,_:usize)->Result<u64,ValueError>{let Mutation::ChangeTestConfigSelection(value)=mutation.get();Ok(if self.phase==0{1+base.get().selected.as_ref().map_or(0,|text|text.len().min(1024))as u64+value.selected.as_ref().map_or(0,|text|text.len().min(1024))as u64}else{1})}
+ fn last_turn_work(&self)->u64{self.last_work}
  fn advance_demands(&self,base:RetainedCloneRef<'_,State>,_:&State,mutation:RetainedCloneRef<'_,Mutation>,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if self.cancelled||self.custody.is_closing(){Ok(Default::default())}else{self.normal_demand(base.get(),mutation.get(),body)}}
  fn advance(&mut self,base:RetainedCloneRef<'_,State>,post:&mut State,mutation:RetainedCloneRef<'_,Mutation>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneEditStep,ValueError>{
+  self.last_work=0;
   if self.cancelled||self.custody.is_closing()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneEditStep::Progress(Default::default()));}
-  if self.phase==0{let Mutation::ChangeTestConfigSelection(value)=mutation.get();if selection_prepared_bytes(base.get().selected.as_deref(),value.selected.as_deref()).is_none_or(|bytes|bytes>1024){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original selection prepared Pack and forward/inverse rows exceed owner publication bound"));}}
+  if self.phase==0{let Mutation::ChangeTestConfigSelection(value)=mutation.get();self.last_work=1;if base.get().selected.as_ref().is_some_and(|text|text.len()>1024)||value.selected.as_ref().is_some_and(|text|text.len()>1024){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original selection text exceeds bounded preparation scan"));}let(bytes,work)=selection_prepared_work(base.get().selected.as_deref(),value.selected.as_deref());self.last_work+=work;if bytes.is_none_or(|bytes|bytes>1024){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original selection prepared Pack and forward/inverse rows exceed owner publication bound"));}}
   let demand=self.normal_demand(base.get(),mutation.get(),grant.maximum_copy_bytes)?;if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(RetainedCloneEditStep::Progress(Default::default()));}
+  self.last_work=self.last_work.max(1);
   let receipt=match self.phase{
    0=>{let copy=size_of::<Option<String>>()+size_of::<ControlledRetirement<Option<String>>>();if grant.maximum_copy_bytes<copy{return Ok(RetainedCloneEditStep::Progress(Default::default()));}let original=post.selected.take();let owner=match ControlledRetirement::new(original){Ok(owner)=>owner,Err((error,original))=>{post.selected=original;self.cancelled=true;return Err(error)}};self.custody.original_mut().0=Some(owner);self.phase=1;RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}},
    1=>{let original=self.custody.original_mut().0.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original displaced selection absent"))?;if original.terminal_is_empty(){let copy=size_of::<Option<ControlledRetirement<Option<String>>>>();if grant.maximum_copy_bytes<copy{return Ok(RetainedCloneEditStep::Progress(Default::default()));}self.custody.original_mut().0=None;self.phase=2;RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}}else{if grant.maximum_depth<original.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original selection child depth overflow"))?{return Ok(RetainedCloneEditStep::Progress(Default::default()));}original.step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})?.progress()}},
@@ -56,7 +61,7 @@ impl RetainedCloneEditCursor<State,Mutation> for SelectionRetainedEditCursor{
  fn foreign_step_presence(&self)->bool{false}
  fn cancel(&mut self){self.cancelled=true;}
  fn begin_close(&mut self)->bool{self.custody.begin_close()}
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.custody.step(grant)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let turn=self.custody.step(grant);self.last_work=self.custody.last_turn_work();turn}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.custody.demands(0)?.copy_bytes)}
  fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.custody.demands(body)?.capacity_bytes)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.custody.demands(0)?.release_bytes)}

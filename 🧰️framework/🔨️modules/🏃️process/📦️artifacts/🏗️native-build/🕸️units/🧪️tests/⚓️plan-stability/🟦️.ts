@@ -34,7 +34,7 @@ const root=repositoryRoot(),toolchain=root?join(root,".cache/b/t/m/r/toolchains"
 test.skipIf(!root||!existsSync(join(toolchain,"cargo")))("two real Cargo plans of the print workspace give every workspace unit one planning digest",()=>{
  const scratch=mkdtempSync(join(tmpdir(),"rf-cargo-")),manifest=join(root,fixture.liveManifest);
  try{
-  const run=(args:string[],target:string)=>{const out=spawnSync(join(toolchain,"cargo"),[...args,"--locked","--offline","--manifest-path",manifest,"--config","build.rustc='"+join(toolchain,"rustc")+"'","--config",'build.rustc-wrapper=""'],{cwd:root,encoding:"utf8",maxBuffer:1<<29,env:{...process.env,CARGO_HOME:join(root,".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/home"),CARGO_TARGET_DIR:join(scratch,target)}});expect(out.status,out.stderr.slice(0,400)).toBe(0);return JSON.parse(out.stdout);};
+  const run=(args:string[],target:string)=>{const out=spawnSync(join(toolchain,"cargo"),[...args,"--locked","--offline","--manifest-path",manifest,"--config","build.rustc='"+join(toolchain,"rustc")+"'","--config",'build.rustc-wrapper=""'],{cwd:root,encoding:"utf8",maxBuffer:1<<29,env:{...process.env,CARGO_HOME:join(root,".cache/b/r/m/cargo/home"),CARGO_TARGET_DIR:join(scratch,target)}});expect(out.status,out.stderr.slice(0,400)).toBe(0);return JSON.parse(out.stdout);};
   const metadata=run(["metadata","--format-version=1"],"m"),graphs=[0,1].map(index=>readCargoCompilationGraphV1(run(["build","--unit-graph","-Z","unstable-options"],"u"+index),metadata,root));
   const [first,second]=graphs.map(graph=>new Map(graph.units.map(unit=>[unit.id,unit.planningDigest])));
   expect([...first.keys()].sort()).toEqual([...second.keys()].sort());expect([...first].filter(([id,digest])=>second.get(id)!==digest).map(([id])=>id)).toEqual([]);

@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "normal",
+      "reported": 1,
+      "paid": 1
+    },
+    {
+      "id": "denied",
+      "reported": 0,
+      "paid": 0
+    },
+    {
+      "id": "failed",
+      "reported": 1,
+      "paid": 1
+    },
+    {
+      "id": "reset",
+      "reported": 0,
+      "paid": 0
+    },
+    {
+      "id": "work-loan-starved",
+      "reported": 0,
+      "paid": 0
+    },
+    {
+      "id": "docx-reserve",
+      "reported": 2,
+      "paid": 2
+    },
+    {
+      "id": "docx-apply",
+      "reported": 3,
+      "paid": 3
+    }
+  ]
+}

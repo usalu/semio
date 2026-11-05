@@ -108,6 +108,9 @@ type En1991Diff {
   loadDispersals: En1991LoadDispersalDelta!
   bulkSolids: En1991BulkSolidDelta!
   rotatingMachines: En1991RotatingMachineDelta!
+  dustExplosions: En1991DustExplosionDelta!
+  railLoadGroups: En1991RailLoadGroupDelta!
+  railDerailments: En1991RailDerailmentDelta!
   fatigueModels: En1991FatigueModelDelta
   supportCollisions: En1991SupportCollisionDelta
   localFires: En1991LocalFireDelta
@@ -137,4 +140,28 @@ type En1991SnowGuardPatch {
   roofId: JSON
   slopeLength: JSON
   assumedForce: JSON
+}
+type En1991RailDerailmentPatch {
+  situation: JSON
+  assumedLineLoad: JSON
+  loadedLength: JSON
+  offset: JSON
+}
+type En1991RailLoadGroupPatch {
+  loadGroup: JSON
+  factorVertical: JSON
+  factorLongitudinal: JSON
+  factorLateral: JSON
+  assumedAxleLoad: JSON
+  assumedUdl: JSON
+  assumedLongitudinal: JSON
+  assumedLateral: JSON
+}
+type En1991DustExplosionPatch {
+  kst: JSON
+  pMax: JSON
+  volume: JSON
+  ventArea: JSON
+  staticOpeningPressure: JSON
+  designPressure: JSON
 }

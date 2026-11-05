@@ -7,6 +7,7 @@ import { publishedPageUrl } from "@semio-tech/framework/assets/published-page";
 // #region 🔌️Adapters
 import {
   type InvocationResponse,
+  resolveWindowActions,
   type PluginUiRefreshRequest,
   type PluginUiRefreshResponse,
   SemioFaultError,
@@ -52,7 +53,7 @@ import { withTypedOperationCall } from "../📬️typed-result/🟦️.ts";
 import { getActivationRegistry, rememberInstanceForRecovery } from "../🛰️runtime-singletons/🟦️.ts";
 import { serializeCommandIngressForActor, submitPluginLifecycleTurn } from "../🧵️turn-dispatch/🟦️.ts";
 import { settlePluginTurn } from "../🔁️turn-settle/🟦️.ts";
-import { uiRefreshSurfaceEvents } from "../🖼️surface-refresh/🟦️.ts";
+import { uiRefreshSurfaceEvents, pluginSurfaceRef } from "../🖼️surface-refresh/🟦️.ts";
 import { invocationFromFrames, noteGuestIngressV1 } from "../📥️invocation-frames/🟦️.ts";
 import { adaptPluginHandle, currentPluginRuntimeActor } from "../🔗️channel-adapter/🟦️.ts";
 import {
@@ -94,7 +95,7 @@ function resolvePluginDescriptorAndRegistry(pluginId: string, moduleUrl: string,
 /** 🧬️ Phase 8 of {@link loadPluginModule}: the kernel `PluginWasmHandle` this module constructs — instance creation,
  * retirement, the `enqueue`/`outcomes` turn ABI and disposal. */
 function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<typeof createInstanceTable>, ui: ReturnType<typeof createRetainedUiIntake>, requestActors: ReturnType<typeof createRequestActor>, turns: ReturnType<typeof createTurnPump>): KernelPluginWasmHandle {
-  const { pluginId, manifest, registry, shardClient, turnOutcomes, state, actorIdByInstance, closingInstances, openingInstances, retiringInstances, documentBindings, lifecycleByInstance, uiOwnerByInstance, uiSurfaceByInstance, uiIntakesByInstance, uiReadsByInstance } = scope;
+  const { pluginId, manifest, registry, shardClient, turnOutcomes, state, actorIdByInstance, appIdByInstance, closingInstances, openingInstances, retiringInstances, documentBindings, lifecycleByInstance, uiOwnerByInstance, uiSurfaceByInstance, uiIntakesByInstance, uiReadsByInstance } = scope;
   const { requireActorId, releaseInstanceMaps } = instances;
   const { acceptUiPatches, retireInstanceLifecycle } = ui;
   const { retireRequestActor } = requestActors;
@@ -106,6 +107,7 @@ function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<type
       const instanceId = takeNextGlobalInstanceId();
       const actorId = `${pluginId}#${instanceId}`;
       actorIdByInstance.set(instanceId, actorId);
+      appIdByInstance.set(instanceId,appId);
       const requireOpening = () => {
         if (state.disposing || closingInstances.has(instanceId) || actorIdByInstance.get(instanceId) !== actorId) throw new Error("plugin-handle.closed");
       };
@@ -206,7 +208,7 @@ function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<type
 
 /** 🔁️ Phase 9 of {@link loadPluginModule}: window-body refresh through `Event::SurfaceVisible` on the instance's actor. */
 function createRefreshUi(scope: PluginHandleScope, instances: ReturnType<typeof createInstanceTable>, ui: ReturnType<typeof createRetainedUiIntake>, jobs: ReturnType<typeof createSpawnedJobDriver>) {
-  const { shardClient, state, documentBindings, uiSurfaceByInstance } = scope;
+  const { shardClient, state, documentBindings, uiSurfaceByInstance,appIdByInstance,manifest } = scope;
   const { requireActorId, submitTurn } = instances;
   const { acceptUiPatches, ownedUiRefreshResponse } = ui;
   const { routeHostEffects } = jobs;
@@ -216,14 +218,20 @@ function createRefreshUi(scope: PluginHandleScope, instances: ReturnType<typeof 
    * `PatchTracker` on the guest side emits nothing for an unchanged body). Every requested window is
    * identified by its schema-owned body key; continuations drain until all surfaces missing from the
    * retained actor state publish their first patch. Panels use the same authored-body surface path. */
-  const refreshUi = async (instanceId: number, request: PluginUiRefreshRequest): Promise<PluginUiRefreshResponse> => {
-    const events = uiRefreshSurfaceEvents(instanceId, request);
+  const refreshUi = async (instanceId: number, request: PluginUiRefreshRequest, control?: Readonly<{signal:AbortSignal}>): Promise<PluginUiRefreshResponse> => {
+    if(control?.signal.aborted)throw control.signal.reason??new Error("staging.cancelled");
+    const app=manifest.apps.find(app=>app.id===appIdByInstance.get(instanceId));
+    const events = uiRefreshSurfaceEvents(instanceId, request,(window,action)=>{
+      const kindId=request.viewState.windowInstances?.find(instance=>instance.id===window)?.windowKindId;
+      const kind=app?.windowKinds.find(kind=>kind.id===kindId);
+      return app&&kind?resolveWindowActions(app,kind).find(entry=>entry.id===action)?.staging:undefined;
+    });
     if (events.length === 0) return {};
     const actorId = requireActorId(instanceId);
     const activation = shardClient.captureActorActivation(actorId);
     const documentPort = documentBindings.get(instanceId)?.port;
     state.eventSeq += 1;
-    const requestedSurfaceIds = new Set(events.map((event) => retainedSurfaceId(instanceId, (event.payload as { readonly surface: { readonly surface: string } }).surface.surface)));
+    const requestedSurfaceIds = new Set(events.map(event=>event.kind==="staged-form-requested"?(event.payload as {readonly surface:string}).surface:retainedSurfaceId(instanceId,(event.payload as {readonly surface:{readonly surface:string}}).surface.surface)));
     const missingAtSubmission = (): ReadonlySet<string> => {
       const surfaces = uiSurfaceByInstance.get(instanceId);
       return new Set([...requestedSurfaceIds].filter((surfaceId) => {
@@ -235,6 +243,7 @@ function createRefreshUi(scope: PluginHandleScope, instances: ReturnType<typeof 
     const result = await (async () => {
       try {
         return await withTypedOperationCall(actorId, `refresh-ui#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
+          if(control?.signal.aborted)throw control.signal.reason??new Error("staging.cancelled");
           const missingSurfaceIds = missingAtSubmission();
           const settled = await settlePluginTurn(
             actorId,
@@ -251,6 +260,7 @@ function createRefreshUi(scope: PluginHandleScope, instances: ReturnType<typeof 
             call,
             requestedSurfaceIds,
             (outcome) => closeTurn({ stop: outcome.stop, continuations: outcome.continuations, patches: outcome.patches, owedAtStop: outcome.owed }),
+            control?{signal:control.signal,events:(request.forms??[]).map(target=>({kind:"surface-hidden",payload:{surface:pluginSurfaceRef(instanceId,target.key)}}))}:undefined,
           );
           return settled;
         }));

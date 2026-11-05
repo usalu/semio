@@ -94,6 +94,8 @@ pub trait Mutation<P>: Sized + Sync + semio_framework_value::ToValue + semio_fra
     /// — what the runtime publishes beside the schemas so every `$ref` of every editable input resolves. Row-aligned like
     /// [`Self::INPUT_SCHEMAS`]; `#[derive(Mutations)]` fills it, a hand-written bridge forwards its source aggregate's.
     const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = &[];
+    /// 🧾️ Source-bound declarations in exactly the direct descriptor row order.
+    const COMPILED_INPUTS: &'static [Option<CompiledMutationInputDefinitions>] = &[];
     /// 📥️ The payload JSON Schema of this operation's own leaf, or `None` when its inputs are not editable.
     /// `#[derive(Mutations)]` answers the wrapped leaf's `MutationLeaf::PAYLOAD_SCHEMA`.
     fn input_schema(&self) -> Option<&'static str> {

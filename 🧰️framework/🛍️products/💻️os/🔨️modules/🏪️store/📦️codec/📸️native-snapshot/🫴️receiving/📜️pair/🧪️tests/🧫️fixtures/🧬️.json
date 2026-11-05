@@ -1,0 +1,137 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "causes",
+    "turns",
+    "expectedWork",
+    "closeOrder",
+    "grantCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "causes": {
+      "const": [
+        "semantic",
+        "quote",
+        "allocation"
+      ]
+    },
+    "turns": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "work",
+          "items",
+          "capture",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "capture": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "stage",
+              "causes"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "stage": {
+                "enum": [
+                  "unchanged",
+                  "retained-failure"
+                ]
+              },
+              "causes": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "semantic",
+                    "quote",
+                    "allocation"
+                  ]
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "expectedWork": {
+      "const": 3
+    },
+    "closeOrder": {
+      "const": [
+        "semantic",
+        "quote",
+        "allocation",
+        "receiver",
+        "decoder",
+        "caller"
+      ]
+    },
+    "grantCases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "caller",
+          "source",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "caller": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "source": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "expected": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

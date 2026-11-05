@@ -152,6 +152,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut consumer = contract_composed_app_raw(mounted_policy, &mut identity).await;
         let before = consumer.test_snapshot().await;
         let source_id = PluginApp::document_identity(&source).expect("the source's identity");
+        assert_ne!(PluginApp::document_identity(&consumer).as_deref(), Some(source_id.as_str()), "separate births must differ before archive identity adoption");
         assert!(std::str::from_utf8(&artifact.data).is_ok_and(|text| text.starts_with("pk:")), "the whole-document carrier is pk: base64 text");
 
         let semio_framework_plugin_decl_app::MediaConsumption::DocumentLoad(archive) = PluginApp::consume_media(&mut consumer, "artifact:in", artifact.clone()).await.expect("a whole document of the own schema is consumed") else {

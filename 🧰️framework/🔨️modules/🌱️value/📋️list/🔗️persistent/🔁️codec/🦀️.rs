@@ -1,7 +1,7 @@
 //! 🔁️ The persistent paged list encodes as an ordered array with exact path reads.
 use crate::list::persistent::PersistentList;
 use crate::{ValueError,ValueRefusalKind};
-use semio_framework_value_intrinsic::{controlled_sequence,path_index,DslValue,ToValue,ValueShape};
+use semio_framework_value_intrinsic::{controlled_sequence,path_index,DslValue,FromValue,ToValue,ValueShape,NativeDecodeControl};
 use semio_framework_value_native_encoding::NativeEncodeControl;
 
 impl<T:ToValue+crate::retirement::RetireOwned+Send+Sync+'static> ToValue for PersistentList<T>{
@@ -19,4 +19,10 @@ impl<T:ToValue+crate::retirement::RetireOwned+Send+Sync+'static> ToValue for Per
         let(segment,rest)=path.split_first().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"immutable array root has no object keys"))?;
         self.get(path_index(segment,self.len(),false)?).expect("admitted immutable row rank").value_key_at_path(rest,index).map_err(|error|error.under(segment))
     }
+}
+
+impl<T:crate::retirement::RetireOwned+Send+Sync+'static> FromValue for PersistentList<T>{
+    fn from_value(_value:DslValue)->Result<Self,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"persistent arrays require original native receiving"))}
+    fn from_value_controlled(_value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.checkpoint()?;Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"persistent arrays require original native receiving"))}
+    fn default_value_controlled(control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.checkpoint()?;Ok(Self::default())}
 }

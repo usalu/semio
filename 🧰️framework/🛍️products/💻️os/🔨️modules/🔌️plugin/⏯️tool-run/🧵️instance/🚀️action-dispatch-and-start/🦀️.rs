@@ -109,7 +109,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     async fn start_tool_run(&mut self, args: Option<&DslValue>, meta: &ActionMeta) -> Result<ToolRunActionOutcome, Fault> {
-        let view_state = meta.view_state.as_ref();
+        let view_state = meta.view_state.as_deref();
         let tool_id = args
             .and_then(|args| args.get(TOOL_RUN_ARG_TOOL_ID))
             .and_then(DslValue::as_str)

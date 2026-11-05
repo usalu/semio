@@ -46,7 +46,7 @@ fn clamped_insert_inverse_and_root_codecs_restore_the_native_snapshot() {
 fn rejects_contextually_invalid_text_and_unknown_fields() {
     let base = TxtSnapshot { lines: vec!["a".into()], ..Default::default() };
     let mutation = InsertLineMutation { index: 1, text: "b\nc".into() };
-    assert!(!<InsertLineMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
+    assert!(!<InsertLineMutation as protocol::ColdMutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
     assert!(semio_framework_pack_json::from_json_str::<InsertLineMutation>(r#"{"index":0,"text":"x","unknown":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     assert!(TxtMutation::parse_op("txt-mutation insert-line payload=7b22696e646578223a302c2274657874223a2278222c22756e6b6e6f776e223a747275657d").is_err());
     assert!(TxtMutation::decode_op(&[vec![3], br#"{"index":0,"text":"x","unknown":true}"#.to_vec()].concat()).is_err());

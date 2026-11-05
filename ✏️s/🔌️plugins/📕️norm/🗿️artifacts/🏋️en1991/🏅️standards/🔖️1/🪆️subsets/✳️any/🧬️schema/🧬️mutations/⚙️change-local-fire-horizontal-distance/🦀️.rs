@@ -22,7 +22,7 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeLocalFireHorizonta
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change localised fire: Horizontal distance r", "lokaler Brand: Horizontaler Abstand r ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change horizontal distance from the localised fire", "Horizontalen Abstand zum lokalen Brand ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

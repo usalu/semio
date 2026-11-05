@@ -1,3 +1,4 @@
+use protocol::{ColdMutation, OpText, OpBinary};
 use crate::{schema::diff, schema::diff::StlDiff};
 use crate::schema::snapshot::StlTriangle;
 use crate::StlSnapshot;

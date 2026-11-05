@@ -6,6 +6,30 @@ semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the raster app; one field per label makes every locale combination
     /// compile-checked.
     pub struct RasterPlayLabels {
+        filter: native_en "Filter", native_de "Filter", reuse_en "Filter", reuse_de "Filter";
+        filter_amount: native_en "Filter amount", native_de "Filterstärke", reuse_en "Filter amount", reuse_de "Filterstärke";
+        apply_filter: native_en "Apply Filter", native_de "Filter anwenden", reuse_en "Apply Filter", reuse_de "Filter anwenden";
+        pixel_width: native_en "Pixel width", native_de "Pixelbreite", reuse_en "Pixel width", reuse_de "Pixelbreite";
+        pixel_height: native_en "Pixel height", native_de "Pixelhöhe", reuse_en "Pixel height", reuse_de "Pixelhöhe";
+        crop_x: native_en "Crop X", native_de "Zuschnitt X", reuse_en "Crop X", reuse_de "Zuschnitt X";
+        crop_y: native_en "Crop Y", native_de "Zuschnitt Y", reuse_en "Crop Y", reuse_de "Zuschnitt Y";
+        bilinear: native_en "Bilinear sampling", native_de "Bilineare Abtastung", reuse_en "Bilinear sampling", reuse_de "Bilineare Abtastung";
+        resize_pixels: native_en "Resize Pixels", native_de "Pixelgröße ändern", reuse_en "Resize Pixels", reuse_de "Pixelgröße ändern";
+        crop_pixels: native_en "Crop Pixels", native_de "Pixel zuschneiden", reuse_en "Crop Pixels", reuse_de "Pixel zuschneiden";
+        invert_pixels: native_en "Invert Pixels", native_de "Pixel invertieren", reuse_en "Invert Pixels", reuse_de "Pixel invertieren";
+        grayscale: native_en "Grayscale", native_de "Graustufen", reuse_en "Grayscale", reuse_de "Graustufen";
+        clear_pixels: native_en "Clear Pixels", native_de "Pixel leeren", reuse_en "Clear Pixels", reuse_de "Pixel leeren";
+        flip_horizontal: native_en "Flip Horizontally", native_de "Horizontal spiegeln", reuse_en "Flip Horizontally", reuse_de "Horizontal spiegeln";
+        flip_vertical: native_en "Flip Vertically", native_de "Vertikal spiegeln", reuse_en "Flip Vertically", reuse_de "Vertikal spiegeln";
+        saturation: native_en "Saturation", native_de "Sättigung", reuse_en "Saturation", reuse_de "Sättigung";
+        gamma: native_en "Gamma", native_de "Gamma", reuse_en "Gamma", reuse_de "Gamma";
+        threshold: native_en "Threshold", native_de "Schwellenwert", reuse_en "Threshold", reuse_de "Schwellenwert";
+        posterize: native_en "Posterize", native_de "Tontrennung", reuse_en "Posterize", reuse_de "Tontrennung";
+        blur: native_en "Blur", native_de "Weichzeichnen", reuse_en "Blur", reuse_de "Weichzeichnen";
+        sharpen: native_en "Sharpen", native_de "Schärfen", reuse_en "Sharpen", reuse_de "Schärfen";
+        fill_selection: native_en "Fill Selection", native_de "Auswahl füllen", reuse_en "Fill Selection", reuse_de "Auswahl füllen";
+        rotate_clockwise: native_en "Rotate 90° Clockwise", native_de "90° im Uhrzeigersinn drehen", reuse_en "Rotate 90° Clockwise", reuse_de "90° im Uhrzeigersinn drehen";
+        rotate_counterclockwise: native_en "Rotate 90° Counterclockwise", native_de "90° gegen den Uhrzeigersinn drehen", reuse_en "Rotate 90° Counterclockwise", reuse_de "90° gegen den Uhrzeigersinn drehen";
         brightness: native_en "Brightness", native_de "Helligkeit", reuse_en "Brightness", reuse_de "Helligkeit";
         contrast: native_en "Contrast", native_de "Kontrast", reuse_en "Contrast", reuse_de "Kontrast";
         mask_present: native_en "Layer mask", native_de "Ebenenmaske", reuse_en "Layer mask", reuse_de "Ebenenmaske";

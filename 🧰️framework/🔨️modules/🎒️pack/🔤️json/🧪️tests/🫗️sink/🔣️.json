@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "maximumDepth": 8,
+  "outputChunkBytes": 7,
+  "cases": [
+    {
+      "input": null,
+      "expected": "null"
+    },
+    {
+      "input": true,
+      "expected": "true"
+    },
+    {
+      "input": "雪\n\"\\\u0000",
+      "expected": "\"雪\\n\\\"\\\\\\u0000\""
+    },
+    {
+      "input": [
+        "a",
+        1,
+        false,
+        null
+      ],
+      "expected": "[\"a\",1,false,null]"
+    },
+    {
+      "input": {
+        "a": [
+          "雪",
+          "\n"
+        ],
+        "b": true
+      },
+      "expected": "{\"a\":[\"雪\",\"\\n\"],\"b\":true}"
+    }
+  ]
+}

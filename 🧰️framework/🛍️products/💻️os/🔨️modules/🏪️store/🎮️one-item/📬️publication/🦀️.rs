@@ -435,6 +435,8 @@ pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
     fn outcome_messages(&self) -> &[semio_framework_os_spr::MutationMessage] { &[] }
 
     fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError>;
+    /// ⛽️ The entire latest advance reports actual work, including observed native work and failures, and resets on denial.
+    fn last_turn_work(&self)->u64;
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint;
     fn prepared(&self) -> Option<&ArtifactStoreOneItemPrepared<P, Mutation>>;
     fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, Mutation>>;

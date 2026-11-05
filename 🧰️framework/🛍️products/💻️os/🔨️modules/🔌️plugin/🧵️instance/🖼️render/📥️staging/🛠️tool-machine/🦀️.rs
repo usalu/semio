@@ -78,7 +78,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let index=self.tool_machines.gesture_operations.iter().position(Option::is_none);
         let available=index.is_some()&&!self.tool_machines.gesture_operations.iter().flatten().any(|original|original.operation==operation);
         let prepared=reserve_live::<A::Mutation>(available,birth,handoff).map_err(|error|error.into_fault())?;
-        let view=meta.view_state.as_ref();
+        let view=meta.view_state.as_deref();
         if let Some(view)=view.filter(|view|!view.window_instances.is_empty()){
             let retired=self.tool_machines.gestures.retain_windows(|window|window.is_empty()||view.window_instances.iter().any(|instance|instance.id==window));
             if !retired.is_empty(){self.tool_machines.gesture_ended=true;self.follow_tool_machines(true);}

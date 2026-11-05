@@ -1,10 +1,27 @@
 //! 📬️ Typed operation unit of the typed operation publication: the publication of one mounted typed operation with its store, history, receipt and result page steps. See [`super`].
 
 use super::*;
+use semio_framework_plugin_retained_command::typed_operation::pending_result_page::{PublicationPageIntent,PublicationPagePlan,PublicationRawReason};
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     pub fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        if mounted.result_page_retirement_pending() {
+            let step = cx.with_retained_loan(retained, |same| mounted.advance_acknowledged_result_page(same))?;
+            let progress = match step {
+                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) | semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress) => progress,
+                _ => Default::default(),
+            };
+            mounted.publication_ownership_progress = Some((retained, progress));
+            return Ok(());
+        }
+        if mounted.advance_pending_result_page(cx)?{return Ok(())}
+        if let Some((lane,receipt))=mounted.pending_artifact_publication.as_ref().and_then(|owner|owner.accepted_receipt().map(|receipt|(owner.lane().0,receipt))){
+            if lane==TypedOperationResultLane::WindowConfig{if mounted.pending_window_config_receipt.is_none(){let d=semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<store::os_store::presence::LaneItemReceipt>>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|_|{mounted.pending_window_config_receipt=Some(receipt);semio_framework_value::RetainedWorkOutcome{work:1,result:Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}})?;Ok(())})?;return Ok(())}return self.advance_mounted_window_config_refresh(mounted,retained,cx);}
+            let revision=match mounted.pending_artifact_publication.as_ref(){Some(PendingArtifactStorePublication::Artifact(owner))=>{if owner.expected_generation!=receipt.generation_after{return Err(plugin_sdk_fault("accepted artifact receipt changed its retained generation").into())}Some(owner.expected_revision)},_=>None};
+            mounted.reserve_store_result(lane,receipt,revision,cx)?;return Ok(())
+        }
         if mounted.reject_cancelled_publication()? {
+            mounted.reserve_cancelled_result(cx)?;
             self.stores.handoff_mounted_durable_publication(mounted)?;
             return Ok(());
         }
@@ -45,7 +62,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let grant=store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(retained);
             let (pending_lane, _) = pending.lane();
             if pending.is_closing(){return Ok(());}
-            if mounted.pending_window_config_receipt.is_some() { return self.advance_mounted_window_config_refresh(mounted, retained).map_err(Into::into); }
+            if mounted.pending_window_config_receipt.is_some() { return self.advance_mounted_window_config_refresh(mounted, retained,cx); }
             let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
             if matches!(pending, PendingArtifactStorePublication::Artifact(_))
                 && self.stores.store.returned_snapshot_read_count() > PUBLICATION_RETURNED_ROOT_ALLOWANCE
@@ -63,6 +80,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 PendingArtifactStorePublication::WindowConfig(publication) => self.stores.window_config_store.advance(publication.as_mut(),retained.maximum_copy_bytes, grant,receiving)?,
                 PendingArtifactStorePublication::WindowTransient(publication) => self.stores.window_transient_store.advance(publication.as_mut(), grant,receiving)?,
             }));
+            let work=match &*pending{PendingArtifactStorePublication::Artifact(publication)=>publication.last_turn_work(),PendingArtifactStorePublication::Config(publication)=>publication.last_turn_work(),PendingArtifactStorePublication::Draft(publication)=>publication.last_turn_work(),_=>0};
+            cx.consume_fuel(work);
             let ownership=match &result{Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>*receipt,Err(error)=>error.retained_progress(),_=>Default::default()};
             cx.consume_receiving_retained(retained,ownership)?;
             let advance=result?;
@@ -91,7 +110,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         TypedOperationResultLane::WindowConfig => {
                             mounted.published_window_config = true;
                             mounted.pending_window_config_receipt = Some(receipt);
-                            return self.advance_mounted_window_config_refresh(mounted, retained).map_err(Into::into);
+                            return Ok(());
                         }
                         TypedOperationResultLane::WindowTransient => {
                             let authority = mounted.window_transient_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window transient receipt lost its captured window authority"))?;
@@ -99,8 +118,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         }
                         _ => unreachable!("pending artifact publication has one durable store lane"),
                     }
-                    let token = mounted.next_token();
-                    mounted.queue_page(TypedOperationResultPage::try_serialize_cold(token, pending_lane, &receipt)?).map_err(Into::into)
+                    Ok(())
                 }
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(checkpoint) => {
                     mounted.note_publication_checkpoint(checkpoint);
@@ -121,17 +139,16 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     Ok(())
                 }
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked => Ok(()),
-                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::AwaitingAck(_) => Err(plugin_sdk_fault("artifact-store publication awaits an ACK without its retained host page").into()),
+                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::AwaitingAck(_) => Ok(()),
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Complete => Err(plugin_sdk_fault("artifact-store publication completed before result ACK").into()),
             };
         }
         let token = mounted.next_token();
         let publication_lanes = mounted.publication_lanes;
-        let page = match mounted.publication.as_mut().expect("publication owner was installed") {
+        let intent = match mounted.publication.as_mut().expect("publication owner was installed") {
             ArtifactToolCompletionValue::Emit(Err(fault), _) | ArtifactToolCompletionValue::Download(Err(fault), _) => {
-                let mut framed = [0; TYPED_OPERATION_FAULT_PAGE_BYTES];
-                let len = fault.framed_page_bytes(&mut framed);
-                TypedOperationResultPage::try_new(token, TypedOperationResultLane::Fault, &framed[..len])?
+                let _=fault;
+                PublicationPageIntent::Raw{lane:TypedOperationResultLane::Fault,reason:PublicationRawReason::Fault}
             }
             ArtifactToolCompletionValue::Download(Ok(download), ephemeral) => {
                 if (!ephemeral.presence.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Presence))
@@ -186,11 +203,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         }
                     }
                 } else {
-                    TypedOperationResultPage::try_serialize_cold(
-                        token,
-                        TypedOperationResultLane::Download,
-                        &DownloadResultPayload { filename: download.filename.as_str(), mime_type: download.mime_type.as_str(), encoding: download.encoding.as_deref(), bytes: download.chunks.bytes() },
-                    )?
+                    let _=download;PublicationPageIntent::Download
                 }
             }
             ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral) => {
@@ -373,44 +386,34 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     return Ok(());
                 } else {
                     MediaTransfers::<A>::mint_extension_invocations(mounted.meta.instance_id, emit)?;
-                    if let Some(effect) = emit.effects.pop() {
-                        let effect = self.stores.stamp_load_document_identity(effect)?;
-                        if let Err(effect) = self.tools.typed_effect_outbox.push(effect) {
-                            emit.effects.push(effect);
-                            return Err(plugin_sdk_fault("typed-operation effect receiver is saturated").into());
-                        }
-                        TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::Effect, &("accepted", self.tools.typed_effect_outbox.len()))?
-                    } else if let Some(event) = emit.events.pop() {
-                        if let Err(event) = self.tools.typed_event_outbox.push(event) {
-                            emit.events.push(event);
-                            return Err(plugin_sdk_fault("typed-operation event receiver is saturated").into());
-                        }
-                        TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::Event, &("accepted", self.tools.typed_event_outbox.len()))?
-                    } else {
-                        match () {
-                            () if !emit.tasks.is_empty() => {
-                                let task = emit.tasks.remove(0);
-                                semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(mounted.meta.instance_id, &mounted.meta, task)?;
-                                return Ok(());
-                            }
-                            () if mounted.ui_pending => {
-                                if let Err(_scope) = self.tools.typed_ui_outbox.push(emit.ui_scope.clone()) {
-                                    return Err(plugin_sdk_fault("typed-operation UI receiver is saturated").into());
-                                }
-                                mounted.ui_pending = false;
-                                TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::Ui, &emit.ui_scope)?
-                            }
-                            () => {
-                                if self.tools.typed_completion_outbox.push(TypedOperationCompletionWitness { operation: token.operation, ui_scope: emit.ui_scope.clone() }).is_err() {
-                                    return Err(plugin_sdk_fault("typed-operation completion receiver is saturated").into());
-                                }
-                                TypedOperationResultPage::try_new(token, TypedOperationResultLane::Terminal, b"typed-operation-complete")?
-                            }
-                        }
+                    if !emit.effects.is_empty(){
+                        let d=semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of_val(emit.effects.last().unwrap())+std::mem::size_of::<Option<PublicationPagePlan>>(),depth:1,..Default::default()};
+                        if !cx.retained_work_can_enter(d){return Ok(())}
+                        let effect=emit.effects.pop().unwrap();let effect=self.stores.stamp_load_document_identity(effect)?;
+                        if let Err(effect)=self.tools.typed_effect_outbox.push(effect){emit.effects.push(effect);return Err(plugin_sdk_fault("typed-operation effect receiver is saturated").into())}
+                        mounted.page_publication.plan=Some(PublicationPagePlan{token,intent:PublicationPageIntent::Accepted{lane:TypedOperationResultLane::Effect,count:self.tools.typed_effect_outbox.len()as u64}});
+                        cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(())
+                    }else if !emit.events.is_empty(){
+                        let d=semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of_val(emit.events.last().unwrap())+std::mem::size_of::<Option<PublicationPagePlan>>(),depth:1,..Default::default()};
+                        if !cx.retained_work_can_enter(d){return Ok(())}
+                        let event=emit.events.pop().unwrap();if let Err(event)=self.tools.typed_event_outbox.push(event){emit.events.push(event);return Err(plugin_sdk_fault("typed-operation event receiver is saturated").into())}
+                        mounted.page_publication.plan=Some(PublicationPagePlan{token,intent:PublicationPageIntent::Accepted{lane:TypedOperationResultLane::Event,count:self.tools.typed_event_outbox.len()as u64}});
+                        cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(())
+                    }else if !emit.tasks.is_empty(){
+                        let task=emit.tasks.remove(0);semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(mounted.meta.instance_id,&mounted.meta,task)?;return Ok(())
+                    }else{
+                        let copy=&mut mounted.page_publication.ui_copy;
+                        if !copy.ready(){let d=copy.demands(&emit.ui_scope,retained.maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,d,|g|copy.advance(&emit.ui_scope,g))?;return Ok(())}
+                        let mut d=semio_framework_plugin_retained_command::typed_operation::MountedUiCopy::transfer_demands();d.copy_bytes+=std::mem::size_of::<Option<PublicationPagePlan>>()+std::mem::size_of::<bool>();
+                        if !cx.retained_work_can_enter(d){return Ok(())}
+                        let scope=copy.take();
+                        let intent=if mounted.ui_pending{match self.tools.typed_ui_outbox.push(scope){Ok(())=>{},Err(scope)=>{copy.restore(scope);return Err(plugin_sdk_fault("typed-operation UI receiver is saturated").into())}}mounted.ui_pending=false;PublicationPageIntent::Ui}
+                        else{match self.tools.typed_completion_outbox.push(TypedOperationCompletionWitness{operation:token.operation,ui_scope:scope}){Ok(())=>{},Err(witness)=>{copy.restore(witness.ui_scope);return Err(plugin_sdk_fault("typed-operation completion receiver is saturated").into())}}PublicationPageIntent::Raw{lane:TypedOperationResultLane::Terminal,reason:PublicationRawReason::Complete}};
+                        mounted.page_publication.plan=Some(PublicationPagePlan{token,intent});cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(())
                     }
                 }
             }
         };
-        mounted.queue_page(page).map_err(Into::into)
+        mounted.reserve_result_intent(intent,cx)?;Ok(())
     }
 }

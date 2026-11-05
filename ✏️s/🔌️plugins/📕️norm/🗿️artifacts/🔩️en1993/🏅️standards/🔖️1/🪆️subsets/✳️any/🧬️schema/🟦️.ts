@@ -814,6 +814,89 @@ export interface FrameMemberBasis {
 
 export type HollowFabrication = "Unset" | "HotFinished" | "ColdFormed";
 
+export type BoltGroupMethod = "Elastic" | "InstantaneousCentre";
+
+export type StressRelief = "AsWelded" | "StressRelieved" | "NonWelded";
+
+export interface FatigueStress {
+  id: string;
+  detailId: string;
+  maxCaseId: string;
+  minCaseId: string;
+  fibreZ: number;
+  fibreY: number;
+  relief: StressRelief;
+  concentration: number;
+  thickness: number;
+  cycles: number;
+}
+
+export type BucklingPlane = "MajorAxis" | "MinorAxis";
+
+export type FrameSway = "NonSway" | "Sway";
+
+export type NodeARestraint = "Framed" | "Fixed" | "Pinned";
+
+export type NodeBRestraint = "Framed" | "Fixed" | "Pinned";
+
+export interface BucklingLength {
+  id: string;
+  memberId: string;
+  plane: BucklingPlane;
+  sway: FrameSway;
+  restraintA: NodeARestraint;
+  columnStiffnessA: number;
+  beamStiffnessA: number;
+  restraintB: NodeBRestraint;
+  columnStiffnessB: number;
+  beamStiffnessB: number;
+}
+
+export type FormingProcess = "RollForming" | "OtherForming";
+
+export interface FormingGain {
+  id: string;
+  memberId: string;
+  forming: FormingProcess;
+  ultimateStrength: number;
+  grossArea: number;
+  bends: number;
+  usedYield: number;
+}
+
+export interface MaterialDuctility {
+  id: string;
+  materialId: string;
+  elongation: number;
+  ultimateStrain: number;
+}
+
+export type FastenerKind = "SelfTappingScrew" | "BlindRivet";
+
+export interface FastenedJoint {
+  id: string;
+  memberId: string;
+  kind: FastenerKind;
+  diameter: number;
+  washerDiameter: number;
+  count: number;
+  perRow: number;
+  headThickness: number;
+  baseThickness: number;
+  headStrength: number;
+  baseStrength: number;
+  endDistance: number;
+  edgeDistance: number;
+  pitch: number;
+  gauge: number;
+  sheetWidth: number;
+  shearForce: number;
+  tensionForce: number;
+  shearResistance: number;
+}
+
+export type FatigueConsequence = "Low" | "High";
+
 export const parseEn1993Artifact: NormWireReader<En1993Artifact> = normWireObject<En1993Artifact>({ annex: normWireRequired(normWireLiteral("En", "De")), materials: normWireRequired(normWireArray(normWireRef(() => parseSteelMaterial))), sections: normWireRequired(normWireArray(normWireRef(() => parseSteelSection))), members: normWireRequired(normWireArray(normWireRef(() => parseSteelMember))), loadCases: normWireRequired(normWireArray(normWireRef(() => parseLoadCase))), memberActions: normWireRequired(normWireArray(normWireRef(() => parseMemberAction))), joints: normWireRequired(normWireArray(normWireRef(() => parseSteelJoint))), fatigueDetails: normWireRequired(normWireArray(normWireRef(() => parseFatigueDetail))), fireExposures: normWireRequired(normWireArray(normWireRef(() => parseFireExposure))), coldFormedMembers: normWireRequired(normWireArray(normWireRef(() => parseColdFormedMember))), platedPanels: normWireRequired(normWireArray(normWireRef(() => parsePlatedPanel))), siloShells: normWireRequired(normWireArray(normWireRef(() => parseSiloShell))), tensionComponents: normWireRequired(normWireArray(normWireRef(() => parseTensionComponent))), bridgeFatigue: normWireRequired(normWireArray(normWireRef(() => parseBridgeFatigue))), towerLegs: normWireRequired(normWireArray(normWireRef(() => parseTowerLeg))), piles: normWireRequired(normWireArray(normWireRef(() => parseSteelPile))), craneRunways: normWireRequired(normWireArray(normWireRef(() => parseCraneRunway))), storeys: normWireRequired(normWireArray(normWireRef(() => parseStorey))), restraints: normWireRequired(normWireArray(normWireRef(() => parseRestraint))), builtUpMembers: normWireRequired(normWireArray(normWireRef(() => parseBuiltUpMember))), weldGroups: normWireRequired(normWireArray(normWireRef(() => parseWeldGroup))), parametricSections: normWireRequired(normWireArray(normWireRef(() => parseParametricSection))), hollowJoints: normWireRequired(normWireArray(normWireRef(() => parseHollowJoint))), jointRows: normWireRequired(normWireArray(normWireRef(() => parseJointRow))), frameNodes: normWireRequired(normWireArray(normWireRef(() => parseFrameNode))), frameBars: normWireRequired(normWireArray(normWireRef(() => parseFrameBar))), placements: normWireRequired(normWireArray(normWireRef(() => parsePlacement))), jointPlates: normWireRequired(normWireArray(normWireRef(() => parseJointPlate))), foundationBlocks: normWireRequired(normWireArray(normWireRef(() => parseFoundationBlock))), reliabilityClass: normWireRequired(normWireLiteral("RC1", "RC2", "RC3")), frameActions: normWireRequired(normWireArray(normWireRef(() => parseFrameAction))), frameMemberBases: normWireRequired(normWireArray(normWireRef(() => parseFrameMemberBasis))), fatigueStresses: normWireRequired(normWireArray(normWireRef(() => parseFatigueStress))), bucklingLengths: normWireRequired(normWireArray(normWireRef(() => parseBucklingLength))), formingGains: normWireRequired(normWireArray(normWireRef(() => parseFormingGain))), materialDuctility: normWireRequired(normWireArray(normWireRef(() => parseMaterialDuctility))), fastenedJoints: normWireRequired(normWireArray(normWireRef(() => parseFastenedJoint))) });
 export const parseMaterialKind: NormWireReader<MaterialKind> = normWireLiteral("Carbon", "Stainless");
 export const parseSteelMaterial: NormWireReader<SteelMaterial> = normWireObject<SteelMaterial>({ id: normWireRequired(normWireString), grade: normWireRequired(normWireString), fy: normWireRequired(normWireNumber), fu: normWireRequired(normWireNumber), eModulus: normWireRequired(normWireNumber), gModulus: normWireRequired(normWireNumber), subgrade: normWireRequired(normWireString), kind: normWireRequired(normWireRef(() => parseMaterialKind)), rambergOsgoodN: normWireRequired(normWireNumber) });
@@ -882,87 +965,17 @@ export const parseFrameAction: NormWireReader<FrameAction> = normWireObject<Fram
 export const parseMemberForceBasis: NormWireReader<MemberForceBasis> = normWireLiteral("FrameDerived", "Explicit");
 export const parseFrameMemberBasis: NormWireReader<FrameMemberBasis> = normWireObject<FrameMemberBasis>({ id: normWireRequired(normWireString), memberId: normWireRequired(normWireString), basis: normWireRequired(normWireRef(() => parseMemberForceBasis)) });
 export const parseHollowFabrication: NormWireReader<HollowFabrication> = normWireLiteral("Unset", "HotFinished", "ColdFormed");
-
-export type FatigueConsequence = "Low" | "High";
-export type BoltGroupMethod = "Elastic" | "InstantaneousCentre";
-export type StressRelief = "AsWelded" | "StressRelieved" | "NonWelded";
-export type BucklingPlane = "MajorAxis" | "MinorAxis";
-export type FrameSway = "NonSway" | "Sway";
-export type NodeARestraint = "Framed" | "Fixed" | "Pinned";
-export type NodeBRestraint = "Framed" | "Fixed" | "Pinned";
-export type FormingProcess = "RollForming" | "OtherForming";
-export type FastenerKind = "SelfTappingScrew" | "BlindRivet";
-export interface FatigueStress {
-  id: string;
-  detailId: string;
-  maxCaseId: string;
-  minCaseId: string;
-  fibreZ: number;
-  fibreY: number;
-  relief: StressRelief;
-  concentration: number;
-  thickness: number;
-  cycles: number;
-}
-export interface BucklingLength {
-  id: string;
-  memberId: string;
-  plane: BucklingPlane;
-  sway: FrameSway;
-  restraintA: NodeARestraint;
-  columnStiffnessA: number;
-  beamStiffnessA: number;
-  restraintB: NodeBRestraint;
-  columnStiffnessB: number;
-  beamStiffnessB: number;
-}
-export interface FormingGain {
-  id: string;
-  memberId: string;
-  forming: FormingProcess;
-  ultimateStrength: number;
-  grossArea: number;
-  bends: number;
-  usedYield: number;
-}
-export interface MaterialDuctility {
-  id: string;
-  materialId: string;
-  elongation: number;
-  ultimateStrain: number;
-}
-export interface FastenedJoint {
-  id: string;
-  memberId: string;
-  kind: FastenerKind;
-  diameter: number;
-  washerDiameter: number;
-  count: number;
-  perRow: number;
-  headThickness: number;
-  baseThickness: number;
-  headStrength: number;
-  baseStrength: number;
-  endDistance: number;
-  edgeDistance: number;
-  pitch: number;
-  gauge: number;
-  sheetWidth: number;
-  shearForce: number;
-  tensionForce: number;
-  shearResistance: number;
-}
-export const parseFatigueConsequence: NormWireReader<FatigueConsequence> = normWireLiteral("Low", "High");
 export const parseBoltGroupMethod: NormWireReader<BoltGroupMethod> = normWireLiteral("Elastic", "InstantaneousCentre");
 export const parseStressRelief: NormWireReader<StressRelief> = normWireLiteral("AsWelded", "StressRelieved", "NonWelded");
+export const parseFatigueStress: NormWireReader<FatigueStress> = normWireObject<FatigueStress>({ id: normWireRequired(normWireString), detailId: normWireRequired(normWireString), maxCaseId: normWireRequired(normWireString), minCaseId: normWireRequired(normWireString), fibreZ: normWireRequired(normWireNumber), fibreY: normWireRequired(normWireNumber), relief: normWireRequired(normWireRef(() => parseStressRelief)), concentration: normWireRequired(normWireNumber), thickness: normWireRequired(normWireNumber), cycles: normWireRequired(normWireNumber) });
 export const parseBucklingPlane: NormWireReader<BucklingPlane> = normWireLiteral("MajorAxis", "MinorAxis");
 export const parseFrameSway: NormWireReader<FrameSway> = normWireLiteral("NonSway", "Sway");
 export const parseNodeARestraint: NormWireReader<NodeARestraint> = normWireLiteral("Framed", "Fixed", "Pinned");
 export const parseNodeBRestraint: NormWireReader<NodeBRestraint> = normWireLiteral("Framed", "Fixed", "Pinned");
-export const parseFormingProcess: NormWireReader<FormingProcess> = normWireLiteral("RollForming", "OtherForming");
-export const parseFastenerKind: NormWireReader<FastenerKind> = normWireLiteral("SelfTappingScrew", "BlindRivet");
-export const parseFatigueStress: NormWireReader<FatigueStress> = normWireObject<FatigueStress>({ id: normWireRequired(normWireString), detailId: normWireRequired(normWireString), maxCaseId: normWireRequired(normWireString), minCaseId: normWireRequired(normWireString), fibreZ: normWireRequired(normWireNumber), fibreY: normWireRequired(normWireNumber), relief: normWireRequired(normWireRef(() => parseStressRelief)), concentration: normWireRequired(normWireNumber), thickness: normWireRequired(normWireNumber), cycles: normWireRequired(normWireNumber) });
 export const parseBucklingLength: NormWireReader<BucklingLength> = normWireObject<BucklingLength>({ id: normWireRequired(normWireString), memberId: normWireRequired(normWireString), plane: normWireRequired(normWireRef(() => parseBucklingPlane)), sway: normWireRequired(normWireRef(() => parseFrameSway)), restraintA: normWireRequired(normWireRef(() => parseNodeARestraint)), columnStiffnessA: normWireRequired(normWireNumber), beamStiffnessA: normWireRequired(normWireNumber), restraintB: normWireRequired(normWireRef(() => parseNodeBRestraint)), columnStiffnessB: normWireRequired(normWireNumber), beamStiffnessB: normWireRequired(normWireNumber) });
+export const parseFormingProcess: NormWireReader<FormingProcess> = normWireLiteral("RollForming", "OtherForming");
 export const parseFormingGain: NormWireReader<FormingGain> = normWireObject<FormingGain>({ id: normWireRequired(normWireString), memberId: normWireRequired(normWireString), forming: normWireRequired(normWireRef(() => parseFormingProcess)), ultimateStrength: normWireRequired(normWireNumber), grossArea: normWireRequired(normWireNumber), bends: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), usedYield: normWireRequired(normWireNumber) });
 export const parseMaterialDuctility: NormWireReader<MaterialDuctility> = normWireObject<MaterialDuctility>({ id: normWireRequired(normWireString), materialId: normWireRequired(normWireString), elongation: normWireRequired(normWireNumber), ultimateStrain: normWireRequired(normWireNumber) });
+export const parseFastenerKind: NormWireReader<FastenerKind> = normWireLiteral("SelfTappingScrew", "BlindRivet");
 export const parseFastenedJoint: NormWireReader<FastenedJoint> = normWireObject<FastenedJoint>({ id: normWireRequired(normWireString), memberId: normWireRequired(normWireString), kind: normWireRequired(normWireRef(() => parseFastenerKind)), diameter: normWireRequired(normWireNumber), washerDiameter: normWireRequired(normWireNumber), count: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), perRow: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), headThickness: normWireRequired(normWireNumber), baseThickness: normWireRequired(normWireNumber), headStrength: normWireRequired(normWireNumber), baseStrength: normWireRequired(normWireNumber), endDistance: normWireRequired(normWireNumber), edgeDistance: normWireRequired(normWireNumber), pitch: normWireRequired(normWireNumber), gauge: normWireRequired(normWireNumber), sheetWidth: normWireRequired(normWireNumber), shearForce: normWireRequired(normWireNumber), tensionForce: normWireRequired(normWireNumber), shearResistance: normWireRequired(normWireNumber) });
+export const parseFatigueConsequence: NormWireReader<FatigueConsequence> = normWireLiteral("Low", "High");

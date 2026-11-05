@@ -1,10 +1,4 @@
-/** ✏️ EN 1990 editor — subset-level typed twin. Mirrors the editor manifest's mode/
- * window vocabulary; namespaced re-exports (not a blanket `export *`) since every window twin
- * independently declares its own same-shaped `*ViewModel` interface. */
-
+/** ✏️ EN1990 editor dialect and mode identifiers. */
 export const EN1990_EDITOR_DIALECT = { artifactKind: "s.norm.en1990", standard: "1", subset: "*" } as const;
 
 export const EN1990_EDIT_MODE_ID = "edit" as const;
-
-export * as inputsWindow from "./🎭️modes/✏️edit/🪟️windows/📥️inputs/🟦️";
-export * as resultsWindow from "./🎭️modes/✏️edit/🪟️windows/📊️results/🟦️";

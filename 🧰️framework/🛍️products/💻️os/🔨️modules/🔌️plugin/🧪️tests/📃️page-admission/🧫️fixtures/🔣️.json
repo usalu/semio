@@ -1,0 +1,1220 @@
+{
+  "version": 1,
+  "scope": "Neutral admission law only; quote quantities are illustrative retained preparer demands, not production APIs.",
+  "initialOwnedBytes": 16,
+  "initialSequence": 7,
+  "quote": {
+    "items": 1,
+    "copyBytes": 64,
+    "capacityBytes": 4096,
+    "releaseBytes": 16,
+    "depth": 1
+  },
+  "cases": [
+    {
+      "id": "lane-receipt",
+      "payload": {
+        "kind": "laneReceipt",
+        "encoding": "json",
+        "value": {
+          "generationBefore": 7,
+          "generationAfter": 8
+        }
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "queued",
+          "already-queued"
+        ],
+        "state": {
+          "phase": "queued",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 7,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 16,
+          "frame": "{\"generationBefore\":7,\"generationAfter\":8}",
+          "retainedInput": "{\"kind\":\"laneReceipt\",\"encoding\":\"json\",\"value\":{\"generationBefore\":7,\"generationAfter\":8}}"
+        }
+      }
+    },
+    {
+      "id": "accepted-count",
+      "payload": {
+        "kind": "accepted",
+        "encoding": "json",
+        "value": [
+          "accepted",
+          3
+        ]
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "queued",
+          "already-queued"
+        ],
+        "state": {
+          "phase": "queued",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 7,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 16,
+          "frame": "[\"accepted\",3]",
+          "retainedInput": "{\"kind\":\"accepted\",\"encoding\":\"json\",\"value\":[\"accepted\",3]}"
+        }
+      }
+    },
+    {
+      "id": "ui-full",
+      "payload": {
+        "kind": "ui",
+        "encoding": "json",
+        "value": {
+          "kind": "full"
+        }
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "queued",
+          "already-queued"
+        ],
+        "state": {
+          "phase": "queued",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 7,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 16,
+          "frame": "{\"kind\":\"full\"}",
+          "retainedInput": "{\"kind\":\"ui\",\"encoding\":\"json\",\"value\":{\"kind\":\"full\"}}"
+        }
+      }
+    },
+    {
+      "id": "ui-none",
+      "payload": {
+        "kind": "ui",
+        "encoding": "json",
+        "value": {
+          "kind": "none"
+        }
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "queued",
+          "already-queued"
+        ],
+        "state": {
+          "phase": "queued",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 7,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 16,
+          "frame": "{\"kind\":\"none\"}",
+          "retainedInput": "{\"kind\":\"ui\",\"encoding\":\"json\",\"value\":{\"kind\":\"none\"}}"
+        }
+      }
+    },
+    {
+      "id": "ui-partial",
+      "payload": {
+        "kind": "ui",
+        "encoding": "json",
+        "value": {
+          "kind": "partial",
+          "windowBodies": [
+            "main"
+          ],
+          "panelBodies": [
+            "details"
+          ],
+          "utilities": true,
+          "tools": false,
+          "engagements": false,
+          "measures": false,
+          "labels": true
+        }
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "queued",
+          "already-queued"
+        ],
+        "state": {
+          "phase": "queued",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 7,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 16,
+          "frame": "{\"kind\":\"partial\",\"windowBodies\":[\"main\"],\"panelBodies\":[\"details\"],\"utilities\":true,\"tools\":false,\"engagements\":false,\"measures\":false,\"labels\":true}",
+          "retainedInput": "{\"kind\":\"ui\",\"encoding\":\"json\",\"value\":{\"kind\":\"partial\",\"windowBodies\":[\"main\"],\"panelBodies\":[\"details\"],\"utilities\":true,\"tools\":false,\"engagements\":false,\"measures\":false,\"labels\":true}}"
+        }
+      }
+    },
+    {
+      "id": "download",
+      "payload": {
+        "kind": "download",
+        "encoding": "json",
+        "value": [
+          "Dokument.txt",
+          "text/plain",
+          null,
+          42
+        ]
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "queued",
+          "already-queued"
+        ],
+        "state": {
+          "phase": "queued",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 7,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 16,
+          "frame": "[\"Dokument.txt\",\"text/plain\",null,42]",
+          "retainedInput": "{\"kind\":\"download\",\"encoding\":\"json\",\"value\":[\"Dokument.txt\",\"text/plain\",null,42]}"
+        }
+      }
+    },
+    {
+      "id": "fault",
+      "payload": {
+        "kind": "fault",
+        "encoding": "raw",
+        "value": "{\"code\":\"cancelled\",\"message\":\"Cancelled\"}"
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "queued",
+          "already-queued"
+        ],
+        "state": {
+          "phase": "queued",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 7,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 16,
+          "frame": "{\"code\":\"cancelled\",\"message\":\"Cancelled\"}",
+          "retainedInput": "{\"kind\":\"fault\",\"encoding\":\"raw\",\"value\":\"{\\\"code\\\":\\\"cancelled\\\",\\\"message\\\":\\\"Cancelled\\\"}\"}"
+        }
+      }
+    },
+    {
+      "id": "terminal",
+      "payload": {
+        "kind": "terminal",
+        "encoding": "raw",
+        "value": "typed-operation-complete"
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "queued",
+          "already-queued"
+        ],
+        "state": {
+          "phase": "queued",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 7,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 16,
+          "frame": "typed-operation-complete",
+          "retainedInput": "{\"kind\":\"terminal\",\"encoding\":\"raw\",\"value\":\"typed-operation-complete\"}"
+        }
+      }
+    },
+    {
+      "id": "all-denied-grants-retain-receipt",
+      "payload": {
+        "kind": "laneReceipt",
+        "encoding": "json",
+        "value": {
+          "generationBefore": 7,
+          "generationAfter": 8
+        }
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 0,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 63,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4095,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 15,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 0
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "denied:items",
+          "denied:copyBytes",
+          "denied:capacityBytes",
+          "denied:releaseBytes",
+          "denied:depth",
+          "queued"
+        ],
+        "state": {
+          "phase": "queued",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 7,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 16,
+          "frame": "{\"generationBefore\":7,\"generationAfter\":8}",
+          "retainedInput": "{\"kind\":\"laneReceipt\",\"encoding\":\"json\",\"value\":{\"generationBefore\":7,\"generationAfter\":8}}"
+        }
+      }
+    },
+    {
+      "id": "foreign-source-before-any-birth",
+      "payload": {
+        "kind": "laneReceipt",
+        "encoding": "json",
+        "value": {
+          "generationBefore": 7,
+          "generationAfter": 8
+        }
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "foreign",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "wrong-source"
+        ],
+        "state": {
+          "phase": "pending",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 0,
+          "queuedPages": 0,
+          "nextSequence": 7,
+          "queuedSequence": null,
+          "allocatedBytes": 0,
+          "releasedBytes": 0,
+          "frame": null,
+          "retainedInput": "{\"kind\":\"laneReceipt\",\"encoding\":\"json\",\"value\":{\"generationBefore\":7,\"generationAfter\":8}}"
+        }
+      }
+    },
+    {
+      "id": "ack-requires-presentation-and-is-once",
+      "payload": {
+        "kind": "laneReceipt",
+        "encoding": "json",
+        "value": {
+          "generationBefore": 7,
+          "generationAfter": 8
+        }
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "ack",
+          "source": "original"
+        },
+        {
+          "type": "present",
+          "source": "original"
+        },
+        {
+          "type": "ack",
+          "source": "original"
+        },
+        {
+          "type": "ack",
+          "source": "original"
+        },
+        {
+          "type": "retire",
+          "source": "original"
+        }
+      ],
+      "expected": {
+        "results": [
+          "queued",
+          "ack-refused",
+          "presented",
+          "acknowledged",
+          "ack-refused",
+          "retired"
+        ],
+        "state": {
+          "phase": "retired",
+          "cancelled": false,
+          "ownerRetained": false,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 8,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 4112,
+          "frame": "{\"generationBefore\":7,\"generationAfter\":8}",
+          "retainedInput": null
+        }
+      }
+    },
+    {
+      "id": "cancel-retains-emit-until-page-and-owner-retire",
+      "payload": {
+        "kind": "laneReceipt",
+        "encoding": "json",
+        "value": {
+          "generationBefore": 7,
+          "generationAfter": 8
+        }
+      },
+      "cancelPayload": {
+        "kind": "terminal",
+        "encoding": "raw",
+        "value": "cancelled"
+      },
+      "events": [
+        {
+          "type": "cancel",
+          "source": "original"
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 0,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "present",
+          "source": "original"
+        },
+        {
+          "type": "ack",
+          "source": "original"
+        },
+        {
+          "type": "retire",
+          "source": "original"
+        }
+      ],
+      "expected": {
+        "results": [
+          "cancelled",
+          "denied:capacityBytes",
+          "queued",
+          "already-queued",
+          "presented",
+          "acknowledged",
+          "retired"
+        ],
+        "state": {
+          "phase": "retired",
+          "cancelled": true,
+          "ownerRetained": false,
+          "outboxAccepts": 0,
+          "queuedPages": 1,
+          "nextSequence": 8,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 4112,
+          "frame": "cancelled",
+          "retainedInput": null
+        }
+      }
+    },
+    {
+      "id": "ui-partial-empty",
+      "payload": {
+        "kind": "ui",
+        "encoding": "json",
+        "value": {
+          "kind": "partial",
+          "utilities": false,
+          "tools": false,
+          "engagements": false,
+          "measures": false,
+          "labels": false
+        }
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "queued",
+          "already-queued"
+        ],
+        "state": {
+          "phase": "queued",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 7,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 16,
+          "frame": "{\"kind\":\"partial\",\"utilities\":false,\"tools\":false,\"engagements\":false,\"measures\":false,\"labels\":false}",
+          "retainedInput": "{\"kind\":\"ui\",\"encoding\":\"json\",\"value\":{\"kind\":\"partial\",\"utilities\":false,\"tools\":false,\"engagements\":false,\"measures\":false,\"labels\":false}}"
+        }
+      }
+    },
+    {
+      "id": "download-escaped-and-encoded",
+      "payload": {
+        "kind": "download",
+        "encoding": "json",
+        "value": [
+          "Notiz \"雪\".txt",
+          "text/plain",
+          "base64",
+          9
+        ]
+      },
+      "events": [
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        },
+        {
+          "type": "admit",
+          "source": "original",
+          "grant": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 16,
+            "depth": 1
+          }
+        }
+      ],
+      "expected": {
+        "results": [
+          "queued",
+          "already-queued"
+        ],
+        "state": {
+          "phase": "queued",
+          "cancelled": false,
+          "ownerRetained": true,
+          "outboxAccepts": 1,
+          "queuedPages": 1,
+          "nextSequence": 7,
+          "queuedSequence": 7,
+          "allocatedBytes": 4096,
+          "releasedBytes": 16,
+          "frame": "[\"Notiz \\\"雪\\\".txt\",\"text/plain\",\"base64\",9]",
+          "retainedInput": "{\"kind\":\"download\",\"encoding\":\"json\",\"value\":[\"Notiz \\\"雪\\\".txt\",\"text/plain\",\"base64\",9]}"
+        }
+      }
+    }
+  ],
+  "acceptedReceipts": [
+    {
+      "lane": "artifact",
+      "receipt": {
+        "generationBefore": 11,
+        "generationAfter": 12
+      },
+      "phases": [
+        {
+          "phase": "preparing",
+          "expected": null
+        },
+        {
+          "phase": "awaitingAck",
+          "expected": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          }
+        },
+        {
+          "phase": "closing",
+          "expected": null
+        },
+        {
+          "phase": "complete",
+          "expected": null
+        }
+      ],
+      "deniedCapture": {
+        "expectedPhase": "awaitingAck",
+        "expectedReceipt": {
+          "generationBefore": 11,
+          "generationAfter": 12
+        }
+      }
+    },
+    {
+      "lane": "config",
+      "receipt": {
+        "generationBefore": 11,
+        "generationAfter": 12
+      },
+      "phases": [
+        {
+          "phase": "preparing",
+          "expected": null
+        },
+        {
+          "phase": "awaitingAck",
+          "expected": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          }
+        },
+        {
+          "phase": "closing",
+          "expected": null
+        },
+        {
+          "phase": "complete",
+          "expected": null
+        }
+      ],
+      "deniedCapture": {
+        "expectedPhase": "awaitingAck",
+        "expectedReceipt": {
+          "generationBefore": 11,
+          "generationAfter": 12
+        }
+      }
+    },
+    {
+      "lane": "draft",
+      "receipt": {
+        "generationBefore": 11,
+        "generationAfter": 12
+      },
+      "phases": [
+        {
+          "phase": "preparing",
+          "expected": null
+        },
+        {
+          "phase": "awaitingAck",
+          "expected": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          }
+        },
+        {
+          "phase": "closing",
+          "expected": null
+        },
+        {
+          "phase": "complete",
+          "expected": null
+        }
+      ],
+      "deniedCapture": {
+        "expectedPhase": "awaitingAck",
+        "expectedReceipt": {
+          "generationBefore": 11,
+          "generationAfter": 12
+        }
+      }
+    },
+    {
+      "lane": "presence",
+      "receipt": {
+        "generationBefore": 11,
+        "generationAfter": 12
+      },
+      "phases": [
+        {
+          "phase": "preparing",
+          "expected": null
+        },
+        {
+          "phase": "awaitingAck",
+          "expected": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          }
+        },
+        {
+          "phase": "closing",
+          "expected": null
+        },
+        {
+          "phase": "complete",
+          "expected": null
+        }
+      ],
+      "deniedCapture": {
+        "expectedPhase": "awaitingAck",
+        "expectedReceipt": {
+          "generationBefore": 11,
+          "generationAfter": 12
+        }
+      }
+    },
+    {
+      "lane": "transient",
+      "receipt": {
+        "generationBefore": 11,
+        "generationAfter": 12
+      },
+      "phases": [
+        {
+          "phase": "preparing",
+          "expected": null
+        },
+        {
+          "phase": "awaitingAck",
+          "expected": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          }
+        },
+        {
+          "phase": "closing",
+          "expected": null
+        },
+        {
+          "phase": "complete",
+          "expected": null
+        }
+      ],
+      "deniedCapture": {
+        "expectedPhase": "awaitingAck",
+        "expectedReceipt": {
+          "generationBefore": 11,
+          "generationAfter": 12
+        }
+      }
+    },
+    {
+      "lane": "windowConfig",
+      "receipt": {
+        "generationBefore": 11,
+        "generationAfter": 12
+      },
+      "phases": [
+        {
+          "phase": "preparing",
+          "expected": null
+        },
+        {
+          "phase": "awaitingAck",
+          "expected": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          }
+        },
+        {
+          "phase": "closing",
+          "expected": null
+        },
+        {
+          "phase": "complete",
+          "expected": null
+        }
+      ],
+      "deniedCapture": {
+        "expectedPhase": "awaitingAck",
+        "expectedReceipt": {
+          "generationBefore": 11,
+          "generationAfter": 12
+        }
+      }
+    },
+    {
+      "lane": "windowTransient",
+      "receipt": {
+        "generationBefore": 11,
+        "generationAfter": 12
+      },
+      "phases": [
+        {
+          "phase": "preparing",
+          "expected": null
+        },
+        {
+          "phase": "awaitingAck",
+          "expected": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          }
+        },
+        {
+          "phase": "closing",
+          "expected": null
+        },
+        {
+          "phase": "complete",
+          "expected": null
+        }
+      ],
+      "deniedCapture": {
+        "expectedPhase": "awaitingAck",
+        "expectedReceipt": {
+          "generationBefore": 11,
+          "generationAfter": 12
+        }
+      }
+    }
+  ],
+  "frontierRecovery": [
+    {
+      "id": "normal",
+      "initial": {
+        "generation": 0,
+        "revision": "g0"
+      },
+      "committed": {
+        "generation": 1,
+        "revision": "g1"
+      },
+      "later": {
+        "generation": 2,
+        "revision": "g2"
+      },
+      "outerPostFailure": false,
+      "expected": {
+        "receipt": {
+          "generationBefore": 0,
+          "generationAfter": 1
+        },
+        "pageGeneration": 1,
+        "pageRevision": "g1",
+        "commits": 1,
+        "liveGeneration": 2
+      }
+    },
+    {
+      "id": "outer-post-failure",
+      "initial": {
+        "generation": 0,
+        "revision": "g0"
+      },
+      "committed": {
+        "generation": 1,
+        "revision": "g1"
+      },
+      "later": {
+        "generation": 2,
+        "revision": "g2"
+      },
+      "outerPostFailure": true,
+      "expected": {
+        "receipt": {
+          "generationBefore": 0,
+          "generationAfter": 1
+        },
+        "pageGeneration": 1,
+        "pageRevision": "g1",
+        "commits": 1,
+        "liveGeneration": 2
+      }
+    }
+  ],
+  "ownedFollow": [
+    {
+      "cancel": "none",
+      "expected": {
+        "acceptedPages": 1,
+        "followCalls": 1,
+        "derivedActions": 1,
+        "receiptPauses": 1,
+        "receipt": "original"
+      }
+    },
+    {
+      "cancel": "context",
+      "expected": {
+        "acceptedPages": 1,
+        "followCalls": 0,
+        "derivedActions": 0,
+        "receiptPauses": 1,
+        "receipt": "original"
+      }
+    },
+    {
+      "cancel": "token",
+      "expected": {
+        "acceptedPages": 1,
+        "followCalls": 0,
+        "derivedActions": 0,
+        "receiptPauses": 1,
+        "receipt": "original"
+      }
+    },
+    {
+      "cancel": "document",
+      "expected": {
+        "acceptedPages": 1,
+        "followCalls": 0,
+        "derivedActions": 0,
+        "receiptPauses": 1,
+        "receipt": "original"
+      }
+    },
+    {
+      "cancel": "instance",
+      "expected": {
+        "acceptedPages": 1,
+        "followCalls": 0,
+        "derivedActions": 0,
+        "receiptPauses": 1,
+        "receipt": "original"
+      }
+    }
+  ]
+}

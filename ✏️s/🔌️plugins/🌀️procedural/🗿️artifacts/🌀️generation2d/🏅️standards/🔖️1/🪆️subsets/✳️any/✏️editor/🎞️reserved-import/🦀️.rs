@@ -1,4 +1,4 @@
-//! 🎞️ Reserved import job of the generation2d editor: the media import job with its `InteractiveJob` implementation. See [`super`].
+//! 🎞️ Generation2d import work borrows the same reserved request until its funded terminal close.
 
 use super::*;
 
@@ -14,51 +14,40 @@ const GENERATION2D_IMPORT_PORT: &str = "params:in";
 /// decode the `params:in` object into `replace-widget` rows, then publish them through the
 /// completion authority (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub(super) struct Generation2dImportJob {
-    pub(super) port: Option<String>,
-    media_json: Option<String>,
-    media_intrinsic: Option<semio_framework_value::DslValue>,
     media_position: usize,
-    pub(super) snapshot: Option<std::sync::Arc<Generation2dSnapshot>>,
     pub(super) mutations: Option<Vec<Generation2dMutation>>,
     decoded: bool,
     completed: bool,
     pub(super) closing: bool,
-    pub(super) completion: Option<ArtifactToolCompletion<EditorApp<Generation2dPlayApp>>>,
     pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Generation2dPlayApp>>>,
     pub(super) publication: semio_framework_job_publication::RetainedJobPublication,
     publishing: Option<semio_framework_job_publication::JobPublicationKind>,
     pub(super) source: Vec<u8>,
     delivered: bool,
     active: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    last_close_work: u64,
 }
 
-impl Generation2dImportJob {
-    pub(super) fn new(request: ArtifactReservedToolJobRequest<EditorApp<Generation2dPlayApp>>, port: String, media: semio_framework_plugin::Media) -> Self {
-        let (media_json, media_intrinsic) = match media.payload {
-            semio_framework_plugin::MediaPayload::Structured { json, .. } => (Some(json), None),
-            semio_framework_plugin::MediaPayload::Binary { .. } => (None, None),
-            semio_framework_plugin::MediaPayload::Intrinsic { value, .. } => (None, Some(value)),
-        };
+impl Default for Generation2dImportJob {
+    fn default() -> Self {
         Self {
-            port: Some(port),
-            media_json,
-            media_intrinsic,
             media_position: 0,
-            snapshot: Some(request.snapshot),
             mutations: Some(Vec::new()),
             decoded: false,
             completed: false,
             closing: false,
-            completion: Some(request.completion),
             pending_completion_rejection: None,
             publication: semio_framework_job_publication::RetainedJobPublication::new(),
             publishing: None,
             source: Vec::new(),
             delivered: false,
             active: None,
+            last_close_work: 0,
         }
     }
+}
 
+impl Generation2dImportJob {
     fn numeric_row(snapshot: &Generation2dSnapshot, key: &str, number: f64) -> Option<Generation2dMutation> {
         let semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. } = snapshot.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget) == key)? else { return None };
         Some(semio_s_artifact_procedural_2d_mut_widgets::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step }))
@@ -75,12 +64,13 @@ impl Generation2dImportJob {
         self.publishing = Some(semio_framework_job_publication::JobPublicationKind::Checkpoint { applied_progress });
     }
 
-    fn decode(&mut self) -> Option<&'static str> {
-        if self.port.as_deref() != Some(GENERATION2D_IMPORT_PORT) {
+    fn decode(&mut self, request: &ArtifactReservedToolJobRequest<EditorApp<Generation2dPlayApp>>) -> Option<&'static str> {
+        let Some(ArtifactReservedToolInput::Media { port, media }) = request.input.as_ref() else { return Some("generation2d import lost its original media owner") };
+        if port != GENERATION2D_IMPORT_PORT {
             return Some("generation2d import only implements params:in");
         }
-        let Some(snapshot) = self.snapshot.as_ref() else { return Some("generation2d import lost its snapshot authority") };
-        if let Some(source) = self.media_intrinsic.as_ref() {
+        let snapshot = &request.snapshot;
+        if let semio_framework_plugin::MediaPayload::Intrinsic { value: source, .. } = &media.payload {
             let Some(object) = source.as_object() else { return Some("generation2d params:in intrinsic payload must be an object") };
             if let Some((key, value)) = object.get(self.media_position) {
                 if let Some(mutation) = value.as_f64().and_then(|number| Self::numeric_row(snapshot, key, number)) {
@@ -93,7 +83,7 @@ impl Generation2dImportJob {
             }
             return None;
         }
-        let Some(media_json) = self.media_json.as_ref() else {
+        let semio_framework_plugin::MediaPayload::Structured { json: media_json, .. } = &media.payload else {
             return Some("generation2d params:in requires a structured payload");
         };
         let Ok(parsed) = semio_framework_pack_json::parse(media_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
@@ -130,26 +120,18 @@ impl Generation2dImportJob {
         if self.mutations.is_some() {
             return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.mutations);
         }
-        if self.media_intrinsic.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.media_intrinsic);
+        if self.source.capacity() != 0 {
+            return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Vec<u8>>(), release_bytes: self.source.capacity(), depth: 1, ..Default::default() });
         }
-        if self.media_json.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.media_json);
-        }
-        if self.port.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.port);
-        }
-        if self.snapshot.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.snapshot);
-        }
-        if self.completion.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion);
+        if self.media_position != 0 {
+            return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<usize>(), depth: 1, ..Default::default() });
         }
         Ok(Default::default())
     }
 
     fn close_turn(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::ValueError> {
         use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress}, ValueError, ValueRefusalKind};
+        self.last_close_work = 0;
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
         if demand == Default::default() {
             return Ok(Default::default());
@@ -162,41 +144,43 @@ impl Generation2dImportJob {
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if !self.publication.terminal_is_empty() {
-            return self.publication.close_step(child).result.map(|step| step.progress());
+            let turn = self.publication.close_step(child);
+            self.last_close_work = turn.work;
+            return turn.result.map(|step| step.progress());
         }
         if self.delivered {
             self.delivered = false;
+            self.last_close_work = 1;
             return Ok(RetainedCloneProgress { copied_items: 1, ..Default::default() });
         }
         if self.active.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| step.progress());
+            let turn = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant);
+            self.last_close_work = turn.work;
+            return turn.result.map(|step| step.progress());
         }
         if self.pending_completion_rejection.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_completion_rejection, &mut self.active, grant).result.map(|step| step.progress());
+            let turn = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_completion_rejection, &mut self.active, grant);
+            self.last_close_work = turn.work;
+            return turn.result.map(|step| step.progress());
         }
         if self.mutations.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, grant).result.map(|step| step.progress());
+            let turn = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, grant);
+            self.last_close_work = turn.work;
+            return turn.result.map(|step| step.progress());
         }
-        if self.media_intrinsic.is_some() {
-            self.media_position = 0;
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media_intrinsic, &mut self.active, grant).result.map(|step| step.progress());
+        self.last_close_work = 1;
+        if self.source.capacity() != 0 {
+            drop(std::mem::take(&mut self.source));
+            return Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() });
         }
-        if self.media_json.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media_json, &mut self.active, grant).result.map(|step| step.progress());
-        }
-        if self.port.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.port, &mut self.active, grant).result.map(|step| step.progress());
-        }
-        if self.snapshot.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant).result.map(|step| step.progress());
-        }
-        store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion, &mut self.active, grant).result.map(|step| step.progress())
+        self.media_position = 0;
+        Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })
     }
 }
 
 impl Generation2dImportJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step_value<'a>(&'a mut self, request: &ArtifactReservedToolJobRequest<EditorApp<Generation2dPlayApp>>, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.delivered {
             let turn = self.publication.close_step(cx.retained_grant());
             cx.consume_fuel(turn.work);
@@ -233,7 +217,7 @@ impl Generation2dImportJob {
         if !self.decoded {
             cx.set_stage("generation2d-import-decode");
             cx.consume_fuel(1);
-            if let Some(detail) = self.decode() {
+            if let Some(detail) = self.decode(request) {
                 self.stage_fault(detail);
                 return Ok(None);
             }
@@ -241,10 +225,7 @@ impl Generation2dImportJob {
             return Ok(None);
         }
         cx.set_stage("generation2d-import-publish");
-        let Some(completion) = self.completion.as_ref() else {
-            self.stage_fault("generation2d import lost its completion authority");
-            return Ok(None);
-        };
+        let completion = &request.completion;
         if !completion.has_mounted_consumer() {
             self.stage_fault("generation2d import completion consumer is absent");
             return Ok(None);
@@ -261,8 +242,8 @@ impl Generation2dImportJob {
     }
 }
 
-impl InteractiveJob for Generation2dImportJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
+impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Generation2dPlayApp>> for Generation2dImportJob {
+    fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Generation2dPlayApp>>,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -277,20 +258,8 @@ impl InteractiveJob for Generation2dImportJob {
         self.closing = true;
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_demands(0)?.copy_bytes)
-    }
-
-    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_demands(body)?.capacity_bytes)
-    }
-
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_demands(0)?.release_bytes)
-    }
-
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_demands(0)?.depth)
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Generation2dImportJob::close_demands(self,body)
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
@@ -298,25 +267,20 @@ impl InteractiveJob for Generation2dImportJob {
             use semio_framework_job::InteractiveJobCloseStep;
             self.closing = true;
             let result = self.close_turn(grant).map(|progress| if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } });
-            semio_framework_value::RetainedWorkOutcome { result, work: 1 }
+            semio_framework_value::RetainedWorkOutcome { result, work: self.last_close_work }
         })
     }
 
     fn terminal_is_empty(&self) -> bool {
         self.closing
-            && self.port.is_none()
-            && self.media_json.is_none()
-            && self.media_intrinsic.is_none()
             && self.media_position == 0
-            && self.snapshot.is_none()
             && self.mutations.is_none()
-            && self.completion.is_none()
             && self.pending_completion_rejection.is_none()
             && self.publication.terminal_is_empty()
             && !self.delivered
             && self.active.is_none()
+            && self.source.capacity() == 0
     }
 }
 
-impl ArtifactReservedJob for Generation2dImportJob {}
 //#endregion 🎞️ReservedImport

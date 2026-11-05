@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️change-roof-ct",
   "semanticKind": "change-roof-ct",
-  "displayName": "Change Roof C T",
+  "displayName": "Change thermal coefficient of the roof",
   "emoji": "🏠",
   "aggregateVariant": "ChangeRoofCT",
   "payloadSchema": "🧬️schema/🔣️.json",

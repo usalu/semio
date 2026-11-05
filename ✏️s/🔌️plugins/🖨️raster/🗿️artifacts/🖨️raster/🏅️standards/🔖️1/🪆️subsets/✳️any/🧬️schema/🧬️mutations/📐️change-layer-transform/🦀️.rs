@@ -10,7 +10,10 @@ use semio_s_artifact_raster_raster_model::RasterTransform;
 #[value(rename_all="camelCase")]
 pub struct ChangeLayerTransform {pub layer_id:String,pub expected:RasterTransform,pub transform:RasterTransform}
 pub fn validate(payload:&ChangeLayerTransform,base:&RasterSnapshot)->Result<(),protocol::OutcomeCode>{
-    let Some(layer @ (RasterLayerNode::Pixel {..}|RasterLayerNode::Group {..}))=find_layer(&base.layers,&payload.layer_id) else {return Err(protocol::OutcomeCode::TargetMissing);};
+    let layer=find_layer(&base.layers,&payload.layer_id).ok_or(protocol::OutcomeCode::TargetMissing)?;validate_target(payload,layer)
+}
+pub fn validate_target(payload:&ChangeLayerTransform,layer:&RasterLayerNode)->Result<(),protocol::OutcomeCode>{
+    let (RasterLayerNode::Pixel {..}|RasterLayerNode::Group {..})=layer else{return Err(protocol::OutcomeCode::TargetMissing)};
     if layer_transform(layer)!=&payload.expected {return Err(protocol::OutcomeCode::TargetMismatch);}
     for value in [&payload.expected,&payload.transform] {semio_framework_pixels::compositing::inverse(value.as_affine()).map_err(|_|protocol::OutcomeCode::Invariant)?;}
     Ok(())

@@ -123,7 +123,7 @@ export type PluginWasmHandle = {
   /** 🎛️ Dispatches a scoped command (os/plugin/app/mode) — optional since not every program declares commands.
    * `dispatch` as on {@link handleAction}. */
   readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewModel, dispatch?: PluginDispatchHintV1) => Promise<InvocationResponse>;
-  readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
+  readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest, control?: Readonly<{signal:AbortSignal}>) => Promise<PluginUiRefreshResponse>;
   /** 🎟️ Only an exact internally certified ordinary response can lend its acknowledged original source. */
   readonly acquireOwnedUiSurface:(instanceId:number,target:PluginUiRefreshSectionResponse)=>OwnedUiSurfaceLease|undefined;
   readonly contextMenu: (instanceId: number, request: PluginContextMenuRequest, viewState: ViewModel) => Promise<readonly ContextMenuItemSpec[]>;

@@ -41,7 +41,7 @@ async fn open_live(config: serde_json::Value, identity:&mut semio_framework_os_v
         capabilities: Vec::new(),
         quotas: QuotaSchema::default(),
     };
-    let captured_turn = runtime.execute_turn(&mut instance, &[open], budget(), &mut *identity).await.expect("open produces capture");
+    let captured_turn = runtime.execute_turn(&mut instance, &mut [open], budget(), &mut *identity).await.expect("open produces capture");
     assert!(captured_turn.ui_patches.is_empty());
     assert_eq!(captured_turn.ui_patch_receipt, None);
     let captured = captured_turn.lifecycle_receipt.expect("component captures lifecycle");
@@ -56,7 +56,7 @@ async fn open_live(config: serde_json::Value, identity:&mut semio_framework_os_v
         _ => panic!("open must return captured lifecycle receipt"),
     };
     let ack = Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: captured });
-    let ack_turn = runtime.execute_turn(&mut instance, &[ack], budget(), &mut *identity).await.expect("exact capture acknowledgement");
+    let ack_turn = runtime.execute_turn(&mut instance, &mut [ack], budget(), &mut *identity).await.expect("exact capture acknowledgement");
     assert!(ack_turn.ui_patches.is_empty());
     assert_eq!(ack_turn.lifecycle_receipt, None);
     assert_eq!(ack_turn.ui_patch_receipt, None);
@@ -93,7 +93,7 @@ async fn genuine_component_returned_and_imported_patches_keep_channel_order_and_
 
     for (config, root, session) in [(serde_json::json!({ "profile": "ui" }), 201, SESSION), (serde_json::json!({ "profile": "ui", "uiImportSink": true }), 101, SESSION + 1)] {
         let (runtime, mut instance, lifetime) = open_live(config, &mut identity).await;
-        let turn = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect("genuine component patch");
+        let turn = runtime.execute_turn(&mut instance, &mut [Event::Wake], budget(), &mut identity).await.expect("genuine component patch");
         assert_single_claim_transport(turn, lifetime, root, 1, session).await;
     }
     semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
@@ -107,7 +107,7 @@ async fn imported_then_returned_channels_refuse_atomically_without_a_transport_t
 
     let (runtime, mut instance, _) = open_live(serde_json::json!({ "profile": "ui", "uiImportSink": true, "uiReturnWithImport": true }), &mut identity).await;
     for _ in 0..2 {
-        let error = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect_err("one turn never mixes the imported and returned channels");
+        let error = runtime.execute_turn(&mut instance, &mut [Event::Wake], budget(), &mut identity).await.expect_err("one turn never mixes the imported and returned channels");
         assert!(error.to_string().contains("mixes the imported and returned channels"), "{error}");
     }
     semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
@@ -120,9 +120,9 @@ async fn malformed_import_is_drained_before_the_next_exact_patch_owner_is_publis
     let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
 
     let (runtime, mut instance, lifetime) = open_live(serde_json::json!({ "profile": "ui", "uiImportSink": true, "uiMalformedFirst": true }), &mut identity).await;
-    let error = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect_err("non-canonical imported payload");
+    let error = runtime.execute_turn(&mut instance, &mut [Event::Wake], budget(), &mut identity).await.expect_err("non-canonical imported payload");
     assert!(error.to_string().contains("ui patch upsert node"));
-    let recovered = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect("next imported patch is isolated from malformed sink");
+    let recovered = runtime.execute_turn(&mut instance, &mut [Event::Wake], budget(), &mut identity).await.expect("next imported patch is isolated from malformed sink");
     assert_single_claim_transport(recovered, lifetime, 302, 2, SESSION + 2).await;
     semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
 }

@@ -1,11 +1,14 @@
 //! 🎯️ Completed selection coverage shared by paint hosts and authoritative commands.
 use semio_framework_plugin::{Fault,FaultCode,FaultOrigin};
+pub use semio_s_artifact_raster_raster_model::selection::coverage;
+pub use semio_s_artifact_raster_raster_model::{RasterSelectionSpans,RasterSelectionSpansBuilder,RasterSpanPage,RASTER_SELECTION_PAGE_ROWS,RASTER_SELECTION_PAGE_BYTES};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, schema::ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all="camelCase")]
 #[dsl(keyword="pixel-selection")]
 #[artifact_schema(id="s.raster.raster.pixelselection")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct RasterPixelSelection {
     #[state(config)]
     pub layer_id:String,
@@ -16,14 +19,17 @@ pub struct RasterPixelSelection {
     #[state(config)]
     pub height:u32,
     #[state(config)]
-    pub spans:Vec<semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan>,
+    pub spans:RasterSelectionSpans,
 }
 
 impl RasterPixelSelection {
     pub fn validate(&self)->Result<usize,Fault>{
-        if self.layer_id.is_empty()||self.layer_id.chars().count()>256||!matches!(self.target.as_str(),"pixels"|"mask"){return Err(fault("Invalid selection target"));}
-        let count=semio_framework_pixels::editing::validate_extent(self.width,self.height).map_err(|_|fault("Invalid selection extent"))?;
-        selection_spans(&self.spans,count)?;
+        self.validate_fields().map_err(fault)
+    }
+    pub fn validate_fields(&self)->Result<usize,&'static str>{
+        if self.layer_id.is_empty()||self.layer_id.chars().take(257).count()>256||!matches!(self.target.as_str(),"pixels"|"mask"){return Err("Invalid selection target");}
+        let count=semio_framework_pixels::editing::validate_extent(self.width,self.height).map_err(|_|"Invalid selection extent")?;
+        if self.spans.maximum_end()>count as u64{return Err("Selection exceeds image");}
         Ok(count)
     }
     pub fn validate_current(&self,document:&semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot,expected_image_key:Option<&str>)->Result<(),Fault>{
@@ -46,14 +52,14 @@ impl RasterPixelSelection {
     }
     pub fn spans(&self)->Result<Vec<(usize,usize,u8)>,Fault>{
         let count=semio_framework_pixels::editing::validate_extent(self.width,self.height).map_err(|_|fault("Invalid selection extent"))?;
-        selection_spans(&self.spans,count)
+        selection_spans(self.spans.iter(),count)
     }
 }
 
 fn fault(message:impl Into<String>)->Fault{Fault::new(FaultOrigin::App,FaultCode::new("raster.pixel-selection"),message.into())}
 
-pub fn selection_spans(spans:&[semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan],count:usize)->Result<Vec<(usize,usize,u8)>,Fault> {
-    let mut result=Vec::with_capacity(spans.len());
+pub fn selection_spans<'a>(spans:impl Iterator<Item=&'a semio_s_artifact_raster_raster_model::RasterSelectionSpan>,count:usize)->Result<Vec<(usize,usize,u8)>,Fault> {
+    let mut result=Vec::new();
     let mut previous=0;
     for span in spans {
         let start=span.start as usize;

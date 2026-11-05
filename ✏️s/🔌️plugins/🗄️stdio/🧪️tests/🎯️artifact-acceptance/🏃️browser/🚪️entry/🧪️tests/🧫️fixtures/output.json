@@ -1,0 +1,49 @@
+{
+  "cases": [
+    {
+      "tag": "text-authored-en",
+      "output": "generated",
+      "accepted": true
+    },
+    {
+      "tag": "../escape",
+      "output": "generated",
+      "accepted": false
+    },
+    {
+      "tag": "CON",
+      "output": "generated",
+      "accepted": false
+    },
+    {
+      "tag": "COM1.txt",
+      "output": "generated",
+      "accepted": false
+    },
+    {
+      "tag": "text:de",
+      "output": "generated",
+      "accepted": false
+    },
+    {
+      "tag": "text/de",
+      "output": "generated",
+      "accepted": false
+    },
+    {
+      "tag": "text.",
+      "output": "generated",
+      "accepted": false
+    },
+    {
+      "tag": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "output": "generated",
+      "accepted": false
+    },
+    {
+      "tag": "text-en",
+      "output": "outside",
+      "accepted": false
+    }
+  ]
+}

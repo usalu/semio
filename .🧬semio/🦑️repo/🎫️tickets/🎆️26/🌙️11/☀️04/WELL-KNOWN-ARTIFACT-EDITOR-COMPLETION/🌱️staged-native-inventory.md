@@ -1,0 +1,9 @@
+# Staged Native Construction Inventory
+
+Read-only current source review; no build or execution. VcsArtifactApp declares26fields. initialize_component phases0–25 reference each exactly once: app,mounted_policy,original_controller_close,constructor,stores,roster,ingress,original_typing,original_emission,original_typed_command,original_typed_tag,original_typed_tag_close,interaction,history,host_events,txn,child_composition,pending,tools,media,ingest,maintenance,close,tool_runs,time_travel,tool_machines. No missing, duplicate or extra field target was found.
+
+Original required sources are consumed by app0; lanes/live4; peer_presence/peer_scope5; dispatch_report17; tools18; field_decoders/completed_records20; close22. Services policy is Copy metadata. At26the final same allocation assumes initialization, original emptied source wrapper is removed, and cursor advances. There is no full VcsArtifactApp reconstruction or by-value donation.
+
+Cancellation marks closing and completes only private custody. Later backing-sensitive initializers receivefalse: roster,child,pending,tools,media,ingest. Their new fixed registries choose unallocated storage. Earlier initialized fields are not overwritten, so real earlier backing remains owned for actual mounted close. Required original registration roots still move into their exact owners.
+
+Phase quotes include component metadata and capacity demand; closing sets only newly requested capacity tozero. Emptied option discriminants and phaseu8are added. Finalphase quotes Box transfer and OptionSources/frame/candidate metadata, then assumes the same initialized Box. Source inspection cannot certify concrete monomorphized byte sizes, compiler stack behavior or physical receipts; native construction/close tests remain required. No concrete field omission or source-value mismatch found.

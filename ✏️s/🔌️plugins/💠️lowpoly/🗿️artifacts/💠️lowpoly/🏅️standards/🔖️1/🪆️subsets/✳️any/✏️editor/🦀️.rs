@@ -275,7 +275,7 @@ pub fn lowpoly_paint_step(
     operation: &AppOperationContext,
 ) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, Fault> {
     let phase = GesturePhase::parse(phase, reason).ok_or_else(|| Fault::from("lowpoly.paint.phase-unknown"))?;
-    let window = context.view_state.as_ref().and_then(|view| view.window_id.clone()).unwrap_or_default();
+    let window = context.view_state.as_deref().and_then(|view| view.window_id.clone()).unwrap_or_default();
     if phase == GesturePhase::Stream && !opens && context.transient.paint(&window).is_none() {
         return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));
     }

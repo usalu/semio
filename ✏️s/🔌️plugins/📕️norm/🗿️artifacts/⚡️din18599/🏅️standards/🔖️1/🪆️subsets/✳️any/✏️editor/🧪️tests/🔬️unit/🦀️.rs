@@ -237,3 +237,9 @@ async fn report_out_exports_the_computed_check_report() {
 
 semio_framework_plugin::history_edit_acceptance_law!("norm", crate::Din18599PlayApp, || semio_framework_plugin::App { definition: crate::create_din18599_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
 semio_framework_plugin::composed_reload_law!("norm", crate::Din18599PlayApp, || semio_framework_plugin::App { definition: crate::create_din18599_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+
+#[test]
+fn compiled_input_metadata_matches_all_native_schema_rows() {
+    let findings = semio_s_plugin_norm_app_surface::norm_compiled_input_findings::<Din18599PlayApp>();
+    assert!(findings.is_empty(), "{}", findings.join("\n"));
+}

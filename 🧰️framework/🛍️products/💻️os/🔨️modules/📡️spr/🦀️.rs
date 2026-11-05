@@ -92,7 +92,7 @@ pub use crate::command::{
     ColdMutation, ColdMutationDiff, ColdDiffAlgebra, ColdMutationKind, ColdCompositeMutationKind, ApplyCapability, PreparedField, CollectionDiff, CommandOutcome, CompositeMutationKind, DiffAlgebra, DiffRegions, Edit, ForeignStep, ForeignStepSource, ForeignTarget, Identified, IndexedTripleDiff, Inference, InferenceFieldSpec, InferenceSpec, ItemPatch, Mutation,
     MutationApplyError, MutationApplyResult, MutationComposition, MutationDescriptor, MutationDescriptorError, MutationDescriptorRegistry, MutationDiff, MutationDiffParticipation, MutationDomainOperation, MutationEvent, MutationInvertibility,
     MutationKind, MutationLanguageSurface, MutationLeaf, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError, MutationMessage,
-    MutationMeta, MutationOrigin, MutationOutcome, MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, MutationUpcaster, NamedTripleDiff, OutcomeCode, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor,
+    MutationMeta, MutationOrigin, MutationOutcome, MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, CompiledMutationInputDefinitions, CompiledMutationInputError, MutationUpcaster, NamedTripleDiff, OutcomeCode, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor,
     SemanticMutation, TouchedPaths, TransactionRef, ValidatedMutationLeafSourceScope, APPLY_OUTCOME_CODE_PREFIX, APPROVED_VERBS, MAX_PLAN_DEPTH, OUTCOME_CODES,
 };
 #[cfg(any(test, feature = "mutation-testing"))]

@@ -74,7 +74,7 @@ impl<'ctx> SessionCtx<'ctx> {
         let window_kind_id = session.app.window_kinds.first().id.clone();
         let window_instance_id = live_view_state.window_id.clone().unwrap_or_else(|| window_kind_id.clone());
         let mode_id = live_view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone());
-        let invocation = semio_framework::manifest::ActionInvocation {
+        let invocation = semio_framework::manifest::ActionInvocation { expected_document_revision:None,
             address: semio_framework::manifest::ActionAddress { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), mode_id, window_kind_id, window_instance_id, action_id: "foldDirectoryEvents".into() },
             arguments: BTreeMap::from([("eventsJson".into(), semio_framework_value::DslValue::String(events_json))]),
         };

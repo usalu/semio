@@ -260,7 +260,7 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, config: CadWorldWindo
 }
 
 pub fn addressed_from_context(ctx: &semio_s_artifact_cad_cad_kit::CadDispatchCtx, config: CadWorldWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
-    addressed(ctx.view_state.as_ref().ok_or_else(|| semio_framework_plugin::Fault::from("cad.window.required: command has no view state"))?, config)
+    addressed(ctx.view_state.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("cad.window.required: command has no view state"))?, config)
 }
 
 

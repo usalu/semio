@@ -48,4 +48,5 @@ semio-framework-value-factory = { path = "../../../../../../../../🔨️modules
 semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }

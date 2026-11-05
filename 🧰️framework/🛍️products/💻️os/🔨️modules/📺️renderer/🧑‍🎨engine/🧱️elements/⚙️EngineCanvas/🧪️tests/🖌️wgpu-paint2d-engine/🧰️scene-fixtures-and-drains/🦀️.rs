@@ -65,6 +65,7 @@ fn paint2d_scene(surface_id: &str, active_utility: &str, selection: &[&str]) -> 
         brush_color: "#e07020".into(),
         brush_hardness: 0.25,
         paint_target:"pixels".into(),mask_value:255,fill_tolerance:24,pixel_selection_json:None,
+        editing_options: semio_framework_ui_scene_plane::Paint2dEditingOptions { filter_kind: "brightness".into(), filter_amount: 0.0, image_grid: semio_framework_ui_scene_plane::Paint2dImageGrid { x: 0, y: 0, width: 512, height: 512, bilinear: true } },selection_cancellation:None,
         view_mode: "composite".into(),
         composite_viewport_json: None,
         lanes: Vec::new(),

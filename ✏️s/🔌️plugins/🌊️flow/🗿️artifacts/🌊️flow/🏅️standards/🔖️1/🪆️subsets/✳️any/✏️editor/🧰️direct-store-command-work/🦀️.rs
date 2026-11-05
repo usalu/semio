@@ -66,7 +66,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation, snapshot_read: _ } = *input;
         let context = context.ok_or_else(|| Fault::from("flow-window-context-required"))?;
-        let view = context.view_state.as_ref().ok_or_else(|| Fault::from("flow-window-view-required"))?;
+        let view = context.view_state.as_deref().ok_or_else(|| Fault::from("flow-window-view-required"))?;
         let config = main::config::from_snapshot(context.window_config.as_ref());
         if self.completed || self.closing {
             return Err(Fault::from("flow-retained-direct-work-terminal"));

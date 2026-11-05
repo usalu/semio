@@ -75,7 +75,7 @@ pub fn dsl(value: &Value) -> DslValue {
 //#region 🧸️ToyHistoryApp
 thread_local! {
     /// 📨️ Every host event the toy app received on this test thread, in order.
-    pub static TOY_HOST_EVENTS: std::cell::RefCell<Vec<HostEvent>> = const { std::cell::RefCell::new(Vec::new()) };
+    pub static TOY_HOST_EVENTS: std::cell::RefCell<semio_framework_plugin_testing_laws::host_event_observation::HostEventTrace> = const { std::cell::RefCell::new(semio_framework_plugin_testing_laws::host_event_observation::HostEventTrace::new()) };
 }
 
 #[doc(hidden)]
@@ -98,8 +98,10 @@ impl ArtifactApp for ToyHistoryApp {
     type TransientMutation = NoTransientMutation;
     type Command = TestMutation;
 
+    fn host_event_demands(_event:&HostEvent)->Option<semio_framework_value::RetirementDemand>{Some(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+
     fn host_event(event: &HostEvent) -> Option<TestMutation> {
-        TOY_HOST_EVENTS.with(|events| events.borrow_mut().push(event.clone()));
+        TOY_HOST_EVENTS.with(|events| events.borrow_mut().push(event));
         None
     }
 
@@ -251,7 +253,7 @@ pub async fn seeded_app_as(fixture: &Value, actor: &str, mounted_policy:semio_fr
 
 #[doc(hidden)]
 pub fn meta(fixture: &Value) -> ActionMeta {
-    ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(text(&fixture["actor"])) }
+    ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(text(&fixture["actor"])) }
 }
 
 /// ✏️ The mutation id of seeded edit `index` (each seeded edit holds one op).

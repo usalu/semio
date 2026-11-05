@@ -877,6 +877,22 @@ fn original_canonical_tree_nested_headers_preserve_body_minima_and_complete_cust
     }
 }
 
+fn persistent_fixture(rows:&[i64])->semio_framework_value::persistent::PersistentList<i64>{
+ use semio_framework_value::persistent::{PersistentList,PERSISTENT_PAGE_FANOUT};
+ use semio_framework_value_shared_issuance::{SealedShared,SharedIssuer};
+ if rows.is_empty(){return PersistentList::default();}
+ let mut level=Vec::new();
+ for chunk in rows.chunks(PERSISTENT_PAGE_FANOUT){let mut sealed=std::array::from_fn(|_|None);for(index,value)in chunk.iter().copied().enumerate(){let demand=RetirementDemand {capacity_bytes:SealedShared::<i64>::birth_bytes(),depth:1,..Default::default()};sealed[index]=Some(SealedShared::admit(value,SharedIssuer::owned(),admitted(demand)).result.map_err(|(error,_)|error).unwrap().0);}level.push(PersistentList::admit_leaf(sealed,chunk.len(),admitted(PersistentList::<i64>::page_birth_demand())).result.map_err(|(error,_)|error).unwrap().0);}
+ while level.len()>1{let mut next=Vec::new();let mut roots=level.into_iter();loop{let children=std::array::from_fn(|_|roots.next());if children[0].is_none(){break;}next.push(PersistentList::admit_branch(children,admitted(PersistentList::<i64>::page_birth_demand())).result.map_err(|(error,_)|error).unwrap().0);}level=next;}
+ level.pop().unwrap()
+}
+
+#[test]
+fn persistent_array_canonical_tree_matches_the_independent_vector_wire(){
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("../../🌱️value/📋️list/🔗️persistent/🔁️codec/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ for expected in fixture["cases"].as_array().unwrap(){let rows:Vec<i64>=serde_json::from_value(expected.clone()).unwrap();let root=persistent_fixture(&rows);for(index,value)in rows.iter().enumerate(){let child=root.canonical_tree_child(index).unwrap();assert!(matches!(child.canonical_tree_node().unwrap(),Node::I64(actual) if actual==*value));}assert!(root.canonical_tree_child(rows.len()).is_err());assert_eq!(canonical_bytes(root),serde_json::to_vec(&rows).unwrap());}
+}
+
 /// 🗺️ Actual retained dictionary traversal lends each original ranked value and matches Serde bytes.
 #[test]
 fn retained_ordered_map_canonical_tree_matches_serde_without_projection_allocations(){

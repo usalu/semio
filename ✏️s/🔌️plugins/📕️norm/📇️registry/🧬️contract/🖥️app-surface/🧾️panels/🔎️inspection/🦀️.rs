@@ -13,9 +13,7 @@ pub use semio_s_plugin_norm_app_surface_viewport3d as viewport3d;
 mod checks_window;
 pub use checks_window::*;
 
-#[path = "../../🌲️outliner/🦀️.rs"]
-mod outliner;
-pub use outliner::*;
+pub use semio_s_plugin_norm_app_surface_outliner::*;
 
 #[path = "../../🪄️selection-mirror/🦀️.rs"]
 mod selection_mirror;
@@ -25,9 +23,7 @@ pub use selection_mirror::*;
 mod properties;
 pub use properties::*;
 
-#[path = "../../⌨️shortcut-dispatch/🦀️.rs"]
-mod shortcut_dispatch;
-pub use shortcut_dispatch::*;
+
 
 #[path = "../../🏳️check-parameters/🦀️.rs"]
 mod check_parameters;
@@ -41,22 +37,21 @@ pub use view_steps::*;
 mod check_entity_link;
 pub use check_entity_link::*;
 
-#[path = "../../🧰️entity-editing/🧭️host-routes/🦀️.rs"]
-mod host_routes;
-pub use host_routes::*;
+
 
 #[path = "../../🧰️entity-editing/🍽️context-menu/🦀️.rs"]
 mod context_menu;
 pub use context_menu::*;
 
-#[path = "../../🧰️entity-editing/🧭️interaction-topology/🦀️.rs"]
-mod interaction_topology;
-pub use interaction_topology::*;
+pub use semio_s_plugin_norm_app_surface_interaction_topology::*;
 
 #[path = "../../🧰️entity-editing/🗃️bulk-edit/🦀️.rs"]
 mod bulk_edit;
 pub use bulk_edit::*;
 
-#[path = "../../🔌️shell-hooks/🦀️.rs"]
-mod shell_hooks;
-pub use shell_hooks::*;
+
+pub use semio_s_plugin_norm_app_surface_shell_hooks::*;
+
+#[cfg(test)]
+#[path = "../../🌲️outliner/🧪️tests/🔗️selection/🦀️.rs"]
+mod outliner_selection_tests;

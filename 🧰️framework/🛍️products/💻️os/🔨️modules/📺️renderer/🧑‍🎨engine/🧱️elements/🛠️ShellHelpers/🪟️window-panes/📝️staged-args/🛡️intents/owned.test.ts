@@ -12,7 +12,7 @@ function fixture() {
   const token = { ...cases.token };
   const args = structuredClone(cases.args);
   let view = { revision: 1, root: 0, hash: "one" };
-  let status: StagedFormStatus = { token, ready: true, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0" };
+  let status: StagedFormStatus = { token, ready: true, commitArgs: cases.args, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0" };
   const records = new Map<number, any>();
   const subscriptions = new Map<StagedOwnedSubscription, { snapshot: StagedOwnedSnapshot; notify: () => void }>();
   const viewSubscriptions = new Map<StagedOwnedSubscription, () => void>();
@@ -109,7 +109,7 @@ test("resident binding values are owned before asynchronous host follow-up", () 
 test("status and read failures disable dispatch; close is idempotent", () => {
   const f = fixture();
   const original = f.statusRead.snapshot!;
-  f.status({ token: f.token, ready: true, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0", extra: true } as any);
+  f.status({ token: f.token, ready: true, commitArgs: cases.args, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0", extra: true } as any);
   expect(f.owner.publishStatus(f.statusRead, original, f.view())).toBe(false);
   expect(f.port.disabled(f.record as any)).toBe(true);
   f.owner.close();

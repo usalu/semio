@@ -649,6 +649,8 @@ mod value_type_binding;
 mod optional_field;
 #[path = "🗂️ordered/🦀️.rs"]
 mod ordered_fields;
+#[path = "📋️persistent/🦀️.rs"]
+mod persistent_fields;
 #[path = "👯️pair/🦀️.rs"]
 mod pair_fields;
 

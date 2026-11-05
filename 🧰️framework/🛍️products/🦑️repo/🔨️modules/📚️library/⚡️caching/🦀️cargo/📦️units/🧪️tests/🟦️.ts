@@ -36,7 +36,7 @@ import {withNativeImageStorageV1} from "@semio-tech/process/artifacts/native-bui
 import {nativeImageRootV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
 import {rustCompilerIdentityV1,rustLibraryCompilerPortV1} from "../🏗️compiler/🦀️rustc/🟦️.ts";
 import {captureRustLibraryDescriptorV1} from "../📥️descriptor/🟦️.ts";
-const outputRoot=relative(process.cwd(),join(nativeImageRootV1(join(repository.root,".🧬semio/🦑️repo/⚡️cache/rust/fixed")),"units")).replaceAll("\\","/");
+const outputRoot=relative(process.cwd(),join(nativeImageRootV1(join(repository.root,".cache/b/r")),"units")).replaceAll("\\","/");
 const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
 test("closed crate units agree with Ajv and propagate exact semantic changes only through dependent artifacts",()=>{
  const validate=new Ajv({strict:true,allErrors:true}).compile(schema),units=fixture.units.map(readRustUnitV1),baseline=planRustUnitsV1(units,outputRoot);for(const unit of units)expect(validate(unit)).toBe(true);

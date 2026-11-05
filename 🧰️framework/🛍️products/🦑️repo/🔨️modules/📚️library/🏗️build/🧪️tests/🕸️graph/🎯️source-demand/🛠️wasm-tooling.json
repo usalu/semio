@@ -1,0 +1,9 @@
+{
+  "cases": [
+    { "id": "direct-bindgen", "required": true, "targets": { "wasm": { "dependsOn": ["generate"] } }, "dependsOn": ["generate", "workspace:deps-wasm"], "prepared": true },
+    { "id": "declared-transitive-facade", "required": false, "targets": { "wasm": { "metadata": { "semio": { "wasmPackageSourceV1": { "version": 1, "sourceOwner": "surface" } } } } }, "dependsOn": ["workspace:deps-wasm"], "prepared": true },
+    { "id": "wasi-component", "required": false, "targets": { "wasm": {} }, "dependsOn": [], "prepared": false },
+    { "id": "no-wasm-target", "required": true, "targets": {}, "dependsOn": [], "prepared": false },
+    { "id": "single-bootstrap-edge", "required": true, "targets": { "wasm": { "dependsOn": ["workspace:deps-wasm"] } }, "dependsOn": ["workspace:deps-wasm"], "prepared": true }
+  ]
+}

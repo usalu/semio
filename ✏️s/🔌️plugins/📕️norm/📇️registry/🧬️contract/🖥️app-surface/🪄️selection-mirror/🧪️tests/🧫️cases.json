@@ -1,0 +1,183 @@
+{
+  "schema": "semio.norm.selection-pick-priority/v1",
+  "checks": [
+    {
+      "id": "b1.low",
+      "entity": "b1",
+      "path": "members[id=b1].length",
+      "utilization": 0.4
+    },
+    {
+      "id": "b1.high",
+      "entity": "b1",
+      "path": "members[id=b1].sectionId",
+      "utilization": 0.9
+    },
+    {
+      "id": "c2.u",
+      "entity": "c2",
+      "path": "members[id=c2].length",
+      "utilization": 1.3
+    }
+  ],
+  "cases": [
+    {
+      "name": "new entity pick replaces an unrelated stored check",
+      "stored": 2,
+      "picks": [
+        [
+          "member",
+          "b1"
+        ]
+      ],
+      "entities": [
+        "b1"
+      ],
+      "picked": [
+        "b1"
+      ],
+      "check": 1,
+      "primary": "b1",
+      "paths": [
+        "members[id=b1].sectionId"
+      ],
+      "checkOwners": [
+        "b1"
+      ]
+    },
+    {
+      "name": "a matching stored check keeps its exact field",
+      "stored": 0,
+      "picks": [
+        [
+          "member",
+          "b1"
+        ]
+      ],
+      "entities": [
+        "b1"
+      ],
+      "picked": [
+        "b1"
+      ],
+      "check": 0,
+      "primary": "b1",
+      "paths": [
+        "members[id=b1].length"
+      ],
+      "checkOwners": [
+        "b1"
+      ]
+    },
+    {
+      "name": "a part pick governs by its document owner",
+      "stored": 2,
+      "picks": [
+        [
+          "fastener",
+          "b1:bolt"
+        ]
+      ],
+      "entities": [
+        "b1:bolt",
+        "b1"
+      ],
+      "picked": [
+        "b1"
+      ],
+      "check": 1,
+      "primary": "b1",
+      "paths": [
+        "members[id=b1].sectionId"
+      ],
+      "checkOwners": [
+        "b1"
+      ]
+    },
+    {
+      "name": "an explicit picked check keeps its priority",
+      "stored": 2,
+      "picks": [
+        [
+          "member",
+          "c2"
+        ],
+        [
+          "check",
+          "b1.low"
+        ]
+      ],
+      "entities": [
+        "c2",
+        "b1"
+      ],
+      "picked": [
+        "c2"
+      ],
+      "check": 0,
+      "primary": "b1",
+      "paths": [
+        "members[id=b1].length"
+      ],
+      "checkOwners": []
+    },
+    {
+      "name": "an entity without checks does not retain another entity",
+      "stored": 2,
+      "picks": [
+        [
+          "member",
+          "unverified"
+        ]
+      ],
+      "entities": [
+        "unverified"
+      ],
+      "picked": [
+        "unverified"
+      ],
+      "check": null,
+      "primary": "unverified",
+      "paths": [],
+      "checkOwners": [
+        "unverified"
+      ]
+    },
+    {
+      "name": "without interaction picks the stored check still selects",
+      "stored": 2,
+      "picks": [],
+      "entities": [
+        "c2"
+      ],
+      "picked": [],
+      "check": 2,
+      "primary": "c2",
+      "paths": [
+        "members[id=c2].length"
+      ],
+      "checkOwners": []
+    },
+    {
+      "name": "keyboard stepping publishes the exact check through canonical interaction",
+      "stored": 2,
+      "picks": [
+        [
+          "check",
+          "c2.u"
+        ]
+      ],
+      "entities": [
+        "c2"
+      ],
+      "picked": [],
+      "check": 2,
+      "primary": "c2",
+      "paths": [
+        "members[id=c2].length"
+      ],
+      "checkOwners": [],
+      "interaction": true
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "pending-zero",
+      "units": 0,
+      "reject": false,
+      "deadline": false,
+      "expectedWork": 0,
+      "expectedResult": "Pending"
+    },
+    {
+      "name": "pending-cpu",
+      "units": 5,
+      "reject": false,
+      "deadline": false,
+      "expectedWork": 5,
+      "expectedResult": "Pending"
+    },
+    {
+      "name": "failed-cpu",
+      "units": 7,
+      "reject": true,
+      "deadline": false,
+      "expectedWork": 7,
+      "expectedResult": "Error"
+    },
+    {
+      "name": "deadline",
+      "units": 9,
+      "reject": false,
+      "deadline": true,
+      "expectedWork": 0,
+      "expectedResult": "Blocked"
+    }
+  ],
+  "closeUnits": 11,
+  "declaredWork": {
+    "projectionBirth": 1,
+    "retainedCloneTake": 1,
+    "pagedProjectionTake": 2,
+    "editBirth": 1
+  }
+}

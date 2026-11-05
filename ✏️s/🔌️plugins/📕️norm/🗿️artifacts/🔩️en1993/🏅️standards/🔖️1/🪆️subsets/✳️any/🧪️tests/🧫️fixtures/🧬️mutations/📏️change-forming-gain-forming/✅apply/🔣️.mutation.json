@@ -1,6 +1,6 @@
 {
   "ChangeFormingGainForming": {
-    "id": "frame-action-1",
-    "newForming": "NodalMoment"
+    "id": "forming-gain-1",
+    "newForming": "OtherForming"
   }
 }

@@ -337,12 +337,12 @@
       "baseRotationalStiffnessNm": 0.0
     }
   ],
-  "joints": [],
-  "bearings": [],
-  "piers": [],
-  "accelerograms": [],
-  "diaphragms": [],
   "soilLayers": [],
+  "diaphragms": [],
+  "accelerograms": [],
+  "piers": [],
+  "bearings": [],
+  "joints": [],
   "placements": [],
   "tieBeams": [],
   "slopes": []

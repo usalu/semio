@@ -1,8 +1,8 @@
 //! 🫴️ Complete Pack Records and authored typed fields retain the exact genesis source through every turn.
 use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use semio_framework_dsl_record::{BorrowedDslRecord,FieldValue,receiving::{DslOwnedReceivingRecord,DslOwnedReceivingField,OwnedFieldReceiving,OwnedSlot}};
-use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,OriginalReceivingPrimary};
 use std::mem::size_of;
 use protocol::PackLimits;
 use pack::record::RetainedRecordReceiving;
@@ -17,16 +17,15 @@ pub trait OriginalArtifactPackReceiving:semio_framework_value::retirement::Retir
 /// 🫴️ The original Pack and actual receiving ledger survive until native output and every partial owner close.
 pub trait OriginalArtifactSnapshotReceiving<P>:Send {
  fn demands(&self,source:&[u8],body:usize)->Result<RetirementDemand,ValueError>;
- fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>;
+ fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>;
  fn is_ready(&self)->bool;
  fn take_demand(&self)->Result<RetirementDemand,ValueError>;
  fn take_into(&mut self,output:&mut Option<P>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>;
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,native:&mut dyn NativeDecodeCloseControl,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ fn close_step(&mut self,native:&mut dyn NativeDecodeCloseControl,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>;
  fn terminal_is_empty(&self)->bool;
 }
 
-fn flat(error:semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary)->ValueError{let progress=error.progress;error.primary.or(error.quote_refusal).or(error.allocation_refusal).unwrap_or_else(||invalid("original native construction refused")).with_retained_progress(progress)}
 enum Turn{Fresh(RetainedCloneProgress),Posted(semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,semio_framework_value_native_owned::OriginalReceivingPrimary>)}
 /// 📸️ The caller retains the original full Pack bytes until typed output and all receiving metadata close.
 pub struct OriginalSnapshotRecordReceiving<T:DslOwnedReceivingRecord+BorrowedDslRecord>{
@@ -58,22 +57,22 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
   }
  }
  /// 🪜️ Borrows the real receiving control; a denied frontier preserves every source and partial destination.
- fn step_turn(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->Result<Turn,ValueError>{
+ fn step_turn(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant,work:&mut u64)->Result<Turn,ValueError>{
   self.validate_control(native)?;let demand=self.demands(source,body)?;if self.phase>=4||self.closing||self.closed||!funds(grant,demand){return Ok(Turn::Fresh(Default::default()))}native.checkpoint()?;
   match self.phase{
-   0=>{let expected=semio_framework_os_semio::declared_binary_prefix_byte(self.envelope,semio_framework_os_semio::Component::Pack,1,self.position)?;if source.get(self.position).copied()!=expected{return Err(invalid("original snapshot Pack envelope differs from its authored identity"))}self.position+=1;if self.position==self.prefix{self.phase=1;}},
-   1=>{let Some((record,progress))=RetainedRecordReceiving::admit_document(source,(self.prefix,source.len()),T::RECORD,self.limits.clone(),child(grant)).result?else{return Ok(Turn::Fresh(Default::default()))};self.record=Some(record);self.phase=2;return Ok(Turn::Fresh(progress))},
-   2=>{let record=self.record.as_mut().ok_or_else(||invalid("native snapshot record is absent"))?;if !record.is_ready(){return Ok(Turn::Posted(record.step(source,native,child(grant))))}let mut original=None;let progress=record.take_into(&mut original,child(grant)).result?;if let Some(record)=original{*self.generic.value=Some(FieldValue::Record(record));self.phase=3;}return Ok(Turn::Fresh(progress))},
-   3=>{if !self.binding.is_ready(){return Ok(Turn::Posted(self.binding.step(&mut self.generic.value,native,body,child(grant))))}let progress=self.binding.take_into(&mut self.output.value,child(grant)).result?;if self.output.value.is_some(){self.phase=4;}return Ok(Turn::Fresh(progress))},
+   0=>{*work=1;let expected=semio_framework_os_semio::declared_binary_prefix_byte(self.envelope,semio_framework_os_semio::Component::Pack,1,self.position)?;if source.get(self.position).copied()!=expected{return Err(invalid("original snapshot Pack envelope differs from its authored identity"))}self.position+=1;if self.position==self.prefix{self.phase=1;}},
+   1=>{let turn=RetainedRecordReceiving::admit_document(source,(self.prefix,source.len()),T::RECORD,self.limits.clone(),child(grant));*work=turn.work;let Some((record,progress))=turn.result?else{return Ok(Turn::Fresh(Default::default()))};self.record=Some(record);self.phase=2;return Ok(Turn::Fresh(progress))},
+   2=>{let record=self.record.as_mut().ok_or_else(||invalid("native snapshot record is absent"))?;if !record.is_ready(){return Ok(Turn::Posted(record.step(source,native,child(grant))))}let mut original=None;let turn=record.take_into(&mut original,child(grant));*work=turn.work;let progress=turn.result?;if let Some(record)=original{*self.generic.value=Some(FieldValue::Record(record));self.phase=3;}return Ok(Turn::Fresh(progress))},
+   3=>{if !self.binding.is_ready(){return Ok(Turn::Posted(self.binding.step(&mut self.generic.value,native,body,child(grant))))}let turn=self.binding.take_into(&mut self.output.value,child(grant));*work=turn.work;let progress=turn.result?;if self.output.value.is_some(){self.phase=4;}return Ok(Turn::Fresh(progress))},
    _=>unreachable!(),
   }Ok(Turn::Fresh(receipt(demand)))
  }
  /// 🧾️ Delegated child steps already posted their physical receipt to the construction recipient; only this owner's own effects are posted here, exactly once.
  pub fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,semio_framework_value_native_owned::OriginalReceivingPrimary>{
-  match self.step_turn(source,native,body,grant){
+  let mut work=0;match self.step_turn(source,native,body,grant,&mut work){
    Ok(Turn::Posted(outcome))=>outcome,
-   Ok(Turn::Fresh(progress))=>{if progress==RetainedCloneProgress::default(){return semio_framework_value::RetainedWorkOutcome{result:Ok(progress),work:0}}let posted=native.receive_retained_work(grant,semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work:1});semio_framework_value::RetainedWorkOutcome{result:posted.result.map(|step|step.progress()),work:posted.work}},
-   Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0},
+   Ok(Turn::Fresh(progress))=>{if work==0&&progress==RetainedCloneProgress::default(){return semio_framework_value::RetainedWorkOutcome{result:Ok(progress),work:0}}let posted=native.receive_retained_work(grant,semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work});semio_framework_value::RetainedWorkOutcome{result:posted.result.map(|step|step.progress()),work:posted.work}},
+   Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work},
   }
  }
  /// 📑️ The schema-checked original Record may be projected in bounded domain rows before whole-owner binding.
@@ -90,15 +89,16 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
  pub fn take_into(&mut self,output:&mut Option<T>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let demand=metadata::<T>();if output.is_some()||!self.is_ready()||!funds(grant,demand){return Ok(Default::default())}*output=self.output.value.take();self.phase=5;Ok(receipt(demand))}
  /// 🧹️ Each retained typed, generic and physical parser owner closes under its own next demand.
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if self.closed{return Ok(Default::default())}if !self.output.terminal_is_empty(){return nested(self.output.close_demands(body)?)}if !self.binding.terminal_is_empty(){return nested(self.binding.close_demands(body)?)}if !self.generic.terminal_is_empty(){return nested(self.generic.close_demands(body)?)}if let Some(record)=&self.record{if !record.terminal_is_empty(){return nested(record.close_demands(body)?)} }Ok(RetirementDemand{depth:1,..Default::default()})
+  if self.closed{return Ok(Default::default())}if !self.closing{return Ok(metadata::<bool>())}if !self.output.terminal_is_empty(){return nested(self.output.close_demands(body)?)}if !self.binding.terminal_is_empty(){return nested(self.binding.close_demands(body)?)}if !self.generic.terminal_is_empty(){return nested(self.generic.close_demands(body)?)}if let Some(record)=&self.record{if !record.terminal_is_empty(){return nested(record.close_demands(body)?)}return Ok(metadata::<Option<RetainedRecordReceiving>>())}Ok(metadata::<bool>())
  }
  /// ♻️ Every partial value remains resident when admission refuses or cancellation starts closure.
- pub fn close_step(&mut self,native:&mut dyn NativeDecodeCloseControl,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  self.validate_control(native)?;if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}native.charge(demand.capacity_bytes)?;self.retire_step(grant)
+ pub fn close_step(&mut self,native:&mut dyn NativeDecodeCloseControl,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>{
+  if let Err(error)=self.validate_control(native){return RetainedWorkOutcome{result:Err(error),work:0}}if self.closed{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if !funds(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if let Err(error)=native.charge(demand.capacity_bytes){return RetainedWorkOutcome{result:Err(error),work:0}}self.retire_step(grant)
  }
- fn retire_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}self.closing=true;
-  if !self.output.terminal_is_empty(){return self.output.close_step(child(grant)).result.map(RetainedCloneStep::Progress)}if !self.binding.terminal_is_empty(){return self.binding.close_step(child(grant)).result.map(RetainedCloneStep::Progress)}if !self.generic.terminal_is_empty(){return self.generic.close_step(child(grant)).result.map(RetainedCloneStep::Progress)}if let Some(record)=&mut self.record{if !record.terminal_is_empty(){return record.close_step(child(grant)).result}self.record=None;return Ok(RetainedCloneStep::Progress(receipt(demand)))}self.closed=true;Ok(RetainedCloneStep::Complete(receipt(demand)))
+ fn retire_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>{
+  if self.closed{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if !funds(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if !self.closing{self.closing=true;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(demand))),work:1}}
+  let turn=if !self.output.terminal_is_empty(){self.output.close_step(child(grant))}else if !self.binding.terminal_is_empty(){self.binding.close_step(child(grant))}else if !self.generic.terminal_is_empty(){self.generic.close_step(child(grant))}else if let Some(record)=&mut self.record{if !record.terminal_is_empty(){return record.close_step(child(grant))}self.record=None;RetainedWorkOutcome{result:Ok(receipt(demand)),work:1}}else{self.closed=true;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(demand))),work:1}};
+  RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}
  }
  /// 🕳️ Terminal means no typed, generic or Pack backing can be released by implicit destruction.
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.record.is_none()&&self.generic.terminal_is_empty()&&self.binding.terminal_is_empty()&&self.output.terminal_is_empty()}
@@ -112,18 +112,18 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> semio_framework_value::retirem
 }
 impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> semio_framework_value::retirement::RetirementCursor for OriginalSnapshotRecordReceiving<T>{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{match self.retire_step(grant){Ok(step)=>semio_framework_value::retirement::RetirementStep::Progress(step.progress(),1),Err(error)=>semio_framework_value::retirement::RetirementStep::Failure(error,0)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{let turn=self.retire_step(grant);match turn.result{Ok(step)=>semio_framework_value::retirement::RetirementStep::Progress(step.progress(),turn.work),Err(error)=>semio_framework_value::retirement::RetirementStep::Failure(error,turn.work)}}
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
  fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
 impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalArtifactSnapshotReceiving<T> for OriginalSnapshotRecordReceiving<T>{
  fn demands(&self,source:&[u8],body:usize)->Result<RetirementDemand,ValueError>{self.demands(source,body)}
- fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.step(source,native,body,grant).result.map_err(flat)}
+ fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{self.step(source,native,body,grant)}
  fn is_ready(&self)->bool{self.is_ready()}
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.take_demand()}
  fn take_into(&mut self,output:&mut Option<T>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.take_into(output,grant)}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
- fn close_step(&mut self,native:&mut dyn NativeDecodeCloseControl,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_step(native,grant)}
+ fn close_step(&mut self,native:&mut dyn NativeDecodeCloseControl,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>{self.close_step(native,grant)}
  fn terminal_is_empty(&self)->bool{self.terminal_is_empty()}
 }
 

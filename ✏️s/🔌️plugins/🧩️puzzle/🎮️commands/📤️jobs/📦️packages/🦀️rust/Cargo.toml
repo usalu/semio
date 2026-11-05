@@ -29,6 +29,7 @@ semio-framework-plugin = { workspace = true, optional = true }
 testing = ["semio-framework-job/testkit", "dep:semio-framework", "dep:semio-framework-plugin"]
 
 [dev-dependencies]
+semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }

@@ -21,9 +21,77 @@ pub const NORM_VIEWER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] 
 
 /// 🧵️ What a norm viewer states to keep its view lane: how it settles its report, projects its scene and reads a `viewportAct` command.
 pub trait NormViewerSurface: semio_framework_plugin::ArtifactViewer<Config = NoConfig, ConfigMutation = NoConfigMutation> {
+    const VARIANT: &'static str;
+    const CONTROLLER: &'static str;
+    const INTERACTION_DOMAIN: &'static str;
+    const VIEWPORT_BODY: &'static str;
+    const CHECKS_BODY: &'static str;
+    const DIAGRAMS_BODY: &'static str;
     fn view_report(document: &Self::Snapshot) -> NormViewReport;
     fn view_scene(document: &Self::Snapshot, report: &NormViewReport, view: &ViewOptions) -> StructuralScene;
+    fn view_diagrams(document: &Self::Snapshot, report: &NormViewReport, focus: Option<&str>) -> Vec<semio_s_plugin_norm_structural_scene::Diagram2d>;
+    fn view_lane(transient: &Self::Transient) -> ViewLane;
     fn lane_event(command: &Self::Command) -> Option<LaneEvent>;
+}
+
+/// 🕹️ The readonly scene exposes the same entity and check selection vocabulary as the editor, with no edit tools.
+pub fn viewer_interaction_definition(variant: &str) -> semio_framework_plugin::InteractionDefinition {
+    use semio_s_plugin_norm_structural_scene::EntityKind;
+    crate::viewport_interaction_definition(variant, semio_framework_ui_locale::LocalizedLabel::native("Model", "Modell"), &[EntityKind::Member, EntityKind::Plate, EntityKind::Shell, EntityKind::Solid, EntityKind::Fastener, EntityKind::Support, EntityKind::Load, EntityKind::Surface, EntityKind::Group])
+}
+
+/// 🗺️ Keeps readonly viewport and check addresses admitted when the framework revalidates its interaction state.
+pub fn viewer_interaction_topology<V: NormViewerSurface>(document: &V::Snapshot) -> semio_framework_plugin::InteractionTopology
+where
+    V::Snapshot: semio_framework_value::ToValue,
+{
+    let report = V::view_report(document);
+    let scene = V::view_scene(document, &report, ViewOptions::none());
+    crate::norm_interaction_topology(V::INTERACTION_DOMAIN, &semio_framework_value::ToValue::to_value(document), &scene, &report)
+}
+
+/// 🪟️ One readonly projection shared by the model, checks and diagrams of a viewer.
+pub struct NormViewerFrame {
+    pub report: NormViewReport,
+    pub selection: NormSelection,
+    pub lane: ViewLane,
+}
+
+impl NormViewerFrame {
+    pub fn new(report: NormViewReport, lane: ViewLane, picked: &[String]) -> Self {
+        let selection = NormSelection::from_interaction(&report, lane.check, picked);
+        Self { report, selection, lane }
+    }
+
+    /// 🎯️ The selected document owner, or the governing owner while nothing is selected.
+    pub fn diagram_focus(&self) -> Option<String> {
+        self.selection.primary(&self.report).or_else(|| self.report.checks.iter().filter(|check| check.status != CheckStatus::NotApplicable && !check.subject.entity_id.is_empty()).max_by(|a, b| a.utilization.total_cmp(&b.utilization)).map(|check| check.subject.entity_id.clone())).map(|id| semio_s_plugin_norm_structural_scene::projection_kit::base_id(&id).to_owned())
+    }
+
+    pub fn render_viewport(&self, body: &str, scene: &StructuralScene, domain: &'static str, controller: &'static str, locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+        let selected = self.selection.highlights(scene.entities.iter().map(|entity| (entity.entity.kind, entity.entity.id.as_str())));
+        crate::toolbar::render_viewport_panel(body, scene, &crate::toolbar::ViewportView { lane: self.lane.clone(), ..Default::default() }, &selected, domain, controller, locale)
+    }
+
+    pub fn render_checks(&self, windows: &semio_framework_plugin::TreeWindows<'_>, domain: &'static str, controller: &'static str, locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+        crate::render_checks_with(&self.report, &self.selection.checks_state(&self.report, ChecksViewState::default()), &ChecksWindowSpec { controller_id: Some(controller), interaction_domain: Some(domain), ..Default::default() }, windows, locale)
+    }
+
+    pub fn render_diagrams(&self, body: &str, diagrams: &[semio_s_plugin_norm_structural_scene::Diagram2d], windows: &semio_framework_plugin::TreeWindows<'_>, locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+        crate::diagrams2d::render_diagrams(body, diagrams, &crate::diagrams2d::DiagramsWindowSpec::default(), windows, locale)
+    }
+}
+
+/// 👁️ Paints every readonly Eurocode window from the same report, interaction selection and local view lane.
+pub fn render_norm_viewer<V: NormViewerSurface>(body_key: &str, doc: &ArtifactView<'_, V::Snapshot>, cfg: &ConfigView<'_, V::Config>, view: &semio_framework_plugin::ViewModel, transient: &semio_framework_plugin::TransientView<'_, V::Transient>, interaction: &semio_framework_plugin::app::InteractionView<'_>) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+    let frame = NormViewerFrame::new(V::view_report(doc.snapshot), V::view_lane(transient.snapshot), &interaction.selection(V::INTERACTION_DOMAIN).ids);
+    let rendered = match body_key {
+        key if key == V::VIEWPORT_BODY => frame.render_viewport(body_key, &V::view_scene(doc.snapshot, &frame.report, &view_options_of(&frame.lane)), V::INTERACTION_DOMAIN, V::CONTROLLER, view.locale),
+        key if key == V::CHECKS_BODY => frame.render_checks(&semio_framework_plugin::TreeWindows::for_body(view, body_key), V::INTERACTION_DOMAIN, V::CONTROLLER, view.locale),
+        key if key == V::DIAGRAMS_BODY => frame.render_diagrams(body_key, &V::view_diagrams(doc.snapshot, &frame.report, frame.diagram_focus().as_deref()), &semio_framework_plugin::TreeWindows::for_body(view, body_key), view.locale),
+        _ => return V::render(body_key, doc, cfg, view).map(Some).map_err(Into::into),
+    };
+    rendered.map(|node| Some(semio_framework_plugin::built_to_component_tree(node))).map_err(Into::into)
 }
 
 /// 🫧️ The lane mutations of one view event: a stepping intent resolves against the report and the scene (projected only for a combination step), every other event folds directly; no mutation when the lane does not change.
@@ -59,18 +127,25 @@ pub fn view_selected_check(lane: &ViewLane) -> Option<usize> {
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 pub fn norm_view_reduce<V: NormViewerSurface>(
     command: &V::Command,
-    _snapshot: &V::Snapshot,
+    snapshot: &V::Snapshot,
     _config: &V::Config,
     _history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
+    interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::ViewerApp<V>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::ViewerApp<V>>>,
     _operation: &semio_framework_plugin::AppOperationContext,
 ) -> NormRetainedCommandResult<V::Mutation> {
     if !NORM_VIEWER_TOOL_IDS.contains(&V::command_id(command)) {
         return Err(Fault::from("norm-command-retained-route-rejected"));
     }
-    Ok(Emit::default())
+    let mut emit = Emit::default();
+    if let (Some(context), Some(event)) = (context, V::lane_event(command)) {
+        let report = V::view_report(snapshot);
+        let lane = V::view_lane(context.transient.get());
+        let picked = interaction.selection.get(V::INTERACTION_DOMAIN).map(|selection| selection.ids.as_slice()).unwrap_or_default();
+        emit.effects.extend(crate::check_step_selection_effect(V::INTERACTION_DOMAIN, &report, &lane, picked, event, || V::view_scene(snapshot, &report, &view_options_of(&lane))));
+    }
+    Ok(emit)
 }
 
 /// 📏️ The viewer command is one bounded step.
@@ -240,14 +315,29 @@ macro_rules! norm_view_command_from_action {
 /// 🧩️ Implements [`NormViewerSurface`] for a viewer from its report, scene and command enum (row `ViewportAct`).
 #[macro_export]
 macro_rules! norm_viewer_surface {
-    ($viewer:ty, $command:ident, report = $report:expr, scene = $scene:expr) => {
+    ($viewer:ty, $command:ident, variant = $variant:literal, report = $report:expr, scene = $scene:expr, diagrams = $diagrams:expr) => {
         impl $crate::NormViewerSurface for $viewer {
+            const VARIANT: &'static str = $variant;
+            const CONTROLLER: &'static str = concat!("s.norm.", $variant, "@1/*#viewer");
+            const INTERACTION_DOMAIN: &'static str = concat!("norm.", $variant);
+            const VIEWPORT_BODY: &'static str = concat!("norm.", $variant, ".view.viewport");
+            const CHECKS_BODY: &'static str = concat!("norm.", $variant, ".view.checks");
+            const DIAGRAMS_BODY: &'static str = concat!("norm.", $variant, ".view.diagrams");
+
             fn view_report(document: &<$viewer as semio_framework_plugin::ArtifactViewer>::Snapshot) -> $crate::NormViewReport {
                 ($report)(document)
             }
 
             fn view_scene(document: &<$viewer as semio_framework_plugin::ArtifactViewer>::Snapshot, report: &$crate::NormViewReport, view: &semio_s_plugin_norm_structural_scene::projection::ViewOptions) -> semio_s_plugin_norm_structural_scene::StructuralScene {
                 ($scene)(document, report, view)
+            }
+
+            fn view_diagrams(document: &<$viewer as semio_framework_plugin::ArtifactViewer>::Snapshot, report: &$crate::NormViewReport, focus: Option<&str>) -> Vec<semio_s_plugin_norm_structural_scene::Diagram2d> {
+                ($diagrams)(document, report, focus)
+            }
+
+            fn view_lane(transient: &<$viewer as semio_framework_plugin::ArtifactViewer>::Transient) -> $crate::ViewLane {
+                $crate::LaneTransient::lane(transient).view
             }
 
             fn lane_event(command: &$command) -> Option<$crate::LaneEvent> {

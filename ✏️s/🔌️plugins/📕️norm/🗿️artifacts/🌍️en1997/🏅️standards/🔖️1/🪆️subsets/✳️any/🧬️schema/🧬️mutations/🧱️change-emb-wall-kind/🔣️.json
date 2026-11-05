@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-emb-wall-kind",
   "semanticKind": "change-emb-wall-kind",
-  "displayName": "Change EmbWallKind",
+  "displayName": "Change support type of the embedded wall",
   "emoji": "🧱",
   "aggregateVariant": "ChangeEmbWallKind",
   "payloadSchema": "🧬️schema/🔣️.json",

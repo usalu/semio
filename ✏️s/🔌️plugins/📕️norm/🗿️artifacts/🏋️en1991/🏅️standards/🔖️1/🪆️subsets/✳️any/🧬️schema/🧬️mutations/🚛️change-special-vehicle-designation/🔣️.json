@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚛️change-special-vehicle-designation",
   "semanticKind": "change-special-vehicle-designation",
-  "displayName": "Change Special Vehicle Designation",
+  "displayName": "Change total and axle load designation of the special vehicle in kilonewtons",
   "emoji": "🚛",
   "aggregateVariant": "ChangeSpecialVehicleDesignation",
   "payloadSchema": "🧬️schema/🔣️.json",

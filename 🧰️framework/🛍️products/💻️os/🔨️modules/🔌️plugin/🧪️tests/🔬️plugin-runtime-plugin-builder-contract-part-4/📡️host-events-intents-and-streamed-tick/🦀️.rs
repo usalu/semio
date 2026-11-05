@@ -16,7 +16,7 @@
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         take_test_host_events();
-        let under = |view: ViewModel| ActionMeta { view_state: Some(view), ..meta() };
+        let under = |view: ViewModel| ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(view, semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..meta() };
         app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-1", Some("select"))), &mut identity,cx).await.expect("the first view");
         app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-1", Some("select"))), &mut identity,cx).await.expect("the same utility");
         assert_eq!(take_test_host_events(), Vec::new(), "neither the first view of a window nor an unchanged utility is a switch");
@@ -46,7 +46,7 @@
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         take_test_host_events();
-        let under = ActionMeta { view_state: Some(host_event_view("main-1", None)), ..meta() };
+        let under = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(host_event_view("main-1", None), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..meta() };
         for (kind, event) in [
             ("blur", HostEvent::WindowBlurred { window_id: "main-2".into() }),
             ("captureLost", HostEvent::PointerCaptureLost { window_id: "main-2".into() }),

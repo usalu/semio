@@ -7,7 +7,8 @@
 //! Design §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.
 
 use semio_s_artifact_raster_raster_diff::{canvas, painted, painted_diff, Painted, Refusal};
-use crate::paint_stroke::{painted_inverse, refused, selection_invariant, selection_mask, RasterSelectionSpan};
+use crate::paint_stroke::{painted_inverse, refused, selection_mask};
+use semio_s_artifact_raster_raster_model::RasterSelectionSpans;
 use semio_s_artifact_raster_raster_diff::RasterDiff;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pixels::editing::{PixelEditJob, PixelOperation};
@@ -40,7 +41,7 @@ pub struct ApplyFilter {
     pub layer_id: String,
     pub filter: String,
     pub amount: f64,
-    pub selection: Option<Vec<RasterSelectionSpan>>,
+    pub selection: Option<RasterSelectionSpans>,
 }
 
 /// 🏗️ Builder — wraps an unclipped filter in its dispatch variant.
@@ -55,25 +56,33 @@ const FILTER_TARGET: &str = "pixels";
 //#region 🌈️Filter
 /// 🧯️ The payload-intrinsic laws the schema states (vocabulary, per-filter bounds, a flip takes no selection, ordered
 /// selection runs), checked again before any pixel moves; the first one broken, as the field it names.
-pub fn invariant(payload: &ApplyFilter) -> Result<(), (&'static str, String)> {
+pub fn invalid_field(payload:&ApplyFilter)->Option<&'static str>{
     let Some((_, range)) = RASTER_FILTERS.iter().find(|(filter, _)| *filter == payload.filter) else {
-        return Err(("filter", format!("\"{}\" is not a filter.", payload.filter)));
+        return Some("filter");
     };
     let admitted = match range {
         None => payload.amount == 0.0,
         Some((min, max)) => payload.amount.is_finite() && payload.amount >= *min && payload.amount <= *max && (!matches!(payload.filter.as_str(), "posterize" | "blur") || payload.amount.fract() == 0.0),
     };
     if !admitted {
-        return Err(("amount", format!("{} is not an amount the {} filter takes.", payload.amount, payload.filter)));
+        return Some("amount");
     }
     if payload.selection.is_some() && matches!(payload.filter.as_str(), "flipHorizontal" | "flipVertical") {
-        return Err(("selection", "A flip mirrors the whole image; it takes no selection.".to_string()));
+        return Some("selection");
     }
-    selection_invariant(payload.selection.as_deref())
+    None
+}
+pub fn invariant_fields(payload: &ApplyFilter) -> Result<(), (&'static str, String)> {
+    match invalid_field(payload){Some("filter")=>Err(("filter",format!("\"{}\" is not a filter.",payload.filter))),Some("amount")=>Err(("amount",format!("{} is not an amount the {} filter takes.",payload.amount,payload.filter))),Some(_)=>Err(("selection","A flip mirrors the whole image; it takes no selection.".to_string())),None=>Ok(())}
+}
+
+/// 🧯️ Complete intrinsic filter validation for cold application.
+pub fn invariant(payload: &ApplyFilter) -> Result<(), (&'static str, String)> {
+    invariant_fields(payload)
 }
 
 /// 🎛️ The pixel-engine operation an admitted `payload` means.
-fn operation(payload: &ApplyFilter) -> PixelOperation {
+pub fn operation(payload: &ApplyFilter) -> PixelOperation {
     let amount = payload.amount;
     match payload.filter.as_str() {
         "invert" => PixelOperation::Invert,

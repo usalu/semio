@@ -126,7 +126,7 @@
     {
       "id": "roof-main",
       "roofType": "flat",
-      "pitchDeg": 0,
+      "pitchDeg": 0.0,
       "cE": -0.5,
       "cT": 1.5,
       "hasParapet": false,
@@ -199,9 +199,9 @@
       "id": "",
       "impact": [
         {
-          "vehicleMass": 0,
-          "vehicleSpeed": 0,
-          "assumedForce": 0
+          "vehicleMass": 0.0,
+          "vehicleSpeed": 0.0,
+          "assumedForce": 0.0
         }
       ],
       "explosion": []
@@ -230,7 +230,8 @@
       "id": "footbridge-1",
       "loadedLength": 0.0,
       "deckWidth": 0.0,
-      "naturalFrequency": 0.0
+      "naturalFrequency": 0.0,
+      "assumedServiceAxle": 0.0
     }
   ],
   "railDynamics": [],

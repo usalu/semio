@@ -137,6 +137,6 @@ export function targetWithDefaults(target, root, ownsScript) {
 
 /** 🛠️ Exposes the pinned wasm toolchain (wasm-pack, wasm-bindgen and the immutable Binaryen optimizer preparation) as a target dependency before compiler execution. */
 export function withWasmTooling(targets, required) {
-  if (!targets.wasm || !required) return targets;
+  if (!targets.wasm || !(required || targets.wasm.metadata?.semio?.wasmPackageSourceV1)) return targets;
   return { ...targets, wasm: { ...targets.wasm, options: { ...targets.wasm.options, env: { ...targets.wasm.options?.env, SEMIO_WASM_BUILD_REQUIRED: "1" } }, dependsOn: [...new Set([...(targets.wasm.dependsOn ?? []), "workspace:deps-wasm"])] } };
 }

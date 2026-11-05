@@ -48,6 +48,12 @@ export function buildBackendRowV1(id:string):BackendRowV1{
  if(!row)throw Error(`Unknown build tool: ${id} (${buildBackendAlternationV1()})\nUnbekanntes Build-Werkzeug: ${id} (${buildBackendAlternationV1()})`);
  return row;
 }
+/** 🌿️ Applies declared process defaults while retaining every explicit caller value. */
+export function buildBackendProcessEnvironmentV1(id:string,environment:Readonly<Record<string,string|undefined>>):Record<string,string|undefined>{
+ const resolved={...environment};
+ for(const[key,value]of Object.entries(buildBackendRowV1(id).processEnvironment??{}))if(resolved[key]===undefined)resolved[key]=value;
+ return resolved;
+}
 /** ✔️ Admits a backend id and returns it. */
 export function requireBuildBackendIdV1(id:string):BuildBackendIdV1{return buildBackendRowV1(id).id;}
 /** 🗜️ Whether the backend reads closure markers itself, so its graph keeps the compact input references instead of the portable file lists. */

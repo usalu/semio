@@ -1,8 +1,19 @@
-//! 🗺️ Interaction topology of the norm app surface: every id the interaction domain of an artifact can hold, so the framework's `selectAll` needs no payload (any scene size) and its stale-selection pruning keeps exactly what still exists. Mounted in the inspection crate next to the host routes.
+//! 🗺️ Interaction topology of the norm app surface: every id the interaction domain of an artifact can hold, so the framework's `selectAll` needs no payload (any scene size) and its stale-selection pruning keeps exactly what still exists. Owned independently of panel rendering and host routing.
 //!
 //! 🔗️ Seam: `ArtifactEditor::interaction_topology`; ids: [`entity_address`](crate::viewport3d::picking::entity_address), [`row_address`](crate::row_address) and the `check` granularity of [`GRANULARITY_CHECK`](crate::viewport3d::picking::GRANULARITY_CHECK).
 
-use crate::*;
+extern crate semio_framework_os_kernel as protocol;
+
+pub use semio_s_plugin_norm_app_surface_viewport3d as viewport3d;
+use semio_s_plugin_norm_compliance::CheckReport;
+
+#[path = "🌲️rows/🦀️.rs"]
+mod rows;
+pub use rows::*;
+
+#[path = "👁️visibility/🦀️.rs"]
+mod visibility;
+pub use visibility::*;
 use crate::viewport3d::picking::{entity_address, granularity, GRANULARITY_CHECK};
 use semio_framework_plugin::{DomainTopology, InteractionTopology, TopologyNode};
 use semio_framework_value::DslValue;

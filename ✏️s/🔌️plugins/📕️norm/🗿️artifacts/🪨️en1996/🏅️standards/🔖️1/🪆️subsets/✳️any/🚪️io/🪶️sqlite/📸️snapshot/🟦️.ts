@@ -1,6 +1,6 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from"./🗄️.sql"with{type:"text"};
-import type{En1996Snapshot,MasonryWall,Placement,CaseRow,CaseNumber,CaseText,WallOpening,WallLoadCase,ConcentratedLoad,WallPier,WallLintel,WallTie,WallPrestress,ConfinedElement,ShearFlange,WallBar,MovementJoint,WallChase,LoadCaseSituation,ImposedCategory}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type{En1996Snapshot,MasonryWall,Placement,CaseRow,CaseNumber,CaseText,WallOpening,WallLoadCase,ConcentratedLoad,WallPier,WallLintel,WallTie,WallPrestress,ConfinedElement,ShearFlange,WallBar,MovementJoint,WallChase,En1996LoadCaseSituation as LoadCaseSituation,En1996ImposedCategory as ImposedCategory}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
 import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 import {type Binary64} from "@semio-tech/framework/value/ieee754";

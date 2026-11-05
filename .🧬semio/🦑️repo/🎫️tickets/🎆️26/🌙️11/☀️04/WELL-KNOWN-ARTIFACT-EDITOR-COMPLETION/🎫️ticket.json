@@ -1,0 +1,22 @@
+{
+  "title": "Well Known Artifact Editor Completion",
+  "emoji": "✏️",
+  "status": "open",
+  "description": "Implement and verify all well-known stdio artifact editors end to end. Repair compilation, open/save/close persistence, registry, and runtime browser journeys. Existing research folder WELL-KNOWN-ARTIFACT-EDITORS-END-TO-END has no ticket metadata; this ticket tracks new implementation and verification.",
+  "goal": "runningstdio",
+  "sessions": [
+    "8b72d43a-5d08-4e15-b0b8-86d7722d838f"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-04 16:25:47",
+      "author": "",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Implement and verify all well-known stdio artifact editors end to end. Repair compilation, open/save/close persistence, registry, and runtime browser journeys. Existing research folder WELL-KNOWN-ARTIFACT-EDITORS-END-TO-END has no ticket metadata; this ticket tracks new implementation and verification.",
+      "effort": "high"
+    }
+  ]
+}

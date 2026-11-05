@@ -84,6 +84,13 @@ fn table_tree(body_key: &str, diagram: &Diagram2d, windows: &TreeWindows<'_>, co
         .build()
 }
 
+/// 🏷️ Text owned by one diagram, with the same identity for short and chunked content.
+fn diagram_text(base: &str, role: &str, text: &str) -> UiAssemblyResult<BuiltNode> {
+    let mut node = render_text_chunks(text)?;
+    node.key = ui_text(format!("{base}.{role}"))?;
+    Ok(node)
+}
+
 /// 📈️ The diagrams window body for `body_key`; an empty set shows a hint instead of an empty canvas. Every diagram is published for the screen reader as an image node described by the table node of its twin.
 pub fn render_diagrams(body_key: &str, diagrams: &[Diagram2d], spec: &DiagramsWindowSpec, windows: &TreeWindows<'_>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let lang = crate::viewport3d::config::Lang::of(locale);
@@ -93,13 +100,14 @@ pub fn render_diagrams(body_key: &str, diagrams: &[Diagram2d], spec: &DiagramsWi
     }
     let mut children = Vec::new();
     for diagram in diagrams {
+        let base = surface_id(body_key, diagram);
         let (canvas, _) = diagram_scene(diagram, &LoweringOptions { width: spec.width, height: spec.height, locale, dark: spec.dark, selected: None, hovered: None, min_target_px: crate::device_profiles::touch_hit_px() });
-        children.push(render_text(copy_text(&diagram.title, locale))?);
+        children.push(diagram_text(&base, "title", &copy_text(&diagram.title, locale))?);
         if let Some(basis) = diagram.basis() {
-            children.push(render_text(copy_text(basis, locale))?);
+            children.push(diagram_text(&base, "basis", &copy_text(basis, locale))?);
         }
-        children.push(scene_surface(&surface_id(body_key, diagram), semio_framework_ui_contract::SurfaceKind::Canvas2d, &canvas)?);
-        children.push(render_text_chunks(&accessible_description(diagram, locale))?);
+        children.push(scene_surface(&base, semio_framework_ui_contract::SurfaceKind::Canvas2d, &canvas)?);
+        children.push(diagram_text(&base, "description", &accessible_description(diagram, locale))?);
         children.push(table_tree(body_key, diagram, windows, spec.controller_id, locale)?);
     }
     ui::column().try_children(children).map_err(|_| ui_error("ui.node.children"))?.try_build().map_err(|_| ui_error("ui.node.build"))

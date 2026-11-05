@@ -26,9 +26,16 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1990-diff = { workspace = true }
 semio-s-artifact-norm-en1990-model = { workspace = true }
 
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+
 [features]
 test-support = ["dep:serde", "semio-s-artifact-norm-en1990-diff/test-support", "semio-s-artifact-norm-en1990-model/test-support"]
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde = { workspace = true }
+semio-framework-job = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1990-model = { workspace = true, features = ["test-support"] }
+serde_json = { workspace = true }

@@ -88,17 +88,24 @@ export function applyEditsToTreeV1(tree: DocumentTreeV1, edits: readonly RemoveI
 /** 🧩️ The per-kind remove mutations of one edit, or the reason the kind refuses. */
 export type ResolveRemovalV1<M> = (tree: DocumentTreeV1, edit: RemoveItemEditV1) => Readonly<{ ok: true; mutations: readonly M[] } | { ok: false; error: string }>;
 
-/** 📤️ The verdict of one `deleteEntities`: ONE emit carrying every mutation (so one undo step) with the tree it leads to, a refusal with its code and its notice in both languages, or the sentence of malformed arguments (the action never reaches the reducer). */
-export type DeleteEntitiesVerdictV1<M> =
+/** 📤️ The typed selection produces one atomic emission and one undo step, or a bilingual domain refusal before any mutation. */
+export type DeleteSelectionVerdictV1<M> =
   | Readonly<{ outcome: "emitted"; edits: readonly RemoveItemEditV1[]; mutations: readonly M[]; undoSteps: 1; tree: DocumentTreeV1 }>
-  | Readonly<{ outcome: "refused"; code: string; message: BilingualTextV1 | string; notice: BilingualTextV1 }>
-  | Readonly<{ outcome: "invalid"; error: string }>;
+  | Readonly<{ outcome: "refused"; code: string; message: BilingualTextV1 | string; notice: BilingualTextV1 }>;
+
+/** 🚪️ Raw action admission followed by the typed selection verdict. */
+export type DeleteEntitiesVerdictV1<M> = DeleteSelectionVerdictV1<M> | Readonly<{ outcome: "invalid"; error: string }>;
 
 /** 🗑️ Executes `deleteEntities` on `tree`: the edits of {@link deleteEditsV1}, each resolved by `resolve` into the mutations of its kind, all-or-nothing and in order; the document is untouched on a refusal. */
 export function executeDeleteEntitiesV1<M>(tree: DocumentTreeV1, args: unknown, resolve: ResolveRemovalV1<M>): DeleteEntitiesVerdictV1<M> {
   const parsed = entitiesArgsV1(args);
   if (!parsed.ok) return { outcome: "invalid", error: parsed.error };
-  const planned = deleteEditsV1(tree, parsed.collection, parsed.ids);
+  return executeDeleteSelectionV1(tree, parsed.collection, parsed.ids, resolve);
+}
+
+/** 🗑️ Resolves a typed deletion selection atomically, including reducer refusals before mutation emission. */
+export function executeDeleteSelectionV1<M>(tree: DocumentTreeV1, collection: string, ids: readonly string[], resolve: ResolveRemovalV1<M>): DeleteSelectionVerdictV1<M> {
+  const planned = deleteEditsV1(tree, collection, ids);
   if (!planned.ok) {
     const code = deleteRefusalCodeV1(planned.refusal);
     return { outcome: "refused", code, message: deleteRefusalMessageV1(planned.refusal), notice: NORM_DELETE_NOTICES_V1[code]! };

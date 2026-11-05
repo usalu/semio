@@ -58,3 +58,4 @@ pub use semio_framework_value_control_contract::OriginalRetirementCloseLoan;
 use semio_framework_value_testing_allocator as _;
 
 pub use semio_framework_value_persistent::work;
+pub use semio_framework_value_persistent::list::persistent;

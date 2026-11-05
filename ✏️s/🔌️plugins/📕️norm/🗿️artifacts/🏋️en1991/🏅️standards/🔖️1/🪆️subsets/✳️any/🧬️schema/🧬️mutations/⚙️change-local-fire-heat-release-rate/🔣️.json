@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-local-fire-heat-release-rate",
   "semanticKind": "change-local-fire-heat-release-rate",
-  "displayName": "Change Local Fire Heat Release Rate",
+  "displayName": "Change heat release rate of the localised fire",
   "emoji": "⚙",
   "aggregateVariant": "ChangeLocalFireHeatReleaseRate",
   "payloadSchema": "🧬️schema/🔣️.json",

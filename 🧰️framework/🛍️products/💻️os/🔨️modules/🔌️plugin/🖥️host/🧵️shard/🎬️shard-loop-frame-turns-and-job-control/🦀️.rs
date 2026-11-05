@@ -92,10 +92,10 @@ impl ShardLoop {
         }else{
             let checked=original.input.checkout_guest(turn_budget.retained_policy).map_err(PluginHostError::NativeIo)?.ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event dispatch has no funded checkout")))?;
             let first=original.input.phase()==ActorGuestPhase::Ready;
-            let event=original.input.original().ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event source is absent")))?;
-            let events=if first{std::slice::from_ref(event)}else{&[]};
+            let guest_policy=original.input.guest_policy(checked).map_err(PluginHostError::NativeIo)?;
+            let events=if first{std::slice::from_mut(original.input.original_mut_for_guest(checked).map_err(PluginHostError::NativeIo)?)}else{&mut []};
             let instance=self.instances.get_mut(&actor_id).ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event guest instance is absent")))?;
-            let call=self.identities.get_mut(&allocation).expect("registered actor owns original identity").execute_turn(&self.runtime,instance,events,Budget{retained:checked,retained_policy:original.input.guest_policy(checked).map_err(PluginHostError::NativeIo)?,..turn_budget}).await;
+            let call=self.identities.get_mut(&allocation).expect("registered actor owns original identity").execute_turn(&self.runtime,instance,events,Budget{retained:checked,retained_policy:guest_policy,..turn_budget}).await;
             match call{
                 Ok(result)=>{if let Err(error)=original.retain_dispatched_result(result){let raw=original.pending_raw_return();return self.send_refused_original_call(actor_id,original,error,raw,None).await}if self.send_original_mesh_step(actor_id,original,turn_budget.retained_policy,turn_budget.work_fuel,turn_budget.deadline_us).await?{return Ok(true)}let receipt=match original.input.return_actor_turn(){Ok(receipt)=>receipt,Err(error)=>{let raw=original.pending_raw_return();return self.send_refused_original_call(actor_id,original,error,raw,None).await}};if let Err(error)=self.receive_original_event(actor_id,receipt){return match error{PluginHostError::NativeIo(error)=>{let raw=original.pending_raw_return();self.send_refused_original_call(actor_id,original,error,raw,None).await},error=>Err(error)}}
                     match original.take_received_more_work(receipt){Some(result)=>Ok(result),None=>{self.send_outcome(&ShardOutcome::OriginalCall{actor:actor_id,returned:OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,work_units_spent:receipt.work_units_spent,claimed_remaining:Some(receipt.remaining),claimed_remaining_fuel:Some(receipt.remaining_fuel)},continuation:true,call:None}).await?;return Ok(true)}}},

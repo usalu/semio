@@ -1,5 +1,55 @@
 //! 🧪️ The same JSON cases run against the native pixel implementation and image crate oracle.
 use super::*;
+
+#[test]
+fn refused_pixel_admission_preserves_the_original_source_operation_and_selection() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/job-storage.json")).unwrap();
+    let pixels: Vec<u8> = fixture["pixels"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap() as u8).collect();
+    let mut source = Some(RasterImage {width:2,height:1,pixels:pixels.clone()});
+    let pointer = source.as_ref().unwrap().pixels.as_ptr();
+    let mut operation = Some(PixelOperation::Invert);
+    let mut selection = Some(vec![255]);
+    assert!(PixelEditJob::admit(&mut source,&mut operation,&mut selection).is_err());
+    assert_eq!(source.as_ref().unwrap().pixels.as_ptr(),pointer);
+    assert_eq!(source.as_ref().unwrap().pixels,pixels);
+    assert_eq!(operation,Some(PixelOperation::Invert));
+    assert_eq!(selection,Some(vec![255]));
+}
+
+#[test]
+fn retained_flood_uses_soft_selection_and_stops_at_an_unselected_barrier() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/flood-clipped.json")).unwrap();
+    let bytes = |name: &str| fixture[name].as_array().unwrap().iter().map(|byte| byte.as_u64().unwrap() as u8).collect::<Vec<_>>();
+    let width = fixture["width"].as_u64().unwrap() as u32;
+    let height = fixture["height"].as_u64().unwrap() as u32;
+    let source = std::sync::Arc::new(RasterImage { width,height,pixels:bytes("pixel").repeat(width as usize * height as usize) });
+    let selection = bytes("selection");
+    let mut job = PixelFloodSelectionJob::new(source,0,0,0).unwrap();
+    assert_eq!(job.reserve_queue().unwrap(),width as usize * height as usize * 4);
+    for turn in 0..100 {
+        let progress = job.advance_selected(1,Some(&selection)).unwrap();
+        if progress.done { break; }
+        assert!(turn < 99);
+    }
+    assert_eq!(job.result().unwrap(),bytes("coverage"));
+}
+
+#[test]
+fn a_partial_pixel_job_hands_every_storage_owner_to_explicit_retirement() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/job-storage.json")).unwrap();
+    let pixels: Vec<u8> = fixture["pixels"].as_array().unwrap().iter().map(|byte| byte.as_u64().unwrap() as u8).collect();
+    let mut job = PixelEditJob::new(RasterImage { width: fixture["width"].as_u64().unwrap() as u32, height: fixture["height"].as_u64().unwrap() as u32, pixels: pixels.clone() }, PixelOperation::Invert, Some(vec![255,255])).unwrap();
+    let progress = job.advance(fixture["grant"].as_u64().unwrap() as usize).unwrap();
+    assert_eq!(progress.completed, fixture["completed"].as_u64().unwrap() as usize);
+    assert!(!progress.done);
+    assert!(job.result().is_err());
+    let storage = job.into_storage();
+    assert_eq!(storage.source.pixels, pixels);
+    assert_eq!(storage.output.pixels, fixture["partial"].as_array().unwrap().iter().map(|byte| byte.as_u64().unwrap() as u8).collect::<Vec<_>>());
+    assert_eq!(storage.selection, Some(vec![255,255]));
+    assert!(storage.points.is_empty());
+    assert!(storage.stroke_segments.is_empty());
+}
 use serde_json::Value;
 
 fn fixture() -> Value {
@@ -193,6 +243,27 @@ fn stroke_bounds_language_neutral_cases() {
     }
 }
 
+#[test]
+fn bounded_selection_initialization_sort_and_fill_match_neutral_coverage(){
+    let budget:Value=serde_json::from_str(include_str!("⏳️selection-budget.json")).unwrap();let work=budget["maximumWork"].as_u64().unwrap()as usize;let writes=budget["maximumWrites"].as_u64().unwrap()as usize;
+    let data=fixture();let case=&data["selectionRasterization"];let width=case["width"].as_u64().unwrap()as u32;let height=case["height"].as_u64().unwrap()as u32;
+    let shape=SelectionShape::Polygon(case["shape"]["points"].as_array().unwrap().iter().map(|point|[point[0].as_f64().unwrap(),point[1].as_f64().unwrap()]).collect());
+    let mut job=PixelSelectionJob::begin(width,height,shape).unwrap();let mut done=false;
+    for _ in 0..100000{let progress=job.advance_budget(work,writes).unwrap();assert!(job.last_work_units()<=work);assert!(job.last_write_bytes()<=writes);if progress.done{done=true;break;}assert_eq!(job.result(),Err(PixelEditError::Incomplete));}
+    assert!(done);assert_eq!(job.result().unwrap(),bytes(&case["expected"]));
+    let mut wide=PixelSelectionJob::new(16384,1,SelectionShape::Box{ellipse:false,x:0.0,y:0.0,width:16384.0,height:1.0}).unwrap();
+    assert!(!wide.advance_budget(1024,32768).unwrap().done);assert_eq!(wide.mask.len(),1024);wide.cancel();assert_eq!(wide.result(),Err(PixelEditError::Cancelled));
+}
+
+#[test]
+fn polygon_finite_validation_is_bounded_before_initializing_coverage(){
+    let budget:Value=serde_json::from_str(include_str!("⏳️selection-budget.json")).unwrap();let maximum=budget["maximumWork"].as_u64().unwrap()as usize;
+    let mut points=vec![[0.0,0.0];budget["polygonValidation"]["maximumPoints"].as_u64().unwrap()as usize];points[budget["polygonValidation"]["invalidPoint"].as_u64().unwrap()as usize][1]=f64::NAN;
+    let mut job=PixelSelectionJob::begin(16384,1,SelectionShape::Polygon(points)).unwrap();
+    for _ in 0..1024{let progress=job.advance_budget(maximum,0);assert!(job.last_work_units()<=maximum);assert_eq!(job.last_write_bytes(),0);assert_eq!(job.mask.len(),budget["polygonValidation"]["initialCoverageBytes"].as_u64().unwrap()as usize);if let Err(error)=progress{assert!(matches!(error,PixelEditError::Invalid(_)));return;}}
+    panic!("the final invalid original polygon point was not visited");
+}
+
 /// 🖌️ The in-place painter is byte-identical to the whole-image job: on every brush case of the shared corpus (selected
 /// or not), and on a generated image whose brushes reach past every edge under a graded selection.
 #[test]
@@ -240,6 +311,12 @@ fn flood_selection_language_neutral_cases() {
         let seed = (row["seed"][0].as_u64().unwrap() as u32, row["seed"][1].as_u64().unwrap() as u32);
         let mask = flood_selection(&image, seed.0, seed.1, row["tolerance"].as_u64().unwrap() as u8, selection.as_deref()).unwrap();
         assert_eq!(mask, bytes(&row["expected"]), "{}", row["name"]);
+        if selection.is_none(){
+            let mut job=PixelFloodSelectionJob::new(std::sync::Arc::new(image.clone()),seed.0,seed.1,row["tolerance"].as_u64().unwrap() as u8).unwrap();
+            assert!(job.result().is_err());let mut completed=0;
+            loop{let progress=job.advance(1).unwrap();assert!(progress.completed>=completed);completed=progress.completed;if progress.done{break;}}
+            assert_eq!(job.result().unwrap(),mask);job.cancel();assert!(job.advance(1).is_err());assert!(job.result().is_err());
+        }
     }
     let image = RasterImage { width: 2, height: 1, pixels: vec![0; 8] };
     assert!(flood_selection(&image, 2, 0, 0, None).is_err(), "a seed outside the image");

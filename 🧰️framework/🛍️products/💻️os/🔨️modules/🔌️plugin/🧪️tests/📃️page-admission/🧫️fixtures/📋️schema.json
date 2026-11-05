@@ -1,0 +1,1161 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scope",
+    "initialOwnedBytes",
+    "initialSequence",
+    "quote",
+    "cases",
+    "acceptedReceipts",
+    "frontierRecovery",
+    "ownedFollow"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "initialOwnedBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "initialSequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "quote": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "payload",
+          "events",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "encoding",
+              "value"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "laneReceipt",
+                  "accepted",
+                  "ui",
+                  "download",
+                  "fault",
+                  "terminal"
+                ]
+              },
+              "encoding": {
+                "enum": [
+                  "json",
+                  "raw"
+                ]
+              },
+              "value": {
+                "$ref": "#/definitions/json"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "laneReceipt"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "json"
+                    },
+                    "value": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "generationBefore",
+                        "generationAfter"
+                      ],
+                      "properties": {
+                        "generationBefore": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "generationAfter": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "accepted"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "json"
+                    },
+                    "value": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": [
+                        {
+                          "const": "accepted"
+                        },
+                        {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "ui"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "json"
+                    },
+                    "value": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "kind"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "full"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "kind"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "none"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "kind",
+                            "utilities",
+                            "tools",
+                            "engagements",
+                            "measures",
+                            "labels"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "partial"
+                            },
+                            "windowBodies": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "panelBodies": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "utilities": {
+                              "type": "boolean"
+                            },
+                            "tools": {
+                              "type": "boolean"
+                            },
+                            "engagements": {
+                              "type": "boolean"
+                            },
+                            "measures": {
+                              "type": "boolean"
+                            },
+                            "labels": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "download"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "json"
+                    },
+                    "value": {
+                      "type": "array",
+                      "minItems": 4,
+                      "maxItems": 4,
+                      "items": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "fault"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "raw"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "terminal"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "raw"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "cancelPayload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "encoding",
+              "value"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "laneReceipt",
+                  "accepted",
+                  "ui",
+                  "download",
+                  "fault",
+                  "terminal"
+                ]
+              },
+              "encoding": {
+                "enum": [
+                  "json",
+                  "raw"
+                ]
+              },
+              "value": {
+                "$ref": "#/definitions/json"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "laneReceipt"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "json"
+                    },
+                    "value": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "generationBefore",
+                        "generationAfter"
+                      ],
+                      "properties": {
+                        "generationBefore": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "generationAfter": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "accepted"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "json"
+                    },
+                    "value": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": [
+                        {
+                          "const": "accepted"
+                        },
+                        {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "ui"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "json"
+                    },
+                    "value": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "kind"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "full"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "kind"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "none"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "kind",
+                            "utilities",
+                            "tools",
+                            "engagements",
+                            "measures",
+                            "labels"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "partial"
+                            },
+                            "windowBodies": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "panelBodies": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "utilities": {
+                              "type": "boolean"
+                            },
+                            "tools": {
+                              "type": "boolean"
+                            },
+                            "engagements": {
+                              "type": "boolean"
+                            },
+                            "measures": {
+                              "type": "boolean"
+                            },
+                            "labels": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "download"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "json"
+                    },
+                    "value": {
+                      "type": "array",
+                      "minItems": 4,
+                      "maxItems": 4,
+                      "items": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "fault"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "raw"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "terminal"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "encoding": {
+                      "const": "raw"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "source"
+              ],
+              "properties": {
+                "type": {
+                  "enum": [
+                    "admit",
+                    "present",
+                    "ack",
+                    "cancel",
+                    "retire"
+                  ]
+                },
+                "source": {
+                  "enum": [
+                    "original",
+                    "foreign"
+                  ]
+                },
+                "grant": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items",
+                    "copyBytes",
+                    "capacityBytes",
+                    "releaseBytes",
+                    "depth"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "copyBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "capacityBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "releaseBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "depth": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "admit"
+                      }
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "grant"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "results",
+              "state"
+            ],
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "state": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "phase",
+                  "cancelled",
+                  "ownerRetained",
+                  "outboxAccepts",
+                  "queuedPages",
+                  "nextSequence",
+                  "queuedSequence",
+                  "allocatedBytes",
+                  "releasedBytes",
+                  "frame",
+                  "retainedInput"
+                ],
+                "properties": {
+                  "phase": {
+                    "enum": [
+                      "pending",
+                      "queued",
+                      "presented",
+                      "acknowledged",
+                      "retired"
+                    ]
+                  },
+                  "cancelled": {
+                    "type": "boolean"
+                  },
+                  "ownerRetained": {
+                    "type": "boolean"
+                  },
+                  "outboxAccepts": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "queuedPages": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "nextSequence": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "queuedSequence": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "allocatedBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "releasedBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "frame": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "retainedInput": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "acceptedReceipts": {
+      "const": [
+        {
+          "lane": "artifact",
+          "receipt": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          },
+          "phases": [
+            {
+              "phase": "preparing",
+              "expected": null
+            },
+            {
+              "phase": "awaitingAck",
+              "expected": {
+                "generationBefore": 11,
+                "generationAfter": 12
+              }
+            },
+            {
+              "phase": "closing",
+              "expected": null
+            },
+            {
+              "phase": "complete",
+              "expected": null
+            }
+          ],
+          "deniedCapture": {
+            "expectedPhase": "awaitingAck",
+            "expectedReceipt": {
+              "generationBefore": 11,
+              "generationAfter": 12
+            }
+          }
+        },
+        {
+          "lane": "config",
+          "receipt": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          },
+          "phases": [
+            {
+              "phase": "preparing",
+              "expected": null
+            },
+            {
+              "phase": "awaitingAck",
+              "expected": {
+                "generationBefore": 11,
+                "generationAfter": 12
+              }
+            },
+            {
+              "phase": "closing",
+              "expected": null
+            },
+            {
+              "phase": "complete",
+              "expected": null
+            }
+          ],
+          "deniedCapture": {
+            "expectedPhase": "awaitingAck",
+            "expectedReceipt": {
+              "generationBefore": 11,
+              "generationAfter": 12
+            }
+          }
+        },
+        {
+          "lane": "draft",
+          "receipt": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          },
+          "phases": [
+            {
+              "phase": "preparing",
+              "expected": null
+            },
+            {
+              "phase": "awaitingAck",
+              "expected": {
+                "generationBefore": 11,
+                "generationAfter": 12
+              }
+            },
+            {
+              "phase": "closing",
+              "expected": null
+            },
+            {
+              "phase": "complete",
+              "expected": null
+            }
+          ],
+          "deniedCapture": {
+            "expectedPhase": "awaitingAck",
+            "expectedReceipt": {
+              "generationBefore": 11,
+              "generationAfter": 12
+            }
+          }
+        },
+        {
+          "lane": "presence",
+          "receipt": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          },
+          "phases": [
+            {
+              "phase": "preparing",
+              "expected": null
+            },
+            {
+              "phase": "awaitingAck",
+              "expected": {
+                "generationBefore": 11,
+                "generationAfter": 12
+              }
+            },
+            {
+              "phase": "closing",
+              "expected": null
+            },
+            {
+              "phase": "complete",
+              "expected": null
+            }
+          ],
+          "deniedCapture": {
+            "expectedPhase": "awaitingAck",
+            "expectedReceipt": {
+              "generationBefore": 11,
+              "generationAfter": 12
+            }
+          }
+        },
+        {
+          "lane": "transient",
+          "receipt": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          },
+          "phases": [
+            {
+              "phase": "preparing",
+              "expected": null
+            },
+            {
+              "phase": "awaitingAck",
+              "expected": {
+                "generationBefore": 11,
+                "generationAfter": 12
+              }
+            },
+            {
+              "phase": "closing",
+              "expected": null
+            },
+            {
+              "phase": "complete",
+              "expected": null
+            }
+          ],
+          "deniedCapture": {
+            "expectedPhase": "awaitingAck",
+            "expectedReceipt": {
+              "generationBefore": 11,
+              "generationAfter": 12
+            }
+          }
+        },
+        {
+          "lane": "windowConfig",
+          "receipt": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          },
+          "phases": [
+            {
+              "phase": "preparing",
+              "expected": null
+            },
+            {
+              "phase": "awaitingAck",
+              "expected": {
+                "generationBefore": 11,
+                "generationAfter": 12
+              }
+            },
+            {
+              "phase": "closing",
+              "expected": null
+            },
+            {
+              "phase": "complete",
+              "expected": null
+            }
+          ],
+          "deniedCapture": {
+            "expectedPhase": "awaitingAck",
+            "expectedReceipt": {
+              "generationBefore": 11,
+              "generationAfter": 12
+            }
+          }
+        },
+        {
+          "lane": "windowTransient",
+          "receipt": {
+            "generationBefore": 11,
+            "generationAfter": 12
+          },
+          "phases": [
+            {
+              "phase": "preparing",
+              "expected": null
+            },
+            {
+              "phase": "awaitingAck",
+              "expected": {
+                "generationBefore": 11,
+                "generationAfter": 12
+              }
+            },
+            {
+              "phase": "closing",
+              "expected": null
+            },
+            {
+              "phase": "complete",
+              "expected": null
+            }
+          ],
+          "deniedCapture": {
+            "expectedPhase": "awaitingAck",
+            "expectedReceipt": {
+              "generationBefore": 11,
+              "generationAfter": 12
+            }
+          }
+        }
+      ]
+    },
+    "frontierRecovery": {
+      "const": [
+        {
+          "id": "normal",
+          "initial": {
+            "generation": 0,
+            "revision": "g0"
+          },
+          "committed": {
+            "generation": 1,
+            "revision": "g1"
+          },
+          "later": {
+            "generation": 2,
+            "revision": "g2"
+          },
+          "outerPostFailure": false,
+          "expected": {
+            "receipt": {
+              "generationBefore": 0,
+              "generationAfter": 1
+            },
+            "pageGeneration": 1,
+            "pageRevision": "g1",
+            "commits": 1,
+            "liveGeneration": 2
+          }
+        },
+        {
+          "id": "outer-post-failure",
+          "initial": {
+            "generation": 0,
+            "revision": "g0"
+          },
+          "committed": {
+            "generation": 1,
+            "revision": "g1"
+          },
+          "later": {
+            "generation": 2,
+            "revision": "g2"
+          },
+          "outerPostFailure": true,
+          "expected": {
+            "receipt": {
+              "generationBefore": 0,
+              "generationAfter": 1
+            },
+            "pageGeneration": 1,
+            "pageRevision": "g1",
+            "commits": 1,
+            "liveGeneration": 2
+          }
+        }
+      ]
+    },
+    "ownedFollow": {
+      "const": [
+        {
+          "cancel": "none",
+          "expected": {
+            "acceptedPages": 1,
+            "followCalls": 1,
+            "derivedActions": 1,
+            "receiptPauses": 1,
+            "receipt": "original"
+          }
+        },
+        {
+          "cancel": "context",
+          "expected": {
+            "acceptedPages": 1,
+            "followCalls": 0,
+            "derivedActions": 0,
+            "receiptPauses": 1,
+            "receipt": "original"
+          }
+        },
+        {
+          "cancel": "token",
+          "expected": {
+            "acceptedPages": 1,
+            "followCalls": 0,
+            "derivedActions": 0,
+            "receiptPauses": 1,
+            "receipt": "original"
+          }
+        },
+        {
+          "cancel": "document",
+          "expected": {
+            "acceptedPages": 1,
+            "followCalls": 0,
+            "derivedActions": 0,
+            "receiptPauses": 1,
+            "receipt": "original"
+          }
+        },
+        {
+          "cancel": "instance",
+          "expected": {
+            "acceptedPages": 1,
+            "followCalls": 0,
+            "derivedActions": 0,
+            "receiptPauses": 1,
+            "receipt": "original"
+          }
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "json": {
+      "anyOf": [
+        {
+          "type": [
+            "null",
+            "boolean",
+            "number",
+            "string"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/json"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/json"
+          }
+        }
+      ]
+    }
+  }
+}

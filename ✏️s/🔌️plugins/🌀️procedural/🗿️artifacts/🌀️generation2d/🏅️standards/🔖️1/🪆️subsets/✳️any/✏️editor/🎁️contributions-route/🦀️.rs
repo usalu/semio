@@ -68,7 +68,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
         let Generation2dCommand::SetContributions(payload) = input.command else {
             return Err(Fault::from("generation2d-contributions-route-rejected"));
         };
-        let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+        let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
         let servable = semio_s_artifact_procedural_2d_preview_eval::may_rearm(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
             let mut emit = Emit::default();

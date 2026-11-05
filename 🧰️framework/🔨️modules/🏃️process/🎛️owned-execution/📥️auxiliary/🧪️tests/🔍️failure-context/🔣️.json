@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {
+      "phase": "pipe-missing",
+      "error": null,
+      "expected": {
+        "operation": "auxiliary-publication",
+        "descriptor": 3,
+        "phase": "pipe-missing",
+        "code": null,
+        "syscall": null
+      }
+    },
+    {
+      "phase": "error-event",
+      "error": {
+        "code": "EPIPE",
+        "syscall": "write"
+      },
+      "expected": {
+        "operation": "auxiliary-publication",
+        "descriptor": 3,
+        "phase": "error-event",
+        "code": "EPIPE",
+        "syscall": "write"
+      }
+    },
+    {
+      "phase": "close-event",
+      "error": null,
+      "expected": {
+        "operation": "auxiliary-publication",
+        "descriptor": 3,
+        "phase": "close-event",
+        "code": null,
+        "syscall": null
+      }
+    },
+    {
+      "phase": "end-callback",
+      "error": {
+        "code": "EPERM",
+        "syscall": "write"
+      },
+      "expected": {
+        "operation": "auxiliary-publication",
+        "descriptor": 3,
+        "phase": "end-callback",
+        "code": "EPERM",
+        "syscall": "write"
+      }
+    },
+    {
+      "phase": "end-call",
+      "error": null,
+      "expected": {
+        "operation": "auxiliary-publication",
+        "descriptor": 3,
+        "phase": "end-call",
+        "code": null,
+        "syscall": null
+      }
+    }
+  ]
+}

@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC2",
   "members": [
     {
       "id": "beam-B1",
@@ -96,24 +95,6 @@
       ]
     }
   ],
-  "placements": [
-    {
-      "id": "beam-B1",
-      "x": 2.5,
-      "y": 1.0,
-      "z": 1.0,
-      "yaw": 1.0
-    }
-  ],
-  "tapers": [],
-  "cutouts": [],
-  "fasteners": [],
-  "panels": [],
-  "floors": [],
-  "diaphragms": [],
-  "trusses": [],
-  "bracings": [],
-  "decks": [],
   "ulsEquation": "eq610",
   "cases": [
     {
@@ -138,5 +119,24 @@
         }
       ]
     }
-  ]
+  ],
+  "placements": [
+    {
+      "id": "beam-B1",
+      "x": 2.5,
+      "y": 1.0,
+      "z": 1.0,
+      "yaw": 1.0
+    }
+  ],
+  "tapers": [],
+  "cutouts": [],
+  "fasteners": [],
+  "panels": [],
+  "floors": [],
+  "diaphragms": [],
+  "trusses": [],
+  "bracings": [],
+  "decks": [],
+  "reliabilityClass": "RC2"
 }

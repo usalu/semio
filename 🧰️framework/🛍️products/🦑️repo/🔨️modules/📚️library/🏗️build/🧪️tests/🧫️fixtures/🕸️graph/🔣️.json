@@ -3013,7 +3013,7 @@
           "--configuration=prototype"
         ],
         "native": {
-          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/t",
+          "artifactDirectory": ".cache/b/r/m/u/l/d/t",
           "transport": {
             "maximumBytes": 134217728,
             "maximumLines": 1000000
@@ -3041,7 +3041,7 @@
           "--configuration=prototype"
         ],
         "native": {
-          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/t",
+          "artifactDirectory": ".cache/b/r/m/u/l/d/t",
           "transport": {
             "maximumBytes": 134217728,
             "maximumLines": 1000000
@@ -3069,7 +3069,7 @@
           "--configuration=prototype"
         ],
         "native": {
-          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/t",
+          "artifactDirectory": ".cache/b/r/m/u/l/d/t",
           "transport": {
             "maximumBytes": 134217728,
             "maximumLines": 1000000
@@ -3111,7 +3111,7 @@
       {
         "platform": "posix",
         "root": "/work/semio",
-        "artifact": "/work/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/t"
+        "artifact": "/work/semio/.cache/b/r/m/u/l/d/t"
       },
       {
         "platform": "win32",

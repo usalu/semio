@@ -123,12 +123,18 @@ impl Puzzle3dInteractionSnapshot {
     /// retained tool job is handed, so a command reusing a render helper sees the same selection and
     /// hover the viewport painted.
     pub fn from_state(state: &protocol::InteractionState, hover: &semio_framework_plugin::app::InteractionHoverState) -> Self {
+        let mut result=Self::from_selection_state(state);
+        result.hovered=hover.get(PUZZLE3D_INTERACTION_DOMAIN).filter(|hover|hover.channel==PUZZLE3D_HOVER_CHANNEL).map(|hover|hover.ids.clone()).unwrap_or_default();
+        result
+    }
+
+    /// ✂️ Clipboard operations read selected identities and granularity without retaining an unused hover map.
+    pub fn from_selection_state(state:&protocol::InteractionState)->Self{
         let selection = state.selection.get(PUZZLE3D_INTERACTION_DOMAIN);
-        let hovered = hover.get(PUZZLE3D_INTERACTION_DOMAIN).filter(|hover| hover.channel == PUZZLE3D_HOVER_CHANNEL).map(|hover| hover.ids.clone()).unwrap_or_default();
         let leftover_ids: Vec<String> = state.selection.values().flat_map(|selection| selection.ids.iter().cloned()).collect();
         let selected = selection.filter(|selection| !selection.ids.is_empty()).map(|selection| selection.ids.clone()).unwrap_or(leftover_ids);
         let granularity = selection.map(|selection| selection.granularity.clone()).filter(|granularity| !granularity.is_empty()).unwrap_or_else(|| if selected.is_empty() { String::new() } else { PUZZLE3D_GRANULARITY_OBJECT.to_string() });
-        Self { granularity, selected, hovered, referenced: Vec::new() }
+        Self { granularity, selected, hovered:Vec::new(), referenced: Vec::new() }
     }
 
     pub fn selected_ids(&self, granularity: &str) -> &[String] {

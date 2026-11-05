@@ -22,7 +22,7 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeLocalFireAssumedFl
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change localised fire: Assumed heat flux", "lokaler Brand: Angesetzter Wärmestrom ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change assumed heat flux of the localised fire", "Angesetzten Wärmestrom des lokalen Brandes ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

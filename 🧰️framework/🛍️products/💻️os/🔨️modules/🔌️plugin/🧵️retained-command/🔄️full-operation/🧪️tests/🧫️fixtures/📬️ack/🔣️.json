@@ -1,0 +1,452 @@
+{
+  "version": 1,
+  "evidence": "Permanent neutral regression inputs; actual Rust producer and host publication paths must consume these expectations.",
+  "initial": {
+    "stage": "awaitingAck",
+    "token": {
+      "operation": 41,
+      "receiver": 7,
+      "sequence": 3,
+      "generation": 0,
+      "attempt": 0
+    },
+    "lane": "per-case",
+    "presented": true,
+    "payloadOctets": [
+      65,
+      67,
+      75,
+      32,
+      112,
+      97,
+      103,
+      101
+    ]
+  },
+  "advance": {
+    "funding": "actual-original-context",
+    "denial": "zero-only-named-currency-keep-other-authored-bounds",
+    "limit": 4096,
+    "forbiddenFixtureHelpers": [
+      "close_fixture_original_page"
+    ]
+  },
+  "cases": [
+    {
+      "name": "progress-ack-closes-before-next-page",
+      "lane": "progress",
+      "ackToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      },
+      "deniedCurrency": "none",
+      "expected": {
+        "ackAccepted": true,
+        "stageAfterAck": "publishing",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": false,
+        "presentedAfterAdvance": false,
+        "samePageAfterAdvance": false,
+        "queueNextAllowed": true,
+        "operationMustReachTerminal": false,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    },
+    {
+      "name": "artifact-ack-closes-before-next-page",
+      "lane": "artifact",
+      "ackToken": {
+        "receiver": 7,
+        "operation": 41,
+        "generation": 1,
+        "sequence": 0,
+        "attempt": 1
+      },
+      "deniedCurrency": "none",
+      "expected": {
+        "ackAccepted": true,
+        "stageAfterAck": "publishing",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": false,
+        "presentedAfterAdvance": false,
+        "samePageAfterAdvance": false,
+        "queueNextAllowed": true,
+        "operationMustReachTerminal": false,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "receiver": 7,
+        "operation": 41,
+        "generation": 1,
+        "sequence": 0,
+        "attempt": 1
+      }
+    },
+    {
+      "name": "denied-items-retains-original-page",
+      "lane": "progress",
+      "ackToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      },
+      "deniedCurrency": "items",
+      "expected": {
+        "ackAccepted": true,
+        "stageAfterAck": "publishing",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": true,
+        "presentedAfterAdvance": true,
+        "samePageAfterAdvance": true,
+        "queueNextAllowed": false,
+        "operationMustReachTerminal": false,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    },
+    {
+      "name": "denied-copyBytes-retains-original-page",
+      "lane": "progress",
+      "ackToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      },
+      "deniedCurrency": "copyBytes",
+      "expected": {
+        "ackAccepted": true,
+        "stageAfterAck": "publishing",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": true,
+        "presentedAfterAdvance": true,
+        "samePageAfterAdvance": true,
+        "queueNextAllowed": false,
+        "operationMustReachTerminal": false,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    },
+    {
+      "name": "denied-releaseBytes-retains-original-page",
+      "lane": "progress",
+      "ackToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      },
+      "deniedCurrency": "releaseBytes",
+      "expected": {
+        "ackAccepted": true,
+        "stageAfterAck": "publishing",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": true,
+        "presentedAfterAdvance": true,
+        "samePageAfterAdvance": true,
+        "queueNextAllowed": false,
+        "operationMustReachTerminal": false,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    },
+    {
+      "name": "denied-depth-retains-original-page",
+      "lane": "progress",
+      "ackToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      },
+      "deniedCurrency": "depth",
+      "expected": {
+        "ackAccepted": true,
+        "stageAfterAck": "publishing",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": true,
+        "presentedAfterAdvance": true,
+        "samePageAfterAdvance": true,
+        "queueNextAllowed": false,
+        "operationMustReachTerminal": false,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    },
+    {
+      "name": "terminal-ack-fully-retires-original-page",
+      "lane": "terminal",
+      "ackToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      },
+      "deniedCurrency": "none",
+      "expected": {
+        "ackAccepted": true,
+        "stageAfterAck": "retiring",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": false,
+        "presentedAfterAdvance": false,
+        "samePageAfterAdvance": false,
+        "queueNextAllowed": false,
+        "operationMustReachTerminal": true,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    },
+    {
+      "name": "invalid-operation-does-not-acknowledge",
+      "lane": "progress",
+      "ackToken": {
+        "operation": 42,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      },
+      "deniedCurrency": "none",
+      "expected": {
+        "ackAccepted": false,
+        "stageAfterAck": "awaitingAck",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": true,
+        "presentedAfterAdvance": true,
+        "samePageAfterAdvance": true,
+        "queueNextAllowed": false,
+        "operationMustReachTerminal": false,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    },
+    {
+      "name": "invalid-receiver-does-not-acknowledge",
+      "lane": "progress",
+      "ackToken": {
+        "operation": 41,
+        "receiver": 8,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      },
+      "deniedCurrency": "none",
+      "expected": {
+        "ackAccepted": false,
+        "stageAfterAck": "awaitingAck",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": true,
+        "presentedAfterAdvance": true,
+        "samePageAfterAdvance": true,
+        "queueNextAllowed": false,
+        "operationMustReachTerminal": false,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    },
+    {
+      "name": "invalid-sequence-does-not-acknowledge",
+      "lane": "progress",
+      "ackToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 4,
+        "generation": 0,
+        "attempt": 0
+      },
+      "deniedCurrency": "none",
+      "expected": {
+        "ackAccepted": false,
+        "stageAfterAck": "awaitingAck",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": true,
+        "presentedAfterAdvance": true,
+        "samePageAfterAdvance": true,
+        "queueNextAllowed": false,
+        "operationMustReachTerminal": false,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    },
+    {
+      "name": "invalid-generation-does-not-acknowledge",
+      "lane": "progress",
+      "ackToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 1,
+        "attempt": 0
+      },
+      "deniedCurrency": "none",
+      "expected": {
+        "ackAccepted": false,
+        "stageAfterAck": "awaitingAck",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": true,
+        "presentedAfterAdvance": true,
+        "samePageAfterAdvance": true,
+        "queueNextAllowed": false,
+        "operationMustReachTerminal": false,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    },
+    {
+      "name": "invalid-attempt-does-not-acknowledge",
+      "lane": "progress",
+      "ackToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 1
+      },
+      "deniedCurrency": "none",
+      "expected": {
+        "ackAccepted": false,
+        "stageAfterAck": "awaitingAck",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": true,
+        "presentedAfterAdvance": true,
+        "samePageAfterAdvance": true,
+        "queueNextAllowed": false,
+        "operationMustReachTerminal": false,
+        "advanceRefused": false
+      },
+      "sourceMatches": true,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    },
+    {
+      "name": "wrong-original-source-refuses-page-advance",
+      "lane": "progress",
+      "ackToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      },
+      "deniedCurrency": "none",
+      "expected": {
+        "ackAccepted": true,
+        "stageAfterAck": "publishing",
+        "originalRetainedAfterAck": true,
+        "presentedAfterAck": true,
+        "originalRetainedAfterAdvance": true,
+        "presentedAfterAdvance": true,
+        "samePageAfterAdvance": true,
+        "queueNextAllowed": false,
+        "operationMustReachTerminal": false,
+        "advanceRefused": true
+      },
+      "sourceMatches": false,
+      "initialToken": {
+        "operation": 41,
+        "receiver": 7,
+        "sequence": 3,
+        "generation": 0,
+        "attempt": 0
+      }
+    }
+  ]
+}

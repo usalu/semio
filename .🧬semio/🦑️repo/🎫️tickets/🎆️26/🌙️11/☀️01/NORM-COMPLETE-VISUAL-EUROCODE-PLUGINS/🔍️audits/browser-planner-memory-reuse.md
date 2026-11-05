@@ -1,0 +1,22 @@
+# Browser Planner Memory And Reuse Trace
+
+Bounded read-only current source and existing browser-current.log inspection; no new planner, process start, global setting or source change. Root independently confirmed killed original processes absent. Log ends genuine OwnedCommandFailure build:graph-plan SIGKILL, then outer command1. It also reports refreshing877projects from generation320 and123stale facts before the inference work. This establishes process failure, not a measured allocation culprit. Critical host pressure was separately observed by actual native capacity logs; SIGKILL alone does not establish its sender.
+
+All source paths below are relative to 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build.
+
+Existing memory ownership:
+
+- 🧭️invocation/🕸️graph/🟦️.ts:29 isolates non-reuse planning in an owned child; doc explicitly identifies JSC construction heap retention. Child launch uses captured source, inherited issued phase and graphChildHeapBytesV1 at61–64, not another front door. Parent parses finished plan only after child exits70–71; finally removes temporary plan directory.
+- Same file writeBuildGraphPlanV1 streams top-level projects individually and array edges in4096-row chunks; it avoids a single whole graph output string, but retains the in-memory graph being emitted. Parent memo path still receives complete plan text then JSON.parse and graph validation.
+- 🕸️graph/🟦️.ts:188 holds expandedClosuresV1 Map of expanded inputlists, bounded by maximumCachedClosureEntries190. releaseBuildGraphV1:197–204 replaces graph content with refusal getters, clears closure/interner caches, yields then collects. Setup shares563 are WeakMap keyed by command, retaining cache until invocation release.
+- Inference part607 holds nodeRows and derivedFacts, context/setupshare;613 holds project/external/config/tag maps plus test/primary sets;640–645 holds inferred projects, edge refresh/processed owner sets, direct file maps and graphcontext while dependency inference runs. No evidence here isolates which is responsible for SIGKILL.
+- 🧠️memory/🟨️.mjs:159–169 string interner is bounded by maximumInternedCharacters and cleared at limit. Generation loader drops engine indexes308 and releases builder after refresh; assembly319–322 accumulates expanded selected projects and assembled dependency/external metadata. expandStreamV1:284 bounds transient raw-node groups but retains the complete expanded result.
+
+Supported reuse and selection:
+
+- 🕸️graph/🚪️admission/🟦️.ts buildInvocationGraphSelectionV1 maps genuine repo run PROJECT:TARGET[:CONFIG] to tasks selection. Literal run-many project/target selectors and exec project selectors produce owner selection; broad roster commands default all. Selected load graph/🟦️.ts:794–799 uses newest sealed generation and computes selected closure. It explicitly builds a generation first if none is usable. Thus selecting one activation target already has a supported path but cannot promise zero workspace discovery.
+- --graph-policy=current is actual supported public flag before --, parsed in generation loader111–122 and forwarded by invocation173–190. Loader policy current can serve a sealed generation without verification, including one from older implementation (messages13/24). It is a snapshot choice, not proof current edited source is represented. A builder uses fresh policy305 if current snapshot cannot serve.
+- True nested reuse graph/🟦️.ts826 reads issued publication and requires exact original admission selection; invocation graph loader handles ancestor selection custody14–22. It is not a public arbitrary graph-file/pin injection port. Do not fabricate pin or ScriptInvocation to force reuse.
+- Graph memo command wrapper lookup can serve a previously sealed command slice only after real implementation identity, journal/fact/selection proof. A miss calls the same planner child; no successful hit from this failed browser run was observed.
+
+The direct dev script still requires owned activation through repo run, as root identified. This review supplies no bypass and does not recommend immediately retrying under unchanged host pressure. The supported next attempt must use actual selected target/current policy only if its sealed snapshot is appropriate, while retaining ordinary owned capacity and admission; current evidence does not prove that generation is usable or includes new inspector/native-input owners.

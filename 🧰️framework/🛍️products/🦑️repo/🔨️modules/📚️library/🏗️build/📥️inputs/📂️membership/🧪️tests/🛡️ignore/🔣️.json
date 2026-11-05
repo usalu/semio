@@ -8,8 +8,8 @@
     { "path": "domain/target/debug/program", "ignored": true, "cargoDirectories": ["target"], "buildDirectories": ["target"] },
     { "path": "domain/target-prototype/debug/program", "ignored": true, "cargoDirectories": ["target-prototype"], "buildDirectories": ["target-prototype"] },
     { "path": ".cache/b/g/m/graph.json", "ignored": true, "cargoDirectories": [], "buildDirectories": [] },
-    { "path": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target/debug/program", "ignored": true, "cargoDirectories": ["target"], "buildDirectories": ["target"] },
-    { "path": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/build/output", "ignored": true, "cargoDirectories": [], "buildDirectories": ["build"] },
+    { "path": ".cache/b/r/m/cargo/shared/target/debug/program", "ignored": true, "cargoDirectories": ["target"], "buildDirectories": ["target"] },
+    { "path": ".cache/b/r/m/cargo/shared/build/output", "ignored": true, "cargoDirectories": [], "buildDirectories": ["build"] },
     { "path": "domain/🗑️generated/🎯️target/output", "ignored": true, "cargoDirectories": [], "buildDirectories": [] },
     { "path": "domain/node_modules/dependency/index.js", "ignored": true, "cargoDirectories": [], "buildDirectories": [] },
     { "path": "domain/dist/index.js", "ignored": true, "cargoDirectories": [], "buildDirectories": ["dist"] }

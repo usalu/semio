@@ -228,3 +228,8 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 }
 
 /// 🎞️ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
+#[test]
+fn compiled_input_metadata_matches_all_native_schema_rows() {
+    let findings = semio_s_plugin_norm_app_surface::norm_compiled_input_findings::<Iso16757PlayApp>();
+    assert!(findings.is_empty(), "{}", findings.join("\n"));
+}

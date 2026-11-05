@@ -288,6 +288,10 @@ message En1992MembersPatch {
   optional En1992MembersBarsRows bars = 46;
   optional En1992MembersTendonPointsRows tendon_points = 47;
   optional En1992MembersStudRowsRows stud_rows = 48;
+  optional string punching_beta_method = 49;
+  optional double punching_moment_c1 = 50;
+  optional double punching_moment_c2 = 51;
+  optional En1992MembersOpeningsRows openings = 52;
 }
 message En1992MembersRemoved {
   string id = 1;
@@ -386,7 +390,7 @@ message En1992MembersTendonPointsRows {
 }
 message En1992PlacementsInserted {
   uint64 index = 1;
-  LoadCaseActions row = 2;
+  Placement row = 2;
 }
 message En1992PlacementsModified {
   string id = 1;
@@ -474,7 +478,7 @@ message En1992ReinforcementGradesRows {
 }
 message En1992MembersOpeningsInserted {
   uint64 index = 1;
-  LoadCaseActions row = 2;
+  Opening row = 2;
 }
 message En1992MembersOpeningsModified {
   string id = 1;

@@ -1,0 +1,54 @@
+{
+  "schema": {
+    "type": "array",
+    "minItems": 7,
+    "uniqueItems": true,
+    "items": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "cases": [
+    "durability",
+    "duplicate",
+    "reopen",
+    "load",
+    "identity",
+    "stale",
+    "cancel",
+    "save-durable-readback",
+    "save-palette-draft",
+    "save-cancel",
+    "save-stale",
+    "save-archive-failure",
+    "save-retired-export",
+    "save-edited-export"
+  ],
+  "expectedBeforeAck": [
+    "import",
+    "write",
+    "attach",
+    "catalog"
+  ],
+  "expectedPublished": [
+    "focus",
+    "shell.documentTransfer.file-opened"
+  ],
+  "expectedFailureCleanup": [
+    "drain",
+    "destroy"
+  ],
+  "saveDraftBeforeAck": [
+    "write",
+    "attach",
+    "catalog"
+  ],
+  "savePublished": [
+    "export",
+    "shell.documentTransfer.file-saved"
+  ],
+  "saveRequests": [
+    "localDocumentArchive",
+    "externalChanged"
+  ]
+}

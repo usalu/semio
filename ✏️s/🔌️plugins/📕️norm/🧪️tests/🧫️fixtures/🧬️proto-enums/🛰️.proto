@@ -1,0 +1,11 @@
+syntax = "proto3";
+enum NodeARestraint {
+  NODE_A_RESTRAINT_FRAMED = 0;
+  NODE_A_RESTRAINT_FIXED = 1;
+  NODE_A_RESTRAINT_PINNED = 2;
+}
+enum NodeBRestraint {
+  NODE_B_RESTRAINT_FRAMED = 0;
+  NODE_B_RESTRAINT_FIXED = 1;
+  NODE_B_RESTRAINT_PINNED = 2;
+}

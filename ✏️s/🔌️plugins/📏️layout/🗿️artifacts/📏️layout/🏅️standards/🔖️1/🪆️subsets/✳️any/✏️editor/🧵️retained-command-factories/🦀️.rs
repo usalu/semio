@@ -77,7 +77,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
             return Err(Fault::from("layout-window-work-terminal"));
         }
         let window_config_snapshot = input.context.and_then(|context| context.window_config.as_ref());
-        let window = input.context.and_then(|context| context.view_state.as_ref());
+        let window = input.context.and_then(|context| context.view_state.as_deref());
         let addressed_window = || window.ok_or_else(|| Fault::from("layout-window-view-required"));
         let mut config = blueprint::config::from_snapshot(window_config_snapshot);
         let mut transient = blueprint::transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));

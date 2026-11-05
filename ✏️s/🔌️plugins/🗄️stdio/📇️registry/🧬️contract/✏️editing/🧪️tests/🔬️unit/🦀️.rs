@@ -159,16 +159,20 @@ impl fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparat
 
 struct ProbePreparation {
     remaining: usize,
+    last_work: u64,
     checkpoint: fixture_store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
     closing: bool,
 }
 
 impl fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<u8, u8> for ProbePreparation {
+    fn last_turn_work(&self)->u64{self.last_work}
     fn advance(&mut self, _body: usize, grant: fixture_store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        self.last_work=0;
         if !grant.permits_one() || self.cancelled || self.closing || self.remaining == 0 {
             return Ok(fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
+        self.last_work=1;
         self.remaining -= 1;
         self.checkpoint.cursor += 1;
         self.checkpoint.completed_items += 1;
@@ -232,14 +236,19 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
     let lifecycle = &fixture["lifecycle"];
     let units = lifecycle["units"].as_u64().expect("units") as usize;
     let cancel_after = lifecycle["cancelAfter"].as_u64().expect("cancel after") as usize;
-    let mut preparation = ProbePreparation { remaining: units, checkpoint: Default::default(), cancelled: false, closing: false };
+    let mut preparation = ProbePreparation { remaining: units, last_work:0, checkpoint: Default::default(), cancelled: false, closing: false };
     let grant = fixture_store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items:1,maximum_copy_bytes:std::mem::size_of::<usize>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1 };
     let mut receiving = semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant());
     let mut progress = Vec::new();
     for _ in 0..cancel_after {
-        let fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, _) = receiving.receive(|control| fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::advance(&mut preparation, 0, grant, control)).expect("progress") else {
+        let fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, physical) = receiving.receive(|control| fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::advance(&mut preparation, 0, grant, control)).expect("progress") else {
             panic!("retained preparation did not progress");
         };
+        assert_eq!(physical.copied_items,0);
+        assert_eq!(fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::last_turn_work(&preparation),1);
+        let denied=fixture_store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:0,..grant};
+        assert_eq!(receiving.receive(|control|fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::advance(&mut preparation,0,denied,control)).unwrap(),fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+        assert_eq!(fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::last_turn_work(&preparation),0);
         progress.push(checkpoint.cursor as u64);
     }
     assert_eq!(progress, lifecycle["expectedProgress"].as_array().expect("progress").iter().map(|value| value.as_u64().expect("cursor")).collect::<Vec<_>>());

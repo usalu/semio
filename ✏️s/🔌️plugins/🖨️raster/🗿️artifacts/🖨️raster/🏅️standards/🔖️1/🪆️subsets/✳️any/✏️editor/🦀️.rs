@@ -32,6 +32,12 @@ mod reserved_import;
 mod retained_commands;
 #[path = "📬️store-preparation/🦀️.rs"]
 mod store_preparation;
+#[path = "🌱️initialization/🦀️.rs"]
+pub mod original_genesis;
+pub use original_genesis::{RasterNativeRegistration,RasterInstanceDeclarations};
+#[path="🎟️resource-policy/🦀️.rs"]
+mod resource_policy;
+pub use resource_policy::raster_mounted_owner_policy;
 #[path = "🌉️wasm/🦀️.rs"]
 pub mod wasm;
 //#endregion 🪢️TaxonomyMounts

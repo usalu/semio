@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-pack-json-canonical"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Canonical typed JSON text, scalar and retained tree encoding."
+
+[package.metadata.semio]
+role = "framework"
+id = "pack-json-canonical"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-pack-json-float = { path = "../../../🎯️float-writer/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../../🌱️value/🗂️ordered/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value-shared-issuance = { path = "../../../../../🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+semio-framework-trace = { workspace = true }

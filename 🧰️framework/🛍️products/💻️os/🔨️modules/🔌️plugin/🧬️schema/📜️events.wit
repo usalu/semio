@@ -56,6 +56,13 @@ interface events {
     body-key: string,
     view-state: list<u8>,
   }
+  /// 📝️ An original ephemeral argument request is independent of the mounted typed view context.
+  record staged-form-requested-event {
+    instance: instance-id,
+    surface: string,
+    body-key: string,
+    request: pack,
+  }
   record surface-hidden-event {
     surface: surface-ref,
   }
@@ -148,6 +155,7 @@ interface events {
     quota-changed(quota-changed-event),
     ui-intent(ui-intent-event),
     surface-visible(surface-visible-event),
+    staged-form-requested(staged-form-requested-event),
     surface-hidden(surface-hidden-event),
     surface-resized(surface-resized-event),
     patch-ack(patch-ack-event),

@@ -1147,7 +1147,7 @@
               "directoryName": "✅apply"
             },
             {
-              "id": "insert-member-dupe",
+              "id": "insert-placement-dupe",
               "directoryName": "⛔dupe"
             }
           ]
@@ -1164,1212 +1164,6 @@
           ]
         },
         {
-          "mutationId": "insert-taper",
-          "sourceMutationDirectoryName": "➕️insert-taper",
-          "mutationDirectoryName": "➕️insert-taper",
-          "scenarios": [
-            {
-              "id": "insert-taper",
-              "directoryName": "✅apply"
-            },
-            {
-              "id": "insert-member-dupe",
-              "directoryName": "⛔dupe"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-taper",
-          "sourceMutationDirectoryName": "➖️remove-taper",
-          "mutationDirectoryName": "➖️remove-taper",
-          "scenarios": [
-            {
-              "id": "remove-taper",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-taper-member",
-          "sourceMutationDirectoryName": "📐️change-taper-member",
-          "mutationDirectoryName": "📐️change-taper-member",
-          "scenarios": [
-            {
-              "id": "change-taper-member",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-taper-kind",
-          "sourceMutationDirectoryName": "📐️change-taper-kind",
-          "mutationDirectoryName": "📐️change-taper-kind",
-          "scenarios": [
-            {
-              "id": "change-taper-kind",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-taper-taper-angle",
-          "sourceMutationDirectoryName": "📐️change-taper-taper-angle",
-          "mutationDirectoryName": "📐️change-taper-taper-angle",
-          "scenarios": [
-            {
-              "id": "change-taper-taper-angle",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-taper-apex-depth",
-          "sourceMutationDirectoryName": "📐️change-taper-apex-depth",
-          "mutationDirectoryName": "📐️change-taper-apex-depth",
-          "scenarios": [
-            {
-              "id": "change-taper-apex-depth",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-taper-inner-radius",
-          "sourceMutationDirectoryName": "📐️change-taper-inner-radius",
-          "mutationDirectoryName": "📐️change-taper-inner-radius",
-          "scenarios": [
-            {
-              "id": "change-taper-inner-radius",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-taper-lamella",
-          "sourceMutationDirectoryName": "📐️change-taper-lamella",
-          "mutationDirectoryName": "📐️change-taper-lamella",
-          "scenarios": [
-            {
-              "id": "change-taper-lamella",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-taper-apex-angle",
-          "sourceMutationDirectoryName": "📐️change-taper-apex-angle",
-          "mutationDirectoryName": "📐️change-taper-apex-angle",
-          "scenarios": [
-            {
-              "id": "change-taper-apex-angle",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-taper-side",
-          "sourceMutationDirectoryName": "📐️change-taper-side",
-          "mutationDirectoryName": "📐️change-taper-side",
-          "scenarios": [
-            {
-              "id": "change-taper-side",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-taper-rods",
-          "sourceMutationDirectoryName": "📐️change-taper-rods",
-          "mutationDirectoryName": "📐️change-taper-rods",
-          "scenarios": [
-            {
-              "id": "change-taper-rods",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-taper-rod-resistance",
-          "sourceMutationDirectoryName": "📐️change-taper-rod-resistance",
-          "mutationDirectoryName": "📐️change-taper-rod-resistance",
-          "scenarios": [
-            {
-              "id": "change-taper-rod-resistance",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-cutout",
-          "sourceMutationDirectoryName": "➕️insert-cutout",
-          "mutationDirectoryName": "➕️insert-cutout",
-          "scenarios": [
-            {
-              "id": "insert-cutout",
-              "directoryName": "✅apply"
-            },
-            {
-              "id": "insert-member-dupe",
-              "directoryName": "⛔dupe"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-cutout",
-          "sourceMutationDirectoryName": "➖️remove-cutout",
-          "mutationDirectoryName": "➖️remove-cutout",
-          "scenarios": [
-            {
-              "id": "remove-cutout",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-cutout-member",
-          "sourceMutationDirectoryName": "🕳️change-cutout-member",
-          "mutationDirectoryName": "🕳️change-cutout-member",
-          "scenarios": [
-            {
-              "id": "change-cutout-member",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-cutout-kind",
-          "sourceMutationDirectoryName": "🕳️change-cutout-kind",
-          "mutationDirectoryName": "🕳️change-cutout-kind",
-          "scenarios": [
-            {
-              "id": "change-cutout-kind",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-cutout-face",
-          "sourceMutationDirectoryName": "🕳️change-cutout-face",
-          "mutationDirectoryName": "🕳️change-cutout-face",
-          "scenarios": [
-            {
-              "id": "change-cutout-face",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-cutout-distance",
-          "sourceMutationDirectoryName": "🕳️change-cutout-distance",
-          "mutationDirectoryName": "🕳️change-cutout-distance",
-          "scenarios": [
-            {
-              "id": "change-cutout-distance",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-cutout-length",
-          "sourceMutationDirectoryName": "🕳️change-cutout-length",
-          "mutationDirectoryName": "🕳️change-cutout-length",
-          "scenarios": [
-            {
-              "id": "change-cutout-length",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-cutout-depth",
-          "sourceMutationDirectoryName": "🕳️change-cutout-depth",
-          "mutationDirectoryName": "🕳️change-cutout-depth",
-          "scenarios": [
-            {
-              "id": "change-cutout-depth",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-cutout-centre-height",
-          "sourceMutationDirectoryName": "🕳️change-cutout-centre-height",
-          "mutationDirectoryName": "🕳️change-cutout-centre-height",
-          "scenarios": [
-            {
-              "id": "change-cutout-centre-height",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-cutout-slope",
-          "sourceMutationDirectoryName": "🕳️change-cutout-slope",
-          "mutationDirectoryName": "🕳️change-cutout-slope",
-          "scenarios": [
-            {
-              "id": "change-cutout-slope",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-cutout-rods",
-          "sourceMutationDirectoryName": "🕳️change-cutout-rods",
-          "mutationDirectoryName": "🕳️change-cutout-rods",
-          "scenarios": [
-            {
-              "id": "change-cutout-rods",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-cutout-rod-resistance",
-          "sourceMutationDirectoryName": "🕳️change-cutout-rod-resistance",
-          "mutationDirectoryName": "🕳️change-cutout-rod-resistance",
-          "scenarios": [
-            {
-              "id": "change-cutout-rod-resistance",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-fastener",
-          "sourceMutationDirectoryName": "➕️insert-fastener",
-          "mutationDirectoryName": "➕️insert-fastener",
-          "scenarios": [
-            {
-              "id": "insert-fastener",
-              "directoryName": "✅apply"
-            },
-            {
-              "id": "insert-member-dupe",
-              "directoryName": "⛔dupe"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-fastener",
-          "sourceMutationDirectoryName": "➖️remove-fastener",
-          "mutationDirectoryName": "➖️remove-fastener",
-          "scenarios": [
-            {
-              "id": "remove-fastener",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-connection",
-          "sourceMutationDirectoryName": "🔩️change-fastener-connection",
-          "mutationDirectoryName": "🔩️change-fastener-connection",
-          "scenarios": [
-            {
-              "id": "change-fastener-connection",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-member",
-          "sourceMutationDirectoryName": "🔩️change-fastener-member",
-          "mutationDirectoryName": "🔩️change-fastener-member",
-          "scenarios": [
-            {
-              "id": "change-fastener-member",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-columns",
-          "sourceMutationDirectoryName": "🔩️change-fastener-columns",
-          "mutationDirectoryName": "🔩️change-fastener-columns",
-          "scenarios": [
-            {
-              "id": "change-fastener-columns",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-lines",
-          "sourceMutationDirectoryName": "🔩️change-fastener-lines",
-          "mutationDirectoryName": "🔩️change-fastener-lines",
-          "scenarios": [
-            {
-              "id": "change-fastener-lines",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-spacing-par",
-          "sourceMutationDirectoryName": "🔩️change-fastener-spacing-par",
-          "mutationDirectoryName": "🔩️change-fastener-spacing-par",
-          "scenarios": [
-            {
-              "id": "change-fastener-spacing-par",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-spacing-perp",
-          "sourceMutationDirectoryName": "🔩️change-fastener-spacing-perp",
-          "mutationDirectoryName": "🔩️change-fastener-spacing-perp",
-          "scenarios": [
-            {
-              "id": "change-fastener-spacing-perp",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-end-distance",
-          "sourceMutationDirectoryName": "🔩️change-fastener-end-distance",
-          "mutationDirectoryName": "🔩️change-fastener-end-distance",
-          "scenarios": [
-            {
-              "id": "change-fastener-end-distance",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-edge-distance",
-          "sourceMutationDirectoryName": "🔩️change-fastener-edge-distance",
-          "mutationDirectoryName": "🔩️change-fastener-edge-distance",
-          "scenarios": [
-            {
-              "id": "change-fastener-edge-distance",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-offset-x",
-          "sourceMutationDirectoryName": "🔩️change-fastener-offset-x",
-          "mutationDirectoryName": "🔩️change-fastener-offset-x",
-          "scenarios": [
-            {
-              "id": "change-fastener-offset-x",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-offset-y",
-          "sourceMutationDirectoryName": "🔩️change-fastener-offset-y",
-          "mutationDirectoryName": "🔩️change-fastener-offset-y",
-          "scenarios": [
-            {
-              "id": "change-fastener-offset-y",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-load-angle",
-          "sourceMutationDirectoryName": "🔩️change-fastener-load-angle",
-          "mutationDirectoryName": "🔩️change-fastener-load-angle",
-          "scenarios": [
-            {
-              "id": "change-fastener-load-angle",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-panel",
-          "sourceMutationDirectoryName": "➕️insert-panel",
-          "mutationDirectoryName": "➕️insert-panel",
-          "scenarios": [
-            {
-              "id": "insert-panel",
-              "directoryName": "✅apply"
-            },
-            {
-              "id": "insert-member-dupe",
-              "directoryName": "⛔dupe"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-panel",
-          "sourceMutationDirectoryName": "➖️remove-panel",
-          "mutationDirectoryName": "➖️remove-panel",
-          "scenarios": [
-            {
-              "id": "remove-panel",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-panel-strength-class",
-          "sourceMutationDirectoryName": "🧱️change-panel-strength-class",
-          "mutationDirectoryName": "🧱️change-panel-strength-class",
-          "scenarios": [
-            {
-              "id": "change-panel-strength-class",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-panel-span",
-          "sourceMutationDirectoryName": "🧱️change-panel-span",
-          "mutationDirectoryName": "🧱️change-panel-span",
-          "scenarios": [
-            {
-              "id": "change-panel-span",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-panel-width",
-          "sourceMutationDirectoryName": "🧱️change-panel-width",
-          "mutationDirectoryName": "🧱️change-panel-width",
-          "scenarios": [
-            {
-              "id": "change-panel-width",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-panel-load",
-          "sourceMutationDirectoryName": "🧱️change-panel-load",
-          "mutationDirectoryName": "🧱️change-panel-load",
-          "scenarios": [
-            {
-              "id": "change-panel-load",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-panel-fire-duration",
-          "sourceMutationDirectoryName": "🧱️change-panel-fire-duration",
-          "mutationDirectoryName": "🧱️change-panel-fire-duration",
-          "scenarios": [
-            {
-              "id": "change-panel-fire-duration",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-floor",
-          "sourceMutationDirectoryName": "➕️insert-floor",
-          "mutationDirectoryName": "➕️insert-floor",
-          "scenarios": [
-            {
-              "id": "insert-floor",
-              "directoryName": "✅apply"
-            },
-            {
-              "id": "insert-member-dupe",
-              "directoryName": "⛔dupe"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-floor",
-          "sourceMutationDirectoryName": "➖️remove-floor",
-          "mutationDirectoryName": "➖️remove-floor",
-          "scenarios": [
-            {
-              "id": "remove-floor",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-floor-member",
-          "sourceMutationDirectoryName": "🏠️change-floor-member",
-          "mutationDirectoryName": "🏠️change-floor-member",
-          "scenarios": [
-            {
-              "id": "change-floor-member",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-floor-span",
-          "sourceMutationDirectoryName": "🏠️change-floor-span",
-          "mutationDirectoryName": "🏠️change-floor-span",
-          "scenarios": [
-            {
-              "id": "change-floor-span",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-floor-width",
-          "sourceMutationDirectoryName": "🏠️change-floor-width",
-          "mutationDirectoryName": "🏠️change-floor-width",
-          "scenarios": [
-            {
-              "id": "change-floor-width",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-floor-joist-spacing",
-          "sourceMutationDirectoryName": "🏠️change-floor-joist-spacing",
-          "mutationDirectoryName": "🏠️change-floor-joist-spacing",
-          "scenarios": [
-            {
-              "id": "change-floor-joist-spacing",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-floor-ei-l",
-          "sourceMutationDirectoryName": "🏠️change-floor-ei-l",
-          "mutationDirectoryName": "🏠️change-floor-ei-l",
-          "scenarios": [
-            {
-              "id": "change-floor-ei-l",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-floor-ei-b",
-          "sourceMutationDirectoryName": "🏠️change-floor-ei-b",
-          "mutationDirectoryName": "🏠️change-floor-ei-b",
-          "scenarios": [
-            {
-              "id": "change-floor-ei-b",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-floor-mass",
-          "sourceMutationDirectoryName": "🏠️change-floor-mass",
-          "mutationDirectoryName": "🏠️change-floor-mass",
-          "scenarios": [
-            {
-              "id": "change-floor-mass",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-floor-damping",
-          "sourceMutationDirectoryName": "🏠️change-floor-damping",
-          "mutationDirectoryName": "🏠️change-floor-damping",
-          "scenarios": [
-            {
-              "id": "change-floor-damping",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-floor-permanent-load",
-          "sourceMutationDirectoryName": "🏠️change-floor-permanent-load",
-          "mutationDirectoryName": "🏠️change-floor-permanent-load",
-          "scenarios": [
-            {
-              "id": "change-floor-permanent-load",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-floor-imposed-load",
-          "sourceMutationDirectoryName": "🏠️change-floor-imposed-load",
-          "mutationDirectoryName": "🏠️change-floor-imposed-load",
-          "scenarios": [
-            {
-              "id": "change-floor-imposed-load",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-floor-psi2",
-          "sourceMutationDirectoryName": "🏠️change-floor-psi2",
-          "mutationDirectoryName": "🏠️change-floor-psi2",
-          "scenarios": [
-            {
-              "id": "change-floor-psi2",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-panel-layer",
-          "sourceMutationDirectoryName": "➕️insert-panel-layer",
-          "mutationDirectoryName": "➕️insert-panel-layer",
-          "scenarios": [
-            {
-              "id": "insert-panel-layer",
-              "directoryName": "✅apply"
-            },
-            {
-              "id": "insert-member-dupe",
-              "directoryName": "⛔dupe"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-panel-layer",
-          "sourceMutationDirectoryName": "➖️remove-panel-layer",
-          "mutationDirectoryName": "➖️remove-panel-layer",
-          "scenarios": [
-            {
-              "id": "remove-panel-layer",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-panel-layer-thickness",
-          "sourceMutationDirectoryName": "🧱️change-panel-layer-thickness",
-          "mutationDirectoryName": "🧱️change-panel-layer-thickness",
-          "scenarios": [
-            {
-              "id": "change-panel-layer-thickness",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-panel-layer-orientation",
-          "sourceMutationDirectoryName": "🧱️change-panel-layer-orientation",
-          "mutationDirectoryName": "🧱️change-panel-layer-orientation",
-          "scenarios": [
-            {
-              "id": "change-panel-layer-orientation",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-panel-layer-grade",
-          "sourceMutationDirectoryName": "🧱️change-panel-layer-grade",
-          "mutationDirectoryName": "🧱️change-panel-layer-grade",
-          "scenarios": [
-            {
-              "id": "change-panel-layer-grade",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-fastener-position",
-          "sourceMutationDirectoryName": "➕️insert-fastener-position",
-          "mutationDirectoryName": "➕️insert-fastener-position",
-          "scenarios": [
-            {
-              "id": "insert-fastener-position",
-              "directoryName": "✅apply"
-            },
-            {
-              "id": "insert-member-dupe",
-              "directoryName": "⛔dupe"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-fastener-position",
-          "sourceMutationDirectoryName": "➖️remove-fastener-position",
-          "mutationDirectoryName": "➖️remove-fastener-position",
-          "scenarios": [
-            {
-              "id": "remove-fastener-position",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-position-x",
-          "sourceMutationDirectoryName": "📍️change-fastener-position-x",
-          "mutationDirectoryName": "📍️change-fastener-position-x",
-          "scenarios": [
-            {
-              "id": "change-fastener-position-x",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fastener-position-y",
-          "sourceMutationDirectoryName": "📍️change-fastener-position-y",
-          "mutationDirectoryName": "📍️change-fastener-position-y",
-          "scenarios": [
-            {
-              "id": "change-fastener-position-y",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-diaphragm",
-          "sourceMutationDirectoryName": "➕️insert-diaphragm",
-          "mutationDirectoryName": "➕️insert-diaphragm",
-          "scenarios": [
-            {
-              "id": "insert-diaphragm",
-              "directoryName": "✅apply"
-            },
-            {
-              "id": "insert-member-dupe",
-              "directoryName": "⛔dupe"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-diaphragm",
-          "sourceMutationDirectoryName": "➖️remove-diaphragm",
-          "mutationDirectoryName": "➖️remove-diaphragm",
-          "scenarios": [
-            {
-              "id": "remove-diaphragm",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-kind",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-kind",
-          "mutationDirectoryName": "🛡️change-diaphragm-kind",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-kind",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-method",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-method",
-          "mutationDirectoryName": "🛡️change-diaphragm-method",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-method",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-panel-width",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-panel-width",
-          "mutationDirectoryName": "🛡️change-diaphragm-panel-width",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-panel-width",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-wall-height",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-wall-height",
-          "mutationDirectoryName": "🛡️change-diaphragm-wall-height",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-wall-height",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-fastener-spacing",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-fastener-spacing",
-          "mutationDirectoryName": "🛡️change-diaphragm-fastener-spacing",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-fastener-spacing",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-panels",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-panels",
-          "mutationDirectoryName": "🛡️change-diaphragm-panels",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-panels",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-fastener-capacity",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-fastener-capacity",
-          "mutationDirectoryName": "🛡️change-diaphragm-fastener-capacity",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-fastener-capacity",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-shear-ed",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-shear-ed",
-          "mutationDirectoryName": "🛡️change-diaphragm-shear-ed",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-shear-ed",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-hold-down",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-hold-down",
-          "mutationDirectoryName": "🛡️change-diaphragm-hold-down",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-hold-down",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-force",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-force",
-          "mutationDirectoryName": "🛡️change-diaphragm-force",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-force",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-length",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-length",
-          "mutationDirectoryName": "🛡️change-diaphragm-length",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-length",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-diaphragm-shear-resistance",
-          "sourceMutationDirectoryName": "🛡️change-diaphragm-shear-resistance",
-          "mutationDirectoryName": "🛡️change-diaphragm-shear-resistance",
-          "scenarios": [
-            {
-              "id": "change-diaphragm-shear-resistance",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-truss",
-          "sourceMutationDirectoryName": "➕️insert-truss",
-          "mutationDirectoryName": "➕️insert-truss",
-          "scenarios": [
-            {
-              "id": "insert-truss",
-              "directoryName": "✅apply"
-            },
-            {
-              "id": "insert-member-dupe",
-              "directoryName": "⛔dupe"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-truss",
-          "sourceMutationDirectoryName": "➖️remove-truss",
-          "mutationDirectoryName": "➖️remove-truss",
-          "scenarios": [
-            {
-              "id": "remove-truss",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-kind",
-          "sourceMutationDirectoryName": "🔺️change-truss-kind",
-          "mutationDirectoryName": "🔺️change-truss-kind",
-          "scenarios": [
-            {
-              "id": "change-truss-kind",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-product",
-          "sourceMutationDirectoryName": "🔺️change-truss-product",
-          "mutationDirectoryName": "🔺️change-truss-product",
-          "scenarios": [
-            {
-              "id": "change-truss-product",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-span",
-          "sourceMutationDirectoryName": "🔺️change-truss-span",
-          "mutationDirectoryName": "🔺️change-truss-span",
-          "scenarios": [
-            {
-              "id": "change-truss-span",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-height",
-          "sourceMutationDirectoryName": "🔺️change-truss-height",
-          "mutationDirectoryName": "🔺️change-truss-height",
-          "scenarios": [
-            {
-              "id": "change-truss-height",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-bays",
-          "sourceMutationDirectoryName": "🔺️change-truss-bays",
-          "mutationDirectoryName": "🔺️change-truss-bays",
-          "scenarios": [
-            {
-              "id": "change-truss-bays",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-chord-width",
-          "sourceMutationDirectoryName": "🔺️change-truss-chord-width",
-          "mutationDirectoryName": "🔺️change-truss-chord-width",
-          "scenarios": [
-            {
-              "id": "change-truss-chord-width",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-chord-depth",
-          "sourceMutationDirectoryName": "🔺️change-truss-chord-depth",
-          "mutationDirectoryName": "🔺️change-truss-chord-depth",
-          "scenarios": [
-            {
-              "id": "change-truss-chord-depth",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-web-width",
-          "sourceMutationDirectoryName": "🔺️change-truss-web-width",
-          "mutationDirectoryName": "🔺️change-truss-web-width",
-          "scenarios": [
-            {
-              "id": "change-truss-web-width",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-web-depth",
-          "sourceMutationDirectoryName": "🔺️change-truss-web-depth",
-          "mutationDirectoryName": "🔺️change-truss-web-depth",
-          "scenarios": [
-            {
-              "id": "change-truss-web-depth",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-chord-force",
-          "sourceMutationDirectoryName": "🔺️change-truss-chord-force",
-          "mutationDirectoryName": "🔺️change-truss-chord-force",
-          "scenarios": [
-            {
-              "id": "change-truss-chord-force",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-restraint-length",
-          "sourceMutationDirectoryName": "🔺️change-truss-restraint-length",
-          "mutationDirectoryName": "🔺️change-truss-restraint-length",
-          "scenarios": [
-            {
-              "id": "change-truss-restraint-length",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-truss-bracing-capacity",
-          "sourceMutationDirectoryName": "🔺️change-truss-bracing-capacity",
-          "mutationDirectoryName": "🔺️change-truss-bracing-capacity",
-          "scenarios": [
-            {
-              "id": "change-truss-bracing-capacity",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-bracing",
-          "sourceMutationDirectoryName": "➕️insert-bracing",
-          "mutationDirectoryName": "➕️insert-bracing",
-          "scenarios": [
-            {
-              "id": "insert-bracing",
-              "directoryName": "✅apply"
-            },
-            {
-              "id": "insert-member-dupe",
-              "directoryName": "⛔dupe"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-bracing",
-          "sourceMutationDirectoryName": "➖️remove-bracing",
-          "mutationDirectoryName": "➖️remove-bracing",
-          "scenarios": [
-            {
-              "id": "remove-bracing",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bracing-kind",
-          "sourceMutationDirectoryName": "✖️change-bracing-kind",
-          "mutationDirectoryName": "✖️change-bracing-kind",
-          "scenarios": [
-            {
-              "id": "change-bracing-kind",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bracing-member",
-          "sourceMutationDirectoryName": "✖️change-bracing-member",
-          "mutationDirectoryName": "✖️change-bracing-member",
-          "scenarios": [
-            {
-              "id": "change-bracing-member",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bracing-stabilised-count",
-          "sourceMutationDirectoryName": "✖️change-bracing-stabilised-count",
-          "mutationDirectoryName": "✖️change-bracing-stabilised-count",
-          "scenarios": [
-            {
-              "id": "change-bracing-stabilised-count",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bracing-spacing",
-          "sourceMutationDirectoryName": "✖️change-bracing-spacing",
-          "mutationDirectoryName": "✖️change-bracing-spacing",
-          "scenarios": [
-            {
-              "id": "change-bracing-spacing",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bracing-length",
-          "sourceMutationDirectoryName": "✖️change-bracing-length",
-          "mutationDirectoryName": "✖️change-bracing-length",
-          "scenarios": [
-            {
-              "id": "change-bracing-length",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bracing-brace-width",
-          "sourceMutationDirectoryName": "✖️change-bracing-brace-width",
-          "mutationDirectoryName": "✖️change-bracing-brace-width",
-          "scenarios": [
-            {
-              "id": "change-bracing-brace-width",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bracing-brace-depth",
-          "sourceMutationDirectoryName": "✖️change-bracing-brace-depth",
-          "mutationDirectoryName": "✖️change-bracing-brace-depth",
-          "scenarios": [
-            {
-              "id": "change-bracing-brace-depth",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bracing-compression",
-          "sourceMutationDirectoryName": "✖️change-bracing-compression",
-          "mutationDirectoryName": "✖️change-bracing-compression",
-          "scenarios": [
-            {
-              "id": "change-bracing-compression",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bracing-resistance",
-          "sourceMutationDirectoryName": "✖️change-bracing-resistance",
-          "mutationDirectoryName": "✖️change-bracing-resistance",
-          "scenarios": [
-            {
-              "id": "change-bracing-resistance",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bracing-stiffness",
-          "sourceMutationDirectoryName": "✖️change-bracing-stiffness",
-          "mutationDirectoryName": "✖️change-bracing-stiffness",
-          "scenarios": [
-            {
-              "id": "change-bracing-stiffness",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
           "mutationId": "insert-deck",
           "sourceMutationDirectoryName": "➕️insert-deck",
           "mutationDirectoryName": "➕️insert-deck",
@@ -2379,7 +1173,7 @@
               "directoryName": "✅apply"
             },
             {
-              "id": "insert-member-dupe",
+              "id": "insert-deck-dupe",
               "directoryName": "⛔dupe"
             }
           ]
@@ -2592,6 +1386,1212 @@
               "directoryName": "✅apply"
             }
           ]
+        },
+        {
+          "mutationId": "insert-diaphragm",
+          "sourceMutationDirectoryName": "➕️insert-diaphragm",
+          "mutationDirectoryName": "➕️insert-diaphragm",
+          "scenarios": [
+            {
+              "id": "insert-diaphragm",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-diaphragm-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-diaphragm",
+          "sourceMutationDirectoryName": "➖️remove-diaphragm",
+          "mutationDirectoryName": "➖️remove-diaphragm",
+          "scenarios": [
+            {
+              "id": "remove-diaphragm",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-kind",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-kind",
+          "mutationDirectoryName": "🛡️change-diaphragm-kind",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-kind",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-method",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-method",
+          "mutationDirectoryName": "🛡️change-diaphragm-method",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-method",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-panel-width",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-panel-width",
+          "mutationDirectoryName": "🛡️change-diaphragm-panel-width",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-panel-width",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-wall-height",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-wall-height",
+          "mutationDirectoryName": "🛡️change-diaphragm-wall-height",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-wall-height",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-fastener-spacing",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-fastener-spacing",
+          "mutationDirectoryName": "🛡️change-diaphragm-fastener-spacing",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-fastener-spacing",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-panels",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-panels",
+          "mutationDirectoryName": "🛡️change-diaphragm-panels",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-panels",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-fastener-capacity",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-fastener-capacity",
+          "mutationDirectoryName": "🛡️change-diaphragm-fastener-capacity",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-fastener-capacity",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-shear-ed",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-shear-ed",
+          "mutationDirectoryName": "🛡️change-diaphragm-shear-ed",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-shear-ed",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-hold-down",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-hold-down",
+          "mutationDirectoryName": "🛡️change-diaphragm-hold-down",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-hold-down",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-force",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-force",
+          "mutationDirectoryName": "🛡️change-diaphragm-force",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-force",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-length",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-length",
+          "mutationDirectoryName": "🛡️change-diaphragm-length",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-length",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-shear-resistance",
+          "sourceMutationDirectoryName": "🛡️change-diaphragm-shear-resistance",
+          "mutationDirectoryName": "🛡️change-diaphragm-shear-resistance",
+          "scenarios": [
+            {
+              "id": "change-diaphragm-shear-resistance",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-truss",
+          "sourceMutationDirectoryName": "➕️insert-truss",
+          "mutationDirectoryName": "➕️insert-truss",
+          "scenarios": [
+            {
+              "id": "insert-truss",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-truss-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-truss",
+          "sourceMutationDirectoryName": "➖️remove-truss",
+          "mutationDirectoryName": "➖️remove-truss",
+          "scenarios": [
+            {
+              "id": "remove-truss",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-kind",
+          "sourceMutationDirectoryName": "🔺️change-truss-kind",
+          "mutationDirectoryName": "🔺️change-truss-kind",
+          "scenarios": [
+            {
+              "id": "change-truss-kind",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-product",
+          "sourceMutationDirectoryName": "🔺️change-truss-product",
+          "mutationDirectoryName": "🔺️change-truss-product",
+          "scenarios": [
+            {
+              "id": "change-truss-product",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-span",
+          "sourceMutationDirectoryName": "🔺️change-truss-span",
+          "mutationDirectoryName": "🔺️change-truss-span",
+          "scenarios": [
+            {
+              "id": "change-truss-span",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-height",
+          "sourceMutationDirectoryName": "🔺️change-truss-height",
+          "mutationDirectoryName": "🔺️change-truss-height",
+          "scenarios": [
+            {
+              "id": "change-truss-height",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-bays",
+          "sourceMutationDirectoryName": "🔺️change-truss-bays",
+          "mutationDirectoryName": "🔺️change-truss-bays",
+          "scenarios": [
+            {
+              "id": "change-truss-bays",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-chord-width",
+          "sourceMutationDirectoryName": "🔺️change-truss-chord-width",
+          "mutationDirectoryName": "🔺️change-truss-chord-width",
+          "scenarios": [
+            {
+              "id": "change-truss-chord-width",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-chord-depth",
+          "sourceMutationDirectoryName": "🔺️change-truss-chord-depth",
+          "mutationDirectoryName": "🔺️change-truss-chord-depth",
+          "scenarios": [
+            {
+              "id": "change-truss-chord-depth",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-web-width",
+          "sourceMutationDirectoryName": "🔺️change-truss-web-width",
+          "mutationDirectoryName": "🔺️change-truss-web-width",
+          "scenarios": [
+            {
+              "id": "change-truss-web-width",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-web-depth",
+          "sourceMutationDirectoryName": "🔺️change-truss-web-depth",
+          "mutationDirectoryName": "🔺️change-truss-web-depth",
+          "scenarios": [
+            {
+              "id": "change-truss-web-depth",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-chord-force",
+          "sourceMutationDirectoryName": "🔺️change-truss-chord-force",
+          "mutationDirectoryName": "🔺️change-truss-chord-force",
+          "scenarios": [
+            {
+              "id": "change-truss-chord-force",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-restraint-length",
+          "sourceMutationDirectoryName": "🔺️change-truss-restraint-length",
+          "mutationDirectoryName": "🔺️change-truss-restraint-length",
+          "scenarios": [
+            {
+              "id": "change-truss-restraint-length",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-truss-bracing-capacity",
+          "sourceMutationDirectoryName": "🔺️change-truss-bracing-capacity",
+          "mutationDirectoryName": "🔺️change-truss-bracing-capacity",
+          "scenarios": [
+            {
+              "id": "change-truss-bracing-capacity",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-bracing",
+          "sourceMutationDirectoryName": "➕️insert-bracing",
+          "mutationDirectoryName": "➕️insert-bracing",
+          "scenarios": [
+            {
+              "id": "insert-bracing",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-bracing-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-bracing",
+          "sourceMutationDirectoryName": "➖️remove-bracing",
+          "mutationDirectoryName": "➖️remove-bracing",
+          "scenarios": [
+            {
+              "id": "remove-bracing",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bracing-kind",
+          "sourceMutationDirectoryName": "✖️change-bracing-kind",
+          "mutationDirectoryName": "✖️change-bracing-kind",
+          "scenarios": [
+            {
+              "id": "change-bracing-kind",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bracing-member",
+          "sourceMutationDirectoryName": "✖️change-bracing-member",
+          "mutationDirectoryName": "✖️change-bracing-member",
+          "scenarios": [
+            {
+              "id": "change-bracing-member",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bracing-stabilised-count",
+          "sourceMutationDirectoryName": "✖️change-bracing-stabilised-count",
+          "mutationDirectoryName": "✖️change-bracing-stabilised-count",
+          "scenarios": [
+            {
+              "id": "change-bracing-stabilised-count",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bracing-spacing",
+          "sourceMutationDirectoryName": "✖️change-bracing-spacing",
+          "mutationDirectoryName": "✖️change-bracing-spacing",
+          "scenarios": [
+            {
+              "id": "change-bracing-spacing",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bracing-length",
+          "sourceMutationDirectoryName": "✖️change-bracing-length",
+          "mutationDirectoryName": "✖️change-bracing-length",
+          "scenarios": [
+            {
+              "id": "change-bracing-length",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bracing-brace-width",
+          "sourceMutationDirectoryName": "✖️change-bracing-brace-width",
+          "mutationDirectoryName": "✖️change-bracing-brace-width",
+          "scenarios": [
+            {
+              "id": "change-bracing-brace-width",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bracing-brace-depth",
+          "sourceMutationDirectoryName": "✖️change-bracing-brace-depth",
+          "mutationDirectoryName": "✖️change-bracing-brace-depth",
+          "scenarios": [
+            {
+              "id": "change-bracing-brace-depth",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bracing-compression",
+          "sourceMutationDirectoryName": "✖️change-bracing-compression",
+          "mutationDirectoryName": "✖️change-bracing-compression",
+          "scenarios": [
+            {
+              "id": "change-bracing-compression",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bracing-resistance",
+          "sourceMutationDirectoryName": "✖️change-bracing-resistance",
+          "mutationDirectoryName": "✖️change-bracing-resistance",
+          "scenarios": [
+            {
+              "id": "change-bracing-resistance",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bracing-stiffness",
+          "sourceMutationDirectoryName": "✖️change-bracing-stiffness",
+          "mutationDirectoryName": "✖️change-bracing-stiffness",
+          "scenarios": [
+            {
+              "id": "change-bracing-stiffness",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-panel-layer",
+          "sourceMutationDirectoryName": "➕️insert-panel-layer",
+          "mutationDirectoryName": "➕️insert-panel-layer",
+          "scenarios": [
+            {
+              "id": "insert-panel-layer",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-panel-layer-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-panel-layer",
+          "sourceMutationDirectoryName": "➖️remove-panel-layer",
+          "mutationDirectoryName": "➖️remove-panel-layer",
+          "scenarios": [
+            {
+              "id": "remove-panel-layer",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-panel-layer-thickness",
+          "sourceMutationDirectoryName": "🧱️change-panel-layer-thickness",
+          "mutationDirectoryName": "🧱️change-panel-layer-thickness",
+          "scenarios": [
+            {
+              "id": "change-panel-layer-thickness",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-panel-layer-orientation",
+          "sourceMutationDirectoryName": "🧱️change-panel-layer-orientation",
+          "mutationDirectoryName": "🧱️change-panel-layer-orientation",
+          "scenarios": [
+            {
+              "id": "change-panel-layer-orientation",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-panel-layer-grade",
+          "sourceMutationDirectoryName": "🧱️change-panel-layer-grade",
+          "mutationDirectoryName": "🧱️change-panel-layer-grade",
+          "scenarios": [
+            {
+              "id": "change-panel-layer-grade",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-fastener-position",
+          "sourceMutationDirectoryName": "➕️insert-fastener-position",
+          "mutationDirectoryName": "➕️insert-fastener-position",
+          "scenarios": [
+            {
+              "id": "insert-fastener-position",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-fastener-position-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-fastener-position",
+          "sourceMutationDirectoryName": "➖️remove-fastener-position",
+          "mutationDirectoryName": "➖️remove-fastener-position",
+          "scenarios": [
+            {
+              "id": "remove-fastener-position",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-position-x",
+          "sourceMutationDirectoryName": "📍️change-fastener-position-x",
+          "mutationDirectoryName": "📍️change-fastener-position-x",
+          "scenarios": [
+            {
+              "id": "change-fastener-position-x",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-position-y",
+          "sourceMutationDirectoryName": "📍️change-fastener-position-y",
+          "mutationDirectoryName": "📍️change-fastener-position-y",
+          "scenarios": [
+            {
+              "id": "change-fastener-position-y",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-taper",
+          "sourceMutationDirectoryName": "➕️insert-taper",
+          "mutationDirectoryName": "➕️insert-taper",
+          "scenarios": [
+            {
+              "id": "insert-taper",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-taper-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-taper",
+          "sourceMutationDirectoryName": "➖️remove-taper",
+          "mutationDirectoryName": "➖️remove-taper",
+          "scenarios": [
+            {
+              "id": "remove-taper",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-taper-member",
+          "sourceMutationDirectoryName": "📐️change-taper-member",
+          "mutationDirectoryName": "📐️change-taper-member",
+          "scenarios": [
+            {
+              "id": "change-taper-member",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-taper-kind",
+          "sourceMutationDirectoryName": "📐️change-taper-kind",
+          "mutationDirectoryName": "📐️change-taper-kind",
+          "scenarios": [
+            {
+              "id": "change-taper-kind",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-taper-taper-angle",
+          "sourceMutationDirectoryName": "📐️change-taper-taper-angle",
+          "mutationDirectoryName": "📐️change-taper-taper-angle",
+          "scenarios": [
+            {
+              "id": "change-taper-taper-angle",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-taper-apex-depth",
+          "sourceMutationDirectoryName": "📐️change-taper-apex-depth",
+          "mutationDirectoryName": "📐️change-taper-apex-depth",
+          "scenarios": [
+            {
+              "id": "change-taper-apex-depth",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-taper-inner-radius",
+          "sourceMutationDirectoryName": "📐️change-taper-inner-radius",
+          "mutationDirectoryName": "📐️change-taper-inner-radius",
+          "scenarios": [
+            {
+              "id": "change-taper-inner-radius",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-taper-lamella",
+          "sourceMutationDirectoryName": "📐️change-taper-lamella",
+          "mutationDirectoryName": "📐️change-taper-lamella",
+          "scenarios": [
+            {
+              "id": "change-taper-lamella",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-taper-apex-angle",
+          "sourceMutationDirectoryName": "📐️change-taper-apex-angle",
+          "mutationDirectoryName": "📐️change-taper-apex-angle",
+          "scenarios": [
+            {
+              "id": "change-taper-apex-angle",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-taper-side",
+          "sourceMutationDirectoryName": "📐️change-taper-side",
+          "mutationDirectoryName": "📐️change-taper-side",
+          "scenarios": [
+            {
+              "id": "change-taper-side",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-taper-rods",
+          "sourceMutationDirectoryName": "📐️change-taper-rods",
+          "mutationDirectoryName": "📐️change-taper-rods",
+          "scenarios": [
+            {
+              "id": "change-taper-rods",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-taper-rod-resistance",
+          "sourceMutationDirectoryName": "📐️change-taper-rod-resistance",
+          "mutationDirectoryName": "📐️change-taper-rod-resistance",
+          "scenarios": [
+            {
+              "id": "change-taper-rod-resistance",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-cutout",
+          "sourceMutationDirectoryName": "➕️insert-cutout",
+          "mutationDirectoryName": "➕️insert-cutout",
+          "scenarios": [
+            {
+              "id": "insert-cutout",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-cutout-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-cutout",
+          "sourceMutationDirectoryName": "➖️remove-cutout",
+          "mutationDirectoryName": "➖️remove-cutout",
+          "scenarios": [
+            {
+              "id": "remove-cutout",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cutout-member",
+          "sourceMutationDirectoryName": "🕳️change-cutout-member",
+          "mutationDirectoryName": "🕳️change-cutout-member",
+          "scenarios": [
+            {
+              "id": "change-cutout-member",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cutout-kind",
+          "sourceMutationDirectoryName": "🕳️change-cutout-kind",
+          "mutationDirectoryName": "🕳️change-cutout-kind",
+          "scenarios": [
+            {
+              "id": "change-cutout-kind",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cutout-face",
+          "sourceMutationDirectoryName": "🕳️change-cutout-face",
+          "mutationDirectoryName": "🕳️change-cutout-face",
+          "scenarios": [
+            {
+              "id": "change-cutout-face",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cutout-distance",
+          "sourceMutationDirectoryName": "🕳️change-cutout-distance",
+          "mutationDirectoryName": "🕳️change-cutout-distance",
+          "scenarios": [
+            {
+              "id": "change-cutout-distance",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cutout-length",
+          "sourceMutationDirectoryName": "🕳️change-cutout-length",
+          "mutationDirectoryName": "🕳️change-cutout-length",
+          "scenarios": [
+            {
+              "id": "change-cutout-length",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cutout-depth",
+          "sourceMutationDirectoryName": "🕳️change-cutout-depth",
+          "mutationDirectoryName": "🕳️change-cutout-depth",
+          "scenarios": [
+            {
+              "id": "change-cutout-depth",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cutout-centre-height",
+          "sourceMutationDirectoryName": "🕳️change-cutout-centre-height",
+          "mutationDirectoryName": "🕳️change-cutout-centre-height",
+          "scenarios": [
+            {
+              "id": "change-cutout-centre-height",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cutout-slope",
+          "sourceMutationDirectoryName": "🕳️change-cutout-slope",
+          "mutationDirectoryName": "🕳️change-cutout-slope",
+          "scenarios": [
+            {
+              "id": "change-cutout-slope",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cutout-rods",
+          "sourceMutationDirectoryName": "🕳️change-cutout-rods",
+          "mutationDirectoryName": "🕳️change-cutout-rods",
+          "scenarios": [
+            {
+              "id": "change-cutout-rods",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cutout-rod-resistance",
+          "sourceMutationDirectoryName": "🕳️change-cutout-rod-resistance",
+          "mutationDirectoryName": "🕳️change-cutout-rod-resistance",
+          "scenarios": [
+            {
+              "id": "change-cutout-rod-resistance",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-fastener",
+          "sourceMutationDirectoryName": "➕️insert-fastener",
+          "mutationDirectoryName": "➕️insert-fastener",
+          "scenarios": [
+            {
+              "id": "insert-fastener",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-fastener-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-fastener",
+          "sourceMutationDirectoryName": "➖️remove-fastener",
+          "mutationDirectoryName": "➖️remove-fastener",
+          "scenarios": [
+            {
+              "id": "remove-fastener",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-connection",
+          "sourceMutationDirectoryName": "🔩️change-fastener-connection",
+          "mutationDirectoryName": "🔩️change-fastener-connection",
+          "scenarios": [
+            {
+              "id": "change-fastener-connection",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-member",
+          "sourceMutationDirectoryName": "🔩️change-fastener-member",
+          "mutationDirectoryName": "🔩️change-fastener-member",
+          "scenarios": [
+            {
+              "id": "change-fastener-member",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-columns",
+          "sourceMutationDirectoryName": "🔩️change-fastener-columns",
+          "mutationDirectoryName": "🔩️change-fastener-columns",
+          "scenarios": [
+            {
+              "id": "change-fastener-columns",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-lines",
+          "sourceMutationDirectoryName": "🔩️change-fastener-lines",
+          "mutationDirectoryName": "🔩️change-fastener-lines",
+          "scenarios": [
+            {
+              "id": "change-fastener-lines",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-spacing-par",
+          "sourceMutationDirectoryName": "🔩️change-fastener-spacing-par",
+          "mutationDirectoryName": "🔩️change-fastener-spacing-par",
+          "scenarios": [
+            {
+              "id": "change-fastener-spacing-par",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-spacing-perp",
+          "sourceMutationDirectoryName": "🔩️change-fastener-spacing-perp",
+          "mutationDirectoryName": "🔩️change-fastener-spacing-perp",
+          "scenarios": [
+            {
+              "id": "change-fastener-spacing-perp",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-end-distance",
+          "sourceMutationDirectoryName": "🔩️change-fastener-end-distance",
+          "mutationDirectoryName": "🔩️change-fastener-end-distance",
+          "scenarios": [
+            {
+              "id": "change-fastener-end-distance",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-edge-distance",
+          "sourceMutationDirectoryName": "🔩️change-fastener-edge-distance",
+          "mutationDirectoryName": "🔩️change-fastener-edge-distance",
+          "scenarios": [
+            {
+              "id": "change-fastener-edge-distance",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-offset-x",
+          "sourceMutationDirectoryName": "🔩️change-fastener-offset-x",
+          "mutationDirectoryName": "🔩️change-fastener-offset-x",
+          "scenarios": [
+            {
+              "id": "change-fastener-offset-x",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-offset-y",
+          "sourceMutationDirectoryName": "🔩️change-fastener-offset-y",
+          "mutationDirectoryName": "🔩️change-fastener-offset-y",
+          "scenarios": [
+            {
+              "id": "change-fastener-offset-y",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-load-angle",
+          "sourceMutationDirectoryName": "🔩️change-fastener-load-angle",
+          "mutationDirectoryName": "🔩️change-fastener-load-angle",
+          "scenarios": [
+            {
+              "id": "change-fastener-load-angle",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-panel",
+          "sourceMutationDirectoryName": "➕️insert-panel",
+          "mutationDirectoryName": "➕️insert-panel",
+          "scenarios": [
+            {
+              "id": "insert-panel",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-panel-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-panel",
+          "sourceMutationDirectoryName": "➖️remove-panel",
+          "mutationDirectoryName": "➖️remove-panel",
+          "scenarios": [
+            {
+              "id": "remove-panel",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-panel-strength-class",
+          "sourceMutationDirectoryName": "🧱️change-panel-strength-class",
+          "mutationDirectoryName": "🧱️change-panel-strength-class",
+          "scenarios": [
+            {
+              "id": "change-panel-strength-class",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-panel-span",
+          "sourceMutationDirectoryName": "🧱️change-panel-span",
+          "mutationDirectoryName": "🧱️change-panel-span",
+          "scenarios": [
+            {
+              "id": "change-panel-span",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-panel-width",
+          "sourceMutationDirectoryName": "🧱️change-panel-width",
+          "mutationDirectoryName": "🧱️change-panel-width",
+          "scenarios": [
+            {
+              "id": "change-panel-width",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-panel-load",
+          "sourceMutationDirectoryName": "🧱️change-panel-load",
+          "mutationDirectoryName": "🧱️change-panel-load",
+          "scenarios": [
+            {
+              "id": "change-panel-load",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-panel-fire-duration",
+          "sourceMutationDirectoryName": "🧱️change-panel-fire-duration",
+          "mutationDirectoryName": "🧱️change-panel-fire-duration",
+          "scenarios": [
+            {
+              "id": "change-panel-fire-duration",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-floor",
+          "sourceMutationDirectoryName": "➕️insert-floor",
+          "mutationDirectoryName": "➕️insert-floor",
+          "scenarios": [
+            {
+              "id": "insert-floor",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-floor-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-floor",
+          "sourceMutationDirectoryName": "➖️remove-floor",
+          "mutationDirectoryName": "➖️remove-floor",
+          "scenarios": [
+            {
+              "id": "remove-floor",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-floor-member",
+          "sourceMutationDirectoryName": "🏠️change-floor-member",
+          "mutationDirectoryName": "🏠️change-floor-member",
+          "scenarios": [
+            {
+              "id": "change-floor-member",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-floor-span",
+          "sourceMutationDirectoryName": "🏠️change-floor-span",
+          "mutationDirectoryName": "🏠️change-floor-span",
+          "scenarios": [
+            {
+              "id": "change-floor-span",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-floor-width",
+          "sourceMutationDirectoryName": "🏠️change-floor-width",
+          "mutationDirectoryName": "🏠️change-floor-width",
+          "scenarios": [
+            {
+              "id": "change-floor-width",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-floor-joist-spacing",
+          "sourceMutationDirectoryName": "🏠️change-floor-joist-spacing",
+          "mutationDirectoryName": "🏠️change-floor-joist-spacing",
+          "scenarios": [
+            {
+              "id": "change-floor-joist-spacing",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-floor-ei-l",
+          "sourceMutationDirectoryName": "🏠️change-floor-ei-l",
+          "mutationDirectoryName": "🏠️change-floor-ei-l",
+          "scenarios": [
+            {
+              "id": "change-floor-ei-l",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-floor-ei-b",
+          "sourceMutationDirectoryName": "🏠️change-floor-ei-b",
+          "mutationDirectoryName": "🏠️change-floor-ei-b",
+          "scenarios": [
+            {
+              "id": "change-floor-ei-b",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-floor-mass",
+          "sourceMutationDirectoryName": "🏠️change-floor-mass",
+          "mutationDirectoryName": "🏠️change-floor-mass",
+          "scenarios": [
+            {
+              "id": "change-floor-mass",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-floor-damping",
+          "sourceMutationDirectoryName": "🏠️change-floor-damping",
+          "mutationDirectoryName": "🏠️change-floor-damping",
+          "scenarios": [
+            {
+              "id": "change-floor-damping",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-floor-permanent-load",
+          "sourceMutationDirectoryName": "🏠️change-floor-permanent-load",
+          "mutationDirectoryName": "🏠️change-floor-permanent-load",
+          "scenarios": [
+            {
+              "id": "change-floor-permanent-load",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-floor-imposed-load",
+          "sourceMutationDirectoryName": "🏠️change-floor-imposed-load",
+          "mutationDirectoryName": "🏠️change-floor-imposed-load",
+          "scenarios": [
+            {
+              "id": "change-floor-imposed-load",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-floor-psi2",
+          "sourceMutationDirectoryName": "🏠️change-floor-psi2",
+          "mutationDirectoryName": "🏠️change-floor-psi2",
+          "scenarios": [
+            {
+              "id": "change-floor-psi2",
+              "directoryName": "✅apply"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -2675,6 +2675,75 @@
         "change-placement-yaw",
         "insert-placement",
         "remove-placement",
+        "insert-deck",
+        "remove-deck",
+        "change-deck-lamination-product",
+        "change-deck-bar-product",
+        "change-deck-span",
+        "change-deck-deck-width",
+        "change-deck-deck-depth",
+        "change-deck-lamination-width",
+        "change-deck-bar-spacing",
+        "change-deck-bar-diameter",
+        "change-deck-plate-side",
+        "change-deck-initial-prestress",
+        "change-deck-loss-relaxation",
+        "change-deck-loss-creep",
+        "change-deck-loss-moisture",
+        "change-deck-bar-resistance",
+        "change-deck-shear-stress",
+        "change-deck-compression-c90",
+        "change-deck-wheel-load",
+        "change-deck-wheel-contact",
+        "insert-diaphragm",
+        "remove-diaphragm",
+        "change-diaphragm-kind",
+        "change-diaphragm-method",
+        "change-diaphragm-panel-width",
+        "change-diaphragm-wall-height",
+        "change-diaphragm-fastener-spacing",
+        "change-diaphragm-panels",
+        "change-diaphragm-fastener-capacity",
+        "change-diaphragm-shear-ed",
+        "change-diaphragm-hold-down",
+        "change-diaphragm-force",
+        "change-diaphragm-length",
+        "change-diaphragm-shear-resistance",
+        "insert-truss",
+        "remove-truss",
+        "change-truss-kind",
+        "change-truss-product",
+        "change-truss-span",
+        "change-truss-height",
+        "change-truss-bays",
+        "change-truss-chord-width",
+        "change-truss-chord-depth",
+        "change-truss-web-width",
+        "change-truss-web-depth",
+        "change-truss-chord-force",
+        "change-truss-restraint-length",
+        "change-truss-bracing-capacity",
+        "insert-bracing",
+        "remove-bracing",
+        "change-bracing-kind",
+        "change-bracing-member",
+        "change-bracing-stabilised-count",
+        "change-bracing-spacing",
+        "change-bracing-length",
+        "change-bracing-brace-width",
+        "change-bracing-brace-depth",
+        "change-bracing-compression",
+        "change-bracing-resistance",
+        "change-bracing-stiffness",
+        "insert-panel-layer",
+        "remove-panel-layer",
+        "change-panel-layer-thickness",
+        "change-panel-layer-orientation",
+        "change-panel-layer-grade",
+        "insert-fastener-position",
+        "remove-fastener-position",
+        "change-fastener-position-x",
+        "change-fastener-position-y",
         "insert-taper",
         "remove-taper",
         "change-taper-member",
@@ -2731,76 +2800,7 @@
         "change-floor-damping",
         "change-floor-permanent-load",
         "change-floor-imposed-load",
-        "change-floor-psi2",
-        "insert-panel-layer",
-        "remove-panel-layer",
-        "change-panel-layer-thickness",
-        "change-panel-layer-orientation",
-        "change-panel-layer-grade",
-        "insert-fastener-position",
-        "remove-fastener-position",
-        "change-fastener-position-x",
-        "change-fastener-position-y",
-        "insert-diaphragm",
-        "remove-diaphragm",
-        "change-diaphragm-kind",
-        "change-diaphragm-method",
-        "change-diaphragm-panel-width",
-        "change-diaphragm-wall-height",
-        "change-diaphragm-fastener-spacing",
-        "change-diaphragm-panels",
-        "change-diaphragm-fastener-capacity",
-        "change-diaphragm-shear-ed",
-        "change-diaphragm-hold-down",
-        "change-diaphragm-force",
-        "change-diaphragm-length",
-        "change-diaphragm-shear-resistance",
-        "insert-truss",
-        "remove-truss",
-        "change-truss-kind",
-        "change-truss-product",
-        "change-truss-span",
-        "change-truss-height",
-        "change-truss-bays",
-        "change-truss-chord-width",
-        "change-truss-chord-depth",
-        "change-truss-web-width",
-        "change-truss-web-depth",
-        "change-truss-chord-force",
-        "change-truss-restraint-length",
-        "change-truss-bracing-capacity",
-        "insert-bracing",
-        "remove-bracing",
-        "change-bracing-kind",
-        "change-bracing-member",
-        "change-bracing-stabilised-count",
-        "change-bracing-spacing",
-        "change-bracing-length",
-        "change-bracing-brace-width",
-        "change-bracing-brace-depth",
-        "change-bracing-compression",
-        "change-bracing-resistance",
-        "change-bracing-stiffness",
-        "insert-deck",
-        "remove-deck",
-        "change-deck-lamination-product",
-        "change-deck-bar-product",
-        "change-deck-span",
-        "change-deck-deck-width",
-        "change-deck-deck-depth",
-        "change-deck-lamination-width",
-        "change-deck-bar-spacing",
-        "change-deck-bar-diameter",
-        "change-deck-plate-side",
-        "change-deck-initial-prestress",
-        "change-deck-loss-relaxation",
-        "change-deck-loss-creep",
-        "change-deck-loss-moisture",
-        "change-deck-bar-resistance",
-        "change-deck-shear-stress",
-        "change-deck-compression-c90",
-        "change-deck-wheel-load",
-        "change-deck-wheel-contact"
+        "change-floor-psi2"
       ]
     }
   ],

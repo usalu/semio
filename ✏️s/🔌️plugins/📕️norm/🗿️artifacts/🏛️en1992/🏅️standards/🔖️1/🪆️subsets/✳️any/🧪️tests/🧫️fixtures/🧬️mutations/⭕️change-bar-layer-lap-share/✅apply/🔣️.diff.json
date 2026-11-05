@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "title": null,
   "designWorkingLifeYears": null,
   "deltaCDev": null,
@@ -72,7 +71,7 @@
                   "lapLength": null,
                   "bondCondition": null,
                   "aggregateSize": null,
-                  "lapShare": 2.0
+                  "lapShare": 0.5
                 }
               }
             ]
@@ -108,9 +107,6 @@
           "punchingColumnDepth": null,
           "punchingColumnPosition": null,
           "punchingAsw": null,
-          "punchingBetaMethod": null,
-          "punchingMomentC1": null,
-          "punchingMomentC2": null,
           "prestressForce": null,
           "prestressArea": null,
           "prestressEccentricity": null,
@@ -144,225 +140,7 @@
                   "lapLength": null,
                   "bondCondition": null,
                   "aggregateSize": null,
-                  "lapShare": 2.0
-                }
-              }
-            ]
-          },
-          "actions": null,
-          "sectionPoints": null,
-          "bars": null,
-          "tendonPoints": null,
-          "studRows": null
-        }
-      },
-      {
-        "id": "wall-W1",
-        "patch": {
-          "labelEn": null,
-          "labelDe": null,
-          "kind": null,
-          "concreteGradeId": null,
-          "reinforcementGradeId": null,
-          "prestressSteelId": null,
-          "exposure": null,
-          "width": null,
-          "height": null,
-          "effectiveDepth": null,
-          "cover": null,
-          "span": null,
-          "support": null,
-          "bucklingLength": null,
-          "stirrupsDiameter": null,
-          "stirrupsSpacing": null,
-          "stirrupsLegs": null,
-          "punchingColumnWidth": null,
-          "punchingColumnDepth": null,
-          "punchingColumnPosition": null,
-          "punchingAsw": null,
-          "punchingBetaMethod": null,
-          "punchingMomentC1": null,
-          "punchingMomentC2": null,
-          "prestressForce": null,
-          "prestressArea": null,
-          "prestressEccentricity": null,
-          "prestressLossRatio": null,
-          "fireRating": null,
-          "fireAxisDistance": null,
-          "fireSlabSystem": null,
-          "useFem": null,
-          "udl": null,
-          "deflectionSensitive": null,
-          "hdOverH": null,
-          "liquidSigmaS": null,
-          "liquidRhoPEff": null,
-          "liquidFCtEff": null,
-          "liquidSRMax": null,
-          "bridgeSigmaC": null,
-          "bridgeDeltaSigmaS": null,
-          "relativeHumidity": null,
-          "longitudinal": {
-            "removed": [],
-            "inserted": [],
-            "moved": [],
-            "modified": [
-              {
-                "id": "vert",
-                "patch": {
-                  "diameter": null,
-                  "count": null,
-                  "position": null,
-                  "anchorageLength": null,
-                  "lapLength": null,
-                  "bondCondition": null,
-                  "aggregateSize": null,
-                  "lapShare": 2.0
-                }
-              }
-            ]
-          },
-          "actions": null,
-          "sectionPoints": null,
-          "bars": null,
-          "tendonPoints": null,
-          "openings": null,
-          "studRows": null
-        }
-      },
-      {
-        "id": "wall-W1",
-        "patch": {
-          "labelEn": null,
-          "labelDe": null,
-          "kind": null,
-          "concreteGradeId": null,
-          "reinforcementGradeId": null,
-          "prestressSteelId": null,
-          "exposure": null,
-          "width": null,
-          "height": null,
-          "effectiveDepth": null,
-          "cover": null,
-          "span": null,
-          "support": null,
-          "bucklingLength": null,
-          "stirrupsDiameter": null,
-          "stirrupsSpacing": null,
-          "stirrupsLegs": null,
-          "punchingColumnWidth": null,
-          "punchingColumnDepth": null,
-          "punchingColumnPosition": null,
-          "punchingAsw": null,
-          "punchingBetaMethod": null,
-          "punchingMomentC1": null,
-          "punchingMomentC2": null,
-          "prestressForce": null,
-          "prestressArea": null,
-          "prestressEccentricity": null,
-          "prestressLossRatio": null,
-          "fireRating": null,
-          "fireAxisDistance": null,
-          "fireSlabSystem": null,
-          "useFem": null,
-          "udl": null,
-          "deflectionSensitive": null,
-          "hdOverH": null,
-          "liquidSigmaS": null,
-          "liquidRhoPEff": null,
-          "liquidFCtEff": null,
-          "liquidSRMax": null,
-          "bridgeSigmaC": null,
-          "bridgeDeltaSigmaS": null,
-          "relativeHumidity": null,
-          "longitudinal": {
-            "removed": [],
-            "inserted": [],
-            "moved": [],
-            "modified": [
-              {
-                "id": "vert",
-                "patch": {
-                  "diameter": null,
-                  "count": null,
-                  "position": null,
-                  "anchorageLength": null,
-                  "lapLength": null,
-                  "bondCondition": null,
-                  "aggregateSize": null,
-                  "lapShare": 2.0
-                }
-              }
-            ]
-          },
-          "actions": null,
-          "sectionPoints": null,
-          "bars": null,
-          "tendonPoints": null,
-          "openings": null,
-          "studRows": null
-        }
-      },
-      {
-        "id": "wall-W1",
-        "patch": {
-          "labelEn": null,
-          "labelDe": null,
-          "kind": null,
-          "concreteGradeId": null,
-          "reinforcementGradeId": null,
-          "prestressSteelId": null,
-          "exposure": null,
-          "width": null,
-          "height": null,
-          "effectiveDepth": null,
-          "cover": null,
-          "span": null,
-          "support": null,
-          "bucklingLength": null,
-          "stirrupsDiameter": null,
-          "stirrupsSpacing": null,
-          "stirrupsLegs": null,
-          "punchingColumnWidth": null,
-          "punchingColumnDepth": null,
-          "punchingColumnPosition": null,
-          "punchingAsw": null,
-          "punchingBetaMethod": null,
-          "punchingMomentC1": null,
-          "punchingMomentC2": null,
-          "prestressForce": null,
-          "prestressArea": null,
-          "prestressEccentricity": null,
-          "prestressLossRatio": null,
-          "fireRating": null,
-          "fireAxisDistance": null,
-          "fireSlabSystem": null,
-          "useFem": null,
-          "udl": null,
-          "deflectionSensitive": null,
-          "hdOverH": null,
-          "liquidSigmaS": null,
-          "liquidRhoPEff": null,
-          "liquidFCtEff": null,
-          "liquidSRMax": null,
-          "bridgeSigmaC": null,
-          "bridgeDeltaSigmaS": null,
-          "relativeHumidity": null,
-          "longitudinal": {
-            "removed": [],
-            "inserted": [],
-            "moved": [],
-            "modified": [
-              {
-                "id": "vert",
-                "patch": {
-                  "diameter": null,
-                  "count": null,
-                  "position": null,
-                  "anchorageLength": null,
-                  "lapLength": null,
-                  "bondCondition": null,
-                  "aggregateSize": null,
-                  "lapShare": 2.0
+                  "lapShare": 0.5
                 }
               }
             ]
@@ -372,6 +150,81 @@
           "bars": null,
           "tendonPoints": null,
           "studRows": null,
+          "punchingBetaMethod": null,
+          "punchingMomentC1": null,
+          "punchingMomentC2": null
+        }
+      },
+      {
+        "id": "wall-W1",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "kind": null,
+          "concreteGradeId": null,
+          "reinforcementGradeId": null,
+          "prestressSteelId": null,
+          "exposure": null,
+          "width": null,
+          "height": null,
+          "effectiveDepth": null,
+          "cover": null,
+          "span": null,
+          "support": null,
+          "bucklingLength": null,
+          "stirrupsDiameter": null,
+          "stirrupsSpacing": null,
+          "stirrupsLegs": null,
+          "punchingColumnWidth": null,
+          "punchingColumnDepth": null,
+          "punchingColumnPosition": null,
+          "punchingAsw": null,
+          "prestressForce": null,
+          "prestressArea": null,
+          "prestressEccentricity": null,
+          "prestressLossRatio": null,
+          "fireRating": null,
+          "fireAxisDistance": null,
+          "fireSlabSystem": null,
+          "useFem": null,
+          "udl": null,
+          "deflectionSensitive": null,
+          "hdOverH": null,
+          "liquidSigmaS": null,
+          "liquidRhoPEff": null,
+          "liquidFCtEff": null,
+          "liquidSRMax": null,
+          "bridgeSigmaC": null,
+          "bridgeDeltaSigmaS": null,
+          "relativeHumidity": null,
+          "longitudinal": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "vert",
+                "patch": {
+                  "diameter": null,
+                  "count": null,
+                  "position": null,
+                  "anchorageLength": null,
+                  "lapLength": null,
+                  "bondCondition": null,
+                  "aggregateSize": null,
+                  "lapShare": 0.5
+                }
+              }
+            ]
+          },
+          "actions": null,
+          "sectionPoints": null,
+          "bars": null,
+          "tendonPoints": null,
+          "studRows": null,
+          "punchingBetaMethod": null,
+          "punchingMomentC1": null,
+          "punchingMomentC2": null,
           "openings": null
         }
       },
@@ -399,9 +252,6 @@
           "punchingColumnDepth": null,
           "punchingColumnPosition": null,
           "punchingAsw": null,
-          "punchingBetaMethod": null,
-          "punchingMomentC1": null,
-          "punchingMomentC2": null,
           "prestressForce": null,
           "prestressArea": null,
           "prestressEccentricity": null,
@@ -435,7 +285,7 @@
                   "lapLength": null,
                   "bondCondition": null,
                   "aggregateSize": null,
-                  "lapShare": 2.0
+                  "lapShare": 0.5
                 }
               }
             ]
@@ -445,6 +295,9 @@
           "bars": null,
           "tendonPoints": null,
           "studRows": null,
+          "punchingBetaMethod": null,
+          "punchingMomentC1": null,
+          "punchingMomentC2": null,
           "openings": null
         }
       },
@@ -472,9 +325,6 @@
           "punchingColumnDepth": null,
           "punchingColumnPosition": null,
           "punchingAsw": null,
-          "punchingBetaMethod": null,
-          "punchingMomentC1": null,
-          "punchingMomentC2": null,
           "prestressForce": null,
           "prestressArea": null,
           "prestressEccentricity": null,
@@ -508,7 +358,7 @@
                   "lapLength": null,
                   "bondCondition": null,
                   "aggregateSize": null,
-                  "lapShare": 2.0
+                  "lapShare": 0.5
                 }
               }
             ]
@@ -518,6 +368,9 @@
           "bars": null,
           "tendonPoints": null,
           "studRows": null,
+          "punchingBetaMethod": null,
+          "punchingMomentC1": null,
+          "punchingMomentC2": null,
           "openings": null
         }
       },
@@ -545,9 +398,6 @@
           "punchingColumnDepth": null,
           "punchingColumnPosition": null,
           "punchingAsw": null,
-          "punchingBetaMethod": null,
-          "punchingMomentC1": null,
-          "punchingMomentC2": null,
           "prestressForce": null,
           "prestressArea": null,
           "prestressEccentricity": null,
@@ -581,7 +431,7 @@
                   "lapLength": null,
                   "bondCondition": null,
                   "aggregateSize": null,
-                  "lapShare": 2.0
+                  "lapShare": 0.5
                 }
               }
             ]
@@ -591,6 +441,155 @@
           "bars": null,
           "tendonPoints": null,
           "studRows": null,
+          "punchingBetaMethod": null,
+          "punchingMomentC1": null,
+          "punchingMomentC2": null,
+          "openings": null
+        }
+      },
+      {
+        "id": "wall-W1",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "kind": null,
+          "concreteGradeId": null,
+          "reinforcementGradeId": null,
+          "prestressSteelId": null,
+          "exposure": null,
+          "width": null,
+          "height": null,
+          "effectiveDepth": null,
+          "cover": null,
+          "span": null,
+          "support": null,
+          "bucklingLength": null,
+          "stirrupsDiameter": null,
+          "stirrupsSpacing": null,
+          "stirrupsLegs": null,
+          "punchingColumnWidth": null,
+          "punchingColumnDepth": null,
+          "punchingColumnPosition": null,
+          "punchingAsw": null,
+          "prestressForce": null,
+          "prestressArea": null,
+          "prestressEccentricity": null,
+          "prestressLossRatio": null,
+          "fireRating": null,
+          "fireAxisDistance": null,
+          "fireSlabSystem": null,
+          "useFem": null,
+          "udl": null,
+          "deflectionSensitive": null,
+          "hdOverH": null,
+          "liquidSigmaS": null,
+          "liquidRhoPEff": null,
+          "liquidFCtEff": null,
+          "liquidSRMax": null,
+          "bridgeSigmaC": null,
+          "bridgeDeltaSigmaS": null,
+          "relativeHumidity": null,
+          "longitudinal": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "vert",
+                "patch": {
+                  "diameter": null,
+                  "count": null,
+                  "position": null,
+                  "anchorageLength": null,
+                  "lapLength": null,
+                  "bondCondition": null,
+                  "aggregateSize": null,
+                  "lapShare": 0.5
+                }
+              }
+            ]
+          },
+          "actions": null,
+          "sectionPoints": null,
+          "bars": null,
+          "tendonPoints": null,
+          "studRows": null,
+          "punchingBetaMethod": null,
+          "punchingMomentC1": null,
+          "punchingMomentC2": null,
+          "openings": null
+        }
+      },
+      {
+        "id": "wall-W1",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "kind": null,
+          "concreteGradeId": null,
+          "reinforcementGradeId": null,
+          "prestressSteelId": null,
+          "exposure": null,
+          "width": null,
+          "height": null,
+          "effectiveDepth": null,
+          "cover": null,
+          "span": null,
+          "support": null,
+          "bucklingLength": null,
+          "stirrupsDiameter": null,
+          "stirrupsSpacing": null,
+          "stirrupsLegs": null,
+          "punchingColumnWidth": null,
+          "punchingColumnDepth": null,
+          "punchingColumnPosition": null,
+          "punchingAsw": null,
+          "prestressForce": null,
+          "prestressArea": null,
+          "prestressEccentricity": null,
+          "prestressLossRatio": null,
+          "fireRating": null,
+          "fireAxisDistance": null,
+          "fireSlabSystem": null,
+          "useFem": null,
+          "udl": null,
+          "deflectionSensitive": null,
+          "hdOverH": null,
+          "liquidSigmaS": null,
+          "liquidRhoPEff": null,
+          "liquidFCtEff": null,
+          "liquidSRMax": null,
+          "bridgeSigmaC": null,
+          "bridgeDeltaSigmaS": null,
+          "relativeHumidity": null,
+          "longitudinal": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "vert",
+                "patch": {
+                  "diameter": null,
+                  "count": null,
+                  "position": null,
+                  "anchorageLength": null,
+                  "lapLength": null,
+                  "bondCondition": null,
+                  "aggregateSize": null,
+                  "lapShare": 0.5
+                }
+              }
+            ]
+          },
+          "actions": null,
+          "sectionPoints": null,
+          "bars": null,
+          "tendonPoints": null,
+          "studRows": null,
+          "punchingBetaMethod": null,
+          "punchingMomentC1": null,
+          "punchingMomentC2": null,
           "openings": null
         }
       }
@@ -603,5 +602,6 @@
     "inserted": [],
     "moved": [],
     "modified": []
-  }
+  },
+  "reliabilityClass": null
 }

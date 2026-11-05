@@ -1,0 +1,1 @@
+{"cases":[{"x":0,"y":0,"width":512,"height":512,"bilinear":false},{"x":4,"y":8,"width":32,"height":16,"bilinear":true},{"x":16384,"y":16384,"width":16384,"height":1,"bilinear":false}],"invalid":[{"x":-1},{"y":16385},{"width":0},{"height":16385},{"width":1.5},{"bilinear":"true"}]}

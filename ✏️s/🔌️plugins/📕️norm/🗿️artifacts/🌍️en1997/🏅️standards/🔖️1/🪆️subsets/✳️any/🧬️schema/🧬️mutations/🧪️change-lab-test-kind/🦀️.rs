@@ -24,7 +24,7 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLabTestKind where 
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Kind (oedometer | triaxial | directShear) of the laboratory test", "Laborversuch: Art (oedometer | triaxial | directShear) ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change laboratory test method", "Laborversuchsverfahren ändern")
     }
 }
 

@@ -2,12 +2,12 @@
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as pack;
-use semio_framework_plugin_reactor_app::LAST_MAINTENANCE_STAGE;
+use semio_framework_plugin_reactor_app::{LAST_MAINTENANCE_STAGE, PluginApp};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
 #[cfg(test)]
 use semio_framework_plugin_job::reserved_jobs::FrameworkCutJob;
-use semio_framework_plugin_decl_views::child_view::CHILD_CONTENT_SLOTS;
+use semio_framework_plugin_decl_views::child_view::{CHILD_CONTENT_SLOTS, ChildContentView};
 use semio_framework_plugin_mounted_owner::{MountedOwnerPhaseV1, MountedOwnerTurnV1};
 use semio_framework_plugin_window_config::{WindowConfigOwnerRegistry, WindowConfigPack};
 use semio_framework_plugin_window_transient::window_transient::{WindowTransientOwnerRegistry, WindowTransientSnapshot};
@@ -18,148 +18,57 @@ use semio_framework::manifest::CommandAddress as ManifestCommandAddress;
 use semio_framework::kernel::{ActorId, AppEvent, Effect, HistoryPatch, InvocationResult};
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin, MediaForm, ViewModel};
 use semio_framework_tool_run::ToolRunTraceCursor;
-/// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
-/// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
-/// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
-/// `ActionDescriptor` have no drop-in replacement of the same name — see
-/// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
-/// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
-/// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
-/// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
-/// too, since this module already used every one of the old wgpu-target types unqualified.
 use semio_framework_ui_contract::*;
 use semio_framework_ui_runtime::ComponentTree;
 use std::collections::{BTreeMap, HashMap};
-/// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `AsyncTask`'s boxed `run` closure/future.
 use std::future::Future;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ConfigStore, create_config_envelope, MemberFactory, Mutation, NoMembers, ReferenceSpaceMember};
 use store::os_store::document_materialize::create_document_envelope;
 use store::os_store::store_schema::{ArtifactCommand, ArtifactEnvelope};
 use store::os_store::composition_coordinator::CompositionCoordinator;
-use semio_framework_ui_layout::layout::ContextMenuItemSpec;
-use semio_framework_ui_layout::layout::ContextMenuRequest;
-use semio_framework_ui_layout::layout::WindowEngagement;
-use semio_framework_ui_layout::layout::WindowMeasure;
-use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
-/// 🎞️ `MediaWireFormat` backs `MediaArtifactDescriptor::wire` (see `🔖️DocumentContract`
-/// below) — the plugin ABI's `consume-media`/`produce-media` payload framing, separate from
-/// `MediaPayload` above (which pairs with `Media`'s per-port `MediaType` projection).
-/// The legacy format enum was retired in ticket 26/08/11/
-/// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6 — `MediaWireFormat::
-/// Binary` now carries a plain format kind id string.
-use semio_framework::MediaWireFormat;
-/// 🎞️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
-/// `ArtifactApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
-/// implementers never need a direct `semio-framework-core` dependency just to satisfy this trait.
+use semio_framework_ui_layout::layout::{ContextMenuItemSpec, ContextMenuRequest, WindowEngagement, WindowMeasure, FRAMEWORK_HISTORY_BODY_KEY};
+use semio_framework::{MediaWireFormat, AppRole};
 use semio_framework::{Media, MediaError, MediaFingerprint, MediaPayload};
-/// 🧬️ `MediaClass`/`MediaType` also live in `semio-framework-core` — re-exported so callers can build
-/// `ArtifactKindSpec.media_type` and `AppBuilder::media_input(...)`/`media_output(...)` port specs
-/// without a direct `semio-framework-core` dependency.
 use semio_framework::{MediaClass, MediaType};
-/// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
-/// 2). Defined in `semio_framework` so plugins and the OS product
-/// share one definition without an inverted dependency; re-exported here verbatim.
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
 use semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND;
-use semio_framework::AppRole;
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_document_media::copy_media_text_parts;
-use semio_framework_plugin_decl_app::media_projection_error;
-use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
-use semio_framework_plugin_window_kits::AppActionRegistry;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_app::DOCUMENT_LOAD_BUSY_CODE;
-use semio_framework_plugin_decl_app::DOCUMENT_LOAD_CHANGED_CODE;
-use semio_framework_plugin_decl_app::DOCUMENT_LOAD_FAILED_CODE;
-use semio_framework_plugin_decl_app::DOCUMENT_LOAD_HISTORY_INVALID_CODE;
-use semio_framework_plugin_decl_app::DOCUMENT_LOAD_INCOMPLETE_CODE;
-use semio_framework_plugin_decl_app::DOCUMENT_LOAD_MEMBER_INVALID_CODE;
-use semio_framework_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE;
-use semio_framework_plugin_decl_app::DOCUMENT_LOAD_TOO_LARGE_CODE;
-use semio_framework_plugin_decl_app::DOCUMENT_LOAD_TOO_MANY_MEMBERS_CODE;
-use semio_framework_plugin_decl_app::EphemeralSnapshot;
-use semio_framework_plugin_document_media::MediaArtifact;
-use semio_framework_plugin_decl_app::MediaArtifactDescriptor;
-use semio_framework_plugin_decl_app::MediaArtifactError;
-use semio_framework_plugin_decl_app::MediaConsumption;
-use semio_framework_plugin_decl_app::NATURAL_FILE_PORT;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_decl_app::TransactionPrepareOutcome;
-use semio_framework_plugin_decl_app::document_load_fault;
-use semio_framework_plugin_decl_app::natural_file_input_media;
-use semio_framework_plugin_window_kits::validate_ui_dispatch_classification;
-use semio_framework_plugin_decl_app::whole_document_archive;
-use semio_framework_plugin_document_media::whole_document_media;
-use semio_framework_plugin_decl_emission::ActionMeta;
-use semio_framework_plugin_decl_emission::ChildEmit;
-use semio_framework_plugin_decl_emission::Emit;
-use semio_framework_plugin_decl_views::ArtifactView;
-use semio_framework_plugin_decl_views::ConfigView;
-use semio_framework_plugin_decl_views::InteractionView;
+use semio_framework_plugin_document_media::{copy_media_text_parts, MediaArtifact, whole_document_media, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadState, ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll};
+use semio_framework_plugin_decl_app::{media_projection_error, ArtifactApp, DOCUMENT_LOAD_BUSY_CODE, DOCUMENT_LOAD_CHANGED_CODE, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_HISTORY_INVALID_CODE, DOCUMENT_LOAD_INCOMPLETE_CODE, DOCUMENT_LOAD_MEMBER_INVALID_CODE, DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, DOCUMENT_LOAD_TOO_LARGE_CODE, DOCUMENT_LOAD_TOO_MANY_MEMBERS_CODE, EphemeralSnapshot, MediaArtifactDescriptor, MediaArtifactError, MediaConsumption, NATURAL_FILE_PORT, TransactionPrepareOutcome, document_load_fault, natural_file_input_media, whole_document_archive};
+use semio_framework_plugin_ownership::bounded_ownership::{plugin_grant_funds, ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry, PluginLifecycleStep};
+use semio_framework_plugin_window_kits::{AppActionRegistry, validate_ui_dispatch_classification, merge_ui_values};
+use semio_framework_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
+use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, InteractionView};
 use semio_framework_plugin_window_transient::window_transient::TransientView;
 use semio_framework_plugin_decl_registry::artifact_registration::PluginRuntimeRegistry;
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
-use semio_framework_plugin_child::ChildMemberRegistrationError;
-use semio_framework_plugin_child::ChildMemberRetirement;
-use semio_framework_plugin_child::OwnedDocumentMemberIngress;
+use semio_framework_plugin_child::{ChildMemberRegistrationError, ChildMemberRetirement, OwnedDocumentMemberIngress};
 use semio_framework_plugin_command::PURE_HISTORY_UNAVAILABLE_CODE;
 use semio_framework_plugin_time_travel_panel::command_history_panel_lift::ui_history_panel;
-use semio_framework_plugin_document_media::ActiveDocumentArchiveLoad;
-use semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState;
-use semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle;
-use semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll;
-use semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind;
-use semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase;
-use semio_framework_plugin_decl_media::ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES;
-use semio_framework_plugin_decl_media::ArtifactDownloadOutput;
-use semio_framework_plugin_decl_media::ArtifactMediaExportHandle;
-use semio_framework_plugin_decl_media::ArtifactMediaExportPoll;
-use semio_framework_plugin_peer::PeerRosterPublication;
-use semio_framework_plugin_peer::PresenceRosterAdmission;
-use semio_framework_plugin_peer::PresenceRosterOutcome;
-use semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitProgress;
-use semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness;
-use semio_framework_plugin_reactor_jobs::reserved::drive_framework_reserved_registry_job;
-use semio_framework_plugin_job::reserved_jobs::register_framework_reserved_factories;
+use semio_framework_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
+use semio_framework_plugin_decl_media::{ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES, ArtifactDownloadOutput, ArtifactMediaExportHandle, ArtifactMediaExportPoll};
+use semio_framework_plugin_peer::{PeerRosterPublication, PresenceRosterAdmission, PresenceRosterOutcome};
+use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommitProgress, register_framework_reserved_factories};
+use semio_framework_plugin_decl_app::tool_contract::{ToolOwnerWitness, ArtifactToolCompletionValue, ArtifactToolFactoryRegistry, ArtifactToolPublicContract, ArtifactToolPublicationLane, TypedOperationResultLane};
+use semio_framework_plugin_reactor_jobs::reserved::{drive_framework_reserved_registry_job, drive_framework_reserved_registry_job_counted};
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_composition_publication::ComposedGestureResult;
-use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use semio_framework_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactOwnedDisposer};
+use semio_framework_plugin_composition_publication::{ComposedGestureResult, MountedTypedCommandFullOperationStage};
 use semio_framework_plugin_operation::ToolCancellationHandle;
 use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolFactoryRegistry;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
-use semio_framework_plugin_job::EmitWire;
-use semio_framework_plugin_job::PendingTransaction;
+use semio_framework_plugin_job::{EmitWire, PendingTransaction, TransactionProposalDraft, TypedOperationCompletion, TypedOperationResultPage, TypedOperationResultToken, TypedOperationUiProgress};
 /// 🪝️ The instance extensions every mounted instance consults, in route, refusal and maintenance order (see [`InstanceExtension`]).
 pub type InstanceExtensions = (semio_framework_plugin_tool_run_turns::ToolRunExtension, (semio_framework_plugin_time_travel_turns::TimeTravelExtension, ()));
 use semio_framework_plugin_time_travel::TimeTravelLedger;
 use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
 use semio_framework_plugin_tool_run::ToolRunLedger;
-use semio_framework_plugin_job::TransactionProposalDraft;
-use semio_framework_plugin_job::TypedOperationCompletion;
-use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
-use semio_framework_plugin_job::TypedOperationResultPage;
-use semio_framework_plugin_job::TypedOperationResultToken;
-use semio_framework_plugin_job::TypedOperationUiProgress;
 use semio_framework_plugin_job::lifted_full_operation_job::TypedCommandFullOperationJobFactory;
-use semio_framework_plugin_window_kits::merge_ui_values;
 use semio_framework_plugin_window_transient::built_to_component_tree;
 #[cfg(test)]
-use semio_framework_plugin_reactor_jobs::reserved::drive_framework_reserved_registry_job_counted;
 
 
 pub struct VcsArtifactApp<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory = NoMembers> {
@@ -177,6 +86,9 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactor
     pub original_typing:semio_framework_plugin_instance_typed_ops::original_typing::OriginalTypingDispatch<A>,
     pub original_emission:semio_framework_plugin_job::original_emission::OriginalEmissionSource<A>,
     pub original_typed_command:semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
+pub original_host_event_command:semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
+pub original_command_scope:Option<(semio_framework_job::OriginalSourceBinding,(u64,u64))>,
+pub original_host_event_scope:Option<(semio_framework_job::OriginalSourceBinding,(u64,u64))>,
     pub original_typed_tag:std::mem::ManuallyDrop<Option<semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag>>,
     pub original_typed_tag_close:semio_framework_value::retained_clone::RetainedCloneClose,
     /// 🗜️ Local interaction: the framework-owned live query, topology authority, hover and snapshot read returns.
@@ -306,6 +218,8 @@ use semio_framework_plugin_instance_render as render;
 
 #[path = "📥️staging/📨️dispatch/🦀️.rs"]
 mod app_dispatch;
+#[path="📥️staging/📣️host-event-routing/🦀️.rs"]
+mod app_host_event_routing;
 
 #[path = "📥️staging/🔒️close-ladder/🦀️.rs"]
 mod app_close_ladder;

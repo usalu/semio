@@ -21,7 +21,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🧊️ The document's own geometry on the shared mesh scene: real triangles or points, framed on their bounds, never a placeholder.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &PlySnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let (positions, triangles, markers) = crate::engine::scene_geometry(document);
+    let (positions, triangles, markers) = crate::schema::inferences::scene_geometry(document);
     semio_s_artifact_stdio_contract::mesh_scene("PLY", &positions, &triangles, &markers)
 }
 //#endregion 🔖️Render

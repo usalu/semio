@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import Ajv from "ajv/dist/2020.js";
+import { unzipSync } from "fflate";
+const base = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/";
+const fixture = base + "✏️editor/🧪️tests/🔬️unit/🧫️fixtures/";
+const law = JSON.parse(readFileSync(fixture + "🔣️.json", "utf8"));
+assert.equal(new Ajv().validate(JSON.parse(readFileSync(fixture + "📐️.json", "utf8")), law), true);
+const members = Object.entries(unzipSync(readFileSync(base + law.sample))).map(([name, bytes]) => ({ name, bytes: Array.from(bytes) }));
+assert.deepEqual(members, law.members);
+const unsupported = readFileSync(base + law.invalidSample);
+assert.equal(unsupported.readUInt16LE(8), law.invalidMethod);
+console.log("[DEBUG] AJV + independent fflate ISO member output matches neutral fixture", members);

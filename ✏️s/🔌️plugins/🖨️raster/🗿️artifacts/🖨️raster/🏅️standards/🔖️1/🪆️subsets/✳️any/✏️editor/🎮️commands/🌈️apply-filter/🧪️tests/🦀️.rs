@@ -2,6 +2,12 @@
 //! session selection (a flip mirrors the whole image); a filter the layer or the session cannot take leaves zero trace.
 
 use semio_s_artifact_raster_raster_editor::config::RasterConfig;
+use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+
+fn receive_persistent_fixture(value:semio_framework_value::DslValue,grant:semio_framework_value::RetainedCloneGrant)->semio_s_artifact_raster_raster_model::RasterSelectionSpans{
+ let mut caller=OriginalWorkFixture::new();let output=caller.receive_native(value,grant);caller.finish();output
+}
+use semio_framework_value::ToValue;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView};
@@ -19,7 +25,7 @@ fn document(locked: bool) -> RasterSnapshot {
 }
 
 fn selected() -> RasterConfig {
-    RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }] }), ..RasterConfig::default() }
+    RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: receive_persistent_fixture(vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }].to_value(),OriginalWorkFixture::stock()) }), ..RasterConfig::default() }
 }
 
 fn filter(name: &str, amount: f64) -> ApplyFilter {
@@ -33,11 +39,14 @@ fn retire(snapshot: RasterSnapshot) {
 #[test]
 fn a_filter_is_one_leaf_on_the_pixels_with_the_session_selection() {
     let document = document(false);
-    let RasterMutation::ApplyFilter(leaf) = apply_filter_leaf(&filter("blur", 2.0), &document, &selected()).expect("the filter builds") else { panic!("an image filter") };
+    let session=selected();
+    let RasterMutation::ApplyFilter(leaf) = apply_filter_leaf(&filter("blur", 2.0), &document, &session).expect("the filter builds") else { panic!("an image filter") };
     assert_eq!((leaf.layer_id.as_str(), leaf.filter.as_str(), leaf.amount), ("ink", "blur", 2.0));
-    assert_eq!(leaf.selection, Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }]));
-    let RasterMutation::ApplyFilter(flip) = apply_filter_leaf(&filter("flipVertical", 0.0), &document, &selected()).expect("the flip builds") else { panic!("an image filter") };
+    assert_eq!(leaf.selection.as_ref().map(|selection|selection.iter().copied().collect::<Vec<_>>()), Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }]));
+    assert!(std::ptr::eq(leaf.selection.as_ref().unwrap().get(0).unwrap(),session.pixel_selection.as_ref().unwrap().spans.get(0).unwrap()));
+    let RasterMutation::ApplyFilter(flip) = apply_filter_leaf(&filter("flipVertical", 0.0), &document, &session).expect("the flip builds") else { panic!("an image filter") };
     assert_eq!(flip.selection, None, "a flip mirrors the whole image");
+    let mut caller=OriginalWorkFixture::new();caller.retire_owned((leaf,session),OriginalWorkFixture::stock());caller.finish();
     retire(document);
 }
 

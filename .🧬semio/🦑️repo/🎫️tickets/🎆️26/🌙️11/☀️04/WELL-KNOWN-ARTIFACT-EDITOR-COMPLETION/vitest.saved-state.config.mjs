@@ -1,0 +1,1 @@
+export default { test: { include: ['**/🧑‍🎨engine/🧪️tests/💾️saved-state/🧮️derivation.ts', '**/🧑‍🎨engine/🧪️tests/💾️saved-state/🚪️lifecycle.tsx', '**/🧑‍🎨engine/🧪️tests/💾️saved-state/🖼️canvas.tsx'], root: process.cwd(), environment: 'jsdom', maxWorkers: 1, minWorkers: 1, fileParallelism: false, testTimeout: 5000 } };

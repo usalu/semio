@@ -697,15 +697,25 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
 /// 🪪️ Per-invocation runtime metadata handed to the object-safe {@link PluginApp} — the local
 /// actor id, the instance id used to stamp operation handles, and optional host view context.
 /// Headless operations have no view; UI actions carry the addressed concrete window's projection.
-#[derive(Clone, Debug, Default, semio_framework_value::RetireOwned,semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, semio_framework_value::RetireOwned)]
 pub struct ActionMeta {
     pub actor: semio_framework_value::SharedUtf8,
     pub instance_id: u32,
-    pub view_state: Option<ViewModel>,
+    pub view_state: Option<std::sync::Arc<ViewModel>>,
+    pub expected_document_revision: Option<[u8;32]>,
 }
-#[path="🛂️metadata/📑️copy/🦀️.rs"]
-pub mod original_metadata_copy;
-pub use original_metadata_copy::OriginalActionMetaCopy;
+impl ActionMeta {
+    /// 🔒️ The owning actor checks the complete captured document frontier before native preparation.
+    pub fn admit_document_revision(&self,current:&[u8;32],live_instance:Option<u32>)->Result<(),semio_framework_value::ValueError>{
+        if let Some(expected)=self.expected_document_revision {
+            if live_instance!=Some(self.instance_id){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"staging.instance"));}
+            if expected!=*current{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"staging.document-revision"));}
+        }
+        Ok(())
+    }
+}
+#[path="🛂️metadata/🔗️view/🦀️.rs"]
+pub mod original_view;
 
 
 /// 🔤️ Parses the raw action id crossing the WASM ABI (`ArtifactApp::handle_action`'s `action: &str`)
@@ -800,7 +810,7 @@ pub trait ToolCommandCatalog {
 /// names the window it concerns: a host forwards a window's blur, pointer-capture loss and closing
 /// (`hostEvent{windowId, kind}`), and the runtime delivers a utility switch it sees in a dispatch's view, the start
 /// of a history edit and a remote edit moving the base to every open window.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum HostEvent {
     WindowBlurred { window_id: String },
     PointerCaptureLost { window_id: String },
@@ -832,3 +842,11 @@ impl HostEvent {
 
 /// 📬️ Mutation emission paired with its operation failure, without changing ownership.
 pub type ArtifactMutationOutcome<M, C = NoConfigMutation, D = NoDraftMutation, E = Fault> = Result<Emit<M, C, D>, E>;
+
+#[cfg(test)]
+#[path="🛂️metadata/🔒️revision/🦀️.rs"]
+mod staged_revision_tests;
+
+#[cfg(test)]
+#[global_allocator]
+static EMISSION_TEST_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

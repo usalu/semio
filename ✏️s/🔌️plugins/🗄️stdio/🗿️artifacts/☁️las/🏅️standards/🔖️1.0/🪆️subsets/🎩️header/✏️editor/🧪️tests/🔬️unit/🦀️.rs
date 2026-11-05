@@ -60,7 +60,7 @@ async fn a_transform_gesture_moves_points_updates_bounds_and_keeps_classificatio
     let event = editing::SnapshotEditEvent::SetValue { path: editing::TRANSFORM_PATH.into(), value: semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"translate":[10,20,30]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) };
     let emit = <LasAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).expect("the transform resolves");
     let mut state = base.clone();
-    emit.artifact_mutations.iter().for_each(|mutation| apply_mutation(&mut state, mutation));
+    emit.artifact_mutations.iter().for_each(|mutation| { apply_mutation(&mut state, mutation); });
     assert_eq!((state.points[1].x, state.points[1].y, state.points[1].z), (11.0, 22.0, 33.0));
     assert_eq!((state.points[1].classification, state.points[1].intensity), (5, 7));
     assert_eq!((state.header.min_x, state.header.max_z), (10.0, 33.0));
@@ -86,7 +86,7 @@ fn natural_las_round_trips_edits_agrees_with_an_independent_byte_reader_and_refu
     let event = editing::SnapshotEditEvent::SetValue { path: editing::TRANSFORM_PATH.into(), value: semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"translate":[10,0,0]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) };
     let emit = <LasAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("transform resolves");
     let mut edited = snapshot.clone();
-    emit.artifact_mutations.iter().for_each(|mutation| apply_mutation(&mut edited, mutation));
+    emit.artifact_mutations.iter().for_each(|mutation| { apply_mutation(&mut edited, mutation); });
     let saved = <LasAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("las saves");
     let le32 = |at: usize| u32::from_le_bytes(saved[at..at + 4].try_into().unwrap());
     let le_f64 = |at: usize| f64::from_le_bytes(saved[at..at + 8].try_into().unwrap());
@@ -107,7 +107,7 @@ fn the_scene_draws_every_point_as_a_marker() {
     use crate::standards::v1_0::subsets::any::schema::snapshot::LasPoint;
     let mut snapshot = LasSnapshot::default();
     snapshot.points = vec![LasPoint { x: 1.0, y: 2.0, z: 3.0, ..LasPoint::default() }];
-    let (positions, triangles, markers) = crate::engine::scene_geometry(&snapshot);
+    let (positions, triangles, markers) = semio_s_artifact_stdio_las_schema::schema::inferences::scene_geometry(&snapshot);
     assert_eq!((positions.len(), triangles.len(), markers), (0, 0, vec![[1.0, 2.0, 3.0]]));
 }
 
@@ -147,7 +147,7 @@ fn the_las_crate_reads_the_saved_edit_back_to_the_edited_model() {
     let event = editing::SnapshotEditEvent::SetValue { path: editing::TRANSFORM_PATH.into(), value: semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"translate":[10,0,0]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) };
     let emit = <LasAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("transform resolves");
     let mut edited = snapshot.clone();
-    emit.artifact_mutations.iter().for_each(|mutation| apply_mutation(&mut edited, mutation));
+    emit.artifact_mutations.iter().for_each(|mutation| { apply_mutation(&mut edited, mutation); });
     let saved = <LasAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("las saves");
     let by_las_crate = oracle_round_trip(&saved).expect("the las crate parses the saved file");
     let reopened = <LasAnyEditor as ArtifactEditor>::decode_natural_file(&by_las_crate).expect("the las crate output reopens");

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️change-beam-transverse-as-top",
   "semanticKind": "change-beam-transverse-as-top",
-  "displayName": "ChangeBeamTransverseAsTop",
+  "displayName": "Change top layer transverse reinforcement of the deck slab per metre of girder",
   "emoji": "🕸️",
   "aggregateVariant": "ChangeBeamTransverseAsTop",
   "payloadSchema": "🧬️schema/🔣️.json",

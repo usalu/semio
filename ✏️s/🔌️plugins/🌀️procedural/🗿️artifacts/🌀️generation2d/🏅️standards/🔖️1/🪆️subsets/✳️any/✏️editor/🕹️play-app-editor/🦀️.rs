@@ -125,18 +125,19 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// routed exclusively through this builder (`dispatch_import_media` →
     /// `build_artifact_reserved_media_job`); `copy`/`cut`/`paste` stay on the framework's own
     /// reserved factories.
-    fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+    fn build_reserved_tool_job(source: &mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>, body: &mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob + Send>>, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if body.is_some() { return semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>, Generation2dImportJob>(source,body,cx); }
+        let request = source.as_ref().ok_or_else(|| Fault::from("generation2d import requires its original request"))?;
         if request.tool_id.as_str() != GENERATION2D_IMPORT_TOOL_ID {
-            return Ok(None);
+            return Ok(false);
         }
         if !request.raw_wire.is_empty() {
-            return Err(Fault::from("generation2d import-media admits a decoded media value, never a wire payload"));
+            return Err(Fault::from("generation2d import-media admits a decoded media value, never a wire payload").into());
         }
-        let ArtifactReservedToolInput::Media { port, media } = &request.input else {
-            return Err(Fault::from("generation2d import-media requires media input"));
+        let Some(ArtifactReservedToolInput::Media { .. }) = request.input.as_ref() else {
+            return Err(Fault::from("generation2d import-media requires media input").into());
         };
-        let (port, media) = (port.clone(), media.clone());
-        Ok(Some(ArtifactReservedToolJob::new(Generation2dImportJob::new(request, port, media))))
+        semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>, Generation2dImportJob>(source,body,cx)
     }
 
     fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {

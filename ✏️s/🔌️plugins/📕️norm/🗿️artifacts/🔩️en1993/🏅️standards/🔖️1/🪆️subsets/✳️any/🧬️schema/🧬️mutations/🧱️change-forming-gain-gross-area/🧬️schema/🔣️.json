@@ -42,7 +42,7 @@
         "order": 20,
         "unit": "m²",
         "precision": 6,
-        "step": 1e-05
+        "step": 0.00001
       }
     }
   }

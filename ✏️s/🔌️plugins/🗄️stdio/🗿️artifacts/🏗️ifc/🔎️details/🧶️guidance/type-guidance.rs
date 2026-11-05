@@ -262,7 +262,7 @@ impl StagedBodySource for IfcPreparedTypeInputSource {
                 label,
                 description: Some(&field.attribute),
                 disabled: false,
-                kind: if field.operation.is_some(){StagedScalarKind::Button{page:false}}else if matches!(field.kind,InputKind::Enum|InputKind::Number|InputKind::List|InputKind::Select) { StagedScalarKind::Choice { value, choices: field.choices.as_ref().ok_or_else(invalid)?.rows() } } else { StagedScalarKind::Text { value } },
+                kind: if field.operation.is_some(){StagedScalarKind::Button{page:false}}else if matches!(field.kind,InputKind::Enum|InputKind::Number|InputKind::List|InputKind::Select) { StagedScalarKind::Choice { value, choices: field.choices.as_ref().ok_or_else(invalid)? } } else { StagedScalarKind::Text { value } },
             },
             required: field.operation.is_none(),
             error: None,
@@ -373,6 +373,8 @@ pub struct IfcTypeInputSourceWork<C: IfcDetailsProfile + 'static> {
     typed_copy:typed_copy::TypedCopy,
     source_loan: ManuallyDrop<Option<super::source_loan::SourceLoan>>,
     candidate: ManuallyDrop<Option<Box<super::type_guidance_candidate::GuidedCandidate<C>>>>,
+    commit_copy: super::type_guidance_request::RequestCopy,
+    commit_args: ManuallyDrop<Option<DslValue>>,
     choice_parts: ManuallyDrop<Option<ChoiceParts>>,
     navigation: ManuallyDrop<Option<Vec<Navigation>>>,
     nav_item: ManuallyDrop<Option<Navigation>>,
@@ -405,6 +407,8 @@ impl<C: IfcDetailsProfile + 'static> Default for IfcTypeInputSourceWork<C> {
             typed_copy:Default::default(),
             source_loan: ManuallyDrop::new(None),
             candidate: ManuallyDrop::new(None),
+            commit_copy: Default::default(),
+            commit_args: ManuallyDrop::new(None),
             choice_parts: ManuallyDrop::new(None),
             navigation: ManuallyDrop::new(None),
             nav_item: ManuallyDrop::new(None),
@@ -461,6 +465,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
     fn source_demands(&self)->Result<RetirementDemand,ValueError>{match self.source_loan.as_ref(){Some(loan)=>loan.demands(),None=>Ok(RetirementDemand{copy_bytes:size_of::<super::source_loan::SourceLoan>()+size_of_val(&self.source_loan),depth:1,..Default::default()})}}
     pub fn demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.source_loan.as_ref().and_then(|loan|loan.source()).is_none(){return self.source_demands();}
+        if matches!(self.state.phase,96|97|98){let own=4*size_of::<State>();let child=if self.state.phase==98{self.commit_copy.close_demand(4096)?}else{self.commit_copy.demands(4096)?};return Ok(RetirementDemand{copy_bytes:own.checked_add(child.copy_bytes).ok_or_else(invalid)?,capacity_bytes:child.capacity_bytes,release_bytes:child.release_bytes,depth:child.depth.max(1)});}
         if self.state.phase==80{
             let base=4*size_of::<State>()+2*size_of::<bool>();
             let child=if let Some(candidate)=self.candidate.as_ref(){let source=self.source_loan.as_ref().and_then(|loan|loan.source()).ok_or_else(stale)?;candidate.demands(source,source.try_authority()?.as_ref(),4096)?}else{RetirementDemand{copy_bytes:size_of::<super::type_guidance_candidate::GuidedCandidate<C>>()+size_of::<Box<super::type_guidance_candidate::GuidedCandidate<C>>>(),capacity_bytes:size_of::<super::type_guidance_candidate::GuidedCandidate<C>>(),depth:1,..Default::default()}};
@@ -1269,10 +1274,19 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 }else{
                     let lease=self.source_loan.as_ref().and_then(|loan|loan.source()).ok_or_else(stale)?;let grant=cx.retained_grant();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(own),..grant};let before=cx.retained_progress();
                     if cx.with_retained_loan(child,|cx|self.candidate.as_mut().ok_or_else(stale)?.advance(&mut self.request,lease,source,revision,cx))?{
-                        self.state.ready=self.candidate.as_ref().ok_or_else(stale)?.valid();self.state.phase=6;let delegated=cx.retained_progress()!=before;cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(!delegated),copied_bytes:own,..Default::default()})?;if !delegated{cx.consume_fuel(1);}
+                        self.state.ready=self.candidate.as_ref().ok_or_else(stale)?.valid();self.state.phase=if self.state.ready{96}else{6};let delegated=cx.retained_progress()!=before;cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(!delegated),copied_bytes:own,..Default::default()})?;if !delegated{cx.consume_fuel(1);}
                     }
                 }
             }
+            96|97|98=>{
+                let own=4*size_of::<State>();let grant=cx.retained_grant();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(own),..grant};let before=cx.retained_progress();
+                let ready=match self.state.phase{
+                    96=>cx.with_retained_loan(child,|cx|self.commit_copy.advance(&mut self.request,cx))?,
+                    97=>cx.with_retained_loan(child,|cx|self.commit_copy.take_args(&mut self.commit_args,cx))?,
+                    _=>{if self.commit_copy.empty(){true}else{let demand=self.commit_copy.close_demand(4096)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|self.commit_copy.close_owned(grant))?;false}},
+                };
+                if ready{let next=match self.state.phase{96=>97,97=>98,_=>6};if next==98{self.commit_copy.begin_close();}self.state.phase=next;let delegated=cx.retained_progress()!=before;cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(!delegated),copied_bytes:own,..Default::default()})?;if !delegated{cx.consume_fuel(1);}}
+            },
             84|85|89=>self.advance_list_copy(cx)?,
             92|94|95=>self.advance_typed_copy(cx)?,
             5 => {
@@ -1342,7 +1356,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 metadata(cx, base + size_of::<Page>() + 2 * size_of::<StagedFormRequest>() + size_of::<Vec<Field>>() + size_of::<Vec<Navigation>>(), || {
                     *self.page = Some(Page {
                         request: self.request.take(),
-                        status: StagedFormStatus { token: empty_token(), ready: self.state.ready, diagnostics: Vec::new(), diagnostic_offset: String::new(), diagnostic_total: String::new() },
+                        status: StagedFormStatus { token: empty_token(), ready: self.state.ready, commit_args: self.commit_args.take(), diagnostics: Vec::new(), diagnostic_offset: String::new(), diagnostic_total: String::new() },
                         fields: self.fields.take().unwrap(),
                         navigation: self.navigation.take().unwrap(),
                     });
@@ -1710,6 +1724,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
         self.state.closing = true;
         self.list_copy.begin_close();
         self.typed_copy.begin_close();
+        self.commit_copy.begin_close();
     }
     pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, OriginalTurnFailure> {
         if self.binding.is_some_and(|(binding, _, _)| !binding.matches(cx)) {
@@ -1744,6 +1759,8 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             && self.typed_copy.empty()
             && self.source_loan.is_none()
             && self.candidate.is_none()
+            && self.commit_copy.empty()
+            && self.commit_args.is_none()
             && self.choice_parts.is_none()
             && self.navigation.is_none()
             && self.nav_item.is_none()
@@ -1751,6 +1768,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             && self.retirement.is_empty()
     }
     fn close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if !self.commit_copy.empty(){return self.commit_copy.close_demand(body);}
         if !self.typed_copy.empty(){return self.typed_copy.close_demands(body);}
         if !self.list_copy.empty(){return self.list_copy.close_demands(body);}
         if !self.retirement.is_empty() {
@@ -1763,6 +1781,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 }
             };
         }
+        owner!(&self.commit_args,DslValue);
         owner!(&self.candidate, Box<super::type_guidance_candidate::GuidedCandidate<C>>);
         owner!(&self.edit, StagedFormBindingEdit);
         owner!(&self.error, String);
@@ -1793,6 +1812,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
         if !retained_clone_grant_admits(grant, demand) {
             return idle_step(RetainedCloneStep::Progress(Default::default()));
         }
+        if !self.commit_copy.empty(){return self.commit_copy.close_owned(grant);}
         if !self.typed_copy.empty(){return self.typed_copy.close_owned(grant);}
         if !self.list_copy.empty(){return self.list_copy.close_owned(grant);}
         if !self.retirement.is_empty() {
@@ -1805,6 +1825,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 }
             };
         }
+        owner!(&mut self.commit_args);
         owner!(&mut self.candidate);
         owner!(&mut self.edit);
         owner!(&mut self.error);

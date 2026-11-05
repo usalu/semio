@@ -248,8 +248,8 @@
       "rKN": 500000.0,
       "gammaEl": 1.0,
       "chordRotationDemandRad": 0.0,
-      "chordRotationUltimateRad": 0.0,
       "chordRotationYieldRad": 0.0,
+      "chordRotationUltimateRad": 0.0,
       "sectionDepthM": 0.0,
       "sectionWidthM": 0.0,
       "effectiveDepthM": 0.0,
@@ -359,12 +359,12 @@
       "baseRotationalStiffnessNm": 0.0
     }
   ],
-  "joints": [],
-  "bearings": [],
-  "piers": [],
-  "accelerograms": [],
-  "diaphragms": [],
   "soilLayers": [],
+  "diaphragms": [],
+  "accelerograms": [],
+  "piers": [],
+  "bearings": [],
+  "joints": [],
   "placements": [],
   "tieBeams": [],
   "slopes": []

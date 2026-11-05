@@ -17,7 +17,7 @@
       {
         "id": "wall-W1",
         "patch": {
-          "wallMovement": "free-alt"
+          "wallMovement": "free"
         }
       }
     ]

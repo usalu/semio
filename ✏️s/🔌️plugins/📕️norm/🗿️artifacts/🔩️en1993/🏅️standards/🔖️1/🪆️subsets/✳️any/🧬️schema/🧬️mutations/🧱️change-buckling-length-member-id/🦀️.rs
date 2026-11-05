@@ -19,7 +19,7 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBucklingLengthMemb
         verb: "change",
         entity: "buckling-length-member-id",
         kind: "change-buckling-length-member-id",
-        record: "ChangedBucklingLengthFatigue memberId",
+        record: "ChangedBucklingLengthMemberId",
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

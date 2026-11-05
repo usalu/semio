@@ -1,0 +1,63 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "catalogVisible",
+          "sameUuid",
+          "fileOpened",
+          "exactOwner",
+          "persisted",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "catalogVisible": {
+            "type": "boolean"
+          },
+          "sameUuid": {
+            "type": "boolean"
+          },
+          "fileOpened": {
+            "type": "boolean"
+          },
+          "exactOwner": {
+            "type": "boolean"
+          },
+          "persisted": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "canClick",
+              "passed"
+            ],
+            "properties": {
+              "canClick": {
+                "type": "boolean"
+              },
+              "passed": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

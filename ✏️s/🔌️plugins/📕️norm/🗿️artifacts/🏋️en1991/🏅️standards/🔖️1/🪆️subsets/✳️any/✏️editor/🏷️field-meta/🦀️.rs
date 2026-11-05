@@ -3,7 +3,7 @@
 use semio_s_plugin_norm_app_surface::{case_input_field_meta, ClauseRef, FieldLabel, FieldSpec, NormFieldChoice, Predicate, PredicateOp, UnitId};
 
 /// 🏷️ Exact, `[]`-templated (never parent-collection) or top-level leaf-segment metadata for the EN 1991 design-load subject; the inputs of a design case (`cases[id=…].numbers[id=KEY].value`) take their unit, label, bounds and choices from the typed case-input vocabulary.
-pub fn en1991_field_meta(path: &str) -> Option<FieldSpec> {
+fn describe_en1991_field(path: &str) -> Option<FieldSpec> {
     if let Some(m) = case_input_field_meta(semio_s_artifact_norm_en1991_checks::catalogue::case_inputs::VOCABULARY, path) {
         return Some(m);
     }
@@ -398,4 +398,16 @@ pub fn flatten_editor_path(path: &str) -> String {
         }
     }
     path.to_string()
+}
+
+/// 🛡️ Descriptive field metadata admitted by the family's actual native setter vocabulary.
+pub fn en1991_field_meta(path: &str) -> Option<FieldSpec> {
+    semio_s_plugin_norm_app_surface::admit_list_meta(
+        semio_s_plugin_norm_app_surface::admit_field_meta(
+        describe_en1991_field(path),
+        semio_s_artifact_norm_en1991_mutations::EDIT_RULES.can_set_field(path),
+        ),
+        semio_s_artifact_norm_en1991_mutations::EDIT_RULES.can_insert_item(path),
+        semio_s_artifact_norm_en1991_mutations::EDIT_RULES.can_remove_item(path, semio_s_artifact_norm_en1991_mutations::ID_REMOVALS.iter().map(|rule| rule.path)),
+    )
 }

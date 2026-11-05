@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Paint2d Editing Options",
+  "description": "Required local editor options shared by renderer implementations. Semantic config commands publish changes; document edits consume the published options. The owning pixel command validates parameter ranges and target extents.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["filterKind", "filterAmount", "imageGrid"],
+  "properties": {
+    "filterKind": {"enum": ["invert", "grayscale", "brightness", "contrast", "saturation", "gamma", "threshold", "posterize", "blur", "sharpen", "clear", "flipHorizontal", "flipVertical"]},
+    "filterAmount": {"type": "number"},
+    "imageGrid": {
+      "type": "object", "additionalProperties": false,
+      "required": ["x", "y", "width", "height", "bilinear"],
+      "properties": {
+        "x": {"type": "integer", "minimum": 0, "maximum": 16384},
+        "y": {"type": "integer", "minimum": 0, "maximum": 16384},
+        "width": {"type": "integer", "minimum": 1, "maximum": 16384},
+        "height": {"type": "integer", "minimum": 1, "maximum": 16384},
+        "bilinear": {"type": "boolean"}
+      }
+    }
+  }
+}

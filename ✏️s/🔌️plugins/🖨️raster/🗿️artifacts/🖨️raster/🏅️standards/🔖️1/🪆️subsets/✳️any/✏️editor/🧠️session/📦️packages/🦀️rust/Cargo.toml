@@ -27,6 +27,8 @@ semio-framework-os-store-one-item = { path = "../../../../../../../../../../../.
 semio-framework-pack-json = { workspace = true }
 semio-framework-pixels = { workspace = true }
 semio-framework-plugin = { workspace = true }
+semio-framework-plugin-ownership = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-os-store-operation-wire = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { workspace = true }
@@ -43,6 +45,7 @@ semio-s-artifact-stdio-semio-image = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

@@ -19,7 +19,7 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePanelSteelGrade wh
         verb: "change",
         entity: "panel-steel-grade",
         kind: "change-panel-steel-grade",
-        record: "ChangedPlatedPanelsFatigue steelGrade",
+        record: "ChangedPanelSteelGrade",
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

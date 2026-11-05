@@ -7,7 +7,8 @@
 //! replaced image released once nothing else shows it). Design §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.
 
 use semio_s_artifact_raster_raster_diff::{canvas, painted, Painted, Refusal};
-use crate::paint_stroke::{channel_byte, grey_byte, repainted_diff, repainted_inverse, refused, selection_invariant, selection_mask, RasterSelectionSpan, RASTER_PAINT_TARGETS};
+use crate::paint_stroke::{channel_byte, grey_byte, repainted_diff, repainted_inverse, refused, selection_mask, RASTER_PAINT_TARGETS};
+use semio_s_artifact_raster_raster_model::RasterSelectionSpans;
 use semio_s_artifact_raster_raster_diff::RasterDiff;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pixels::editing::{fill_in_place, flood_selection, PixelOperation};
@@ -33,7 +34,7 @@ pub struct FillRegion {
     pub seed: RasterSeed,
     pub tolerance: u32,
     pub color: Vec<f64>,
-    pub selection: Option<Vec<RasterSelectionSpan>>,
+    pub selection: Option<RasterSelectionSpans>,
 }
 
 /// 🏗️ Builder — wraps an unclipped fill in its dispatch variant.
@@ -45,7 +46,7 @@ pub fn fill_region<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + F
 //#region 🪣️Fill
 /// 🧯️ The payload-intrinsic laws the schema states (vocabulary, bounds, ordered selection runs), checked again before any
 /// pixel moves; the first one broken, as the field it names.
-fn invariant(payload: &FillRegion) -> Result<(), (&'static str, String)> {
+pub fn invariant_fields(payload: &FillRegion) -> Result<(), (&'static str, String)> {
     if !RASTER_PAINT_TARGETS.contains(&payload.target.as_str()) {
         return Err(("target", format!("Fill target \"{}\" is neither pixels nor mask.", payload.target)));
     }
@@ -53,7 +54,12 @@ fn invariant(payload: &FillRegion) -> Result<(), (&'static str, String)> {
         return Err(("tolerance", format!("A colour tolerance lies within 0..255, not {}.", payload.tolerance)));
     }
     fill_color_invariant(&payload.color)?;
-    selection_invariant(payload.selection.as_deref())
+    Ok(())
+}
+
+/// 🧯️ Complete intrinsic region-fill validation for cold application.
+pub fn invariant(payload: &FillRegion) -> Result<(), (&'static str, String)> {
+    invariant_fields(payload)
 }
 
 /// 🎨️ The fill operation `color` means on `target`: the colour over the layer's pixels, or the colour's grey level as

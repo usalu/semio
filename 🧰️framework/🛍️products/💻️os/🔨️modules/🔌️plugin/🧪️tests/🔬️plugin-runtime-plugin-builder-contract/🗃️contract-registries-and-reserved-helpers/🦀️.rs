@@ -10,7 +10,7 @@
     // 🚫️async: E1 pure constructor, called pervasively as `&meta()` — see R9.
     #[doc(hidden)]
 pub fn meta() -> ActionMeta {
-        ActionMeta { actor: "local".into(), instance_id: 1, view_state: None }
+        ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: 1, view_state: None }
     }
 
     #[doc(hidden)]

@@ -1,5 +1,5 @@
 //! 🎟️ The real launcher supplies independent startup and host-operation stock before native execution.
-use crate::native_caller::{NativeFrameCaller, NativeFrameRootPolicyV1};
+use crate::native_caller::{NativeFrameCaller, NativeFrameEventIssuer, NativeFrameRootPolicyV1};
 use semio_framework_job::Generation;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
@@ -12,6 +12,7 @@ struct NativeLaunchDeclarationV1<'a> {
     startup: NativeFrameRootPolicyV1,
     host_io: NativeFrameRootPolicyV1,
     compiler_task: NativeFrameRootPolicyV1,
+    frame_event: NativeFrameRootPolicyV1,
 }
 
 #[derive(serde::Deserialize)]
@@ -33,6 +34,7 @@ pub struct NativeLaunchPolicy {
     startup: NativeFrameRootPolicyV1,
     host_io: NativeFrameRootPolicyV1,
     compiler_task: NativeFrameRootPolicyV1,
+    frame_event: NativeFrameRootPolicyV1,
     script_deadline_epoch_milliseconds: Option<u64>,
 }
 
@@ -52,7 +54,7 @@ impl NativeLaunchPolicy {
             || admission.script_owner.is_empty() || admission.script_owner.chars().count() > 128
             || admission.script_deadline_epoch_milliseconds.is_some_and(|value| value > 9_007_199_254_740_991)
         { return Err(refused("native launch owner, version or original deadline refused")); }
-        for policy in [declaration.startup, declaration.host_io, declaration.compiler_task] {
+        for policy in [declaration.startup, declaration.host_io, declaration.compiler_task, declaration.frame_event] {
             policy.validate()?;
             let grant = policy.grant;
             let reserve = policy.retirement_reserve;
@@ -62,7 +64,7 @@ impl NativeLaunchPolicy {
                     reserve.grant.maximum_release_bytes, reserve.grant.maximum_depth].iter().any(|value| *value as u128 > 9_007_199_254_740_991)
             { return Err(refused("native launch independent currency exceeds schema range")); }
         }
-        Ok(Self { startup: declaration.startup, host_io: declaration.host_io, compiler_task:declaration.compiler_task, script_deadline_epoch_milliseconds: admission.script_deadline_epoch_milliseconds })
+        Ok(Self { startup: declaration.startup, host_io: declaration.host_io, compiler_task:declaration.compiler_task, frame_event:declaration.frame_event, script_deadline_epoch_milliseconds: admission.script_deadline_epoch_milliseconds })
     }
 
     fn original_deadline(self, policy: NativeFrameRootPolicyV1) -> Result<u64, ValueError> {
@@ -88,6 +90,14 @@ impl NativeLaunchPolicy {
             semio_framework_job::default_now_us, policy, deadline)
     }
     fn compiler_caller(self)->Result<NativeFrameCaller,ValueError>{let deadline=self.original_deadline(self.compiler_task)?;NativeFrameCaller::from_original_deadline(semio_framework_trace::allocate_operation_id(),Generation(1),semio_framework_job::default_now_us,self.compiler_task,deadline)}
+    fn frame_event_issuer(self)->Result<NativeFrameEventIssuer,ValueError>{
+        let deadline=if let Some(deadline)=self.script_deadline_epoch_milliseconds{
+            let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_|refused("native event Script clock refused"))?.as_micros();
+            let remaining=(deadline as u128).checked_mul(1000).and_then(|deadline|deadline.checked_sub(now)).filter(|remaining|*remaining!=0).and_then(|remaining|u64::try_from(remaining).ok()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"native event original Script deadline exhausted"))?;
+            Some(semio_framework_job::default_now_us().and_then(|now|now.checked_add(remaining)).ok_or_else(||refused("native event original monotone deadline refused"))?)
+        }else{None};
+        NativeFrameEventIssuer::new(semio_framework_job::default_now_us,self.frame_event,deadline)
+    }
 }
 
 /// 🚪️ Missing launch metadata is refused instead of borrowing later UI-event stock.
@@ -98,6 +108,7 @@ pub fn install_native_launch_admission() -> Result<(), ValueError> {
     policy.original_deadline(policy.startup)?;
     policy.original_deadline(policy.host_io)?;
     policy.original_deadline(policy.compiler_task)?;
+    policy.original_deadline(policy.frame_event)?;
     NATIVE_LAUNCH_POLICY.set(policy).map_err(|_| refused("native launch admission already installed"))
 }
 
@@ -108,6 +119,9 @@ pub fn native_launch_caller(startup: bool) -> Result<NativeFrameCaller, ValueErr
 
 /// 🧩️ Actual CreateApp submission issues one finite compiler source from its independent required launch declaration.
 pub fn native_compiler_task_caller()->Result<NativeFrameCaller,ValueError>{NATIVE_LAUNCH_POLICY.get().copied().ok_or_else(||refused("native launch admission is not installed"))?.compiler_caller()}
+
+/// 🪟️ UI events borrow the actual launch declaration and its nullable original Script deadline.
+pub fn native_frame_event_issuer()->Result<NativeFrameEventIssuer,ValueError>{NATIVE_LAUNCH_POLICY.get().copied().ok_or_else(||refused("native launch admission is not installed"))?.frame_event_issuer()}
 
 /// 🧪️ A native fixture installs its explicit complete launch wire once before any real invocation, never replacing live process policy.
 #[cfg(any(test, feature = "testkit"))]

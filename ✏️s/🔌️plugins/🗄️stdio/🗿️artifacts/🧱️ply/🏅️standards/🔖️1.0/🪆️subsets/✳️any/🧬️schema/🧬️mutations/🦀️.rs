@@ -126,7 +126,7 @@ pub const KINDS: &[&str] = &["set-format", "insert-comment", "remove-comment", "
 /// `protocol_walk_law` (`⚙️engine/🦀️.rs`) all exercise. Covers `AddElement`'s bare `PlyElement` payload (itself containing `PlyProperty`),
 /// `InsertRow`'s `PlyRow` payload, and `SetRowProperty`'s bare `PlyValue` payload (incl. the
 /// recursive `List` variant).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn demo_base_snapshot() -> PlySnapshot {
     use crate::schema::snapshot::{PlyProperty, PlyScalarType};

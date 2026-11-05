@@ -1,0 +1,40 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-plugin-norm-inspector-forms"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Typed norm inspector drafts, immutable descriptor sources and original funded staged pages."
+
+[package.metadata.semio]
+role = "library"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-plugin-decl-staged-form = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/staged-form/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-replication-mutation = { path = "../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+
+semio-framework-job-native-decode = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }

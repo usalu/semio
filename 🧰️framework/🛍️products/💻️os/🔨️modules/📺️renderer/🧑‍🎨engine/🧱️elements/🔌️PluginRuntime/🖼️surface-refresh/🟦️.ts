@@ -1,3 +1,4 @@
+import {bindStagedFormTargets,type StagedActionDefinition} from "@semio-tech/framework/manifest/staging";
 /** 🖼️ Window, panel and section refresh: retained surfaces per actor, refresh request to surface-visible events, section values, refresh responses and guest presence updates.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
@@ -204,7 +205,7 @@ export function admitCrossingViewContext<T>(where: string, view: T): T {
 }
 
 /** 🪟️ Binds each concrete host surface to its authored body and projected ViewModel. */
-export function uiRefreshSurfaceEvents(instanceId: number, request: PluginUiRefreshRequest) {
+export function uiRefreshSurfaceEvents(instanceId: number, request: PluginUiRefreshRequest,definition:(window:string,action:string)=>StagedActionDefinition|undefined=()=>undefined) {
   admitCrossingViewContext("refresh-ui", request.viewState);
   const windows = windowHostContextBindings(instanceId, request.windows ?? [], request.viewState).flatMap((binding) => {
     const viewState = windowViewContext(request.viewState, binding.windowKey);
@@ -230,7 +231,12 @@ export function uiRefreshSurfaceEvents(instanceId: number, request: PluginUiRefr
       viewState: encodePackValue(viewContextWireValue(sectionViewContext(request.viewState))),
     },
   } satisfies ShardEventEnvelope));
-  return [...windows, ...panels, ...sections];
+  const occupied=[...(request.windows??[]).map(target=>target.key),...(request.panels??[]).map(target=>target.key),...uiRefreshSectionTargets(request).map(target=>target.bodyKey)];
+  const forms=bindStagedFormTargets(request.viewState,request.forms??[],definition,occupied).map(target=>({
+    kind:"staged-form-requested",
+    payload:{instance:instanceId,surface:retainedSurfaceId(instanceId,target.key),bodyKey:target.bodyKey,request:encodePackValue(target.stagedRequest)},
+  } satisfies ShardEventEnvelope));
+  return [...windows, ...panels, ...sections,...forms];
 }
 
 /** 🖼️ The typed fault one MOUNTED SURFACE publishes when its own retained render terminated — the

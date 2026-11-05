@@ -22,7 +22,7 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeDynamicLogDecremen
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change logarithmic decrement of structural damping delta_s of the dynamic element", "Schwingungsanfälliges Bauteil: Logarithmisches Dämpfungsdekrement delta_s ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change logarithmic decrement of structural damping of the dynamic element", "Logarithmisches Dämpfungsdekrement des schwingungsanfälligen Bauteils ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -262,6 +262,12 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Vdi3805BoundedComma
 }
 
 impl semio_s_plugin_norm_app_surface::NormRetainedEditor for Vdi3805PlayApp {
+    fn inspector_rules() -> &'static semio_s_plugin_norm_app_surface::NormEditRules { &semio_s_artifact_norm_vdi3805_mutations::EDIT_RULES }
+
+    fn inspector_resolve(document: &Self::Snapshot, edit: &semio_s_plugin_norm_app_surface::NormEdit) -> Result<Vec<Self::Mutation>, String> {
+        semio_s_artifact_norm_vdi3805_mutations::resolve_edit(document, edit)
+    }
+
     type Family = Vdi3805Family;
 
     type ResultsWindowConfigOwner = results::ResultsWindowConfigOwner;
@@ -413,3 +419,7 @@ pub mod presence {
     pub mod schema;
 }
 //#endregion 🪢️Mounts
+
+#[cfg(test)]
+#[path = "🧪️tests/🧩️nested/🦀️.rs"]
+mod nested_business_tests;

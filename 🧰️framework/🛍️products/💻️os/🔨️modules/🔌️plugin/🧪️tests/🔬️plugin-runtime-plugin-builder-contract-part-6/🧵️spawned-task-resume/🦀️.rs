@@ -62,7 +62,7 @@
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let instance = 501;
-        let spawn_meta = ActionMeta { actor: "alice".into(), instance_id: instance, view_state: None };
+        let spawn_meta = ActionMeta { expected_document_revision:None, actor: "alice".into(), instance_id: instance, view_state: None };
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         semio_framework_plugin_reactor_app::PluginApp::bind_instance_id(&mut app, instance).await;
 
@@ -123,7 +123,7 @@
     }
 
     fn resume_meta(instance: u32) -> ActionMeta {
-        ActionMeta { actor: "alice".into(), instance_id: instance, view_state: None }
+        ActionMeta { expected_document_revision:None, actor: "alice".into(), instance_id: instance, view_state: None }
     }
 
     fn resume_bytes(value: i32) -> Vec<u8> {

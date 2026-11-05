@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": "RC2",
   "materials": null,
   "sections": null,
   "members": null,
@@ -34,5 +33,6 @@
     ]
   },
   "ringStiffeners": null,
-  "transverseStiffeners": null
+  "transverseStiffeners": null,
+  "reliabilityClass": "RC2"
 }

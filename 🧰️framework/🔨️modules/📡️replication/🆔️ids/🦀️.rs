@@ -21,6 +21,8 @@ impl std::borrow::Borrow<str> for MutationId{fn borrow(&self)->&str{&self.0}}
 #[serde(transparent)]
 #[derive(semio_framework_value::RetainedClone)]
 pub struct ActorId(pub semio_framework_value::SharedUtf8);
+#[path="🎟️seed/🦀️.rs"]
+mod original_actor_seed;
 
 /// 🌱️ Explicit actor for standalone genesis and named local test contexts.
 pub const LOCAL_ACTOR_ID: &str = "local";

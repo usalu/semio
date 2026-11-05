@@ -162,7 +162,7 @@ impl PluginArtifactChannel {
             message: format!("plugin `{plugin_id}` declares no app action named by capability `{capability_id}` — its committed manifest publishes {} app(s)", self.descriptor.manifest.apps.len()),
         })?;
         let arguments = arguments().map_err(|detail| Self::not_wired("PureCommand", detail))?;
-        Ok(semio_framework::manifest::ActionInvocation { address, arguments })
+        Ok(semio_framework::manifest::ActionInvocation { expected_document_revision:None, address, arguments })
     }
 
     pub(crate) fn not_wired(what: &str, detail: impl std::fmt::Display) -> Fault {

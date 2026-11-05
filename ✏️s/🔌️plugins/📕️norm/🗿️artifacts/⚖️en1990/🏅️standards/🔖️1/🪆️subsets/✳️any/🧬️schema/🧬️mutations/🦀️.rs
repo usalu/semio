@@ -14,7 +14,7 @@ use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use crate::edit_rules::{resolve_edit, EDIT_RULES};
+pub use crate::edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};
 
 //#region 🔖️Leaves
 use semio_s_artifact_norm_en1990_mut_design_basis::change_annex;

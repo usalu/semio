@@ -53,7 +53,7 @@ type En1990PermanentModification {
 }
 type En1990PermanentPatch {
   kind: JSON
-  gk: Float
+  gk: JSON
 }
 type En1990VariableDelta {
   removed: [En1990VariableRemoval!]!
@@ -79,9 +79,9 @@ type En1990VariableModification {
   patch: En1990VariablePatch!
 }
 type En1990VariablePatch {
-  category: String
-  qk: Float
-  group: String
+  category: JSON
+  qk: JSON
+  group: JSON
 }
 type En1990AccidentalDelta {
   removed: [En1990AccidentalRemoval!]!
@@ -107,7 +107,7 @@ type En1990AccidentalModification {
   patch: En1990AccidentalPatch!
 }
 type En1990AccidentalPatch {
-  ad: Float
+  ad: JSON
 }
 type En1990SeismicDelta {
   removed: [En1990SeismicRemoval!]!
@@ -133,8 +133,8 @@ type En1990SeismicModification {
   patch: En1990SeismicPatch!
 }
 type En1990SeismicPatch {
-  aEk: Float
-  importanceClass: ImportanceClass
+  aEk: JSON
+  importanceClass: JSON
 }
 type En1990MemberDelta {
   removed: [En1990MemberRemoval!]!
@@ -160,38 +160,38 @@ type En1990MemberModification {
   patch: En1990MemberPatch!
 }
 type En1990MemberPatch {
-  labelEn: String
-  labelDe: String
-  rdStr: Float
-  rdGeo: Float
-  rdEquStab: Float
-  rdEquDestab: Float
-  rdFat: Float
-  span: Float
-  precamber: Float
-  deflectionW1: Float
-  deflectionW2: Float
-  deflectionW3: Float
-  deflectionLimitRatio: Float
-  deflectionLimitRatioW3: Float
-  slsLimitChar: Float
-  slsLimitFreq: Float
-  slsLimitQp: Float
-  vibrationFrequency: Float
-  vibrationFrequencyMin: Float
-  frameHeight: Float
-  frameDrift: Float
-  storeyHeight: Float
-  storeyDrift: Float
-  materialStrengthK: Float
-  materialConversionFactor: Float
-  materialPartialFactor: Float
-  materialDesignStrength: Float
-  nominalDimension: Float
-  dimensionTolerance: Float
-  designDimension: Float
-  memberAlphaCr: Float
-  secondOrderAnalysis: Float
+  labelEn: JSON
+  labelDe: JSON
+  rdStr: JSON
+  rdGeo: JSON
+  rdEquStab: JSON
+  rdEquDestab: JSON
+  rdFat: JSON
+  span: JSON
+  precamber: JSON
+  deflectionW1: JSON
+  deflectionW2: JSON
+  deflectionW3: JSON
+  deflectionLimitRatio: JSON
+  deflectionLimitRatioW3: JSON
+  slsLimitChar: JSON
+  slsLimitFreq: JSON
+  slsLimitQp: JSON
+  vibrationFrequency: JSON
+  vibrationFrequencyMin: JSON
+  frameHeight: JSON
+  frameDrift: JSON
+  storeyHeight: JSON
+  storeyDrift: JSON
+  materialStrengthK: JSON
+  materialConversionFactor: JSON
+  materialPartialFactor: JSON
+  materialDesignStrength: JSON
+  nominalDimension: JSON
+  dimensionTolerance: JSON
+  designDimension: JSON
+  memberAlphaCr: JSON
+  secondOrderAnalysis: JSON
 }
 type En1990BridgeSlsDelta {
   removed: [En1990BridgeSlsRemoval!]!
@@ -217,21 +217,21 @@ type En1990BridgeSlsModification {
   patch: En1990BridgeSlsPatch!
 }
 type En1990BridgeSlsPatch {
-  memberId: String
-  deckAcceleration: Float
-  deckAccelerationLimit: Float
-  deckTwist: Float
-  deckTwistLimit: Float
-  bridgeDeflection: Float
-  bridgeDeflectionLimit: Float
-  trackGauge: Float
-  lineSpeed: Float
-  ballastDepth: Float
-  deckMass: Float
-  naturalFrequency: Float
-  endRotation: Float
-  basicWindSpeed: Float
-  dampingRatio: Float
+  memberId: JSON
+  deckAcceleration: JSON
+  deckAccelerationLimit: JSON
+  deckTwist: JSON
+  deckTwistLimit: JSON
+  bridgeDeflection: JSON
+  bridgeDeflectionLimit: JSON
+  trackGauge: JSON
+  lineSpeed: JSON
+  ballastDepth: JSON
+  deckMass: JSON
+  naturalFrequency: JSON
+  endRotation: JSON
+  basicWindSpeed: JSON
+  dampingRatio: JSON
 }
 type En1990FatigueSpectrumDelta {
   removed: [En1990FatigueSpectrumRemoval!]!
@@ -257,10 +257,10 @@ type En1990FatigueSpectrumModification {
   patch: En1990FatigueSpectrumPatch!
 }
 type En1990FatigueSpectrumPatch {
-  memberId: String
-  detailCategory: Float
-  stressRange: Float
-  cycles: Float
+  memberId: JSON
+  detailCategory: JSON
+  stressRange: JSON
+  cycles: JSON
 }
 type En1990ReliabilityAnalysisDelta {
   removed: [En1990ReliabilityAnalysisRemoval!]!
@@ -287,15 +287,15 @@ type En1990ReliabilityAnalysisModification {
 }
 type En1990ReliabilityAnalysisPatch {
   resistanceDistribution: JSON
-  resistanceMean: Float
-  resistanceSd: Float
+  resistanceMean: JSON
+  resistanceSd: JSON
   actionDistribution: JSON
-  actionMean: Float
-  actionSd: Float
+  actionMean: JSON
+  actionSd: JSON
   secondActionDistribution: JSON
-  secondActionMean: Float
-  secondActionSd: Float
-  memberId: String
+  secondActionMean: JSON
+  secondActionSd: JSON
+  memberId: JSON
 }
 type En1990TestSeriesDelta {
   removed: [En1990TestSeriesRemoval!]!
@@ -321,17 +321,17 @@ type En1990TestSeriesModification {
   patch: En1990TestSeriesPatch!
 }
 type En1990TestSeriesPatch {
-  quantity: String
+  quantity: JSON
   distribution: JSON
-  sampleSize: Int
-  mean: Float
-  stdDev: Float
-  variationKnown: Float
-  conversionFactor: Float
-  required: Float
-  pairs: String
-  theoryVariation: Float
-  theoryMean: Float
+  sampleSize: JSON
+  mean: JSON
+  stdDev: JSON
+  variationKnown: JSON
+  conversionFactor: JSON
+  required: JSON
+  pairs: JSON
+  theoryVariation: JSON
+  theoryMean: JSON
 }
 type En1990PlacementDelta {
   removed: [En1990PlacementRemoval!]!
@@ -357,10 +357,10 @@ type En1990PlacementModification {
   patch: En1990PlacementPatch!
 }
 type En1990PlacementPatch {
-  x: Float
-  y: Float
-  z: Float
-  yaw: Float
+  x: JSON
+  y: JSON
+  z: JSON
+  yaw: JSON
 }
 type En1990FactorOverrideDelta {
   removed: [En1990FactorOverrideRemoval!]!
@@ -386,10 +386,10 @@ type En1990FactorOverrideModification {
   patch: En1990FactorOverridePatch!
 }
 type En1990FactorOverridePatch {
-  factor: String
-  target: String
-  value: Float
-  justification: String
+  factor: JSON
+  target: JSON
+  value: JSON
+  justification: JSON
 }
 type En1990TrafficGroupDelta {
   removed: [En1990TrafficGroupRemoval!]
@@ -415,8 +415,8 @@ type En1990TrafficGroupModification {
   patch: En1990TrafficGroupPatch!
 }
 type En1990TrafficGroupPatch {
-  group: String
-  variableId: String
+  group: JSON
+  variableId: JSON
 }
 enum En1990RowOp {
   Insert

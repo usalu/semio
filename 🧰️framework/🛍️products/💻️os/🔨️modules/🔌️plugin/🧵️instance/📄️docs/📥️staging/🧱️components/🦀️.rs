@@ -43,21 +43,23 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.media_exports,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.media_closures,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.snapshot_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.segmented_downloads,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.segmented_closures,64)?])}
 
     /// 💉️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
-    pub fn new() -> Self {
+    pub fn new() -> Self {Self::with_backing(true)}
+    /// 🪹️ Empty cleanup custody retains no unneeded transfer backing.
+    pub fn with_backing(backing:bool)->Self{
         Self {
             pending_media_import_permit: ManuallyDrop::new(None),
-            media_exports: ArtifactFixedRegistry::new(),
+            media_exports: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
             media_export_preparation: ManuallyDrop::new(None),
             media_download_preparation: ManuallyDrop::new(None),
-            media_closures: ArtifactFixedRegistry::new(),
-            snapshot_retirements: ArtifactFixedRegistry::new(),
+            media_closures: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
+            snapshot_retirements: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
             current_media_export: None,
             media_submission_refusal: std::mem::ManuallyDrop::new(None),
             media_submission_refusal_place: std::mem::ManuallyDrop::new(None),
             media_submission_refusal_identity: None,
             media_submission_refusal_retirement: std::mem::ManuallyDrop::new(None),
-            segmented_downloads: ArtifactFixedRegistry::new(),
-            segmented_closures: ArtifactFixedRegistry::new(),
+            segmented_downloads: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
+            segmented_closures: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
         }
     }
 
@@ -113,17 +115,19 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
     pub fn new() -> Self {Self::from_original(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry::new(),store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry::new())}
 
     /// 🧷️ Retains the actual admitted decoder and completion issuers during native component construction.
-    pub fn from_original(field_decoders:std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry<A::Snapshot,A::Mutation>>,completed_records:std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry<A::Snapshot,A::Mutation>>)->Self{
+    pub fn from_original(field_decoders:std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry<A::Snapshot,A::Mutation>>,completed_records:std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry<A::Snapshot,A::Mutation>>)->Self{Self::from_original_with_backing(field_decoders,completed_records,true)}
+    /// 🪹️ Cleanup keeps the original decode issuers without unused ingress backing.
+    pub fn from_original_with_backing(field_decoders:std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry<A::Snapshot,A::Mutation>>,completed_records:std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry<A::Snapshot,A::Mutation>>,backing:bool)->Self{
         Self {
-            envelope_ingress: ArtifactFixedRegistry::new(),
-            envelope_decode_jobs: ArtifactFixedRegistry::new(),
-            store_replacement_jobs: ArtifactFixedRegistry::new(),
+            envelope_ingress: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
+            envelope_decode_jobs: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
+            store_replacement_jobs: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
             import_staging: semio_framework::kernel::ImportStaging::default(),
-            document_archive_loads: ArtifactFixedRegistry::with_slots(DOCUMENT_ARCHIVE_LOAD_SLOTS),
+            document_archive_loads: if backing{ArtifactFixedRegistry::with_slots(DOCUMENT_ARCHIVE_LOAD_SLOTS)}else{ArtifactFixedRegistry::unallocated(DOCUMENT_ARCHIVE_LOAD_SLOTS)},
             envelope_field_decoders: store::os_store::owned_schema_decode::ArtifactEnvelopeRegistryOwner::from_original(field_decoders),
-            envelope_field_decoder_retirements: ArtifactFixedRegistry::new(),
+            envelope_field_decoder_retirements: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
             envelope_completed_records: store::os_store::owned_schema_decode::ArtifactEnvelopeRegistryOwner::from_original(completed_records),
-            envelope_completed_record_retirements: ArtifactFixedRegistry::new(),
+            envelope_completed_record_retirements: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
             document_snapshot_read_returns: SnapshotReadReturnPump::new(),
         }
     }

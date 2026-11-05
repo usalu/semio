@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "messages", "progress", "expected", "sqlite", "closeGrant", "maximumTurns"],
+  "properties": {
+    "contract": {"const": "semio.native-snapshot.original-settlement-refusal.v1"},
+    "messages": {"type": "array", "minItems": 6, "maxItems": 6, "items": {"type": "string", "minLength": 1}},
+    "progress": {"type": "object", "additionalProperties": false, "required": ["copiedItems", "copiedBytes", "retainedCapacityBytes", "releasedBytes"], "properties": {"copiedItems": {"type": "integer", "minimum": 0}, "copiedBytes": {"type": "integer", "minimum": 0}, "retainedCapacityBytes": {"type": "integer", "minimum": 0}, "releasedBytes": {"type": "integer", "minimum": 0}}},
+    "expected": {"type": "object", "additionalProperties": false, "required": ["accepted", "repeatAccepted", "preservedOwners", "foldAllocationBytes", "foldReleaseBytes"], "properties": {"accepted": {"const": true}, "repeatAccepted": {"const": false}, "preservedOwners": {"const": 6}, "foldAllocationBytes": {"const": 0}, "foldReleaseBytes": {"const": 0}}},
+    "sqlite": {"type": "object", "additionalProperties": false, "required": ["completed", "total", "settlementKind", "settlementMessage", "callbackCalls"], "properties": {"completed": {"const": 1}, "total": {"const": 1}, "settlementKind": {"const": "Canceled"}, "settlementMessage": {"type": "string", "minLength": 1}, "callbackCalls": {"const": 1}}},
+    "closeGrant": {"type": "object", "additionalProperties": false, "required": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"], "properties": {"maximumItems": {"type": "integer", "minimum": 1}, "maximumCopyBytes": {"type": "integer", "minimum": 1}, "maximumCapacityBytes": {"type": "integer", "minimum": 1}, "maximumReleaseBytes": {"type": "integer", "minimum": 1}, "maximumDepth": {"type": "integer", "minimum": 1}}},
+    "maximumTurns": {"type": "integer", "minimum": 1}
+  }
+}

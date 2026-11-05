@@ -19,7 +19,7 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFormingGainMemberI
         verb: "change",
         entity: "forming-gain-member-id",
         kind: "change-forming-gain-member-id",
-        record: "ChangedFormingGainFatigue memberId",
+        record: "ChangedFormingGainMemberId",
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

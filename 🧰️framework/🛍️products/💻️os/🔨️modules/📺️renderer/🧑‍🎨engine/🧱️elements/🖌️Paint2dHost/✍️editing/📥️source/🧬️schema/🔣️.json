@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pixel Source Preparation",
+  "description": "Canonical standard base64 is validated and decoded through bounded cursor grants. Each incomplete grant yields to the event loop. Cancellation, including cancellation from the final progress callback, refuses publication. Progress spans validation and decoding without resetting. Browser image readback reuses its owned buffer.",
+  "type": "object",
+  "additionalProperties": false,
+  "oneOf": [{"required": ["encoded"]}, {"required": ["width", "height", "target"]}],
+  "properties": {
+    "encoded": {"type": "string"},
+    "maximumOutputBytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "width": {"type": "integer", "minimum": 1, "maximum": 16384},
+    "height": {"type": "integer", "minimum": 1, "maximum": 16384},
+    "target": {"enum": ["pixels", "mask"]}
+  },
+  "x-semio-admission": {"maximumWorkUnits": 32768, "sourceBytes": "The artifact owner admits the encoded file. A supplied maximumOutputBytes is enforced before output allocation; otherwise this stage quotes the exact encoded-file extent without inventing a pixel-to-file-size bound."}
+}

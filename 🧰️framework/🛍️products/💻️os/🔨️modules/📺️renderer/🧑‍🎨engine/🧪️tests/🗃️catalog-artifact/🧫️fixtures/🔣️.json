@@ -1,0 +1,11 @@
+{
+  "documentId": "urn:artifact:demo",
+  "schema": "stdio.csv",
+  "name": "Tabelle.csv",
+  "surface": { "pluginId": "stdio-table", "appId": "s.stdio.csv@rfc4180/base#editor" },
+  "roots": ["/device", "C:\\Users\\Ada\\Data"],
+  "archive": {
+    "parent_pack": [1, 2, 3], "parent_spr": [4, 5],
+    "members": [{ "ordinal": 0, "reference": { "artifact_id": "child", "artifact_kind": "stdio.txt", "standard": "utf-8", "subset": "any" }, "owner": { "parent": { "artifact_id": "urn:artifact:demo", "artifact_kind": "stdio.csv", "standard": "rfc4180", "subset": "base" }, "slot": "content", "child_id": "child" }, "envelope_pack": [6, 7] }]
+  }
+}

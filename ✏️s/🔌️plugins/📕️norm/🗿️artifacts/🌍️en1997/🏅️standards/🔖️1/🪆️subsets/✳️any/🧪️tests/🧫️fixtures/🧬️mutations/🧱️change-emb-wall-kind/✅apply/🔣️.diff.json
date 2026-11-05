@@ -21,7 +21,7 @@
       {
         "id": "ewall-E1",
         "patch": {
-          "kind": "freeEarth-alt"
+          "kind": "freeEarth"
         }
       }
     ]

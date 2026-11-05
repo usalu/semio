@@ -3,13 +3,12 @@
 use super::*;
 
 /// 🖼️ The image a repaint (a stroke, a region fill) paints into and where it sits: the source image (decoded, so its
-/// profile and metadata ride along), its asset key, the key prefix of the image the repaint mints, and the layer's mask
+/// profile and metadata ride along), its asset key, and the layer's mask
 /// when the target is one.
 pub struct Canvas {
     pub source: SemioImageSnapshot,
-    previous: Option<String>,
-    prefix: &'static str,
-    pub(super) mask: Option<RasterLayerMask>,
+    pub previous: Option<String>,
+    pub mask: Option<RasterLayerMask>,
     pub extent: (Option<u32>, Option<u32>),
     pub placement: RasterTransform,
 }
@@ -78,7 +77,7 @@ pub fn canvas(layer_id: &str, target: &str, base: &RasterSnapshot) -> Result<Can
             }
             None => blank(mask.width.unwrap_or(layer_extent.0), mask.height.unwrap_or(layer_extent.1), [255; 4])?,
         };
-        return Ok(Canvas { source, previous: mask.image_key.clone(), prefix: "mask", mask: Some(mask), extent: (None, None), placement });
+        return Ok(Canvas { source, previous: mask.image_key.clone(), mask: Some(mask), extent: (None, None), placement });
     }
     let RasterLayerNode::Pixel { image_key, width, height, .. } = layer else {
         return Err(Refusal::Error("mutation.target-mismatch", format!("Layer \"{layer_id}\" holds no pixels.")));
@@ -87,14 +86,14 @@ pub fn canvas(layer_id: &str, target: &str, base: &RasterSnapshot) -> Result<Can
         Some(key) => asset_image(base, key)?,
         None => blank(layer_extent.0, layer_extent.1, [0; 4])?,
     };
-    Ok(Canvas { source, previous: image_key.clone(), prefix: "pixels", mask: None, extent: (*width, *height), placement })
+    Ok(Canvas { source, previous: image_key.clone(), mask: None, extent: (*width, *height), placement })
 }
 
 /// 🎨️ What one repaint did: the canvas it painted, the painted image as an asset, and the key it is filed under.
 pub struct Painted {
-    canvas: Canvas,
-    pub(super) asset: SemioImageSnapshot,
-    pub(super) key: String,
+    pub canvas: Canvas,
+    pub asset: SemioImageSnapshot,
+    pub key: String,
 }
 
 /// 🗄️ Files `pixels` repainted on `canvas` as a new content-addressed asset of `layer_id` in the lossless carrier.
@@ -110,8 +109,10 @@ pub fn reshaped(canvas: Canvas, image: RasterImage, layer_id: &str) -> Painted {
     filed(canvas, image, layer_id)
 }
 
-pub(super) fn filed(canvas: Canvas, image: SemioImageSnapshot, layer_id: &str) -> Painted {
-    let key = semio_s_artifact_raster_raster_model::raster_image_content_id(&format!("{}-{layer_id}", canvas.prefix), &image);
+pub(super) fn filed(canvas: Canvas, image: SemioImageSnapshot, _layer_id: &str) -> Painted {
+    let mut hash = semio_s_artifact_raster_raster_model::RasterImageContentHash::new();
+    while !hash.advance(&image,32_768).expect("fixed image hash grant is valid").done {}
+    let key = semio_s_artifact_raster_raster_model::raster_image_key(hash.finish().expect("canonical image hash completed"));
     let asset = image;
     Painted { canvas, asset, key }
 }
@@ -156,7 +157,7 @@ pub fn inverse_pixel_region(region: &RasterPixelRegion, base: &RasterSnapshot) -
 /// replaced image released when nothing else shows it.
 pub fn painted_diff(painted: Painted, base: &RasterSnapshot, layer_id: &str, target: &str, reshape: Option<&Reshape>) -> protocol::MutationOutcome<RasterDiff> {
     let release = painted.canvas.previous.as_deref().filter(|previous| *previous != painted.key && released(base, previous, layer_id, target)).map(str::to_string);
-    if !base.assets.contains_key(&painted.key) && base.assets.len() >= semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY {
+    if !base.assets.contains_key(&painted.key) && release.is_none() && base.assets.len() >= semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY {
         return protocol::MutationOutcome::fatal("mutation.apply.capacity", format!("The asset pool already holds {} images.", base.assets.len()), [layer_id.to_string()]);
     }
     let patch = match painted.canvas.mask {

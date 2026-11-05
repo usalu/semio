@@ -13,6 +13,8 @@ pub use scalar::{OwnedScalar,ScalarReceiving};
 pub use scalar::scalar_sealed;
 #[path="📋️vector/🦀️.rs"]mod vector;
 pub use vector::VectorReceiving;
+#[path="📋️persistent/🦀️.rs"]mod persistent;
+pub use persistent::PersistentReceiving;
 #[path="🔢️array/🦀️.rs"]mod array;
 pub use array::ArrayReceiving;
 #[path="🎁️wrapping/🦀️.rs"]mod wrapping;

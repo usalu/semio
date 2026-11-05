@@ -6,7 +6,7 @@ use crate::opening_config::mutations::{admit_local_document, apply_local_catalog
 use protocol::{Mutation};
 
 fn document(document_id: &str) -> LocalDocument {
-    LocalDocument { document_id: document_id.to_string(), schema: "s.space".to_string(), name: document_id.to_uppercase(), storage: LocalDocumentStorage::File, target: format!("/data/{document_id}.os"), admitted_at_ms: 9 }
+    LocalDocument { document_id: document_id.to_string(), schema: "s.space".to_string(), name: document_id.to_uppercase(), storage: LocalDocumentStorage::File, target: format!("/data/{document_id}.os"), admitted_at_ms: 9, surface: None }
 }
 
 #[test]

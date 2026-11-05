@@ -716,6 +716,12 @@ pub enum Event {
         body_key: String,
         view_state: Vec<u8>,
     },
+    StagedFormRequested {
+        instance: u32,
+        surface: String,
+        body_key: String,
+        request: Vec<u8>,
+    },
     SurfaceHidden {
         surface: String,
     },
@@ -894,3 +900,7 @@ mod return_source_entries_tests;
 #[path = "📤️return/🏠️source/📚️entries/🦀️.rs"]
 mod return_source_entries;
 //#endregion 🔖️TurnResult
+
+#[cfg(test)]
+#[path="🧪️tests/📝️staging/🦀️.rs"]
+mod staged_form_event_tests;

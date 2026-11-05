@@ -3,6 +3,9 @@ import {typeScriptPackageOutputProducerV1} from "../../../../⚡️caching/📦�
 import {workspacePackageModuleV1,buildImportResourceV1} from "../../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs";
 import {readTypeScriptPackageProducerV1} from "../../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🏭️producer/🟦️.ts";
 import AjvDraft07 from "ajv";
+import wasmToolingCases from "./🛠️wasm-tooling.json";
+import wasmToolingSchema from "./🧬️wasm-tooling.json";
+import {withWasmTooling} from "../../../🕸️graph/📥️inference/🎯️target-policy/🟨️.mjs";
 import {isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import {evaluateExtractedFunctionV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 /** 🎯️ Matched inputs, runtime modules and demanded compilation entries keep compiler authority. */
@@ -23,6 +26,11 @@ import {generatorOutputCouplingInputs} from "../../../🕸️graph/📥️infere
 import resolutionDocument from "../../../📥️inputs/🦀️resolution/🔣️.json";
 import {build} from "esbuild";
 import fixture from "../../🧫️fixtures/🕸️graph/🔣️.json";
+test("declared WASM packages provision binding tools even through transitive facade crates",()=>{
+ const ajv=new AjvDraft07({strict:false}),prepared=ajv.compile(wasmToolingSchema.definitions.PreparedTarget);
+ expect(ajv.validate(wasmToolingSchema,wasmToolingCases)).toBe(true);
+ for(const row of wasmToolingCases.cases){const before=JSON.stringify(row.targets),result=withWasmTooling(row.targets,row.required);expect(result.wasm?.dependsOn??[],row.id).toEqual(row.dependsOn);expect(Boolean(result.wasm&&prepared(result.wasm)),row.id).toBe(row.prepared);expect(JSON.stringify(row.targets),row.id).toBe(before);}
+});
 /** 🧩 Extracts the named top-level declarations of one inference Source plus every sibling declaration they reference, except the ports a test supplies, so the extracted code stays complete when a helper is split off. */
 const closureCodeV1=(ts:any,tree:any,roots:string[],ports:string[]):string=>{const defs=new Map<string,any>(),bound=new Map<string,string>();for(const node of tree.statements){if(ts.isFunctionDeclaration(node)&&node.name)defs.set(node.name.text,node);else if(ts.isVariableStatement(node)&&(node.declarationList.flags&ts.NodeFlags.Const)!==0)for(const declaration of node.declarationList.declarations){if(ts.isIdentifier(declaration.name))defs.set(declaration.name.text,node);else if(ts.isObjectBindingPattern(declaration.name)&&declaration.initializer)for(const element of declaration.name.elements)if(ts.isIdentifier(element.name)&&!element.dotDotDotToken&&!element.initializer){defs.set(element.name.text,declaration.initializer);bound.set(element.name.text,`const ${element.name.text}=(${declaration.initializer.getText(tree)})[${JSON.stringify((element.propertyName??element.name).getText(tree))}];`);}}}const taken=new Set<string>(),order:any[]=[],visit=(name:string):void=>{if(taken.has(name)||ports.includes(name)||!defs.has(name))return;taken.add(name);const node=defs.get(name),walk=(child:any):void=>{if(ts.isIdentifier(child))visit(child.text);ts.forEachChild(child,walk);};walk(node);order.push(bound.get(name)??node);};roots.forEach(visit);return [...new Set(order)].map(node=>typeof node==="string"?node:node.getText(tree).replace(/^export /u,"").replaceAll("import.meta.url",JSON.stringify(import.meta.url))).join("\n");};
 type SourceDemandRootV1={readonly target:string;readonly runtime:readonly string[];readonly compile:readonly string[]};

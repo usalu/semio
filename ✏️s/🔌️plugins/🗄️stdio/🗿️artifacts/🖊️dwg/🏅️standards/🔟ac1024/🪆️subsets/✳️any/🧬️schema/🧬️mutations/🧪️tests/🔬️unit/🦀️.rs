@@ -1,3 +1,4 @@
+use protocol::command::ColdMutation;
 use semio_s_artifact_stdio_contract::apply_mutation;
 use super::*;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};

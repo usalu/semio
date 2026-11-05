@@ -65,7 +65,7 @@ export interface ModeProps {
   windows: ModeWindowDescriptor[];
   activeWindowId: string | null;
   onActiveWindowChange?: (windowId: string | null) => void;
-  onWindowClose?: (windowId: string) => void;
+  onWindowClose?: (windowId: string) => boolean | void | Promise<boolean | void>;
   onWindowOpenInNewWindow?: (windowId: string) => void;
   layout?: WindowLayoutNode;
   onLayoutChange?: (layout: WindowLayoutNode) => void;

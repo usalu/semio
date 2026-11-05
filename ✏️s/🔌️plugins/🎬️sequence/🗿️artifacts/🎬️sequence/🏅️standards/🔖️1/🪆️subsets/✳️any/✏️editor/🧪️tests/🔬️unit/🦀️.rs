@@ -400,6 +400,24 @@ async fn import_media_rejects_unknown_port() {
 }
 //#endregion 🔖️PortTests
 
+#[semio_framework_async_macros::async_test]
+async fn original_reserved_import_matches_neutral_parameter_vectors(){
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/import-parameters.json")).unwrap();
+    let mut app=new_app_with_registry_wired().await;
+    for row in rows["cases"].as_array().unwrap(){
+        let media=Media{
+            media_type:semio_framework_plugin::MediaType{class:semio_framework_plugin::MediaClass::Computation,form:semio_framework_plugin::MediaForm::Any},
+            payload:MediaPayload::Structured{schema:"computation.value".into(),json:row["wire"].as_str().unwrap().into()},
+        };
+        let before=live_host_snapshot(&app).await.steps.len();
+        app.0.import_media("steps:in",media,&semio_framework_plugin::artifact_app_laws::meta("local"),app.1.cx()).await.expect("original parameter import");
+        let after=live_host_snapshot(&app).await;
+        assert_eq!(after.steps.len(),before+1,"{}",row["id"]);
+        let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&after.steps.last().unwrap().params)).unwrap();
+        assert_eq!(actual,row["expected"],"{}",row["id"]);
+    }
+}
+
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
 /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to

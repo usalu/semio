@@ -29,7 +29,7 @@ function owned(){const parent=mkdtempSync(join(artifacts!,"nx-bound-")),root=joi
 
 test("authored storage resolves one fixed16GiB backing with independent envelope accounting",()=>{
  expect(new Ajv({strict:true}).compile(repositorySchema)(repositoryPolicy)).toBe(true);const actual=repositoryStrictStorageV1(repository.root),db=new Database(":memory:");
- try{expect(actual.directory).toBe(join(repository.root,".🧬semio/🦑️repo/⚡️cache/rust/fixed"));expect(actual.leaseDirectory).toBe(join(repository.root,".cache/b/l/m/data"));expect((db.query("SELECT ?1 - ?2 AS reserve,?3 <= ?2 AND ?4 <= ?2 AS kindsFit").get(actual.capacityBytes,actual.filesystemBytes,actual.maximumWorkspaceBytes,actual.maximumArtifactBytes) as {reserve:number;kindsFit:number})).toEqual({reserve:1048576,kindsFit:1});expect(actual.capacityBytes).toBe(51539607552);}finally{db.close();}
+ try{expect(actual.directory).toBe(join(repository.root,".cache/b/r"));expect(actual.leaseDirectory).toBe(join(repository.root,".cache/b/l/m/data"));expect((db.query("SELECT ?1 - ?2 AS reserve,?3 <= ?2 AND ?4 <= ?2 AS kindsFit").get(actual.capacityBytes,actual.filesystemBytes,actual.maximumWorkspaceBytes,actual.maximumArtifactBytes) as {reserve:number;kindsFit:number})).toEqual({reserve:1048576,kindsFit:1});expect(actual.capacityBytes).toBe(51539607552);}finally{db.close();}
 });
 
 test("Nx cache database loader and temporary paths share one declared backing namespace",()=>{

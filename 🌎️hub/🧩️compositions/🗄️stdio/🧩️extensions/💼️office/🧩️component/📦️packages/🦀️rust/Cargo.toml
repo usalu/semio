@@ -75,6 +75,12 @@ variant = "stdio-xlsx-transitional"
 app = "s.stdio.xlsx@ecma-376/transitional#editor"
 aliases = ["stdio xlsx transitional"]
 ports = { react = 6275, wgpu = 6375 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-idml"
+app = "s.stdio.idml@8.0/*#editor"
+aliases = ["stdio idml"]
+ports = { react = 6276, wgpu = 6376 }
 # /🧩️ Composition Playgrounds
 
 [package.metadata.semio.sources]

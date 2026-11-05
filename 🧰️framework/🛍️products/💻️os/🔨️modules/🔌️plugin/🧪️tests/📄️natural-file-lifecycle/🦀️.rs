@@ -65,7 +65,9 @@ const BATCH_A_NATURAL_FILE_APPS: &[&str] = &[
 
 const BATCH_B_NATURAL_FILE_APPS: &[&str] = &[
     "s.stdio.csv@rfc4180/*#editor",
-    "s.stdio.docx@ecma-376/base#editor",
+    "s.stdio.docx@ecma-376/*#editor",
+    "s.stdio.docx@ecma-376/strict#editor",
+    "s.stdio.docx@ecma-376/transitional#editor",
     "s.stdio.tsv@iana/*#editor",
     "s.stdio.xlsx@ecma-376/*#editor",
     "s.stdio.xlsx@ecma-376/transitional#editor",
@@ -106,6 +108,7 @@ const BATCH_F_NATURAL_FILE_APPS: &[&str] = &[
     "s.stdio.epw@energyplus/*#editor",
     "s.stdio.bcf@2.1/*#editor",
     "s.stdio.ifc@4/*#editor",
+    "s.stdio.ifc@4x3/*#editor",
     "s.stdio.ifc@2x3/*#editor",
     "s.energy.model@1/*#editor",
     "s.stdio.ifc@2x3/cobie#editor",
@@ -139,17 +142,39 @@ const BATCH_D_NATURAL_FILE_APPS: &[&str] = &[
     "s.stdio.svg@1.1/tiny#editor",
 ];
 
-const BATCH_H_NATURAL_FILE_APPS: &[&str] = &["s.stdio.zip@2.0/*#editor", "s.stdio.deflate@rfc1950/*#editor", "s.stdio.binary@raw/*#editor"];
+const BATCH_H_NATURAL_FILE_APPS: &[&str] = &["s.stdio.zip@2.0/*#editor", "s.stdio.zip@2.0/iso21320#editor", "s.stdio.deflate@rfc1950/*#editor", "s.stdio.binary@raw/*#editor"];
+
+const BATCH_I_NATURAL_FILE_APPS: &[&str] = &[
+    "s.stdio.semio@v1/*#editor",
+    "s.stdio.semio@v1/animation#editor",
+    "s.stdio.semio@v1/audio#editor",
+    "s.stdio.semio@v1/brep#editor",
+    "s.stdio.semio@v1/cad#editor",
+    "s.stdio.semio@v1/document#editor",
+    "s.stdio.semio@v1/drawing#editor",
+    "s.stdio.semio@v1/flow#editor",
+    "s.stdio.semio@v1/graph#editor",
+    "s.stdio.semio@v1/image#editor",
+    "s.stdio.semio@v1/kit#editor",
+    "s.stdio.semio@v1/mesh#editor",
+    "s.stdio.semio@v1/model#editor",
+    "s.stdio.semio@v1/object#editor",
+    "s.stdio.semio@v1/presentation#editor",
+    "s.stdio.semio@v1/table#editor",
+    "s.stdio.semio@v1/text#editor",
+    "s.stdio.semio@v1/value#editor",
+    "s.stdio.semio@v1/video#editor",
+];
 
 #[test]
 fn natural_file_actions_publish_exact_paired_codec_metadata() {
     let fixture: Fixture = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/📄️natural-file-lifecycle/🔣️.json"))).expect("natural-file lifecycle fixture parses");
     let declared: std::collections::BTreeSet<&str> = fixture.formats.iter().map(|row| row.app_id.as_str()).collect();
     assert_eq!(declared.len(), fixture.formats.len(), "every natural-file app id is declared exactly once");
-    for expected in [BATCH_A_NATURAL_FILE_APPS, BATCH_B_NATURAL_FILE_APPS, BATCH_C_NATURAL_FILE_APPS, BATCH_D_NATURAL_FILE_APPS, BATCH_E_NATURAL_FILE_APPS, BATCH_F_NATURAL_FILE_APPS, BATCH_G_NATURAL_FILE_APPS, BATCH_H_NATURAL_FILE_APPS].into_iter().flatten() {
+    for expected in [BATCH_A_NATURAL_FILE_APPS, BATCH_B_NATURAL_FILE_APPS, BATCH_C_NATURAL_FILE_APPS, BATCH_D_NATURAL_FILE_APPS, BATCH_E_NATURAL_FILE_APPS, BATCH_F_NATURAL_FILE_APPS, BATCH_G_NATURAL_FILE_APPS, BATCH_H_NATURAL_FILE_APPS, BATCH_I_NATURAL_FILE_APPS].into_iter().flatten() {
         assert!(declared.contains(expected), "{expected} must declare its natural file");
     }
-    let named: std::collections::BTreeSet<&str> = [BATCH_A_NATURAL_FILE_APPS, BATCH_B_NATURAL_FILE_APPS, BATCH_C_NATURAL_FILE_APPS, BATCH_D_NATURAL_FILE_APPS, BATCH_E_NATURAL_FILE_APPS, BATCH_F_NATURAL_FILE_APPS, BATCH_G_NATURAL_FILE_APPS, BATCH_H_NATURAL_FILE_APPS].into_iter().flatten().copied().collect();
+    let named: std::collections::BTreeSet<&str> = [BATCH_A_NATURAL_FILE_APPS, BATCH_B_NATURAL_FILE_APPS, BATCH_C_NATURAL_FILE_APPS, BATCH_D_NATURAL_FILE_APPS, BATCH_E_NATURAL_FILE_APPS, BATCH_F_NATURAL_FILE_APPS, BATCH_G_NATURAL_FILE_APPS, BATCH_H_NATURAL_FILE_APPS, BATCH_I_NATURAL_FILE_APPS].into_iter().flatten().copied().collect();
     assert_eq!(declared, named, "every declared natural-file app belongs to exactly one named batch set and vice versa");
     for row in fixture.formats {
         let codec = semio_framework_plugin_decl_app::NaturalFileCodec {

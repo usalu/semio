@@ -38,6 +38,8 @@ export function tableSceneFromLanes(spine: TableScene, laneTexts: ReadonlyMap<st
 }
 
 /** 🖌️ A 2D paint surface scene payload — mirrors the wasm `componentScene` node's `paint2d` field. */
+export type Paint2dImageGrid={readonly x:number;readonly y:number;readonly width:number;readonly height:number;readonly bilinear:boolean};
+export type Paint2dEditingOptions={readonly filterKind:"invert"|"grayscale"|"brightness"|"contrast"|"saturation"|"gamma"|"threshold"|"posterize"|"blur"|"sharpen"|"clear"|"flipHorizontal"|"flipVertical";readonly filterAmount:number;readonly imageGrid:Paint2dImageGrid};
 export type Paint2dScene = {
   readonly documentSyncJson: string;
   readonly assetsJson: string;
@@ -54,6 +56,8 @@ export type Paint2dScene = {
   readonly maskValue:number;
   /** 🪣️ The session colour tolerance (0..255) every host's bucket and wand floods with. */
   readonly fillTolerance:number;
+  readonly editingOptions:Paint2dEditingOptions;
+  readonly selectionCancellation?: { readonly actor:string; readonly appInstanceId:number; readonly windowId:string; readonly operationId:string; readonly generation:string };
   readonly viewMode: string;
   readonly compositeViewportJson?: string;
   /** 🚚️ The spine's lane manifest — see {@link PAINT2D_SCENE_LANES}. */

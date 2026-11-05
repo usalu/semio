@@ -103,7 +103,7 @@ fn energy_model_view_reduce(
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<EnergyModelViewer>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<EnergyModelMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    camera_emit(command, context.and_then(|context| context.view_state.as_ref()))
+    camera_emit(command, context.and_then(|context| context.view_state.as_deref()))
 }
 
 struct EnergyModelViewCommandJobFactory {

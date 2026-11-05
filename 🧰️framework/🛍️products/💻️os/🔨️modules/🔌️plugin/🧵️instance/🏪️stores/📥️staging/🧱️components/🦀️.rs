@@ -137,7 +137,8 @@ pub struct PeerRoster<A: ArtifactApp> {
     /// the ARTIFACT+APP-scope roster `InteractionView::peers_selecting`/`peers_hovering` and the
     /// UI-tree stamping pass read from; upserted/pruned atomically with `presence_store`'s own
     /// peer map by `adopt_presence`.
-    pub peer_presence: ManuallyDrop<std::sync::Arc<PeerPresenceRoot>>,
+    pub peer_presence: ManuallyDrop<Option<std::sync::Arc<PeerPresenceRoot>>>,
+    pub peer_presence_close: ManuallyDrop<Option<PeerPresenceRootRetirement>>,
     pub peer_presence_generation: u64,
     pub peer_roster_admission_generation: u64,
     pub peer_roster_processed_generation: u64,
@@ -165,27 +166,32 @@ pub struct PeerRoster<A: ArtifactApp> {
 }
 
 impl<A: ArtifactApp> PeerRoster<A> {
+    /// 👁️ Retired read custody borrows the immutable empty value without allocating a replacement root.
+    pub fn peer_presence_root(&self)->&PeerPresenceRoot{self.peer_presence.as_deref().unwrap_or(&PeerPresenceRoot::EMPTY)}
     /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
     pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_roster_publications,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_roster_outcomes,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_presence_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.presence_peer_retirements,64)?])}
 
     /// 🪤️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
-    pub fn new() -> Self {Self::from_original(PeerPresenceRoot::empty_shared(),semio_framework_job::CancelToken::root_now())}
+    pub fn new() -> Self {Self::from_original(std::sync::Arc::new(PeerPresenceRoot::empty()),semio_framework_job::CancelToken::root_now())}
 
     /// 🧷️ Uses the actual admitted presence root and cancellation source without minting either during component birth.
-    pub fn from_original(root:std::sync::Arc<PeerPresenceRoot>,scope:semio_framework_job::CancelToken)->Self{
+    pub fn from_original(root:std::sync::Arc<PeerPresenceRoot>,scope:semio_framework_job::CancelToken)->Self{Self::from_original_with_backing(root,scope,true)}
+    /// 🪹️ Cleanup custody can retain its original roots without allocating unused publication slots.
+    pub fn from_original_with_backing(root:std::sync::Arc<PeerPresenceRoot>,scope:semio_framework_job::CancelToken,backing:bool)->Self{
         Self {
             own_color: None,
-            peer_presence: ManuallyDrop::new(root),
+            peer_presence: ManuallyDrop::new(Some(root)),
+            peer_presence_close: ManuallyDrop::new(None),
             peer_presence_generation: 0,
             peer_roster_admission_generation: 0,
             peer_roster_processed_generation: 0,
             peer_roster_outcome_generation: 0,
             peer_roster_reservations: std::array::from_fn(|_| None),
             peer_roster_scope: scope,
-            peer_roster_publications: ArtifactFixedRegistry::new(),
-            peer_roster_outcomes: ArtifactFixedRegistry::new(),
-            peer_presence_retirements: ArtifactFixedRegistry::new(),
-            presence_peer_retirements: ArtifactFixedRegistry::new(),
+            peer_roster_publications: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)},
+            peer_roster_outcomes: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)},
+            peer_presence_retirements: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)},
+            presence_peer_retirements: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)},
             pending_presence: Vec::new(),
             presence_marked_keys: BTreeMap::new(),
         }

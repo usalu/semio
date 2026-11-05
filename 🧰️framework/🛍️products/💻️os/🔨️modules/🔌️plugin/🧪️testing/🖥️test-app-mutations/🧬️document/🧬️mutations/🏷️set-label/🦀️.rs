@@ -69,7 +69,7 @@ impl semio_framework_dsl_record::BorrowedDslVariants for SetLabelSource{
 impl semio_framework_value::ErasedSnapshotRetirement for SetLabelSource{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.value.next_demand(maximum_body_bytes)}
 
-    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.value.close_step(grant)}
+    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{self.value.close_step(grant)}
     fn terminal_is_empty(&self)->bool{self.value.terminal_is_empty()}
     fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.value.next_copy_byte_demand()}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.value.next_capacity_byte_demand(copy)}

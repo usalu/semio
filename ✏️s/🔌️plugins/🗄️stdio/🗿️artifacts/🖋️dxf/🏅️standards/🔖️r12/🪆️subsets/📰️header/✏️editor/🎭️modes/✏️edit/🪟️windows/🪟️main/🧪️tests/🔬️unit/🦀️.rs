@@ -2,7 +2,6 @@ use crate::standards::v_r12::subsets::any::schema::snapshot::{DxfArc, DxfCircle,
 use semio_framework_plugin::app::ImageWindowKit;
 use semio_framework_plugin::WindowKit;
 use crate::editor::dxf::modes::edit::windows::main::*;
-use crate::standards::v_r12::subsets::any::io::text::snapshot::preview::preview_svg;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_image_window_kit() {

@@ -1,7 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
-  "cases": {"removed": [], "inserted": [], "moved": [], "modified": []},
   "structureKind": null,
   "steelFYPa": null,
   "beams": {
@@ -12,9 +10,6 @@
   },
   "columns": null,
   "slabs": null,
-  "fireRating": null,
-  "insulationThicknessM": null,
-  "fatigueDetail": null,
   "placements": {
     "removed": [],
     "inserted": [],
@@ -28,6 +23,16 @@
         "index": 0
       }
     ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fireRating": null,
+  "insulationThicknessM": null,
+  "fatigueDetail": null,
+  "reliabilityClass": null,
+  "cases": {
+    "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []

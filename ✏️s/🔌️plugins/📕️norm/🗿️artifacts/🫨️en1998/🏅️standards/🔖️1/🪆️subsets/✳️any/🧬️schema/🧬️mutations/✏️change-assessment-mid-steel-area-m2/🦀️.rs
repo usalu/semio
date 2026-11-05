@@ -18,7 +18,7 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentMidSteel
         verb: "change",
         entity: "assessment-mid-steel-area-m2",
         kind: "change-assessment-mid-steel-area-m2",
-        record: "ChangeAssessed elementIntermediateSteelAreaM2",
+        record: "ChangedAssessmentMidSteelAreaM2",
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

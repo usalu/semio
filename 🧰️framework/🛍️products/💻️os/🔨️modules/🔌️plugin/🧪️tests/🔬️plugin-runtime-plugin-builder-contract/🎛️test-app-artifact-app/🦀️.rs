@@ -45,8 +45,10 @@
 
         /// 📨️ Records every host event on this test thread; a blur answers the lane-less `noopMutation`, so a law sees
         /// that a host event's own dispatch is never a history row.
+        fn host_event_demands(event:&HostEvent)->Option<semio_framework_value::RetirementDemand>{let header=if matches!(event,HostEvent::WindowBlurred{..}){std::mem::size_of::<TestCommand>()}else{0};Some(semio_framework_value::RetirementDemand{copy_bytes:header*2,capacity_bytes:header,depth:1,..Default::default()})}
+
         fn host_event(event: &HostEvent) -> Option<TestCommand> {
-            TEST_HOST_EVENTS.with(|events| events.borrow_mut().push(event.clone()));
+            TEST_HOST_EVENTS.with(|events| events.borrow_mut().push(event));
             matches!(event, HostEvent::WindowBlurred { .. }).then_some(TestCommand::NoopMutation)
         }
 

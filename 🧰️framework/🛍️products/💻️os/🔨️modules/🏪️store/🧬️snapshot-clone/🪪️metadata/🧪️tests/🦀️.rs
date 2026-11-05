@@ -1,6 +1,41 @@
 //! 🧪️ Original metadata owns every admitted field through genuine native preparation and cancellation.
 use super::*;
 use semio_framework_value::ToValue;
+#[test]
+fn shared_semantic_assembly_preserves_original_slots_and_exact_funded_custody(){
+ use super::super::assembly::{OriginalPublicationAssembly,OriginalPublicationInputs};
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/📦️assembly/🔣️.json")).unwrap();
+ let maximum=law["maximumSemanticTurns"].as_u64().unwrap()as usize;
+ let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
+ for cut in 0..maximum{
+  let mut owner=OriginalPublicationAssembly::<bool,bool>::default();
+  let mut forward=Some(true);let mut post=Some(false);let mut inverse=Some(vec![false,true,false]);
+  let mut authority=Some(Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(921),semio_framework_job::Generation(0),[0;32],3,4,semio_framework_os_spr::HybridLogicalTimestamp{actor:1,physical_ms:42,logical:2},"semantic:α".into(),None,None,None)));
+  let mut mutations:Option<Arc<dyn ArtifactOwnedValueRetirementFactory<bool>>>=Some(Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<bool>::default()));
+  let mut snapshots:Option<Arc<dyn SnapshotRetirementFactory<bool>>>=Some(Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<bool>::default()));
+  for _ in 0..cut{
+   if owner.sealer().is_some(){break;}
+   let(demand,actual)=heap(||owner.advance_demands(authority.as_ref(),grant.maximum_copy_bytes).unwrap());assert_eq!(actual,(0,0));assert!(permits(demand,grant));
+   let original=(forward,post,inverse.as_ref().map(|value|(value.as_ptr(),value.len())),authority.as_ref().map(Arc::as_ptr));
+   for denied in[RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant}]{
+    if permits(demand,denied){continue;}
+    let(turn,actual)=heap(||owner.advance(OriginalPublicationInputs{forward:&mut forward,post:&mut post,inverse:&mut inverse,authority:&mut authority,mutations:&mut mutations,snapshots:&mut snapshots},denied));
+    assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap(),None);assert_eq!(actual,(0,0));assert_eq!(owner.advance_demands(authority.as_ref(),grant.maximum_copy_bytes).unwrap(),demand);
+    assert_eq!((forward,post,inverse.as_ref().map(|value|(value.as_ptr(),value.len())),authority.as_ref().map(Arc::as_ptr)),original);
+   }
+   let(turn,actual)=heap(||owner.advance(OriginalPublicationInputs{forward:&mut forward,post:&mut post,inverse:&mut inverse,authority:&mut authority,mutations:&mut mutations,snapshots:&mut snapshots},grant));let receipt=turn.result.unwrap().expect("funded semantic frontier advances");assert!(receipt.fits(grant));assert!(turn.work>0);assert_eq!(actual,(receipt.retained_capacity_bytes,receipt.released_bytes));
+  }
+  if owner.sealer().is_some(){assert!(forward.is_none()&&post.is_none()&&inverse.is_none()&&authority.is_none()&&mutations.is_none()&&snapshots.is_none());}
+  for _ in 0..maximum*128{
+   if owner.terminal_is_empty(){break;}
+   let(demand,actual)=heap(||owner.close_demands(grant.maximum_copy_bytes).unwrap().unwrap());assert_eq!(actual,(0,0));assert!(permits(demand,grant));
+   let(turn,actual)=heap(||owner.close_step(grant));let receipt=turn.result.unwrap().progress();assert!(receipt.fits(grant));assert_eq!(actual,(receipt.retained_capacity_bytes,receipt.released_bytes));
+  }
+  assert!(owner.terminal_is_empty());assert_eq!(heap(||drop(owner)).1,(0,0));
+  let mut born=0;let mut released=0;drive_original((forward,post,inverse,authority),grant,maximum*128,&mut born,&mut released);
+  for factory in [mutations.map(|factory|->Arc<dyn semio_framework_value::FactoryRetirement>{factory}),snapshots.map(|factory|->Arc<dyn semio_framework_value::FactoryRetirement>{factory})].into_iter().flatten(){drive_original(FactoryAuthority::new(factory),grant,maximum*128,&mut born,&mut released);}
+ }
+}
 fn heap<T>(action:impl FnOnce()->T)->(T,(usize,usize)){let(value,born,freed)=semio_framework_trace_memory_testing::observe_backing(action);(value,(born,freed))}
 /// 🧮️ Drives one original owner under a fixed policy; a controlled retirement gates its turn on capacity, release and depth, so only those axes are denied one below their quote (its copy quote is an advisory payload price).
 fn drive_original<T:RetireOwned>(original:T,grant:RetainedCloneGrant,maximum_turns:usize,born:&mut usize,released:&mut usize){

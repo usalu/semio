@@ -37,25 +37,36 @@ pub const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setCameraZoom",
     "setActiveExample",
-    "flattenLayers",
-    "mergeDown",
-    "maskFromSelection",
     "setBrushColor",
     "setBrushHardness",
     "setPaintTarget",
     "setMaskValue",
-    "setPixelSelection",
-    "paintStroke",
-    "fillRegion",
     "setFillTolerance",
-    "applyFilter",
-    "transformImage",
-    "fillSelection",
+    "setFilterKind",
+    "setFilterAmount",
+    "setImageGrid",
 ];
+
+pub const RASTER_PIXEL_EDIT_TOOL_IDS:&[&str]=&["paintStroke","fillRegion","applyFilter","transformImage","fillSelection"];
+const PIXEL_POINTS:usize=semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RASTER_STROKE_MAXIMUM_POINTS;
+const PIXEL_FIELD:usize=semio_s_artifact_raster_raster_model::RASTER_OWNED_FIELD_BYTES;
+pub const RASTER_PIXEL_EDIT_RAW_BYTES:usize=2*PIXEL_POINTS*25+2*PIXEL_FIELD*6+(16+16+64)*6+512;
+pub const RASTER_PIXEL_EDIT_DECODED_ITEMS:usize=2*PIXEL_POINTS+64;
+pub const RASTER_PIXEL_EDIT_OUTPUT_BYTES:usize=16_777_216*52+2+PIXEL_POINTS*60+2+4*PIXEL_FIELD*6+2*64*6+8192;
+pub fn raster_pixel_edit_contract()->ToolExecutionContract{ToolExecutionContract::resumable(RASTER_PIXEL_EDIT_RAW_BYTES,RASTER_PIXEL_EDIT_DECODED_ITEMS,1024,RASTER_PIXEL_EDIT_OUTPUT_BYTES,7500,64,1)}
 
 pub(super) const RASTER_RETAINED_PAYLOAD_SCHEMA: &str = "raster.tool-command.v1";
 
 pub(super) const RASTER_RETAINED_RAW_BYTES: usize = 65_536;
+pub const RASTER_SELECT_PIXELS_RAW_BYTES:usize=2*1_048_576+3*4096*6+65_536;
+pub const RASTER_SELECT_PIXELS_OUTPUT_BYTES:usize=16_777_216*64+8192;
+pub fn raster_select_pixels_contract()->ToolExecutionContract{ToolExecutionContract::resumable(RASTER_SELECT_PIXELS_RAW_BYTES,4096,1024,RASTER_SELECT_PIXELS_OUTPUT_BYTES,7500,64,1)}
+pub const RASTER_MASK_SELECTION_RAW_BYTES:usize=3*semio_s_artifact_raster_raster_model::RASTER_OWNED_FIELD_BYTES*6+65_536;
+pub const RASTER_MASK_SELECTION_OUTPUT_BYTES:usize=16_777_216*4*4+4*semio_s_artifact_raster_raster_model::RASTER_OWNED_FIELD_BYTES*6+8192;
+pub fn raster_mask_selection_contract()->ToolExecutionContract{ToolExecutionContract::resumable(RASTER_MASK_SELECTION_RAW_BYTES,4096,1,RASTER_MASK_SELECTION_OUTPUT_BYTES,7500,64,1)}
+pub const RASTER_LAYER_BAKE_TOOL_IDS:&[&str]=&["flattenLayers","mergeDown"];
+pub const RASTER_LAYER_BAKE_OUTPUT_BYTES:usize=16_777_216*4*4+4096*(4096*6+512)+64*(4096*6+128)+65_536;
+pub fn raster_layer_bake_contract()->ToolExecutionContract{ToolExecutionContract::resumable(RASTER_RETAINED_RAW_BYTES,4096,1024,RASTER_LAYER_BAKE_OUTPUT_BYTES,7500,64,1)}
 
 pub(super) const RASTER_RETAINED_WORK_ITEMS: usize = 4_096;
 
@@ -75,14 +86,6 @@ pub(super) const RASTER_RETAINED_WORK_ITEMS: usize = 4_096;
 /// document field, and there is no `RasterOperation::SetCamera`); `Config` is precisely the lane that
 /// says "this route publishes into the config store, not into artifact history".
 pub(super) const RASTER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "flattenLayers", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "mergeDown", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "paintStroke", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
-    ArtifactToolPublicationContract { tool_id: "fillRegion", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "applyFilter", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "transformImage", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "fillSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "maskFromSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "addLayer", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "dropLayerKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setLayerVisible", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -99,7 +102,9 @@ pub(super) const RASTER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract
     ArtifactToolPublicationContract {tool_id:"setPaintTarget",lanes:&[ArtifactToolPublicationLane::Config]},
     ArtifactToolPublicationContract {tool_id:"setMaskValue",lanes:&[ArtifactToolPublicationLane::Config]},
     ArtifactToolPublicationContract { tool_id: "setFillTolerance", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract {tool_id:"setPixelSelection",lanes:&[ArtifactToolPublicationLane::Config]},
+    ArtifactToolPublicationContract { tool_id: "setFilterKind", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setFilterAmount", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setImageGrid", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCompositeViewport", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -110,17 +115,23 @@ pub fn raster_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(RASTER_RETAINED_RAW_BYTES, 4_096, 1, 262_144, 7_500)
 }
 
+pub(super) fn raster_retained_accepts(tool:&str)->bool{RASTER_RETAINED_TOOL_IDS.contains(&tool)||RASTER_LAYER_BAKE_TOOL_IDS.contains(&tool)||RASTER_PIXEL_EDIT_TOOL_IDS.contains(&tool)}
+
 /// 📏️ One bounded first step per retained route, admitted only while the WHOLE layer tree (groups and
 /// their nested children, via `flatten_raster_layers`) plus the asset pool plus this edit fit inside
 /// `RASTER_RETAINED_WORK_ITEMS`. `layers.len()` alone would understate a grouped document, so the
 /// recursive walk is used rather than the top-level count.
 pub(super) fn raster_retained_extent(command: &RasterCommand, snapshot: &RasterSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    if !RASTER_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+    if !raster_retained_accepts(command.command_id()) {
         return None;
     }
     let items = semio_s_artifact_raster_raster_model::flatten_raster_layers(&snapshot.layers).len().checked_add(snapshot.assets.len())?.checked_add(1)?;
     (items <= RASTER_RETAINED_WORK_ITEMS).then_some(1)
 }
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 pub(super) fn raster_retained_reduce(
@@ -175,3 +186,85 @@ impl ArtifactOwnedToolJobFactory for RasterRetainedCommandJobFactory {
     const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = RASTER_PUBLICATION_CONTRACTS;
 }
+
+pub struct RasterPixelEditJobFactory{keys:Vec<ToolFactoryKey>}
+impl RasterPixelEditJobFactory{pub fn new(controller_id:&str)->Self{Self{keys:RASTER_PIXEL_EDIT_TOOL_IDS.iter().map(|id|ToolFactoryKey::new(controller_id,*id)).collect()}}}
+impl semio_framework::ToolJobFactory for RasterPixelEditJobFactory{
+ type Payload=ArtifactRetainedCommandPayload<EditorApp<RasterPlayApp>>;
+ type Job=ArtifactRetainedCommandJob<EditorApp<RasterPlayApp>>;
+ fn keys(&self)->&[ToolFactoryKey]{&self.keys}
+ fn payload_schema_id(&self)->&str{RASTER_RETAINED_PAYLOAD_SCHEMA}
+ fn classification(&self)->InteractiveJobClassification{InteractiveJobClassification::Migrated}
+ fn execution_contract(&self)->ToolExecutionContract{raster_pixel_edit_contract()}
+ semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_PIXEL_EDIT_RAW_BYTES,checkpoint_resume:false);
+}
+impl ArtifactOwnedToolJobFactory for RasterPixelEditJobFactory{
+ type Owner=EditorApp<RasterPlayApp>;
+ const TOOL_IDS:&'static[&'static str]=RASTER_PIXEL_EDIT_TOOL_IDS;
+ const DOCUMENT_SCHEMA:&'static str=RASTER_DOCUMENT_SCHEMA;
+ const PUBLICATION_CONTRACTS:&'static[ArtifactToolPublicationContract]=&[
+  ArtifactToolPublicationContract{tool_id:"paintStroke",lanes:&[ArtifactToolPublicationLane::Artifact,ArtifactToolPublicationLane::WindowTransient]},
+  ArtifactToolPublicationContract{tool_id:"fillRegion",lanes:&[ArtifactToolPublicationLane::Artifact]},
+  ArtifactToolPublicationContract{tool_id:"applyFilter",lanes:&[ArtifactToolPublicationLane::Artifact]},
+  ArtifactToolPublicationContract{tool_id:"transformImage",lanes:&[ArtifactToolPublicationLane::Artifact]},
+  ArtifactToolPublicationContract{tool_id:"fillSelection",lanes:&[ArtifactToolPublicationLane::Artifact]},
+ ];
+}
+
+pub struct RasterSelectPixelsJobFactory {keys:Vec<ToolFactoryKey>}
+impl RasterSelectPixelsJobFactory {pub fn new(controller_id:&str)->Self{Self {keys:vec![ToolFactoryKey::new(controller_id,"selectPixels")]}}}
+impl semio_framework::ToolJobFactory for RasterSelectPixelsJobFactory {
+    type Payload=ArtifactRetainedCommandPayload<EditorApp<RasterPlayApp>>;
+    type Job=ArtifactRetainedCommandJob<EditorApp<RasterPlayApp>>;
+    fn keys(&self)->&[ToolFactoryKey]{&self.keys}
+    fn payload_schema_id(&self)->&str{RASTER_RETAINED_PAYLOAD_SCHEMA}
+    fn classification(&self)->InteractiveJobClassification{InteractiveJobClassification::Migrated}
+    fn execution_contract(&self)->ToolExecutionContract{raster_select_pixels_contract()}
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_SELECT_PIXELS_RAW_BYTES,checkpoint_resume:false);
+}
+impl ArtifactOwnedToolJobFactory for RasterSelectPixelsJobFactory {
+    type Owner=EditorApp<RasterPlayApp>;
+    const TOOL_IDS:&'static[&'static str]=&["selectPixels"];
+    const DOCUMENT_SCHEMA:&'static str=RASTER_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS:&'static[ArtifactToolPublicationContract]=&[ArtifactToolPublicationContract {tool_id:"selectPixels",lanes:&[ArtifactToolPublicationLane::Config]}];
+}
+
+pub struct RasterMaskSelectionJobFactory {keys:Vec<ToolFactoryKey>}
+impl RasterMaskSelectionJobFactory {pub fn new(controller_id:&str)->Self{Self {keys:vec![ToolFactoryKey::new(controller_id,"maskFromSelection")]}}}
+impl semio_framework::ToolJobFactory for RasterMaskSelectionJobFactory {
+    type Payload=ArtifactRetainedCommandPayload<EditorApp<RasterPlayApp>>;
+    type Job=ArtifactRetainedCommandJob<EditorApp<RasterPlayApp>>;
+    fn keys(&self)->&[ToolFactoryKey]{&self.keys}
+    fn payload_schema_id(&self)->&str{RASTER_RETAINED_PAYLOAD_SCHEMA}
+    fn classification(&self)->InteractiveJobClassification{InteractiveJobClassification::Migrated}
+    fn execution_contract(&self)->ToolExecutionContract{raster_mask_selection_contract()}
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_MASK_SELECTION_RAW_BYTES,checkpoint_resume:false);
+}
+impl ArtifactOwnedToolJobFactory for RasterMaskSelectionJobFactory {
+    type Owner=EditorApp<RasterPlayApp>;
+    const TOOL_IDS:&'static[&'static str]=&["maskFromSelection"];
+    const DOCUMENT_SCHEMA:&'static str=RASTER_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS:&'static[ArtifactToolPublicationContract]=&[ArtifactToolPublicationContract {tool_id:"maskFromSelection",lanes:&[ArtifactToolPublicationLane::Artifact]}];
+}
+/// 🥞️ Raw image baking declares both image bytes and bounded mutation metadata.
+pub struct RasterLayerBakeJobFactory {keys:Vec<ToolFactoryKey>}
+impl RasterLayerBakeJobFactory {pub fn new(controller_id:&str)->Self{Self{keys:RASTER_LAYER_BAKE_TOOL_IDS.iter().map(|id|ToolFactoryKey::new(controller_id,*id)).collect()}}}
+impl semio_framework::ToolJobFactory for RasterLayerBakeJobFactory {
+    type Payload=ArtifactRetainedCommandPayload<EditorApp<RasterPlayApp>>;
+    type Job=ArtifactRetainedCommandJob<EditorApp<RasterPlayApp>>;
+    fn keys(&self)->&[ToolFactoryKey]{&self.keys}
+    fn payload_schema_id(&self)->&str{RASTER_RETAINED_PAYLOAD_SCHEMA}
+    fn classification(&self)->InteractiveJobClassification{InteractiveJobClassification::Migrated}
+    fn execution_contract(&self)->ToolExecutionContract{raster_layer_bake_contract()}
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_RETAINED_RAW_BYTES,checkpoint_resume:false);
+}
+impl ArtifactOwnedToolJobFactory for RasterLayerBakeJobFactory {
+    type Owner=EditorApp<RasterPlayApp>;
+    const TOOL_IDS:&'static[&'static str]=RASTER_LAYER_BAKE_TOOL_IDS;
+    const DOCUMENT_SCHEMA:&'static str=RASTER_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS:&'static[ArtifactToolPublicationContract]=&[
+        ArtifactToolPublicationContract{tool_id:"flattenLayers",lanes:&[ArtifactToolPublicationLane::Artifact]},
+        ArtifactToolPublicationContract{tool_id:"mergeDown",lanes:&[ArtifactToolPublicationLane::Artifact]},
+    ];
+}
+

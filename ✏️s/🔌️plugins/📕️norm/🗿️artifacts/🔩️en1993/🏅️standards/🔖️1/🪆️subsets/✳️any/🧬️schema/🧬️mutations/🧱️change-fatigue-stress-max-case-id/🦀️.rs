@@ -19,7 +19,7 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFatigueStressMaxCa
         verb: "change",
         entity: "fatigue-stress-max-case-id",
         kind: "change-fatigue-stress-max-case-id",
-        record: "ChangedFatigueStressLoad case of the maximumId",
+        record: "ChangedFatigueStressMaxCaseId",
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

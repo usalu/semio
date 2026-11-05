@@ -40,7 +40,7 @@ fn snapshot_clone_original_inline_custody_observes_exact_granted_birth_work_and_
         let initial = pending::demands(&original, &owner, 0).unwrap();
         assert_eq!(initial.copy_bytes, size_of::<T>());
         let below = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: initial.copy_bytes.saturating_sub(1), maximum_depth: initial.depth, ..Default::default() };
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| pending::close(&mut original, &mut owner, below).unwrap().unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| pending::close(&mut original, &mut owner, below).result.unwrap().unwrap());
         assert_eq!(step.progress(), RetainedCloneProgress::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(original.is_some());
@@ -57,10 +57,10 @@ fn snapshot_clone_original_inline_custody_observes_exact_granted_birth_work_and_
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert!(demand.copy_bytes + demand.capacity_bytes + demand.release_bytes <= 4096);
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let (zero, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| pending::close(&mut original, &mut owner, RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap().unwrap());
+            let (zero, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| pending::close(&mut original, &mut owner, RetainedCloneGrant { maximum_items: 0, ..grant }).result.unwrap().unwrap());
             assert_eq!(zero.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| pending::close(&mut original, &mut owner, grant).unwrap().unwrap());
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| pending::close(&mut original, &mut owner, grant).result.unwrap().unwrap());
             assert!(step.progress().fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
             if grant.maximum_copy_bytes > 0 && grant.maximum_release_bytes == 0 { assert_eq!(heap.released_bytes, 0); }
@@ -95,6 +95,8 @@ impl RetainedCloneEdit<u64, BirthMutation> for BirthEdit {
     fn begin(&self, grant: RetainedCloneGrant) -> Result<(BirthCursor, RetainedCloneProgress), ValueError> { Ok((BirthCursor, self.begin_demand().admit(grant)?)) }
 }
 impl RetainedCloneEditCursor<u64, BirthMutation> for BirthCursor {
+    fn next_work_demand(&self,_:RetainedCloneRef<'_,u64>,_:&u64,_:RetainedCloneRef<'_,BirthMutation>,_:usize)->Result<u64,ValueError>{unreachable!()}
+    fn last_turn_work(&self)->u64{0}
     fn foreign_step_presence(&self)->bool{false}
     fn advance_demands(&self, _: RetainedCloneRef<'_, u64>, _: &u64, _: RetainedCloneRef<'_, BirthMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { unreachable!() }
     fn advance(&mut self, _: RetainedCloneRef<'_, u64>, _: &mut u64, _: RetainedCloneRef<'_, BirthMutation>, _: usize, _: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> { unreachable!() }

@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-plugin-norm-app-surface-shell-hooks"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm host shell integration, keyboard routes and menu visibility"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../📚️library/🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-s-plugin-norm-app-surface-foundation = { workspace = true }
+semio-s-plugin-norm-app-surface-viewport3d = { workspace = true }
+semio-s-plugin-norm-app-surface-visual-chrome = { workspace = true }
+semio-s-plugin-norm-app-surface-live-core = { workspace = true }
+semio-s-plugin-norm-app-surface-interaction-topology = { workspace = true }
+semio-s-plugin-norm-structural-scene = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde_json = { workspace = true }

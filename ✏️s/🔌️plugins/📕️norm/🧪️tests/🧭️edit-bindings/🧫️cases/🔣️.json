@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "path": "catalog.products",
+      "insert": "add-product",
+      "remove": true,
+      "setter": null
+    },
+    {
+      "path": "catalog.products[id=P1]",
+      "insert": null,
+      "remove": true,
+      "setter": null
+    },
+    {
+      "path": "catalog.products[id=P1].configuration.attributes.n",
+      "insert": null,
+      "remove": false,
+      "setter": {
+        "kind": "replace-configuration",
+        "boundary": "catalog.products[id=P1].configuration",
+        "relative": "attributes.n"
+      }
+    },
+    {
+      "path": "catalog.products[2].configuration",
+      "insert": null,
+      "remove": false,
+      "setter": {
+        "kind": "replace-configuration",
+        "boundary": "catalog.products[2].configuration",
+        "relative": ""
+      }
+    },
+    {
+      "path": "catalog.products[id=P1].configuration.exact",
+      "insert": null,
+      "remove": false,
+      "setter": {
+        "kind": "set-exact",
+        "boundary": "catalog.products[id=P1].configuration.exact",
+        "relative": ""
+      }
+    },
+    {
+      "path": "catalog.products[id=P1].configuration.items[1].value",
+      "insert": null,
+      "remove": false,
+      "setter": {
+        "kind": "replace-configuration",
+        "boundary": "catalog.products[id=P1].configuration",
+        "relative": "items[1].value"
+      }
+    },
+    {
+      "path": "catalog.products[id=P1].configuration.items",
+      "insert": "add-item",
+      "remove": true,
+      "setter": {
+        "kind": "replace-configuration",
+        "boundary": "catalog.products[id=P1].configuration",
+        "relative": "items"
+      }
+    },
+    {
+      "path": "catalog.products[id=P1].configuration.items[0]",
+      "insert": null,
+      "remove": true,
+      "setter": {
+        "kind": "replace-configuration",
+        "boundary": "catalog.products[id=P1].configuration",
+        "relative": "items[0]"
+      }
+    },
+    {
+      "path": "catalog.productss",
+      "insert": null,
+      "remove": false,
+      "setter": null
+    },
+    {
+      "path": "catalog.products[id=P1].configurations.n",
+      "insert": null,
+      "remove": false,
+      "setter": null
+    },
+    {
+      "path": "catalog.products[id=P1",
+      "insert": null,
+      "remove": false,
+      "setter": null
+    },
+    {
+      "path": "clearOnly",
+      "insert": null,
+      "remove": false,
+      "setter": null
+    }
+  ]
+}

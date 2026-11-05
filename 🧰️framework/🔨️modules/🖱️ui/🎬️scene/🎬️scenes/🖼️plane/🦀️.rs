@@ -29,7 +29,7 @@ pub use canvas2d_scene::{
 #[path = "🎨️paint2d-scene/🦀️.rs"]
 mod paint2d_scene;
 pub use paint2d_scene::{
-    Paint2dScene, Paint2dSceneLane, PAINT2D_SCENE_LANE_BODY_KEYS, PAINT2D_SCENE_LANE_FIELDS,
+    Paint2dScene, Paint2dSelectionCancellation, Paint2dEditingOptions, Paint2dImageGrid, Paint2dSceneLane, PAINT2D_SCENE_LANE_BODY_KEYS, PAINT2D_SCENE_LANE_FIELDS,
     PAINT2D_SCENE_LANE_KEY_PREFIX, PAINT2D_SCENE_LANE_NAMES, PAINT2D_SCENE_LANE_OPTIONAL,
 };
 

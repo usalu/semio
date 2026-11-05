@@ -30,6 +30,10 @@ use std::collections::HashMap;
 mod gesture;
 pub use gesture::{PaintEditCommand,PaintTarget,RASTER_STROKE_STREAM_BATCH};
 
+#[path = "🎯️selection/🦀️.rs"]
+mod pixel_selection;
+pub use pixel_selection::RasterSelectionIntent;
+
 #[path = "🧩️compositing/🦀️.rs"]
 mod compositing;
 use semio_framework_pixels::compositing::layers::{RasterStackLayer,RasterStackContent};

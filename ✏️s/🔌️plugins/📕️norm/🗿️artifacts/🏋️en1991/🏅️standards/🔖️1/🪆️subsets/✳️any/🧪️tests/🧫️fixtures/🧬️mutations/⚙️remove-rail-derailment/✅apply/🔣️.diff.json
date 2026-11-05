@@ -246,6 +246,18 @@
     "moved": [],
     "modified": []
   },
+  "dustExplosions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "railLoadGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "railDerailments": {
     "removed": [
       {

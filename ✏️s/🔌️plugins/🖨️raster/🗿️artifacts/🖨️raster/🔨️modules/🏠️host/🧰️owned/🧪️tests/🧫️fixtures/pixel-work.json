@@ -1,0 +1,11 @@
+{
+  "source":{"width":1024,"height":1024,"pixel":[0,0,0,0]},
+  "grant":{"fuel":256,"maximumCopyBytes":32768,"maximumCapacityBytes":16777216,"maximumReleaseBytes":16777216,"maximumDepth":64},
+  "minimumTurns":128,
+  "strokePreparation":{"points":4096,"pointBytes":16,"maximumPageBytes":32768,"minimumCopyPages":2},
+  "inverseCases":[{"name":"exclusive","assets":1,"shared":false,"filter":"invert","rows":3},{"name":"shared","assets":1,"shared":true,"filter":"invert","rows":2},{"name":"full-pool","assets":64,"shared":false,"filter":"invert","rows":4},{"name":"unchanged","assets":1,"shared":false,"filter":"clear","rows":0}],
+  "routes":["paint-stroke","fill-region","apply-filter","transform-image","fill-selection","write-pixel-region"],
+  "firstPixels":{"paint-stroke":[255,0,0,255],"fill-region":[255,0,0,255],"apply-filter":[255,255,255,0],"transform-image":[0,0,0,0],"fill-selection":[255,0,0,255],"write-pixel-region":[255,0,0,255]},
+  "cancelAfterTurns":[0,1,32,96],
+  "rules":["zero-fuel-preserves-private-owners","source-remains-unchanged-until-publication","one-grant-cannot-initialize-or-filter-the-entire-image","cancel-discards-candidate-and-closes-all-private-storage"]
+}

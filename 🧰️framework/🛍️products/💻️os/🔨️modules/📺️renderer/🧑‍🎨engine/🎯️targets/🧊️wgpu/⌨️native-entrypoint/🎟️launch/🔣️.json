@@ -63,5 +63,26 @@
     },
     "fuel": 67108864,
     "maximumElapsedMicroseconds": 1800000000
+  },
+  "frameEvent": {
+    "fuel": 67108864,
+    "maximumElapsedMicroseconds": 30000000,
+    "grant": {
+      "maximumItems": 33554432,
+      "maximumCopyBytes": 536870912,
+      "maximumCapacityBytes": 268435456,
+      "maximumReleaseBytes": 536870912,
+      "maximumDepth": 256
+    },
+    "retirementReserve": {
+      "fuel": 8388608,
+      "grant": {
+        "maximumItems": 4194304,
+        "maximumCopyBytes": 8388608,
+        "maximumCapacityBytes": 4194304,
+        "maximumReleaseBytes": 268435456,
+        "maximumDepth": 256
+      }
+    }
   }
 }

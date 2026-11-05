@@ -1,3 +1,4 @@
+use semio_framework_plugin::WindowKit;
 use crate::standards::v_ascii::subsets::any::schema::snapshot::StlSnapshot;
 use semio_framework_plugin::MeshWindowKit;
 use crate::viewer::stl::modes::view::windows::main::*;

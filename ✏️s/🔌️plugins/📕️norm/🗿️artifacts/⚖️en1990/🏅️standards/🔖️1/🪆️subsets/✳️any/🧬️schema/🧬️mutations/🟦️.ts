@@ -117,6 +117,7 @@ import { type ChangeCaseNumber, parseChangeCaseNumber } from "./🔢️change-ca
 import { type ChangeCaseText, parseChangeCaseText } from "./🔤️change-case-text/🧬️schema/🟦️.ts";
 import { type InsertMember, parseInsertMember } from "./🔩insert-member/🧬️schema/🟦️.ts";
 import { type RemoveSeismic, parseRemoveSeismic } from "./🕳️remove-seismic/🧬️schema/🟦️.ts";
+import { type ChangeReliabilityMemberId, parseChangeReliabilityMemberId } from "./🚦️change-reliability-member-id/🧬️schema/🟦️.ts";
 import { type ChangeTrafficGroupGroup, parseChangeTrafficGroupGroup } from "./🚦️change-traffic-group-group/🧬️schema/🟦️.ts";
 import { type ChangeTrafficGroupVariableId, parseChangeTrafficGroupVariableId } from "./🚦️change-traffic-group-variable-id/🧬️schema/🟦️.ts";
 import { type InsertTrafficGroup, parseInsertTrafficGroup } from "./🚦️insert-traffic-group/🧬️schema/🟦️.ts";
@@ -124,10 +125,12 @@ import { type RemoveTrafficGroup, parseRemoveTrafficGroup } from "./🚦️remov
 import { type ChangeTestConversionFactor, parseChangeTestConversionFactor } from "./🧪️change-test-conversion-factor/🧬️schema/🟦️.ts";
 import { type ChangeTestDistribution, parseChangeTestDistribution } from "./🧪️change-test-distribution/🧬️schema/🟦️.ts";
 import { type ChangeTestMean, parseChangeTestMean } from "./🧪️change-test-mean/🧬️schema/🟦️.ts";
+import { type ChangeTestPairs, parseChangeTestPairs } from "./🧪️change-test-pairs/🧬️schema/🟦️.ts";
 import { type ChangeTestQuantity, parseChangeTestQuantity } from "./🧪️change-test-quantity/🧬️schema/🟦️.ts";
 import { type ChangeTestRequired, parseChangeTestRequired } from "./🧪️change-test-required/🧬️schema/🟦️.ts";
 import { type ChangeTestSampleSize, parseChangeTestSampleSize } from "./🧪️change-test-sample-size/🧬️schema/🟦️.ts";
 import { type ChangeTestStdDev, parseChangeTestStdDev } from "./🧪️change-test-std-dev/🧬️schema/🟦️.ts";
+import { type ChangeTestTheoryVariation, parseChangeTestTheoryVariation } from "./🧪️change-test-theory-variation/🧬️schema/🟦️.ts";
 import { type ChangeTestVariationKnown, parseChangeTestVariationKnown } from "./🧪️change-test-variation-known/🧬️schema/🟦️.ts";
 import { type InsertTestSeries, parseInsertTestSeries } from "./🧪️insert-test-series/🧬️schema/🟦️.ts";
 import { type RemoveTestSeries, parseRemoveTestSeries } from "./🧪️remove-test-series/🧬️schema/🟦️.ts";
@@ -206,6 +209,7 @@ export type En1990Mutation =
   | ChangeReliabilityActionMean
   | ChangeReliabilityActionSd
   | ChangeTestQuantity
+  | ChangeTestPairs
   | ChangeTestDistribution
   | ChangeTestSampleSize
   | ChangeTestMean
@@ -213,6 +217,7 @@ export type En1990Mutation =
   | ChangeTestVariationKnown
   | ChangeTestConversionFactor
   | ChangeTestRequired
+  | ChangeTestTheoryVariation
   | ChangePlacementX
   | ChangePlacementY
   | ChangePlacementZ
@@ -264,6 +269,7 @@ export type En1990Mutation =
   | RemoveFactorOverride
   | ChangeTrafficGroupGroup
   | ChangeTrafficGroupVariableId
+  | ChangeReliabilityMemberId
   | InsertTrafficGroup
   | RemoveTrafficGroup;
 
@@ -339,6 +345,7 @@ export const parseEn1990Mutation: NormWireReader<En1990Mutation> = normWireTagge
   changeReliabilityActionMean: parseChangeReliabilityActionMean,
   changeReliabilityActionSd: parseChangeReliabilityActionSd,
   changeTestQuantity: parseChangeTestQuantity,
+  changeTestPairs: parseChangeTestPairs,
   changeTestDistribution: parseChangeTestDistribution,
   changeTestSampleSize: parseChangeTestSampleSize,
   changeTestMean: parseChangeTestMean,
@@ -346,6 +353,7 @@ export const parseEn1990Mutation: NormWireReader<En1990Mutation> = normWireTagge
   changeTestVariationKnown: parseChangeTestVariationKnown,
   changeTestConversionFactor: parseChangeTestConversionFactor,
   changeTestRequired: parseChangeTestRequired,
+  changeTestTheoryVariation: parseChangeTestTheoryVariation,
   changePlacementX: parseChangePlacementX,
   changePlacementY: parseChangePlacementY,
   changePlacementZ: parseChangePlacementZ,
@@ -397,6 +405,7 @@ export const parseEn1990Mutation: NormWireReader<En1990Mutation> = normWireTagge
   removeFactorOverride: parseRemoveFactorOverride,
   changeTrafficGroupGroup: parseChangeTrafficGroupGroup,
   changeTrafficGroupVariableId: parseChangeTrafficGroupVariableId,
+  changeReliabilityMemberId: parseChangeReliabilityMemberId,
   insertTrafficGroup: parseInsertTrafficGroup,
   removeTrafficGroup: parseRemoveTrafficGroup,
 });

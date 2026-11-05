@@ -67,7 +67,7 @@ pub fn gumball_step(
     let targets = if ids.is_empty() { selected } else { ids };
     if targets.iter().any(|id| semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_id(id).is_none()) { return Err(Fault::from("fem3d.gumball.identity-refused")); }
     let tick = fem3d_gumball_tick(snapshot, targets, motion);
-    let window = context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.window_id.clone()).unwrap_or_default();
+    let window = context.and_then(|context| context.view_state.as_deref()).and_then(|view| view.window_id.clone()).unwrap_or_default();
     let transient = context.map(|context| context.transient.as_ref().clone()).unwrap_or_default();
     let base_revision: String = operation.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect();
     let drive = fem_gumball_drive::<Fem3dGumballTool>(&transient, &window, verb, phase, tick, &operation.authoring_seed, &base_revision)?;

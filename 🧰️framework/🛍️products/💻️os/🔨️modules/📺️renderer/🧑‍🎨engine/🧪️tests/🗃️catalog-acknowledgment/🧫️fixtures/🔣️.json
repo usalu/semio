@@ -1,0 +1,11 @@
+{
+  "document": { "documentId": "file-a", "schema": "stdio.csv", "name": "Table", "storage": "folder", "target": "/device/file-a", "admittedAtMs": 10 },
+  "cases": [
+    { "name": "exact admitted document", "mutation": "admit", "documents": "same", "reflected": true },
+    { "name": "unrelated concurrent entry", "mutation": "admit", "documents": "extra", "reflected": true },
+    { "name": "old name is not acknowledgment", "mutation": "admit", "documents": "old", "reflected": false },
+    { "name": "missing admission", "mutation": "admit", "documents": "empty", "reflected": false },
+    { "name": "retired document", "mutation": "retire", "documents": "empty", "reflected": true },
+    { "name": "retirement not persisted", "mutation": "retire", "documents": "same", "reflected": false }
+  ]
+}

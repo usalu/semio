@@ -1,0 +1,1 @@
+{"cases":[{"value":255,"valid":true,"fuel":1,"work":1,"copy":1},{"value":256,"valid":false,"fuel":1,"work":1,"copy":0},{"value":255,"valid":false,"fuel":0,"work":0,"copy":0}]}

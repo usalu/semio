@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC2",
   "members": [
     {
       "id": "beam-B1",
@@ -96,30 +95,6 @@
       ]
     }
   ],
-  "placements": [],
-  "tapers": [],
-  "cutouts": [],
-  "fasteners": [],
-  "panels": [],
-  "floors": [],
-  "diaphragms": [],
-  "trusses": [],
-  "bracings": [
-    {
-      "id": "bracing-1",
-      "kind": "plan-bracing",
-      "memberId": "beam-B1",
-      "stabilisedCount": 4,
-      "spacingM": 0.8,
-      "lengthM": 6.0,
-      "braceWidthM": 0.06,
-      "braceDepthM": 0.12,
-      "compressionForceN": 20000.0,
-      "resistanceN": 3001.0,
-      "stiffnessNPerM": 500000.0
-    }
-  ],
-  "decks": [],
   "ulsEquation": "eq610",
   "cases": [
     {
@@ -144,5 +119,30 @@
         }
       ]
     }
-  ]
+  ],
+  "placements": [],
+  "tapers": [],
+  "cutouts": [],
+  "fasteners": [],
+  "panels": [],
+  "floors": [],
+  "diaphragms": [],
+  "trusses": [],
+  "bracings": [
+    {
+      "id": "bracing-1",
+      "kind": "plan-bracing",
+      "memberId": "beam-B1",
+      "stabilisedCount": 4,
+      "spacingM": 0.8,
+      "lengthM": 6.0,
+      "braceWidthM": 0.06,
+      "braceDepthM": 0.12,
+      "compressionForceN": 20000.0,
+      "resistanceN": 3001.0,
+      "stiffnessNPerM": 500000.0
+    }
+  ],
+  "decks": [],
+  "reliabilityClass": "RC2"
 }

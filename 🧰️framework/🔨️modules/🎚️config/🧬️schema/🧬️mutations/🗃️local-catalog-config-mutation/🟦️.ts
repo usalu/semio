@@ -4,6 +4,12 @@
 /** 🗄️ Where a local document's events persist on this device: a folder event log or one file. */
 export type LocalDocumentStorage = "folder" | "file";
 
+/** 🪟️ The selected presentation coordinate of a kept artifact. */
+export interface LocalDocumentSurface {
+  readonly pluginId: string;
+  readonly appId: string;
+}
+
 /** 📄️ One document this device keeps locally: its id, artifact schema, name and where its events persist. */
 export interface LocalDocument {
   readonly documentId: string;
@@ -12,6 +18,7 @@ export interface LocalDocument {
   readonly storage: LocalDocumentStorage;
   readonly target: string;
   readonly admittedAtMs: number;
+  readonly surface?: LocalDocumentSurface;
 }
 //#endregion 🔖️Schema
 

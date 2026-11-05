@@ -1,0 +1,37 @@
+{
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "required": [
+        "locale",
+        "title",
+        "cancel"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "locale": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "cancel": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "locale": "en",
+      "title": "Files on this device",
+      "cancel": "Cancel"
+    },
+    {
+      "locale": "de",
+      "title": "Dateien auf diesem Gerät",
+      "cancel": "Abbrechen"
+    }
+  ]
+}

@@ -1,0 +1,1295 @@
+{
+  "grants": [
+    2,
+    3,
+    8,
+    17,
+    32768
+  ],
+  "invalidGrants": [
+    0,
+    1,
+    32769
+  ],
+  "emptyMetadataEntries": 4096,
+  "cases": [
+    {
+      "name": "equal",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": true
+    },
+    {
+      "name": "schema",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "other.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "width",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 1,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "height",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 2,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "bitDepth",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 16,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "frameCount",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          },
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "delay",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 26,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "pixel",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              254
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "pixelLength",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "profilePresence",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": null,
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "profileEmpty",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "profileByte",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          5
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "metadataCount",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "metadataKey",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "metadataValue",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Uberblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "metadataOrder",
+      "left": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Title",
+            "value": "Überblick"
+          },
+          {
+            "key": "Author",
+            "value": "Raster"
+          }
+        ]
+      },
+      "right": {
+        "schema": "stdio.semio.image",
+        "width": 2,
+        "height": 1,
+        "colorspace": "rgba",
+        "bitDepth": 8,
+        "frames": [
+          {
+            "delayMs": 25,
+            "rgba8": [
+              20,
+              40,
+              60,
+              255,
+              100,
+              120,
+              140,
+              255
+            ]
+          }
+        ],
+        "icc": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metadata": [
+          {
+            "key": "Author",
+            "value": "Raster"
+          },
+          {
+            "key": "Title",
+            "value": "Überblick"
+          }
+        ]
+      },
+      "equal": false
+    }
+  ]
+}

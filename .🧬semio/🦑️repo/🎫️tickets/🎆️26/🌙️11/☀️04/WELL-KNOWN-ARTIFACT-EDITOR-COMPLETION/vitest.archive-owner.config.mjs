@@ -1,0 +1,1 @@
+export default { test: { include: ['**/🧑‍🎨engine/🧪️tests/🔏️folder-archive-owner/🟦️.ts'], root: process.cwd(), environment: 'node', maxWorkers: 1, minWorkers: 1, fileParallelism: false, testTimeout: 5000 } };

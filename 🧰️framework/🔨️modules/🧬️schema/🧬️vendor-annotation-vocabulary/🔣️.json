@@ -8,6 +8,9 @@
     "x-semio-binary": {
       "type": "object"
     },
+    "x-semio-catalogue": {
+      "type": "string"
+    },
     "x-semio-child": {
       "type": [
         "string",
@@ -40,6 +43,9 @@
     },
     "x-semio-derived": {
       "type": "boolean"
+    },
+    "x-semio-dsl": {
+      "type": "object"
     },
     "x-semio-family-options": {
       "type": "object"
@@ -130,6 +136,9 @@
     },
     "x-semio-retained-discriminator": {
       "type": "string"
+    },
+    "x-semio-rust": {
+      "type": "object"
     },
     "x-semio-state": {
       "type": "string"

@@ -95,13 +95,13 @@ async fn native_cold_pages_use_dedicated_bounded_input() {
         bytes: vec![1, 2, 3, 4, 5],
     };
     let event = Event::ColdDocumentPairPage(page.clone());
-    let (ordinary, command, cold) = kernel_turn_inputs_to_wit(&[event.clone()], 7).await.unwrap();
+    let (ordinary, command, cold) = kernel_turn_inputs_to_wit(&mut [event.clone()], 7).await.unwrap();
     assert!(ordinary.is_empty() && command.is_none());
     let lifted = cold.unwrap();
     assert_eq!(lifted.bytes, page.bytes);
     assert_eq!(lifted.header.transfer_generation, 4);
     assert_eq!(lifted.header.lifetime.instance_id, 7);
-    assert!(kernel_turn_inputs_to_wit(&[event.clone(), event], 7).await.is_err());
+    assert!(kernel_turn_inputs_to_wit(&mut [event.clone(), event], 7).await.is_err());
     for size in [0, 4, 6, 65537] {
         let mut invalid = page.clone();
         invalid.bytes = vec![0; size];

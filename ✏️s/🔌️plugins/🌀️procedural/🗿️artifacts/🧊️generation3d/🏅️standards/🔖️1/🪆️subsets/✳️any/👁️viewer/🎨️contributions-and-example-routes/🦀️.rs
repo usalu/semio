@@ -65,7 +65,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
         let Generation3dViewCommand::SetContributions(payload) = input.command else {
             return Err(Fault::from("generation3d-view-contributions-route-rejected"));
         };
-        let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+        let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
         let mut emit = Emit::default();
         self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
             if owner.with_session(|session| set_contributions::install(payload, session, input.operation.retained))?? {

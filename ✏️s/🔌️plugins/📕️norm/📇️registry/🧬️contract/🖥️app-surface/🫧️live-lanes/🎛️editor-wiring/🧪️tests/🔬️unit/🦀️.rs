@@ -91,7 +91,8 @@ fn gestures_parse_from_the_wire_json_and_refuse_ambiguous_ones() {
     assert!(matches!(parsed.step, GestureStep::Phase { phase: DragPhase::Stream, modifiers, .. } if modifiers.shift && !modifiers.alt));
     let both = r#"{"entity":{"kind":"member","id":"b1"},"handle":"h","s":1,"phase":"stream","key":"Enter"}"#;
     assert!(Gesture::parse(both).is_err());
-    assert!(Gesture::parse(r#"{"handle":"h","s":1,"phase":"stream"}"#).is_err());
+    assert!(Gesture::parse(r#"{"handle":"h","s":1,"phase":"stream"}"#).expect("handle-only gesture").entity.is_none());
+    assert!(Gesture::parse(r#"{"s":1,"phase":"stream"}"#).is_err());
 }
 
 #[test]

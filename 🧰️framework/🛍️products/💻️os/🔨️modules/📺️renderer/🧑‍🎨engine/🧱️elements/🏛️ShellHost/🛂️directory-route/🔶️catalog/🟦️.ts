@@ -3,7 +3,8 @@ import { directorySessionAuthorityIsCurrentV1 } from "@semio-tech/framework/dire
 import { useCallback, useEffect, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { localCatalogActorConfig } from "@semio-tech/framework/backbone/config-lane";
-import { LOCAL_CATALOG_READ_DEADLINE_MS_V1, LOCAL_CATALOG_WRITE_DEADLINE_MS_V1, foldLocalCatalogEnvelopesV1, localCatalogBindingV1, localCatalogMutationEnvelopeV1, sameLocalDocumentArchiveV1, type LocalCatalogAdmissionV1 } from "../../🗂️local-catalog/🟦️.ts";
+import { LOCAL_CATALOG_READ_DEADLINE_MS_V1, LOCAL_CATALOG_WRITE_DEADLINE_MS_V1, decodeLocalCatalogArchiveV1, foldLocalCatalogEnvelopesV1, localCatalogBindingV1, localCatalogMutationEnvelopeV1, sameLocalDocumentArchiveV1, type LocalCatalogAdmissionV1 } from "../../🗂️local-catalog/🟦️.ts";
+import { awaitLocalCatalogMutationV1 } from "../../🗂️local-catalog/💾️acknowledgment/🟦️.ts";
 import { LOCAL_CATALOG_CONFIG_SCHEMA, type LocalCatalog, type LocalCatalogConfigMutation, type LocalDocument } from "@semio-tech/framework/config/mutations";
 import { type SpaceAdministrationIntentV1 } from "../../../🛂️SpaceAdministration/🟦️.tsx";
 import type { InferencePortUiAction } from "@semio-tech/framework/inference/service";
@@ -30,12 +31,18 @@ export function useCatalogState({ core }: { readonly core: ShellCoreAfterBackbon
   } = core;
   //#region FrameworkOsShell
   //#region 🗂️LocalCatalog
+  const catalogCommitAbortRef = useRef<AbortController | null>(null);
+  const catalogCommitQueueRef = useRef<Promise<LocalCatalog | null>>(Promise.resolve(null));
   useEffect(() => {
     const worker = ensureBackboneWorker();
     const clientInstanceId = crypto.randomUUID();
+    const abort = new AbortController();
+    catalogCommitAbortRef.current = abort;
     localCatalogClientInstanceIdRef.current = clientInstanceId;
     worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, ...localCatalogActorConfig(shellActorIdRef.current, {maximumItems:1024,maximumCopyBytes:65536,maximumCapacityBytes:65536,maximumReleaseBytes:65536,maximumDepth:64}, localDataDir) }) });
     return () => {
+      abort.abort();
+      if (catalogCommitAbortRef.current === abort) catalogCommitAbortRef.current = null;
       if (localCatalogClientInstanceIdRef.current === clientInstanceId) localCatalogClientInstanceIdRef.current = null;
       worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId }) });
     };
@@ -96,18 +103,35 @@ export function useCatalogState({ core }: { readonly core: ShellCoreAfterBackbon
    * central applier, persists the catalog to the folder lane and answers with the resulting archive — that archive is the
    * projection the shell renders. Until it arrives the shell shows the optimistic projection: the same diff through the same
    * twin applier ({@link foldLocalCatalogEnvelopesV1}), replaced by the store's result. Without an open facet nothing is recorded. */
-  const recordLocalCatalogRef = useRef((_mutation: LocalCatalogConfigMutation): LocalCatalog | null => null);
-  recordLocalCatalogRef.current = (mutation: LocalCatalogConfigMutation): LocalCatalog | null => {
+  const recordLocalCatalogRef = useRef(async (_mutation: LocalCatalogConfigMutation): Promise<LocalCatalog | null> => null);
+  recordLocalCatalogRef.current = (mutation: LocalCatalogConfigMutation): Promise<LocalCatalog | null> => {
     const clientInstanceId = localCatalogClientInstanceIdRef.current;
-    if (clientInstanceId === null) return null;
-    const base = localCatalogRef.current;
-    const envelope = localCatalogMutationEnvelopeV1(shellActorIdRef.current, mutation, base);
-    const next = foldLocalCatalogEnvelopesV1(base, [envelope]);
+    const abort = catalogCommitAbortRef.current;
+    if (clientInstanceId === null || abort === null) return Promise.resolve(null);
     const worker = ensureBackboneWorker();
-    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } }) });
-    localCatalogRef.current = next;
-    setLocalCatalog(next);
-    return next;
+    const commit = catalogCommitQueueRef.current.catch(() => null).then(async () => {
+      if (localCatalogClientInstanceIdRef.current !== clientInstanceId || catalogCommitAbortRef.current !== abort || backboneWorkerRef.current !== worker) return null;
+      const envelope = localCatalogMutationEnvelopeV1(shellActorIdRef.current, mutation, localCatalogRef.current);
+      const next = foldLocalCatalogEnvelopesV1(localCatalogRef.current, [envelope]);
+      return awaitLocalCatalogMutationV1({
+        mutation, signal: abort.signal, timeoutMs: LOCAL_CATALOG_WRITE_DEADLINE_MS_V1,
+        current: () => localCatalogClientInstanceIdRef.current === clientInstanceId && catalogCommitAbortRef.current === abort && backboneWorkerRef.current === worker,
+        subscribe: (listener) => {
+          if (localDocumentOwnersRef.current.has(clientInstanceId)) throw new Error("local-catalog.commit-owner-busy");
+          const owner = { status: listener.status, archive: (bytes: Uint8Array): void => { const catalog = decodeLocalCatalogArchiveV1(bytes); if (catalog !== undefined) listener.archive(catalog); } };
+          localDocumentOwnersRef.current.set(clientInstanceId, owner);
+          return () => { if (localDocumentOwnersRef.current.get(clientInstanceId) === owner) localDocumentOwnersRef.current.delete(clientInstanceId); };
+        },
+        submit: () => {
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } }) });
+          localCatalogRef.current = next;
+          setLocalCatalog(next);
+        },
+        probe: () => worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId, message: { kind: "externalChanged" } }) }),
+      });
+    });
+    catalogCommitQueueRef.current = commit;
+    return commit;
   };
   //#endregion 🗂️LocalCatalog
 

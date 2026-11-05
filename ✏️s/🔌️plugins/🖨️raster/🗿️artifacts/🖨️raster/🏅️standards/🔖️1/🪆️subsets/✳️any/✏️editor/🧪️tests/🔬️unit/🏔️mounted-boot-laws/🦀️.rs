@@ -229,7 +229,7 @@ async fn inspector_patch_values_preserve_numeric_names_and_typed_controls() {
 #[semio_framework_async_macros::async_test]
 async fn selection_mask_retained_publication_survives_undo_and_redo() {
     use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
-    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎮️commands/🎭️mask-from-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🎮️commands/🎭️mask-from-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut app=context::app().await;
     context::dispatch(&mut app,RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer {kind:"pixel".into()})).await;
     let snapshot=app.snapshot().unwrap();
@@ -238,12 +238,13 @@ async fn selection_mask_retained_publication_survives_undo_and_redo() {
     for field in ["width","height"] {
         context::dispatch(&mut app,RasterCommand::PatchLayer(semio_s_artifact_raster_raster_editor::commands::patch_layer::PatchLayer {layer_id:id.clone(),field:field.into(),value:fixture[field].to_string()})).await;
     }
-    context::dispatch(&mut app,RasterCommand::MaskFromSelection(semio_s_artifact_raster_raster_editor::commands::mask_from_selection::MaskFromSelection {layer_id:id,expected_image_key:None,selection:fixture["selection"].to_string()})).await;
+    context::dispatch(&mut app,RasterCommand::SelectPixels(semio_s_artifact_raster_raster_editor::commands::select_pixels::SelectPixels {layer_id:id.clone(),target:"pixels".into(),expected_image_key:None,width:fixture["width"].as_u64().unwrap() as u32,height:fixture["height"].as_u64().unwrap() as u32,method:fixture["mountedIntent"]["method"].as_str().unwrap().into(),mode:fixture["mountedIntent"]["mode"].as_str().unwrap().into(),path:fixture["mountedIntent"]["path"].as_str().unwrap().into()})).await;
+    context::dispatch(&mut app,RasterCommand::MaskFromSelection(semio_s_artifact_raster_raster_editor::commands::mask_from_selection::MaskFromSelection {layer_id:id,expected_image_key:None})).await;
     let snapshot=app.snapshot().unwrap();
     let semio_s_artifact_raster_raster_model::RasterLayerNode::Pixel {mask:Some(mask),image_key:None,..}=&snapshot.layers[0] else {panic!("mask creation must preserve source pixels")};
     let key=mask.image_key.clone().unwrap();
-    let asset=semio_s_artifact_raster_raster_io::raster_asset(&snapshot.assets,&key).unwrap();
-    assert_eq!(serde_json::to_value(semio_framework_pixels::decode_png(&asset.data).unwrap().pixels).unwrap(),fixture["expectedRgba"]);
+    let asset=snapshot.assets.get(&key).unwrap().local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>().unwrap();
+    assert_eq!(serde_json::to_value(&asset.frames[0].rgba8).unwrap(),fixture["mountedIntent"]["expectedRgba"]);
     retire_raster_snapshot(snapshot);
     context::history(&mut app,"undo").await;
     let snapshot=app.snapshot().unwrap();

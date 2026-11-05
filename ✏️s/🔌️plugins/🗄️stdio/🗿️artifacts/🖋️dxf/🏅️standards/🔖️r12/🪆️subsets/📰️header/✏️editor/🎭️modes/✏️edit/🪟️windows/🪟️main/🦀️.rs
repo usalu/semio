@@ -1,6 +1,7 @@
 //! 🖼️ DXF editor — Main window: a real 2D `ImageWindowKit` render of the drawing (read-only canvas); typed geometry and layer edits live in Details.
 
-use crate::standards::v_r12::subsets::any::io::text::snapshot::preview::{preview_svg, DXF_PREVIEW_CANVAS};
+pub use crate::standards::v_r12::subsets::any::io::text::snapshot::preview::preview_svg;
+use crate::standards::v_r12::subsets::any::io::text::snapshot::preview::DXF_PREVIEW_CANVAS;
 use crate::standards::v_r12::subsets::any::schema::snapshot::DxfSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};

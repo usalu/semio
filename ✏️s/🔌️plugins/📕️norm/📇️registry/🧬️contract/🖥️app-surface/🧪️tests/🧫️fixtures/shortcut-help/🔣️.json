@@ -1,0 +1,22 @@
+{
+  "scopes": [
+    {
+      "id": "global",
+      "en": "Everywhere",
+      "de": "Überall",
+      "rows": 22
+    },
+    {
+      "id": "viewport",
+      "en": "3D model",
+      "de": "3D-Modell",
+      "rows": 18
+    },
+    {
+      "id": "handle",
+      "en": "Handle",
+      "de": "Griff",
+      "rows": 20
+    }
+  ]
+}

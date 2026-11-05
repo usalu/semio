@@ -1,21 +1,20 @@
 //! 🧪️ Export retains exact pixels, bounded output and cancellation without document edits.
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use std::mem::size_of;
 use semio_s_artifact_raster_raster_editor::RasterPlayApp;
 use semio_framework_pixels::png_encoding::PngEncodeJob;
 use semio_framework_job::RetainedCloneGrant;
 use semio_framework_plugin::app::ArtifactOutputChunks;
 use semio_s_artifact_raster_raster_editor::media_export::*;
-use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
 use semio_s_artifact_raster_raster_model::create_pixel_layer;
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
 
-fn close_work(work:&mut ImageExportWork) {
-    work.closing=true;
-    if let Some(mut job)=work.preparing.take(){job.cancel();}
-    if let Some(mut job)=work.compositing.take(){job.cancel();}
-    if let Some(mut job)=work.encoding.take(){job.cancel();}
-    work.encoded=Vec::new();
+fn loan()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:32768,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
+fn close_work(work:&mut ImageExportWork,caller:&mut semio_framework_plugin::artifact_app_laws::OriginalWorkFixture){work.cancel();for _ in 0..100000{if work.terminal_is_empty(){return}caller.turn(loan(),|cx|{let demand=work.close_demands(32768)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|work.close_step(grant))?;Ok(())}).unwrap();}panic!("finite export close")}
+fn advance_work(work:&mut ImageExportWork,document:&RasterSnapshot,caller:&mut semio_framework_plugin::artifact_app_laws::OriginalWorkFixture)->Result<Option<Vec<u8>>,semio_framework_job::OriginalTurnFailure>{
+ let mut page=None;let result=caller.turn(loan(),|cx|{if work.page_ready(){let turn=work.take_page(cx.retained_grant());let cpu=turn.work;let result=turn.result.map(|output|if let Some((bytes,progress))=output{page=Some(bytes);semio_framework_value::RetainedCloneStep::Progress(progress)}else{semio_framework_value::RetainedCloneStep::Progress(Default::default())});semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:cpu})?;}else{semio_framework_job::receive_original_retained_work(cx,work.advance(document,cx.retained_grant()))?;}Ok(())});
+ if let Err(error)=result{if let Some(page)=page{caller.retire_owned(page,loan());}Err(error)}else{Ok(page)}
 }
 
 fn document(width:u32,height:u32,pixels:Vec<u8>)->RasterSnapshot {
@@ -27,7 +26,7 @@ fn document(width:u32,height:u32,pixels:Vec<u8>)->RasterSnapshot {
 
 #[test]
 fn export_pages_match_neutral_base64_vectors() {
-    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../📤️export/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(BASE64_INPUT_BYTES,fixture["base64InputBytesPerGrant"].as_u64().unwrap() as usize);assert_eq!(ArtifactOutputChunks::CHUNK_BYTES,fixture["outputChunkBytes"].as_u64().unwrap() as usize);
     for row in fixture["base64Cases"].as_array().unwrap() {let bytes:Vec<u8>=serde_json::from_value(row["bytes"].clone()).unwrap();assert_eq!(String::from_utf8(base64_output_page(&bytes).unwrap()).unwrap(),row["expected"].as_str().unwrap());}
     for row in fixture["boundaryLengths"].as_array().unwrap() {let bytes:Vec<u8>=(0..row.as_u64().unwrap() as usize).map(|i|i as u8).collect();let mut output=Vec::new();for part in bytes.chunks(BASE64_INPUT_BYTES){let chunk=base64_output_page(part).unwrap();assert!(chunk.len()<=ArtifactOutputChunks::CHUNK_BYTES);output.extend(chunk);}assert_eq!(String::from_utf8(output).unwrap(),base64_codec::base64_standard_encode(bytes));}
@@ -36,25 +35,25 @@ fn export_pages_match_neutral_base64_vectors() {
 
 #[test]
 fn export_work_preserves_rgba_and_yields_each_stage() {
-    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../📤️export/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let image=&fixture["image"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let image=&fixture["image"];
     let pixels:Vec<u8>=serde_json::from_value(image["pixels"].clone()).unwrap();let document=document(2,2,pixels.clone());
-    let mut work=ImageExportWork::default();assert!(work.advance(&document,0).unwrap().is_none());assert!(work.preparing.is_none());
+    let mut caller=semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();let turn=work.advance(&document,Default::default());assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(work.stage(),"prepare");
     let mut stages=std::collections::BTreeSet::new();let mut output=Vec::new();
-    for _ in 0..1000 {stages.insert(work.stage());if let Some(chunk)=work.advance(&document,1).unwrap(){assert!(chunk.len()<=ArtifactOutputChunks::CHUNK_BYTES);output.extend(chunk);}if work.done{break;}}
+    for _ in 0..1000 {stages.insert(work.stage());if let Some(chunk)=advance_work(&mut work,&document,&mut caller).unwrap(){assert!(chunk.len()<=ArtifactOutputChunks::CHUNK_BYTES);output.extend_from_slice(&chunk);caller.retire_owned(chunk,loan());}if work.done{break;}}
     assert!(work.done);for stage in fixture["stages"].as_array().unwrap(){assert!(stages.contains(stage.as_str().unwrap()));}
     let bytes=base64_codec::base64_standard_decode(std::str::from_utf8(&output).unwrap()).unwrap();let decoded=semio_framework_pixels::decode_png(&bytes).unwrap();assert_eq!((decoded.width,decoded.height),(2,2));assert_eq!(decoded.pixels,pixels);
-    assert!(work.advance(&document,1).is_err());close_work(&mut work);retire_raster_snapshot(document);
+    assert!(work.advance(&document,loan()).result.is_err());close_work(&mut work,&mut caller);caller.retire_owned(output,loan());caller.finish();retire_raster_snapshot(document);
 }
 
 #[test]
 fn export_cancels_every_stage_and_refuses_an_empty_document() {
     let document=document(128,128,(0..128*128*4).map(|i|((i*73+i/31)%256) as u8).collect());
     for stage in ["prepare","composite","encode","output"] {
-        let mut work=ImageExportWork::default();for _ in 0..10000 {if work.stage()==stage{break;}work.advance(&document,1).unwrap();}assert_eq!(work.stage(),stage);
-        work.closing=true;assert!(work.advance(&document,1).is_err());close_work(&mut work);assert!(work.terminal_is_empty());
+        let mut caller=semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();for _ in 0..100000 {if work.stage()==stage{break;}if let Some(page)=advance_work(&mut work,&document,&mut caller).unwrap(){caller.retire_owned(page,loan());}}assert_eq!(work.stage(),stage);
+        work.cancel();assert!(work.advance(&document,loan()).result.is_err());close_work(&mut work,&mut caller);assert!(work.terminal_is_empty());caller.finish();
     }
     retire_raster_snapshot(document);
-    let empty=empty_raster_snapshot();let mut work=ImageExportWork::default();let mut refused=false;for _ in 0..100 {if work.advance(&empty,1).is_err(){refused=true;break;}}assert!(refused);close_work(&mut work);retire_raster_snapshot(empty);
+    let empty=empty_raster_snapshot();let mut caller=semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();let mut refused=false;for _ in 0..100000 {if let Err(error)=advance_work(&mut work,&empty,&mut caller){refused=true;caller.retire_owned(error,loan());break;}}assert!(refused);close_work(&mut work,&mut caller);caller.finish();retire_raster_snapshot(empty);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -79,7 +78,7 @@ async fn retained_image_export_completes_or_cancels_without_mutating_history() {
 
 #[test]
 fn export_progress_uses_neutral_localized_stage_labels() {
-    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../📤️export/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for stage in fixture["stages"].as_array().unwrap() {let bytes=progress_payload(stage.as_str().unwrap(),7);let payload:serde_json::Value=serde_json::from_slice(&bytes).unwrap();assert_eq!(payload["stage"],*stage);assert_eq!(payload["completedUnits"],7);for locale in ["en","de"]{assert_eq!(payload[locale],fixture["labels"][stage.as_str().unwrap()][locale]);}}
 }
 
@@ -103,7 +102,7 @@ async fn png_command_download_survives_operation_retirement_and_preserves_histor
     use crate::unit_tests::context;
     use semio_s_artifact_raster_raster_editor::RasterCommand;
     use semio_s_artifact_raster_raster_editor::commands::{add_layer, export_png};
-    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../📤️export/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let expected=&fixture["download"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=&fixture["download"];
     let command=<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(expected["action"].as_str().unwrap(), None, None).unwrap();assert!(matches!(command,RasterCommand::ExportPng(_)));
     store::os_store::test_support::assert_op_text_binary_equivalence(&command);
     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
@@ -181,4 +180,20 @@ fn export_snapshot_installed_supplier_returns_each_actual_shared_owner(){
     let snapshot=Arc::new(semio_s_artifact_raster_raster_io::testing::raster_image_test_snapshot());let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>=Arc::new(semio_framework_value::OwnedValueRetirementFactory::<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>::default());
     let mut owners=[FactorySharedRetirement::new(snapshot.clone(),factory.clone()),FactorySharedRetirement::new(snapshot,factory)];
     for owner in &mut owners{for turn in 0..100000{if owner.terminal_is_empty(){break}let demand=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(owner.close_step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap().progress(),Default::default());let step=owner.close_step(grant).unwrap();assert!(step.progress().fits(grant));assert!(turn<99999)}assert!(owner.terminal_is_empty())}
+}
+
+#[test]
+fn original_download_completion_preserves_source_until_admitted_and_keeps_it_after_receipt_refusal(){
+    use semio_framework_plugin::{ArtifactToolCompletion,EditorApp,ArtifactDownloadOutput,EphemeralEmit};
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧵️work/🧪️tests/🔣️.json")).unwrap();
+    let completion=ArtifactToolCompletion::<EditorApp<RasterPlayApp>>::new();
+    let mut caller=semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut chunks=None;
+    caller.turn(loan(),|cx|ArtifactOutputChunks::original_birth_admit(law["outputPageBytes"].as_u64().unwrap()as usize,&mut chunks,cx)).unwrap();let chunks=chunks.unwrap();
+    caller.turn(loan(),|cx|chunks.seal_original(cx)).unwrap();
+    let mut source=Some(ArtifactDownloadOutput{filename:law["filename"].as_str().unwrap().into(),mime_type:law["mimeType"].as_str().unwrap().into(),encoding:Some(law["encoding"].as_str().unwrap().into()),chunks,media_export_handle:None,media_export_metadata:None});
+    let pointer=source.as_ref().unwrap().filename.as_ptr();let identity=source.as_ref().unwrap().chunks.original_identity();let mut published=false;
+    let copied=size_of::<ArtifactDownloadOutput>()+size_of::<EphemeralEmit<EditorApp<RasterPlayApp>>>()+size_of::<bool>();
+    for axis in law["deniedAxes"].as_array().unwrap(){let mut grant=loan();match axis.as_str().unwrap(){"items"=>grant.maximum_items=0,"copy"=>grant.maximum_copy_bytes=copied-1,"depth"=>grant.maximum_depth=0,_=>unreachable!()}caller.turn(grant,|cx|{assert!(!completion.complete_download_original(&mut source,&mut published,cx)?);Ok(())}).unwrap();assert_eq!(source.as_ref().unwrap().filename.as_ptr(),pointer);assert!(!published);}
+    let error=caller.turn(RetainedCloneGrant{maximum_copy_bytes:copied,..loan()},|cx|{assert!(completion.complete_download_original(&mut source,&mut published,cx)?);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?;Ok(())}).unwrap_err();assert!(source.is_none()&&published);
+    let(output,ephemeral)=completion.test_take_download().unwrap().unwrap();let output=output.unwrap();assert_eq!(output.filename.as_ptr(),pointer);assert_eq!(output.chunks.original_identity(),identity);caller.retire_owned(error,loan());caller.retire_owned(ephemeral,loan());caller.retire_owned(output,loan());caller.retire_owned(completion,loan());caller.finish();
 }

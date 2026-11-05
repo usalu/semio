@@ -102,7 +102,7 @@ fn expected_focus_verb(variant: &str, region: Region) -> ShellKeyOutcome {
 }
 
 #[test]
-fn every_documented_shortcut_reaches_the_shell_as_an_action() {
+fn every_documented_shortcut_reaches_its_shell_or_grip_walk_outcome() {
     for shortcut in shortcuts() {
         let scope = match shortcut.scope {
             Scope::Global => "norm-en1993-global",
@@ -111,8 +111,10 @@ fn every_documented_shortcut_reaches_the_shell_as_an_action() {
         };
         let outcome = NormShellHooks.handle_key(&ShellKeyEvent { scope: scope.to_owned(), key: shortcut.chord.key.to_owned(), ctrl: shortcut.chord.ctrl, alt: shortcut.chord.alt, shift: shortcut.chord.shift, meta: false });
         match shortcut_route(&shortcut_action_id(&shortcut.action)) {
-            HostRoute::History(_) | HostRoute::SelectAll => assert_eq!(outcome, ShellKeyOutcome::Ignored, "{shortcut:?}"),
+            HostRoute::History(_) => assert_eq!(outcome, ShellKeyOutcome::Ignored, "{shortcut:?}"),
+            HostRoute::SelectAll => assert_eq!(outcome, ShellKeyOutcome::verb(semio_framework::SELECT_ALL_ACTION_ID, [("granularities".to_owned(), "member,plate,shell,solid,fastener,support,load,surface,group".to_owned())]), "{shortcut:?}"),
             HostRoute::FocusWindow(region) => assert_eq!(outcome, expected_focus_verb("en1993", region), "{shortcut:?}"),
+            HostRoute::Local if matches!(&shortcut.action, ShortcutAction::CycleHandle { .. } | ShortcutAction::CycleGripInEntity { .. }) => assert_eq!(outcome, ShellKeyOutcome::Ignored, "{shortcut:?}: no grip walk is active"),
             HostRoute::ViewAct(_) | HostRoute::Entity(_) | HostRoute::Local => assert!(matches!(&outcome, ShellKeyOutcome::Action { action } if action.starts_with("norm.")), "{shortcut:?} -> {outcome:?}"),
         }
     }
@@ -162,7 +164,7 @@ fn every_answered_action_is_declared_by_the_viewport_window_with_both_languages(
             Scope::Handle => "norm-en1993-handle",
         };
         let ShellKeyOutcome::Action { action } = NormShellHooks.handle_key(&ShellKeyEvent { scope: scope.to_owned(), key: shortcut.chord.key.to_owned(), ctrl: shortcut.chord.ctrl, alt: shortcut.chord.alt, shift: shortcut.chord.shift, meta: false }) else {
-            assert!(matches!(shortcut_route(&shortcut_action_id(&shortcut.action)), HostRoute::History(_) | HostRoute::SelectAll | HostRoute::FocusWindow(_)), "{shortcut:?} is answered by the shell or by nobody only when it is history, select all or a window focus");
+            assert!(matches!(shortcut_route(&shortcut_action_id(&shortcut.action)), HostRoute::History(_) | HostRoute::SelectAll | HostRoute::FocusWindow(_)) || matches!(&shortcut.action, ShortcutAction::CycleHandle { .. } | ShortcutAction::CycleGripInEntity { .. } | ShortcutAction::EnterHandles), "{shortcut:?} has a shell verb, history or grip-walk outcome");
             continue;
         };
         assert!(declared.iter().any(|definition| definition.id == action), "{action} is not declared");
@@ -325,14 +327,17 @@ fn the_framework_touch_lane_realises_the_gesture_table_of_every_device_class() {
     use semio_framework_plugin::{MergeMode, SelectionMethod};
     let lane = |class: DeviceClass| {
         let profile = touch_profile_of(class);
-        TouchSession { one_finger_orbit: profile.one_finger_orbit, long_press: profile.long_press, ..TouchSession::default() }
+        let mut session = TouchSession::default();
+        session.one_finger_orbit = profile.one_finger_orbit;
+        session.long_press = profile.long_press;
+        session
     };
     for class in [DeviceClass::Mobile, DeviceClass::Tablet, DeviceClass::Desktop] {
         let mut session = lane(class);
         session.down(0.0, 1, 100.0, 100.0);
-        assert!(matches!(session.tick(LONG_PRESS_MS).as_slice(), [TouchStep::Press { additive: true, .. }]), "{class:?}: a held finger is an additive press");
+        assert!(matches!(session.tick(LONG_PRESS_MS).as_slice(), [TouchStep::Press { additive: true, .. }, TouchStep::LongPress { .. }]), "{class:?}: a held finger selects additively and opens the menu");
         let released = session.up(LONG_PRESS_MS + 10.0, 1);
-        assert!(matches!(released.as_slice(), [TouchStep::Release { additive: true, .. }, TouchStep::LongPress { .. }]), "{class:?}: released in place it asks for the menu: {released:?}");
+        assert!(matches!(released.as_slice(), [TouchStep::Release { additive: true, .. }]), "{class:?}: release ends the already announced hold: {released:?}");
         assert_eq!(map_gesture(class, Gesture::LongPress), Intent::Select { method: SelectionMethod::Pick, merge: MergeMode::Additive }, "{class:?}: the additive press is the table's long press");
         let mut rectangle = lane(class);
         rectangle.down(0.0, 1, 100.0, 100.0);

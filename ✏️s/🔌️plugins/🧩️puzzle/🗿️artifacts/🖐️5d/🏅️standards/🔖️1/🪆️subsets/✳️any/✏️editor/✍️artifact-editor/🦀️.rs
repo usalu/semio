@@ -162,50 +162,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         }
     }
 
-    fn build_reserved_tool_job(mut request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        if !["copy", "cut", "paste", "import-media"].contains(&request.tool_id.as_str()) {
-            return Ok(None);
-        }
-        let raw = std::mem::take(&mut request.raw_wire);
-        request.raw_wire = match puzzle5d_preflight_reserved_wire(raw, request.contract.max_raw_wire_bytes) {
-            Ok(raw) => raw,
-            Err((fault, rejected)) => {
-                drop(rejected);
-                return Err(fault);
-            }
-        };
-        let job = match request.tool_id.as_str() {
-            "copy" => {
-                let interaction = match &request.input {
-                    ArtifactReservedToolInput::Action { interaction, .. } => interaction.clone(),
-                    _ => return Err(Fault::from("puzzle5d copy requires action input")),
-                };
-                ArtifactReservedToolJob::new(Puzzle5dClipboardJob::new(Puzzle5dClipboardVerb::Copy, request, &interaction))
-            }
-            "cut" => {
-                let interaction = match &request.input {
-                    ArtifactReservedToolInput::Action { interaction, .. } => interaction.clone(),
-                    _ => return Err(Fault::from("puzzle5d cut requires action input")),
-                };
-                ArtifactReservedToolJob::new(Puzzle5dClipboardJob::new(Puzzle5dClipboardVerb::Cut, request, &interaction))
-            }
-            "paste" => {
-                let args = match &request.input {
-                    ArtifactReservedToolInput::Action { args, .. } => args.clone(),
-                    _ => return Err(Fault::from("puzzle5d paste requires action input")),
-                };
-                ArtifactReservedToolJob::new(Puzzle5dPasteJob::new(request, args.map(|value| semio_framework_pack_json::from_dsl_value(&value))))
-            }
-            "import-media" => {
-                let (port, media) = match &request.input {
-                    ArtifactReservedToolInput::Media { port, media } => (port.clone(), media.clone()),
-                    _ => return Err(Fault::from("puzzle5d import-media requires media input")),
-                };
-                ArtifactReservedToolJob::new(Puzzle5dImportJob::new(request, port, media))
-            }
-            _ => return Ok(None),
-        };
-        Ok(Some(job))
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if body.is_none()&&!request.as_ref().is_some_and(|request|["copy","cut","paste","import-media"].contains(&request.tool_id.as_str())){return Ok(false)}
+        semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,crate::editor::puzzle5d::session::Puzzle5dReservedWork>(request,body,cx)
     }
 
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old

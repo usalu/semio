@@ -823,6 +823,19 @@ fn op_text_of_a_newtype_variant_over_a_keywordless_record_round_trips_with_the_v
 }
 
 #[test]
+fn persistent_array_fields_preserve_list_metadata_and_require_original_receiving(){
+    use semio_framework_value::persistent::PersistentList;
+    let root=PersistentList::<i64>::default();let oracle=Vec::<i64>::new();
+    assert_eq!(format!("{:?}",<PersistentList<i64> as DslField>::shape()),format!("{:?}",<Vec<i64> as DslField>::shape()));
+    assert!(matches!(<PersistentList<i64> as BorrowedDslField>::SHAPE,BorrowedShape::List(_)));
+    assert_eq!(format!("{:?}",DslField::to_value(&root)),format!("{:?}",DslField::to_value(&oracle)));
+    assert!(DslField::projection_key(&root,&[],0).is_err());
+    assert!(<PersistentList<i64> as DslField>::from_value(&FieldValue::List(vec![])).is_err());
+    let mut callback=|_|true;let mut control=NativeEncodeControl::new(1024,&mut callback);
+    assert_eq!(format!("{:?}",DslField::to_value_controlled(&root,&mut control).unwrap()),format!("{:?}",DslField::to_value(&oracle)));
+}
+
+#[test]
 fn retained_ordered_map_binds_exactly_like_the_btree_map_oracle() {
     use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
     use std::collections::BTreeMap;

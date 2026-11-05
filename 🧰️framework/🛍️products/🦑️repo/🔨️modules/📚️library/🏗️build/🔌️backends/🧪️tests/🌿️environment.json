@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "id": "default",
+      "backend": "nx",
+      "environment": {},
+      "expected": {
+        "NX_DAEMON": "false"
+      }
+    },
+    {
+      "id": "explicit-on",
+      "backend": "nx",
+      "environment": {
+        "NX_DAEMON": "true"
+      },
+      "expected": {
+        "NX_DAEMON": "true"
+      }
+    },
+    {
+      "id": "explicit-off",
+      "backend": "nx",
+      "environment": {
+        "NX_DAEMON": "false",
+        "CUSTOM": "kept"
+      },
+      "expected": {
+        "NX_DAEMON": "false",
+        "CUSTOM": "kept"
+      }
+    },
+    {
+      "id": "other-backend",
+      "backend": "semio",
+      "environment": {
+        "CUSTOM": "kept"
+      },
+      "expected": {
+        "CUSTOM": "kept"
+      }
+    }
+  ]
+}

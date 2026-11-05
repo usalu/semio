@@ -178,12 +178,12 @@ fn a_clip_survives_the_clipboard_text_and_pastes_like_the_original_clip() {
 
 #[test]
 fn the_touch_long_press_menu_enables_entries_by_selection_and_clip_and_routes_like_the_chords() {
-    let empty = touch_menu(0, false);
+    let empty = touch_menu(0, false, None);
     assert_eq!(empty.iter().filter(|entry| entry.enabled).map(|entry| entry.label.en.as_str()).collect::<Vec<_>>(), ["Select all"]);
-    let full = touch_menu(2, true);
+    let full = touch_menu(2, true, Some(0));
     assert!(full.iter().all(|entry| entry.enabled && !entry.label.de.is_empty() && entry.label.de != entry.label.en));
-    assert_eq!(full.iter().map(|entry| shortcut_route(&entry.action_id)).collect::<Vec<_>>(), [HostRoute::Entity("copyEntities"), HostRoute::Entity("pasteEntities"), HostRoute::Entity("duplicateEntities"), HostRoute::Entity("deleteEntities"), HostRoute::SelectAll]);
-    assert!(touch_menu(1, false)[1].enabled == false);
+    assert_eq!(full.iter().map(|entry| shortcut_route(&entry.action_id)).collect::<Vec<_>>(), [HostRoute::Local, HostRoute::Entity("copyEntities"), HostRoute::Entity("pasteEntities"), HostRoute::Entity("duplicateEntities"), HostRoute::Entity("deleteEntities"), HostRoute::SelectAll]);
+    assert!(touch_menu(1, false, None)[2].enabled == false);
 }
 
 #[test]
@@ -302,16 +302,20 @@ fn moving_a_row_by_step_position_or_drop_is_one_move_item_edit_and_the_tree_foll
 #[test]
 fn the_touch_menu_renders_actions_for_enabled_entries_and_names_the_disabled_ones_in_both_languages() {
     use crate::viewport3d::config::Lang;
-    let entries = touch_menu(0, false);
+    let entries = touch_menu(0, false, None);
     for (locale, copy, none) in [(Locale::En, "Copy", "Not available"), (Locale::De, "Kopieren", "Nicht verfügbar")] {
         let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_touch_menu(&entries, "norm.mock", locale).expect("menu"))).expect("projection");
         assert!(json.contains(copy) && json.contains(none), "{json}");
-        assert!(json.contains("\"selectAll\"") && !json.contains("norm.shortcut.select-all"), "Select all raises the framework verb, not a shortcut action: {json}");
-        assert!(!json.contains("norm.shortcut.copy\""), "a disabled entry raises nothing: {json}");
+        let projected: serde_json::Value = serde_json::from_str(&json).expect("projected menu");
+        let rows = projected["children"].as_array().expect("menu entries");
+        let entry = |id: &str| rows.iter().find(|row| row["key"].as_str().and_then(|key| key.strip_prefix("norm-touch-menu.")) == Some(id)).expect("menu entry");
+        assert_eq!(entry("norm.shortcut.select-all")["component"]["target"]["activation"], "selectAll");
+        assert!(entry("norm.shortcut.copy")["component"].get("target").is_none(), "a disabled entry raises nothing: {json}");
+        assert!(entry("norm.shortcut.copy")["bindings"].as_array().expect("bindings").is_empty());
     }
-    let nodes = touch_menu_nodes(&touch_menu(2, true), Lang::De);
+    let nodes = touch_menu_nodes(&touch_menu(2, true, None), Lang::De);
     assert_eq!((nodes[0].node.role, nodes[0].node.name.as_str()), ("menu", "Bearbeiten"));
-    assert_eq!(nodes.iter().skip(1).map(|node| (node.node.role, node.node.position)).collect::<Vec<_>>(), (1..=5).map(|at| ("menuitem", Some((at, 5)))).collect::<Vec<_>>());
+    assert_eq!(nodes.iter().skip(1).map(|node| (node.node.role, node.node.position)).collect::<Vec<_>>(), (1..=6).map(|at| ("menuitem", Some((at, 6)))).collect::<Vec<_>>());
     let disabled = touch_menu_nodes(&entries, Lang::En);
     assert_eq!(disabled[1].node.description.as_deref(), Some("Not available"));
     assert!(disabled.iter().all(|node| node.node.attributes().iter().all(|(key, value)| (*key == "role" || key.starts_with("aria-")) && !value.is_empty())));
@@ -329,7 +333,7 @@ mod select_all {
     #[test]
     fn the_touch_menu_select_all_raises_the_framework_verb_with_the_norm_scope_for_any_scene_size() {
         use crate::viewport3d::config::Lang;
-        let entries = touch_menu(0, false);
+        let entries = touch_menu(0, false, None);
         let tree = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_touch_menu(&entries, "norm.mock", Locale::En).expect("menu"))).expect("projection");
         assert!(tree.contains("selectAll") && tree.contains(&select_all_granularities()) && !tree.contains("interactionSelect"), "{tree}");
         assert!(tree.len() < 4_096, "the menu never carries targets, so it does not grow with the scene");
@@ -512,7 +516,7 @@ mod context_menu {
     fn the_touch_menu_and_the_context_menu_dispatch_the_same_entity_tools() {
         let context = HostContext { collection: "beams".into(), ids: vec!["b1".into()], clip_json: Some(copy_clip_json(&doc(), "beams", &["b1".into()]).unwrap()) };
         let menu = items(&MenuProbe { window: "norm-en1992-viewport".into(), ..MenuProbe::default() }, &context, false);
-        for (entry, id) in touch_menu(1, true).iter().zip(["copy", "paste", "duplicate", "delete"]) {
+        for (entry, id) in touch_menu(1, true, None).iter().filter(|entry| matches!(shortcut_route(&entry.action_id), HostRoute::Entity(_))).zip(["copy", "paste", "duplicate", "delete"]) {
             let (tool, _) = host_entity_call(&entry.action_id, &context).expect("an entity route").expect("something to act on");
             assert_eq!(named(&menu, id).action.as_deref(), Some(tool), "{id}");
         }

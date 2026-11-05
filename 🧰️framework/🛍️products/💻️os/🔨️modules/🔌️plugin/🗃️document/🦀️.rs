@@ -22,6 +22,7 @@ use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::ManuallyDrop;
+pub use semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient;
 use semio_framework_plugin_composition_emission::root::advance_original_child_root_retirement;
 use semio_framework_plugin_composition_emission::root::original_child_root_retirement_demands;
 use semio_framework_plugin_decl_app::ArtifactApp;

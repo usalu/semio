@@ -1,0 +1,15 @@
+//! 🎚️ Stages one bounded session filter amount without editing the document.
+use crate::config::{valid_filter_options, RasterConfig, RasterConfigMutation, SetFilterOptionsEdit};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[dsl(keyword = "filter-amount")]
+pub struct SetFilterAmount { pub value: f64 }
+
+pub fn handle(payload: &SetFilterAmount, _doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+    if !valid_filter_options(&cfg.snapshot.filter_kind, payload.value) { return Err(crate::commands::paint_stroke::raster_fault("raster.filter.invalid")); }
+    Ok(Emit::config(vec![RasterConfigMutation::SetFilterOptions(SetFilterOptionsEdit { filter: cfg.snapshot.filter_kind.clone(), amount: payload.value })]))
+}

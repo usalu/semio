@@ -3,5 +3,15 @@
   "tags": [
     "scope:framework",
     "language:rust"
-  ]
+  ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🧫️mutation-inputs/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/status-counter-cases.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/value-reference-cases.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/value-reference.schema.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/🌱️shape-seeds/singleton-cases.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/🌱️shape-seeds/seed.schema.json"
+    ]
+  }
 }

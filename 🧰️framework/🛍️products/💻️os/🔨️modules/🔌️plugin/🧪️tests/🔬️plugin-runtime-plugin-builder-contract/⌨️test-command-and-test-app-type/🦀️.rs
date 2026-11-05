@@ -106,7 +106,7 @@
 
     thread_local! {
         /// 📨️ Every host event `TestApp::host_event` received on this test thread, in order.
-        pub static TEST_HOST_EVENTS: std::cell::RefCell<Vec<HostEvent>> = const { std::cell::RefCell::new(Vec::new()) };
+        pub static TEST_HOST_EVENTS: std::cell::RefCell<semio_framework_plugin_testing_laws::host_event_observation::HostEventTrace> = const { std::cell::RefCell::new(semio_framework_plugin_testing_laws::host_event_observation::HostEventTrace::new()) };
     }
 
     #[doc(hidden)]

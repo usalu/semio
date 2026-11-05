@@ -1,0 +1,1 @@
+export default { test: { include: ['**/🧑‍🎨engine/🧪️tests/📂️picked-file-opening/🌊️flow.ts'], root: process.cwd(), environment: 'node', maxWorkers: 1, minWorkers: 1, fileParallelism: false, testTimeout: 5000 } };

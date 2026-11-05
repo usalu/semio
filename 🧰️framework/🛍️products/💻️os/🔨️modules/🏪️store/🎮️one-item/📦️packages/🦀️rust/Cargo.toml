@@ -21,9 +21,12 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["dep:semio-framework-job-testing-caller", "dep:semio-framework-job-context", "dep:semio-framework-trace", "semio-framework-value/testkit"]
 
 [dependencies]
+semio-framework-job-testing-caller = { path = "../../../../../../../🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/📦️packages/🦀️rust", optional = true }
+semio-framework-job-context = { path = "../../../../../../../🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust", optional = true }
+semio-framework-trace = { path = "../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust", optional = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-projection = { path = "../../../../../../../🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }

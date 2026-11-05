@@ -45,6 +45,6 @@ fn inverse_and_root_codecs_restore_a_visible_crlf_style() {
 fn refuses_an_invisible_crlf_choice_and_unknown_fields() {
     let base = TxtSnapshot { lines: vec!["a".into()], ..Default::default() };
     let mutation = SetLineEndingMutation { value: LineEnding::CrLf };
-    assert!(!<SetLineEndingMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
+    assert!(!<SetLineEndingMutation as protocol::ColdMutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
     assert!(semio_framework_pack_json::from_json_str::<SetLineEndingMutation>(r#"{"value":"lf","unknown":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
 }

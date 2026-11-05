@@ -11,16 +11,22 @@ import { type ChangeMaterialKind, parseChangeMaterialKind } from "./⚗️change
 import { type ChangeMaterialRambergOsgoodN, parseChangeMaterialRambergOsgoodN } from "./⚗️change-material-ramberg-osgood-n/🧬️schema/🟦️.ts";
 import { type ChangeMaterialSubgrade, parseChangeMaterialSubgrade } from "./⚗️change-material-subgrade/🧬️schema/🟦️.ts";
 import { type InsertBridgeFatigue, parseInsertBridgeFatigue } from "./➕️insert-bridge-fatigue/🧬️schema/🟦️.ts";
+import { type InsertBucklingLength, parseInsertBucklingLength } from "./➕️insert-buckling-length/🧬️schema/🟦️.ts";
 import { type InsertBuiltUpMember, parseInsertBuiltUpMember } from "./➕️insert-built-up-member/🧬️schema/🟦️.ts";
 import { type InsertCfAction, parseInsertCfAction } from "./➕️insert-cf-action/🧬️schema/🟦️.ts";
 import { type InsertColdFormedMember, parseInsertColdFormedMember } from "./➕️insert-cold-formed-member/🧬️schema/🟦️.ts";
 import { type InsertCraneAction, parseInsertCraneAction } from "./➕️insert-crane-action/🧬️schema/🟦️.ts";
 import { type InsertCraneRunway, parseInsertCraneRunway } from "./➕️insert-crane-runway/🧬️schema/🟦️.ts";
+import { type InsertFastenedJoint, parseInsertFastenedJoint } from "./➕️insert-fastened-joint/🧬️schema/🟦️.ts";
 import { type InsertFatigueBand, parseInsertFatigueBand } from "./➕️insert-fatigue-band/🧬️schema/🟦️.ts";
 import { type InsertFatigueDetail, parseInsertFatigueDetail } from "./➕️insert-fatigue-detail/🧬️schema/🟦️.ts";
+import { type InsertFatigueStress, parseInsertFatigueStress } from "./➕️insert-fatigue-stress/🧬️schema/🟦️.ts";
 import { type InsertFireExposure, parseInsertFireExposure } from "./➕️insert-fire-exposure/🧬️schema/🟦️.ts";
+import { type InsertFormingGain, parseInsertFormingGain } from "./➕️insert-forming-gain/🧬️schema/🟦️.ts";
 import { type InsertFoundationBlock, parseInsertFoundationBlock } from "./➕️insert-foundation-block/🧬️schema/🟦️.ts";
+import { type InsertFrameAction, parseInsertFrameAction } from "./➕️insert-frame-action/🧬️schema/🟦️.ts";
 import { type InsertFrameBar, parseInsertFrameBar } from "./➕️insert-frame-bar/🧬️schema/🟦️.ts";
+import { type InsertFrameMemberBasis, parseInsertFrameMemberBasis } from "./➕️insert-frame-member-basis/🧬️schema/🟦️.ts";
 import { type InsertFrameNode, parseInsertFrameNode } from "./➕️insert-frame-node/🧬️schema/🟦️.ts";
 import { type InsertHollowJoint, parseInsertHollowJoint } from "./➕️insert-hollow-joint/🧬️schema/🟦️.ts";
 import { type InsertJointAction, parseInsertJointAction } from "./➕️insert-joint-action/🧬️schema/🟦️.ts";
@@ -28,6 +34,7 @@ import { type InsertJointPlate, parseInsertJointPlate } from "./➕️insert-joi
 import { type InsertJointRow, parseInsertJointRow } from "./➕️insert-joint-row/🧬️schema/🟦️.ts";
 import { type InsertJoint, parseInsertJoint } from "./➕️insert-joint/🧬️schema/🟦️.ts";
 import { type InsertLoadCase, parseInsertLoadCase } from "./➕️insert-load-case/🧬️schema/🟦️.ts";
+import { type InsertMaterialDuctility, parseInsertMaterialDuctility } from "./➕️insert-material-ductility/🧬️schema/🟦️.ts";
 import { type InsertMaterial, parseInsertMaterial } from "./➕️insert-material/🧬️schema/🟦️.ts";
 import { type InsertMemberAction, parseInsertMemberAction } from "./➕️insert-member-action/🧬️schema/🟦️.ts";
 import { type InsertMember, parseInsertMember } from "./➕️insert-member/🧬️schema/🟦️.ts";
@@ -47,16 +54,22 @@ import { type InsertTowerAction, parseInsertTowerAction } from "./➕️insert-t
 import { type InsertTowerLeg, parseInsertTowerLeg } from "./➕️insert-tower-leg/🧬️schema/🟦️.ts";
 import { type InsertWeldGroup, parseInsertWeldGroup } from "./➕️insert-weld-group/🧬️schema/🟦️.ts";
 import { type RemoveBridgeFatigue, parseRemoveBridgeFatigue } from "./➖️remove-bridge-fatigue/🧬️schema/🟦️.ts";
+import { type RemoveBucklingLength, parseRemoveBucklingLength } from "./➖️remove-buckling-length/🧬️schema/🟦️.ts";
 import { type RemoveBuiltUpMember, parseRemoveBuiltUpMember } from "./➖️remove-built-up-member/🧬️schema/🟦️.ts";
 import { type RemoveCfAction, parseRemoveCfAction } from "./➖️remove-cf-action/🧬️schema/🟦️.ts";
 import { type RemoveColdFormedMember, parseRemoveColdFormedMember } from "./➖️remove-cold-formed-member/🧬️schema/🟦️.ts";
 import { type RemoveCraneAction, parseRemoveCraneAction } from "./➖️remove-crane-action/🧬️schema/🟦️.ts";
 import { type RemoveCraneRunway, parseRemoveCraneRunway } from "./➖️remove-crane-runway/🧬️schema/🟦️.ts";
+import { type RemoveFastenedJoint, parseRemoveFastenedJoint } from "./➖️remove-fastened-joint/🧬️schema/🟦️.ts";
 import { type RemoveFatigueBand, parseRemoveFatigueBand } from "./➖️remove-fatigue-band/🧬️schema/🟦️.ts";
 import { type RemoveFatigueDetail, parseRemoveFatigueDetail } from "./➖️remove-fatigue-detail/🧬️schema/🟦️.ts";
+import { type RemoveFatigueStress, parseRemoveFatigueStress } from "./➖️remove-fatigue-stress/🧬️schema/🟦️.ts";
 import { type RemoveFireExposure, parseRemoveFireExposure } from "./➖️remove-fire-exposure/🧬️schema/🟦️.ts";
+import { type RemoveFormingGain, parseRemoveFormingGain } from "./➖️remove-forming-gain/🧬️schema/🟦️.ts";
 import { type RemoveFoundationBlock, parseRemoveFoundationBlock } from "./➖️remove-foundation-block/🧬️schema/🟦️.ts";
+import { type RemoveFrameAction, parseRemoveFrameAction } from "./➖️remove-frame-action/🧬️schema/🟦️.ts";
 import { type RemoveFrameBar, parseRemoveFrameBar } from "./➖️remove-frame-bar/🧬️schema/🟦️.ts";
+import { type RemoveFrameMemberBasis, parseRemoveFrameMemberBasis } from "./➖️remove-frame-member-basis/🧬️schema/🟦️.ts";
 import { type RemoveFrameNode, parseRemoveFrameNode } from "./➖️remove-frame-node/🧬️schema/🟦️.ts";
 import { type RemoveHollowJoint, parseRemoveHollowJoint } from "./➖️remove-hollow-joint/🧬️schema/🟦️.ts";
 import { type RemoveJointAction, parseRemoveJointAction } from "./➖️remove-joint-action/🧬️schema/🟦️.ts";
@@ -64,6 +77,7 @@ import { type RemoveJointPlate, parseRemoveJointPlate } from "./➖️remove-joi
 import { type RemoveJointRow, parseRemoveJointRow } from "./➖️remove-joint-row/🧬️schema/🟦️.ts";
 import { type RemoveJoint, parseRemoveJoint } from "./➖️remove-joint/🧬️schema/🟦️.ts";
 import { type RemoveLoadCase, parseRemoveLoadCase } from "./➖️remove-load-case/🧬️schema/🟦️.ts";
+import { type RemoveMaterialDuctility, parseRemoveMaterialDuctility } from "./➖️remove-material-ductility/🧬️schema/🟦️.ts";
 import { type RemoveMaterial, parseRemoveMaterial } from "./➖️remove-material/🧬️schema/🟦️.ts";
 import { type RemoveMemberAction, parseRemoveMemberAction } from "./➖️remove-member-action/🧬️schema/🟦️.ts";
 import { type RemoveMember, parseRemoveMember } from "./➖️remove-member/🧬️schema/🟦️.ts";
@@ -83,6 +97,7 @@ import { type RemoveTowerAction, parseRemoveTowerAction } from "./➖️remove-t
 import { type RemoveTowerLeg, parseRemoveTowerLeg } from "./➖️remove-tower-leg/🧬️schema/🟦️.ts";
 import { type RemoveWeldGroup, parseRemoveWeldGroup } from "./➖️remove-weld-group/🧬️schema/🟦️.ts";
 import { type ChangeBridgeCategory, parseChangeBridgeCategory } from "./🌉️change-bridge-category/🧬️schema/🟦️.ts";
+import { type ChangeBridgeConsequence, parseChangeBridgeConsequence } from "./🌉️change-bridge-consequence/🧬️schema/🟦️.ts";
 import { type ChangeBridgeCrossbeamSpacing, parseChangeBridgeCrossbeamSpacing } from "./🌉️change-bridge-crossbeam-spacing/🧬️schema/🟦️.ts";
 import { type ChangeBridgeDeckThickness, parseChangeBridgeDeckThickness } from "./🌉️change-bridge-deck-thickness/🧬️schema/🟦️.ts";
 import { type ChangeBridgeDeltaSigmaP, parseChangeBridgeDeltaSigmaP } from "./🌉️change-bridge-delta-sigma-p/🧬️schema/🟦️.ts";
@@ -159,6 +174,16 @@ import { type ChangePlacementX, parseChangePlacementX } from "./📍️change-pl
 import { type ChangePlacementY, parseChangePlacementY } from "./📍️change-placement-y/🧬️schema/🟦️.ts";
 import { type ChangePlacementYaw, parseChangePlacementYaw } from "./📍️change-placement-yaw/🧬️schema/🟦️.ts";
 import { type ChangePlacementZ, parseChangePlacementZ } from "./📍️change-placement-z/🧬️schema/🟦️.ts";
+import { type ChangeBucklingLengthPlane, parseChangeBucklingLengthPlane } from "./📏️change-buckling-length-plane/🧬️schema/🟦️.ts";
+import { type ChangeBucklingLengthRestraintA, parseChangeBucklingLengthRestraintA } from "./📏️change-buckling-length-restraint-a/🧬️schema/🟦️.ts";
+import { type ChangeBucklingLengthRestraintB, parseChangeBucklingLengthRestraintB } from "./📏️change-buckling-length-restraint-b/🧬️schema/🟦️.ts";
+import { type ChangeBucklingLengthSway, parseChangeBucklingLengthSway } from "./📏️change-buckling-length-sway/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointKind, parseChangeFastenedJointKind } from "./📏️change-fastened-joint-kind/🧬️schema/🟦️.ts";
+import { type ChangeFatigueStressRelief, parseChangeFatigueStressRelief } from "./📏️change-fatigue-stress-relief/🧬️schema/🟦️.ts";
+import { type ChangeFormingGainForming, parseChangeFormingGainForming } from "./📏️change-forming-gain-forming/🧬️schema/🟦️.ts";
+import { type ChangeFrameActionKind, parseChangeFrameActionKind } from "./📏️change-frame-action-kind/🧬️schema/🟦️.ts";
+import { type ChangeFrameMemberBasisBasis, parseChangeFrameMemberBasisBasis } from "./📏️change-frame-member-basis-basis/🧬️schema/🟦️.ts";
+import { type ChangeJointPlateGroupMethod, parseChangeJointPlateGroupMethod } from "./📏️change-joint-plate-group-method/🧬️schema/🟦️.ts";
 import { type ChangeMemberAnalysis, parseChangeMemberAnalysis } from "./📏️change-member-analysis/🧬️schema/🟦️.ts";
 import { type ChangeMemberBucklingLengthY, parseChangeMemberBucklingLengthY } from "./📏️change-member-buckling-length-y/🧬️schema/🟦️.ts";
 import { type ChangeMemberBucklingLengthZ, parseChangeMemberBucklingLengthZ } from "./📏️change-member-buckling-length-z/🧬️schema/🟦️.ts";
@@ -192,6 +217,7 @@ import { type ChangeSectionAreaNet, parseChangeSectionAreaNet } from "./📐️c
 import { type ChangeSectionArea, parseChangeSectionArea } from "./📐️change-section-area/🧬️schema/🟦️.ts";
 import { type ChangeSectionB, parseChangeSectionB } from "./📐️change-section-b/🧬️schema/🟦️.ts";
 import { type ChangeSectionDesignation, parseChangeSectionDesignation } from "./📐️change-section-designation/🧬️schema/🟦️.ts";
+import { type ChangeSectionFabrication, parseChangeSectionFabrication } from "./📐️change-section-fabrication/🧬️schema/🟦️.ts";
 import { type ChangeSectionH, parseChangeSectionH } from "./📐️change-section-h/🧬️schema/🟦️.ts";
 import { type ChangeSectionIt, parseChangeSectionIt } from "./📐️change-section-it/🧬️schema/🟦️.ts";
 import { type ChangeSectionIw, parseChangeSectionIw } from "./📐️change-section-iw/🧬️schema/🟦️.ts";
@@ -213,6 +239,7 @@ import { type ChangeLoadCaseName, parseChangeLoadCaseName } from "./📚️chang
 import { type ChangeFatigueBandCycles, parseChangeFatigueBandCycles } from "./🔁️change-fatigue-band-cycles/🧬️schema/🟦️.ts";
 import { type ChangeFatigueBandDeltaSigma, parseChangeFatigueBandDeltaSigma } from "./🔁️change-fatigue-band-delta-sigma/🧬️schema/🟦️.ts";
 import { type ChangeFatigueCategory, parseChangeFatigueCategory } from "./🔁️change-fatigue-category/🧬️schema/🟦️.ts";
+import { type ChangeFatigueConsequence, parseChangeFatigueConsequence } from "./🔁️change-fatigue-consequence/🧬️schema/🟦️.ts";
 import { type ChangeFatigueMemberId, parseChangeFatigueMemberId } from "./🔁️change-fatigue-member-id/🧬️schema/🟦️.ts";
 import { type ChangeFatigueMethod, parseChangeFatigueMethod } from "./🔁️change-fatigue-method/🧬️schema/🟦️.ts";
 import { type ChangeFatigueStressHistory, parseChangeFatigueStressHistory } from "./🔁️change-fatigue-stress-history/🧬️schema/🟦️.ts";
@@ -252,6 +279,8 @@ import { type ChangeJointBeamInertia, parseChangeJointBeamInertia } from "./🔩
 import { type ChangeJointBeamMomentRes, parseChangeJointBeamMomentRes } from "./🔩️change-joint-beam-moment-res/🧬️schema/🟦️.ts";
 import { type ChangeJointBeamMomentResistance, parseChangeJointBeamMomentResistance } from "./🔩️change-joint-beam-moment-resistance/🧬️schema/🟦️.ts";
 import { type ChangeJointBeamSpan, parseChangeJointBeamSpan } from "./🔩️change-joint-beam-span/🧬️schema/🟦️.ts";
+import { type ChangeJointBeamWebFy, parseChangeJointBeamWebFy } from "./🔩️change-joint-beam-web-fy/🧬️schema/🟦️.ts";
+import { type ChangeJointBeamWebThickness, parseChangeJointBeamWebThickness } from "./🔩️change-joint-beam-web-thickness/🧬️schema/🟦️.ts";
 import { type ChangeJointBoltClass, parseChangeJointBoltClass } from "./🔩️change-joint-bolt-class/🧬️schema/🟦️.ts";
 import { type ChangeJointBoltDiameter, parseChangeJointBoltDiameter } from "./🔩️change-joint-bolt-diameter/🧬️schema/🟦️.ts";
 import { type ChangeJointBoltGripLength, parseChangeJointBoltGripLength } from "./🔩️change-joint-bolt-grip-length/🧬️schema/🟦️.ts";
@@ -297,6 +326,8 @@ import { type ChangeJointShearPlanes, parseChangeJointShearPlanes } from "./🔩
 import { type ChangeJointSlipFactorKs, parseChangeJointSlipFactorKs } from "./🔩️change-joint-slip-factor-ks/🧬️schema/🟦️.ts";
 import { type ChangeJointStiffnessRatio, parseChangeJointStiffnessRatio } from "./🔩️change-joint-stiffness-ratio/🧬️schema/🟦️.ts";
 import { type ChangeJointTransformationParameter, parseChangeJointTransformationParameter } from "./🔩️change-joint-transformation-parameter/🧬️schema/🟦️.ts";
+import { type ChangeJointWeldForceLongitudinal, parseChangeJointWeldForceLongitudinal } from "./🔩️change-joint-weld-force-longitudinal/🧬️schema/🟦️.ts";
+import { type ChangeJointWeldForceTransverse, parseChangeJointWeldForceTransverse } from "./🔩️change-joint-weld-force-transverse/🧬️schema/🟦️.ts";
 import { type ChangeJointWeldFu, parseChangeJointWeldFu } from "./🔩️change-joint-weld-fu/🧬️schema/🟦️.ts";
 import { type ChangeJointWeldGrade, parseChangeJointWeldGrade } from "./🔩️change-joint-weld-grade/🧬️schema/🟦️.ts";
 import { type ChangeJointWeldLength, parseChangeJointWeldLength } from "./🔩️change-joint-weld-length/🧬️schema/🟦️.ts";
@@ -456,6 +487,41 @@ import { type ChangeJointPlateShearPlanes, parseChangeJointPlateShearPlanes } fr
 import { type ChangeJointPlateWeldBetaW, parseChangeJointPlateWeldBetaW } from "./🧩️change-joint-plate-weld-beta-w/🧬️schema/🟦️.ts";
 import { type ChangeJointPlateWeldFu, parseChangeJointPlateWeldFu } from "./🧩️change-joint-plate-weld-fu/🧬️schema/🟦️.ts";
 import { type ChangeJointPlateWeldThroat, parseChangeJointPlateWeldThroat } from "./🧩️change-joint-plate-weld-throat/🧬️schema/🟦️.ts";
+import { type ChangeBucklingLengthBeamStiffnessA, parseChangeBucklingLengthBeamStiffnessA } from "./🧱️change-buckling-length-beam-stiffness-a/🧬️schema/🟦️.ts";
+import { type ChangeBucklingLengthBeamStiffnessB, parseChangeBucklingLengthBeamStiffnessB } from "./🧱️change-buckling-length-beam-stiffness-b/🧬️schema/🟦️.ts";
+import { type ChangeBucklingLengthColumnStiffnessA, parseChangeBucklingLengthColumnStiffnessA } from "./🧱️change-buckling-length-column-stiffness-a/🧬️schema/🟦️.ts";
+import { type ChangeBucklingLengthColumnStiffnessB, parseChangeBucklingLengthColumnStiffnessB } from "./🧱️change-buckling-length-column-stiffness-b/🧬️schema/🟦️.ts";
+import { type ChangeBucklingLengthMemberId, parseChangeBucklingLengthMemberId } from "./🧱️change-buckling-length-member-id/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointBaseStrength, parseChangeFastenedJointBaseStrength } from "./🧱️change-fastened-joint-base-strength/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointBaseThickness, parseChangeFastenedJointBaseThickness } from "./🧱️change-fastened-joint-base-thickness/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointCount, parseChangeFastenedJointCount } from "./🧱️change-fastened-joint-count/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointDiameter, parseChangeFastenedJointDiameter } from "./🧱️change-fastened-joint-diameter/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointEdgeDistance, parseChangeFastenedJointEdgeDistance } from "./🧱️change-fastened-joint-edge-distance/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointEndDistance, parseChangeFastenedJointEndDistance } from "./🧱️change-fastened-joint-end-distance/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointGauge, parseChangeFastenedJointGauge } from "./🧱️change-fastened-joint-gauge/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointHeadStrength, parseChangeFastenedJointHeadStrength } from "./🧱️change-fastened-joint-head-strength/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointHeadThickness, parseChangeFastenedJointHeadThickness } from "./🧱️change-fastened-joint-head-thickness/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointMemberId, parseChangeFastenedJointMemberId } from "./🧱️change-fastened-joint-member-id/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointPerRow, parseChangeFastenedJointPerRow } from "./🧱️change-fastened-joint-per-row/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointPitch, parseChangeFastenedJointPitch } from "./🧱️change-fastened-joint-pitch/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointShearForce, parseChangeFastenedJointShearForce } from "./🧱️change-fastened-joint-shear-force/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointShearResistance, parseChangeFastenedJointShearResistance } from "./🧱️change-fastened-joint-shear-resistance/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointSheetWidth, parseChangeFastenedJointSheetWidth } from "./🧱️change-fastened-joint-sheet-width/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointTensionForce, parseChangeFastenedJointTensionForce } from "./🧱️change-fastened-joint-tension-force/🧬️schema/🟦️.ts";
+import { type ChangeFastenedJointWasherDiameter, parseChangeFastenedJointWasherDiameter } from "./🧱️change-fastened-joint-washer-diameter/🧬️schema/🟦️.ts";
+import { type ChangeFatigueStressConcentration, parseChangeFatigueStressConcentration } from "./🧱️change-fatigue-stress-concentration/🧬️schema/🟦️.ts";
+import { type ChangeFatigueStressCycles, parseChangeFatigueStressCycles } from "./🧱️change-fatigue-stress-cycles/🧬️schema/🟦️.ts";
+import { type ChangeFatigueStressDetailId, parseChangeFatigueStressDetailId } from "./🧱️change-fatigue-stress-detail-id/🧬️schema/🟦️.ts";
+import { type ChangeFatigueStressFibreY, parseChangeFatigueStressFibreY } from "./🧱️change-fatigue-stress-fibre-y/🧬️schema/🟦️.ts";
+import { type ChangeFatigueStressFibreZ, parseChangeFatigueStressFibreZ } from "./🧱️change-fatigue-stress-fibre-z/🧬️schema/🟦️.ts";
+import { type ChangeFatigueStressMaxCaseId, parseChangeFatigueStressMaxCaseId } from "./🧱️change-fatigue-stress-max-case-id/🧬️schema/🟦️.ts";
+import { type ChangeFatigueStressMinCaseId, parseChangeFatigueStressMinCaseId } from "./🧱️change-fatigue-stress-min-case-id/🧬️schema/🟦️.ts";
+import { type ChangeFatigueStressThickness, parseChangeFatigueStressThickness } from "./🧱️change-fatigue-stress-thickness/🧬️schema/🟦️.ts";
+import { type ChangeFormingGainBends, parseChangeFormingGainBends } from "./🧱️change-forming-gain-bends/🧬️schema/🟦️.ts";
+import { type ChangeFormingGainGrossArea, parseChangeFormingGainGrossArea } from "./🧱️change-forming-gain-gross-area/🧬️schema/🟦️.ts";
+import { type ChangeFormingGainMemberId, parseChangeFormingGainMemberId } from "./🧱️change-forming-gain-member-id/🧬️schema/🟦️.ts";
+import { type ChangeFormingGainUltimateStrength, parseChangeFormingGainUltimateStrength } from "./🧱️change-forming-gain-ultimate-strength/🧬️schema/🟦️.ts";
+import { type ChangeFormingGainUsedYield, parseChangeFormingGainUsedYield } from "./🧱️change-forming-gain-used-yield/🧬️schema/🟦️.ts";
 import { type ChangeFoundationAnchorClass, parseChangeFoundationAnchorClass } from "./🧱️change-foundation-anchor-class/🧬️schema/🟦️.ts";
 import { type ChangeFoundationAnchorCount, parseChangeFoundationAnchorCount } from "./🧱️change-foundation-anchor-count/🧬️schema/🟦️.ts";
 import { type ChangeFoundationAnchorDiameter, parseChangeFoundationAnchorDiameter } from "./🧱️change-foundation-anchor-diameter/🧬️schema/🟦️.ts";
@@ -470,6 +536,20 @@ import { type ChangeFoundationGroutFck, parseChangeFoundationGroutFck } from "./
 import { type ChangeFoundationGroutThickness, parseChangeFoundationGroutThickness } from "./🧱️change-foundation-grout-thickness/🧬️schema/🟦️.ts";
 import { type ChangeFoundationJointId, parseChangeFoundationJointId } from "./🧱️change-foundation-joint-id/🧬️schema/🟦️.ts";
 import { type ChangeFoundationLabel, parseChangeFoundationLabel } from "./🧱️change-foundation-label/🧬️schema/🟦️.ts";
+import { type ChangeFrameActionEndRatio, parseChangeFrameActionEndRatio } from "./🧱️change-frame-action-end-ratio/🧬️schema/🟦️.ts";
+import { type ChangeFrameActionFx, parseChangeFrameActionFx } from "./🧱️change-frame-action-fx/🧬️schema/🟦️.ts";
+import { type ChangeFrameActionFz, parseChangeFrameActionFz } from "./🧱️change-frame-action-fz/🧬️schema/🟦️.ts";
+import { type ChangeFrameActionLoadCaseId, parseChangeFrameActionLoadCaseId } from "./🧱️change-frame-action-load-case-id/🧬️schema/🟦️.ts";
+import { type ChangeFrameActionMy, parseChangeFrameActionMy } from "./🧱️change-frame-action-my/🧬️schema/🟦️.ts";
+import { type ChangeFrameActionStartRatio, parseChangeFrameActionStartRatio } from "./🧱️change-frame-action-start-ratio/🧬️schema/🟦️.ts";
+import { type ChangeFrameActionTargetId, parseChangeFrameActionTargetId } from "./🧱️change-frame-action-target-id/🧬️schema/🟦️.ts";
+import { type ChangeFrameMemberBasisMemberId, parseChangeFrameMemberBasisMemberId } from "./🧱️change-frame-member-basis-member-id/🧬️schema/🟦️.ts";
+import { type ChangeMaterialDuctilityElongation, parseChangeMaterialDuctilityElongation } from "./🧱️change-material-ductility-elongation/🧬️schema/🟦️.ts";
+import { type ChangeMaterialDuctilityMaterialId, parseChangeMaterialDuctilityMaterialId } from "./🧱️change-material-ductility-material-id/🧬️schema/🟦️.ts";
+import { type ChangeMaterialDuctilityUltimateStrain, parseChangeMaterialDuctilityUltimateStrain } from "./🧱️change-material-ductility-ultimate-strain/🧬️schema/🟦️.ts";
+import { type ChangePanelDesignTemperature, parseChangePanelDesignTemperature } from "./🧱️change-panel-design-temperature/🧬️schema/🟦️.ts";
+import { type ChangePanelSteelGrade, parseChangePanelSteelGrade } from "./🧱️change-panel-steel-grade/🧬️schema/🟦️.ts";
+import { type ChangePanelSteelSubgrade, parseChangePanelSteelSubgrade } from "./🧱️change-panel-steel-subgrade/🧬️schema/🟦️.ts";
 import { type ChangePlatedA, parseChangePlatedA } from "./🧱️change-plated-a/🧬️schema/🟦️.ts";
 import { type ChangePlatedActionForce, parseChangePlatedActionForce } from "./🧱️change-plated-action-force/🧬️schema/🟦️.ts";
 import { type ChangePlatedActionLoadCaseId, parseChangePlatedActionLoadCaseId } from "./🧱️change-plated-action-load-case-id/🧬️schema/🟦️.ts";
@@ -493,7 +573,6 @@ import { type ChangePlatedHalfWidth, parseChangePlatedHalfWidth } from "./🧱�
 import { type ChangePlatedHogging, parseChangePlatedHogging } from "./🧱️change-plated-hogging/🧬️schema/🟦️.ts";
 import { type ChangePlatedKSigma, parseChangePlatedKSigma } from "./🧱️change-plated-k-sigma/🧬️schema/🟦️.ts";
 import { type ChangePlatedLatPressureCoef, parseChangePlatedLatPressureCoef } from "./🧱️change-plated-lat-pressure-coef/🧬️schema/🟦️.ts";
-import { type ChangePlatedLateralPressureCoefficient, parseChangePlatedLateralPressureCoefficient } from "./🧱️change-plated-lateral-pressure-coefficient/🧬️schema/🟦️.ts";
 import { type ChangePlatedLateralPressure, parseChangePlatedLateralPressure } from "./🧱️change-plated-lateral-pressure/🧬️schema/🟦️.ts";
 import { type ChangePlatedLongitudinalInertia, parseChangePlatedLongitudinalInertia } from "./🧱️change-plated-longitudinal-inertia/🧬️schema/🟦️.ts";
 import { type ChangePlatedLongitudinalOffset, parseChangePlatedLongitudinalOffset } from "./🧱️change-plated-longitudinal-offset/🧬️schema/🟦️.ts";
@@ -513,7 +592,6 @@ import { type ChangePlatedStiffenerArea, parseChangePlatedStiffenerArea } from "
 import { type ChangePlatedStiffenerDepth, parseChangePlatedStiffenerDepth } from "./🧱️change-plated-stiffener-depth/🧬️schema/🟦️.ts";
 import { type ChangePlatedStiffenerEcc, parseChangePlatedStiffenerEcc } from "./🧱️change-plated-stiffener-ecc/🧬️schema/🟦️.ts";
 import { type ChangePlatedStiffenerEccentricity, parseChangePlatedStiffenerEccentricity } from "./🧱️change-plated-stiffener-eccentricity/🧬️schema/🟦️.ts";
-import { type ChangePlatedStiffenerFlangeThickness, parseChangePlatedStiffenerFlangeThickness } from "./🧱️change-plated-stiffener-flange-thickness/🧬️schema/🟦️.ts";
 import { type ChangePlatedStiffenerFlangeThk, parseChangePlatedStiffenerFlangeThk } from "./🧱️change-plated-stiffener-flange-thk/🧬️schema/🟦️.ts";
 import { type ChangePlatedStiffenerFlangeWidth, parseChangePlatedStiffenerFlangeWidth } from "./🧱️change-plated-stiffener-flange-width/🧬️schema/🟦️.ts";
 import { type ChangePlatedStiffenerInertia, parseChangePlatedStiffenerInertia } from "./🧱️change-plated-stiffener-inertia/🧬️schema/🟦️.ts";
@@ -524,7 +602,6 @@ import { type ChangePlatedStressX, parseChangePlatedStressX } from "./🧱️cha
 import { type ChangePlatedStressZ, parseChangePlatedStressZ } from "./🧱️change-plated-stress-z/🧬️schema/🟦️.ts";
 import { type ChangePlatedThickness, parseChangePlatedThickness } from "./🧱️change-plated-thickness/🧬️schema/🟦️.ts";
 import { type ChangePlatedTransStiffInert, parseChangePlatedTransStiffInert } from "./🧱️change-plated-trans-stiff-inert/🧬️schema/🟦️.ts";
-import { type ChangePlatedTransverseStiffenerInertia, parseChangePlatedTransverseStiffenerInertia } from "./🧱️change-plated-transverse-stiffener-inertia/🧬️schema/🟦️.ts";
 import { type ChangePlatedWebHeight, parseChangePlatedWebHeight } from "./🧱️change-plated-web-height/🧬️schema/🟦️.ts";
 import { type ChangeWeldBetaW, parseChangeWeldBetaW } from "./🧵️change-weld-beta-w/🧬️schema/🟦️.ts";
 import { type ChangeWeldDepth, parseChangeWeldDepth } from "./🧵️change-weld-depth/🧬️schema/🟦️.ts";
@@ -1183,11 +1260,8 @@ export type En1993Mutation =
   | { ChangeCfRequiredRestraintStiffness: ChangeCfRequiredRestraintStiffness }
   | { ChangePlatedStiffenerEccentricity: ChangePlatedStiffenerEccentricity }
   | { ChangePlatedPatchMomentResistance: ChangePlatedPatchMomentResistance }
-  | { ChangePlatedTransverseStiffenerInertia: ChangePlatedTransverseStiffenerInertia }
   | { ChangePlatedCorrugationProjection: ChangePlatedCorrugationProjection }
   | { ChangePlatedStiffenerFlangeWidth: ChangePlatedStiffenerFlangeWidth }
-  | { ChangePlatedStiffenerFlangeThickness: ChangePlatedStiffenerFlangeThickness }
-  | { ChangePlatedLateralPressureCoefficient: ChangePlatedLateralPressureCoefficient }
   | { ChangeTensionCableHorizontalForce: ChangeTensionCableHorizontalForce }
   | { ChangeTowerLateralForceCoefficient: ChangeTowerLateralForceCoefficient }
   | { ChangeTowerPermittedAmplitudeRatio: ChangeTowerPermittedAmplitudeRatio }
@@ -1237,7 +1311,87 @@ export type En1993Mutation =
   | { ChangeFoundationAnchorDiameter: ChangeFoundationAnchorDiameter }
   | { ChangeFoundationAnchorStressArea: ChangeFoundationAnchorStressArea }
   | { ChangeFoundationAnchorEmbedment: ChangeFoundationAnchorEmbedment }
-  | { ChangeFoundationAnchorEdgeDistance: ChangeFoundationAnchorEdgeDistance };
+  | { ChangeFoundationAnchorEdgeDistance: ChangeFoundationAnchorEdgeDistance }
+  | { ChangeBridgeConsequence: ChangeBridgeConsequence }
+  | { ChangeBucklingLengthBeamStiffnessA: ChangeBucklingLengthBeamStiffnessA }
+  | { ChangeBucklingLengthBeamStiffnessB: ChangeBucklingLengthBeamStiffnessB }
+  | { ChangeBucklingLengthColumnStiffnessA: ChangeBucklingLengthColumnStiffnessA }
+  | { ChangeBucklingLengthColumnStiffnessB: ChangeBucklingLengthColumnStiffnessB }
+  | { ChangeBucklingLengthMemberId: ChangeBucklingLengthMemberId }
+  | { ChangeBucklingLengthPlane: ChangeBucklingLengthPlane }
+  | { ChangeBucklingLengthRestraintA: ChangeBucklingLengthRestraintA }
+  | { ChangeBucklingLengthRestraintB: ChangeBucklingLengthRestraintB }
+  | { ChangeBucklingLengthSway: ChangeBucklingLengthSway }
+  | { ChangeFastenedJointBaseStrength: ChangeFastenedJointBaseStrength }
+  | { ChangeFastenedJointBaseThickness: ChangeFastenedJointBaseThickness }
+  | { ChangeFastenedJointCount: ChangeFastenedJointCount }
+  | { ChangeFastenedJointDiameter: ChangeFastenedJointDiameter }
+  | { ChangeFastenedJointEdgeDistance: ChangeFastenedJointEdgeDistance }
+  | { ChangeFastenedJointEndDistance: ChangeFastenedJointEndDistance }
+  | { ChangeFastenedJointGauge: ChangeFastenedJointGauge }
+  | { ChangeFastenedJointHeadStrength: ChangeFastenedJointHeadStrength }
+  | { ChangeFastenedJointHeadThickness: ChangeFastenedJointHeadThickness }
+  | { ChangeFastenedJointKind: ChangeFastenedJointKind }
+  | { ChangeFastenedJointMemberId: ChangeFastenedJointMemberId }
+  | { ChangeFastenedJointPerRow: ChangeFastenedJointPerRow }
+  | { ChangeFastenedJointPitch: ChangeFastenedJointPitch }
+  | { ChangeFastenedJointShearForce: ChangeFastenedJointShearForce }
+  | { ChangeFastenedJointShearResistance: ChangeFastenedJointShearResistance }
+  | { ChangeFastenedJointSheetWidth: ChangeFastenedJointSheetWidth }
+  | { ChangeFastenedJointTensionForce: ChangeFastenedJointTensionForce }
+  | { ChangeFastenedJointWasherDiameter: ChangeFastenedJointWasherDiameter }
+  | { ChangeFatigueConsequence: ChangeFatigueConsequence }
+  | { ChangeFatigueStressConcentration: ChangeFatigueStressConcentration }
+  | { ChangeFatigueStressCycles: ChangeFatigueStressCycles }
+  | { ChangeFatigueStressDetailId: ChangeFatigueStressDetailId }
+  | { ChangeFatigueStressFibreY: ChangeFatigueStressFibreY }
+  | { ChangeFatigueStressFibreZ: ChangeFatigueStressFibreZ }
+  | { ChangeFatigueStressMaxCaseId: ChangeFatigueStressMaxCaseId }
+  | { ChangeFatigueStressMinCaseId: ChangeFatigueStressMinCaseId }
+  | { ChangeFatigueStressRelief: ChangeFatigueStressRelief }
+  | { ChangeFatigueStressThickness: ChangeFatigueStressThickness }
+  | { ChangeFormingGainBends: ChangeFormingGainBends }
+  | { ChangeFormingGainForming: ChangeFormingGainForming }
+  | { ChangeFormingGainGrossArea: ChangeFormingGainGrossArea }
+  | { ChangeFormingGainMemberId: ChangeFormingGainMemberId }
+  | { ChangeFormingGainUltimateStrength: ChangeFormingGainUltimateStrength }
+  | { ChangeFormingGainUsedYield: ChangeFormingGainUsedYield }
+  | { ChangeFrameActionEndRatio: ChangeFrameActionEndRatio }
+  | { ChangeFrameActionFx: ChangeFrameActionFx }
+  | { ChangeFrameActionFz: ChangeFrameActionFz }
+  | { ChangeFrameActionKind: ChangeFrameActionKind }
+  | { ChangeFrameActionLoadCaseId: ChangeFrameActionLoadCaseId }
+  | { ChangeFrameActionMy: ChangeFrameActionMy }
+  | { ChangeFrameActionStartRatio: ChangeFrameActionStartRatio }
+  | { ChangeFrameActionTargetId: ChangeFrameActionTargetId }
+  | { ChangeFrameMemberBasisBasis: ChangeFrameMemberBasisBasis }
+  | { ChangeFrameMemberBasisMemberId: ChangeFrameMemberBasisMemberId }
+  | { ChangeJointBeamWebFy: ChangeJointBeamWebFy }
+  | { ChangeJointBeamWebThickness: ChangeJointBeamWebThickness }
+  | { ChangeJointPlateGroupMethod: ChangeJointPlateGroupMethod }
+  | { ChangeJointWeldForceLongitudinal: ChangeJointWeldForceLongitudinal }
+  | { ChangeJointWeldForceTransverse: ChangeJointWeldForceTransverse }
+  | { ChangeMaterialDuctilityElongation: ChangeMaterialDuctilityElongation }
+  | { ChangeMaterialDuctilityMaterialId: ChangeMaterialDuctilityMaterialId }
+  | { ChangeMaterialDuctilityUltimateStrain: ChangeMaterialDuctilityUltimateStrain }
+  | { ChangePanelDesignTemperature: ChangePanelDesignTemperature }
+  | { ChangePanelSteelGrade: ChangePanelSteelGrade }
+  | { ChangePanelSteelSubgrade: ChangePanelSteelSubgrade }
+  | { ChangeSectionFabrication: ChangeSectionFabrication }
+  | { InsertBucklingLength: InsertBucklingLength }
+  | { InsertFastenedJoint: InsertFastenedJoint }
+  | { InsertFatigueStress: InsertFatigueStress }
+  | { InsertFormingGain: InsertFormingGain }
+  | { InsertFrameAction: InsertFrameAction }
+  | { InsertFrameMemberBasis: InsertFrameMemberBasis }
+  | { InsertMaterialDuctility: InsertMaterialDuctility }
+  | { RemoveBucklingLength: RemoveBucklingLength }
+  | { RemoveFastenedJoint: RemoveFastenedJoint }
+  | { RemoveFatigueStress: RemoveFatigueStress }
+  | { RemoveFormingGain: RemoveFormingGain }
+  | { RemoveFrameAction: RemoveFrameAction }
+  | { RemoveFrameMemberBasis: RemoveFrameMemberBasis }
+  | { RemoveMaterialDuctility: RemoveMaterialDuctility };
 
 export const parseEn1993Mutation: NormWireReader<En1993Mutation> = normWireExternal<En1993Mutation>({
   ChangeAnnex: parseChangeAnnex,
@@ -1802,11 +1956,8 @@ export const parseEn1993Mutation: NormWireReader<En1993Mutation> = normWireExter
   ChangeCfRequiredRestraintStiffness: parseChangeCfRequiredRestraintStiffness,
   ChangePlatedStiffenerEccentricity: parseChangePlatedStiffenerEccentricity,
   ChangePlatedPatchMomentResistance: parseChangePlatedPatchMomentResistance,
-  ChangePlatedTransverseStiffenerInertia: parseChangePlatedTransverseStiffenerInertia,
   ChangePlatedCorrugationProjection: parseChangePlatedCorrugationProjection,
   ChangePlatedStiffenerFlangeWidth: parseChangePlatedStiffenerFlangeWidth,
-  ChangePlatedStiffenerFlangeThickness: parseChangePlatedStiffenerFlangeThickness,
-  ChangePlatedLateralPressureCoefficient: parseChangePlatedLateralPressureCoefficient,
   ChangeTensionCableHorizontalForce: parseChangeTensionCableHorizontalForce,
   ChangeTowerLateralForceCoefficient: parseChangeTowerLateralForceCoefficient,
   ChangeTowerPermittedAmplitudeRatio: parseChangeTowerPermittedAmplitudeRatio,
@@ -1857,4 +2008,84 @@ export const parseEn1993Mutation: NormWireReader<En1993Mutation> = normWireExter
   ChangeFoundationAnchorStressArea: parseChangeFoundationAnchorStressArea,
   ChangeFoundationAnchorEmbedment: parseChangeFoundationAnchorEmbedment,
   ChangeFoundationAnchorEdgeDistance: parseChangeFoundationAnchorEdgeDistance,
+  ChangeBridgeConsequence: parseChangeBridgeConsequence,
+  ChangeBucklingLengthBeamStiffnessA: parseChangeBucklingLengthBeamStiffnessA,
+  ChangeBucklingLengthBeamStiffnessB: parseChangeBucklingLengthBeamStiffnessB,
+  ChangeBucklingLengthColumnStiffnessA: parseChangeBucklingLengthColumnStiffnessA,
+  ChangeBucklingLengthColumnStiffnessB: parseChangeBucklingLengthColumnStiffnessB,
+  ChangeBucklingLengthMemberId: parseChangeBucklingLengthMemberId,
+  ChangeBucklingLengthPlane: parseChangeBucklingLengthPlane,
+  ChangeBucklingLengthRestraintA: parseChangeBucklingLengthRestraintA,
+  ChangeBucklingLengthRestraintB: parseChangeBucklingLengthRestraintB,
+  ChangeBucklingLengthSway: parseChangeBucklingLengthSway,
+  ChangeFastenedJointBaseStrength: parseChangeFastenedJointBaseStrength,
+  ChangeFastenedJointBaseThickness: parseChangeFastenedJointBaseThickness,
+  ChangeFastenedJointCount: parseChangeFastenedJointCount,
+  ChangeFastenedJointDiameter: parseChangeFastenedJointDiameter,
+  ChangeFastenedJointEdgeDistance: parseChangeFastenedJointEdgeDistance,
+  ChangeFastenedJointEndDistance: parseChangeFastenedJointEndDistance,
+  ChangeFastenedJointGauge: parseChangeFastenedJointGauge,
+  ChangeFastenedJointHeadStrength: parseChangeFastenedJointHeadStrength,
+  ChangeFastenedJointHeadThickness: parseChangeFastenedJointHeadThickness,
+  ChangeFastenedJointKind: parseChangeFastenedJointKind,
+  ChangeFastenedJointMemberId: parseChangeFastenedJointMemberId,
+  ChangeFastenedJointPerRow: parseChangeFastenedJointPerRow,
+  ChangeFastenedJointPitch: parseChangeFastenedJointPitch,
+  ChangeFastenedJointShearForce: parseChangeFastenedJointShearForce,
+  ChangeFastenedJointShearResistance: parseChangeFastenedJointShearResistance,
+  ChangeFastenedJointSheetWidth: parseChangeFastenedJointSheetWidth,
+  ChangeFastenedJointTensionForce: parseChangeFastenedJointTensionForce,
+  ChangeFastenedJointWasherDiameter: parseChangeFastenedJointWasherDiameter,
+  ChangeFatigueConsequence: parseChangeFatigueConsequence,
+  ChangeFatigueStressConcentration: parseChangeFatigueStressConcentration,
+  ChangeFatigueStressCycles: parseChangeFatigueStressCycles,
+  ChangeFatigueStressDetailId: parseChangeFatigueStressDetailId,
+  ChangeFatigueStressFibreY: parseChangeFatigueStressFibreY,
+  ChangeFatigueStressFibreZ: parseChangeFatigueStressFibreZ,
+  ChangeFatigueStressMaxCaseId: parseChangeFatigueStressMaxCaseId,
+  ChangeFatigueStressMinCaseId: parseChangeFatigueStressMinCaseId,
+  ChangeFatigueStressRelief: parseChangeFatigueStressRelief,
+  ChangeFatigueStressThickness: parseChangeFatigueStressThickness,
+  ChangeFormingGainBends: parseChangeFormingGainBends,
+  ChangeFormingGainForming: parseChangeFormingGainForming,
+  ChangeFormingGainGrossArea: parseChangeFormingGainGrossArea,
+  ChangeFormingGainMemberId: parseChangeFormingGainMemberId,
+  ChangeFormingGainUltimateStrength: parseChangeFormingGainUltimateStrength,
+  ChangeFormingGainUsedYield: parseChangeFormingGainUsedYield,
+  ChangeFrameActionEndRatio: parseChangeFrameActionEndRatio,
+  ChangeFrameActionFx: parseChangeFrameActionFx,
+  ChangeFrameActionFz: parseChangeFrameActionFz,
+  ChangeFrameActionKind: parseChangeFrameActionKind,
+  ChangeFrameActionLoadCaseId: parseChangeFrameActionLoadCaseId,
+  ChangeFrameActionMy: parseChangeFrameActionMy,
+  ChangeFrameActionStartRatio: parseChangeFrameActionStartRatio,
+  ChangeFrameActionTargetId: parseChangeFrameActionTargetId,
+  ChangeFrameMemberBasisBasis: parseChangeFrameMemberBasisBasis,
+  ChangeFrameMemberBasisMemberId: parseChangeFrameMemberBasisMemberId,
+  ChangeJointBeamWebFy: parseChangeJointBeamWebFy,
+  ChangeJointBeamWebThickness: parseChangeJointBeamWebThickness,
+  ChangeJointPlateGroupMethod: parseChangeJointPlateGroupMethod,
+  ChangeJointWeldForceLongitudinal: parseChangeJointWeldForceLongitudinal,
+  ChangeJointWeldForceTransverse: parseChangeJointWeldForceTransverse,
+  ChangeMaterialDuctilityElongation: parseChangeMaterialDuctilityElongation,
+  ChangeMaterialDuctilityMaterialId: parseChangeMaterialDuctilityMaterialId,
+  ChangeMaterialDuctilityUltimateStrain: parseChangeMaterialDuctilityUltimateStrain,
+  ChangePanelDesignTemperature: parseChangePanelDesignTemperature,
+  ChangePanelSteelGrade: parseChangePanelSteelGrade,
+  ChangePanelSteelSubgrade: parseChangePanelSteelSubgrade,
+  ChangeSectionFabrication: parseChangeSectionFabrication,
+  InsertBucklingLength: parseInsertBucklingLength,
+  InsertFastenedJoint: parseInsertFastenedJoint,
+  InsertFatigueStress: parseInsertFatigueStress,
+  InsertFormingGain: parseInsertFormingGain,
+  InsertFrameAction: parseInsertFrameAction,
+  InsertFrameMemberBasis: parseInsertFrameMemberBasis,
+  InsertMaterialDuctility: parseInsertMaterialDuctility,
+  RemoveBucklingLength: parseRemoveBucklingLength,
+  RemoveFastenedJoint: parseRemoveFastenedJoint,
+  RemoveFatigueStress: parseRemoveFatigueStress,
+  RemoveFormingGain: parseRemoveFormingGain,
+  RemoveFrameAction: parseRemoveFrameAction,
+  RemoveFrameMemberBasis: parseRemoveFrameMemberBasis,
+  RemoveMaterialDuctility: parseRemoveMaterialDuctility,
 });

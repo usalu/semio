@@ -1,0 +1,236 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/testing/nested-edit.json",
+  "title": "NormNestedEditCases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "document",
+    "bundle",
+    "access",
+    "cases",
+    "typedAdmission"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "document": {
+      "type": "object"
+    },
+    "access": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "editable",
+        "readonly"
+      ],
+      "properties": {
+        "editable": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "readonly": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document",
+        "writes",
+        "expected"
+      ],
+      "properties": {
+        "document": {
+          "type": "object"
+        },
+        "expected": {
+          "type": "object"
+        },
+        "writes": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "pointer",
+              "value"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pointer": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {}
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/Case"
+      }
+    },
+    "typedAdmission": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "$ref": "#/$defs/TypedAdmission"
+      }
+    }
+  },
+  "$defs": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "rules",
+        "path",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rules": {
+          "enum": [
+            "parent",
+            "exact",
+            "clear"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {},
+        "error": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "selectors",
+            "valueField",
+            "source",
+            "pointer"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "selectors": {
+              "type": "object"
+            },
+            "valueField": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "pointer": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "expected": {}
+          },
+          "required": [
+            "expected"
+          ]
+        },
+        {
+          "properties": {
+            "error": {}
+          },
+          "required": [
+            "error"
+          ]
+        }
+      ]
+    },
+    "TypedAdmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value",
+        "accept"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {},
+        "accept": {
+          "type": "boolean"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "accept": {
+              "const": true
+            },
+            "count": {}
+          },
+          "required": [
+            "count"
+          ]
+        },
+        {
+          "properties": {
+            "accept": {
+              "const": false
+            }
+          },
+          "not": {
+            "required": [
+              "count"
+            ],
+            "properties": {
+              "count": {}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

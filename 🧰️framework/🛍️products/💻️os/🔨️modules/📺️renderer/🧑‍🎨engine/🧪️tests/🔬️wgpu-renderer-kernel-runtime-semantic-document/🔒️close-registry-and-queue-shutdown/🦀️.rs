@@ -77,9 +77,11 @@ fn fixed_kernel_request_queue_shutdown_releases_surface_and_rejected_events_in_f
                 instance: 1,
                 event: QueuedKernelEvent {
                     kind: Some(QueuedKernelEventKind::SurfaceVisible),
-                    surface_visible: Some("surface".to_string()),
+                    surface: Some("surface".to_string()),
                     surface_body_key: None,
                     surface_view_state: None,
+                    staged_instance: None,
+                    staged_request: None,
                     message_endpoint: None,
                     message_payload: None,
                 },

@@ -91,10 +91,10 @@ impl PluginArtifactChannel {
             uri: self.actor_label.clone(),
         };
         let payload = command.encode().map_err(|error| Self::not_wired("document-backbone bind", error))?;
-        let event = semio_framework::kernel::Event::Message { source: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload };
+        let mut event = semio_framework::kernel::Event::Message { source: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload };
         let runtime = Arc::clone(&self.runtime);
         let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("document-backbone bind", format!("no open instance {instance}")))?;
-        let turn = with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_ref(&event), headless_command_budget(), identity))).map_err(|error| Self::not_wired("document-backbone bind", error))?;
+        let turn = with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_mut(&mut event), headless_command_budget(), identity))).map_err(|error| Self::not_wired("document-backbone bind", error))?;
         let receipts: Vec<&Vec<u8>> = turn
             .effects
             .iter()
@@ -220,10 +220,10 @@ impl PluginArtifactChannel {
         let mut owed = vec![semio_framework::kernel::Event::Message { source: semio_framework::kernel::MessageEndpoint::Backbone { uri: self.actor_label.clone() }, payload: message }];
         let deadline = std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET;
         loop {
-            let events = std::mem::take(&mut owed);
+            let mut events = std::mem::take(&mut owed);
             let runtime = Arc::clone(&self.runtime);
             let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("document-backbone ingress", format!("no open instance {instance}")))?;
-            let turn = match with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, &events, headless_command_budget(), identity))) {
+            let turn = match with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, &mut events, headless_command_budget(), identity))) {
                 Ok(turn) => turn,
                 Err(error) => {
                     self.discard_instance(instance);

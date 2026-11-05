@@ -4,7 +4,7 @@
   "title": "ChangeTestTheoryVariation",
   "type": "object",
   "additionalProperties": false,
-  "theoryVariation": [
+  "required": [
     "mutation",
     "id",
     "newTheoryVariation"

@@ -23,6 +23,7 @@ name = "semio_framework_os_kernel_dsl_derive_expand"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-manifest-input-compiler = { path = "../../../../../../../../🔨️modules/🛂️manifest/🔡️mutation-inputs/🏗️compiler/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

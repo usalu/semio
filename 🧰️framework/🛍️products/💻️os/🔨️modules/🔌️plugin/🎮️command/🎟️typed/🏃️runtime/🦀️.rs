@@ -3,6 +3,11 @@ use super::*;
 use semio_framework_plugin_decl_app::tool_contract::admit_op_binary_producer;
 pub use semio_framework_plugin_decl_app::tool_contract::RUNTIME_COMMAND_WIRE_MAXIMUM;
 impl<A:ArtifactApp> OriginalTypedCommandSource<A>{
+ /// 📣️ Domain command storage is born under its declared original quote before the wire producer receives it.
+ pub fn produce_host_event(&mut self,event:&semio_framework_plugin_decl_emission::HostEvent,cx:&mut StepContext<'_>)->Result<Option<bool>,OriginalTurnFailure>{
+  self.validate(cx)?;if self.runtime_ignored{return Ok(Some(false))}if self.caller.is_none(){if !cx.original_source_parent()?.admit_loan(&mut *self.caller,cx)?{return Ok(None)}}if self.command.is_some()||self.wire.is_some(){if self.command.is_none()||self.wire.is_none(){return Err(refused().into())}if self.producer.is_some(){self.close_producer(cx)?;return Ok(None)}return Ok(Some(true))}
+  if self.producer.is_none(){if self.runtime_input.is_none(){let Some(mut d)=A::host_event_demands(event)else{return Ok(Some(false))};let header=2*size_of::<Option<Box<A::Command>>>()+2*size_of::<bool>();d.copy_bytes=d.copy_bytes.checked_add(header).ok_or_else(refused)?;let mut done=None;semio_framework_job::admit_original_construction(cx,&mut done,original(d),|_|{let command=A::host_event(event).map(Box::new);let p=if command.is_some(){progress(d)}else{RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<Option<Box<A::Command>>>()+2*size_of::<bool>(),..Default::default()}};self.runtime_ignored=command.is_none();self.host_event=command.is_some();*self.runtime_input=command;semio_framework_value::RetainedWorkOutcome{result:Ok(((),p)),work:1}})?;return Ok(None)}let original=&mut self.runtime_input;admit_op_binary_producer(||original.take(),None,cx,&mut self.producer)?;return Ok(None)}let producer=self.producer.as_mut().unwrap();if !producer.ready(){producer.advance("",&mut None,&mut None,cx)?;return Ok(None)}producer.take_into(&mut self.command,&mut self.wire,cx)?;Ok(None)
+ }
  /// 🏃️ A command the runtime originates is born into the producer slot once, then encoded and handed to this source together with its sealed wire.
  pub fn produce_runtime(&mut self,make:impl FnOnce()->Option<Box<A::Command>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;

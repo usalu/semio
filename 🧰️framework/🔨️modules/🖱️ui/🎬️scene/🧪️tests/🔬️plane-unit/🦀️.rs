@@ -251,6 +251,46 @@ fn ink_canvas_document_payload_is_document_json_on_both_encoders() {
 /// 🖌️ The paint-2d twin of [`CANVAS2D_SCENE_LANE_CONTRACT`].
 const PAINT2D_SCENE_LANE_CONTRACT: &str = include_str!("../🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json");
 
+#[test]
+fn paint2d_editing_options_preserve_the_neutral_carrier(){
+    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🎚️paint2d-editing/🔣️.json")).unwrap();
+    let options:Paint2dEditingOptions=serde_json::from_value(fixture["options"].clone()).unwrap();
+    assert_eq!(serde_json::to_value(&options).unwrap(),fixture["options"]);
+    assert_eq!(Paint2dEditingOptions::from_value(options.to_value()).unwrap(),options);
+    let mut scene=paint2d_probe_scene();scene.editing_options=options.clone();
+    let (spine,_)=scene.split_lanes();assert_eq!(spine.editing_options,options);
+    assert_eq!(Paint2dScene::from_value(scene.to_value()).unwrap(),scene);
+    let edge:Paint2dEditingOptions=serde_json::from_value(fixture["edge"].clone()).unwrap();assert_eq!(Paint2dEditingOptions::from_value(edge.to_value()).unwrap(),edge);
+    for invalid in fixture["invalid"].as_array().unwrap(){assert!(serde_json::from_value::<Paint2dEditingOptions>(invalid.clone()).is_err());}
+    let DslValue::Object(entries)=options.to_value()else{panic!("options object")};
+    let mut unknown=entries.clone();unknown.push(("extra".into(),DslValue::Bool(true)));assert!(Paint2dEditingOptions::from_value(DslValue::Object(unknown)).is_err());
+    let mut duplicate=entries.clone();duplicate.push(entries[0].clone());assert!(Paint2dEditingOptions::from_value(DslValue::Object(duplicate)).is_err());
+    let mut invalid=options.clone();invalid.image_grid.width=0;assert!(Paint2dEditingOptions::from_value(invalid.to_value()).is_err());
+    invalid=options.clone();invalid.filter_kind="curves".into();assert!(Paint2dEditingOptions::from_value(invalid.to_value()).is_err());
+}
+
+#[test]
+fn paint2d_selection_cancellation_preserves_exact_scoped_authority(){
+    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/⎋️paint2d-selection/🔣️.json")).unwrap();
+    let authority:Paint2dSelectionCancellation=serde_json::from_value(fixture.clone()).unwrap();
+    assert_eq!(serde_json::to_value(&authority).unwrap(),fixture);
+    assert_eq!(Paint2dSelectionCancellation::from_value(authority.to_value()).unwrap(),authority);
+    let mut scene=paint2d_probe_scene();scene.selection_cancellation=Some(authority);
+    let(spine,_)=scene.split_lanes();assert_eq!(spine.selection_cancellation,scene.selection_cancellation);
+    assert_eq!(Paint2dScene::from_value(scene.to_value()).unwrap(),scene);
+}
+
+#[test]
+fn paint2d_selection_cancellation_codecs_refuse_the_same_invalid_authorities(){
+    let valid:Value=serde_json::from_str(include_str!("../🧫️fixtures/⎋️paint2d-selection/🔣️.json")).unwrap();
+    let invalid:Value=serde_json::from_str(include_str!("../🧫️fixtures/⎋️paint2d-selection/invalid.json")).unwrap();
+    let authority:Paint2dSelectionCancellation=serde_json::from_value(valid.clone()).unwrap();let DslValue::Object(entries)=authority.to_value()else{panic!("cancellation object")};
+    let refuse=|value:Value,entries:Vec<(String,DslValue)>|{assert!(serde_json::from_value::<Paint2dSelectionCancellation>(value).is_err());assert!(Paint2dSelectionCancellation::from_value(DslValue::Object(entries)).is_err());};
+    for row in invalid["cases"].as_array().unwrap(){let field=row["field"].as_str().unwrap();let mut value=valid.clone();value.as_object_mut().unwrap().insert(field.into(),row["value"].clone());let mut entries=entries.clone();entries.retain(|(key,_)|key!=field);let scalar=match &row["value"]{Value::Null=>DslValue::Null,Value::Bool(value)=>value.to_value(),Value::String(value)=>value.to_value(),Value::Number(value)=>value.as_i64().map_or_else(||value.as_f64().unwrap().to_value(),|value|value.to_value()),_=>panic!("scalar cancellation fixture")};entries.push((field.into(),scalar));refuse(value,entries);}
+    for field in invalid["missing"].as_array().unwrap(){let field=field.as_str().unwrap();let mut value=valid.clone();value.as_object_mut().unwrap().remove(field);let mut entries=entries.clone();entries.retain(|(key,_)|key!=field);refuse(value,entries);}
+    for field in invalid["duplicate"].as_array().unwrap(){let mut duplicate=entries.clone();duplicate.push(entries.iter().find(|(key,_)|key==field.as_str().unwrap()).unwrap().clone());assert!(Paint2dSelectionCancellation::from_value(DslValue::Object(duplicate)).is_err());}
+}
+
 fn paint2d_lane_contract() -> Value {
     serde_json::from_str(PAINT2D_SCENE_LANE_CONTRACT).expect("paint-2d lane contract parses")
 }
@@ -295,6 +335,7 @@ fn paint2d_probe_scene() -> Paint2dScene {
         brush_color: "#e07020".into(),
         brush_hardness: 0.25,
         paint_target:"pixels".into(),mask_value:255,fill_tolerance:24,pixel_selection_json:None,
+        editing_options: Paint2dEditingOptions { filter_kind: "brightness".into(), filter_amount: 0.0, image_grid: Paint2dImageGrid { x: 0, y: 0, width: 512, height: 512, bilinear: true } },selection_cancellation:None,
         view_mode: "composite".into(),
         composite_viewport_json: None,
         lanes: Vec::new(),

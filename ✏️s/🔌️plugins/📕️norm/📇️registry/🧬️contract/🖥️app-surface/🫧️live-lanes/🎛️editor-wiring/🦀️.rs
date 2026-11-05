@@ -361,21 +361,12 @@ where
     let edits = match command {
         LiveCommand::DuplicateEntities { collection, ids } => crate::entity_editing::duplicate_edits(&tree, collection, ids, &crate::entity_editing::paste_offsets()).map(|pasted| pasted.edits),
         LiveCommand::PasteEntities { clip_json, at } => crate::entity_editing::clip_from_json(clip_json).and_then(|clip| crate::entity_editing::paste_edits(&tree, &clip, *at, &crate::entity_editing::paste_offsets())).map(|pasted| pasted.edits),
-        LiveCommand::MoveEntity { path, id, target } => move_edit(&tree, path, id, target).map(|edit| vec![edit]),
+        LiveCommand::MoveEntity { path, id, target } => crate::move_edit(&tree, path, id, target).map(|edit| vec![edit]),
         LiveCommand::DeleteEntities { collection, ids } => Ok(crate::entity_editing::delete_edits(&tree, collection, ids).map_err(|refusal| fault(refusal.code(), refusal.message(false)))?),
         LiveCommand::SetFields { .. } | LiveCommand::PreviewRemedy { .. } | LiveCommand::PreviewInsert { .. } | LiveCommand::ClearPreview | LiveCommand::CancelEvaluation | LiveCommand::EvaluateUnits { .. } | LiveCommand::CopyEntities { .. } => return Ok(Emit::default()),
     }
     .map_err(|message| fault("norm.entity-edit", message))?;
     crate::entity_editing::handle_edits(document, &edits, |d, e| A::live_resolve(d, e)).map(|emit| Emit { artifact_mutations: emit.artifact_mutations, ..Emit::default() })
-}
-
-/// ↕️ The `MoveItem` edit of a move target against the document tree.
-pub fn move_edit(tree: &DslValue, path: &str, id: &str, target: &crate::MoveTarget) -> Result<NormEdit, String> {
-    match target {
-        crate::MoveTarget::To(to) => crate::move_item_edit(tree, path, id, *to),
-        crate::MoveTarget::Over(over) => crate::move_item_over_edit(tree, path, id, over),
-        crate::MoveTarget::Step(delta) => crate::move_item_step_edit(tree, path, id, *delta),
-    }
 }
 
 /// 📋️ The copy of `copyEntities`: the rows of the selection become a clip that the host keeps for the next paste; the document stays as it is.
@@ -515,8 +506,19 @@ where
 pub fn live_check_focus_effects<A: NormLiveEditor>(document: &A::Snapshot, check: Option<u32>, domain: &str) -> Vec<semio_framework_plugin::Effect> {
     let Some(index) = check else { return Vec::new() };
     let report = <A::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
-    let scene = A::live_scene(document, ViewOptions::none());
-    crate::focus_of_check(&report, &scene, index as usize, crate::viewport3d::config::CameraPreset::default()).and_then(|focus| crate::focus_effect(domain, &focus)).into_iter().collect()
+    crate::check_selection_effect(domain, &report, index as usize).into_iter().collect()
+}
+
+/// 🎹️ A check step publishes the same canonical interaction check identity as clicking its row.
+pub fn live_view_focus_effects<A: NormLiveEditor>(command: &A::Command, document: &A::Snapshot, transient: &A::Transient, interaction: &protocol::InteractionState, domain: &str) -> Vec<semio_framework_plugin::Effect>
+where
+    A::Transient: LaneTransient<Mutation = A::TransientMutation>,
+{
+    let Some(event @ LaneEvent::ViewStep { step: crate::ViewStep::Check | crate::ViewStep::Governing, .. }) = A::view_event(command) else { return Vec::new() };
+    let report = <A::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
+    let lane = transient.lane().view;
+    let picked = interaction.selection.get(domain).map(|selection| selection.ids.as_slice()).unwrap_or_default();
+    crate::check_step_selection_effect(domain, &report, &lane, picked, event, || A::live_scene(document, &crate::view_options_of(&lane))).into_iter().collect()
 }
 //#endregion 🔖️Editor
 

@@ -228,7 +228,7 @@ pub fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
         RasterMutation::MoveLayer(payload) => RasterMutationDsl::MoveLayer { layer_id: payload.layer_id.clone(), new_x: payload.new_x, new_y: payload.new_y },
         RasterMutation::ResizeLayer(payload) => RasterMutationDsl::ResizeLayer { layer_id: payload.layer_id.clone(), new_width: payload.new_width, new_height: payload.new_height },
         RasterMutation::ChangeLayerAdjustmentKind(payload) => RasterMutationDsl::ChangeLayerAdjustmentKind { layer_id: payload.layer_id.clone(), new_adjustment_kind: payload.new_adjustment_kind.clone() },
-        RasterMutation::AddLayerAsset(payload) => RasterMutationDsl::AddLayerAsset { asset_id: payload.asset_id.clone(), asset: RasterImageDsl::from(&payload.asset) },
+        RasterMutation::AddLayerAsset(payload) => RasterMutationDsl::AddLayerAsset { asset_id: payload.asset_id.clone(), asset: RasterImageDsl::from(payload.asset.image()) },
         RasterMutation::ChangeLayerAdjustmentParameter(payload) => RasterMutationDsl::ChangeLayerAdjustmentParameter {layer_id:payload.layer_id.clone(),parameter:payload.parameter.clone(),expected:payload.expected,value:payload.value},
         RasterMutation::ChangeLayerTransform(payload)=>RasterMutationDsl::ChangeLayerTransform {layer_id:payload.layer_id.clone(),expected:payload.expected.clone(),transform:payload.transform.clone()},
         RasterMutation::ChangeLayerMask(payload) => RasterMutationDsl::ChangeLayerMask { layer_id: payload.layer_id.clone(), expected: payload.expected.clone(), mask: payload.mask.clone() },
@@ -288,8 +288,8 @@ pub fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
     }
 }
 
-pub fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
-    match mutation {
+pub fn raster_mutation_from_dsl(mutation:RasterMutationDsl)->Result<RasterMutation,semio_framework_diagnostic::TextError>{
+    Ok(match mutation {
         RasterMutationDsl::CreateLayer { parent_id, index, layer } => RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id, index, layer }),
         RasterMutationDsl::DeleteLayer { layer_id } => RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id }),
         RasterMutationDsl::ReorderLayers { layer_id, parent_id, index } => RasterMutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { layer_id, parent_id, index }),
@@ -301,7 +301,7 @@ pub fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
         RasterMutationDsl::MoveLayer { layer_id, new_x, new_y } => RasterMutation::MoveLayer(move_layer::mutation::MoveLayer { layer_id, new_x, new_y }),
         RasterMutationDsl::ResizeLayer { layer_id, new_width, new_height } => RasterMutation::ResizeLayer(resize_layer::mutation::ResizeLayer { layer_id, new_width, new_height }),
         RasterMutationDsl::ChangeLayerAdjustmentKind { layer_id, new_adjustment_kind } => RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id, new_adjustment_kind }),
-        RasterMutationDsl::AddLayerAsset { asset_id, asset } => RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id, asset: asset.into() }),
+        RasterMutationDsl::AddLayerAsset {..}=>return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"image asset mutation requires original native receiving".into(),semio_framework_diagnostic::TextSpan::at(1,1))),
         RasterMutationDsl::ChangeLayerAdjustmentParameter {layer_id,parameter,expected,value} => RasterMutation::ChangeLayerAdjustmentParameter(change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id,parameter,expected,value}),
         RasterMutationDsl::ChangeLayerTransform {layer_id,expected,transform}=>RasterMutation::ChangeLayerTransform(change_layer_transform::ChangeLayerTransform {layer_id,expected,transform}),
         RasterMutationDsl::ChangeLayerMask { layer_id, expected, mask } => RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask { layer_id, expected, mask }),
@@ -345,12 +345,12 @@ pub fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
             height,
             samples: (0..samples.len() / 2).filter_map(|at| samples.get(at * 2..at * 2 + 2).and_then(|pair| u8::from_str_radix(pair, 16).ok())).collect(),
         }),
-    }
+    })
 }
 
 impl OpText for RasterMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        Ok(raster_mutation_from_dsl(<RasterMutationDsl as OpText>::parse_op(line)?))
+        raster_mutation_from_dsl(<RasterMutationDsl as OpText>::parse_op(line)?)
     }
 
     fn print_op(&self) -> String {

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "variant": "en1990",
+  "example": "road-bridge-compliant",
+  "serves": {
+    "react": "http://127.0.0.1:6094/?plugin=en1990&role=editor&example=road-bridge-compliant",
+    "wgpu": "http://127.0.0.1:6194/?plugin=en1990&role=editor&example=road-bridge-compliant"
+  },
+  "locales": ["en", "de"],
+  "field": {
+    "path": "bridgeSls[id=sls-D1].deckAcceleration",
+    "key": "norm-inputs.bridgeSls[id=sls-D1].deckAcceleration",
+    "owner": "scope:1:9:bridgeSls6:sls-D1",
+    "ownerWindow": "norm-en1990-outliner",
+    "argument": "newDeckAcceleration",
+    "label": {"en": "Deck acceleration", "de": "Deckbeschleunigung"},
+    "limit": 0.5,
+    "unit": "m/s²"
+  },
+  "check": "en1990.a2.acceleration.deck-D1.sls-D1",
+  "states": {
+    "before": {"value": 0.2, "utilization": 0.4},
+    "after": {"value": 0.4, "utilization": 0.8}
+  },
+  "journey": ["boot", "edit", "undo", "redo", "reload"]
+}

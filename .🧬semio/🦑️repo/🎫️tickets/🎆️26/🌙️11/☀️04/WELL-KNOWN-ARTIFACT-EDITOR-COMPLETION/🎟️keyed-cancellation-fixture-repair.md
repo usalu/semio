@@ -1,0 +1,7 @@
+# Keyed Cancellation Fixture Repair
+
+Changed only the standalone test section after the preceding async function in document-cancellation-and-latest-wins-keys source. Added a test-only KeyedCancellationFixture retaining one genuine OriginalFixtureScope and ToolCancellationIssuer. Admission uses actual original_source_parent and issuer.admit_step; keyedlease creation uses issuer.begin_keyed(&key,cx) through bounded turns. Physical lease cursor admission/close/release consumes the exact returned progress on the same context. Issuer closes to terminal emptiness before the original scope retires.
+
+Preserved all five existing standalone test assertions and independent serde fixture comparisons. Replaced deleted default handle creation, removed registry handle cloning assumptions, switched contention to try_lock with explicit alias release, used original_key for rebind assertions, and updated SharedOwner retained-work result access. Semantic finish is followed by physical lease retirement; a finish call alone is not terminal custody. Cleanup_slot uses its current funded issuer API and bounded completion.
+
+Static source check: five standalone tests, no default handle construction or blocking state lock, nine physical close_lease callsites and five explicit issuer closure callsites. Runtime agent may reuse the helper for its separate cancellation leaf and add ordinary begin/cx methods. No Rust compilation or test run was launched; existing actual compiler errors establish the prior red state, and root owns the next focused native run.

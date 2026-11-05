@@ -27,8 +27,8 @@
             }),
         );
         let mut invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::Plugin { plugin_id: "fixture".into() }, command_id: "refresh".into() }, arguments: Default::default() };
-        plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "a".into(), instance_id: 1, view_state: None }).expect("first app instance");
-        plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "b".into(), instance_id: 2, view_state: None }).expect("second app instance");
+        plugin.handle_plugin_command(&invocation, &ActionMeta { expected_document_revision:None, actor: "a".into(), instance_id: 1, view_state: None }).expect("first app instance");
+        plugin.handle_plugin_command(&invocation, &ActionMeta { expected_document_revision:None, actor: "b".into(), instance_id: 2, view_state: None }).expect("second app instance");
         assert_eq!(calls.load(Ordering::SeqCst), 3);
     }
 

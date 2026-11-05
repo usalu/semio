@@ -148,3 +148,13 @@ fn unknown_kind_is_an_error_never_a_silent_no_op() {
     let result = oracle_apply_mutation(&input, &spec("not-a-real-kind", Json::Object(vec![])));
     assert!(result.is_err(), "an unrecognised kind must fail loudly");
 }
+
+#[test]
+fn vlr_inverse_wire_retains_non_utf8_payload_through_the_reference_library() {
+    let expected = semio_repo_test_host::parse_json(include_str!("../🧫️fixtures/📼️wire.json")).expect("neutral VLR wire fixture");
+    let original = vlr_of_wire(&expected).expect("binary VLR input");
+    let mut bytes = Vec::new();
+    original.write_to(&mut bytes).expect("reference VLR writer");
+    let decoded = las::raw::Vlr::read_from(std::io::Cursor::new(bytes), false).expect("reference VLR reader");
+    assert_eq!(vlr_to_wire(&decoded), expected);
+}

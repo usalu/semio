@@ -267,6 +267,8 @@ where
         Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"bounded config semantic preparation requires its original incremental mutation owner"))
     }
 
+    fn last_turn_work(&self)->u64{0}
+
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }

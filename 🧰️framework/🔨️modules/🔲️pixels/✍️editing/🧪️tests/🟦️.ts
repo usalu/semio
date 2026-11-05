@@ -3,8 +3,17 @@ import { describe, expect, test } from "bun:test";
 import sharp from "sharp";
 import Ajv from "ajv";
 import fixtures from "./🧫️fixtures/🔣️.json";
+import clippedFlood from "./🧫️fixtures/flood-clipped.json";
 import schema from "../🧬️schema/🔣️.json";
 import { editImage, selectionMask, selectPixels, combineSelections, SelectionCombineJob, type SelectionMerge, floodSelection, paintStroke, PixelEditJob, PixelSelectionJob, strokeBounds, validateImage, type PixelOperation, type PixelPoint, type SelectionShape } from "../🟦️.ts";
+
+test("retained flood clipping shares the soft barrier contract and independent image coverage",async()=>{
+  const image={width:clippedFlood.width,height:clippedFlood.height,pixels:Uint8Array.from(Array.from({length:clippedFlood.width*clippedFlood.height},()=>clippedFlood.pixel).flat())};
+  const actual=await floodSelection(image,clippedFlood.seed[0]!,clippedFlood.seed[1]!,clippedFlood.tolerance,{selection:Uint8Array.from(clippedFlood.selection),chunkPixels:clippedFlood.grant});
+  expect([...actual]).toEqual(clippedFlood.coverage);
+  const encoded=await sharp(Buffer.from(actual),{raw:{width:image.width,height:image.height,channels:1}}).png().toBuffer();
+  expect([...await sharp(encoded).extractChannel(0).raw().toBuffer()]).toEqual(clippedFlood.coverage);
+});
 
 const image = () => ({ ...fixtures.image, pixels: Uint8Array.from(fixtures.image.pixels) });
 describe("pixel editing contract", () => {

@@ -34,19 +34,15 @@ enum Puzzle5dSelectionStage {
 /// ♻️ The scan's retained owners, staged whole when its job closes.
 #[derive(Default, semio_framework_value::RetireOwned)]
 struct Puzzle5dSelectionScanOwners {
-    pub snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,
     pub projection: Option<Value>,
     pub part_ids: HashSet<String>,
-    explicit_fastener_ids: HashSet<String>,
     pub parts: Vec<Puzzle5dPart>,
     pub fasteners: Vec<Puzzle5dFastener>,
 }
 
 struct Puzzle5dSelectionScan {
-    pub snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,
     pub projection: Option<Value>,
     pub part_ids: HashSet<String>,
-    explicit_fastener_ids: HashSet<String>,
     pub stage: Puzzle5dSelectionStage,
     pub cursor: usize,
     pub parts: Vec<Puzzle5dPart>,
@@ -55,12 +51,11 @@ struct Puzzle5dSelectionScan {
 
 impl Puzzle5dSelectionScan {
     fn into_owners(&mut self) -> Puzzle5dSelectionScanOwners {
-        Puzzle5dSelectionScanOwners { snapshot: self.snapshot.take(), projection: self.projection.take(), part_ids: std::mem::take(&mut self.part_ids), explicit_fastener_ids: std::mem::take(&mut self.explicit_fastener_ids), parts: std::mem::take(&mut self.parts), fasteners: std::mem::take(&mut self.fasteners) }
+        Puzzle5dSelectionScanOwners { projection: self.projection.take(), part_ids: std::mem::take(&mut self.part_ids), parts: std::mem::take(&mut self.parts), fasteners: std::mem::take(&mut self.fasteners) }
     }
 
-    pub fn new(snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>, interaction: &semio_framework::InteractionState) -> Self {
-        let (part_ids, explicit_fastener_ids) = puzzle5d_selection_ids(interaction);
-        Self { snapshot: Some(snapshot), projection: None, part_ids, explicit_fastener_ids, stage: Puzzle5dSelectionStage::Endpoints, cursor: 0, parts: Vec::new(), fasteners: Vec::new() }
+    pub fn new() -> Self {
+        Self { projection: None, part_ids:HashSet::new(), stage: Puzzle5dSelectionStage::Endpoints, cursor: 0, parts: Vec::new(), fasteners: Vec::new() }
     }
 
     /// 🗂️ One cursored row of the scanned projection, which is derived ONCE and then cached. Re-deriving
@@ -69,21 +64,24 @@ impl Puzzle5dSelectionScan {
     /// `framework route 'copy' overran the 8 ms step ceiling for 4 consecutive steps, worst 70521us`
     /// on the 180-part Nakagin, which is what made `copy`/`cut` fault the moment the shipped examples
     /// stopped loading empty. The cache is retired on its own rung of the close ladder.
-    pub fn row(&mut self, key: &str, index: usize) -> Option<Value> {
+    pub fn row(&mut self, snapshot:&Puzzle5dPlaySnapshot,key: &str, index: usize) -> Option<Value> {
         if self.projection.is_none() {
-            let projection = self.snapshot.as_ref().map(|snapshot| puzzle5d_editor_projection(snapshot))?;
+            let projection = puzzle5d_editor_projection(snapshot);
             self.projection = Some(projection);
         }
         self.projection.as_ref()?.get(key).and_then(Value::as_array).and_then(|rows| rows.get(index)).cloned()
     }
 
-    pub fn step(&mut self) -> Result<bool, String> {
+    pub fn step(&mut self,snapshot:&Puzzle5dPlaySnapshot,interaction:&semio_framework::InteractionState) -> Result<bool, String> {
+        use crate::editor::puzzle5d::entities::{PUZZLE5D_INTERACTION_DOMAIN,PUZZLE5D_GRANULARITY_PART,PUZZLE5D_GRANULARITY_FASTENER};
+        let selected=interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN);
+        let explicit=|kind:&str,id:&str|selected.is_some_and(|selection|selection.granularity==kind&&selection.ids.iter().any(|candidate|candidate==id));
         match self.stage {
             Puzzle5dSelectionStage::Endpoints => {
                 let cursor = self.cursor;
-                if let Some(row) = self.row("fasteners", cursor) {
+                if let Some(row) = self.row(snapshot,"fasteners", cursor) {
                     self.cursor += 1;
-                    if row.get("id").and_then(Value::as_str).is_some_and(|id| self.explicit_fastener_ids.contains(id)) {
+                    if row.get("id").and_then(Value::as_str).is_some_and(|id| explicit(PUZZLE5D_GRANULARITY_FASTENER,id)) {
                         if let Some(source) = row.get("source").and_then(Value::as_str) {
                             self.part_ids.insert(owning_part_id_local(source).to_string());
                         }
@@ -98,13 +96,13 @@ impl Puzzle5dSelectionScan {
             }
             Puzzle5dSelectionStage::Fasteners => {
                 let cursor = self.cursor;
-                if let Some(row) = self.row("fasteners", cursor) {
+                if let Some(row) = self.row(snapshot,"fasteners", cursor) {
                     self.cursor += 1;
                     let source = row.get("source").and_then(Value::as_str).map(owning_part_id_local);
                     let target = row.get("target").and_then(Value::as_str).map(owning_part_id_local);
-                    let selected = row.get("id").and_then(Value::as_str).is_some_and(|id| self.explicit_fastener_ids.contains(id))
-                        || source.zip(target).is_some_and(|(source, target)| !self.part_ids.is_empty() && self.part_ids.contains(source) && self.part_ids.contains(target));
-                    if selected {
+                    let has_part=|id:&str|self.part_ids.contains(id)||explicit(PUZZLE5D_GRANULARITY_PART,id);
+                    let included = row.get("id").and_then(Value::as_str).is_some_and(|id| explicit(PUZZLE5D_GRANULARITY_FASTENER,id))||source.zip(target).is_some_and(|(source,target)|has_part(source)&&has_part(target));
+                    if included {
                         self.fasteners.push(puzzle5d_record_from_projection(row).map_err(|error| error.to_string())?);
                     }
                 } else {
@@ -114,9 +112,9 @@ impl Puzzle5dSelectionScan {
             }
             Puzzle5dSelectionStage::Parts => {
                 let cursor = self.cursor;
-                if let Some(row) = self.row("parts", cursor) {
+                if let Some(row) = self.row(snapshot,"parts", cursor) {
                     self.cursor += 1;
-                    if row.get("id").and_then(Value::as_str).is_some_and(|id| self.part_ids.contains(id)) {
+                    if row.get("id").and_then(Value::as_str).is_some_and(|id| self.part_ids.contains(id)||explicit(PUZZLE5D_GRANULARITY_PART,id)) {
                         self.parts.push(puzzle5d_record_from_projection(row).map_err(|error| error.to_string())?);
                     }
                 } else {
@@ -139,7 +137,6 @@ enum Puzzle5dClipboardStage {
 }
 
 struct Puzzle5dClipboardWork {
-    pub raw: Vec<u8>,
     pub raw_cursor: usize,
     pub raw_page: [u8; PUZZLE5D_RESERVED_PAGE_BYTES],
     pub raw_page_len: usize,
@@ -157,30 +154,30 @@ enum Puzzle5dClipboardWorkStep {
 }
 
 impl Puzzle5dClipboardWork {
-    pub fn new(raw: Vec<u8>, snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>, interaction: &semio_framework::InteractionState) -> Self {
+    pub fn new() -> Self {
         Self {
-            raw,
             raw_cursor: 0,
             raw_page: [0; PUZZLE5D_RESERVED_PAGE_BYTES],
             raw_page_len: 0,
             progress: 0,
             stage: Puzzle5dClipboardStage::Envelope,
-            scan: Puzzle5dSelectionScan::new(snapshot, interaction),
+            scan: Puzzle5dSelectionScan::new(),
             encode_cursor: 0,
             dsl_text: String::new(),
         }
     }
 
-    fn step_work(&mut self, cx: &mut StepContext<'_>) -> Result<Puzzle5dClipboardWorkStep, String> {
+    fn step_work(&mut self,request:&ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx: &mut StepContext<'_>) -> Result<Puzzle5dClipboardWorkStep, String> {
         match self.stage {
             Puzzle5dClipboardStage::Envelope => {
-                if let Some(outcome) = puzzle5d_step_envelope(&self.raw, &mut self.raw_cursor, &mut self.raw_page, &mut self.raw_page_len, &mut self.progress, cx) {
+                if let Some(outcome) = puzzle5d_step_envelope(&request.raw_wire, &mut self.raw_cursor, &mut self.raw_page, &mut self.raw_page_len, &mut self.progress, cx) {
                     return Ok(Puzzle5dClipboardWorkStep::Outcome(outcome));
                 }
                 self.stage = Puzzle5dClipboardStage::Select;
             }
             Puzzle5dClipboardStage::Select => {
-                if !self.scan.step()? {
+                let Some(semio_framework_plugin::ArtifactReservedToolInput::Action{interaction,..})=request.input.as_ref()else{return Err("puzzle5d clipboard requires its original action selection".into())};
+                if !self.scan.step(&request.snapshot,interaction.get())? {
                     self.progress = self.progress.saturating_add(1);
                     cx.consume_fuel(1);
                     return Ok(Puzzle5dClipboardWorkStep::Pending);
@@ -255,28 +252,25 @@ pub enum Puzzle5dClipboardVerb {
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
 struct Puzzle5dClipboardOwners {
-    pub raw: Vec<u8>,
     pub dsl_text: String,
     pub scan: Puzzle5dSelectionScanOwners,
-    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
     rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
 }
 
 pub struct Puzzle5dClipboardJob {
     pub verb: Puzzle5dClipboardVerb,
     pub work: Puzzle5dClipboardWork,
-    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
     rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
     pub completed: bool,
     pub outbox: crate::puzzle_job::JobOutbox,
     pub closing: bool,
+    close_staged:bool,
     pub owners: crate::puzzle_job::WorkClosing<Puzzle5dClipboardOwners>,
 }
 
+impl Default for Puzzle5dClipboardJob{fn default()->Self{Self{verb:Puzzle5dClipboardVerb::Copy,work:Puzzle5dClipboardWork::new(),rejection:None,completed:false,outbox:Default::default(),closing:false,close_staged:false,owners:Default::default()}}}
+
 impl Puzzle5dClipboardJob {
-    pub fn new(verb: Puzzle5dClipboardVerb, request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, interaction: &semio_framework::InteractionState) -> Self {
-        Self { verb, work: Puzzle5dClipboardWork::new(request.raw_wire, request.snapshot, interaction), completion: Some(request.completion), rejection: None, completed: false, outbox: Default::default(), closing: false, owners: Default::default() }
-    }
 
     pub fn label(&self) -> &'static str {
         match self.verb {
@@ -305,7 +299,7 @@ impl Puzzle5dClipboardJob {
         }
     }
 
-    pub fn turn(&mut self, cx: &mut StepContext<'_>) -> crate::puzzle_job::JobTurn {
+    pub fn turn(&mut self,request:&mut ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx: &mut StepContext<'_>) -> crate::puzzle_job::JobTurn {
         if self.closing || cx.is_cancelled() {
             return crate::puzzle_job::JobTurn::Cancelled;
         }
@@ -315,17 +309,18 @@ impl Puzzle5dClipboardJob {
         if self.completed {
             return crate::puzzle_job::JobTurn::Complete;
         }
-        match self.work.step_work(cx) {
+        self.verb=if request.tool_id=="cut"{Puzzle5dClipboardVerb::Cut}else{Puzzle5dClipboardVerb::Copy};
+        match self.work.step_work(request,cx) {
             Ok(Puzzle5dClipboardWorkStep::Outcome(outcome)) => return outcome,
             Ok(Puzzle5dClipboardWorkStep::Pending) => return self.work.checkpoint(),
             Err(error) => return puzzle5d_job_fault(error),
             Ok(Puzzle5dClipboardWorkStep::Complete) => {}
         }
-        if !self.work.raw.is_empty() {
-            return crate::puzzle_job::JobTurn::Prepare(std::mem::take(&mut self.work.raw));
+        if !request.raw_wire.is_empty() {
+            return crate::puzzle_job::JobTurn::Yield;
         }
         let emit = self.emit();
-        let Some(completion) = self.completion.as_ref() else { return puzzle5d_job_fault(format!("{} lost its completion authority", self.label())) };
+        let completion=&request.completion;
         if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
             let message = rejected.fault.message.clone();
             self.rejection = Some(rejected);
@@ -338,7 +333,7 @@ impl Puzzle5dClipboardJob {
 
 impl Puzzle5dClipboardJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step_value<'a>(&'a mut self,request:&mut ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
             crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
@@ -347,56 +342,34 @@ impl Puzzle5dClipboardJob {
             }
             crate::puzzle_job::OutboxPhase::Idle => {}
         }
-        let turn = if cx.fuel_exhausted() || cx.deadline_exceeded() { crate::puzzle_job::JobTurn::Yield } else { self.turn(cx) };
+        if self.work.stage==Puzzle5dClipboardStage::Complete&&!request.raw_wire.is_empty(){return crate::editor::puzzle5d::session::support::puzzle5d_prepare_original_wire(&mut request.raw_wire,&mut self.outbox,cx)}
+        let turn = if cx.fuel_exhausted() || cx.deadline_exceeded() { crate::puzzle_job::JobTurn::Yield } else { self.turn(request,cx) };
         self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
-impl InteractiveJob for Puzzle5dClipboardJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
+impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dClipboardJob {
+    fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.outbox.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
-        if std::mem::replace(&mut self.closing, true) {
-            return;
-        }
-        self.owners.stage(Puzzle5dClipboardOwners {
-            raw: std::mem::take(&mut self.work.raw),
-            dsl_text: std::mem::take(&mut self.work.dsl_text),
-            scan: self.work.scan.into_owners(),
-            completion: self.completion.take(),
-            rejection: self.rejection.take(),
-        });
+        self.closing=true;
     }
 
-    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
-        self.begin_close();
-        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, cx)
-    }) }
-
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.copy_bytes)
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        self.closing=true;if !self.close_staged{let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;return semio_framework_job::close_original_retained_step(cx,demand,|_|{self.owners.stage(Puzzle5dClipboardOwners{dsl_text:std::mem::take(&mut self.work.dsl_text),scan:self.work.scan.into_owners(),rejection:self.rejection.take()});self.close_staged=true;semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})}crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx)
     }
 
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, maximum_copy_bytes)?.capacity_bytes)
-    }
-
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.release_bytes)
-    }
-
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.depth)
+    fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if !self.close_staged{return Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Puzzle5dClipboardOwners>(),depth:1,..Default::default()})}crate::puzzle_job::job_close_demands(&self.outbox,&self.owners,body)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.outbox.terminal_is_empty() && self.owners.is_empty()
+        self.closing && self.close_staged && self.outbox.terminal_is_empty() && self.owners.is_empty()
     }
 }
 
-impl ArtifactReservedJob for Puzzle5dClipboardJob {}
 //#endregion 🧵️ReservedJobs

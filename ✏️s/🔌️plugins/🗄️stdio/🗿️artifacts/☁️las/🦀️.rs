@@ -109,7 +109,7 @@ pub mod editor {
             pub mod edit {
                 pub use semio_s_artifact_stdio_las_mutations::editor::las::modes::edit::*;
 
-                pub use semio_s_artifact_stdio_las_snapshot::editor::las::modes::edit::windows;
+                pub use semio_s_artifact_stdio_las_schema::editor::las::modes::edit::windows;
             }
         }
     }

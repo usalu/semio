@@ -1,0 +1,14 @@
+//! 🧪️ Actor seeds admit the exact original UTF8 and shared header under real caller credits, matching Serde string wire.
+use super::*;
+#[global_allocator]
+static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
+use semio_framework_value::{RetainedCloneStep,retirement::controlled::ControlledRetirement};
+#[test]
+fn original_actor_seed_has_zero_denied_effects_and_exact_allocator_receipts(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../fixture.json")).unwrap();let stock=RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:128};
+ for row in law["cases"].as_array().unwrap(){let seed=row["seed"].as_str().unwrap();let mut caller=OriginalJobFixtureCaller::admit(OperationId(593),Generation(31),stock,||Some(1),u64::MAX,1<<20);if !row["valid"].as_bool().unwrap(){assert!(ActorId::seed_demands(seed).is_err());caller.retire(stock);continue}let d=ActorId::seed_demands(seed).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:1<<20,maximum_depth:d.depth};
+  for axis in 0..4{let mut denied=grant;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes-=1,2=>denied.maximum_capacity_bytes-=1,_=>denied.maximum_depth=0}let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ActorId::admit_seed(seed,denied));assert!(turn.result.unwrap().is_none());assert_eq!(turn.work,0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+  let mut actor=None;let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,|cx|{let turn=ActorId::admit_seed(seed,cx.retained_grant());let result=turn.result.map(|value|{let(value,p)=value.unwrap();actor=Some(value);RetainedCloneStep::Progress(p)});semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result,work:turn.work})?;Ok(())}).unwrap());assert_eq!(heap.requested_bytes,caller.receipt().retained_capacity_bytes);let actor=actor.unwrap();assert_eq!(serde_json::to_value(&actor).unwrap(),serde_json::to_value(seed).unwrap());let mut close=ControlledRetirement::retain(actor);for _ in 0..65536{if close.terminal_is_empty(){break}caller.turn(stock,|cx|cx.with_original_retirement(|cx|{let d=close.selected_demand(stock.maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,d,|g|{let result=close.step(g);RetainedWorkOutcome{result,work:close.last_turn_work()}})?;Ok(())})).unwrap();}assert!(close.terminal_is_empty());caller.retire(stock);
+ }
+}

@@ -50,9 +50,9 @@ pub(crate) fn mounted_typed_interaction_writes_are_next<A: ArtifactApp>(mounted:
 }
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
-    pub async fn advance_typed_operation_publication_one(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    pub async fn advance_typed_operation_publication_one(&mut self,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let before = self.tools.typed_operation_stall_witness();
-        let advanced = self.advance_typed_operation_publication_unit(cx).await;
+        let advanced = self.advance_typed_operation_publication_unit(identity,cx).await;
         if let (Some(before), Some(after)) = (before, self.tools.typed_operation_stall_witness()) {
             if let Some(streak) = typed_operation_stall_streak::<A>(before, after) {
                 let verb = self.tools.tool_operations.get(after.0).map_or("<released>", |operation| operation.verb.as_str());
@@ -74,9 +74,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// migrated dispatch's document change lands on the Artifact lane, so this is where the
     /// revalidation belongs; `mounted` is out of the registry here, so the async pass is free
     /// to borrow the app, and the flag makes it exactly one pass per operation.
-    async fn advance_typed_operation_publication_unit(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
-        let retained=cx.retained_grant();if cx.should_yield(){return Ok(())}
-        if !self.tools.latest_wins_commands.is_empty() && (self.tools.latest_wins_turn || self.tools.tool_operations.is_empty()) {
+    async fn advance_typed_operation_publication_unit(&mut self,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+        let retained=cx.retained_grant();if cx.fuel_exhausted(){return Ok(())}
+        if !cx.should_yield() && !self.tools.latest_wins_commands.is_empty() && (self.tools.latest_wins_turn || self.tools.tool_operations.is_empty()) {
             self.tools.latest_wins_turn = false;
             return self.advance_latest_wins_command_one(retained, cx).await.map_err(Into::into);
         }
@@ -86,20 +86,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return Ok(());
         };
         self.tools.typed_publication_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-        if self.tools.tool_operations.get(operation_id).is_some_and(|mounted|mounted.cancellation_lease.is_none()&&mounted.cancellation_retirement.is_none()&&mounted.stage==MountedTypedCommandFullOperationStage::Publishing){
-            let mounted=self.tools.tool_operations.get_mut(operation_id).unwrap();
-            if !mounted.source_identity.matches(cx){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original emission lease requires its mounted receiving caller").into())}
-            let key=ToolOperationKey{app_instance_id:mounted.meta.instance_id,document:ArtifactDocumentAuthority(mounted.meta.instance_id),operation_id:mounted.operation.operation,base_revision:mounted.operation.base_revision,generation:mounted.operation.generation};
-            mounted.cancellation_lease=self.tools.tool_cancellations.begin_keyed(&key,cx)?;
-            if let Some(lease)=mounted.cancellation_lease.as_ref(){
-                if mounted.terminal_fault.is_some()||mounted.user_cancel_requested{lease.cancel();}
-                let maximum=({ let __a0 = &self.tools.tool_operations.get(operation_id).unwrap().verb; self.tools.qualified_tool_proof(&*self.stores, __a0) })?.contract().max_output_bytes;
-                let mounted=self.tools.tool_operations.get_mut(operation_id).unwrap();let lease=mounted.cancellation_lease.as_ref().unwrap();
-                let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|!lease.token.is_cancelled_now()&&!lease.publication_claim.is_cancelled();
-                mounted.identity=Some(semio_framework_value::NativeEncodeControl::new(maximum,&mut observer).pause().map_err(|error|plugin_sdk_fault(error.to_string()))?);
-            }
-            return Ok(());
-        }
         if self.tools.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Worker) {
             record_typed_operation_unit(TypedOperationUnitKind::Worker);
             return self.tools.drive_typed_operation_worker(&self.mounted_policy, operation_id, cx);
@@ -114,38 +100,47 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         let mut mounted =
             self.tools.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority"), "typed-operation publication owner changed before one-unit transfer"))?;
-        let outcome = self.publish_mounted_typed_operation_run(&mut mounted,cx,retained).await;
-        let mut driver_result = Ok(());
+        let outcome=if mounted.borrows_original_emission_authority(){self.publish_original_emission_run(&mut mounted,identity,cx,retained).await}else{self.publish_mounted_typed_operation_run(&mut mounted,cx,retained).await};
         if let Err(failure)=outcome{self.tools.tool_operations.insert_admitted(operation_id,mounted);return Err(failure);}
         mounted.publication_attempt=0;
-        if driver_result.is_ok() && mounted.published_artifact && !mounted.interaction_revalidated {
-            mounted.interaction_revalidated = true;
-            let meta = mounted.meta.clone();
-            let receipt = mounted.identity.take().ok_or_else(|| plugin_sdk_fault("mounted revalidation lacks its original authoring receipt"))?;
-            let lease = mounted.cancellation_lease.as_ref().ok_or_else(|| plugin_sdk_fault("mounted revalidation lacks its original cancellation lease"))?;
-            let token = lease.token.clone();
-            let publication = lease.publication_claim.clone();
-            let mut progress = mounted.identity_progress;
-            let mut observer = |next: semio_framework_value::native_encoding::NativeEncodeProgress| { progress = next; !token.is_cancelled_now() && !publication.is_cancelled() };
-            let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
-            driver_result = self.as_render().revalidate_interaction_on_document_change(&meta, &mut identity).await;
-            mounted.identity = Some(identity.pause().map_err(|error| plugin_sdk_fault(error.to_string()))?);
-            drop(observer);
-            mounted.identity_progress = progress;
-        }
+        let driver_result=self.revalidate_mounted_publication(&mut mounted,identity,cx).await;
         self.tools.tool_operations.insert_admitted(operation_id, mounted);
-        driver_result.map_err(Into::into)
+        driver_result
     }
 
 }
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
+    /// 🧭️ Revalidates a published document through the same owned completion or original caller loan.
+    async fn revalidate_mounted_publication(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+        if !mounted.published_artifact||mounted.interaction_revalidated{return Ok(())}
+        if cx.is_cancelled()||mounted.cancellation_lease.as_ref().is_some_and(|lease|lease.publication_is_cancelled()){return Ok(())}
+        let borrowed=mounted.borrows_original_emission_authority();
+        if borrowed{mounted.validate_original_emission_authoring(cx)?;}
+        let meta=&mounted.meta;
+        if borrowed{
+            self.as_render().revalidate_interaction_on_document_change(meta,identity).await?;
+            mounted.interaction_revalidated=true;
+            return Ok(())
+        }
+        let lease=mounted.cancellation_lease.as_ref().ok_or_else(||plugin_sdk_fault("mounted revalidation lacks its original cancellation lease"))?;
+        let token=lease.token.clone();let publication=lease.publication_claim.clone();
+        let receipt=mounted.identity.take().ok_or_else(||plugin_sdk_fault("mounted revalidation lacks its original authoring receipt"))?;
+        let mut progress=mounted.identity_progress;
+        let mut observer=|next:semio_framework_value::native_encoding::NativeEncodeProgress|{progress=next;!token.is_cancelled_now()&&!publication.is_cancelled()};
+        let mut owned_identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
+        let result=self.as_render().revalidate_interaction_on_document_change(meta,&mut owned_identity).await;
+        mounted.identity=Some(owned_identity.pause().map_err(|error|plugin_sdk_fault(error.to_string()))?);drop(observer);mounted.identity_progress=progress;
+        result?;mounted.interaction_revalidated=true;Ok(())
+    }
+
     /// 🪟️ Continues the window-config authority refresh of a published receipt; once it is complete the extensions are told
     /// before the retained receipt's result page is queued.
-    pub(crate) fn advance_mounted_window_config_refresh(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained: RetainedCloneGrant) -> Result<(), Fault> {
+    pub(crate) fn advance_mounted_window_config_refresh(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained: RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if self.stores.advance_window_config_refresh(mounted, retained)? {
-            X::window_config_published(&mut *self.time_travel, &mut *self.tool_runs);
-            InstanceStores::<A>::queue_window_config_receipt(mounted)?;
+            if mounted.publication_ownership_progress.is_some(){return Ok(())}
+            let receipt=mounted.pending_window_config_receipt.ok_or_else(||plugin_sdk_fault("window config refresh lost its accepted receipt"))?;
+            if mounted.reserve_store_result(TypedOperationResultLane::WindowConfig,receipt,None,cx)?{X::window_config_published(&mut *self.time_travel,&mut *self.tool_runs);}
         }
         Ok(())
     }

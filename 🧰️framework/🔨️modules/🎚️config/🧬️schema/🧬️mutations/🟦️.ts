@@ -9,7 +9,7 @@ import { diff as setDefaultAppDiff, inverse as setDefaultAppInverse } from "./�
 import { diff as clearDefaultAppDiff, inverse as clearDefaultAppInverse } from "./🧹clear-default-app/🟦️.ts";
 import type { ChangeMergePolicy, MergePolicyConfigMutation, MergePolicySetting } from "./🛡️change-merge-policy/🟦️.ts";
 import { changeMergePolicy, diff as changeMergePolicyDiff, inverse as changeMergePolicyInverse } from "./🛡️change-merge-policy/🟦️.ts";
-import type { AdmitLocalDocument, LocalCatalogConfigMutation, LocalCatalogDiff, LocalCatalogRow, LocalDocument, LocalDocumentStorage, RetireLocalDocument } from "./🗃️local-catalog-config-mutation/🟦️.ts";
+import type { AdmitLocalDocument, LocalCatalogConfigMutation, LocalCatalogDiff, LocalCatalogRow, LocalDocument, LocalDocumentSurface, LocalDocumentStorage, RetireLocalDocument } from "./🗃️local-catalog-config-mutation/🟦️.ts";
 import { admitLocalDocument, retireLocalDocument } from "./🗃️local-catalog-config-mutation/🟦️.ts";
 import type { LocalCatalog } from "./📥️admit-local-document/🟦️.ts";
 import { diff as admitLocalDocumentDiff, inverse as admitLocalDocumentInverse, LOCAL_CATALOG_CONFIG_SCHEMA } from "./📥️admit-local-document/🟦️.ts";
@@ -93,7 +93,7 @@ export function inverseLocalCatalogConfigMutation(mutation: LocalCatalogConfigMu
 }
 
 export { admitLocalDocument, LOCAL_CATALOG_CONFIG_SCHEMA, retireLocalDocument };
-export type { AdmitLocalDocument, LocalCatalog, LocalCatalogConfigMutation, LocalCatalogDiff, LocalCatalogRow, LocalDocument, LocalDocumentStorage, RetireLocalDocument };
+export type { AdmitLocalDocument, LocalCatalog, LocalCatalogConfigMutation, LocalCatalogDiff, LocalCatalogRow, LocalDocument, LocalDocumentSurface, LocalDocumentStorage, RetireLocalDocument };
 //#endregion 🔖️LocalCatalog
 
 //#region 🔖️LocalFolders

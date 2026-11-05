@@ -4,25 +4,7 @@ use super::*;
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     /// 📨️ A real context lends the original donor before the same retained render owner begins querying.
-    pub(super) fn receive_render_request(&mut self,body_key:&str,request:&mut Option<semio_framework::action_staging::StagedFormRequest>,view:&ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{
-        let invalid=||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"staging.render-request-context");
-        let value=request.as_ref().ok_or_else(invalid)?;
-        if !A::uses_render_work(body_key)||!value.context_matches(view.window_id.as_deref(),view.locale){return Err(invalid().into());}
-        if self.pending.receive_render_failure(cx)?||cx.should_yield(){return Ok(None);}
-        if self.pending.pending_render_tree.is_some()||self.pending.pending_render_tree_close.is_some()||self.pending.pending_render_source.is_some(){return Err(invalid().into());}
-        if self.pending.pending_render_work.is_none()&&self.pending.pending_render_tree_ready{self.pending.pending_render_tree_identity=None;self.pending.pending_render_tree_ready=false;}
-        if let Some(identity)=self.pending.pending_render_tree_identity.as_mut(){identity.validate(cx)?;}else{self.pending.pending_render_tree_identity=Some(OriginalRenderTreeIdentity::capture(cx)?);}
-        if self.pending.pending_render_work.is_none(){
-            if !<A::RenderWork as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()||!<A::Snapshot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"staged render requires controlled original source retirement").into());}
-            let Some(work)=A::begin_render_work(body_key,cx)?else{return Ok(None)};
-            *self.pending.pending_render_work=Some(semio_framework_plugin_instance_jobs::jobs_render::work::OriginalRenderWork::retain(work));
-            return Ok(None);
-        }
-        let identity=self.pending.pending_render_tree_identity.as_mut().ok_or_else(invalid)?;
-        let work=self.pending.pending_render_work.as_mut().ok_or_else(invalid)?.original(identity,cx)?.ok_or_else(invalid)?;
-        let result=A::receive_render_work_request(work,request,view,cx);
-        match result{Ok(Some(()))if request.is_some()=>Err(invalid().into()),Ok(None)if request.is_none()=>Err(invalid().into()),other=>other}
-    }
+    pub(super) fn receive_render_request(&mut self,body_key:&str,request:&mut Option<semio_framework::action_staging::StagedFormRequest>,view:&ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{self.render_ctx().receive_render_request(body_key,request,view,cx)}
     /// 🕰️ Framework-owned, snapshot-independent — served before any app body-key match.
     ///
     /// 🕹️ Task 5: materialized once, before either branch, then used to stamp EVERY
@@ -78,7 +60,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         }
         let interaction_state = self.interaction.interaction_state(&self.stores).await;
         let interaction_hover = self.interaction.interaction_hover.clone();
-        let interaction_peers = std::sync::Arc::clone(&self.roster.peer_presence);
+        let interaction_peers = std::sync::Arc::clone(self.roster.peer_presence.as_ref().ok_or_else(||plugin_sdk_fault("peer presence root retired before render capture"))?);
         let draft_references = self.time_travel.draft_references();
         let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
         let window_config = self.stores.window_config_store.capture(Some(view_state)).await?;
@@ -173,7 +155,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         }
         let interaction_state = self.interaction.interaction_state(&self.stores).await;
         let interaction_hover = self.interaction.interaction_hover.clone();
-        let interaction_peers = std::sync::Arc::clone(&self.roster.peer_presence);
+        let Some(interaction_peers) = self.roster.peer_presence.as_ref() else { return HashMap::new(); };
+        let interaction_peers = std::sync::Arc::clone(interaction_peers);
         let draft_references = self.time_travel.draft_references();
         let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
@@ -219,7 +202,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         }
         let interaction_state = self.interaction.interaction_state(&self.stores).await;
         let interaction_hover = self.interaction.interaction_hover.clone();
-        let interaction_peers = std::sync::Arc::clone(&self.roster.peer_presence);
+        let Some(interaction_peers) = self.roster.peer_presence.as_ref() else { return HashMap::new(); };
+        let interaction_peers = std::sync::Arc::clone(interaction_peers);
         let draft_references = self.time_travel.draft_references();
         let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
@@ -320,7 +304,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         }
         let interaction_state = self.interaction.interaction_state(&self.stores).await;
         let interaction_hover = self.interaction.interaction_hover.clone();
-        let interaction_peers = std::sync::Arc::clone(&self.roster.peer_presence);
+        let Some(interaction_peers) = self.roster.peer_presence.as_ref() else { return Vec::new(); };
+        let interaction_peers = std::sync::Arc::clone(interaction_peers);
         let draft_references = self.time_travel.draft_references();
         let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
         let window_config = match self.stores.window_config_store.capture(Some(view_state)).await {

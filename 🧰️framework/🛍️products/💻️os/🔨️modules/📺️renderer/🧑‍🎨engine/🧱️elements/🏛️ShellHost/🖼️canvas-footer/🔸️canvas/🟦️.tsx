@@ -1,5 +1,6 @@
 /** 🔸️ The canvas phase of useCanvasAndFooter. */
-import { useMemo } from "../../../⚛️react-port/🟦️.ts";
+import type { ProgramRetirementLeaseV1 } from "../../🚪️program-retirement/🟦️.ts";
+import { useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { type LocalizedLabel } from "@semio-tech/framework";
 import { modeLayoutStacksV1, type WindowScopeLayoutNodeV1 } from "../../⌨️window-scope/🟦️.ts";
 import { spawnedIdOfWindowInstanceV1, spawnedProgramWindowInstancesV1 } from "../../🪟️spawned-program/🟦️.ts";
@@ -8,15 +9,24 @@ import { ShellFaultBoundary } from "../../../🐚️Shell/🧯️fault-boundary/
 import { clearPendingWorldProjection } from "../../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { wireLabel } from "../../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, resolveFrameworkLayoutSeed, frameworkLayoutDeclaredInstances } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
-import { buildSpacePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { buildSpacePanelState, parsePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { resolveAppLabel, resolveManifestLabel, shellLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { shellLabelTextV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
 import { PluginRecoveryPanel, ShellRouteNotFoundPage } from "../../../📌️ChromePanels/🟦️.tsx";
 import { withLocalizedWindowKindLabels } from "../../🧱️built-node-stores/🟦️.ts";
 import type { buildPluginFilterState } from "../🔶️plugin-filter/🟦️.tsx";
+import { LocalFilesV1 } from "../../🗂️local-catalog/📂️files/🟦️.tsx";
+import { deriveSavedStateV1 } from "../../../🛠️ShellHelpers/💾️saved-state/🟦️.ts";
 
 /** 🔹 Builds canvas of useCanvasAndFooter. */
-export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPluginId, pluginSupervisorById, dispatch, reloadPlugin, uninstallPlugin, error, sessionFault, session, initialExampleReady, uiTerminology, hostAppId, panel, onAction, openSpaceIdRef, loadedPlugins, appLabelsOverlay, uiLocale, applyModeChange, mobile, modeWindows, effectiveModeLayout, activeWindowId, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, noteShellCommand, effectiveModeLayoutRef, updateSpacePanel, world3dWindowViewRegistry, writeUtilityRegister, extraWindowInstancesRef, spawnedIds, extraWindowCounterRef, refreshUi, reportRefreshFault }: Pick<ReturnType<typeof buildPluginFilterState>, "hostMode" | "notFoundPath" | "navigateShellUri" | "primaryPluginId" | "pluginSupervisorById" | "dispatch" | "reloadPlugin" | "uninstallPlugin" | "error" | "sessionFault" | "session" | "initialExampleReady" | "uiTerminology" | "hostAppId" | "panel" | "onAction" | "openSpaceIdRef" | "loadedPlugins" | "appLabelsOverlay" | "uiLocale" | "applyModeChange" | "mobile" | "modeWindows" | "effectiveModeLayout" | "activeWindowId" | "handleActiveWindowChange" | "handleModeLayoutChange" | "handleTemplateDrop" | "noteShellCommand" | "effectiveModeLayoutRef" | "updateSpacePanel" | "world3dWindowViewRegistry" | "writeUtilityRegister" | "extraWindowInstancesRef" | "spawnedIds" | "extraWindowCounterRef" | "refreshUi" | "reportRefreshFault">) {
+export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPluginId, pluginSupervisorById, dispatch, reloadPlugin, uninstallPlugin, error, sessionFault, session, initialExampleReady, uiTerminology, hostAppId, panel, onAction, openSpaceIdRef, loadedPlugins, appLabelsOverlay, uiLocale, applyModeChange, mobile, modeWindows, effectiveModeLayout, activeWindowId, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, noteShellCommand, effectiveModeLayoutRef, updateSpacePanel, world3dWindowViewRegistry, writeUtilityRegister, extraWindowInstancesRef, spawnedIds, extraWindowCounterRef, refreshUi, reportRefreshFault, localCatalog, shellStateRef, currentDocumentRuntimeKey, openKeptFile, sessionRef, admitProgramRetirementRef, requestCloseDocument, openDocumentSessionsRef, updateSpacePanelFrom }: Pick<ReturnType<typeof buildPluginFilterState>, "hostMode" | "notFoundPath" | "navigateShellUri" | "primaryPluginId" | "pluginSupervisorById" | "dispatch" | "reloadPlugin" | "uninstallPlugin" | "error" | "sessionFault" | "session" | "initialExampleReady" | "uiTerminology" | "hostAppId" | "panel" | "onAction" | "openSpaceIdRef" | "loadedPlugins" | "appLabelsOverlay" | "uiLocale" | "applyModeChange" | "mobile" | "modeWindows" | "effectiveModeLayout" | "activeWindowId" | "handleActiveWindowChange" | "handleModeLayoutChange" | "handleTemplateDrop" | "noteShellCommand" | "effectiveModeLayoutRef" | "updateSpacePanel" | "world3dWindowViewRegistry" | "writeUtilityRegister" | "extraWindowInstancesRef" | "spawnedIds" | "extraWindowCounterRef" | "refreshUi" | "reportRefreshFault" | "localCatalog" | "shellStateRef" | "currentDocumentRuntimeKey" | "openKeptFile" | "sessionRef" | "admitProgramRetirementRef" | "requestCloseDocument" | "openDocumentSessionsRef" | "updateSpacePanelFrom">) {
+  const closingWindowIdsRef = useRef(new Set<string>());
+  const closeOrderRef = useRef<Promise<void>>(Promise.resolve());
+  const statuses = shellStateRef.current.sync.syncStatusByDocumentId;
+  useEffect(() => {
+    const mounted = new Set(modeLayoutStacksV1(effectiveModeLayout as WindowScopeLayoutNodeV1 | null).flatMap((stack) => [...stack.windowIds]));
+    for (const id of closingWindowIdsRef.current) if (!mounted.has(id)) closingWindowIdsRef.current.delete(id);
+  }, [effectiveModeLayout]);
   const canvas = useMemo(() => {
     if (hostMode && notFoundPath !== null) {
       return <ShellRouteNotFoundPage path={notFoundPath} onHome={() => navigateShellUri("/")} />;
@@ -71,6 +81,7 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
       <div className="flex h-full min-h-0 flex-col overflow-hidden">
         {studioHomeBar}
         {focusedBar}
+        {hostMode && <LocalFilesV1 documents={localCatalog.documents} locale={uiLocale} activeDocumentId={currentDocumentRuntimeKey === null ? null : openDocumentSessionsRef.current.get(currentDocumentRuntimeKey)?.documentId ?? null} persisted={new Set(Object.entries(statuses).filter(([, status]) => deriveSavedStateV1(status).kind === "saved").map(([id]) => openDocumentSessionsRef.current.get(id)?.documentId ?? id))} onOpen={openKeptFile} />}
         <div className="min-h-0 flex-1">
           <ShellFaultBoundary boundaryId="session-canvas" fallbackLabel={shellLabel("ui.common.renderError")}>
             <App
@@ -88,26 +99,42 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
               onActiveWindowChange={handleActiveWindowChange}
               onLayoutChange={handleModeLayoutChange}
               onTemplateDrop={mobile ? undefined : handleTemplateDrop}
-              onWindowClose={(windowId) => {
-                const closeNoted = noteShellCommand("shell.windowClose", shellLabelTextV1("ui.shellCommand.windowClose"), { windowId });
+              onWindowClose={async (windowId) => {
+                const previousClose = closeOrderRef.current;
+                let release!: () => void;
+                closeOrderRef.current = new Promise<void>((resolve) => { release = resolve; });
+                await previousClose;
+                closingWindowIdsRef.current.add(windowId);
+                let accepted = false, retirement: ProgramRetirementLeaseV1 | null = null;
+                try {
                 const closedSpawnedId = hostMode && panel ? spawnedIdOfWindowInstanceV1(windowId, panel.spawnedApps.map((entry) => entry.id)) : null;
-                if (closedSpawnedId !== null && panel) {
-                  const closedSpawned = panel.spawnedApps.find((entry) => entry.id === closedSpawnedId);
+                const closedSpawned = panel?.spawnedApps.find((entry) => entry.id === closedSpawnedId);
                   const closedApp = closedSpawned ? loadedPlugins.find((entry) => entry.handle.pluginId === closedSpawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === closedSpawned.appId) : undefined;
                   const mountedWindowIds = modeLayoutStacksV1(effectiveModeLayoutRef.current as WindowScopeLayoutNodeV1 | null).flatMap((stack) => [...stack.windowIds]);
-                  const closedInstances = closedApp ? spawnedProgramWindowInstancesV1(closedSpawnedId, closedApp.windowKinds, frameworkLayoutDeclaredInstances(closedApp.defaultLayout, closedApp.windowKinds)) : [];
-                  const remaining = closedInstances.map((instance) => instance.id).filter((id) => id !== windowId && mountedWindowIds.includes(id));
-                  if (remaining.length === 0) {
-                    const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== closedSpawnedId);
-                    updateSpacePanel(buildSpacePanelState(nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
-                    if (closedSpawned) {
-                      const closedPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === closedSpawned.pluginId)?.handle;
-                      void closeNoted.then(() => closedPlugin?.destroyApp(closedSpawned.instanceId)).catch(() => {});
+                  const closedInstances = closedApp && closedSpawnedId !== null ? spawnedProgramWindowInstancesV1(closedSpawnedId, closedApp.windowKinds, frameworkLayoutDeclaredInstances(closedApp.defaultLayout, closedApp.windowKinds)) : [];
+                  const remaining = closedInstances.map((instance) => instance.id).filter((id) => !closingWindowIdsRef.current.has(id) && mountedWindowIds.includes(id));
+                  const ownsProgram = (): boolean => {
+                    const current = sessionRef.current === null ? null : parsePanelState(sessionRef.current.viewState);
+                    return current?.spawnedApps.some((entry) => entry.id === closedSpawnedId && entry.pluginId === closedSpawned?.pluginId && entry.appId === closedSpawned?.appId && entry.instanceId === closedSpawned?.instanceId) === true;
+                  };
+                  if (closedSpawned && !ownsProgram()) return false;
+                  if (closedSpawned && remaining.length === 0) {
+                    const handle = loadedPlugins.find(entry => entry.handle.pluginId === closedSpawned.pluginId)?.handle;
+                    if (!handle || !closedApp) return false;
+                    retirement = await admitProgramRetirementRef.current([{ handle, name: closedSpawned.label, session: { pluginId: closedSpawned.pluginId, instanceId: closedSpawned.instanceId, app: closedApp, viewState: sessionRef.current?.viewState ?? session.viewState } }], ownsProgram);
+                    if (retirement === null || !retirement.current()) return false;
+                  }
+                  await noteShellCommand("shell.windowClose", shellLabelTextV1("ui.shellCommand.windowClose"), { windowId });
+                  if (closedSpawned && remaining.length === 0) {
+                    if (!ownsProgram() || retirement === null || !await retirement.retire()) return false;
+                    updateSpacePanelFrom((latest) => {
+                      if (latest === null) return buildSpacePanelState([], panel!.activePanelTab);
+                      const nextSpawned = latest.spawnedApps.filter(entry => entry.id !== closedSpawnedId || entry.pluginId !== closedSpawned.pluginId || entry.appId !== closedSpawned.appId || entry.instanceId !== closedSpawned.instanceId);
+                      return buildSpacePanelState(nextSpawned, latest.activePanelTab, latest.activeSpawnedId === closedSpawnedId ? nextSpawned[0]?.id : latest.activeSpawnedId);
+                    });
                       world3dWindowViewRegistry.retireOwner(`${closedSpawned.pluginId}:${closedSpawned.appId}:${closedSpawned.instanceId}`);
-                    }
                     for (const instance of closedInstances) writeUtilityRegister(instance.id, null, null);
                   }
-                }
                 clearPendingWorldProjection(windowId);
                 world3dWindowViewRegistry.retireWindow(windowId);
                 dispatch({
@@ -122,6 +149,13 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
                   type: "SET_SHELL_LAYOUT",
                   value: (current) => current ?? resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).modeLayout,
                 });
+                accepted = true;
+                return true;
+                } finally {
+                  retirement?.release();
+                  if (!accepted) closingWindowIdsRef.current.delete(windowId);
+                  release();
+                }
               }}
               onWindowOpenInNewWindow={(windowId) => {
                 if (!session) return;
@@ -169,6 +203,6 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
         </div>
       </div>
     );
-  }, [initialExampleReady, activeWindowId, appLabelsOverlay, effectiveModeLayout, error, sessionFault, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateShellUri, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, refreshUi, reloadPlugin, session, notFoundPath, hostMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
+  }, [initialExampleReady, activeWindowId, appLabelsOverlay, effectiveModeLayout, error, sessionFault, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateShellUri, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, refreshUi, reloadPlugin, session, notFoundPath, hostMode, uiLocale, uiTerminology, updateSpacePanel, updateSpacePanelFrom, admitProgramRetirementRef, requestCloseDocument, dispatch, uninstallPlugin, localCatalog, currentDocumentRuntimeKey, openKeptFile, statuses]);
   return { canvas };
 }

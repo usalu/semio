@@ -51,7 +51,7 @@ export interface NavbarExampleSelectProps {
  * history panel's command filter on this shell) — ticket 26/09/02/PUZZLE-3D-END-TO-END wave B30.
  * The visually-hidden `${id}.label` stays OUTSIDE the trigger so the trigger's own text is the active
  * example's label and nothing else. */
-function NavbarExampleSelect({ id, label, value, options, onValueChange, className, includeNoExample = true }: NavbarExampleSelectProps) {
+function NavbarExampleSelect({ id, label, value, options, onValueChange, className, includeNoExample = false }: NavbarExampleSelectProps) {
   const exampleLabel = useLabel("ui.common.example");
   const noExampleLabel = useLabel("ui.common.noExample");
   const resolvedLabel = label ?? exampleLabel;
@@ -67,7 +67,7 @@ function NavbarExampleSelect({ id, label, value, options, onValueChange, classNa
     <div className={cn("flex min-w-0 max-w-md flex-1 items-center justify-center px-single", className)}>
       <Label id={`${id}.label`} label={resolvedLabel} className="sr-only" />
       <Select id={`${id}.select`} value={resolvedValue} onValueChange={(next) => onValueChange(normalizePlaygroundExampleId(next))}>
-        <SelectTrigger className="h-medium w-full min-w-[12rem] max-w-md" id={id} size="sm">
+        <SelectTrigger aria-label={resolvedLabel} className="h-medium w-full min-w-[12rem] max-w-md" id={id} size="sm">
           <span className="flex min-w-0 flex-1 items-center gap-single">
             {selectedOption ? <span data-slot="navbar-example-icon" className="inline-flex shrink-0"><Icon icon={selectedOption.icon} size="small" /></span> : null}
             <SelectValue placeholder={resolvedLabel} />

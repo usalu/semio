@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC3",
   "title": "Concrete \u0000日本",
   "designWorkingLifeYears": 0.5,
   "deltaCDev": 0.5,
@@ -114,7 +113,7 @@
       "bridgeSigmaC": 0.5,
       "bridgeDeltaSigmaS": 0.5,
       "relativeHumidity": 0.5,
-      "bearingWidth": 1.5,
+      "bearingWidth": 0.8,
       "sectionPoints": [
         {
           "id": "p1",
@@ -193,5 +192,6 @@
       "yaw": 0.5
     }
   ],
-  "cases": []
+  "cases": [],
+  "reliabilityClass": "RC3"
 }

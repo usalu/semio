@@ -95,7 +95,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let work_items = self.framework_reserved_work_items(action, args).await?;
         if CLIPBOARD_ACTION_IDS.contains(&action) {
             let Some(authority)=self.as_dispatch().admit_reserved_emit_producer(action,meta,cx)?else{return Ok(None)};
-            let producer = match self.as_render().build_artifact_reserved_action_job(action, args, raw.clone(), meta).await { Ok(producer) => producer, Err(fault) => { self.tools.finish_reserved_emit_producer(authority); return Err(fault.into()); } };
+            let producer = match self.as_render().build_artifact_reserved_action_job(action, args, raw.clone(), meta,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)).await { Ok(producer) => producer, Err(fault) => { self.tools.finish_reserved_emit_producer(authority); return Err(fault.into()); } };
             let mut app_completion = None;
             let job = match producer {
                 Some((job, completion)) => {

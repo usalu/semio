@@ -10,7 +10,7 @@ pub use original::NativeReceivingOriginal;
 pub use list::{NativeListSource,NativePersistentListReceiver};
 
 #[path="🔗️sealed-shared-receiver/🦀️.rs"]mod shared;
-pub use shared::NativeSharedReceiver;
+pub use shared::{NativeSharedReceiver,NativeSharedRoot};
 pub use semio_framework_value_native_default::{NativeDefault,NativeDefaultCursor,NativeDefaultValue,NativeDefaultValueCursor,NativeDefaultSlot,NativeArrayDefaultCursor,NativePairDefaultCursor};
 
 #[path="🌳️value/🦀️.rs"]pub mod tree;

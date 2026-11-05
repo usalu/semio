@@ -1,0 +1,4 @@
+{"version":1,"atMs":1793818727221,"event":"open","session":"a1kn9usmujp","agent":"01a1a72c-77b1-7010-8fe1-f1eb93f6a1e0","pid":4069051}
+{"version":1,"atMs":1793840941475,"event":"open","session":"apa2hyj212","agent":"01a1a8be-4c0a-7bc2-8377-89de7fcce14d","pid":1891004}
+{"version":1,"atMs":1793840941484,"event":"close","session":"a1kn9usmujp","agent":"01a1a72c-77b1-7010-8fe1-f1eb93f6a1e0","pid":1891004,"reason":"gone"}
+{"version":1,"atMs":1793840941484,"event":"collect","session":"a1kn9usmujp","agent":"01a1a72c-77b1-7010-8fe1-f1eb93f6a1e0","reason":"gone"}

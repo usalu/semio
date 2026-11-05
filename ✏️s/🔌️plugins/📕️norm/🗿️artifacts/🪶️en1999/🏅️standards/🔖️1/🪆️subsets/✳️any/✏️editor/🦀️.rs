@@ -276,6 +276,12 @@ semio_s_plugin_norm_app_surface::norm_latency_bench!(En1999PlayApp, variant = "e
 semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory!(En1999BoundedCommandJobFactory, En1999PlayApp);
 
 impl semio_s_plugin_norm_app_surface::NormRetainedEditor for En1999PlayApp {
+    fn inspector_rules() -> &'static semio_s_plugin_norm_app_surface::NormEditRules { &semio_s_artifact_norm_en1999_mutations::EDIT_RULES }
+
+    fn inspector_resolve(document: &Self::Snapshot, edit: &semio_s_plugin_norm_app_surface::NormEdit) -> Result<Vec<Self::Mutation>, String> {
+        semio_s_artifact_norm_en1999_mutations::resolve_edit(document, edit)
+    }
+
     type Family = En1999Family;
 
     type ResultsWindowConfigOwner = checks::ChecksWindowConfigOwner;
@@ -295,6 +301,10 @@ impl semio_s_plugin_norm_app_surface::NormRetainedEditor for En1999PlayApp {
             En1999Command::SetSelectedCheckIndex(payload) => semio_s_plugin_norm_app_surface::live_check_focus_effects::<Self>(document, payload.index, checks::INTERACTION_DOMAIN),
             _ => Vec::new(),
         }
+    }
+
+    fn view_focus_effects(command: &Self::Command, document: &Self::Snapshot, transient: &Self::Transient, interaction: &protocol::InteractionState) -> Vec<semio_framework_plugin::Effect> {
+        semio_s_plugin_norm_app_surface::live_view_focus_effects::<Self>(command, document, transient, interaction, checks::INTERACTION_DOMAIN)
     }
 
     fn dispatch_retained(command: &En1999Command, doc: &ArtifactView<'_, En1999Snapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1999Mutation, NoConfigMutation, NoDraftMutation>, Fault> {

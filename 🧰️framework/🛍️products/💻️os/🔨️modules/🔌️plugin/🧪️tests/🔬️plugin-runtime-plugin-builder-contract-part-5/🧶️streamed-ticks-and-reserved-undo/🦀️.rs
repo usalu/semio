@@ -102,7 +102,7 @@
 
         use semio_framework::manifest::{ActionAddress, ActionInvocation};
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        let invocation = ActionInvocation {
+        let invocation = ActionInvocation { expected_document_revision:None,
             address: ActionAddress {
                 plugin_id: "test".into(),
                 app_id: TestApp::<false>::APP_ID.into(),

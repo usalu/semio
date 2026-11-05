@@ -1,10 +1,14 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "masonryClass": null,
   "designSituation": null,
   "storeys": null,
-  "walls": null,
+  "walls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "placements": {
     "removed": [],
     "inserted": [],
@@ -38,16 +42,17 @@
       }
     ]
   },
+  "chases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "movementJoints": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "chases": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  }
+  "reliabilityClass": null
 }

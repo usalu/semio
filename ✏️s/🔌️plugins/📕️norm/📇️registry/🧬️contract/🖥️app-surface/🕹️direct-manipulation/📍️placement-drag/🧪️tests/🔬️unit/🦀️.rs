@@ -38,7 +38,7 @@ fn edits_of(tree: &DslValue, writes: &[FieldWrite]) -> Vec<NormEdit> {
 
 fn edits_with_yaw(tree: &DslValue, writes: &[FieldWrite], yaw: Option<f64>) -> Vec<NormEdit> {
     let handles = grips();
-    resolve_placed_fields(tree, writes, &|id| standing_pose(&handles, id, &|_| yaw), |_, edit| Ok(vec![edit.clone()])).expect("resolves")
+    plan_placed_fields(tree, writes, &|id| standing_pose(&handles, id, &|_| yaw)).expect("plans")
 }
 
 fn replay(tree: &mut DslValue, edits: &[NormEdit]) {

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-beam-stud-cross-spacing-m",
   "semanticKind": "change-beam-stud-cross-spacing-m",
-  "displayName": "ChangeBeamStudCrossSpacingM",
+  "displayName": "Change transverse spacing between stud row centres (0 = not declared)",
   "emoji": "↔️",
   "aggregateVariant": "ChangeBeamStudCrossSpacingM",
   "payloadSchema": "🧬️schema/🔣️.json",

@@ -1,0 +1,14 @@
+import Ajv2020 from "ajv/dist/2020.js";
+import { zlibSync, unzlibSync } from "fflate";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+const base="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🎞️media/📤️producer/🧪️tests/📥️custody";
+const law=await Bun.file(join(base,"🔣️.json")).json();
+const schema=await Bun.file(join(base,"🧬️schema.json")).json();
+const valid=new Ajv2020({strict:true}).compile(schema);
+if(!valid(law))throw new Error(JSON.stringify(valid.errors));
+const representation=Array.from(unzlibSync(zlibSync(Uint8Array.from(law.page))));
+if(JSON.stringify(representation)!==JSON.stringify(law.page))throw new Error("independent binary transport changed the declared page");
+const result={schema:true,representation,oracle:"AJV2020 + fflate zlib roundtrip",nativeAcceptance:"canonical producer custody laws compare actual drained bytes via serde_json and preserve their original pointer"};
+await Bun.write(join(dirname(fileURLToPath(import.meta.url)),"🗑️generated","[DEBUG]media-custody-oracle.json"),JSON.stringify(result,null,2)+"\n");
+console.log("[DEBUG] canonical media custody schema and independent byte representation pass");

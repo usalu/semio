@@ -66,7 +66,7 @@ import { handleInferenceHistoryStatusMessage } from "./🧠️inference-history-
 import { handleDocumentCheckInStatusMessage, handleSpaceArtifactCreationCatalogRefreshRequiredMessage, handleSpaceArtifactCreationStatusMessage } from "./🌱️artifact-creation-messages/🟦️.ts";
 import { handleDirectoryAdministrationCapabilityMessage, handleDirectoryAdministrationStateMessage, handleDirectoryCommandReceiptMessage, handleDirectoryScopeRevokedMessage } from "./📇️directory-messages/🟦️.ts";
 import { handleArtifactBootstrapMessage } from "./🥾️bootstrap-messages/🟦️.ts";
-import { handleDocumentEventMessage, handleIdentityEventMessage, handleLocalCatalogEventMessage } from "./📬️document-event-messages/🟦️.ts";
+import { handleDocumentEventMessage, handleIdentityEventMessage, handleLocalCatalogEventMessage, routeLocalDocumentObserverV1 } from "./📬️document-event-messages/🟦️.ts";
 import { usePluginInstallState } from "./🔧️plugin-install-state/🟦️.ts";
 
 export type ShellCoreAfterBackboneWorker = ShellCoreAfterIdentityAndDocumentPorts & ReturnType<typeof useBackboneWorker>;
@@ -262,14 +262,9 @@ export function useBackboneWorker(core: ShellCoreAfterIdentityAndDocumentPorts) 
         return handleArtifactBootstrapMessage({ openDocumentSessionsRef, failDocumentBackbone, retireBrowserActorUi, cancelSpaceArtifactCreationsForRuntime, sessionRef, message, setBootstrapUiByDocument, worker, rebootstrapDiscardedSessionsRef });
       }
       if (message.kind === "event" && message.documentId === LOCAL_CATALOG_CONFIG_SCHEMA) {
-        return handleLocalCatalogEventMessage({ localCatalogClientInstanceIdRef, setLocalCatalog, message });
+        return handleLocalCatalogEventMessage({ localCatalogClientInstanceIdRef, localCatalogRef: core.localCatalogRef, localDocumentOwnersRef: core.localDocumentOwnersRef, setLocalCatalog, message });
       }
-      if (message.kind === "event" && localDocumentOwnersRef.current.has(message.clientInstanceId)) {
-        const owner = localDocumentOwnersRef.current.get(message.clientInstanceId);
-        if (message.event.kind === "status") owner?.status?.(message.event.persisted);
-        else if (message.event.kind === "documentArchiveReplaced") owner?.archive?.(new Uint8Array(message.event.archive));
-        return;
-      }
+      if (routeLocalDocumentObserverV1({ localDocumentOwnersRef, openDocumentSessionsRef, message })) return;
       if (message.kind === "event" && message.documentId === IDENTITY_CONFIG_SCHEMA) {
         return handleIdentityEventMessage({ identityClientInstanceIdRef, verifiedSessionAuthorityRef, setIdentity, identitySnapshotResolverRef, sessionRefreshRef, message });
       }

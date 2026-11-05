@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "masonryClass": null,
   "designSituation": null,
   "storeys": null,
@@ -81,20 +80,6 @@
               }
             ]
           },
-          "frostClass": null,
-          "coverM": null,
-          "deflectionLimit": null,
-          "soilHeightM": null,
-          "soilDensityKgM3": null,
-          "isothermDepthM": null,
-          "planXM": null,
-          "planYM": null,
-          "planAngleDeg": null,
-          "inPlaneShearN": null,
-          "inPlaneMomentNm": null,
-          "bracingSystem": null,
-          "diaphragmStiffnessNPerM": null,
-          "webSpacingM": null,
           "piers": {
             "removed": [],
             "inserted": [],
@@ -136,18 +121,48 @@
             "inserted": [],
             "moved": [],
             "modified": []
-          }
+          },
+          "frostClass": null,
+          "coverM": null,
+          "deflectionLimit": null,
+          "soilHeightM": null,
+          "soilDensityKgM3": null,
+          "isothermDepthM": null,
+          "planXM": null,
+          "planYM": null,
+          "planAngleDeg": null,
+          "inPlaneShearN": null,
+          "inPlaneMomentNm": null,
+          "bracingSystem": null,
+          "diaphragmStiffnessNPerM": null,
+          "webSpacingM": null
         }
       }
     ]
   },
-  "placements": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "cases": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "movementJoints": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "chases": {"removed": [], "inserted": [], "moved": [], "modified": []}
+  "chases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "movementJoints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "reliabilityClass": null
 }

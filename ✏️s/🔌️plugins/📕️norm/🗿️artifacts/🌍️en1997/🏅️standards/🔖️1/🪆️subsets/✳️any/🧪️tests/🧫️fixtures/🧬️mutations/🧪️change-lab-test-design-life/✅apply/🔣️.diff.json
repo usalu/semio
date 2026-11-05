@@ -29,7 +29,12 @@
     ]
   },
   "layerWaters": null,
-  "cases": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "investigations": null,
   "characteristicBases": null
 }

@@ -1,6 +1,5 @@
 //! 🫳️ Immutable authored schema views for retained Record encoding without owned metadata copies.
 use crate::{RecordLayout,ValueError};
-use crate::native_encoding::FieldProjectionSource;
 use semio_framework_value::NativeEncodeControl;
 
 /// 🧩️ Borrows the same declarative shape vocabulary used by ordinary Record producers.

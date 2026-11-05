@@ -1,0 +1,12 @@
+{
+  "schema": "s.norm.en1990.physical-public-factory.v1",
+  "bodyBytes": 4096,
+  "maximumTurns": 100000,
+  "copyBytes": 4096,
+  "capacityBytes": 65536,
+  "releaseBytes": 65536,
+  "depth": 4096,
+  "cancelAfter": [0, 1, 3, 11, 64, 128],
+  "operationIndices": [0, 7],
+  "expected": {"heapMatchesReceipts": true, "unchangedOnDenial": true}
+}

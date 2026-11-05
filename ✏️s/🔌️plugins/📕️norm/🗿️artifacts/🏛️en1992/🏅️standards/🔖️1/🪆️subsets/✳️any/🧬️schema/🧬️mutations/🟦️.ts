@@ -86,6 +86,7 @@ import { type ChangeCaseLabelDe, parseChangeCaseLabelDe } from "./🏷️change-
 import { type ChangeCaseLabelEn, parseChangeCaseLabelEn } from "./🏷️change-case-label-en/🧬️schema/🟦️.ts";
 import { type ChangeTitle, parseChangeTitle } from "./🏷️change-title/🧬️schema/🟦️.ts";
 import { type ChangeMemberLiquidSigmaS, parseChangeMemberLiquidSigmaS } from "./💦change-member-liquid-sigma-s/🧬️schema/🟦️.ts";
+import { type ChangeMemberBearingWidth, parseChangeMemberBearingWidth } from "./💧change-member-bearing-width/🧬️schema/🟦️.ts";
 import { type ChangeMemberRelativeHumidity, parseChangeMemberRelativeHumidity } from "./💧change-member-relative-humidity/🧬️schema/🟦️.ts";
 import { type ChangeDesignWorkingLife, parseChangeDesignWorkingLife } from "./📅️change-design-working-life/🧬️schema/🟦️.ts";
 import { type ChangeCaseEntryId, parseChangeCaseEntryId } from "./📇️change-case-entry-id/🧬️schema/🟦️.ts";
@@ -323,7 +324,8 @@ export type En1992Mutation =
   | { ChangeStudRowSpacingRadial: ChangeStudRowSpacingRadial }
   | { ChangeStudRowDiameter: ChangeStudRowDiameter }
   | { InsertStudRow: InsertStudRow }
-  | { RemoveStudRow: RemoveStudRow };
+  | { RemoveStudRow: RemoveStudRow }
+  | { ChangeMemberBearingWidth: ChangeMemberBearingWidth };
 
 export const parseEn1992Mutation: NormWireReader<En1992Mutation> = normWireExternal<En1992Mutation>({
   ChangeAnnex: parseChangeAnnex,
@@ -486,4 +488,5 @@ export const parseEn1992Mutation: NormWireReader<En1992Mutation> = normWireExter
   ChangeStudRowDiameter: parseChangeStudRowDiameter,
   InsertStudRow: parseInsertStudRow,
   RemoveStudRow: parseRemoveStudRow,
+  ChangeMemberBearingWidth: parseChangeMemberBearingWidth,
 });

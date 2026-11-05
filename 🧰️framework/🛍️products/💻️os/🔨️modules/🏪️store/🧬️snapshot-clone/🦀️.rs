@@ -17,6 +17,9 @@ use semio_framework_value::retirement::original_vector::OriginalVectorCursor;
 #[path="🪪️metadata/🦀️.rs"]
 mod metadata;
 use metadata::NativeEditMetadata;
+#[path="📦️assembly/🦀️.rs"]
+pub mod assembly;
+pub use assembly::{OriginalPublicationAssembly,OriginalPublicationInputs};
 
 #[path = "🚚️handoff/🦀️.rs"]
 mod handoff;
@@ -50,7 +53,10 @@ impl RetainedCloneEditStep {
 /// ✏️ Applies one domain mutation to an exclusive cloned owner through bounded turns.
 pub trait RetainedCloneEditCursor<P: RetainedClone, M>: Send {
     fn advance_demands(&self, base: RetainedCloneRef<'_, P>, post: &P, mutation: RetainedCloneRef<'_, M>, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
+    fn next_work_demand(&self,base:RetainedCloneRef<'_,P>,post:&P,mutation:RetainedCloneRef<'_,M>,body:usize)->Result<u64,ValueError>;
     fn advance(&mut self, base: RetainedCloneRef<'_, P>, post: &mut P, mutation: RetainedCloneRef<'_, M>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError>;
+    /// ⛽️ Actual work of the entire latest call, including nested cursors and partial failures; every call resets it.
+    fn last_turn_work(&self)->u64;
     fn take_inverse(&mut self) -> Option<Vec<M>>;
     /// 🌐️ Returns the original domain cursor's completed foreign-step decision.
     fn foreign_step_presence(&self) -> bool;
@@ -145,17 +151,10 @@ where
             edit_cursor: None,
             inverse: None,
             foreign_step_presence: None,
-            publication_post: None,
-            publication_post_close: None,
-            publication_inverse: None,
-            publication_metadata: None,
-            publication_metadata_close: None,
-            publication_edit: None,
-            publication_edit_close: None,
+            assembly:OriginalPublicationAssembly::default(),
             build_stage: 0,
             mutation: None,
             authority: Some(authority),
-            sealer: None,
             mutation_retirement: Some(mutation_retirement),
             snapshot_retirement: Some(snapshot_retirement),
             copied_close: None,
@@ -167,6 +166,7 @@ where
             maximum_depth: self.maximum_depth,
             checkpoint: ArtifactStoreOneItemCheckpoint::default(),
             ownership: RetainedCloneProgress::default(),
+            last_work:0,
             seal_base: ArtifactStoreOneItemCheckpoint::default(),
             phase: RetainedClonePreparationPhase::Source,
             cancelled: false,
@@ -182,6 +182,7 @@ enum RetainedClonePreparationPhase {
     CloneCursor,
     EditCursor,
     Clone,
+    TakeClone,
     CloseClone,
     Edit,
     CaptureForeignStepPresence,
@@ -208,17 +209,10 @@ struct RetainedClonePreparation<P: RetainedClone, M: RetireOwned + Sync, E: Reta
     edit_cursor: Option<E::Cursor>,
     pub inverse: Option<Vec<M>>,
     pub foreign_step_presence: Option<bool>,
-    publication_post: Option<Arc<P>>,
-    publication_post_close: Option<SharedControlledRetirement<P>>,
-    publication_inverse: Option<Box<OriginalVectorCursor<M>>>,
-    publication_metadata: Option<Box<NativeEditMetadata<M>>>,
-    publication_metadata_close: Option<ControlledRetirement<Box<NativeEditMetadata<M>>>>,
-    publication_edit: Option<Edit<M>>,
-    publication_edit_close: Option<ControlledRetirement<Edit<M>>>,
+    assembly:OriginalPublicationAssembly<P,M>,
     build_stage: u8,
     pub mutation: Option<RetainedCloneSource<M>>,
     pub authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
-    pub sealer: Option<ArtifactStoreOneItemSealer<P, M>>,
     pub mutation_retirement: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,
     pub snapshot_retirement: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
     copied_close: Option<ControlledRetirement<P>>,
@@ -230,6 +224,7 @@ struct RetainedClonePreparation<P: RetainedClone, M: RetireOwned + Sync, E: Reta
     pub maximum_depth: usize,
     pub checkpoint: ArtifactStoreOneItemCheckpoint,
     pub ownership: RetainedCloneProgress,
+    last_work:u64,
     seal_base: ArtifactStoreOneItemCheckpoint,
     pub phase: RetainedClonePreparationPhase,
     pub cancelled: bool,
@@ -293,14 +288,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
         if let Some(owner) = self.clone_handoff.as_ref() { controlled!(owner); }
         if let Some(owner) = self.clone_cursor.as_ref() { typed!(owner); }
         if let Some(owner)=self.edit_cursor.as_ref(){if !owner.terminal_is_empty(){typed!(owner);}}
-        if let Some(owner)=self.sealer.as_ref(){return owner.retirement_demands(body);}
-        if let Some(owner)=self.publication_metadata_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<Box<NativeEditMetadata<M>>>>>(),depth:1,..Default::default()});}let copy=owner.next_copy_byte_demand()?;return Ok(RetirementDemand{copy_bytes:copy,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"native metadata close depth overflow"))?});}
-        if self.publication_metadata.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Box<NativeEditMetadata<M>>>()+size_of::<ControlledRetirement<Box<NativeEditMetadata<M>>>>(),depth:1,..Default::default()});}
-        if let Some(owner)=self.publication_edit_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<Edit<M>>>>(),depth:1,..Default::default()});}let copy=owner.next_copy_byte_demand()?;return Ok(RetirementDemand{copy_bytes:copy,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original assembled edit close depth overflow"))?});}
-        if self.publication_edit.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Edit<M>>()+size_of::<ControlledRetirement<Edit<M>>>(),depth:1,..Default::default()});}
-        if let Some(owner)=self.publication_inverse.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<OriginalVectorCursor<M>>>>(),release_bytes:size_of::<OriginalVectorCursor<M>>(),depth:1,..Default::default()});}let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original inverse vector parent depth overflow"))?;return Ok(demand);}
-        if let Some(owner)=self.publication_post_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<SharedControlledRetirement<P>>>(),depth:1,..Default::default()});}let copy=owner.next_copy_byte_demand()?;return Ok(RetirementDemand{copy_bytes:copy,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original publication post parent depth overflow"))?});}
-        if self.publication_post.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Arc<P>>()+size_of::<SharedControlledRetirement<P>>(),depth:1,..Default::default()});}
+        if let Some(demand)=self.assembly.close_demands(body)?{return Ok(demand);}
         if let Some(owner) = self.inverse_close.as_ref() { controlled!(owner); }
         if self.inverse.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Vec<M>>(), depth: 1, ..Default::default() }); }
         if let Some(owner) = self.copied_close.as_ref() { controlled!(owner); }
@@ -319,49 +307,40 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
         Ok(Default::default())
     }
 
-    fn build_sealer(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<bool, ValueError> {
-        use semio_framework_value::{RetirementDemand,retirement::arc_custody::shared_retirement_allocation_bytes};
+    fn build_sealer(&mut self,grant:ArtifactStoreOneItemGrant)->Result<bool,ValueError>{
+        use semio_framework_value::RetirementDemand;
         let g=grant.retained_grant();
+        if self.build_stage>=4{
+            let turn=self.assembly.advance(OriginalPublicationInputs{forward:&mut self.pending_mutation,post:&mut self.copied,inverse:&mut self.inverse,authority:&mut self.authority,mutations:&mut self.mutation_retirement,snapshots:&mut self.snapshot_retirement},g);
+            self.last_work=self.last_work.saturating_add(turn.work);
+            let Some(progress)=turn.result?else{return Ok(false);};
+            self.record_progress(progress)?;
+            if self.assembly.sealer().is_some(){self.phase=RetainedClonePreparationPhase::Seal;self.seal_base=self.checkpoint;}
+            return Ok(true);
+        }
         let demand=match self.build_stage{
             0=>{let source=self.mutation.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original forward source missing before publication detach").with_retained_progress(self.ownership))?;let body=source.next_take_copy_byte_demand()?;RetirementDemand{copy_bytes:body,capacity_bytes:source.next_take_capacity_byte_demand(body)?,release_bytes:source.next_take_release_byte_demand()?,depth:source.next_take_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original forward source depth overflow").with_retained_progress(self.ownership))?}},
             1=>{let source=self.mutation.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original forward source missing before publication lease closure").with_retained_progress(self.ownership))?;if source.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<u8>(),depth:1,..Default::default()}}else{let body=source.next_close_copy_byte_demand()?;RetirementDemand{copy_bytes:body,capacity_bytes:source.next_close_capacity_byte_demand(body)?,release_bytes:source.next_close_release_byte_demand()?,depth:source.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original forward source depth overflow").with_retained_progress(self.ownership))?}}},
             2=>RetirementDemand{copy_bytes:size_of::<Option<RetainedCloneSource<M>>>(),depth:1,..Default::default()},
             3=>RetirementDemand{copy_bytes:size_of::<u8>(),depth:1,..Default::default()},
-            4=>RetirementDemand{copy_bytes:size_of::<P>()+size_of::<Arc<P>>(),capacity_bytes:shared_retirement_allocation_bytes::<P>(),depth:1,..Default::default()},
-            5=>{let mut d=OriginalVectorCursor::<M>::constructor_demand();d.copy_bytes=d.copy_bytes.checked_add(size_of::<OriginalVectorCursor<M>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original inverse vector transfer overflow").with_retained_progress(self.ownership))?;d.capacity_bytes=size_of::<OriginalVectorCursor<M>>();d},
-            6=>NativeEditMetadata::<M>::constructor_demand(),
-            7=>{let owner=self.publication_metadata.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original metadata frame missing").with_retained_progress(self.ownership))?;owner.next_demand(self.authority.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original metadata authority missing").with_retained_progress(self.ownership))?,self.publication_inverse.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original inverse cursor missing").with_retained_progress(self.ownership))?)?},
-            8=>RetirementDemand{copy_bytes:size_of::<Option<Box<NativeEditMetadata<M>>>>(),release_bytes:size_of::<NativeEditMetadata<M>>(),depth:1,..Default::default()},
-            9=>{let owner=self.publication_inverse.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original inverse backing missing").with_retained_progress(self.ownership))?;if owner.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<u8>(),depth:1,..Default::default()}}else{let mut demand=owner.next_demand(g.maximum_copy_bytes)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original inverse backing depth overflow").with_retained_progress(self.ownership))?;demand}},
-            10=>RetirementDemand{copy_bytes:size_of::<Option<Box<OriginalVectorCursor<M>>>>(),release_bytes:size_of::<OriginalVectorCursor<M>>(),depth:1,..Default::default()},
-            11=>{let birth=ArtifactStoreOneItemSealer::<P,M>::constructor_demand();RetirementDemand{copy_bytes:ArtifactStoreOneItemSealer::<P,M>::constructor_copy_byte_demand()+size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+size_of::<Arc<P>>()+size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>()+size_of::<Arc<dyn SnapshotRetirementFactory<P>>>(),capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()}},
-            _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original publication assembly has no admitted stage").with_retained_progress(self.ownership)),
+            _=>return Err(ValueError::invariant("original forward source has no admitted frontier")),
         };
         if g.maximum_items==0||demand.copy_bytes>g.maximum_copy_bytes||demand.capacity_bytes>g.maximum_capacity_bytes||demand.release_bytes>g.maximum_release_bytes||demand.depth>g.maximum_depth{return Ok(false);}
         let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes};
         match self.build_stage{
-            0=>{let source=self.mutation.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original forward source missing at publication detach").with_retained_progress(self.ownership))?;match source.take_authority(RetainedCloneGrant{maximum_items:1,maximum_depth:g.maximum_depth-1,..g}).result?{semio_framework_value::retained_clone::RetainedCloneSourceTake::Pending(step)=>{progress=step;},semio_framework_value::retained_clone::RetainedCloneSourceTake::Ready(original,step)=>{self.pending_mutation=Some(original);progress=step;self.build_stage=1;}}},
-            1=>{let source=self.mutation.as_mut().ok_or_else(||ValueError::invariant("mutation absent"))?;if source.terminal_is_empty(){self.build_stage=2;}else{progress=source.close_step(RetainedCloneGrant{maximum_items:1,maximum_depth:g.maximum_depth-1,..g}).result?.progress();}},
+            0=>{let source=self.mutation.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original forward source missing at publication detach").with_retained_progress(self.ownership))?;match {let turn=source.take_authority(RetainedCloneGrant{maximum_items:1,maximum_depth:g.maximum_depth-1,..g});self.last_work=self.last_work.saturating_add(turn.work);turn.result?}{semio_framework_value::retained_clone::RetainedCloneSourceTake::Pending(step)=>{progress=step;},semio_framework_value::retained_clone::RetainedCloneSourceTake::Ready(original,step)=>{self.pending_mutation=Some(original);progress=step;self.build_stage=1;}}},
+            1=>{let source=self.mutation.as_mut().ok_or_else(||ValueError::invariant("mutation absent"))?;if source.terminal_is_empty(){self.build_stage=2;}else{let turn=source.close_step(RetainedCloneGrant{maximum_items:1,maximum_depth:g.maximum_depth-1,..g});self.last_work=self.last_work.saturating_add(turn.work);progress=turn.result?.progress();}},
             2=>{self.mutation=None;self.build_stage=3;},
             3=>{self.build_stage=4;},
-            4=>{self.publication_post=Some(Arc::new(self.copied.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original exclusive post missing before shared publication birth").with_retained_progress(self.ownership))?));self.build_stage=5;},
-            5=>{let original=self.inverse.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original inverse vector missing before publication handoff").with_retained_progress(self.ownership))?;match OriginalVectorCursor::admit(original,g).result {Ok((owner,receipt))=>{self.publication_inverse=Some(Box::new(owner));progress=RetainedCloneProgress{copied_bytes:receipt.copied_bytes+size_of::<OriginalVectorCursor<M>>(),retained_capacity_bytes:size_of::<OriginalVectorCursor<M>>(),..receipt};self.build_stage=6;},Err((error,original))=>{self.inverse=Some(original);return Err(error);}}},
-            6=>{let(owner,receipt)=NativeEditMetadata::<M>::admit(self.authority.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original authority missing at metadata admission").with_retained_progress(self.ownership))?,g)?;self.publication_metadata=Some(owner);progress=receipt;self.build_stage=7;},
-            7=>{let owner=self.publication_metadata.as_mut().unwrap();if owner.ready(){let(original,receipt)=owner.take(g)?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original metadata take lacks grant").with_retained_progress(self.ownership))?;self.publication_edit=Some(original);progress=receipt;self.build_stage=8;}else{progress=owner.step(self.authority.as_ref().unwrap(),&mut self.pending_mutation,self.publication_inverse.as_mut().unwrap(),g)?;if progress==Default::default(){return Ok(false);}}},
-            8=>{if !self.publication_metadata.as_ref().unwrap().terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original metadata frame still retains fields before release").with_retained_progress(self.ownership));}self.publication_metadata=None;self.build_stage=9;},
-            9=>{let owner=self.publication_inverse.as_mut().ok_or_else(||ValueError::invariant("publication_inverse absent"))?;if owner.terminal_is_empty(){self.build_stage=10;}else{owner.begin_close();progress=owner.step(RetainedCloneGrant{maximum_items:1,maximum_depth:g.maximum_depth-1,..g}).result?.progress();}},
-            10=>{if !self.publication_inverse.as_ref().unwrap().terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original inverse frame retains backing before release").with_retained_progress(self.ownership));}self.publication_inverse=None;self.build_stage=11;},
-            11=>{if self.authority.is_none()||self.publication_edit.is_none()||self.publication_post.is_none()||self.mutation_retirement.is_none()||self.snapshot_retirement.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original publication seal is missing an original owner").with_retained_progress(self.ownership));}let authority=self.authority.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original publication authority missing at seal").with_retained_progress(self.ownership))?;let original=self.publication_edit.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original publication edit missing at seal").with_retained_progress(self.ownership))?;let post=self.publication_post.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original publication post missing at seal").with_retained_progress(self.ownership))?;let mutation_retirement=self.mutation_retirement.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original mutation factory missing at seal").with_retained_progress(self.ownership))?;let snapshot_retirement=self.snapshot_retirement.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original snapshot factory missing at seal").with_retained_progress(self.ownership))?;match ArtifactStoreOneItemSealer::admit(authority,original,post,mutation_retirement,snapshot_retirement,g){Ok((owner,receipt))=>{self.sealer=Some(owner);progress=RetainedCloneProgress{copied_bytes:demand.copy_bytes,..receipt};self.phase=RetainedClonePreparationPhase::Seal;self.build_stage=12;},Err((error,authority,original,post,mutation_retirement,snapshot_retirement))=>{self.authority=Some(authority);self.publication_edit=Some(original);self.publication_post=Some(post);self.mutation_retirement=Some(mutation_retirement);self.snapshot_retirement=Some(snapshot_retirement);return Err(error);}}},
             _=>unreachable!(),
         }
-        self.record_progress(admit_retained_clone_progress(g,progress,"original publication assembly").map_err(|error|error.with_retained_progress(progress))?)?;
-        if self.phase==RetainedClonePreparationPhase::Seal{self.seal_base=self.checkpoint;}
+        self.record_progress(admit_retained_clone_progress(g,progress,"original forward source handoff").map_err(|error|error.with_retained_progress(progress))?)?;
         Ok(true)
     }
 
-
     pub fn advance_original(&mut self,  body:usize, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         self.ownership=RetainedCloneProgress::default();
+        self.last_work=0;
         if self.cancelled || self.closing || !grant.permits_one() {
             {return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};
         }
@@ -380,10 +359,10 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
                 }
                 let admission=self.source_admission.as_mut().ok_or_else(||ValueError::invariant("staged source admission was just installed"))?;
                 let progress=if admission.phase()=="ready" {
-                    let progress=admission.take_output(&mut self.source,clone_grant).result?.progress();
+                    let turn=admission.take_output(&mut self.source,clone_grant);self.last_work=self.last_work.saturating_add(turn.work);let progress=turn.result?.progress();
                     if self.source.is_some() { self.source_admission=None; self.phase=RetainedClonePreparationPhase::MutationSource; }
                     progress
-                } else { admission.advance(clone_grant).result?.progress() };
+                } else {let turn=admission.advance(clone_grant);self.last_work=self.last_work.saturating_add(turn.work);turn.result?.progress() };
                 self.record_progress(progress)?;
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
             }
@@ -398,10 +377,10 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
                 }
                 let admission=self.mutation_admission.as_mut().ok_or_else(||ValueError::invariant("staged mutation admission was just installed"))?;
                 let progress=if admission.phase()=="ready" {
-                    let progress=admission.take_output(&mut self.mutation,clone_grant).result?.progress();
+                    let turn=admission.take_output(&mut self.mutation,clone_grant);self.last_work=self.last_work.saturating_add(turn.work);let progress=turn.result?.progress();
                     if self.mutation.is_some() { self.mutation_admission=None; self.phase=RetainedClonePreparationPhase::CloneCursor; }
                     progress
-                } else { admission.advance(clone_grant).result?.progress() };
+                } else {let turn=admission.advance(clone_grant);self.last_work=self.last_work.saturating_add(turn.work);turn.result?.progress() };
                 self.record_progress(progress)?;
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
             }
@@ -425,24 +404,27 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
             }
             RetainedClonePreparationPhase::Clone => {
-                let step = self
+                let turn = self
                     .clone_cursor
                     .as_mut()
                     .ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its active clone cursor").with_retained_progress(self.ownership))?
-                    .advance(self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its source").with_retained_progress(self.ownership))?.borrow(), body, clone_grant)
-                    .result?;
+                    .advance(self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its source").with_retained_progress(self.ownership))?.borrow(), body, clone_grant);
+                self.last_work=self.last_work.saturating_add(turn.work);let step=turn.result?;
                 let progress = admit_retained_clone_progress(clone_grant, step.progress(), "retained clone preparation snapshot clone")?;
                 if progress == RetainedCloneProgress::default() && !matches!(step, RetainedCloneStep::Complete(_)) {
                     return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "retained-clone.step-grant-too-small: the snapshot clone cursor cannot fund its next contiguous owner within one turn grant").with_retained_progress(self.ownership));
                 }
                 self.record_document_progress(progress)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) {
-                    self.copied = Some(match self.clone_cursor.as_mut(){Some(cursor)=>cursor.take(clone_grant).result?.map(|(value,_)|value),None=>None}.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone cursor completed without its owner").with_retained_progress(self.ownership))?);
-                    self.handoff_clone_cursor()?;
-                    self.phase = RetainedClonePreparationPhase::CloseClone;
+                    self.phase=RetainedClonePreparationPhase::TakeClone;
                 }
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
             }
+            RetainedClonePreparationPhase::TakeClone=>{
+                let cursor=self.clone_cursor.as_mut().ok_or_else(||ValueError::invariant("completed snapshot clone cursor is absent"))?;let turn=cursor.take(clone_grant);self.last_work=self.last_work.saturating_add(turn.work);
+                let Some((value,progress))=turn.result?else{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);};self.copied=Some(value);self.record_document_progress(progress)?;self.handoff_clone_cursor()?;self.phase=RetainedClonePreparationPhase::CloseClone;
+                Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
+            },
             RetainedClonePreparationPhase::CloseClone => {
                 let handoff = self.clone_handoff.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its Store-owned clone cursor handoff").with_retained_progress(self.ownership))?;
                 if handoff.terminal_is_empty() {
@@ -451,18 +433,19 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
                     self.phase = RetainedClonePreparationPhase::Edit;
                     return Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership));
                 }
-                let step = handoff.close_step(clone_grant).result?;
+                let turn=handoff.close_step(clone_grant);self.last_work=self.last_work.saturating_add(turn.work);let step=turn.result?;
                 let step = admit_retained_clone_close(clone_grant, step, handoff.terminal_is_empty(), "retained clone preparation clone close")?;
                 self.record_document_progress(step.progress())?;
                 Ok(if step.progress() == RetainedCloneProgress::default() && !matches!(step, RetainedCloneStep::Complete(_)) { ArtifactStoreOneItemPreparationStep::Blocked } else { ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership) })
             }
             RetainedClonePreparationPhase::Edit => {
-                let step = self.edit_cursor.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its admitted editor cursor").with_retained_progress(self.ownership))?.advance(
+                let result = self.edit_cursor.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its admitted editor cursor").with_retained_progress(self.ownership))?.advance(
                     self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its edit source").with_retained_progress(self.ownership))?.borrow(),
                     self.copied.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its exclusive post snapshot").with_retained_progress(self.ownership))?,
                     self.mutation.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its forward mutation").with_retained_progress(self.ownership))?.borrow(),
                     body, clone_grant,
-                )?;
+                );
+                self.last_work=self.edit_cursor.as_ref().unwrap().last_turn_work();let step=result?;
                 let progress = admit_retained_clone_progress(clone_grant, step.progress(), "retained clone preparation typed edit")?;
                 self.record_progress(progress)?;
                 if matches!(step,RetainedCloneEditStep::Complete(_)){self.phase=RetainedClonePreparationPhase::CaptureForeignStepPresence;}
@@ -477,7 +460,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
             }
             RetainedClonePreparationPhase::CloseEdit => {
-                let step = self.edit_cursor.as_mut().unwrap().close_step(clone_grant)?;
+                let result=self.edit_cursor.as_mut().unwrap().close_step(clone_grant);self.last_work=self.edit_cursor.as_ref().unwrap().last_turn_work();let step=result?;
                 let step = admit_retained_clone_close(clone_grant, step, self.edit_cursor.as_ref().is_none_or(|cursor|cursor.terminal_is_empty()), "retained clone preparation edit close")?;
                 self.record_progress(step.progress())?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = RetainedClonePreparationPhase::Build; }
@@ -491,8 +474,9 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
                 }
             }
             RetainedClonePreparationPhase::Seal => {
-                let result = self.sealer.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its canonical sealer").with_retained_progress(self.ownership))?.advance(grant,receiving);
-                let receipt=self.sealer.as_ref().unwrap().ownership_progress();
+                let result = self.assembly.sealer.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its canonical sealer").with_retained_progress(self.ownership))?.advance(grant,receiving);
+                self.last_work=self.assembly.sealer.as_ref().unwrap().last_turn_work();
+                let receipt=self.assembly.sealer.as_ref().unwrap().ownership_progress();
                 self.ownership=receipt;
                 admit_retained_clone_progress(clone_grant,receipt,"retained clone preparation original canonical source").map_err(|error|error.with_retained_progress(receipt))?;
                 self.charge_footprint(receipt,"retained clone original canonical source exceeded admitted footprint")?;
@@ -511,7 +495,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
             RetainedClonePreparationPhase::RecordForeignStepPresence => {
                 let copy=size_of::<bool>()+size_of::<RetainedClonePreparationPhase>();if clone_grant.maximum_copy_bytes<copy||clone_grant.maximum_depth==0{{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};}
                 let presence=self.foreign_step_presence.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained edit foreign-step decision is absent").with_retained_progress(self.ownership))?;
-                if !self.sealer.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original sealer is absent before declaration").with_retained_progress(self.ownership))?.record_foreign_step_presence(presence){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared owner is absent before declaration").with_retained_progress(self.ownership));}
+                if !self.assembly.sealer.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original sealer is absent before declaration").with_retained_progress(self.ownership))?.record_foreign_step_presence(presence){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared owner is absent before declaration").with_retained_progress(self.ownership));}
                 self.phase=RetainedClonePreparationPhase::Prepared;self.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;
                 Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint,self.ownership))
             }
@@ -528,11 +512,22 @@ where
     E: RetainedCloneEdit<P, M>,
 {
     fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
-        match self.advance_original(body,grant,receiving) {
+        self.last_work=0;self.ownership=Default::default();
+        if self.cancelled||self.closing||!grant.permits_one(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+        let native= self.phase==RetainedClonePreparationPhase::Seal;
+        let demand=if self.phase==RetainedClonePreparationPhase::Edit{self.edit_cursor.as_ref().ok_or_else(||ValueError::invariant("original editor cursor is absent"))?.next_work_demand(self.source.as_ref().ok_or_else(||ValueError::invariant("original edit source is absent"))?.borrow(),self.copied.as_ref().ok_or_else(||ValueError::invariant("original post is absent"))?,self.mutation.as_ref().ok_or_else(||ValueError::invariant("original mutation source is absent"))?.borrow(),body)?}else{1};
+        if !native&&!receiving.prepare_work(demand)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+        let before=receiving.actual_work();let result=self.advance_original(body,grant,receiving);
+        let observed=receiving.actual_work().saturating_sub(before);let coordinated=result.as_ref().is_ok_and(|step|step.ownership_progress()!=Default::default());
+        let reported=self.last_work;self.last_work=reported.max(observed).max(u64::from(coordinated));
+        if !native{receiving.commit_work(self.last_work).map_err(|error|error.with_retained_progress(self.ownership))?;}
+        self.last_work=semio_framework_os_store_one_item::original_one_item_turn_work(reported,observed,coordinated)?;
+        match result {
             Ok(step)=>Ok(step),
             Err(error)=>{self.cancelled=true;if error.retained_progress()!=Default::default(){self.ownership=error.retained_progress();}Err(error.with_retained_progress(self.ownership))}
         }
     }
+    fn last_turn_work(&self)->u64{self.last_work}
 
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint {
         self.checkpoint
@@ -540,18 +535,18 @@ where
 
     fn prepared(&self) -> Option<&ArtifactStoreOneItemPrepared<P, M>> {
         if self.phase!=RetainedClonePreparationPhase::Prepared{return None}
-        self.sealer.as_ref().and_then(ArtifactStoreOneItemSealer::prepared)
+        self.assembly.sealer.as_ref().and_then(ArtifactStoreOneItemSealer::prepared)
     }
 
     fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, M>> {
         if self.phase!=RetainedClonePreparationPhase::Prepared{return None}
-        self.sealer.as_mut().and_then(ArtifactStoreOneItemSealer::take_prepared)
+        self.assembly.sealer.as_mut().and_then(ArtifactStoreOneItemSealer::take_prepared)
     }
 
     fn cancel(&mut self) {
         self.cancelled = true;
         if let Some(cursor)=self.edit_cursor.as_mut(){cursor.cancel();}
-        if let Some(sealer) = self.sealer.as_mut() {
+        if let Some(sealer) = self.assembly.sealer.as_mut() {
             sealer.cancel();
         }
     }
@@ -563,12 +558,13 @@ where
         self.closing = true;
         if let Some(cursor) = self.clone_cursor.as_mut() { cursor.begin_close(); }
         if let Some(cursor)=self.edit_cursor.as_mut(){let _=cursor.begin_close();}
-        if let Some(sealer) = self.sealer.as_mut() {
+        if let Some(sealer) = self.assembly.sealer.as_mut() {
             sealer.begin_close();
         }
     }
 
     fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.last_work=0;self.ownership=Default::default();
         let grant = grant.retained_grant();
         let empty = RetainedCloneProgress::default();
         if !self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -576,26 +572,19 @@ where
             return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "snapshot clone close exceeds granted depth"));
         }
         if let Some(handoff) = self.clone_handoff.as_mut() {
-            let step = handoff.close_step(grant).result?;
+            let turn=handoff.close_step(grant);self.last_work=turn.work;let step=turn.result?;
             if handoff.terminal_is_empty() { self.clone_handoff = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(cursor) = self.clone_cursor.as_mut() {
-            let step = cursor.close_step(grant).result?;
+            let turn=cursor.close_step(grant);self.last_work=turn.work;let step=turn.result?;
             if cursor.terminal_is_empty() { self.clone_cursor = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(owner)=self.edit_cursor.as_mut(){let step=owner.close_step(grant)?;if owner.terminal_is_empty(){self.edit_cursor=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if let Some(owner)=self.sealer.as_mut(){let step=owner.close_step(grant)?;if owner.terminal_is_empty(){self.sealer=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if self.publication_metadata_close.is_some(){let d=self.close_demand(grant.maximum_copy_bytes)?;if d.depth>grant.maximum_depth||d.copy_bytes>grant.maximum_copy_bytes||d.capacity_bytes>grant.maximum_capacity_bytes||d.release_bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}let owner=self.publication_metadata_close.as_mut().unwrap();if owner.terminal_is_empty(){self.publication_metadata_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..empty}));}return owner.step(RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant}).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if self.publication_metadata.is_some(){let d=self.close_demand(grant.maximum_copy_bytes)?;if d.depth>grant.maximum_depth||d.copy_bytes>grant.maximum_copy_bytes{return Ok(RetainedCloneStep::Progress(empty));}let original=self.publication_metadata.take().unwrap();match ControlledRetirement::new(original){Ok(owner)=>self.publication_metadata_close=Some(owner),Err((error,original))=>{self.publication_metadata=Some(original);return Err(error);}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..empty}));}
-        if self.publication_edit_close.is_some(){let d=self.close_demand(grant.maximum_copy_bytes)?;if d.depth>grant.maximum_depth||d.copy_bytes>grant.maximum_copy_bytes||d.capacity_bytes>grant.maximum_capacity_bytes||d.release_bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}let owner=self.publication_edit_close.as_mut().unwrap();if owner.terminal_is_empty(){self.publication_edit_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..empty}));}return owner.step(RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant}).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if self.publication_edit.is_some(){let d=self.close_demand(grant.maximum_copy_bytes)?;if d.depth>grant.maximum_depth||d.copy_bytes>grant.maximum_copy_bytes{return Ok(RetainedCloneStep::Progress(empty));}let original=self.publication_edit.take().unwrap();match ControlledRetirement::new(original){Ok(owner)=>self.publication_edit_close=Some(owner),Err((error,original))=>{self.publication_edit=Some(original);return Err(error);}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..empty}));}
-        if self.publication_inverse.is_some(){let demand=self.close_demand(grant.maximum_copy_bytes)?;if demand.depth>grant.maximum_depth||demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}let owner=self.publication_inverse.as_mut().ok_or_else(||ValueError::invariant("publication_inverse absent"))?;if owner.terminal_is_empty(){self.publication_inverse=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..empty}));}owner.begin_close();return owner.step(RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant}).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if self.publication_post_close.is_some(){let demand=self.close_demand(grant.maximum_copy_bytes)?;if demand.depth>grant.maximum_depth||demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}let owner=self.publication_post_close.as_mut().unwrap();if owner.terminal_is_empty(){self.publication_post_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}return owner.step(RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant}).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if self.publication_post.is_some(){let bytes=size_of::<Arc<P>>()+size_of::<SharedControlledRetirement<P>>();if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(empty));}self.publication_post_close=Some(SharedControlledRetirement::new(self.publication_post.take().unwrap()));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..empty}));}
+        if let Some(owner)=self.edit_cursor.as_mut(){let result=owner.close_step(grant);self.last_work=owner.last_turn_work();let step=result?;if owner.terminal_is_empty(){self.edit_cursor=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if !self.assembly.terminal_is_empty(){let turn=self.assembly.close_step(grant);self.last_work=turn.work;return turn.result;}
         if let Some(owner) = self.inverse_close.as_mut() {
-            let step = owner.step(grant)?;
+            let result=owner.step(grant);self.last_work=owner.last_turn_work();let step=result?;
             if owner.terminal_is_empty() { self.inverse_close = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
@@ -607,10 +596,11 @@ where
                 Ok(owner) => self.inverse_close = Some(owner),
                 Err((error, value)) => { self.inverse = Some(value); return Err(error); }
             }
+            self.last_work=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..empty }));
         }
         if let Some(owner) = self.copied_close.as_mut() {
-            let step = owner.step(grant)?;
+            let result=owner.step(grant);self.last_work=owner.last_turn_work();let step=result?;
             if owner.terminal_is_empty() { self.copied_close = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
@@ -622,48 +612,49 @@ where
                 Ok(owner) => self.copied_close = Some(owner),
                 Err((error, value)) => { self.copied = Some(value); return Err(error); }
             }
+            self.last_work=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..empty }));
         }
         if let Some(admission)=self.mutation_admission.as_mut(){
             if admission.phase()=="ready" {
-                let step=admission.take_output(&mut self.mutation,grant).result?;
+                let turn=admission.take_output(&mut self.mutation,grant);self.last_work=turn.work;let step=turn.result?;
                 if admission.terminal_is_empty() { self.mutation_admission = None; }
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
             let mut inputs=None;
-            let step=admission.return_inputs(&mut inputs,grant).result?;
+            let turn=admission.return_inputs(&mut inputs,grant);self.last_work=turn.work;let step=turn.result?;
             if let Some((mutation,authority))=inputs { self.pending_mutation=Some(mutation); self.pending_mutation_authority=Some(authority); }
             if admission.terminal_is_empty() { self.mutation_admission = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(step)=pending::close(&mut self.pending_mutation,&mut self.pending_mutation_close,grant)?{return Ok(step);}
-        if let Some(owner)=self.pending_mutation_authority.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.pending_mutation_authority=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        {let turn=pending::close(&mut self.pending_mutation,&mut self.pending_mutation_close,grant);self.last_work=turn.work;if let Some(step)=turn.result?{return Ok(step);}}
+        if let Some(owner)=self.pending_mutation_authority.as_mut(){let result=owner.step(grant);self.last_work=owner.last_turn_work();let step=result?;if owner.terminal_is_empty(){self.pending_mutation_authority=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
         if let Some(source) = self.mutation.as_mut() {
-            let step = source.close_step(grant).result?;
+            let turn=source.close_step(grant);self.last_work=turn.work;let step=turn.result?;
             if source.terminal_is_empty() { self.mutation = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(admission)=self.source_admission.as_mut(){
             if admission.phase()=="ready" {
-                let turn=admission.take_output(&mut self.source,grant);
+                let turn=admission.take_output(&mut self.source,grant);self.last_work=turn.work;
                 let step=turn.result?;
                 if admission.terminal_is_empty() { self.source_admission = None; }
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
             let mut inputs=None;
-            let step=admission.return_inputs(&mut inputs,grant).result?;
+            let turn=admission.return_inputs(&mut inputs,grant);self.last_work=turn.work;let step=turn.result?;
             if let Some((base,()))=inputs { self.pending_base=Some(base); }
             if admission.terminal_is_empty() { self.source_admission = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(step)=pending::close(&mut self.pending_base,&mut self.pending_base_close,grant)?{return Ok(step);}
+        {let turn=pending::close(&mut self.pending_base,&mut self.pending_base_close,grant);self.last_work=turn.work;if let Some(step)=turn.result?{return Ok(step);}}
         if let Some(source) = self.source.as_mut() {
-            let step = source.close_step(grant).result?;
+            let turn=source.close_step(grant);self.last_work=turn.work;let step=turn.result?;
             if source.terminal_is_empty() { self.source = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(owner) = self.authority_close.as_mut() {
-            let step = owner.step(grant)?;
+            let result=owner.step(grant);self.last_work=owner.last_turn_work();let step=result?;
             if owner.terminal_is_empty() { self.authority_close = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
@@ -671,10 +662,11 @@ where
             let bytes = size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>();
             if grant.maximum_copy_bytes < bytes { return Ok(RetainedCloneStep::Progress(empty)); }
             self.authority_close = Some(SharedControlledRetirement::lease(self.authority.take().unwrap()));
+            self.last_work=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..empty }));
         }
         if let Some(owner) = self.factory_close.as_mut() {
-            let step = owner.step(grant).result?;
+            let turn=owner.step(grant);self.last_work=turn.work;let step=turn.result?;
             if owner.terminal_is_empty() { self.factory_close = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
@@ -683,6 +675,7 @@ where
             if grant.maximum_copy_bytes < bytes { return Ok(RetainedCloneStep::Progress(empty)); }
             let owner: Arc<dyn semio_framework_value::FactoryRetirement> = if let Some(owner)=self.edit.take(){owner}else if let Some(owner) = self.mutation_retirement.take() { owner } else { self.snapshot_retirement.take().unwrap() };
             self.factory_close = Some(FactoryAuthority::new(owner));
+            self.last_work=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..empty }));
         }
         Ok(RetainedCloneStep::Complete(empty))
@@ -713,17 +706,10 @@ where
             && self.source.is_none()
             && self.copied.is_none()
             && self.inverse.is_none()
-            && self.publication_inverse.is_none()
-            && self.publication_post.is_none()
-            && self.publication_post_close.is_none()
-            && self.publication_metadata.is_none()
-            && self.publication_metadata_close.is_none()
-            && self.publication_edit.is_none()
-            && self.publication_edit_close.is_none()
+            && self.assembly.terminal_is_empty()
             && self.mutation.is_none()
            
             && self.authority.is_none()
-            && self.sealer.is_none()
             && self.copied_close.is_none()
             && self.inverse_close.is_none()
             && self.authority_close.is_none()

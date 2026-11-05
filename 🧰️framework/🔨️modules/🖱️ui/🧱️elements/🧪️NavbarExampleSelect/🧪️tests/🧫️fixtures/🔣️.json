@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "default-en",
+      "locale": "en",
+      "value": "",
+      "options": [
+        {
+          "id": "note",
+          "label": "Note"
+        }
+      ],
+      "select": "note",
+      "expected": {
+        "text": "Example",
+        "offered": [
+          "note"
+        ],
+        "emitted": "note",
+        "label": "Example"
+      }
+    },
+    {
+      "id": "false-en",
+      "locale": "en",
+      "value": "",
+      "includeNoExample": false,
+      "options": [
+        {
+          "id": "note",
+          "label": "Note"
+        }
+      ],
+      "select": "note",
+      "expected": {
+        "text": "Example",
+        "offered": [
+          "note"
+        ],
+        "emitted": "note",
+        "label": "Example"
+      }
+    },
+    {
+      "id": "true-en",
+      "locale": "en",
+      "value": "note",
+      "includeNoExample": true,
+      "options": [
+        {
+          "id": "note",
+          "label": "Note"
+        }
+      ],
+      "select": "__none__",
+      "expected": {
+        "text": "Note",
+        "offered": [
+          "__none__",
+          "note"
+        ],
+        "emitted": "",
+        "label": "Example"
+      }
+    },
+    {
+      "id": "default-de",
+      "locale": "de",
+      "value": "",
+      "options": [
+        {
+          "id": "note",
+          "label": "Notiz"
+        }
+      ],
+      "select": "note",
+      "expected": {
+        "text": "Beispiel",
+        "offered": [
+          "note"
+        ],
+        "emitted": "note",
+        "label": "Beispiel"
+      }
+    },
+    {
+      "id": "false-de",
+      "locale": "de",
+      "value": "",
+      "includeNoExample": false,
+      "options": [
+        {
+          "id": "note",
+          "label": "Notiz"
+        }
+      ],
+      "select": "note",
+      "expected": {
+        "text": "Beispiel",
+        "offered": [
+          "note"
+        ],
+        "emitted": "note",
+        "label": "Beispiel"
+      }
+    },
+    {
+      "id": "true-de",
+      "locale": "de",
+      "value": "note",
+      "includeNoExample": true,
+      "options": [
+        {
+          "id": "note",
+          "label": "Notiz"
+        }
+      ],
+      "select": "__none__",
+      "expected": {
+        "text": "Notiz",
+        "offered": [
+          "__none__",
+          "note"
+        ],
+        "emitted": "",
+        "label": "Beispiel"
+      }
+    }
+  ]
+}

@@ -216,13 +216,19 @@ message En1991Diff {
   // @state artifact
   En1991RotatingMachineDelta rotating_machines = 107;
   // @state artifact
-  optional En1991FatigueModelDelta fatigue_models = 108;
+  En1991DustExplosionDelta dust_explosions = 108;
   // @state artifact
-  optional En1991SupportCollisionDelta support_collisions = 109;
+  En1991RailLoadGroupDelta rail_load_groups = 109;
   // @state artifact
-  optional En1991LocalFireDelta local_fires = 110;
+  En1991RailDerailmentDelta rail_derailments = 110;
   // @state artifact
-  optional En1991SnowGuardDelta snow_guards = 111;
+  optional En1991FatigueModelDelta fatigue_models = 111;
+  // @state artifact
+  optional En1991SupportCollisionDelta support_collisions = 112;
+  // @state artifact
+  optional En1991LocalFireDelta local_fires = 113;
+  // @state artifact
+  optional En1991SnowGuardDelta snow_guards = 114;
 }
 message En1991FatigueModelPatch {
   optional string model = 1;
@@ -248,4 +254,28 @@ message En1991SnowGuardPatch {
   optional string roof_id = 1;
   optional double slope_length = 2;
   optional double assumed_force = 3;
+}
+message En1991RailDerailmentPatch {
+  optional string situation = 1;
+  optional double assumed_line_load = 2;
+  optional double loaded_length = 3;
+  optional double offset = 4;
+}
+message En1991RailLoadGroupPatch {
+  optional string load_group = 1;
+  optional double factor_vertical = 2;
+  optional double factor_longitudinal = 3;
+  optional double factor_lateral = 4;
+  optional double assumed_axle_load = 5;
+  optional double assumed_udl = 6;
+  optional double assumed_longitudinal = 7;
+  optional double assumed_lateral = 8;
+}
+message En1991DustExplosionPatch {
+  optional double kst = 1;
+  optional double p_max = 2;
+  optional double volume = 3;
+  optional double vent_area = 4;
+  optional double static_opening_pressure = 5;
+  optional double design_pressure = 6;
 }

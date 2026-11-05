@@ -1,3 +1,4 @@
+use protocol::command::ColdMutation;
 use crate::schema::diff;
 use crate::apply_mutation;
 use crate::standards::v2_0::subsets::base::schema::mutations::*;

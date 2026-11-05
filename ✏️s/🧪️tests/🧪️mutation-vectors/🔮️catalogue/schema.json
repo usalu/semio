@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "kinds",
+          "manifest"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kinds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "manifest": {
+            "type": "object"
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "error": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "missing": {}
+            },
+            "required": [
+              "missing"
+            ],
+            "not": {
+              "properties": {
+                "error": {}
+              },
+              "required": [
+                "error"
+              ]
+            }
+          },
+          {
+            "properties": {
+              "error": {}
+            },
+            "required": [
+              "error"
+            ],
+            "not": {
+              "properties": {
+                "missing": {}
+              },
+              "required": [
+                "missing"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

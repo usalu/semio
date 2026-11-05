@@ -23,7 +23,7 @@
           "de": "Das adressierte Element (Rahmeneinwirkung), per Kennung."
         },
         "ref": {
-          "restraintB": "buckling-length"
+          "kind": "buckling-length"
         },
         "group": "target",
         "order": 10

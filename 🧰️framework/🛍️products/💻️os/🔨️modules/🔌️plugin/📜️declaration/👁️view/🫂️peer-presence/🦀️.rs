@@ -45,14 +45,10 @@ impl PeerPresenceRoot {
     /// 🌱️ Constructs the empty shared root only inside its defining original native birth quote.
     pub fn admit_empty(grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(std::sync::Arc<Self>,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{let d=Self::birth_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None)}Ok(Some((std::sync::Arc::new(Self::empty()),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})))}
 
-    pub fn empty() -> Self {
-        Self { entries: std::array::from_fn(|_| None), len: 0 }
-    }
+    /// 🈳️ An absent roster borrows this immutable empty value without allocating shared ownership.
+    pub const EMPTY:Self=Self{entries:[const{None};PEER_PRESENCE_SLOTS],len:0};
 
-    pub fn empty_shared() -> std::sync::Arc<Self> {
-        static EMPTY: std::sync::OnceLock<std::sync::Arc<PeerPresenceRoot>> = std::sync::OnceLock::new();
-        EMPTY.get_or_init(|| std::sync::Arc::new(Self::empty())).clone()
-    }
+    pub fn empty() -> Self {Self::EMPTY}
 
     pub fn insert(&mut self, actor: String, presence: PeerPresence) -> Result<(), Fault> {
         if actor.is_empty() || actor.len() > PEER_PRESENCE_ID_BYTES {

@@ -1,0 +1,15 @@
+# Complete Payload Binding Census
+
+A bounded read-only source census connected actual native rule declarations to canonical payload schema IDs across all fifteen artifact owners. The first pass parsed2648bindings with zero missing schema mappings and identified two incomplete EN1999 setters: bucklingLengthZ lacked axis; bolts.rows lacked newBoltsPerRow. Actual family resolver inspection found no special handler supplying either field. Native typed payload structs require those members.
+
+The source completeness follow-up found eight additional EN1993 SetFieldRule declarations whose actual field names had been replaced with domain words instead of the required Rust field kind. They were excluded by the first parser because they were syntactically invalid records. The permanent test now counts2656 declarations, validates their complete closed field shapes independently with Ajv, and checks each complete emitted argument key set against the canonical schema through both a direct model and strict Ajv unique/required-membership validation. This is lexical/schema evidence; it is not a passing native compiler or family execution claim.
+
+The shared schema-first corpus supplies axis literal, preserved sibling and missing-sibling refusal vectors. A generic declarative argument extension is worker-owned, with actual EN1999 native witness tests authored against the same corpus. Root owns the eight incorrect EN1993 field spellings, to be corrected only after the new independent test observes the malformed declarations. Input research script edit-binding-census.ts remains in the ticket; its tool output is in generated/edit-binding-census.json. The permanent neutral fixtures and tests are in norm/tests/payload-bindings.
+
+## Current Source Follow-up
+
+After the initial malformed declarations were observed by the actual registered Bun test, all eight EN1993 field spellings were corrected without changing paths, kinds, selectors or values. A concurrent legitimate EN1999 forceMethod rule brought its current roster to205; its actual field was also misspelled force_method instead of kind. The next Bun run exposed that exact source path. It is now corrected and the exact frozen family count updated to match the actual new canonical mutation schema. Total current declared binding census is2657. This records a real new source row rather than weakening count or missing-schema checks. The fixture strict-required branches were made explicit and zero-required-key validators omit an illegal empty allOf; strict mode remains enabled.
+
+## Actual Independent Binding Gate
+
+Run15751 completed exit0 after the observed source repairs: three tests, zero failures and7,981assertions. It checks the complete2657current declared bindings across all15families, closed source-field shapes, both explicit EN1999 argument declarations, direct-versus-independent strict Ajv key-set agreement, and concrete complete-payload positive/refusal witnesses. Native generic/family execution and whole-host acceptance remain separate pending gates.

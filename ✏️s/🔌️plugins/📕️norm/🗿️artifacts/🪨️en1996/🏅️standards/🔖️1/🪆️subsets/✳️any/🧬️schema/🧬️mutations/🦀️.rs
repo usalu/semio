@@ -13,7 +13,7 @@ use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use crate::edit_rules::{resolve_edit, EDIT_RULES};
+pub use crate::edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};
 
 use semio_s_artifact_norm_en1996_mut_concentrated::change_concentrated_bearing_length;
 use semio_s_artifact_norm_en1996_mut_eccentricity::change_slab_span;

@@ -46,8 +46,9 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
   const localOnly = /^local_only\s*=\s*true\b/m.test(block);
   const viewerPath = block.match(/^viewer_path\s*=\s*"([^"]+)"/m)?.[1];
   const nativeHost = parsePlaygroundNativeHostV1(block) as PlaygroundNativeHostV1 | undefined;
+  const nativeLaunchPolicy=block.match(/^nativeLaunchPolicy\s*=\s*"([^"]+)"/m)?.[1];
   const mcpHost = parsePlaygroundNativeHostV1(block,"mcpHost") as PlaygroundNativeHostV1 | undefined;
-  return { variant, ...(catalogDefault === undefined ? {} : { catalogDefault }), pluginId, cratePath, app, brand, devContribution, ...(compositionConfigPath === undefined ? {} : { compositionConfigPath }), distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), ...(hub ? { hub } : {}), ...(dataDir ? { dataDir } : {}), ...(userDataDir ? { userDataDir } : {}), ...(localOnly ? { localOnly } : {}), ...(viewerPath ? { viewerPath } : {}), examples: [], engines, assets: [], ...(nativeHost ? {nativeHost} : {}),...(mcpHost ? {mcpHost} : {}) };
+  return { variant, ...(catalogDefault === undefined ? {} : { catalogDefault }), pluginId, cratePath, app, brand, devContribution, ...(compositionConfigPath === undefined ? {} : { compositionConfigPath }), distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), ...(hub ? { hub } : {}), ...(dataDir ? { dataDir } : {}), ...(userDataDir ? { userDataDir } : {}), ...(localOnly ? { localOnly } : {}), ...(viewerPath ? { viewerPath } : {}), examples: [], engines, assets: [], ...(nativeHost ? {nativeHost} : {}),...(nativeLaunchPolicy?{nativeLaunchPolicy}:{}),...(mcpHost ? {mcpHost} : {}) };
 }
 
 /** 🗂️ Parses every `[[package.metadata.semio.assets]]` row for one crate manifest. */

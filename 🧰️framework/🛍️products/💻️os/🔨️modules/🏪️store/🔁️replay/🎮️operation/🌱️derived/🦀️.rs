@@ -41,6 +41,7 @@ pub struct ArtifactDerivedOperation<P,M:Sync> {
     pub finished: bool,
     pub closing: bool,
     pub progress: ArtifactReplayPreparationProgress,
+    pub last_work:u64,
 }
 
 fn funded(grant:RetainedCloneGrant,demand:RetirementDemand)->bool { grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth }
@@ -49,6 +50,7 @@ fn refusal(message:&'static str)->ValueError { ValueError::literal(ValueRefusalK
 
 impl<P,M:Sync> ArtifactDerivedOperation<P,M> {
     /// 📈️ Counts admitted work from the actual semantic producer and every cleanup frontier.
+    pub fn last_turn_work(&self)->u64{self.last_work}
     pub fn progress(&self)->ArtifactReplayPreparationProgress { self.progress }
     /// 🛑️ Stops source reads while retaining every producer and prepared owner for bounded cleanup.
     pub fn cancel(&mut self) { self.closing=true;self.finished=false; }
@@ -103,7 +105,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
     /// ⏯️ Advances exactly one funded action, leaving cancellation and incomplete work owned across turns.
     pub fn step(&mut self,generation:u64,revision:[u8;32],body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<RetainedCloneStep,ValueError>{self.step_turn(generation,revision,grant,DerivedOperationTurn::Advance(receiving,body),deadline).result}
     fn close_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{if !self.closing{return semio_framework_value::RetainedWorkOutcome{result:Err(refusal("derived closure requires its original cancellation")),work:0};}self.step_turn(self.context.generation,self.context.base_revision,grant,DerivedOperationTurn::Close(None),&mut||false)}
-    fn step_turn(&mut self,generation:u64,revision:[u8;32],grant:RetainedCloneGrant,mut turn:DerivedOperationTurn<'_,'_>,deadline:&mut dyn FnMut()->bool)->semio_framework_value::RetainedWorkOutcome {let mut work=0u64;let result=(||->Result<RetainedCloneStep,ValueError>{
+    fn step_turn(&mut self,generation:u64,revision:[u8;32],grant:RetainedCloneGrant,mut turn:DerivedOperationTurn<'_,'_>,deadline:&mut dyn FnMut()->bool)->semio_framework_value::RetainedWorkOutcome {self.last_work=0;let mut work=0u64;let result=(||->Result<RetainedCloneStep,ValueError>{
         let idle=RetainedCloneProgress::default();if deadline(){return Ok(RetainedCloneStep::Progress(idle));}let body=match &turn{DerivedOperationTurn::Advance(_,body)=>*body,DerivedOperationTurn::Close(_)=>grant.maximum_copy_bytes};let demand=self.demands(generation,revision,body)?;if !funded(grant,demand){return Ok(RetainedCloneStep::Progress(idle));}
         if matches!(turn,DerivedOperationTurn::Close(None))&&self.requires_original_control(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"derived semantic retirement requires its original decoding custody"));}
         if let Some(task)=self.task.as_ref(){if let DerivedOperationTurn::Close(Some(control))=&mut turn{task.validate_retirement_control(&**control)?;}}
@@ -125,11 +127,11 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
                 *self.task_close=Some(self.task.take().unwrap().into_retirement());RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}
             }else{
                 let DerivedOperationTurn::Advance(control,body)=turn else{return Err(refusal("derived close turn cannot advance semantic receiving"));};
-                let step=self.task.as_mut().unwrap().step(generation,revision,body,ArtifactStoreOneItemGrant{maximum_items:grant.maximum_items,maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth},control,deadline)?;
+                let result=self.task.as_mut().unwrap().step(generation,revision,body,ArtifactStoreOneItemGrant{maximum_items:grant.maximum_items,maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth},control,deadline);work+=self.task.as_ref().unwrap().last_turn_work();let step=result?;
                 self.ready=matches!(step,ArtifactReplayPreparationStep::Prepared(_));step.progress()
             }
         }else if let Some(close)=self.task_close.as_mut(){
-            if close.terminal_is_empty(){drop(self.task_close.take());RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}}else{match turn{DerivedOperationTurn::Advance(control,_)=>control.with_retirement(grant,|original|close.close_step(grant,original))?,DerivedOperationTurn::Close(Some(original))=>close.close_step(grant,original)?,DerivedOperationTurn::Close(None)=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"derived semantic retirement requires its original decoding custody"))}.progress()}
+            if close.terminal_is_empty(){drop(self.task_close.take());RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}}else{let result=match turn{DerivedOperationTurn::Advance(control,_)=>control.with_retirement(grant,|original|close.close_step(grant,original)),DerivedOperationTurn::Close(Some(original))=>close.close_step(grant,original),DerivedOperationTurn::Close(None)=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"derived semantic retirement requires its original decoding custody"))};work+=close.last_turn_work();result?.progress()}
         }else if self.retirement.is_some(){match turn{DerivedOperationTurn::Advance(control,_)=>control.with_retirement(grant,|original|{let turn=semio_framework_value::close_factory_ticket_controlled(&mut self.retirement,grant,original);work+=turn.work;turn.result})?,DerivedOperationTurn::Close(Some(original))=>{let turn=semio_framework_value::close_factory_ticket_controlled(&mut self.retirement,grant,original);work+=turn.work;turn.result}?,DerivedOperationTurn::Close(None)=>{let turn=semio_framework_value::close_factory_ticket(&mut self.retirement,grant);work+=turn.work;turn.result}?}.progress()
         }else if let Some(input)=self.failed_input.as_mut(){if input.terminal_is_empty(){self.failed_input.take();RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}}else{let turn=input.close_step(grant);work+=turn.work;turn.result?.progress()}
         }else if let Some(read)=self.failed_read.as_mut(){let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-demand.copy_bytes,..grant};let(frame,mut p)=read.admit_retirement(self.registry.as_ref().unwrap(),self.snapshots.as_ref().unwrap(),child)?;*self.retirement=Some(frame);self.failed_read.take();p.copied_bytes+=demand.copy_bytes;p
@@ -155,7 +157,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
         }else if self.registry_close.is_some(){snapshot_read_registry_retirement::snapshot_registry_alias_close_step(&mut self.registry_close,grant)?.progress()
         }else{if let Some(registry)=self.registry.take(){*self.registry_close=Some(snapshot_read_registry_retirement::SnapshotReadRegistryAliasRetirement::new(registry));}RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}};
         self.record(progress);if !progress.fits(grant){return Err(refusal("derived operation exceeded its independently admitted grant"));}Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
-    })();if work==0{work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=Default::default()));}semio_framework_value::RetainedWorkOutcome{result,work}
+    })();if work==0{work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=Default::default()));}self.last_work=work;semio_framework_value::RetainedWorkOutcome{result,work}
     }
 }
 

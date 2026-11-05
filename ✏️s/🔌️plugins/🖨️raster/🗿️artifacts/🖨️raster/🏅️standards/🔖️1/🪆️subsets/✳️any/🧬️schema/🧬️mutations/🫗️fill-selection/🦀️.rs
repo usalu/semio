@@ -6,7 +6,8 @@
 
 use crate::fill_region::{fill_color_invariant, fill_operation};
 use semio_s_artifact_raster_raster_diff::{canvas, painted, Painted, Refusal};
-use crate::paint_stroke::{repainted_diff, repainted_inverse, refused, selection_invariant, selection_mask, RasterSelectionSpan, RASTER_PAINT_TARGETS};
+use crate::paint_stroke::{repainted_diff, repainted_inverse, refused, selection_mask, RASTER_PAINT_TARGETS};
+use semio_s_artifact_raster_raster_model::RasterSelectionSpans;
 use semio_s_artifact_raster_raster_diff::RasterDiff;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pixels::editing::fill_in_place;
@@ -21,7 +22,7 @@ pub struct FillSelection {
     pub layer_id: String,
     pub target: String,
     pub color: Vec<f64>,
-    pub selection: Option<Vec<RasterSelectionSpan>>,
+    pub selection: Option<RasterSelectionSpans>,
 }
 
 /// 🏗️ Builder — fills the whole image of `layer_id`'s `target` with `color`.
@@ -33,12 +34,17 @@ pub fn fill_selection<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> 
 //#region 🫗️Fill
 /// 🧯️ The payload-intrinsic laws the schema states (vocabulary, unit colour channels, ordered selection runs), checked
 /// again before any pixel moves; the first one broken, as the field it names.
-pub fn invariant(payload: &FillSelection) -> Result<(), (&'static str, String)> {
+pub fn invariant_fields(payload: &FillSelection) -> Result<(), (&'static str, String)> {
     if !RASTER_PAINT_TARGETS.contains(&payload.target.as_str()) {
         return Err(("target", format!("Fill target \"{}\" is neither pixels nor mask.", payload.target)));
     }
     fill_color_invariant(&payload.color)?;
-    selection_invariant(payload.selection.as_deref())
+    Ok(())
+}
+
+/// 🧯️ Complete intrinsic selection-fill validation for cold application.
+pub fn invariant(payload: &FillSelection) -> Result<(), (&'static str, String)> {
+    invariant_fields(payload)
 }
 
 /// 🫗️ Fills `payload` on `base`; `Ok(None)` when no pixel changes (already that colour, or an empty selection).

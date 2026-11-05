@@ -130,6 +130,9 @@ pub struct FieldSpec {
     pub help: Option<FieldLabel>,
     pub clause: Option<ClauseRef>,
     pub kind: FieldKind,
+    pub read_only: bool,
+    pub can_insert: bool,
+    pub can_remove: bool,
     pub range: Option<FieldRange>,
     pub soft_range: Option<FieldRange>,
     pub step: Option<f64>,
@@ -177,6 +180,9 @@ impl FieldSpec {
         help: None,
         clause: None,
         kind: FieldKind::Inferred,
+        read_only: false,
+        can_insert: false,
+        can_remove: false,
         range: None,
         soft_range: None,
         step: None,
@@ -280,6 +286,17 @@ impl FieldSpec {
     }
 }
 
+/// 🛡️ Combines descriptive metadata with the family's native setter admission while preserving intentional read-only fields.
+pub fn admit_field_meta(meta: Option<FieldSpec>, can_set: bool) -> Option<FieldSpec> {
+    let spec = meta.unwrap_or(FieldSpec::EMPTY);
+    Some(FieldSpec { read_only: spec.read_only || !can_set, ..spec })
+}
+
+/// 🧺️ List admission is independent of the containing field’s replacement capability.
+pub fn admit_list_meta(meta: Option<FieldSpec>, can_insert: bool, can_remove: bool) -> Option<FieldSpec> {
+    Some(FieldSpec { can_insert, can_remove, ..meta.unwrap_or(FieldSpec::EMPTY) })
+}
+
 /// 🏷️ Lookup hook consumed by [`resolve_field_meta`] (families usually wrap [`lookup_norm_field_meta`]).
 pub type NormFieldMetaFn = fn(&str) -> Option<FieldSpec>;
 
@@ -375,7 +392,7 @@ pub fn resolve_field_meta(path: &str, meta_fn: Option<NormFieldMetaFn>) -> Optio
 }
 
 pub fn field_label(path: &str, meta: Option<FieldSpec>, locale: Locale) -> String {
-    if let Some(meta) = meta {
+    if let Some(meta) = meta.filter(|meta| !meta.label(locale).is_empty()) {
         return meta.label(locale).to_owned();
     }
     path.rsplit(['.', '[']).next().unwrap_or(path).trim_end_matches(']').to_string()

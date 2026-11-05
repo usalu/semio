@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "name": "same-head",
+      "expected": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "current": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "instance": 7,
+      "live": 7,
+      "accepted": true
+    },
+    {
+      "name": "changed-head",
+      "expected": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "current": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "instance": 7,
+      "live": 7,
+      "accepted": false
+    },
+    {
+      "name": "foreign-instance",
+      "expected": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "current": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "instance": 7,
+      "live": 8,
+      "accepted": false
+    },
+    {
+      "name": "retired-instance",
+      "expected": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "current": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "instance": 7,
+      "live": null,
+      "accepted": false
+    },
+    {
+      "name": "ordinary-action",
+      "expected": null,
+      "current": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "instance": 7,
+      "live": 7,
+      "accepted": true
+    }
+  ]
+}

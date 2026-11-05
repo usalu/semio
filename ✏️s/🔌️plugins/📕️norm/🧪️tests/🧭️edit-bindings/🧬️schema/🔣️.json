@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "insert",
+          "remove",
+          "setter"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "insert": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "remove": {
+            "type": "boolean"
+          },
+          "setter": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "boundary",
+                  "relative"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string"
+                  },
+                  "boundary": {
+                    "type": "string"
+                  },
+                  "relative": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

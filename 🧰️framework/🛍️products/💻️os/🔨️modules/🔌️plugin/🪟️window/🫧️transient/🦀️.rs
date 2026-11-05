@@ -43,7 +43,25 @@ pub trait WindowTransientOwner: Send + Sync + 'static {
 
     fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Self::Mutation>::default())}
     fn build_owners() -> WindowTransientOwnerBundle<Self::State, Self::Mutation>;
+    fn owners_birth_demands() -> RetirementDemand;
 }
+
+/// 📏️ Quotes the three concrete factory allocations and their shared bundle before original construction.
+pub fn transfer_owners_birth_demands<P:Send+Sync+'static,M:Send+'static>()->RetirementDemand{
+    owners_factory_birth_demands::<P,M,store::ArtifactEphemeralTransferPreparationFactory<P,M>>()
+}
+
+/// 🧮️ Quotes one concrete preparation factory beside its concrete value-retirement factories.
+pub fn owners_factory_birth_demands<P:'static,M:'static,F:semio_framework_value::FactoryPayloadRetirement>()->RetirementDemand{
+    let capacity=semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::OwnedValueRetirementFactory<P>>()
+        +semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::OwnedValueRetirementFactory<M>>()
+        +semio_framework_value::factory_arc_birth_bytes::<F>();
+    RetirementDemand{copy_bytes:2*size_of::<WindowTransientOwnerBundle<P,M>>()+size_of::<F>(),capacity_bytes:capacity,depth:2,..Default::default()}
+}
+
+#[path="🌱️registration/🦀️.rs"]
+mod original_registration;
+pub use original_registration::OriginalWindowTransientOwnerRegistration;
 
 pub struct WindowTransientOwnerBundle<P, M> {
     pub preparation: Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<P, M>>,
@@ -105,7 +123,7 @@ impl WindowTransientMutation {
 }
 
 impl semio_framework_plugin_window_config_mutation::refresh::WindowRefreshSnapshot for WindowTransientSnapshot{fn swap_address(&mut self,other:&mut Self){std::mem::swap(&mut self.window_id,&mut other.window_id);}}
-impl WindowTransientSnapshot{pub fn try_duplicate(&self)->Result<Self,ValueError>{Ok(Self{window_id:self.window_id.clone(),window_kind_id:self.window_kind_id,generation:self.generation,document_generation:self.document_generation,snapshot:self.snapshot.try_duplicate()?})}}
+impl WindowTransientSnapshot{pub fn try_duplicate(&self)->Result<Self,ValueError>{Ok(Self{window_id:self.window_id.clone(),window_kind_id:self.window_kind_id,generation:self.generation,document_generation:self.document_generation,snapshot:self.snapshot.try_duplicate()?,mutation_issuer:self.mutation_issuer.clone()})}}
 /// 📖️ Immutable snapshot of one exact window-owned transient partition.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct WindowTransientSnapshot {
@@ -119,6 +137,8 @@ pub struct WindowTransientSnapshot {
     pub document_generation: u64,
     #[doc(hidden)]
     pub snapshot: store::os_store::snapshot_read::ErasedSnapshotRead,
+    #[doc(hidden)]
+    pub mutation_issuer:CapturedWindowMutationIssuer,
 }
 
 impl WindowTransientSnapshot {
@@ -161,6 +181,7 @@ pub trait ErasedWindowTransientPublication: Send {
     fn window_kind_id(&self) -> &str;
     fn document_generation(&self) -> u64;
     fn phase(&self) -> store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase;
+    fn accepted_receipt(&self)->Option<store::os_store::one_item::LaneItemReceipt>;
     fn fault(&self) -> Option<&str>;
     fn preparation_refusal(&self) -> Option<&ValueError>;
     fn acknowledge(&mut self) -> bool;
@@ -196,6 +217,8 @@ impl<O: WindowTransientOwner> ErasedWindowTransientPublication for TypedWindowTr
     fn phase(&self) -> store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase {
         self.publication.phase()
     }
+
+    fn accepted_receipt(&self)->Option<store::os_store::one_item::LaneItemReceipt>{self.publication.accepted_receipt()}
 
     fn fault(&self) -> Option<&str> {
         self.publication.fault()
@@ -286,11 +309,13 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
     fn capture_generation(&self,window_id:&str)->Option<u64>{self.partitions.get(window_id).map(|partition|partition.store.generation_now())}
     fn capture_original_header(&self,window_id:&str,document_generation:u64,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<WindowTransientAuthority>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let partition=self.partitions.get(window_id).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native Window transient capture requires an already admitted original partition"))?;
-        let copy=2*size_of::<WindowTransientAuthority>()+size_of::<WindowTransientSnapshot>();
-        built(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:0,release_bytes:0,depth:1},||{let snapshot=partition.store.current_read_original()?.into_erased();let generation=partition.store.generation_now();Ok((WindowTransientAuthority{window_id:String::new(),window_kind_id:String::new(),generation,snapshot:WindowTransientSnapshot{window_id:String::new(),window_kind_id:O::WINDOW_KIND_ID,generation,document_generation,snapshot},pending_snapshot:None,retired_snapshots:Default::default()},RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))})
+        let copy=2*size_of::<WindowTransientAuthority>()+size_of::<WindowTransientSnapshot>()+size_of::<Arc<dyn store::ArtifactOwnedValueRetirementFactory<O::Mutation>>>();let capacity=CapturedWindowMutationIssuer::birth_bytes::<O::Mutation>();
+        let factory=&self.owners.as_ref().ok_or_else(||ValueError::invariant("original Window transient issuer is absent"))?.mutation_retirement;
+        built(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:capacity,release_bytes:0,depth:1},||{let snapshot=partition.store.current_read_original()?.into_erased();let generation=partition.store.generation_now();let mutation_issuer=CapturedWindowMutationIssuer::capture(factory.clone());Ok((WindowTransientAuthority{window_id:String::new(),window_kind_id:String::new(),generation,snapshot:WindowTransientSnapshot{window_id:String::new(),window_kind_id:O::WINDOW_KIND_ID,generation,document_generation,snapshot,mutation_issuer},pending_snapshot:None,retired_snapshots:Default::default()},RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,..Default::default()}))})
     }
 
     fn capture(&mut self, window_id: &str, document_generation: u64) -> Result<WindowTransientAuthority, Fault> {
+        let mutation_issuer=CapturedWindowMutationIssuer::capture(self.owners.as_ref().expect("registered Window transient issuer remains").mutation_retirement.clone());
         let partition = self.partition(window_id);
         let snapshot = partition.store.current_read_erased().map_err(Fault::from)?;
         Ok(WindowTransientAuthority {
@@ -298,7 +323,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
             window_kind_id: O::WINDOW_KIND_ID.to_string(),
             generation: partition.store.generation_now(),
             pending_snapshot:None,retired_snapshots:Default::default(),
-            snapshot: WindowTransientSnapshot { window_id: window_id.to_string(), window_kind_id: O::WINDOW_KIND_ID, generation: partition.store.generation_now(), document_generation, snapshot },
+            snapshot: WindowTransientSnapshot { window_id: window_id.to_string(), window_kind_id: O::WINDOW_KIND_ID, generation: partition.store.generation_now(), document_generation, snapshot,mutation_issuer },
         })
     }
 
@@ -306,7 +331,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
     fn refresh(&mut self,authority:&mut WindowTransientAuthority,grant:RetainedCloneGrant)->Result<semio_framework_plugin_window_config_mutation::WindowAuthorityRefreshStep,Fault>{
         let demand=self.refresh_demands(authority,grant.maximum_copy_bytes).map_err(demand_fault)?;
         if demand_refusal(demand,grant)?{return Ok(semio_framework_plugin_window_config_mutation::WindowAuthorityRefreshStep::Pending(Default::default()));}
-        if authority.pending_snapshot.is_none(){let partition=self.partition(&authority.window_id);let snapshot=partition.store.current_read_erased().map_err(Fault::from)?;authority.pending_snapshot=Some(WindowTransientSnapshot{window_id:String::new(),window_kind_id:O::WINDOW_KIND_ID,generation:partition.store.generation_now(),document_generation:authority.snapshot.document_generation,snapshot});return Ok(semio_framework_plugin_window_config_mutation::WindowAuthorityRefreshStep::Pending(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+        if authority.pending_snapshot.is_none(){let partition=self.partition(&authority.window_id);let snapshot=partition.store.current_read_erased().map_err(Fault::from)?;authority.pending_snapshot=Some(WindowTransientSnapshot{window_id:String::new(),window_kind_id:O::WINDOW_KIND_ID,generation:partition.store.generation_now(),document_generation:authority.snapshot.document_generation,snapshot,mutation_issuer:authority.snapshot.mutation_issuer.clone()});return Ok(semio_framework_plugin_window_config_mutation::WindowAuthorityRefreshStep::Pending(RetainedCloneProgress{copied_items:1,..Default::default()}));}
         let step=semio_framework_plugin_window_config_mutation::refresh::refresh_transfer(&mut authority.snapshot,&mut authority.pending_snapshot,&mut authority.retired_snapshots,grant).map_err(demand_fault)?;
         if matches!(step,semio_framework_plugin_window_config_mutation::WindowAuthorityRefreshStep::Ready(_)){authority.generation=authority.snapshot.generation;}Ok(step)
     }
@@ -434,6 +459,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
 
 /// 🗂️ Runtime registry of heterogeneous window-owned transient schemas.
 pub struct WindowTransientOwnerRegistry {
+    lifetime:u64,
     #[doc(hidden)]
     pub document_generation: u64,
     #[doc(hidden)]
@@ -444,9 +470,12 @@ pub struct WindowTransientOwnerRegistry {
 }
 
 impl WindowTransientOwnerRegistry {
+    /// 🪪️ Pins original registration to this registry lifetime across moves and same-address replacements.
+    pub fn original_lifetime(&self)->u64{self.lifetime}
     #[doc(hidden)]
     pub fn for_document_generation(document_generation: u64) -> Self {
-        Self { document_generation, owners: WindowRegistry::new(), owner_close_cursor: 0, owner_open: 0 }
+        static NEXT_LIFETIME:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(1);
+        Self { lifetime:NEXT_LIFETIME.fetch_add(1,std::sync::atomic::Ordering::Relaxed), document_generation, owners: WindowRegistry::new(), owner_close_cursor: 0, owner_open: 0 }
     }
 
     #[doc(hidden)]
@@ -661,3 +690,7 @@ impl<T> TransientView<'_, T> {
 #[path="🎟️capture/🦀️.rs"]
 mod original_capture;
 pub use original_capture::OriginalWindowTransientCapture;
+
+#[path="🧾️issuer/🦀️.rs"]
+mod mutation_issuer;
+pub use mutation_issuer::CapturedWindowMutationIssuer;

@@ -81,7 +81,7 @@
       "outcome": "refused",
       "code": "norm.entity-delete-unknown",
       "message": { "en": "'walls' is not a list of this document", "de": "'walls' ist keine Liste dieses Dokuments" },
-      "remaining": ["b1", "b2", "b3", "b4"]
+      "remaining": []
     },
     {
       "id": "one unknown row refuses the whole batch",

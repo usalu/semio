@@ -18,7 +18,7 @@ use super::*;
 /// beyond "text". Orthogonal to `ArgPresentation` (which is about the WIDGET, not the value's
 /// semantics): a `Color` format could still render as free text in a minimal shell.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgFormat {
@@ -54,7 +54,7 @@ pub enum ArgFormat {
 /// 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
 /// header comment for the D6 stored/derived split.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgSchema {

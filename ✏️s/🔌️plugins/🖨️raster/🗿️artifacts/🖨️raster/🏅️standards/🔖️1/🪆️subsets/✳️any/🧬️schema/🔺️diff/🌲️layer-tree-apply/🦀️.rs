@@ -356,7 +356,8 @@ fn apply_layer_patch_entry(layers: &mut [RasterLayerNode], entry: &RasterLayerMo
 
 fn validate_assets_delta<T>(assets: &semio_s_artifact_raster_raster_model::RasterOwnedMap<T>, delta: &RasterAssetsDelta) -> protocol::MutationApplyResult<()> {
     let additional = delta.entries.iter().filter(|(key, value)| value.is_some() && !assets.contains_key(key)).count();
-    assets.validate_additional_unique_entries(additional).map_err(|reason| protocol::MutationApplyError::new("mutation.apply.capacity", reason))?;
+    let removed = delta.entries.iter().filter(|(key,value)|value.is_none()&&assets.contains_key(key)).count();
+    assets.validate_additional_unique_entries(additional.saturating_sub(removed)).map_err(|reason| protocol::MutationApplyError::new("mutation.apply.capacity", reason))?;
     for (key, value) in &delta.entries {
         if value.is_none() && !assets.contains_key(key) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed asset does not exist").at([key.as_str()]));
@@ -444,17 +445,18 @@ impl protocol::ColdMutationDiff<RasterSnapshot> for RasterDiff {
                 }
             }
             if let Some(assets) = &self.assets {
+                for (key,value) in &assets.entries {
+                    if value.is_none(){
+                        let mut removed=next.assets.remove_entry(key).expect("asset removal was validated against this projection before ownership was cloned");
+                        drop(removed.take());
+                    }
+                }
                 for (key, value) in &assets.entries {
                     match value {
                         Some(asset) => {
                             next.assets.insert(key.clone(), semio_s_artifact_raster_raster_model::mint_raster_image_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
                         }
-                        None => {
-                            let mut removed = next.assets.remove_entry(key).expect("asset removal was validated against this projection before ownership was cloned");
-                            let (removed_key, removed_child) = removed.take();
-                            drop(removed_key);
-                            drop(removed_child);
-                        }
+                        None => {}
                     }
                 }
                 while let Some(page) = next.assets.take_empty_page_backing() {

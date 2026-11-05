@@ -8,7 +8,7 @@ struct Sink<'output,F>{pub output:&'output mut F,pub maximum:u64,pub completed:u
 impl<F> Sink<'_,F>{
     fn raw<E:From<ValueError>>(&mut self,text:&str,control:&mut NativeEncodeControl<'_>)->Result<(),E>
     where F:FnMut(&[u8],&mut NativeEncodeControl<'_>)->Result<(),E>{
-        let next=self.completed.checked_add(text.len()as u64).filter(|length|*length<=self.maximum).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"borrowed JSON output exceeds caller byte policy"))?;
+        let next=self.completed.checked_add(text.len()as u64).filter(|length|*length<=self.maximum).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"borrowed JSON output exceeds caller byte policy"))?;
         control.checkpoint()?;
         (self.output)(text.as_bytes(),control)?;
         self.completed=next;
@@ -27,7 +27,7 @@ impl<F> Sink<'_,F>{
             for character in text.chars(){
                 match character{
                     '"'=>self.raw("\\\"",control)?, '\\'=>self.raw("\\\\",control)?, '\u{0008}'=>self.raw("\\b",control)?, '\u{000c}'=>self.raw("\\f",control)?, '\n'=>self.raw("\\n",control)?, '\r'=>self.raw("\\r",control)?, '\t'=>self.raw("\\t",control)?,
-                    character if (character as u32)<0x20=>{let mut scalar=ScalarText::new();write!(scalar,"\\u{:04x}",character as u32).map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"borrowed JSON escape exceeds fixed scalar cell"))?;self.raw(scalar.text(),control)?;},
+                    character if (character as u32)<0x20=>{let mut scalar=ScalarText::new();write!(scalar,"\\u{:04x}",character as u32).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed JSON escape exceeds fixed scalar cell"))?;self.raw(scalar.text(),control)?;},
                     character=>{let mut bytes=[0;4];self.raw(character.encode_utf8(&mut bytes),control)?;},
                 }
                 control.advance(character.len_utf8())?;
@@ -44,7 +44,7 @@ impl<F> Sink<'_,F>{
             match node{
                 JsonWriteNode::Null=>self.raw("null",control),
                 JsonWriteNode::Bool(value)=>self.raw(if value{"true"}else{"false"},control),
-                JsonWriteNode::Number(value)=>{let mut scalar=ScalarText::new();match value{semio_framework_value::Number::UInt(value)=>write!(scalar,"{value}"),semio_framework_value::Number::Int(value)=>write!(scalar,"{value}"),semio_framework_value::Number::Float(value)=>write_float_to(value,&mut scalar)}.map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"borrowed JSON number exceeds fixed scalar cell"))?;self.raw(scalar.text(),control)},
+                JsonWriteNode::Number(value)=>{let mut scalar=ScalarText::new();match value{semio_framework_value::Number::UInt(value)=>write!(scalar,"{value}"),semio_framework_value::Number::Int(value)=>write!(scalar,"{value}"),semio_framework_value::Number::Float(value)=>write_float_to(value,&mut scalar)}.map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed JSON number exceeds fixed scalar cell"))?;self.raw(scalar.text(),control)},
                 JsonWriteNode::String(value)=>self.string(value,control),
                 JsonWriteNode::NativeString(value)=>{
                     self.raw("\"",control)?;
@@ -52,13 +52,13 @@ impl<F> Sink<'_,F>{
                     self.raw("\"",control)
                 },
                 JsonWriteNode::Array(length)|JsonWriteNode::Object(length)=>{
-                    if length as u64>self.maximum_items{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"borrowed JSON collection exceeds caller item policy").into());}
+                    if length as u64>self.maximum_items{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"borrowed JSON collection exceeds caller item policy").into());}
                     self.raw(if object{"{"}else{"["},control)?;
                     control.scoped_stage(|control|{
                         control.begin_stage(length)?;
                         for index in 0..length{
                             control.checkpoint()?;
-                            if depth>=path.len(){return Err(ValueError::new(ValueRefusalKind::DepthLimit,"borrowed JSON source exceeds fixed path authority").into());}
+                            if depth>=path.len(){return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"borrowed JSON source exceeds fixed path authority").into());}
                             if index!=0{self.raw(",",control)?;}
                             if object{self.string(source.object_key_at_path(&path[..depth],index)?,control)?;self.raw(":",control)?;}
                             path[depth]=index;

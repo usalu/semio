@@ -10,7 +10,8 @@ pub(super) fn select_turn_event<PA: PluginApp>(runtime: &PluginRuntime<PA>, even
     if matches!(events.as_ref(),Some(Event::Completed { .. })) {
         original_receiving::retain_completed(runtime,events,cx)?;
     }
-    let selected_event = if matches!(events.as_ref(),Some(Event::Completed { .. })) {
+    if matches!(events.as_ref(),Some(Event::StagedFormRequested { .. })) {original_receiving::forms::retain(runtime,events,cx)?;}
+    let selected_event = if matches!(events.as_ref(),Some(Event::Completed { .. }|Event::StagedFormRequested { .. })) {
         None
     } else if events.is_some() {
         let grant=cx.retained_grant();
@@ -53,6 +54,7 @@ pub(super) async fn dispatch_turn_event<PA: PluginApp>(runtime: &PluginRuntime<P
             Event::ColdDocumentPairPage(_) => {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-page-event-bypass"), "cold document pair page must use poll_kernel's dedicated owner argument").into());
             }
+            Event::StagedFormRequested { .. } => unreachable!("staged request donation uses the original borrowed receiver"),
             Event::UiIntent { instance, intent } => ui_intent_event(runtime, instance, intent, dirty)?,
             Event::SurfaceVisible { surface, body_key, view_state } => {
                 if let Some(instance) = parse_surface_instance(&surface) {
@@ -65,6 +67,7 @@ pub(super) async fn dispatch_turn_event<PA: PluginApp>(runtime: &PluginRuntime<P
             }
             Event::SurfaceHidden { surface } => {
                 if let Some(instance) = parse_surface_instance(&surface) {
+                    original_receiving::forms::cancel_surface(instance,&surface);
                     if native_close_key(runtime, instance).is_ok() {
                         semio_framework_plugin_runtime_ops::ops_surface_render::plugin_hide_surface(runtime, instance, &surface).await?;
                     }
@@ -231,6 +234,7 @@ pub(super) async fn advance_original_receiving<PA: PluginApp>(runtime: &PluginRu
     if !original_receiving::retain_intents(&mut dirty.intents,cx)? {
         return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original intent receiving slot retains an earlier batch").into());
     }
+    original_receiving::forms::advance(runtime,cx).await?;
     original_receiving::advance_responses(runtime,identity,&mut *effects,cx).await?;
     original_receiving::advance_intents(runtime,identity,&mut *effects,cx).await?;
     Ok(())

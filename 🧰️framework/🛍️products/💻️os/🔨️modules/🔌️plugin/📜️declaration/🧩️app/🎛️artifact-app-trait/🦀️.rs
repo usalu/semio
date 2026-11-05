@@ -151,6 +151,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 📨️ The typed command this app answers a [`HostEvent`] with: the runtime dispatches it to the event's window
     /// through the ordinary typed pipeline, and a command that edits no store is never a history row. `None` (the
     /// default) ignores the event.
+    /// 📏️ Quotes the boxed domain command and payload without constructing it; the runtime adds its own custody headers.
+    fn host_event_demands(_event:&HostEvent)->Option<semio_framework_value::RetirementDemand>{None}
     fn host_event(_event: &HostEvent) -> Option<Self::Command> {
         None
     }
@@ -166,8 +168,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     }
     /// 🧭️ Builds a persistent producer/import job for one explicitly registered reserved route.
     /// The empty default grants no route authority and never calls legacy monolithic hooks.
-    fn build_reserved_tool_job(_request: ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        Ok(None)
+    fn build_reserved_tool_job(_request:&mut Option<ArtifactReservedToolJobRequest<Self>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered reserved app route lacks its original producer").into())
     }
     /// 🎞️ Builds an owned resumable producer for an explicitly registered media-output port.
     /// The completed `Media` crosses back to the host only after the job's fresh commit boundary.
@@ -335,7 +337,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 🏪️ Draft-lane operations applied to {@link store::DraftStore}.
     type DraftMutation: Clone + ::protocol::ColdMutation<Self::Draft> + ::protocol::Mutation<Self::Draft> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     /// 👥️ Shared live presence — use {@link NoPresence} when the app has no shareable live state.
-    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
+    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
     /// 🔤️ Presence-lane operations applied to the app's typed presence snapshot.
     type PresenceMutation: Clone + ::protocol::ColdMutation<Self::Presence> + ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     /// 🫧️ Ephemeral LOCAL-ONLY UI state — use {@link NoTransient} when the app has none.

@@ -1,7 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": "RC2",
-  "cases": {"removed": [], "inserted": [], "moved": [], "modified": []},
   "structureKind": null,
   "steelFYPa": null,
   "beams": {
@@ -12,9 +10,6 @@
   },
   "columns": null,
   "slabs": null,
-  "fireRating": null,
-  "insulationThicknessM": null,
-  "fatigueDetail": null,
   "placements": {
     "removed": [],
     "inserted": [],
@@ -31,5 +26,15 @@
       }
     ]
   },
-  "studs": null
+  "studs": null,
+  "fireRating": null,
+  "insulationThicknessM": null,
+  "fatigueDetail": null,
+  "reliabilityClass": "RC2",
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

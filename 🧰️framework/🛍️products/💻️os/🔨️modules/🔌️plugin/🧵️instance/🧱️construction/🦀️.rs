@@ -35,7 +35,7 @@ use semio_framework_job::close_original_retained_step;
 use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
 use std::mem::size_of;
 use semio_framework_plugin_instance_app::VcsArtifactApp;
-use semio_framework_plugin_instance_initialization::services::{OriginalInstanceLiveStores,OriginalInstanceServices,OriginalControllerClose,OriginalInstanceRegistration,OriginalInstanceRegistrationParts,invalid,construction};
+use semio_framework_plugin_instance_initialization::services::{OriginalInstanceLiveStores,OriginalInstanceServiceSources,OriginalControllerClose,OriginalInstanceRegistration,OriginalInstanceRegistrationParts,invalid,construction};
 use semio_framework_plugin_instance_initialization::stores::{OriginalArtifactAppBirth,OriginalArtifactStores,OriginalArtifactStoreSet};
 #[path="🧺️sources/🦀️.rs"]
 pub mod sources;
@@ -45,3 +45,7 @@ pub mod factory;
 mod original;
 pub use original::OriginalVcsApp;
 pub use sources::{OriginalArtifactInstanceAdmission,OriginalArtifactInstanceSources};
+
+use semio_framework_plugin_instance_app::{PeerRoster,ActionIngress,LocalInteraction,CommandHistory,HostEvents,Transactions,ChildComposition,PendingReserved,ToolOperations,MediaTransfers,EnvelopeJobs,MaintenanceCursors};
+use semio_framework_plugin_time_travel::TimeTravelLedger;
+use semio_framework_plugin_tool_run::{ToolRunLedger,tool_jobs_tool_machine::ToolMachineRuntime};

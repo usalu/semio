@@ -56,9 +56,12 @@
             "setCameraZoom",
             "setCompositeViewport",
             "setFillTolerance",
+            "setFilterKind",
+            "setFilterAmount",
+            "setImageGrid",
             "setMaskValue",
             "setPaintTarget",
-            "setPixelSelection"
+            "selectPixels"
           ]
         },
         {

@@ -159,7 +159,12 @@ impl OriginalDecodedPluginCommand{
 
    let result=if receiving.is_artifact(){let(action,args,meta)=receiving.artifact_parts();if !DOCUMENT_COMMAND_ACTION_IDS.contains(&action){return Err(refusal("original ArtifactCommand action is not owned by this command channel"))}with_instances_turn_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;drive_self_waking_ready(instance.app.handle_action(action,args,meta,identity,cx))}).await?}else if receiving.is_action(){
     if !receiving.context_ready{
-     if receiving.projection.is_none(){OriginalWindowViewBinding::admit(cx,&mut receiving.projection)?;return Ok(None)}
+     if receiving.projection.is_none(){
+      let expected=match receiving.parsed.as_ref().and_then(|value|value.get("expectedDocumentRevision")){None=>None,Some(DslValue::String(text))=>Some(protocol::local_interaction::parse_revision_hex(text)?),Some(_)=>return Err(refusal("staged expected document revision requires canonical text"))};
+      if !paid(cx,size_of::<Option<[u8;32]>>())?{return Ok(None)}
+      receiving.metadata.as_mut().unwrap().meta.as_mut().ok_or_else(||refusal("staged original metadata is absent"))?.expected_document_revision=expected;
+      OriginalWindowViewBinding::admit(cx,&mut receiving.projection)?;return Ok(None)
+     }
      let address=receiving.action.as_ref().unwrap();let meta=receiving.metadata.as_mut().unwrap().meta.as_mut().ok_or_else(||refusal("original action metadata is absent"))?;let projection=receiving.projection.as_mut().unwrap();if !projection.advance(meta,address,cx)?{return Ok(None)}receiving.action_mode_active=projection.mode_active;receiving.context_ready=true;
     }
     if !receiving.refresh_ready{if receiving.refresh.is_none(){OriginalSurfaceRefresh::admit(cx,&mut receiving.refresh)?;return Ok(None)}let meta=receiving.metadata.as_mut().unwrap().meta.as_mut().ok_or_else(||refusal("original surface metadata is absent"))?;let complete=with_instances_turn_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;receiving.refresh.as_mut().unwrap().advance(&mut instance.surface_contexts,&mut meta.view_state,cx)}).await?;if !complete{return Ok(None)}receiving.refresh_ready=true;}
@@ -167,7 +172,7 @@ impl OriginalDecodedPluginCommand{
     if !runtime.plugin.borrow().as_ref().is_some_and(|program|program.manifest.plugin_id==address.plugin_id){return Err(refusal("original action plugin owner is foreign"))}
     with_instances_turn_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;drive_self_waking_ready(instance.app.handle_action_invocation(address,args,fault,mode_active.then_some(address.mode_id.as_str()),meta,identity,cx))}).await?
    }else{
-    if !receiving.context_ready{if let ManifestCommandOwnerAddress::Mode{mode_id,..}=&receiving.address.as_ref().unwrap().owner{if receiving.metadata.as_ref().unwrap().meta.as_ref().and_then(|meta|meta.view_state.as_ref()).and_then(|view|view.active_mode_id.as_deref())!=Some(mode_id.as_str()){return Err(refusal("original command mode is inactive"))}}receiving.context_ready=true;}
+    if !receiving.context_ready{if let ManifestCommandOwnerAddress::Mode{mode_id,..}=&receiving.address.as_ref().unwrap().owner{if receiving.metadata.as_ref().unwrap().meta.as_ref().and_then(|meta|meta.view_state.as_deref()).and_then(|view|view.active_mode_id.as_deref())!=Some(mode_id.as_str()){return Err(refusal("original command mode is inactive"))}}receiving.context_ready=true;}
     if !receiving.refresh_ready&&matches!(receiving.address.as_ref().unwrap().owner,ManifestCommandOwnerAddress::App{..}|ManifestCommandOwnerAddress::Mode{..}){if receiving.refresh.is_none(){OriginalSurfaceRefresh::admit(cx,&mut receiving.refresh)?;return Ok(None)}let meta=receiving.metadata.as_mut().unwrap().meta.as_mut().ok_or_else(||refusal("original surface metadata is absent"))?;let complete=with_instances_turn_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;receiving.refresh.as_mut().unwrap().advance(&mut instance.surface_contexts,&mut meta.view_state,cx)}).await?;if !complete{return Ok(None)}receiving.refresh_ready=true;}
     let(address,args,fault,meta)=receiving.dispatch_parts();let active=match &address.owner{ManifestCommandOwnerAddress::Mode{mode_id,..}=>Some(mode_id.as_str()),_=>None};match &address.owner{
      ManifestCommandOwnerAddress::Os=>return Err(refusal("OS commands require their actual OS dispatcher")),

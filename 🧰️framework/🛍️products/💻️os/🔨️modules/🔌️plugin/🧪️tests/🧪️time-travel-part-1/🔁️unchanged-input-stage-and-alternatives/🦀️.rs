@@ -166,7 +166,7 @@ async fn opening_a_history_edit_and_a_remote_edit_deliver_host_events_to_every_w
     let (mut remote, mut remote_probe) = replica(&fixture, "host-events-remote", "remote", false, mounted_policy, &mut identity).await;
     relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     let roster = vec![semio_framework::ViewWindowInstance { id: "pane-a".into(), window_kind_id: "main".into() }, semio_framework::ViewWindowInstance { id: "pane-b".into(), window_kind_id: "main".into() }];
-    let under = ActionMeta { view_state: Some(ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }), ..artifact_app_laws::meta(&actor) };
+    let under = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }, semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(&actor) };
     let every = |event: fn(String) -> HostEvent| vec![event("pane-a".into()), event("pane-b".into())];
     TOY_HOST_EVENTS.with(|events| events.borrow_mut().clear());
     for index in [0, 1] {
@@ -174,13 +174,13 @@ async fn opening_a_history_edit_and_a_remote_edit_deliver_host_events_to_every_w
         let begun = local.handle_action("historyEditBegin", Some(&DslValue::Object(vec![("mutationId".into(), DslValue::String(mutation))])), &under, &mut identity).await.expect("begin");
         assert_eq!(rejected(&begun), None);
     }
-    assert_eq!(TOY_HOST_EVENTS.with(|events| std::mem::take(&mut *events.borrow_mut())), every(|window_id| HostEvent::TimeTravelFrozen { window_id }), "only opening the session freezes the windows");
+    assert_eq!(TOY_HOST_EVENTS.with(|events| events.borrow_mut().take()), every(|window_id| HostEvent::TimeTravelFrozen { window_id }), "only opening the session freezes the windows");
     local.handle_action("historyEditExit", None, &under, &mut identity).await.expect("exit");
     pump_until(&mut local, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     remote.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }, &mut identity).await.expect("a remote edit");
     TOY_HOST_EVENTS.with(|events| events.borrow_mut().clear());
     relay(&mut remote_probe, &mut local_probe, &mut local, mounted_policy, &mut identity).await;
-    assert_eq!(TOY_HOST_EVENTS.with(|events| std::mem::take(&mut *events.borrow_mut())), every(|window_id| HostEvent::BaseMoved { window_id }), "the remote edit moved the base");
+    assert_eq!(TOY_HOST_EVENTS.with(|events| events.borrow_mut().take()), every(|window_id| HostEvent::BaseMoved { window_id }), "the remote edit moved the base");
     drop((local_probe, remote_probe));
     close(&mut local,cx);
     close(&mut remote,cx);

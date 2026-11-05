@@ -1180,6 +1180,7 @@ dependencies = [
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "serde",
 ]
 
@@ -1191,6 +1192,16 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "serde",
+]
+
+[[package]]
+name = "semio-framework-manifest-input-compiler"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+ "semio-framework-manifest-mutation-inputs",
+ "semio-framework-pack-json",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -1696,6 +1707,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-manifest-input-compiler",
  "semio-framework-native-build-compiler-resources",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
@@ -4052,6 +4064,8 @@ dependencies = [
  "semio-framework-plugin-mounted-owner",
  "semio-framework-plugin-ownership",
  "semio-framework-plugin-reactor-app",
+ "semio-framework-plugin-time-travel",
+ "semio-framework-plugin-tool-run",
  "semio-framework-plugin-window-kits",
  "semio-framework-value",
 ]
@@ -4807,6 +4821,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-reactor-receiving-source"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-plugin-reactor-staged-forms"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-job-native-decode",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-plugin-actor-host",
+ "semio-framework-plugin-reactor-app",
+ "semio-framework-plugin-reactor-lifecycle",
+ "semio-framework-plugin-reactor-patches",
+ "semio-framework-plugin-reactor-receiving-source",
+ "semio-framework-plugin-runtime-ops",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-runtime",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-plugin-reactor-surfaces"
 version = "0.1.0"
 dependencies = [
@@ -4867,6 +4910,8 @@ dependencies = [
  "semio-framework-plugin-reactor-core",
  "semio-framework-plugin-reactor-lifecycle",
  "semio-framework-plugin-reactor-patches",
+ "semio-framework-plugin-reactor-receiving-source",
+ "semio-framework-plugin-reactor-staged-forms",
  "semio-framework-plugin-reactor-surfaces",
  "semio-framework-plugin-reactor-tasks",
  "semio-framework-plugin-reactor-turn-limits",
@@ -4935,6 +4980,8 @@ dependencies = [
  "semio-framework-job-worker-authority",
  "semio-framework-os-kernel",
  "semio-framework-os-store-engine-replay",
+ "semio-framework-pack-json",
+ "semio-framework-pack-json-source-sink",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-composition-publication",
  "semio-framework-plugin-decl-app",
@@ -7119,6 +7166,7 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-las-schema",
  "semio-s-artifact-stdio-las-snapshot",
+ "semio-s-artifact-stdio-las-test-oracle",
  "semio-s-artifact-stdio-las-tests",
  "serde_json",
 ]

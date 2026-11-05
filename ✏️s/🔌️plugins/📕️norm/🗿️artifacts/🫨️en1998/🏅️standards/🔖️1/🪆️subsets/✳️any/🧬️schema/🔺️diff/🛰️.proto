@@ -127,7 +127,7 @@ message En1998StoreyPatch {
   optional double height_m = 1;
   optional double permanent_gk_n = 2;
   optional bool correlated_occupancy = 3;
-  En1998VariableActionDelta variables = 4;
+  optional En1998VariableActionDelta variables = 4;
   optional double stiffness_x = 5;
   optional double stiffness_y = 6;
   optional double centre_of_mass_x_m = 7;
@@ -210,9 +210,9 @@ message En1998BuildingPatch {
   optional string name = 1;
   optional double plan_width_m = 2;
   optional double plan_length_m = 3;
-  En1998SystemDelta systems = 4;
-  En1998StoreyDelta storeys = 5;
-  En1998MemberDelta members = 6;
+  optional En1998SystemDelta systems = 4;
+  optional En1998StoreyDelta storeys = 5;
+  optional En1998MemberDelta members = 6;
   optional bool plan_regular = 7;
   optional bool elevation_regular = 8;
   optional string t1_method = 9;
@@ -270,7 +270,7 @@ message En1998BridgePatch {
   optional double bearing_d_rd_m = 4;
   optional double permanent_gk_n = 5;
   optional bool correlated_occupancy = 6;
-  En1998VariableActionDelta variables = 7;
+  optional En1998VariableActionDelta variables = 7;
   optional double pier_height_m = 8;
   optional double pier_moment_rd_nm = 9;
   optional double pier_shear_rd_n = 10;
@@ -522,7 +522,7 @@ message En1998TowerPatch {
   optional double q_nominal = 4;
   optional double permanent_gk_n = 5;
   optional bool correlated_occupancy = 6;
-  En1998VariableActionDelta variables = 7;
+  optional En1998VariableActionDelta variables = 7;
   optional double ei_nm2 = 8;
   optional double base_rotational_stiffness_nm = 9;
 }
@@ -783,13 +783,13 @@ message En1998TieBeamModification {
 message En1998TieBeamPatch {
   optional string foundation_a_id = 1;
   optional string foundation_b_id = 2;
-  optional string span = 3;
-  optional string width = 4;
-  optional string depth = 5;
-  optional string steel_area = 6;
-  optional string steel_design_strength = 7;
-  optional string relative_displacement = 8;
-  optional string displacement_limit = 9;
+  optional double span = 3;
+  optional double width = 4;
+  optional double depth = 5;
+  optional double steel_area = 6;
+  optional double steel_design_strength = 7;
+  optional double relative_displacement = 8;
+  optional double displacement_limit = 9;
 }
 message En1998SlopeDelta {
   repeated En1998SlopeRemoval removed = 1;
@@ -816,12 +816,12 @@ message En1998SlopeModification {
 }
 message En1998SlopePatch {
   optional string governing_layer_id = 1;
-  optional string height = 2;
-  optional string angle = 3;
-  optional string friction_angle = 4;
-  optional string cohesion = 5;
-  optional string topographic_amplification = 6;
-  optional string circle_centre_x = 7;
-  optional string circle_centre_z = 8;
-  optional string circle_radius = 9;
+  optional double height = 2;
+  optional double angle = 3;
+  optional double friction_angle = 4;
+  optional double cohesion = 5;
+  optional double topographic_amplification = 6;
+  optional double circle_centre_x = 7;
+  optional double circle_centre_z = 8;
+  optional double circle_radius = 9;
 }

@@ -30,7 +30,7 @@ mod tests{
  fn json(source:&impl FieldProjectionSource,path:&mut Vec<usize>)->serde_json::Value{match source.projection_view(path).unwrap(){V::IntrinsicObject(length)=>{let mut object=serde_json::Map::new();for index in 0..length{let key=source.projection_key(path,index).unwrap().to_owned();path.push(index);let value=json(source,path);path.pop();object.insert(key,value);}object.into()},V::IntrinsicText(value)=>value.into(),V::IntrinsicNumber(Number::UInt(value))=>value.into(),_=>panic!("unexpected receiving fixture node")}}
  #[test]
  fn defining_receiving_projection_matches_neutral_causes_and_borrows_original_messages(){
-  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧵️job/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let row=&fixture["receivingWire"]["primary"]["original"];
+  let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let row=&fixture["receivingWire"]["primary"]["original"];
   let cause=|name:&str|{let value=&row[name];ValueError::new(semio_framework_value::ValueRefusalKind::from_wire(value["kind"].as_str().unwrap()).unwrap(),value["message"].as_str().unwrap()).with_retained_progress(progress(&value["retainedProgress"]))};
   let source=OriginalReceivingPrimary{primary:Some(cause("primary")),quote_refusal:Some(cause("quoteRefusal")),allocation_refusal:Some(cause("allocationRefusal")),progress:progress(&row["retainedProgress"])};
   assert_eq!(json(&source,&mut Vec::new()),*row);

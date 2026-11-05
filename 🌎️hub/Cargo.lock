@@ -17226,6 +17226,9 @@ dependencies = [
  "semio-s-artifact-stdio-html",
  "semio-s-artifact-stdio-html-mutations",
  "semio-s-artifact-stdio-idf",
+ "semio-s-artifact-stdio-idml",
+ "semio-s-artifact-stdio-idml-any",
+ "semio-s-artifact-stdio-idml-story",
  "semio-s-artifact-stdio-ifc",
  "semio-s-artifact-stdio-ifc-2x3-base",
  "semio-s-artifact-stdio-ifc-2x3-base-model",
@@ -17236,6 +17239,7 @@ dependencies = [
  "semio-s-artifact-stdio-ifc-4",
  "semio-s-artifact-stdio-ifc-4-model",
  "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-4x3",
  "semio-s-artifact-stdio-ifc-catalog",
  "semio-s-artifact-stdio-jpg",
  "semio-s-artifact-stdio-json",
@@ -17344,6 +17348,7 @@ dependencies = [
  "semio-s-artifact-stdio-ifc-4",
  "semio-s-artifact-stdio-ifc-4-model",
  "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-4x3",
  "semio-s-artifact-stdio-ifc-catalog",
 ]
 
@@ -17510,6 +17515,7 @@ dependencies = [
  "semio-s-artifact-stdio-gif",
  "semio-s-artifact-stdio-gltf",
  "semio-s-artifact-stdio-html",
+ "semio-s-artifact-stdio-idml",
  "semio-s-artifact-stdio-ifc",
  "semio-s-artifact-stdio-jpg",
  "semio-s-artifact-stdio-json",
@@ -17671,6 +17677,7 @@ dependencies = [
  "semio-s-artifact-stdio-gltf-model",
  "semio-s-artifact-stdio-gltf-mutations",
  "semio-s-artifact-stdio-html",
+ "semio-s-artifact-stdio-idml",
  "semio-s-artifact-stdio-ifc-2x3-base-model",
  "semio-s-artifact-stdio-ifc-2x3-base-mutations",
  "semio-s-artifact-stdio-ifc-2x3-cobie",
@@ -17678,6 +17685,7 @@ dependencies = [
  "semio-s-artifact-stdio-ifc-2x3-sav",
  "semio-s-artifact-stdio-ifc-4-model",
  "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-4x3",
  "semio-s-artifact-stdio-jpg",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-las",
@@ -17756,6 +17764,9 @@ dependencies = [
  "semio-s-artifact-stdio-docx-strict",
  "semio-s-artifact-stdio-docx-strict-mutations",
  "semio-s-artifact-stdio-docx-transitional",
+ "semio-s-artifact-stdio-idml",
+ "semio-s-artifact-stdio-idml-any",
+ "semio-s-artifact-stdio-idml-story",
  "semio-s-artifact-stdio-pptx",
  "semio-s-artifact-stdio-pptx-base",
  "semio-s-artifact-stdio-pptx-base-model",
@@ -35114,6 +35125,8 @@ dependencies = [
  "semio-s-artifact-energy-model-editor-panels",
  "semio-s-artifact-energy-model-editor-results",
  "semio-s-artifact-energy-model-examples",
+ "semio-s-artifact-energy-model-export",
+ "semio-s-artifact-energy-model-import",
  "semio-s-artifact-energy-model-initialization",
  "semio-s-artifact-energy-model-mut-boundary",
  "semio-s-artifact-energy-model-mut-construction",
@@ -68061,6 +68074,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -68400,6 +68414,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-os-kernel",
  "semio-framework-pack",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
@@ -69151,8 +69166,11 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-dwg-examples",
+ "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-mutations",
  "semio-s-artifact-stdio-dwg-snapshot",
+ "semio-s-artifact-stdio-dwg-snapshot-drawing",
+ "semio-s-artifact-stdio-dwg-snapshot-objects",
 ]
 
 [[package]]
@@ -70000,6 +70018,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -71455,6 +71474,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-factory",
+ "semio-framework-value-snapshot-projection",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-idml-schema",
  "semio-s-artifact-stdio-xml",
@@ -71462,10 +71482,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-idml-any"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-compute",
+ "semio-framework-artifact-reference",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-idml",
+ "semio-s-artifact-stdio-idml-story",
+]
+
+[[package]]
 name = "semio-s-artifact-stdio-idml-schema"
 version = "0.1.0"
 dependencies = [
  "semio-framework-schema-registry",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-idml-story"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-idml",
 ]
 
 [[package]]
@@ -75429,6 +75472,7 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-base",
  "semio-s-artifact-stdio-pdf-mut-base-2",
@@ -82558,6 +82602,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -82619,6 +82664,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -88112,6 +88158,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-plugin-norm-app-surface-entity-editing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-schema",
+ "semio-framework-schema-registry",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-plugin-norm-app-surface-foundation",
+ "semio-s-plugin-norm-app-surface-live-core",
+ "semio-s-plugin-norm-app-surface-viewport3d",
+ "semio-s-plugin-norm-app-surface-visual-chrome",
+ "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-results-config",
+ "semio-s-plugin-norm-structural-scene",
+]
+
+[[package]]
 name = "semio-s-plugin-norm-app-surface-foundation"
 version = "0.1.0"
 dependencies = [
@@ -88130,6 +88201,19 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-results-config",
+ "semio-s-plugin-norm-structural-scene",
+]
+
+[[package]]
+name = "semio-s-plugin-norm-app-surface-interaction-topology"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-plugin",
+ "semio-framework-value",
+ "semio-s-plugin-norm-app-surface-foundation",
+ "semio-s-plugin-norm-app-surface-viewport3d",
+ "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-structural-scene",
 ]
 
@@ -88173,6 +88257,7 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-s-plugin-norm-app-surface-entity-editing",
  "semio-s-plugin-norm-app-surface-foundation",
  "semio-s-plugin-norm-app-surface-live-core",
  "semio-s-plugin-norm-app-surface-panels",
@@ -88181,6 +88266,25 @@ dependencies = [
  "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-results-config",
  "semio-s-plugin-norm-structural-scene",
+]
+
+[[package]]
+name = "semio-s-plugin-norm-app-surface-outliner"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-plugin-norm-app-surface-foundation",
+ "semio-s-plugin-norm-app-surface-interaction-topology",
+ "semio-s-plugin-norm-app-surface-live-core",
+ "semio-s-plugin-norm-compliance",
 ]
 
 [[package]]
@@ -88228,11 +88332,39 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-plugin-norm-app-surface-foundation",
+ "semio-s-plugin-norm-app-surface-interaction-topology",
  "semio-s-plugin-norm-app-surface-live-core",
+ "semio-s-plugin-norm-app-surface-outliner",
+ "semio-s-plugin-norm-app-surface-shell-hooks",
  "semio-s-plugin-norm-app-surface-viewport3d",
  "semio-s-plugin-norm-app-surface-visual-chrome",
  "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-results-config",
+ "semio-s-plugin-norm-structural-scene",
+]
+
+[[package]]
+name = "semio-s-plugin-norm-app-surface-shell-hooks"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-schema",
+ "semio-framework-schema-registry",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-plugin-norm-app-surface-foundation",
+ "semio-s-plugin-norm-app-surface-interaction-topology",
+ "semio-s-plugin-norm-app-surface-live-core",
+ "semio-s-plugin-norm-app-surface-viewport3d",
+ "semio-s-plugin-norm-app-surface-visual-chrome",
+ "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-structural-scene",
 ]
 

@@ -6,6 +6,7 @@ use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 
 /// 📚 Every path an EN1991 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field_arguments: &[],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "assumedCraneHorizontal", kind: "change-assumed-crane-horizontal", selectors: &[], value: "newAssumedCraneHorizontal" },

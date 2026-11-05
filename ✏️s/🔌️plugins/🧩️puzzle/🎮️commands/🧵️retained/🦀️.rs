@@ -113,7 +113,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedFirstStepCommandWork<A> {
         if self.consumed {
             return Err(Fault::from("puzzle-command-bounded-work-repeated"));
         }
-        let emit = (self.reducer)(input.command, input.snapshot, input.config, input.interaction, input.hover, input.context.and_then(|context| context.view_state.as_ref()))?;
+        let emit = (self.reducer)(input.command, input.snapshot, input.config, input.interaction, input.hover, input.context.and_then(|context| context.view_state.as_deref()))?;
         self.consumed = true;
         Ok(ArtifactCommandWorkStep::Complete(emit))
     

@@ -86,7 +86,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
             | FormsCommand::ResetTry(_)
             | FormsCommand::PreviousStep(_)
             | FormsCommand::NextStep(_)
-            | FormsCommand::Submit(_) => context?.view_state.as_ref().map(|_| 1),
+            | FormsCommand::Submit(_) => context?.view_state.as_deref().map(|_| 1),
             _ => Some(1),
         }
     }
@@ -115,7 +115,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
             }
             FormsCommand::SetTryValue(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
-                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let view = forms_try_view(context.view_state.as_deref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
                 let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
                 let output = set_try_value::start_window(payload, input.operation, &try_window::transient::from_snapshot(context.window_transient.as_ref()), &lease)?;
                 emit = output.emit;
@@ -123,7 +123,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
             }
             FormsCommand::SetTryValues(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
-                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let view = forms_try_view(context.view_state.as_deref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
                 let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
                 let output = set_try_values::start_window(payload, input.operation, &try_window::transient::from_snapshot(context.window_transient.as_ref()), &lease)?;
                 emit = output.emit;
@@ -131,7 +131,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
             }
             FormsCommand::SetTryValueStep(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
-                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let view = forms_try_view(context.view_state.as_deref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
                 let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
                 let output = set_try_value::advance_window(payload, input.operation, &try_window::transient::from_snapshot(context.window_transient.as_ref()), &lease)?;
                 emit = output.emit;
@@ -139,7 +139,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
             }
             FormsCommand::ResetTry(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
-                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let view = forms_try_view(context.view_state.as_deref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
                 let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
                 let (output, config) = reset_try::handle_window(payload, input.operation, &lease)?;
                 emit = output.emit;
@@ -148,19 +148,19 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
             }
             FormsCommand::PreviousStep(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
-                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let view = forms_try_view(context.view_state.as_deref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
                 let next = previous_step::handle_window(payload, &try_window::config::from_snapshot(context.window_config.as_ref()))?;
                 emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::from_snapshot(context.window_config.as_ref()), next)?);
             }
             FormsCommand::NextStep(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
-                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let view = forms_try_view(context.view_state.as_deref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
                 let next = next_step::handle_window(payload, input.snapshot, &try_window::config::from_snapshot(context.window_config.as_ref()), &try_window::transient::from_snapshot(context.window_transient.as_ref()))?;
                 emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::from_snapshot(context.window_config.as_ref()), next)?);
             }
             FormsCommand::Submit(payload) => {
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
-                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let view = forms_try_view(context.view_state.as_deref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
                 let (output, config) = submit::handle_window(input.snapshot, &try_window::config::from_snapshot(context.window_config.as_ref()), &try_window::transient::from_snapshot(context.window_transient.as_ref()), input.operation.canonical_base_revision_hex())?;
                 emit = output;
                 emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::from_snapshot(context.window_config.as_ref()), config)?);

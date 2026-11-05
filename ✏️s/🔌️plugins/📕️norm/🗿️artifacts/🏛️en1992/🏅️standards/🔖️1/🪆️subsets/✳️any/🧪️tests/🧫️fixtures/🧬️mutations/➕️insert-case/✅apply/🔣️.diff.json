@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "title": null,
   "designWorkingLifeYears": null,
   "deltaCDev": null,
@@ -33,5 +32,6 @@
     ],
     "moved": [],
     "modified": []
-  }
+  },
+  "reliabilityClass": null
 }

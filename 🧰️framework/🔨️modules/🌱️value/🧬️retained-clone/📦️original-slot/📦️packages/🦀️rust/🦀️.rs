@@ -9,3 +9,6 @@ pub mod original_slot;
 pub use original_slot::{RetainedOriginalReadOwner,RetainedOriginalRead,RetainedOriginalReadReturn,RetainedOriginalSlot,RetainedOriginalSlotKey};
 #[cfg(test)]
 pub(crate) use semio_framework_value_testing_allocator::observe_retirement_allocations;
+
+#[path = "../../🏗️initialization/🦀️.rs"]
+pub mod initialization;

@@ -1,0 +1,9 @@
+{
+  "contract": "semio.native-snapshot.original-settlement-refusal.v1",
+  "messages": ["original typed body", "original quote", "original allocation", "original context", "original settlement", "repeated settlement"],
+  "progress": {"copiedItems": 2, "copiedBytes": 3, "retainedCapacityBytes": 5, "releasedBytes": 7},
+  "expected": {"accepted": true, "repeatAccepted": false, "preservedOwners": 6, "foldAllocationBytes": 0, "foldReleaseBytes": 0},
+  "sqlite": {"completed": 1, "total": 1, "settlementKind": "Canceled", "settlementMessage": "relational SQLite transfer cancelled", "callbackCalls": 1},
+  "closeGrant": {"maximumItems": 1, "maximumCopyBytes": 65536, "maximumCapacityBytes": 65536, "maximumReleaseBytes": 65536, "maximumDepth": 4096},
+  "maximumTurns": 4096
+}

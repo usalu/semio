@@ -1,0 +1,14 @@
+{
+  "actions": [
+    {"key":"fill-selection","command":"fillSelection","labels":{"en":"Fill Selection","de":"Auswahl füllen"},"args":{}},
+    {"key":"invert","command":"applyFilter","labels":{"en":"Invert Pixels","de":"Pixel invertieren"},"args":{"filter":"invert","amount":0}},
+    {"key":"grayscale","command":"applyFilter","labels":{"en":"Grayscale","de":"Graustufen"},"args":{"filter":"grayscale","amount":0}},
+    {"key":"clear","command":"applyFilter","labels":{"en":"Clear Pixels","de":"Pixel leeren"},"args":{"filter":"clear","amount":0}},
+    {"key":"flip-horizontal","command":"applyFilter","labels":{"en":"Flip Horizontally","de":"Horizontal spiegeln"},"args":{"filter":"flipHorizontal","amount":0}},
+    {"key":"flip-vertical","command":"applyFilter","labels":{"en":"Flip Vertically","de":"Vertikal spiegeln"},"args":{"filter":"flipVertical","amount":0}},
+    {"key":"rotate-clockwise","command":"transformImage","labels":{"en":"Rotate 90° Clockwise","de":"90° im Uhrzeigersinn drehen"},"args":{"operation":"rotateClockwise","x":0,"y":0,"width":0,"height":0,"bilinear":false}},
+    {"key":"rotate-counterclockwise","command":"transformImage","labels":{"en":"Rotate 90° Counterclockwise","de":"90° gegen den Uhrzeigersinn drehen"},"args":{"operation":"rotateCounterclockwise","x":0,"y":0,"width":0,"height":0,"bilinear":false}},
+    {"key":"resize-pixels","command":"transformImage","labels":{"en":"Resize Pixels","de":"Pixelgröße ändern"},"args":{"operation":"resize","x":0,"y":0,"width":512,"height":512,"bilinear":false}},
+    {"key":"crop-pixels","command":"transformImage","labels":{"en":"Crop Pixels","de":"Pixel zuschneiden"},"args":{"operation":"crop","x":0,"y":0,"width":512,"height":512,"bilinear":false}}
+  ]
+}

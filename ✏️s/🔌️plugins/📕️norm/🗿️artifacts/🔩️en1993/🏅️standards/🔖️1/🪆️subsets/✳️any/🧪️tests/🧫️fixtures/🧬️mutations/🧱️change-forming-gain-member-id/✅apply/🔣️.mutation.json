@@ -1,3 +1,6 @@
 {
-  "ChangeFormingGainMemberId": "forming-gain-1"
+  "ChangeFormingGainMemberId": {
+    "id": "forming-gain-1",
+    "newMemberId": "cold-1-changed"
+  }
 }

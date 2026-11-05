@@ -2,7 +2,6 @@
   "annex": "De",
   "masonryClass": "Class5",
   "designSituation": "Seismic",
-  "reliabilityClass": "RC3",
   "storeys": 4294967295,
   "walls": [
     {
@@ -212,5 +211,6 @@
       "wallId": "duplicate wall 世界",
       "positionM": 2.5625
     }
-  ]
+  ],
+  "reliabilityClass": "RC3"
 }

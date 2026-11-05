@@ -1,0 +1,5 @@
+# Transition And Identity Work Ports
+
+Changed only History decode/🔀️transition/🦀️.rs and 📇️identity-records/🦀️.rs. Both retain real last_work/getter, reset before public step/close source validation and all guards, record selected local frontiers after grant admission, and leave denied/ready/closed/partial-custody probes zero. Native charge refusal resets work before the charge. Transition forwards SharedUtf8::receive_original actual outcome.work, including error, independently of physical items. Existing stored faults are preserved. No nested erased retirement calls occur in these two leaves.
+
+The existing sixteen-case neutral SQLite/Ajv work contract was authored and passed before these changes. Native laws were not expanded outside the two authorized leaves. Both complete files passed parse-only Rust AST checks, exit0; no compiler or runtime execution and no quota changes. Lower ID/field/record Result APIs retain their existing admitted single-frontier contract; no guessed child counter API was introduced.

@@ -71,7 +71,7 @@ pub fn sourcing_curation_retained_reduce(
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window };
     let emit = command.dispatch(&doc, &cfg)?;
-    let view = _context.and_then(|context| context.view_state.as_ref());
+    let view = _context.and_then(|context| context.view_state.as_deref());
     sourcing_curation_finish_emit(command, emit, window, view)
 }
 

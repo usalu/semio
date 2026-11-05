@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native Snapshot Failure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cause",
+    "receiptRefusal",
+    "contextRefusal",
+    "progress",
+    "settlementRefusal"
+  ],
+  "properties": {
+    "cause": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "value"
+              ],
+              "properties": {
+                "type": {
+                  "const": "value"
+                },
+                "value": {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "message"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "primary",
+                "quoteRefusal",
+                "allocationRefusal",
+                "progress"
+              ],
+              "properties": {
+                "type": {
+                  "const": "receiving"
+                },
+                "primary": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "message"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "quoteRefusal": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "message"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "allocationRefusal": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "message"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "progress": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "copiedItems",
+                    "copiedBytes",
+                    "retainedCapacityBytes",
+                    "releasedBytes"
+                  ],
+                  "properties": {
+                    "copiedItems": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "copiedBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "retainedCapacityBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "releasedBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "receiptRefusal": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "message"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retainedCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "contextRefusal": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "message"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "settlementRefusal": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "message"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

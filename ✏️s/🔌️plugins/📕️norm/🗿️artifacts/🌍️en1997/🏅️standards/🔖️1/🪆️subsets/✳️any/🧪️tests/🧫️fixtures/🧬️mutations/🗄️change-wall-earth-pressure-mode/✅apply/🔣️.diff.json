@@ -17,7 +17,7 @@
       {
         "id": "wall-W1",
         "patch": {
-          "earthPressureMode": "active-alt"
+          "earthPressureMode": "active"
         }
       }
     ]

@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "artifact": "idml",
+      "owner": "stdio-office",
+      "family": "💼️office",
+      "runtimeEnum": "StdioOfficeApps",
+      "library": "semio-hub-stdio-office",
+      "standard": "8.0",
+      "subset": "*",
+      "kind": "s.stdio.idml",
+      "documentSchema": "stdio.idml",
+      "contribution": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🧩️composition/🔣️.json",
+      "playground": {
+        "owner": "stdio-office",
+        "variant": "stdio-idml",
+        "app": "s.stdio.idml@8.0/*#editor",
+        "aliases": [
+          "stdio idml"
+        ],
+        "ports": {
+          "react": 6276,
+          "wgpu": 6376
+        }
+      },
+      "roles": [
+        {
+          "role": "editor",
+          "variant": "IdmlEditor",
+          "type": "semio_s_artifact_stdio_idml_any::editor::IdmlEditor",
+          "factory": "semio_s_artifact_stdio_idml_any::editor::create_idml_editor",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🏅️standards/🔖️8.0/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "app": "s.stdio.idml@8.0/*#editor"
+        },
+        {
+          "role": "viewer",
+          "variant": "IdmlViewer",
+          "type": "semio_s_artifact_stdio_idml_any::viewer::IdmlViewer",
+          "factory": "semio_s_artifact_stdio_idml_any::viewer::create_idml_viewer",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🏅️standards/🔖️8.0/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "app": "s.stdio.idml@8.0/*#viewer"
+        }
+      ]
+    },
+    {
+      "artifact": "ifc4x3",
+      "owner": "stdio-bim",
+      "family": "🏠️bim",
+      "runtimeEnum": "StdioBimApps",
+      "library": "semio-hub-stdio-bim",
+      "standard": "4x3",
+      "subset": "*",
+      "kind": "s.stdio.ifc",
+      "documentSchema": "s.stdio.ifc@4x3/*",
+      "contribution": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧩️composition/🔣️.json",
+      "playground": {
+        "owner": "stdio-bim",
+        "variant": "stdio-ifc-4x3",
+        "app": "s.stdio.ifc@4x3/*#editor",
+        "aliases": [
+          "stdio ifc 4x3"
+        ],
+        "ports": {
+          "react": 6222,
+          "wgpu": 6322
+        }
+      },
+      "roles": [
+        {
+          "role": "editor",
+          "variant": "Ifc4x3AnyEditor",
+          "type": "semio_s_artifact_stdio_ifc_4x3::editor::Ifc4x3AnyEditor",
+          "factory": "semio_s_artifact_stdio_ifc_4x3::editor::create_ifc4x3_any_editor",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+          "app": "s.stdio.ifc@4x3/*#editor"
+        },
+        {
+          "role": "viewer",
+          "variant": "Ifc4x3AnyViewer",
+          "type": "semio_s_artifact_stdio_ifc_4x3::viewer::Ifc4x3AnyViewer",
+          "factory": "semio_s_artifact_stdio_ifc_4x3::viewer::create_ifc4x3_any_viewer",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+          "app": "s.stdio.ifc@4x3/*#viewer"
+        }
+      ]
+    }
+  ]
+}

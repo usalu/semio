@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-local-fire-fire-diameter",
   "semanticKind": "change-local-fire-fire-diameter",
-  "displayName": "Change Local Fire Fire Diameter",
+  "displayName": "Change diameter of the localised fire",
   "emoji": "⚙",
   "aggregateVariant": "ChangeLocalFireFireDiameter",
   "payloadSchema": "🧬️schema/🔣️.json",

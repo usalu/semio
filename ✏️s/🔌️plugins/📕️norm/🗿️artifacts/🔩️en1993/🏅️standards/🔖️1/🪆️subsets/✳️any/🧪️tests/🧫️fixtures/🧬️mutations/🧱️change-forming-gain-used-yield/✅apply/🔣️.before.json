@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC3",
   "materials": [
     {
       "id": "duplicate",
@@ -505,6 +504,7 @@
   "placements": [],
   "jointPlates": [],
   "foundationBlocks": [],
+  "reliabilityClass": "RC3",
   "frameActions": [],
   "frameMemberBases": [],
   "fatigueStresses": [],
@@ -516,7 +516,8 @@
       "forming": "RollForming",
       "ultimateStrength": 0.0,
       "grossArea": 0.0,
-      "bends": 0
+      "bends": 0,
+      "usedYield": 0.0
     }
   ],
   "materialDuctility": [],

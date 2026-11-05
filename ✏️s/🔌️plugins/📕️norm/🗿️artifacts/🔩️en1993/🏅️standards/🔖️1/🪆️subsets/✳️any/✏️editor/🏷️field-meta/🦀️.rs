@@ -967,10 +967,22 @@ const TABLE: &[(&str, FieldSpec)] = &[
 ];
 
 /// 🏷️ Exact / `[]`-wildcard / longest-prefix metadata for the EN 1993 steel subject.
-pub fn en1993_field_meta(path: &str) -> Option<FieldSpec> {
+fn describe_en1993_field(path: &str) -> Option<FieldSpec> {
     lookup_norm_field_meta(TABLE, path)
 }
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+/// 🛡️ Descriptive field metadata admitted by the family's actual native setter vocabulary.
+pub fn en1993_field_meta(path: &str) -> Option<FieldSpec> {
+    semio_s_plugin_norm_app_surface::admit_list_meta(
+        semio_s_plugin_norm_app_surface::admit_field_meta(
+        describe_en1993_field(path),
+        semio_s_artifact_norm_en1993_mutations::EDIT_RULES.can_set_field(path),
+        ),
+        semio_s_artifact_norm_en1993_mutations::EDIT_RULES.can_insert_item(path),
+        semio_s_artifact_norm_en1993_mutations::EDIT_RULES.can_remove_item(path, std::iter::empty::<&str>()),
+    )
+}

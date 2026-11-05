@@ -56,23 +56,26 @@ pub fn crop_image<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + Fr
 /// 🧯️ The payload-intrinsic laws the schema states (vocabulary; a quarter turn carries no window, extent or sampling; a
 /// resize no origin; a crop no sampling; every extent within 1..=16384), checked again before any pixel moves; the first
 /// one broken, as the field it names.
-pub fn invariant(payload: &TransformImage) -> Result<(), (&'static str, String)> {
+pub fn invalid_field(payload:&TransformImage)->Option<&'static str>{
     if !RASTER_IMAGE_TRANSFORMS.contains(&payload.operation.as_str()) {
-        return Err(("operation", format!("\"{}\" is not an image transform.", payload.operation)));
+        return Some("operation");
     }
     let sized = |side: u32| (1..=RASTER_IMAGE_MAXIMUM_SIDE).contains(&side);
     match payload.operation.as_str() {
-        "resize" | "crop" if !sized(payload.width) => Err(("width", format!("A width lies within 1..={RASTER_IMAGE_MAXIMUM_SIDE}, not {}.", payload.width))),
-        "resize" | "crop" if !sized(payload.height) => Err(("height", format!("A height lies within 1..={RASTER_IMAGE_MAXIMUM_SIDE}, not {}.", payload.height))),
-        "resize" | "rotateClockwise" | "rotateCounterclockwise" if payload.x != 0 || payload.y != 0 => Err(("x", "Only a crop has an origin.".to_string())),
-        "rotateClockwise" | "rotateCounterclockwise" if payload.width != 0 || payload.height != 0 => Err(("width", "A quarter turn keeps the image's own extent.".to_string())),
-        "crop" | "rotateClockwise" | "rotateCounterclockwise" if payload.bilinear => Err(("bilinear", "Only a resize samples.".to_string())),
-        _ => Ok(()),
+        "resize" | "crop" if !sized(payload.width) => Some("width"),
+        "resize" | "crop" if !sized(payload.height) => Some("height"),
+        "resize" | "rotateClockwise" | "rotateCounterclockwise" if payload.x != 0 || payload.y != 0 => Some("x"),
+        "rotateClockwise" | "rotateCounterclockwise" if payload.width != 0 || payload.height != 0 => Some("width"),
+        "crop" | "rotateClockwise" | "rotateCounterclockwise" if payload.bilinear => Some("bilinear"),
+        _ => None,
     }
+}
+pub fn invariant(payload: &TransformImage) -> Result<(), (&'static str, String)> {
+    match invalid_field(payload){Some("operation")=>Err(("operation",format!("\"{}\" is not an image transform.",payload.operation))),Some("width")if matches!(payload.operation.as_str(),"resize"|"crop")=>Err(("width",format!("A width lies within 1..={RASTER_IMAGE_MAXIMUM_SIDE}, not {}.",payload.width))),Some("height")=>Err(("height",format!("A height lies within 1..={RASTER_IMAGE_MAXIMUM_SIDE}, not {}.",payload.height))),Some("x")=>Err(("x","Only a crop has an origin.".to_string())),Some("width")=>Err(("width","A quarter turn keeps the image's own extent.".to_string())),Some(_)=>Err(("bilinear","Only a resize samples.".to_string())),None=>Ok(())}
 }
 
 /// 🎛️ The pixel-engine operation an admitted `payload` means.
-fn operation(payload: &TransformImage) -> PixelOperation {
+pub fn operation(payload: &TransformImage) -> PixelOperation {
     match payload.operation.as_str() {
         "rotateClockwise" => PixelOperation::RotateClockwise,
         "rotateCounterclockwise" => PixelOperation::RotateCounterclockwise,
@@ -83,7 +86,7 @@ fn operation(payload: &TransformImage) -> PixelOperation {
 
 /// 📐️ Where the layer goes so the transformed image keeps its place and scale: the old display scale per image pixel
 /// folded into the placement (its axes swapped by a quarter turn), and a crop's window centre kept where it was.
-fn reshape(payload: &TransformImage, placement: &RasterTransform, display: (Option<u32>, Option<u32>), source: (u32, u32), result: (u32, u32)) -> Reshape {
+pub fn reshape(payload: &TransformImage, placement: &RasterTransform, display: (Option<u32>, Option<u32>), source: (u32, u32), result: (u32, u32)) -> Reshape {
     let (scale_x, scale_y) = (f64::from(display.0.unwrap_or(source.0)) / f64::from(source.0.max(1)), f64::from(display.1.unwrap_or(source.1)) / f64::from(source.1.max(1)));
     let (scale_x, scale_y) = match payload.operation.as_str() {
         "rotateClockwise" | "rotateCounterclockwise" => (scale_y, scale_x),

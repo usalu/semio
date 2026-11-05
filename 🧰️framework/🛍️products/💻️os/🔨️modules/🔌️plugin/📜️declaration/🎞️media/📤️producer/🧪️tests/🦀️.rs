@@ -67,3 +67,6 @@ fn original_ports_refuse_an_unsupplied_context_without_moving_its_source(){
  let mut source=Some(vec![1,2,3]);let pointer=source.as_ref().unwrap().as_ptr();let chunks=ArtifactOutputChunks::new(4096);let mut sequence=0;let mut recipient=Default::default();let mut cx=semio_framework_job::StepContext::new(OperationId(807),Generation(3),StepBudget::new(32768,1500,stock()),semio_framework_job::root_cancel_token(),now_us,&mut sequence,&mut recipient);
  assert!(chunks.push_original(&mut source,None,&mut cx).is_err());assert_eq!(source.as_ref().unwrap().as_ptr(),pointer);assert_eq!(chunks.bytes(),0);assert_eq!(chunks.chunks_remaining(),0);assert!(chunks.seal_original(&mut cx).is_err());assert!(!chunks.is_sealed());assert_eq!(cx.retained_progress(),Default::default());
 }
+
+#[path="📥️custody/🦀️.rs"]
+mod original_custody;

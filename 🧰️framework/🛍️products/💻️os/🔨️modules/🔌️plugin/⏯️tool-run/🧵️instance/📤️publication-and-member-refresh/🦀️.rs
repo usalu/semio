@@ -38,7 +38,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let result=cx.with_native_receiving(|native|self.stores.store.advance_apply_batch(publication,grant.maximum_copy_bytes,store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:grant.maximum_items.min(1),maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth},native));
         use store::os_store::one_item_publication::ArtifactStoreOneItemAdvance as Advance;
         let p=match &result{Ok(Advance::Published(_,p)|Advance::PreparationProgress(_,p))=>*p,Err(store::os_vcs::VcsError::InverseRefused(error))=>error.retained_progress(),_=>Default::default()};
-        if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,p)?;}cx.consume_fuel(p.copied_items as u64);
+        cx.consume_fuel(publication.last_turn_work());if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,p)?;}
         match result{
             Ok(Advance::Published(..)|Advance::AwaitingAck(_))=>{
                 if publication.outbound{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original ToolRun publication requires its committed native causal intent").into())}

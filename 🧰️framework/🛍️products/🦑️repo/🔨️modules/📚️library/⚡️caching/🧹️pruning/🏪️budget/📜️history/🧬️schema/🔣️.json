@@ -15,7 +15,7 @@
           "receiptDigest": "810602fcf506d6b0db126fa1ce03cd4daef69f6639ab0b67ff3eee4aaa5c8e41",
           "receiptBytes": 14489
         },
-        "imageDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed",
+        "imageDirectory": ".cache/b/r",
         "leaseDirectory": ".cache/b/l/m/data",
         "imageResourcePrefix": "native-fixed-image:",
         "sourceWitnesses": [

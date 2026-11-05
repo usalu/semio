@@ -24,11 +24,12 @@ async fn a_log_without_composition_writes_no_composition_record() {
 struct FlaggedTurn {
     yielding: std::cell::Cell<bool>,
     cancelled: std::cell::Cell<bool>,
+    work: std::cell::Cell<u64>,
 }
 
 impl FlaggedTurn {
     fn new() -> Self {
-        Self { yielding: std::cell::Cell::new(false), cancelled: std::cell::Cell::new(false) }
+        Self { yielding: std::cell::Cell::new(false), cancelled: std::cell::Cell::new(false), work: std::cell::Cell::new(1_000_000) }
     }
 }
 
@@ -50,8 +51,15 @@ fn retained_corpus() -> (serde_json::Value, protocol::codec::HistoryReadLimits, 
     (law, limits, grant, allocation)
 }
 
+struct TurnWork(u64);
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for TurnWork{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.0.min(4096)))}}
+fn settle_work(turn:&FlaggedTurn,work:u64){assert!(work<=turn.work.get().min(4096));turn.work.set(turn.work.get()-work)}
+
 fn paid_turn(decode: &mut RetainedHistoryDecode, bytes: &[u8], turn: &FlaggedTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>) -> RetainedHistorySourceStep {
-    let step = decode.step(bytes, turn, grant, history).expect("advance retained decode");
+    let outcome = decode.step(bytes, turn, grant, history, &mut TurnWork(turn.work.get()));
+    settle_work(turn,outcome.work);
+    if turn.should_yield()||turn.is_cancelled(){assert_eq!(outcome.work,0)}
+    let step=outcome.result.expect("advance retained decode");
     if let Some((issued, progress)) = decode.take_receipt() {
         assert_eq!(issued, grant, "every receipt answers the exact supplied grant");
         assert!(progress.fits(grant), "every receipt fits the supplied grant");
@@ -72,12 +80,14 @@ fn settle(decode: &mut RetainedHistoryDecode, bytes: &[u8], turn: &FlaggedTurn, 
     }
 }
 
-fn close_all(decode: &mut RetainedHistoryDecode, bytes: &[u8], grant: RetainedCloneGrant) {
+fn close_all(decode: &mut RetainedHistoryDecode, bytes: &[u8], grant: RetainedCloneGrant, turn:&FlaggedTurn) {
     for _ in 0..1_000_000 {
         if decode.terminal_is_empty() {
             return;
         }
-        let step = decode.close_step(bytes, &RetainedHistoryUninterrupted, grant).expect("close retained decode");
+        let outcome = decode.close_step(bytes, &RetainedHistoryUninterrupted, grant, &mut TurnWork(turn.work.get()));
+        settle_work(turn,outcome.work);
+        let step=outcome.result.expect("close retained decode");
         assert!(step.progress().fits(grant), "every close receipt fits the supplied grant");
     }
     panic!("retained history close did not settle");
@@ -136,7 +146,7 @@ async fn retained_history_decode_closes_every_original_owner_after_a_cancelled_t
         if !decode.terminal_is_empty() && history.is_none() {
             assert_eq!(paid_turn(&mut decode, &bytes, &turn, grant, &mut history), RetainedHistorySourceStep::Blocked, "a cancelled turn admits no further original work");
         }
-        close_all(&mut decode, &bytes, grant);
+        close_all(&mut decode, &bytes, grant, &turn);
         assert!(decode.terminal_is_empty());
         assert!(decode.source_identity().is_none());
     }
@@ -145,16 +155,17 @@ async fn retained_history_decode_closes_every_original_owner_after_a_cancelled_t
 #[semio_framework_async_macros::async_test]
 async fn retained_history_decode_rejects_a_crc_valid_malformed_transition_after_valid_records() {
     let mut log = sample_log().await;
-    log.transitions.push(HistoryTransitionRecord { id: "transition-after-valid-prefix".to_string(), actor: "alice".into(), hlt: (1, 2, 0), dependencies: Vec::new(), observed: None, payload: vec![0xff] });
+    log.transitions.push(HistoryTransitionRecord { id: "transition-after-valid-prefix".to_string(), actor: "alice".into(), hlt: (1, 2, 0), dependencies: Vec::new(), observed: None, payload: semio_framework_value::paged::PagedBytes::<{isize::MAX as usize}>::try_from_slice(&[0xff]).unwrap() });
     let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode semantically malformed retained history");
     let (_, limits, grant, allocation) = retained_corpus();
     let mut decode = RetainedHistoryDecode::new((0, bytes.len()), limits, false, allocation).expect("admit retained semantic refusal");
     let mut history = None;
-    let (_, step) = settle(&mut decode, &bytes, &FlaggedTurn::new(), grant, &mut history);
+    let turn=FlaggedTurn::new();
+    let (_, step) = settle(&mut decode, &bytes, &turn, grant, &mut history);
     assert_eq!(step, RetainedHistorySourceStep::Fault, "a malformed transition payload never reaches ready");
     assert!(decode.fault().is_some(), "the refusal keeps its exact original owner until it is closed");
     assert!(history.is_none());
-    close_all(&mut decode, &bytes, grant);
+    close_all(&mut decode, &bytes, grant, &turn);
     assert!(decode.terminal_is_empty());
 }
 
@@ -166,11 +177,12 @@ async fn retained_history_decode_rejects_a_repeated_transition_id() {
     let (_, limits, grant, allocation) = retained_corpus();
     let mut decode = RetainedHistoryDecode::new((0, bytes.len()), limits, false, allocation).expect("admit retained decode");
     let mut history = None;
-    let (_, step) = settle(&mut decode, &bytes, &FlaggedTurn::new(), grant, &mut history);
+    let turn=FlaggedTurn::new();
+    let (_, step) = settle(&mut decode, &bytes, &turn, grant, &mut history);
     assert_eq!(step, RetainedHistorySourceStep::Fault, "a repeated transition identity never reaches ready");
     assert!(decode.fault().is_some());
     assert!(history.is_none());
-    close_all(&mut decode, &bytes, grant);
+    close_all(&mut decode, &bytes, grant, &turn);
     assert!(decode.terminal_is_empty());
 }
 //#endregion 🔖️Composition

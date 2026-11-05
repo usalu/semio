@@ -1,0 +1,38 @@
+[package]
+name = "semio-framework-plugin-reactor-staged-forms"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+workspace = "../../../../../../../../../../.."
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-reactor-staged-forms"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-async = { path = "../../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
+semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job-native-decode = { path = "../../../../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-pack = { path = "../../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-app = { path = "../../../../../🔌️app/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-lifecycle = { path = "../../../../../📨️pending/📦️packages/🦀️rust" }
+semio-framework-plugin-runtime-ops = { path = "../../../../../🏃️runtime/🧰️ops/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-patches = { path = "../../../../../🩹️patches/📦️packages/🦀️rust" }
+semio-framework-plugin-actor-host = { path = "../../../../../../🌐host/📦️packages/🦀️rust" }
+semio_framework_ui_runtime = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
+semio_framework_ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-plugin-reactor-receiving-source = { path = "../../../🎟️source/📦️packages/🦀️rust" }

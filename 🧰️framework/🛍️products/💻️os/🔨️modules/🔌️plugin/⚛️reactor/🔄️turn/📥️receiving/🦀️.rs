@@ -1,4 +1,5 @@
 //! 📥️ Original response and intent inputs remain owned through deferred dispatch and paid source return.
+pub use semio_framework_plugin_reactor_receiving_source::{ReceivingSource,retired};
 use std::cell::{Cell, RefCell};
 use crate::{DIRTY_INTENT_INSTANCE_CAPACITY, DirtyIntentBatch, collect_original_publication_receipts, native_close_key, retain_refused_publication, route_exchange_output};
 use semio_framework::kernel::{Effect, Event};
@@ -12,31 +13,15 @@ use semio_framework_job::{OriginalCallerSourceLoan, OriginalTurnFailure, StepCon
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::ManuallyDrop;
-fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
-#[path="auxiliary.rs"]
-pub mod auxiliary;
+pub use semio_framework_plugin_reactor_staged_forms::{auxiliary,forms};
 
-#[doc(hidden)]
-pub struct ReceivingSource{pub identity:(semio_framework_job::OperationId,semio_framework_job::Generation),pub parent:usize,pub recipient:usize,pub epoch:Cell<Option<u64>>,pub clock:fn()->Option<u64>,observed:Cell<Option<u64>>,deadline:u64,loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,returning_loan:bool}
-impl ReceivingSource{
- pub fn new(cx:&StepContext<'_>)->Result<Self,OriginalTurnFailure>{Ok(Self{identity:(cx.operation(),cx.generation()),parent:cx.original_source_parent()?.source_identity()?,recipient:cx.original_recipient_identity(),epoch:Cell::new(cx.original_source_epoch()),clock:cx.clock_source(),observed:Cell::new(cx.latest_us()),deadline:cx.deadline_us(),loan:ManuallyDrop::new(None),returning_loan:false})}
- pub fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{
-  let epoch=cx.original_source_epoch();let now=cx.now_us();
-  if self.identity!=(cx.operation(),cx.generation())||self.parent!=cx.original_source_parent()?.source_identity()?||self.recipient!=cx.original_recipient_identity()||!std::ptr::fn_addr_eq(self.clock,cx.clock_source())||self.deadline!=cx.deadline_us()||self.epoch.get().is_some()!=epoch.is_some()||matches!((self.epoch.get(),epoch),(Some(before),Some(after))if after<before)||now.is_none()||matches!((self.observed.get(),now),(Some(before),Some(after))if after<before){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original receiving continuation requires its initiating source recipient clock and work lifetime").into())}
-  self.epoch.set(epoch);self.observed.set(now);
-  if !self.returning_loan{if let Some(loan)=self.loan.as_ref(){loan.validate_context(cx)?}}Ok(())
- }
- pub fn admit(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.loan.is_none()&&cx.is_cancelled(){return Ok(true)}if self.returning_loan||self.loan.is_some(){return Ok(true)}cx.original_source_parent()?.admit_loan(&mut self.loan,cx)?;Ok(false)}
- pub fn close(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;let Some(loan)=self.loan.as_mut()else{return Ok(true)};self.returning_loan=true;loan.close_step(cx.original_source_parent()?,cx)?;if loan.terminal_is_empty(){self.loan.take();}Ok(false)}
-}
 #[doc(hidden)]
 pub fn metadata(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 type ResponseFields=(Option<String>,Option<semio_framework_value::DslValue>,Option<semio_framework::Fault>);
 #[doc(hidden)]
 #[path="📦️completed/🦀️.rs"]
 pub mod completed;
-#[path="staged.rs"]
-pub mod staged;
+pub use semio_framework_plugin_reactor_staged_forms::staged;
 #[doc(hidden)]
 pub struct RetainedResponse{pub metadata:ManuallyDrop<Option<Box<semio_framework_plugin_runtime_ops::ops_typed_operations::OriginalResponseActionSource>>>,pub instance:Option<u32>,pub key:Option<instance_lifetime::NativeCloseKey>,pub witness:ReceivingSource,pub request:Option<semio_framework::kernel::RequestId>,pub input:ManuallyDrop<Option<completed::CompletedInput>>,pub fields:ManuallyDrop<Option<ResponseFields>>,pub request_result:ManuallyDrop<Option<Result<Vec<u8>,semio_framework::Fault>>>,pub request_closing:ManuallyDrop<Option<ControlledRetirement<Result<Vec<u8>,semio_framework::Fault>>>>,pub closing:ManuallyDrop<Option<ControlledRetirement<ResponseFields>>>,pub output:ManuallyDrop<Option<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>>,pub failure:ManuallyDrop<Option<OriginalTurnFailure>>,pub finished:bool}
 impl RetainedResponse{
@@ -64,7 +49,7 @@ impl RetainedResponse{
   if !self.witness.close(cx)?{return Ok(None)}
   if !metadata(cx)?{return Ok(None)}if let Some(request)=self.request.take(){REGISTRY.with(|registry|registry.release_completed(request));}if let Some(failure)=self.failure.take(){return Err(failure)}Ok(self.output.take())
  }
- pub fn terminal(&self)->bool{self.finished&&self.metadata.is_none()&&self.request.is_none()&&self.input.is_none()&&self.fields.is_none()&&self.request_result.is_none()&&self.request_closing.is_none()&&self.closing.is_none()&&self.witness.loan.is_none()&&self.output.is_none()&&self.failure.is_none()}
+ pub fn terminal(&self)->bool{self.finished&&self.metadata.is_none()&&self.request.is_none()&&self.input.is_none()&&self.fields.is_none()&&self.request_result.is_none()&&self.request_closing.is_none()&&self.closing.is_none()&&self.witness.source_is_returned()&&self.output.is_none()&&self.failure.is_none()}
 }
 impl Drop for RetainedResponse{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal(),"original response requires source retirement before terminal drop")}}
 thread_local!{static RESPONSES:RefCell<[Option<RetainedResponse>;requests::REQUEST_SLOTS]>=const{RefCell::new([const{None};requests::REQUEST_SLOTS])};static RESPONSE_CURSOR:Cell<usize>=const{Cell::new(0)};}
@@ -125,7 +110,7 @@ impl RetainedIntents{
   if !self.batches.terminal_is_empty(){let grant=cx.retained_grant();let release=self.batches.next_release_allocation_bytes().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"intent batch release quote refused"))?;if grant.maximum_release_bytes<release||grant.maximum_depth<self.batches.next_release_depth_demand().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"intent batch release depth refused"))?{return Ok(false)}let step=self.batches.release_empty_page(grant.maximum_release_bytes).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"intent batch release refused"))?;cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:step.released_allocation_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
   self.witness.close(cx)
  }
- pub fn terminal(&self)->bool{self.batches.terminal_is_empty()&&self.current.is_none()&&self.value.is_none()&&self.intent_source.is_none()&&self.witness.loan.is_none()&&self.outputs.iter().all(Option::is_none)&&self.failure.is_none()}
+ pub fn terminal(&self)->bool{self.batches.terminal_is_empty()&&self.current.is_none()&&self.value.is_none()&&self.intent_source.is_none()&&self.witness.source_is_returned()&&self.outputs.iter().all(Option::is_none)&&self.failure.is_none()}
 }
 impl Drop for RetainedIntents{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal(),"original intent batch requires complete input and outcome retirement")}}
 thread_local!{static INTENTS:RefCell<Option<RetainedIntents>>=const{RefCell::new(None)};}

@@ -4,7 +4,8 @@
 import { normWireLiteral, normWireObject, normWireRequired, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeReliabilityClass {
+  mutation: "changeReliabilityClass";
   newReliabilityClass: "RC1" | "RC2" | "RC3";
 }
 
-export const parseChangeReliabilityClass: NormWireReader<ChangeReliabilityClass> = normWireObject<ChangeReliabilityClass>({ newReliabilityClass: normWireRequired(normWireLiteral("RC1", "RC2", "RC3")) });
+export const parseChangeReliabilityClass: NormWireReader<ChangeReliabilityClass> = normWireObject<ChangeReliabilityClass>({ mutation: normWireRequired(normWireLiteral("changeReliabilityClass")), newReliabilityClass: normWireRequired(normWireLiteral("RC1", "RC2", "RC3")) });

@@ -84,7 +84,7 @@ test("a profile that compilers hold loses only superseded units idle for the bus
 
 test("a real compiler lock keeps its unit, a real exclusive build lease makes a profile busy, a free one is taken without waiting and released",async()=>{
  if(!["darwin","linux"].includes(process.platform))return;
- const root=mkdtempSync(join(realpathSync(tmpdir()),"units-")),store=join(root,".🧬semio/🦑️repo/⚡️cache/rust/fixed/m"),leases=join(root,".cache/b/l/m/data");
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"units-")),store=join(root,".cache/b/r/m"),leases=join(root,".cache/b/l/m/data");
  try{
   mkdirSync(leases,{recursive:true});mkdirSync(store,{recursive:true});expect(leaseDirectoryOfStoreV1(store)).toBe(leases);expect(leaseDirectoryOfStoreV1(join(tmpdir(),"nowhere-"+process.pid))).toBeUndefined();
   const held=unit(store,"b/p/prototype","serde","a1",65536,50),free=unit(store,"b/p/prototype","serde","a2",65536,45);unit(store,"b/p/prototype","serde","a3",65536,40);unit(store,"b/p/prototype","serde","a4",65536,39);unit(store,"b/p/prototype","serde","a5",65536,38);

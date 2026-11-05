@@ -26,8 +26,8 @@
           "rKN": 650000.0,
           "gammaEl": 1.0,
           "chordRotationDemandRad": 0.0,
-          "chordRotationUltimateRad": 0.0,
           "chordRotationYieldRad": 0.0,
+          "chordRotationUltimateRad": 0.0,
           "sectionDepthM": 0.0,
           "sectionWidthM": 0.0,
           "effectiveDepthM": 0.0,
@@ -86,25 +86,7 @@
     "moved": [],
     "modified": []
   },
-  "joints": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "bearings": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "piers": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "accelerograms": {
+  "soilLayers": {
     "removed": [],
     "inserted": [],
     "moved": [],
@@ -116,7 +98,37 @@
     "moved": [],
     "modified": []
   },
-  "soilLayers": {
+  "accelerograms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "piers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bearings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tieBeams": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "slopes": {
     "removed": [],
     "inserted": [],
     "moved": [],

@@ -144,6 +144,7 @@ message En1996Mutation {
     ChangeMovementJointPosition change_movement_joint_position = 140;
     InsertMovementJoint insert_movement_joint = 141;
     RemoveMovementJoint remove_movement_joint = 142;
+    ChangeWallWebSpacingM change_wall_web_spacing_m = 143;
   }
 }
 message ChangeConcentratedBearingLength {
@@ -768,4 +769,8 @@ message InsertMovementJoint {
 }
 message RemoveMovementJoint {
   string id = 1;
+}
+message ChangeWallWebSpacingM {
+  string id = 1;
+  double new_web_spacing_m = 2;
 }

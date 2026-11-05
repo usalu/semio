@@ -81,3 +81,7 @@ path = "../../🧪️tests/🔬️mutation-laws/🦀️.rs"
 [[test]]
 name = "strict_mutation_laws"
 path = "../../🧪️tests/🔬️strict-mutation-laws/🦀️.rs"
+
+[[test]]
+name = "natural_file_sdk"
+path = "../../🧪️tests/📄️natural/🦀️.rs"

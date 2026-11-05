@@ -26,3 +26,7 @@ pub use report_tree::*;
 #[path = "../📝️document-editors/🦀️.rs"]
 mod document_editors;
 pub use document_editors::*;
+
+#[path = "../🌳️report-tree/✅️feedback/🦀️.rs"]
+mod field_feedback;
+pub use field_feedback::*;

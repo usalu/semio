@@ -37,8 +37,8 @@ impl FromValue for crate::IdmlPackage {
         control.checkpoint()?;
         Ok(package)
     }
-    fn retire_decoded(value: Self) {
-        <semio_s_artifact_stdio_zip::ZipSnapshot as FromValue>::retire_decoded(value.into_archive());
+    fn retire_decoded(self) {
+        <semio_s_artifact_stdio_zip::ZipSnapshot as FromValue>::retire_decoded(self.into_archive());
     }
 }
 

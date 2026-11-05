@@ -23,7 +23,7 @@
           "de": "Das adressierte Element (Rahmeneinwirkung), per Kennung."
         },
         "ref": {
-          "relief": "fatigue-stress"
+          "kind": "fatigue-stress"
         },
         "group": "target",
         "order": 10

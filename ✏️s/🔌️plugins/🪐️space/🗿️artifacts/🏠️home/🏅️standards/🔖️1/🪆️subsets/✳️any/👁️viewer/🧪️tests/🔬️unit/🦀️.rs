@@ -209,7 +209,7 @@ async fn a_viewer_page_publishes_only_its_transient_item() {
     app.bind_instance_id(1).await;
     let fixture = semio_framework_pack_json::parse(fixture_text!("../../🧪️tests/🧫️fixtures/📬️directory-feed/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral directory feed fixture");
     let pages = fixture["pages"].as_array().expect("pages");
-    let meta = semio_framework_plugin::ActionMeta { actor: "local".into(), instance_id: 1, view_state: Some(home_view()) };
+    let meta = semio_framework_plugin::ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: 1, view_state: Some(home_view()) };
     for page in pages {
         let args = DslValue::Object(vec![("pageJson".into(), DslValue::String(semio_framework_pack_json::to_json_string(&feed_page(&fixture, page))))]);
         semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "applyDirectoryEventPage", Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the viewer admits a sealed page");

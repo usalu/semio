@@ -2,6 +2,27 @@
 use super::*;
 
 #[test]
+fn pixel_selection_intent_uses_intrinsic_coordinates_and_pins_target_revision(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️selection/🔣️.json")).unwrap();
+    let mut host=RasterHost::new();host.set_size(100,100,1.0);
+    host.sync_document_json(&serde_json::json!({"schema":"raster.document","layers":[{"kind":"pixel","id":"p","imageKey":"source","width":fixture["displayWidth"],"height":fixture["displayHeight"],"transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1}}]}).to_string()).unwrap();
+    host.upload_raster_image_key("source",&png_bytes(8,8)).unwrap();host.sync_interaction(&["p".into()],None);
+    let points:Vec<[f64;2]>=serde_json::from_value(fixture["points"].clone()).unwrap();
+    let intent=host.pixel_selection_intent(&points).unwrap();
+    assert_eq!((intent.width,intent.height),(8,8));assert_eq!(intent.image_key.as_deref(),Some("source"));assert_eq!(intent.points,vec![[0.0,0.0],[4.0,4.0]]);
+    assert!(intent.matches(&host));host.upload_raster_image_key("source",&png_bytes(4,4)).unwrap();assert!(!intent.matches(&host));
+}
+
+#[test]
+fn pixel_selection_intent_invalidates_image_revisions(){
+    let mut host=RasterHost::new();host.set_size(100,100,1.0);
+    let mut document=serde_json::json!({"schema":"raster.document","layers":[{"kind":"pixel","id":"p","imageKey":"source","width":8,"height":8,"transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1}}]});
+    host.sync_document_json(&document.to_string()).unwrap();host.upload_raster_image_key("source",&png_bytes(8,8)).unwrap();host.sync_interaction(&["p".into()],None);
+    let intent=host.pixel_selection_intent(&[[50.0,50.0]]).unwrap();
+    document["layers"][0]["imageKey"]="replacement".into();host.sync_document_json(&document.to_string()).unwrap();assert!(!intent.matches(&host));
+}
+
+#[test]
 fn retained_composite_matches_shared_mask_oracles(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🔲️pixels/🧩️compositing/🗂️layers/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap(){

@@ -4,7 +4,7 @@
     use semio_framework_os_store_backbone::MemoryBackbone;
 use semio_framework_os_store_backbone::BackboneMessage;
 fn take_test_host_events() -> Vec<HostEvent> {
-        TEST_HOST_EVENTS.with(|events| std::mem::take(&mut *events.borrow_mut()))
+        TEST_HOST_EVENTS.with(|events| events.borrow_mut().take())
     }
 
     /// 🪟️ A view of the two-window roster `main-1`/`main-2` targeting `target` under `utility`.
@@ -236,7 +236,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
 
             let mut receiver = contract_app(mounted_policy, &mut identity).await;
 
-            let under = ActionMeta { view_state: Some(host_event_view("main-1", Some("select"))), ..meta() };
+            let under = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(host_event_view("main-1", Some("select")), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..meta() };
 
             receiver.dispatch_typed(TestCommand::ViewNoScope, &under, &mut identity,cx).await.expect("admitted window context");
 

@@ -14,5 +14,8 @@ pub use paste::*;
 #[path = "📥️snapshot-import/🦀️.rs"]
 pub mod snapshot_import;
 pub use snapshot_import::*;
+#[path="🎟️reserved/🦀️.rs"]
+mod reserved;
+pub use reserved::Puzzle5dReservedWork;
 
 //#endregion 🧵️ReservedJobs

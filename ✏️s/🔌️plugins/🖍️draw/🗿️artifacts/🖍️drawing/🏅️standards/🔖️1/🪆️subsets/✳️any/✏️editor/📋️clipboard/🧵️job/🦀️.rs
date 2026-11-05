@@ -10,10 +10,10 @@ use semio_s_artifact_draw_drawing_editor_interaction::clipboard::copy;
 use semio_s_artifact_draw_drawing_editor_interaction::clipboard::decode;
 use semio_s_artifact_draw_drawing_editor_interaction::clipboard::encode;
 use semio_s_artifact_draw_drawing_editor_interaction::clipboard::invert;
-use semio_framework_plugin::{ArtifactReservedToolJobRequest,ArtifactReservedToolInput,EditorApp,Emit,Effect,EphemeralEmit,ArtifactReservedJob};
+use semio_framework_plugin::{ArtifactReservedToolJobRequest,ArtifactReservedToolInput,EditorApp,Emit,Effect,EphemeralEmit};
 use semio_s_artifact_draw_drawing_host::outcome::DrawingJobTurn;
-use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,StepContext};
-use semio_framework_value::{DslValue, ValueError, RetireOwned, NativeEncodeControl, NativeEncodeContinuation, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep}};
+use semio_framework_job::{InteractiveJobCloseStep,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,StepContext};
+use semio_framework_value::{DslValue, ValueError, RetireOwned, NativeEncodeControl, NativeEncodeContinuation, retained_clone::{RetainedCloneClose,RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep}};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeContinuation};
 use semio_framework_value::retirement::RetireOwned as RetireAuthority;
 type App=EditorApp<crate::DrawingPlayApp>;
@@ -66,8 +66,8 @@ pub const MAX_NATIVE_BYTES:usize=COPY_NATIVE_BYTES*2+MAX_BYTES*size_of::<DslValu
 /// 📖️ Borrows the sealed snapshot through its original clone source; the field path keeps sibling workspace fields borrowable.
 macro_rules! source_doc{($workspace:expr)=>{$workspace.source.as_ref().expect("Drawing clipboard seals its source before any read").borrow().get()}}
 #[derive(RetireOwned)]
-struct Workspace{source:Option<RetainedCloneSource<DrawingSnapshot,store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>>,unsealed:Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>,sealing:store::os_store::snapshot_read::SnapshotReadSourceStaging<DrawingSnapshot>,completion:Option<semio_framework_plugin::ArtifactToolCompletion<App>>,args:Option<DslValue>,interaction:protocol::InteractionState,hover:semio_framework_plugin::app::InteractionHoverState,wire:Vec<u8>,packet:Option<DrawingClipboard>,encoder:Option<semio_framework_pack_json::JsonWriteCursor<encode::ClipboardJsonSource>>,parser:Option<semio_framework_pack_json::JsonGrammarCursor<DslValue>>,hydration:Option<decode::ClipboardHydration>,placement:Option<semio_s_artifact_draw_drawing_scene_paint::placement::DrawingScenePlacementJob>,text:String,buffer_admitted:usize,roots:Vec<String>,retired_ids:Vec<String>,selected:Vec<String>,assets:Vec<String>,mutations:Vec<DrawingMutation>,effects:Vec<Effect>,interaction_writes:Vec<semio_framework_plugin::InteractionWrite>,interaction_targets:Vec<protocol::InteractionTarget>,fragment:Option<ClipboardFragment>,pending_asset:Option<(String,DrawingImageAsset)>,rejected_completion:Option<crate::completion::RejectedCompletion>,parent:Option<String>,addresses:metadata::Table<DrawingLayerAddress>,visited:metadata::Table<()>,removed:metadata::Table<()>,identities:metadata::Table<String>,asset_identities:metadata::Table<String>,cycle_active:metadata::Table<()>,cycle_done:metadata::Table<()>,cycle_stack:Vec<(DrawingLayerAddress,usize)>,pending_native:NativeText,rejected_native:Option<NativeText>,retired_native:NativeRetired,target:NativeText}
-pub struct DrawingClipboardJob{owner:ControlledRetirement<Workspace>,outcomes:DrawingJobOutcomes,tool:String,layer_clone:Option<Clone<DrawingLayerNode>>,asset_clone:Option<Clone<DrawingImageAsset>>,encoding:Option<NativeEncodeContinuation>,decoding:Option<NativeDecodeContinuation>,placement:PastePlacement,phase:u8,at:usize,closing:bool,complete:bool,locator:Option<DrawingLayerLocator>,footprint:Option<DrawingLayerCloneWorkAuthority>,source_root:Option<DrawingLayerAddress>,path:[usize;MAX_DEPTH],children:[usize;MAX_DEPTH],depth:usize,entered:bool,reference:usize,admitted_bytes:usize,normalize_other:usize,asset_append:usize,tree:Option<TreeCursor>,asset_search:usize,located_asset:Option<usize>,ordinal:usize,destination:[f64;6],inverse:[f64;6],offset:[f64;2],insertion:usize,scratch:[u8;MAX_ID_BYTES],material:[u8;MAX_ID_BYTES*2+64],mapped:[u8;76]}
+struct Workspace{source:Option<RetainedCloneSource<DrawingSnapshot,store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>>,unsealed:Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>,sealing:store::os_store::snapshot_read::SnapshotReadSourceStaging<DrawingSnapshot>,input:Option<ArtifactReservedToolInput>,input_captured:bool,packet:Option<DrawingClipboard>,encoder:Option<semio_framework_pack_json::JsonWriteCursor<encode::ClipboardJsonSource>>,parser:Option<semio_framework_pack_json::JsonGrammarCursor<DslValue>>,hydration:Option<decode::ClipboardHydration>,placement:Option<semio_s_artifact_draw_drawing_scene_paint::placement::DrawingScenePlacementJob>,text:String,buffer_admitted:usize,roots:Vec<String>,retired_ids:Vec<String>,selected:Vec<String>,assets:Vec<String>,mutations:Vec<DrawingMutation>,effects:Vec<Effect>,interaction_writes:Vec<semio_framework_plugin::InteractionWrite>,interaction_targets:Vec<protocol::InteractionTarget>,fragment:Option<ClipboardFragment>,pending_asset:Option<(String,DrawingImageAsset)>,rejected_completion:Option<crate::completion::RejectedCompletion>,parent:Option<String>,addresses:metadata::Table<DrawingLayerAddress>,visited:metadata::Table<()>,removed:metadata::Table<()>,identities:metadata::Table<String>,asset_identities:metadata::Table<String>,cycle_active:metadata::Table<()>,cycle_done:metadata::Table<()>,cycle_stack:Vec<(DrawingLayerAddress,usize)>,pending_native:NativeText,rejected_native:Option<NativeText>,retired_native:NativeRetired,target:NativeText}
+pub struct DrawingClipboardJob{owner:Option<Workspace>,retirement:RetainedCloneClose,outcomes:DrawingJobOutcomes,layer_clone:Option<Clone<DrawingLayerNode>>,asset_clone:Option<Clone<DrawingImageAsset>>,encoding:Option<NativeEncodeContinuation>,decoding:Option<NativeDecodeContinuation>,placement:PastePlacement,phase:u8,at:usize,closing:bool,complete:bool,locator:Option<DrawingLayerLocator>,footprint:Option<DrawingLayerCloneWorkAuthority>,source_root:Option<DrawingLayerAddress>,path:[usize;MAX_DEPTH],children:[usize;MAX_DEPTH],depth:usize,entered:bool,reference:usize,admitted_bytes:usize,normalize_other:usize,asset_append:usize,tree:Option<TreeCursor>,asset_search:usize,located_asset:Option<usize>,ordinal:usize,destination:[f64;6],inverse:[f64;6],offset:[f64;2],insertion:usize,scratch:[u8;MAX_ID_BYTES],material:[u8;MAX_ID_BYTES*2+64],mapped:[u8;76]}
 fn fault(error:impl std::fmt::Display)->semio_framework::Fault{semio_framework::Fault::from(error.to_string())}
 fn refused()->ValueError{ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Invalid drawing clipboard input / Ungültige Zeichnungsdaten in der Zwischenablage")}
 fn property<'a>(value:&'a mut DslValue,key:&str)->Option<&'a mut DslValue>{let DslValue::Object(entries)=value else{return None;};entries.iter_mut().find(|(name,_)|name==key).map(|(_,value)|value)}
@@ -94,15 +94,13 @@ fn canonical_operation(value:&NativeText)->bool{value.len()<=16&&["union","diffe
 fn initial_vec<T>(target:&mut Vec<T>,count:usize,admitted:&mut usize,cx:&mut StepContext<'_>)->Result<(),semio_framework::Fault>{if !target.is_empty()||target.capacity()!=0{return Err(fault(refused()));}let mut accepted=|_|!cx.is_cancelled();let mut control=NativeDecodeControl::new(MAX_NATIVE_BYTES.checked_sub(*admitted).ok_or_else(||fault(refused()))?,&mut accepted);let result=control.allocate_vec(count).map_err(fault);*admitted=(*admitted).checked_add(control.owned_bytes()).ok_or_else(||fault(refused()))?;*target=result?;Ok(())}
 fn copy_identity(source:&str,admitted:&mut usize,cx:&mut StepContext<'_>)->Result<String,semio_framework::Fault>{if source.is_empty()||source.len()>MAX_ID_BYTES{return Err(fault(refused()));}let mut accepted=|_|!cx.is_cancelled();let mut control=NativeDecodeControl::new(MAX_NATIVE_BYTES.checked_sub(*admitted).ok_or_else(||fault(refused()))?,&mut accepted);let result=control.copy_text(source).map_err(fault);*admitted=(*admitted).checked_add(control.owned_bytes()).ok_or_else(||fault(refused()))?;result}
 impl DrawingClipboardJob{
-    pub fn new(request:ArtifactReservedToolJobRequest<App>)->Result<Self,semio_framework::Fault>{
-        let ArtifactReservedToolInput::Action{args,interaction,hover}=request.input else{return Err(fault("Clipboard requires an action input"));};
-        let owner=ControlledRetirement::new(Workspace{source:None,unsealed:Some(request.snapshot_read),sealing:Default::default(),completion:Some(request.completion),args,interaction,hover,wire:request.raw_wire,packet:None,encoder:None,parser:None,hydration:None,placement:None,text:String::new(),buffer_admitted:0,roots:Vec::new(),retired_ids:Vec::new(),selected:Vec::new(),assets:Vec::new(),mutations:Vec::new(),effects:Vec::new(),interaction_writes:Vec::new(),interaction_targets:Vec::new(),fragment:None,pending_asset:None,rejected_completion:None,parent:None,addresses:metadata::Table::new(),visited:metadata::Table::new(),removed:metadata::Table::new(),identities:metadata::Table::new(),asset_identities:metadata::Table::new(),cycle_active:metadata::Table::new(),cycle_done:metadata::Table::new(),cycle_stack:Vec::new(),pending_native:Default::default(),rejected_native:None,retired_native:Default::default(),target:Default::default()}).map_err(|(error,_)|fault(error))?;
-        Ok(Self{owner,outcomes:DrawingJobOutcomes::new(),tool:request.tool_id,layer_clone:None,asset_clone:None,encoding:None,decoding:None,placement:Default::default(),phase:0,at:0,closing:false,complete:false,locator:None,footprint:None,source_root:None,path:[0;MAX_DEPTH],children:[0;MAX_DEPTH],depth:0,entered:false,reference:0,admitted_bytes:0,normalize_other:0,asset_append:0,tree:None,asset_search:0,located_asset:None,ordinal:0,destination:[1.0,0.0,0.0,1.0,0.0,0.0],inverse:[1.0,0.0,0.0,1.0,0.0,0.0],offset:[0.0;2],insertion:0,scratch:[0;MAX_ID_BYTES],material:[0;MAX_ID_BYTES*2+64],mapped:[0;76]})
+    fn vacant()->Self{
+        Self{owner:Some(Workspace{source:None,unsealed:None,sealing:Default::default(),input:None,input_captured:false,packet:None,encoder:None,parser:None,hydration:None,placement:None,text:String::new(),buffer_admitted:0,roots:Vec::new(),retired_ids:Vec::new(),selected:Vec::new(),assets:Vec::new(),mutations:Vec::new(),effects:Vec::new(),interaction_writes:Vec::new(),interaction_targets:Vec::new(),fragment:None,pending_asset:None,rejected_completion:None,parent:None,addresses:metadata::Table::new(),visited:metadata::Table::new(),removed:metadata::Table::new(),identities:metadata::Table::new(),asset_identities:metadata::Table::new(),cycle_active:metadata::Table::new(),cycle_done:metadata::Table::new(),cycle_stack:Vec::new(),pending_native:Default::default(),rejected_native:None,retired_native:Default::default(),target:Default::default()}),retirement:RetainedCloneClose::default(),outcomes:DrawingJobOutcomes::new(),layer_clone:None,asset_clone:None,encoding:None,decoding:None,placement:Default::default(),phase:0,at:0,closing:false,complete:false,locator:None,footprint:None,source_root:None,path:[0;MAX_DEPTH],children:[0;MAX_DEPTH],depth:0,entered:false,reference:0,admitted_bytes:0,normalize_other:0,asset_append:0,tree:None,asset_search:0,located_asset:None,ordinal:0,destination:[1.0,0.0,0.0,1.0,0.0,0.0],inverse:[1.0,0.0,0.0,1.0,0.0,0.0],offset:[0.0;2],insertion:0,scratch:[0;MAX_ID_BYTES],material:[0;MAX_ID_BYTES*2+64],mapped:[0;76]}
     }
-    fn prepare(&mut self,cx:&mut StepContext<'_>)->Result<(),semio_framework::Fault>{
-        let workspace=self.owner.original_mut().ok_or_else(||fault("Clipboard owner is closing"))?;
-        if self.tool=="paste"{
-            let args=workspace.args.as_mut().ok_or_else(||fault(refused()))?;
+    fn prepare(&mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->Result<(),semio_framework::Fault>{
+        let workspace=self.owner.as_mut().ok_or_else(||fault("Clipboard owner is closing"))?;
+        if request.tool_id=="paste"{
+            let Some(ArtifactReservedToolInput::Action{args:Some(args),..})=workspace.input.as_mut()else{return Err(fault(refused()));};
             self.placement.anchor=match args.get("anchor").and_then(DslValue::as_str){None|Some("original")=>PasteAnchor::Original,Some("middle")=>PasteAnchor::Middle,Some("centroid")=>PasteAnchor::Centroid,Some("bottomLeft")=>PasteAnchor::BottomLeft,Some("bottomRight")=>PasteAnchor::BottomRight,Some("topLeft")=>PasteAnchor::TopLeft,Some("topRight")=>PasteAnchor::TopRight,_=>return Err(fault(refused()))};
             if let Some(value)=args.get("position"){let DslValue::Array(values)=value else{return Err(fault(refused()));};if values.len()!=3{return Err(fault(refused()));}let mut position=[0.0;3];for(index,value)in values.iter().enumerate(){position[index]=value.as_f64().filter(|value|value.is_finite()).ok_or_else(||fault(refused()))?;}self.placement.position=Some(position);}
             if let Some(parent)=property(args,"parentId"){let DslValue::String(parent)=parent else{return Err(fault(refused()));};if parent.len()>4096{return Err(fault(refused()));}workspace.parent=Some(std::mem::take(parent));}
@@ -113,7 +111,7 @@ impl DrawingClipboardJob{
             let Some(DslValue::String(text))=property(fragment,"dslText")else{return Err(fault(refused()));};if text.len()>MAX_BYTES{return Err(fault("Drawing clipboard exceeds its declared byte capacity / Zeichnungszwischenablage überschreitet die zugelassene Größe"));}workspace.text=std::mem::take(text);
             workspace.parser=Some(semio_framework_pack_json::JsonGrammarCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject));self.phase=5;
         }else{
-            let selection=workspace.interaction.selection.get(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN).ok_or_else(||fault(ClipboardError::EmptySelection))?;
+            let Some(ArtifactReservedToolInput::Action{interaction,..})=workspace.input.as_ref()else{return Err(fault(refused()));};let selection=interaction.get().selection.get(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN).ok_or_else(||fault(ClipboardError::EmptySelection))?;
             if selection.ids.len()>MAX_NODES{return Err(fault(refused()));}if selection.ids.is_empty(){return Err(fault(ClipboardError::EmptySelection));}
             initial_vec(&mut workspace.roots,MAX_NODES,&mut workspace.buffer_admitted,cx)?;initial_vec(&mut workspace.assets,MAX_NODES,&mut workspace.buffer_admitted,cx)?;initial_vec(&mut workspace.selected,selection.ids.len(),&mut workspace.buffer_admitted,cx)?;initial_vec(&mut workspace.retired_ids,MAX_NODES*2,&mut workspace.buffer_admitted,cx)?;
             workspace.packet=Some(DrawingClipboard{schema:copy_identity(SCHEMA,&mut workspace.buffer_admitted,cx)?,roots:Vec::new(),selected:Vec::new(),assets:Default::default()});self.phase=12;self.at=0;
@@ -121,23 +119,30 @@ impl DrawingClipboardJob{
         Ok(())
     }
     /// 🧬️ Seals the captured snapshot read as the original clone source before any layer or asset is copied; true while the seal is still owed.
-    fn seal_source(&mut self,cx:&mut StepContext<'_>)->Result<bool,semio_framework::Fault>{
-        let workspace=self.owner.original_mut().ok_or_else(||fault("Clipboard owner is closing"))?;
-        if workspace.unsealed.is_none()&&workspace.sealing.terminal_is_empty(){return Ok(false);}
+    fn seal_source(&mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->Result<bool,semio_framework::Fault>{
+        let workspace=self.owner.as_mut().ok_or_else(||fault("Clipboard owner is closing"))?;
+        if workspace.source.is_some(){return Ok(false);}
+        if workspace.unsealed.is_none()&&workspace.sealing.terminal_is_empty(){
+            let demand=store::os_store::snapshot_read::SnapshotRead::<DrawingSnapshot>::duplicate_original_demands();
+            if cx.fuel_remaining()==0||!semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),demand){return Ok(true);}
+            let turn=request.snapshot_read.duplicate_original(&mut workspace.unsealed,cx.retained_grant());
+            cx.consume_fuel(turn.work);let receipt=turn.result.map_err(fault)?;
+            cx.consume_retained(receipt).map_err(fault)?;return Ok(true);
+        }
         if let Some(read)=workspace.unsealed.take(){
             if let Err((error,read))=workspace.sealing.begin(read){workspace.unsealed=Some(read);return Err(fault(error.into_message()));}
         }
         let grant=cx.retained_grant();
         let demand=workspace.sealing.next_demand().map_err(|error|fault(error.into_message()))?;
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(true);}
-        let progress=workspace.sealing.step(&mut workspace.source,grant).result.map_err(|error|fault(error.into_message()))?.progress();
+        let turn=workspace.sealing.step(&mut workspace.source,grant);cx.consume_fuel(turn.work);let progress=turn.result.map_err(|error|fault(error.into_message()))?.progress();
         cx.consume_retained(progress).map_err(fault)?;
         Ok(true)
     }
-    fn advance(&mut self,cx:&mut StepContext<'_>)->Result<bool,semio_framework::Fault>{
-        if self.seal_source(cx)?{cx.consume_fuel(1);return Ok(false);}
-        if self.phase==0{self.prepare(cx)?;cx.consume_fuel(1);return Ok(false);}
-        let workspace=self.owner.original_mut().ok_or_else(||fault("Clipboard owner is closing"))?;
+    fn advance(&mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->Result<bool,semio_framework::Fault>{
+        if self.seal_source(request,cx)?{return Ok(false);}
+        if self.phase==0{self.prepare(request,cx)?;cx.consume_fuel(1);return Ok(false);}
+        let workspace=self.owner.as_mut().ok_or_else(||fault("Clipboard owner is closing"))?;
         match self.phase{
             1=>{
                 cx.set_stage("clipboard-dependencies");
@@ -178,7 +183,7 @@ impl DrawingClipboardJob{
             4=>{
                 cx.set_stage("clipboard-encode");let grant=cx.retained_grant();let mut accepted=|_|!cx.is_cancelled();let mut control=if let Some(receipt)=self.encoding.take(){NativeEncodeControl::resume(receipt,&mut accepted).map_err(fault)?}else{NativeEncodeControl::new(MAX_BYTES,&mut accepted)};
                 let output=workspace.encoder.as_mut().unwrap().step(32,&mut control,grant).map_err(fault)?;self.encoding=Some(control.pause().map_err(fault)?);
-                if let Some(output)=output{workspace.text=output;self.phase=if self.tool=="cut"{20}else{8};self.at=0;}
+                if let Some(output)=output{workspace.text=output;self.phase=if request.tool_id=="cut"{20}else{8};self.at=0;}
             },
             5=>{
                 cx.set_stage("clipboard-parse");let grant=cx.retained_grant();let mut accepted=|_|!cx.is_cancelled();let mut control=if let Some(receipt)=self.decoding.take(){NativeDecodeControl::resume(receipt,&mut accepted).map_err(fault)?}else{NativeDecodeControl::new(MAX_NATIVE_BYTES,&mut accepted)};
@@ -188,8 +193,8 @@ impl DrawingClipboardJob{
             8=>{self.phase=37;self.at=0;}
             37=>{
                 cx.set_stage("clipboard-publication-admission");
-                if self.tool!="paste"{initial_vec(&mut workspace.effects,1,&mut workspace.buffer_admitted,cx)?;workspace.fragment=Some(ClipboardFragment{schema:String::new(),media_type:media_type(),dsl_text:String::new(),pack_bytes:None,source_app:String::new(),label:String::new()});}
-                if self.tool!="copy"{initial_vec(&mut workspace.interaction_writes,1,&mut workspace.buffer_admitted,cx)?;initial_vec(&mut workspace.interaction_targets,if self.tool=="paste"{workspace.selected.len()}else{0},&mut workspace.buffer_admitted,cx)?;}
+                if request.tool_id!="paste"{initial_vec(&mut workspace.effects,1,&mut workspace.buffer_admitted,cx)?;workspace.fragment=Some(ClipboardFragment{schema:String::new(),media_type:media_type(),dsl_text:String::new(),pack_bytes:None,source_app:String::new(),label:String::new()});}
+                if request.tool_id!="copy"{initial_vec(&mut workspace.interaction_writes,1,&mut workspace.buffer_admitted,cx)?;initial_vec(&mut workspace.interaction_targets,if request.tool_id=="paste"{workspace.selected.len()}else{0},&mut workspace.buffer_admitted,cx)?;}
                 self.phase=38;self.at=0;
             },
             38=>{
@@ -198,8 +203,8 @@ impl DrawingClipboardJob{
             },
             39=>{
                 cx.set_stage("clipboard-selection-publication");
-                if self.tool=="paste"&&self.at<workspace.selected.len(){let granularity=copy_identity(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_GRANULARITY,&mut workspace.buffer_admitted,cx)?;let id=std::mem::take(&mut workspace.selected[self.at]);workspace.interaction_targets.push(protocol::InteractionTarget{granularity,id});self.at+=1;return Ok(false);}
-                if self.tool!="copy"{let domain=copy_identity(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN,&mut workspace.buffer_admitted,cx)?;workspace.interaction_writes.push(semio_framework_plugin::InteractionWrite{domain,targets:std::mem::take(&mut workspace.interaction_targets),merge:protocol::MergeMode::Replace});}return Ok(true);
+                if request.tool_id=="paste"&&self.at<workspace.selected.len(){let granularity=copy_identity(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_GRANULARITY,&mut workspace.buffer_admitted,cx)?;let id=std::mem::take(&mut workspace.selected[self.at]);workspace.interaction_targets.push(protocol::InteractionTarget{granularity,id});self.at+=1;return Ok(false);}
+                if request.tool_id!="copy"{let domain=copy_identity(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN,&mut workspace.buffer_admitted,cx)?;workspace.interaction_writes.push(semio_framework_plugin::InteractionWrite{domain,targets:std::mem::take(&mut workspace.interaction_targets),merge:protocol::MergeMode::Replace});}return Ok(true);
             },
             29=>{
                 cx.set_stage("clipboard-destination");
@@ -299,57 +304,82 @@ impl DrawingClipboardJob{
                 self.source_root=None;
             },
             10|11=>{cx.set_stage("clipboard-normalize");let ids=if self.phase==10{&mut workspace.roots}else{&mut workspace.selected};if self.at==ids.len(){if self.phase==10{self.phase=11;self.at=0;}else{let packet=workspace.packet.as_mut().unwrap();initial_vec(&mut packet.roots,workspace.roots.len(),&mut workspace.buffer_admitted,cx)?;initial_vec(&mut packet.selected,workspace.selected.len(),&mut workspace.buffer_admitted,cx)?;self.phase=13;self.at=0;}self.normalize_other=0;return Ok(false);}if self.normalize_other==ids.len(){self.at+=1;self.normalize_other=0;return Ok(false);}let address=workspace.addresses[&ids[self.at]];let other=workspace.addresses[&ids[self.normalize_other]];if self.at!=self.normalize_other&&other.length<address.length&&address.indices[..other.length]==other.indices[..other.length]{workspace.retired_ids.push(ids.remove(self.at));self.normalize_other=0;}else{self.normalize_other+=1;}},
-            12=>{cx.set_stage("clipboard-selection");let ids=&workspace.interaction.selection[semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN].ids;if self.at==ids.len(){self.phase=1;self.at=0;return Ok(false);}let id=&ids[self.at];if id.is_empty()||id.len()>MAX_ID_BYTES{return Err(fault(refused()));}if !workspace.selected.contains(id){workspace.selected.push(copy_identity(id,&mut workspace.buffer_admitted,cx)?);workspace.roots.push(copy_identity(id,&mut workspace.buffer_admitted,cx)?);}self.at+=1;},
+            12=>{cx.set_stage("clipboard-selection");let Some(ArtifactReservedToolInput::Action{interaction,..})=workspace.input.as_ref()else{return Err(fault(refused()));};let ids=&interaction.get().selection[semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN].ids;if self.at==ids.len(){self.phase=1;self.at=0;return Ok(false);}let id=&ids[self.at];if id.is_empty()||id.len()>MAX_ID_BYTES{return Err(fault(refused()));}if !workspace.selected.contains(id){workspace.selected.push(copy_identity(id,&mut workspace.buffer_admitted,cx)?);workspace.roots.push(copy_identity(id,&mut workspace.buffer_admitted,cx)?);}self.at+=1;},
             13=>{cx.set_stage("clipboard-selected-identities");if self.at==workspace.selected.len(){self.phase=2;self.at=0;return Ok(false);}let id=copy_identity(&workspace.selected[self.at],&mut workspace.buffer_admitted,cx)?;workspace.packet.as_mut().unwrap().selected.push(id);self.at+=1;},
             _=>return Err(fault(refused()))
         };cx.consume_fuel(1);Ok(false)
     }
-    fn publish(&mut self,result:Result<(),semio_framework::Fault>)->DrawingJobTurn{
-        let workspace=self.owner.original_mut().unwrap();let emit=result.map(|()|{
+    fn publish(&mut self,request:&ArtifactReservedToolJobRequest<App>,result:Result<(),semio_framework::Fault>)->DrawingJobTurn{
+        let workspace=self.owner.as_mut().unwrap();let emit=result.map(|()|{
             let mut emit=Emit::mutations(std::mem::take(&mut workspace.mutations));
             emit.effects=std::mem::take(&mut workspace.effects);emit.interaction_writes=std::mem::take(&mut workspace.interaction_writes);emit
         });
-        let failed=emit.is_err();let Some(completion)=workspace.completion.as_ref()else{return self.outcomes.fault("drawing.clipboard-completion-missing");};
+        let failed=emit.is_err();let completion=&request.completion;
         if let Err(rejected)=completion.complete(emit,EphemeralEmit::default()){
             workspace.rejected_completion=Some(crate::completion::RejectedCompletion::new(rejected));
             return self.outcomes.fault("drawing.clipboard-completion-rejected");
         }
         self.complete=true;if failed{self.outcomes.fault("drawing.clipboard-refused")}else{DrawingJobTurn::Complete}
     }
-    fn demands(&self,copy:usize)->Result<RetainedCloneGrant,ValueError>{if !self.outcomes.terminal_is_empty(){let demand=self.outcomes.retirement_demands()?;return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth});}if let Some(owner)=self.layer_clone.as_ref(){return owner.close_demands(copy);}if let Some(owner)=self.asset_clone.as_ref(){return owner.close_demands(copy);}Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:self.owner.next_copy_byte_demand()?,maximum_capacity_bytes:self.owner.next_capacity_byte_demand(copy)?,maximum_release_bytes:self.owner.next_release_byte_demand()?,maximum_depth:self.owner.next_depth_demand()?})}
+    fn demands(&self,copy:usize)->Result<RetainedCloneGrant,ValueError>{if !self.outcomes.terminal_is_empty(){let demand=self.outcomes.retirement_demands()?;return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth});}if let Some(owner)=self.layer_clone.as_ref(){return owner.close_demands(copy);}if let Some(owner)=self.asset_clone.as_ref(){return owner.close_demands(copy);}let demand=self.retirement.next_owner_demands::<Workspace>(self.owner.is_some(),&None,copy)?;Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})}
 }
 impl DrawingClipboardJob{
-    fn turn(&mut self,cx:&mut StepContext<'_>)->DrawingJobTurn{
+    fn turn(&mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->DrawingJobTurn{
         if self.outcomes.faulted(){return DrawingJobTurn::Fault;}
         if self.closing||cx.is_cancelled(){return DrawingJobTurn::Cancelled;}if self.complete{return DrawingJobTurn::Complete;}
-        while !cx.should_yield(){if cx.is_cancelled(){return DrawingJobTurn::Cancelled;}let placement_turn=self.phase==34;let fuel_before=cx.fuel_remaining();let result=self.advance(cx);if !placement_turn{cx.consume_fuel(1);}else if cx.fuel_remaining()==fuel_before&&matches!(&result,Ok(false)){return DrawingJobTurn::Yield;}match result{Ok(true)=>return self.publish(Ok(())),Ok(false)=>{},Err(error)=>return self.publish(Err(error))}}
+        while !cx.should_yield(){if cx.is_cancelled(){return DrawingJobTurn::Cancelled;}let placement_turn=self.phase==34;let fuel_before=cx.fuel_remaining();let result=self.advance(request,cx);if !placement_turn{cx.consume_fuel(1);}else if cx.fuel_remaining()==fuel_before&&matches!(&result,Ok(false)){return DrawingJobTurn::Yield;}match result{Ok(true)=>return self.publish(request,Ok(())),Ok(false)=>{},Err(error)=>return self.publish(request,Err(error))}}
         DrawingJobTurn::Yield
     }
 }
 impl DrawingClipboardJob{
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{let turn=self.turn(cx);self.outcomes.lend(turn,cx)}
+    fn step_value<'a>(&'a mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->semio_framework_job::InteractiveJobStep<'a>{let turn=self.turn(request,cx);self.outcomes.lend(turn,cx)}
 }
 
-impl InteractiveJob for DrawingClipboardJob{
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
+impl Default for DrawingClipboardJob{fn default()->Self{Self::vacant()}}
+impl semio_framework_plugin::tool_contract::ArtifactReservedWork<App> for DrawingClipboardJob{
+    fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>,_claim:&mut semio_framework_job::OriginalJobReturnClaim)->semio_framework_job::InteractiveJobStep<'a>{
+        if !self.owner.as_ref().is_some_and(|owner|owner.input_captured){
+            let bytes=2*size_of::<Option<ArtifactReservedToolInput>>();
+            if cx.fuel_remaining()==0||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_copy_bytes<bytes{return Ok(None);}
+            let workspace=self.owner.as_mut().ok_or_else(||ValueError::invariant("Drawing source is closing"))?;
+            workspace.input=request.input.take();workspace.input_captured=true;
+            cx.consume_fuel(1);cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
+            return Ok(None);
+        }
+        self.step_value(request,cx)
+    }
     fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{self.outcomes.borrow_outcome(descriptor)}
     fn begin_close(&mut self){self.closing=true;}
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            if !self.closing{return Ok(InteractiveJobCloseStep::Blocked);}
-            if !self.outcomes.terminal_is_empty(){return self.outcomes.close_job_step(grant);}
-            if self.locator.is_some()||self.footprint.is_some()||self.tree.is_some(){if grant.maximum_items==0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()});}self.locator=None;self.footprint=None;self.tree=None;return Ok(InteractiveJobCloseStep::Pending{progress:semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}});}
-            let step=if let Some(owner)=self.layer_clone.as_mut(){let step=owner.close_step(grant);if owner.terminal_is_empty(){self.layer_clone=None;}step}else if let Some(owner)=self.asset_clone.as_mut(){let step=owner.close_step(grant);if owner.terminal_is_empty(){self.asset_clone=None;}step}else if !self.owner.terminal_is_empty(){self.owner.step(grant)}else{
-
-                self.encoding=None;self.decoding=None;return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()});
-            };Ok(match step{Ok(RetainedCloneStep::Progress(progress))|Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Pending{progress},Err(error)=>return Err(error)})
-        })
+    fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
+        let grant=self.demands(body)?;Ok(semio_framework_value::RetirementDemand{copy_bytes:grant.maximum_copy_bytes,capacity_bytes:grant.maximum_capacity_bytes,release_bytes:grant.maximum_release_bytes,depth:grant.maximum_depth})
     }
-    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.maximum_copy_bytes)}
-    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.demands(copy)?.maximum_capacity_bytes)}
-    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.maximum_release_bytes)}
-    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.maximum_depth)}
-    fn terminal_is_empty(&self)->bool{self.closing&&self.owner.terminal_is_empty()&&self.layer_clone.is_none()&&self.asset_clone.is_none()&&self.encoding.is_none()&&self.decoding.is_none()&&self.locator.is_none()&&self.footprint.is_none()&&self.tree.is_none()&&self.outcomes.terminal_is_empty()}
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_one(grant))?;
+        Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
+    }
+    fn terminal_is_empty(&self)->bool{self.closing&&self.owner.is_none()&&self.retirement.is_empty()&&self.layer_clone.is_none()&&self.asset_clone.is_none()&&self.encoding.is_none()&&self.decoding.is_none()&&self.locator.is_none()&&self.footprint.is_none()&&self.tree.is_none()&&self.outcomes.terminal_is_empty()}
 }
-impl ArtifactReservedJob for DrawingClipboardJob {}
+impl DrawingClipboardJob{
+    fn close_one(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+        use semio_framework_value::{RetainedWorkOutcome,retained_clone::RetainedCloneProgress};
+        if !self.closing{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
+        if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant);}
+        if self.locator.is_some()||self.footprint.is_some()||self.tree.is_some(){
+            let bytes=size_of::<Option<DrawingLayerLocator>>()+size_of::<Option<DrawingLayerCloneWorkAuthority>>()+size_of::<Option<TreeCursor>>();
+            if grant.maximum_items==0||grant.maximum_copy_bytes<bytes{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
+            self.locator=None;self.footprint=None;self.tree=None;
+            return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1};
+        }
+        if let Some(owner)=self.layer_clone.as_mut(){let turn=owner.close_step(grant);if owner.terminal_is_empty(){self.layer_clone=None;}return turn;}
+        if let Some(owner)=self.asset_clone.as_mut(){let turn=owner.close_step(grant);if owner.terminal_is_empty(){self.asset_clone=None;}return turn;}
+        if self.owner.is_some(){
+            let turn=self.retirement.begin_granted(&mut self.owner,grant);
+            return RetainedWorkOutcome{work:turn.work,result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default())))};
+        }
+        if !self.retirement.is_empty(){return self.retirement.step_granted(grant);}
+        self.encoding=None;self.decoding=None;
+        RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}
+    }
+}

@@ -1,0 +1,272 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "familyCounts",
+    "arguments",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "familyCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "din16798",
+        "din18599",
+        "din4108",
+        "en1990",
+        "en1991",
+        "en1992",
+        "en1993",
+        "en1994",
+        "en1995",
+        "en1996",
+        "en1997",
+        "en1998",
+        "en1999",
+        "iso16757",
+        "vdi3805"
+      ],
+      "properties": {
+        "din16798": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "din18599": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "din4108": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "en1990": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "en1991": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "en1992": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "en1993": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "en1994": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "en1995": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "en1996": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "en1997": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "en1998": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "en1999": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "iso16757": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "vdi3805": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "arguments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "family",
+          "path",
+          "kind",
+          "argument",
+          "source"
+        ],
+        "properties": {
+          "family": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "argument": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "value"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "text"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "path"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "sibling"
+                  },
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "rules",
+          "tree",
+          "edit"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rules": {
+            "enum": [
+              "axis",
+              "bolts"
+            ]
+          },
+          "tree": {
+            "type": "object"
+          },
+          "edit": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "value"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {}
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "payload"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "payload": {
+                "type": "object"
+              }
+            }
+          },
+          "siblingPointer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "siblingValue": {},
+          "errorContains": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "expected"
+            ],
+            "not": {
+              "required": [
+                "errorContains"
+              ],
+              "properties": {
+                "errorContains": {}
+              }
+            },
+            "properties": {
+              "expected": {}
+            }
+          },
+          {
+            "required": [
+              "errorContains"
+            ],
+            "not": {
+              "required": [
+                "expected"
+              ],
+              "properties": {
+                "expected": {}
+              }
+            },
+            "properties": {
+              "errorContains": {}
+            }
+          }
+        ]
+      }
+    }
+  }
+}

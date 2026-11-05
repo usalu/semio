@@ -243,7 +243,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             publication,publication_ownership_progress:None,actor_capture:None,actor_capture_pending:semio_framework_plugin_mounted_owner::actor_capture::ActorCapture::new(),worker_resume_pending:false,tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,pending_stream_abort:None,stream_abort_completed:false,pending_child_publication:None,
             owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,
             captured_child_content:Some(std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root))),captured_child_content_generation:self.child_composition.child_content_generation,
-            result_page:None, diagnostics:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,
+            page_publication:semio_framework_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None, diagnostics:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,
             ui_pending:true,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,
             command_logged:false,interaction_revalidated:false,retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing,
         };
@@ -252,8 +252,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let capture:Result<_,Fault>=async{
             if self.tools.live_runtime_instance_id!=Some(meta.instance_id){return Err(plugin_sdk_fault("original emission does not belong to its mounted live app instance"));}
             let proof=self.tools.qualified_tool_proof(&*self.stores, verb)?;
-            let window_config=self.stores.window_config_store.capture(meta.view_state.as_ref()).await?;
-            let window_transient=self.stores.window_transient_store.capture(meta.view_state.as_ref())?;
+            let window_config=self.stores.window_config_store.capture(meta.view_state.as_deref()).await?;
+            let window_transient=self.stores.window_transient_store.capture(meta.view_state.as_deref())?;
             Ok((proof.publication_lanes(),proof.contract().max_output_bytes,window_config,window_transient,self.stores.presence_store.generation().await,self.stores.transient_store.generation().await))
         }.await;
         let mounted=self.tools.tool_operations.get_mut(operation_id).expect("original completed output remains in its exact admitted slot");

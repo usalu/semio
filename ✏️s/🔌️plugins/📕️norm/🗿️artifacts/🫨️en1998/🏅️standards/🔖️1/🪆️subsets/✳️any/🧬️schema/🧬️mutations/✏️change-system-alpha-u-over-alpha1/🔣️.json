@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-system-alpha-u-over-alpha1",
   "semanticKind": "change-system-alpha-u-over-alpha1",
-  "displayName": "Change αu/α1",
+  "displayName": "Change structural overstrength ratio αu/α1",
   "emoji": "✏️",
   "aggregateVariant": "ChangeSystemAlphaUOverAlpha1",
   "payloadSchema": "🧬️schema/🔣️.json",

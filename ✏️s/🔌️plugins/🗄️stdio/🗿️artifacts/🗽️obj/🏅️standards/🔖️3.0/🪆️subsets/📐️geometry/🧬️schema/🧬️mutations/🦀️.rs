@@ -34,7 +34,7 @@ use crate::schema::diff::{
     diff_set_mtllib, diff_set_normal, diff_set_object, diff_set_smoothing_groups, diff_set_texcoord, diff_set_unknown_statements, diff_set_usemtl, diff_set_vertex, face_field_changes, normal_field_changes, texcoord_field_changes,
     vertex_field_changes, ObjDiff};
 use crate::schema::snapshot::{ObjFace, ObjNormal, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use crate::schema::snapshot::{ObjFaceVertex, ObjGroup, ObjObject};
 use crate::ObjSnapshot;
 use protocol::{Mutation};

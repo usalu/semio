@@ -90,6 +90,8 @@ fn original_enum_type_guidance_keeps_declared_options_bounded_and_supplied_value
                 }
             }
             assert_eq!(output.as_ref().unwrap().status().ready, complete);
+            assert_eq!(output.as_ref().unwrap().status().commit_args.is_some(), complete);
+            assert!(output.as_ref().unwrap().status().admitted());
             retire_guidance(&mut caller, &mut output);
             retire_guidance(&mut caller, &mut Some(guide));
             caller.finish();

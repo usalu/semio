@@ -91,6 +91,11 @@
         "fillTolerance": {
           "$u64": 24
         },
+        "editingOptions": {
+          "filterKind": "brightness",
+          "filterAmount": 0,
+          "imageGrid": {"x":{"$u64":0},"y":{"$u64":0},"width":{"$u64":512},"height":{"$u64":512},"bilinear":true}
+        },
         "viewMode": "composite"
       }
     },

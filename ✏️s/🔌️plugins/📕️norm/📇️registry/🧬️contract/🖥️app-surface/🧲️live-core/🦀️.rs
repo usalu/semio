@@ -10,9 +10,11 @@ pub use semio_s_plugin_norm_app_surface_foundation::*;
 mod live_lanes;
 pub use live_lanes::*;
 
-#[path = "../✏️edit-rules/🦀️.rs"]
-mod edit_rules;
-pub use edit_rules::*;
+pub use semio_s_plugin_norm_app_surface_edit_rules::*;
+
+#[path = "../✏️edit-rules/🎮️commands/🦀️.rs"]
+mod edit_commands;
+pub use edit_commands::*;
 
 #[path = "../🕹️direct-manipulation/🦀️.rs"]
 pub mod direct_manipulation;

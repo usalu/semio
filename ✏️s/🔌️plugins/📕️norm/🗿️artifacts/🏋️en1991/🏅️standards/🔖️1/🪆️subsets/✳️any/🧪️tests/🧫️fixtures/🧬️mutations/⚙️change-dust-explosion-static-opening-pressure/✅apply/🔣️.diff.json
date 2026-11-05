@@ -246,6 +246,36 @@
     "moved": [],
     "modified": []
   },
+  "dustExplosions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "dust-explosion-1",
+        "patch": {
+          "kst": null,
+          "pMax": null,
+          "volume": null,
+          "ventArea": null,
+          "staticOpeningPressure": 20001.0,
+          "designPressure": null
+        }
+      }
+    ]
+  },
+  "railLoadGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "railDerailments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "fatigueModels": {
     "removed": [],
     "inserted": [],
@@ -269,35 +299,5 @@
     "inserted": [],
     "moved": [],
     "modified": []
-  },
-  "railDerailments": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "railLoadGroups": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "dustExplosions": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": [
-      {
-        "id": "dust-explosion-1",
-        "patch": {
-          "kst": null,
-          "pMax": null,
-          "volume": null,
-          "ventArea": null,
-          "staticOpeningPressure": 20001.0,
-          "designPressure": null
-        }
-      }
-    ]
   }
 }

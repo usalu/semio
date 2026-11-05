@@ -18,7 +18,7 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamCrackedLengthF
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-cracked-length-fraction", kind: "change-beam-cracked-length-fraction", record: "ChangedBeamCrackedLengthFraction" };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change cracked length fraction of each span at internal supports, cl. 5.4.2.3 (0 = uncracked analysis)", "gerissener Längenanteil je Feld an Innenstützen nach 5.4.2.3 (0 = ungerissene Berechnung) ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change cracked length fraction of each span at internal supports, cl. 5.4.2.3 (0 = uncracked analysis)", "Gerissenen Längenanteil je Feld an Innenstützen nach 5.4.2.3 (0 = ungerissene Berechnung) ändern")
     }
 }
 

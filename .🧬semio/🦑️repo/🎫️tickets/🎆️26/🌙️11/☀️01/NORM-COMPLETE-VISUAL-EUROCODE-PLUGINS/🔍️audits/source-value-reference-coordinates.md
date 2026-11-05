@@ -1,0 +1,19 @@
+# Source Value Reference Coordinates
+
+2026-11-05. New schema-owned descriptive lookup coordinates; native issuance, registry custody, wire binding/request/status and command consumption are still unmounted. No source authority or ready state is inferred from this module.
+
+The closed origin records actual actor activation/instance/guest lifetime, initiating native operation/source generation, a nonreused source serial, controller and exact action/window/document-revision/form-generation token. A reference adds an exact slot and distinct draft/seed/variant/commit purpose. Every field participates in matching. A future native registry must construct these coordinates from the actual issuing source, retain its real value owner, and refuse absent, retired, substituted or consumed entries.
+
+Shared neutral fixtures cover21 shape cases and14 exact-match cases: u64/u32 maxima and overflow, noncanonical text, invalid types/purpose, missing/unknown fields, and each substituted scope component. TypeScript uses the existing first-party Ajv oracle port independently. Native derives compare their own FromValue/ToValue path with serde_json on the same runtime fixture. Accessor-backed inputs are refused without invoking their getters.
+
+Actual initial gate85285 terminal1: schema1/1 passed; both reader/matcher tests failed because the new production module did not exist. The source is now authored; green68023 is terminal0:3 tests/83 assertions passed. Native whole-library successor28527 is terminal0:27/27 passed, including the shared reference shape/equality/serde law and exact status counters. This precedes the new singleton sidecar feature. Strict scoped TypeScript76148 is terminal0 with zero diagnostics for the reference module and test, including its imported staging dependency chain.
+
+Native lib-test already has32 source files and no file headroom. Declarations/tests were therefore added to their existing staging source/test files; no test-only relocation or source cap changes. The new schema and vectors are explicitly declared nativeSources inputs. The bounded existing source collector reports headroom in bytes/lines; actual admission remains the stronger evidence.
+
+The actual browser witness stopped before UI execution: build:graph-plan was killed by SIGKILL and its repository command terminated1. Both original parent PIDs1906940/1906941 are now absent. No browser verdict or success is inferred. A new attempt must preserve actual owned activation/serve/runtime checks and run after focused prerequisites rather than duplicate the failed broad planner under critical host pressure. Completed original custody laws, wide35-field Create/Add/commit transport, native issuer registry, exact source-reference receiving and browser command behavior remain acceptance requirements.
+
+The proper framework StagedFormScript test roster now includes commit/reference plus original/new host session, lifecycle and execution suites. This closes a real runner omission: the earlier scoped successes were not automatically selected by the proper package target. Execution of the completed package roster is still required.
+
+Native filtered status-red56471 stopped at the new reference test helper E0308: FromValue consumes an owned DslValue, while the new test passed a borrow. The helper now transfers its own constructed test value without changing any expectation. No native reference or status behavioral success is inferred from this compiler-only correction; coordinated successor remains required.
+
+The original numeric domains were verified in source: trace/🛰️operations-and-trace/🦀️.rs defines OperationId(pub u64) and Generation(pub u64). NativeCloseKey captures actual ActorInstanceLifetime, whose instance identifier is u32. The coordinates preserve those exact ranges; the future issuer must still capture the actual native owner and never trust a deserialized coordinate record as authority.

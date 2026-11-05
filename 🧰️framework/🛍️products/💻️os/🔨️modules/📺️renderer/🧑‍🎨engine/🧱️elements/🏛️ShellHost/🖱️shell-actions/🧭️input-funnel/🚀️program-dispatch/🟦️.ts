@@ -33,13 +33,14 @@ function holdSourceRevision(core: ShellCoreAfterShellUriAndDocuments, session: A
 }
 
 /** 📮️ Runs an action through the hub-mounted browser actor and maps a rejection to a typed refusal. */
-export async function dispatchDirectBrowserActorAction({ dispatchDirectBrowserActorCommand, uiTerminologyRef, directBrowserActor, targetSession, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, applied, refusalReasonForError, core, refuse, propagateFailure }: Pick<ShellCoreAfterShellUriAndDocuments, "dispatchDirectBrowserActorCommand" | "uiTerminologyRef"> & {
+export async function dispatchDirectBrowserActorAction({ dispatchDirectBrowserActorCommand, uiTerminologyRef, directBrowserActor, targetSession, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision, applied, refusalReasonForError, core, refuse, propagateFailure }: Pick<ShellCoreAfterShellUriAndDocuments, "dispatchDirectBrowserActorCommand" | "uiTerminologyRef"> & {
   readonly directBrowserActor: ReturnType<ShellCoreAfterShellUriAndDocuments["directBrowserActorForSession"]>;
   readonly targetSession: ActiveSession;
   readonly dispatchViewState: NonNullable<ReturnType<typeof hostArmedViewContext>>;
   readonly action: ShellInputActionV1;
   readonly dispatchExtraInstances: readonly { readonly id: string; readonly windowKindId: string; }[];
   readonly dispatchWindowId: string | undefined;
+  readonly expectedDocumentRevision?: string;
   readonly applied: (commit?: InputCommitReceiptV1) => InputOutcomeV1;
   readonly refusalReasonForError: (error: unknown) => { readonly reason: InputRefusalReasonV1; readonly detail?: string; readonly diagnostic?: InputDiagnosticV1; readonly draftDisposition?: InputDraftDispositionV1; };
   readonly core: ShellCoreAfterShellUriAndDocuments;
@@ -52,7 +53,7 @@ export async function dispatchDirectBrowserActorAction({ dispatchDirectBrowserAc
     try {
       const result = await dispatchDirectBrowserActorCommand(
         directBrowserActor,
-        windowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId),
+        windowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision),
         dispatchViewState,
       );
       releaseSourceWork?.admit(undefined);
@@ -74,13 +75,14 @@ export async function dispatchDirectBrowserActorAction({ dispatchDirectBrowserAc
 }
 
 /** 🎬️ Runs an action through the program handler, applies its history patch and host effects and settles the ledger entry. */
-export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwner, applyHistoryPatch, applyLeftoverInteractionView, historyStore, lastDispatchedExampleIdRef, exampleOptionsRef, defaults, dispatch, refreshHistorySnapshot, applyHostEffects, observeLocalInteraction, awaitOperationSettle, uiTerminologyRef, uiLocale, dropForSealedInstance, dropForRetiredInstance, targetSession, plugin, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, entry, actionOwner, lifecycle, onAction, actionOrigin, hostWindowId, core, applied, refuse, refusalReasonForError, propagateFailure }: Pick<ShellCoreAfterShellUriAndDocuments, "sessionWorkRef" | "isCurrentEffectOwner" | "applyHistoryPatch" | "applyLeftoverInteractionView" | "historyStore" | "lastDispatchedExampleIdRef" | "exampleOptionsRef" | "defaults" | "dispatch" | "refreshHistorySnapshot" | "applyHostEffects" | "observeLocalInteraction" | "awaitOperationSettle" | "uiTerminologyRef" | "uiLocale" | "dropForSealedInstance" | "dropForRetiredInstance"> & {
+export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwner, applyHistoryPatch, applyLeftoverInteractionView, historyStore, lastDispatchedExampleIdRef, exampleOptionsRef, defaults, dispatch, refreshHistorySnapshot, applyHostEffects, observeLocalInteraction, awaitOperationSettle, uiTerminologyRef, uiLocale, dropForSealedInstance, dropForRetiredInstance, targetSession, plugin, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision, entry, actionOwner, lifecycle, onAction, actionOrigin, hostWindowId, core, applied, refuse, refusalReasonForError, propagateFailure }: Pick<ShellCoreAfterShellUriAndDocuments, "sessionWorkRef" | "isCurrentEffectOwner" | "applyHistoryPatch" | "applyLeftoverInteractionView" | "historyStore" | "lastDispatchedExampleIdRef" | "exampleOptionsRef" | "defaults" | "dispatch" | "refreshHistorySnapshot" | "applyHostEffects" | "observeLocalInteraction" | "awaitOperationSettle" | "uiTerminologyRef" | "uiLocale" | "dropForSealedInstance" | "dropForRetiredInstance"> & {
   readonly targetSession: ActiveSession;
   readonly plugin: ShellCoreAfterShellUriAndDocuments["loadedPlugins"][number]["handle"];
   readonly dispatchViewState: NonNullable<ReturnType<typeof hostArmedViewContext>>;
   readonly action: ShellInputActionV1;
   readonly dispatchExtraInstances: readonly { readonly id: string; readonly windowKindId: string; }[];
   readonly dispatchWindowId: string | undefined;
+  readonly expectedDocumentRevision?: string;
   readonly entry: ReturnType<ShellCoreAfterShellUriAndDocuments["inputLedgerRef"]["current"]["issue"]>;
   readonly actionOwner: ReturnType<ShellCoreAfterShellUriAndDocuments["captureEffectOwner"]>;
   readonly lifecycle: ActionDispatchLifecycleV1 | undefined;
@@ -96,7 +98,7 @@ export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwn
   const releaseActionWork = sessionWorkRef.current.begin(targetSession.pluginId, targetSession.instanceId, "typed-operation");
   const releaseSourceWork = holdSourceRevision(core, targetSession, plugin);
   try {
-    const response = await plugin.handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId), dispatchViewState, { order: causalOrderKeyV1(entry.provenance) });
+    const response = await plugin.handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision), dispatchViewState, { order: causalOrderKeyV1(entry.provenance) });
     const startedOperation = startedTypedOperationV1(response.output);
     releaseSourceWork?.admit(startedOperation?.operation);
     if (startedOperation !== undefined && isCurrentEffectOwner(actionOwner)) lifecycle?.started({
@@ -143,7 +145,7 @@ export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwn
     } else if (appNotice !== null) {
       core.showTransientNotice(appNotice.text, appNotice.kind, appNotice.code);
       outcome = refuse("dispatch-failed", appNotice.code, true, diagnostic);
-    } else if (dropForSealedInstance(targetSession, "action failure", action.action)) {
+    } else if (dropForSealedInstance(plugin, targetSession, "action failure", action.action)) {
       outcome = refuse("instance-sealed", `${targetSession.pluginId}#${targetSession.instanceId}`);
     } else if (dropForRetiredInstance(targetSession, `action ${action.action}`, actionError)) {
       outcome = refuse("instance-retired", `${targetSession.pluginId}#${targetSession.instanceId}`);

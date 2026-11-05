@@ -24,7 +24,7 @@ use crate::turn_close_step::step_reactor_close;
 #[doc(hidden)]
 #[path="📥️receiving/🦀️.rs"]
 pub mod original_receiving;
-pub(crate) fn original_receiving_sources_empty(key:instance_lifetime::NativeCloseKey)->bool{original_receiving::response_key_empty(key)&&original_receiving::intent_key_empty(key)}
+pub(crate) fn original_receiving_sources_empty(key:instance_lifetime::NativeCloseKey)->bool{original_receiving::response_key_empty(key)&&original_receiving::intent_key_empty(key)&&original_receiving::forms::key_empty(key)}
 
 use semio_framework_plugin_extension::extension_invocation_failure::{ExtensionInvocationCause, RetainedExtensionFaultReply};
 

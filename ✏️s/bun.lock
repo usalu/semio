@@ -1417,6 +1417,7 @@
       },
       "devDependencies": {
         "@semio-tech/framework-os": "workspace:*",
+        "@semio-tech/process": "workspace:*",
         "@semio-tech/repo-test": "workspace:*",
         "typescript": "^5.9.3"
       }

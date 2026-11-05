@@ -3,9 +3,32 @@ use semio_framework_ui_contract::*;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use std::mem::{ManuallyDrop,size_of};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
-pub struct StagedScalarChoice<'a>{pub key:&'a str,pub label:&'a str}
 #[derive(Clone,Copy)]
-pub enum StagedScalarKind<'a>{Text{value:&'a str},Choice{value:&'a str,choices:&'a[StagedScalarChoice<'a>]},Button{page:bool},ReadOnly{value:&'a str},Status}
+pub struct StagedScalarChoice<'a>{pub key:&'a str,pub label:&'a str}
+/// 🍱 Immutable resident choices lend allocation-free rows throughout the original control cursor.
+pub trait StagedScalarChoiceSource:Send+Sync{
+    fn len(&self)->usize;
+    fn choice(&self,index:usize)->Option<StagedScalarChoice<'_>>;
+    fn is_empty(&self)->bool{self.len()==0}
+}
+impl<const N:usize> StagedScalarChoiceSource for [StagedScalarChoice<'_>;N]{
+    fn len(&self)->usize{N}
+    fn choice(&self,index:usize)->Option<StagedScalarChoice<'_>>{self.as_slice().get(index).copied()}
+}
+impl StagedScalarChoiceSource for Vec<StagedScalarChoice<'_>>{
+    fn len(&self)->usize{Vec::len(self)}
+    fn choice(&self,index:usize)->Option<StagedScalarChoice<'_>>{self.get(index).copied()}
+}
+pub struct StagedScalarChoices<'a>{source:&'a dyn StagedScalarChoiceSource,index:usize}
+impl<'a> Iterator for StagedScalarChoices<'a>{
+    type Item=StagedScalarChoice<'a>;
+    fn next(&mut self)->Option<Self::Item>{if self.index>=self.source.len(){return None}let choice=self.source.choice(self.index);self.index+=1;choice}
+}
+impl dyn StagedScalarChoiceSource+'_{
+    pub fn iter(&self)->StagedScalarChoices<'_>{StagedScalarChoices{source:self,index:0}}
+}
+#[derive(Clone,Copy)]
+pub enum StagedScalarKind<'a>{Text{value:&'a str},Choice{value:&'a str,choices:&'a dyn StagedScalarChoiceSource},Button{page:bool},ReadOnly{value:&'a str},Status}
 pub struct StagedScalarControl<'a>{pub owner:usize,pub address:u64,pub controller:&'a str,pub label:&'a str,pub description:Option<&'a str>,pub disabled:bool,pub kind:StagedScalarKind<'a>}
 pub struct StagedScalarCursor {identity:Option<(usize,u64)>,node:ManuallyDrop<Option<BuiltNode>>,retiring:ManuallyDrop<Option<Box<OriginalBuiltTreeRetirement>>>,phase:u8,choice:usize,failed:bool,closing:bool}
 impl Default for StagedScalarCursor{fn default()->Self{Self{identity:None,node:ManuallyDrop::new(None),retiring:ManuallyDrop::new(None),phase:0,choice:0,failed:false,closing:false}}}
@@ -43,7 +66,7 @@ impl StagedScalarCursor {
                 if let StagedScalarKind::Choice{choices,..}=&spec.kind{if self.choice<choices.len(){
                     let node=self.node.as_mut().ok_or_else(invalid)?;let Component::Select(props)=&mut node.component else{return Err(invalid())};
                     if !props.items.has_reserved_slot(){let reserved=props.items.try_reserve_one(grant.maximum_capacity_bytes).map_err(|error|ValueError::literal(ValueRefusalKind::AllocationFailed,error.reason).with_retained_progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:error.allocated_bytes,..Default::default()}))?;progress.retained_capacity_bytes=reserved.allocated_bytes;return Ok(progress);}
-                    let choice=&choices[self.choice];if choice.key.is_empty()||choices[..self.choice].iter().any(|previous|previous.key==choice.key){return Err(invalid());}
+                    let choice=choices.choice(self.choice).ok_or_else(invalid)?;if choice.key.is_empty(){return Err(invalid());}for index in 0..self.choice{if choices.choice(index).ok_or_else(invalid)?.key==choice.key{return Err(invalid());}}
                     let choice=SelectItem{value:text(choice.key)?,label:Label(text(choice.label)?)};props.items.try_push_reserved(choice).map_err(|_|invalid())?;self.choice+=1;return Ok(progress);
                 }}self.phase=2;
             },
@@ -91,3 +114,7 @@ impl RetirementCursor for StagedScalarCursor{
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(usize::MAX)?.copy_bytes)}
     fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demand(body)?.copy_bytes)}
 }
+
+#[cfg(test)]
+#[path="choice-source-tests.rs"]
+mod choice_source_tests;

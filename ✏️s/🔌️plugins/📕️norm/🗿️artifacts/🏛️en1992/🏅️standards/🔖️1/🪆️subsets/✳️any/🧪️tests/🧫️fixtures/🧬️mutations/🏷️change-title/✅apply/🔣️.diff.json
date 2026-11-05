@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "title": "Liquid-retaining tank wall with post-installed anchors",
   "designWorkingLifeYears": null,
   "deltaCDev": null,
@@ -16,5 +15,6 @@
     "inserted": [],
     "moved": [],
     "modified": []
-  }
+  },
+  "reliabilityClass": null
 }

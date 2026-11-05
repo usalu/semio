@@ -1,0 +1,14 @@
+{
+  "schema": "semio.norm.mechanics.ltb-sample-pairs-cases/v1",
+  "cases": [
+    {"id":"empty","valid":true,"value":{"moment":[],"lineLoad":[],"pointLoads":[]}},
+    {"id":"signed-samples","valid":true,"value":{"moment":[[0,-1200],[2.5,0],[5,1200]],"lineLoad":[[0,-400],[5,-400]],"pointLoads":[[2.5,-15000]]}},
+    {"id":"fractional","valid":true,"value":{"moment":[[0.125,0.0001]],"lineLoad":[[0,1.25]],"pointLoads":[]}},
+    {"id":"missing-field","valid":false,"value":{"moment":[],"lineLoad":[]}},
+    {"id":"short-moment-pair","valid":false,"value":{"moment":[[0]],"lineLoad":[],"pointLoads":[]}},
+    {"id":"long-line-load-pair","valid":false,"value":{"moment":[],"lineLoad":[[0,1,2]],"pointLoads":[]}},
+    {"id":"text-point-load","valid":false,"value":{"moment":[],"lineLoad":[],"pointLoads":[[0,"10"]]}},
+    {"id":"scalar-samples","valid":false,"value":{"moment":1,"lineLoad":[],"pointLoads":[]}},
+    {"id":"object-pair","valid":false,"value":{"moment":[],"lineLoad":[],"pointLoads":[{"x":0,"value":10}]}}
+  ]
+}

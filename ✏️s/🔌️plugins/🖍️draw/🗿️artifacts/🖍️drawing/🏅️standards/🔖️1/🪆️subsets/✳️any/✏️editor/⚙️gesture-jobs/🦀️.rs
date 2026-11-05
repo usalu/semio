@@ -348,7 +348,7 @@ pub(super) fn drawing_gesture_tool_job(request: &mut Option<semio_framework_plug
             interaction_state: request.interaction_state,
             instance_owner: request.instance_operation_owner,
             operation_context,
-            active_utility_id: request.context.view_state.as_ref().map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility).to_owned(),
+            active_utility_id: request.context.view_state.as_deref().map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility).to_owned(),
             completion: request.completion,
         };
         let job = match input {

@@ -12,6 +12,7 @@ fn invalid() -> ValueError {
 }
 /// 📦️ Codec scratch, initialized bytes and successful scratch draining retain independent original demands.
 pub struct OriginalPackWriting {
+    last_work:u64,
     cursor: ManuallyDrop<Option<BorrowedPackDocumentCursor>>,
     wire: ManuallyDrop<Vec<u8>>,
     envelope: &'static str,
@@ -28,6 +29,7 @@ impl OriginalPackWriting {
         let prefix = semio_framework_os_semio::declared_envelope_prefix_len(envelope, semio_framework_os_semio::Component::Pack, 1)?;
         let body = maximum.checked_sub(prefix).ok_or_else(invalid)?;
         Ok(Self {
+            last_work:0,
             cursor: ManuallyDrop::new(Some(BorrowedPackDocumentCursor::with_maximum_file_len(body).with_maximum_body_len(body))),
             wire: ManuallyDrop::new(Vec::new()),
             envelope,
@@ -39,6 +41,7 @@ impl OriginalPackWriting {
             closing: false,
         })
     }
+    pub fn last_turn_work(&self)->u64{self.last_work}
     pub fn ready(&self) -> bool {
         !self.closing && self.cursor.is_none() && self.wire.capacity() > 0
     }
@@ -66,6 +69,7 @@ impl OriginalPackWriting {
     }
     /// ✍️ Denied turns preserve every owner and callback count; accepted spans use the supplied original encoder.
     pub fn advance<T: FieldProjectionSource>(&mut self, source: &T, schema: BorrowedRecordSpec, native: &mut NativeEncodeControl<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+        self.last_work=0;
         let demand = self.demand(grant.maximum_copy_bytes)?;
         if !retained_clone_grant_admits(grant, demand) {
             return Ok(Default::default());
@@ -82,7 +86,8 @@ impl OriginalPackWriting {
         if self.draining || cursor.is_complete() {
             self.draining = true;
             native.charge(demand.capacity_bytes)?;
-            let step = cursor.close(grant).map_err(|e| e.reason)?;
+            let result=cursor.close(grant);self.last_work=cursor.last_turn_work();
+            let step=result.map_err(|e|e.reason)?;
             if cursor.terminal_is_empty() {
                 self.cursor.take();
             }
@@ -91,7 +96,7 @@ impl OriginalPackWriting {
         if let Some(length) = cursor.output_len() {
             let total = self.prefix.checked_add(length).ok_or_else(invalid)?;
             if self.wire.capacity() == 0 {
-                *self.wire = native.allocate_vec(total)?;
+                self.last_work=1;*self.wire = native.allocate_vec(total)?;
                 return Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Vec<u8>>(), retained_capacity_bytes: self.wire.capacity(), ..Default::default() });
             }
             if self.initialized < total {
@@ -99,7 +104,7 @@ impl OriginalPackWriting {
                 if count == 0 {
                     return Ok(Default::default());
                 }
-                self.initialized += count;
+                self.last_work=1;self.initialized += count;
                 self.wire.resize(self.initialized, 0);
                 return Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: count, ..Default::default() });
             }
@@ -108,7 +113,7 @@ impl OriginalPackWriting {
                 if count == 0 {
                     return Ok(Default::default());
                 }
-                for i in self.prefix_written..self.prefix_written + count {
+                self.last_work=1;for i in self.prefix_written..self.prefix_written + count {
                     self.wire[i] = semio_framework_os_semio::declared_binary_prefix_byte(self.envelope, semio_framework_os_semio::Component::Pack, 1, i)?.ok_or_else(invalid)?;
                 }
                 self.prefix_written += count;
@@ -122,7 +127,8 @@ impl OriginalPackWriting {
             let start = self.prefix.checked_add(self.written).ok_or_else(invalid)?;
             &mut self.wire[start..]
         };
-        match cursor.advance(source, schema, out, grant) {
+        let result=cursor.advance(source,schema,out,grant);self.last_work=cursor.last_turn_work();
+        match result {
             Ok(step) => {
                 self.written = self.written.checked_add(step.written_bytes).ok_or_else(invalid)?;
                 Ok(step.progress)
@@ -135,6 +141,7 @@ impl OriginalPackWriting {
     }
     /// 📬️ Transfers the actual sole final Pack after all canonical codec scratch has reached terminal close.
     pub fn take(&mut self, grant: RetainedCloneGrant) -> Result<Option<(Vec<u8>, RetainedCloneProgress)>, ValueError> {
+        self.last_work=0;
         if !self.ready() {
             return Err(invalid());
         }
@@ -145,7 +152,7 @@ impl OriginalPackWriting {
         if self.wire.len() != self.prefix.checked_add(self.written).ok_or_else(invalid)? {
             return Err(invalid());
         }
-        Ok(Some((std::mem::take(&mut *self.wire), RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })))
+        self.last_work=1;Ok(Some((std::mem::take(&mut *self.wire), RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })))
     }
     pub fn close_demand(&self, _body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(cursor) = self.cursor.as_ref() {
@@ -155,20 +162,22 @@ impl OriginalPackWriting {
         }
     }
     pub fn close(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.last_work=0;
         let demand = self.close_demand(grant.maximum_copy_bytes)?;
         if !retained_clone_grant_admits(grant, demand) {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         self.closing = true;
         if let Some(cursor) = self.cursor.as_mut() {
-            let step = cursor.close(grant).map_err(|e| e.reason)?;
+            let result=cursor.close(grant);self.last_work=cursor.last_turn_work();
+            let step=result.map_err(|e|e.reason)?;
             if cursor.terminal_is_empty() {
                 self.cursor.take();
             }
             return Ok(RetainedCloneStep::Progress(step.progress));
         }
         if self.wire.capacity() > 0 {
-            let released_bytes = self.wire.capacity();
+            self.last_work=1;let released_bytes = self.wire.capacity();
             drop(std::mem::take(&mut *self.wire));
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes, ..Default::default() }));
         }
@@ -196,8 +205,8 @@ impl RetirementCursor for OriginalPackWriting {
     }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         match self.close(grant) {
-            Ok(step) => RetirementStep::Progress(step.progress(), 1),
-            Err(e) => RetirementStep::Failure(e, 0),
+            Ok(step) => RetirementStep::Progress(step.progress(), self.last_work),
+            Err(e) => RetirementStep::Failure(e, self.last_work),
         }
     }
     fn terminal_is_empty(&self) -> bool {

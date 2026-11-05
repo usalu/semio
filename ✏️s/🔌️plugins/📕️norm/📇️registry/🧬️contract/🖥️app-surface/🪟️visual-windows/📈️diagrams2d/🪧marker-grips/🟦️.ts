@@ -1,7 +1,7 @@
 /** 🪧 Marker grips, TypeScript twin of `./🦀️.rs`: a diagram marker bound to a field is the same kind of grip as a 3D handle, so the keyboard, the typed value and the table twin reach it through the one handle drag statechart.
  *
  * 🧫️ Replayed on `🧪️tests/🧫️fixtures/🎯️grip-keyboard/🔣️.json` (`markerCells`) by both implementations. */
-import type { Diagram2d, Handle, Marker } from "../../../../../🎬️structural-scene/🧬️schema/🟦️.ts";
+import type { Diagram2d, Handle, Marker } from "../../../../../../🎬️structural-scene/🧬️schema/🟦️.ts";
 import { invertAffineV1 } from "../../../🕹️direct-manipulation/🛠️handle-drag-tool/🟦️.ts";
 
 /** 🏷️ The id prefix of the grip of a marker, `marker:<diagram>:<marker>`. */

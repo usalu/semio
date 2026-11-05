@@ -1,0 +1,9 @@
+{
+  "recipe": "actor + U+001F + decimal(clock.actor) + ':' + decimal(clock.physical_ms) + ':' + decimal(clock.logical)",
+  "algorithm": "SHA-256 first eight bytes, lowercase hex, authoring-seed prefix",
+  "vectors": [
+    {"actor":"alice","clockActor":"1","physicalMs":"42","logical":"0","expected":"authoring-seed-a8fb2c456b588351"},
+    {"actor":"💧/Ä","clockActor":"18446744073709551615","physicalMs":"9223372036854775807","logical":"65535","expected":"authoring-seed-a726d4b887f4d8b4"}
+  ],
+  "laws": ["denied birth preserves clock and actor source", "denied hash page preserves cursor", "changed original caller refuses", "changed actor source refuses", "output installed before receipt", "cancellation before finalization retains no heap"]
+}

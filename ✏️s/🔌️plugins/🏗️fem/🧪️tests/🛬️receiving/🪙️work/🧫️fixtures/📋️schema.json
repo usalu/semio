@@ -1,0 +1,131 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "dimension",
+          "priorWork",
+          "admitted",
+          "actions",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "enum": [
+              2,
+              3
+            ]
+          },
+          "priorWork": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "units",
+                "physicalItems",
+                "fails",
+                "causes"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "header",
+                    "validation",
+                    "row",
+                    "transfer"
+                  ]
+                },
+                "units": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "physicalItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "fails": {
+                  "type": "boolean"
+                },
+                "causes": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "primary",
+                      "quote",
+                      "allocation"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "work",
+              "physicalItems",
+              "outcome",
+              "causes"
+            ],
+            "properties": {
+              "work": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "physicalItems": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "outcome": {
+                "enum": [
+                  "ok",
+                  "denied",
+                  "failure"
+                ]
+              },
+              "causes": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "primary",
+                    "quote",
+                    "allocation"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

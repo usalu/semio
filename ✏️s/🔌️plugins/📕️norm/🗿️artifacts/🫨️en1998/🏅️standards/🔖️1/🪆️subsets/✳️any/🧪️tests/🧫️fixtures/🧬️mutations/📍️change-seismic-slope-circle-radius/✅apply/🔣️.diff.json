@@ -49,25 +49,7 @@
     "moved": [],
     "modified": []
   },
-  "joints": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "bearings": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "piers": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "accelerograms": {
+  "soilLayers": {
     "removed": [],
     "inserted": [],
     "moved": [],
@@ -79,27 +61,29 @@
     "moved": [],
     "modified": []
   },
-  "soilLayers": {
+  "accelerograms": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "placements": {
+  "piers": {
     "removed": [],
     "inserted": [],
     "moved": [],
-    "modified": [
-      {
-        "id": "bldg-office",
-        "patch": {
-          "x": null,
-          "y": null,
-          "z": null,
-          "yaw": 0.5
-        }
-      }
-    ]
+    "modified": []
+  },
+  "bearings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "tieBeams": {
     "removed": [],
@@ -139,6 +123,22 @@
           "circleCentreX": null,
           "circleCentreZ": null,
           "circleRadius": 13.0
+        }
+      }
+    ]
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "bldg-office",
+        "patch": {
+          "x": null,
+          "y": null,
+          "z": null,
+          "yaw": 0.5
         }
       }
     ]

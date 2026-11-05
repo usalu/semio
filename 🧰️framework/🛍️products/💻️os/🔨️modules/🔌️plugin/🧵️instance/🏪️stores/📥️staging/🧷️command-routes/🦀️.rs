@@ -15,7 +15,25 @@ use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
 
+#[path = "🪪️seed/🦀️.rs"]
+mod seed;
+pub use seed::AuthoringSeedWork;
+
 impl<A: ArtifactApp> InstanceStores<A> {
+    pub fn advance_authoring_seed(&self, actor: &str, work: &mut Option<AuthoringSeedWork>, output: &mut Option<String>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if work.is_none() {
+            let bytes = AuthoringSeedWork::birth_bytes();
+            let grant = cx.retained_grant();
+            if cx.should_yield() || cx.is_cancelled() || grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < bytes { return Ok(false); }
+            let mut clock = self.store.clock_now();
+            clock.tick(semio_framework_job::default_now_ms().unwrap_or(clock.physical_ms));
+            *work = Some(AuthoringSeedWork::new(actor, clock, cx));
+            cx.consume_fuel(1);
+            cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
+            return Ok(false);
+        }
+        work.as_mut().unwrap().advance(actor, output, cx)
+    }
     /// ⏪️ Advances one retained original Undo until its fixed receipt and physical return complete.
     pub fn framework_revert_unit(&mut self,edit_id:&str,command:&mut Option<store::os_store::ArtifactNativeVcsCommand<A::Snapshot,A::Mutation>>,result:&mut Option<store::os_store::ArtifactNativeVcsResult>,closing:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
         if command.is_none()&&*closing{*closing=false;return Ok(Some(false))}

@@ -13,7 +13,7 @@ use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use crate::edit_rules::{resolve_edit, EDIT_RULES};
+pub use crate::edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};
 
 use semio_s_artifact_norm_en1992_mut_project::change_annex;
 use semio_s_artifact_norm_en1992_mut_project::change_reliability_class;

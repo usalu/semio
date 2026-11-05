@@ -1,0 +1,11 @@
+{
+  "nodes":[{"id":"a","handles":[{"id":"a:h"}]},{"id":"b","handles":[{"id":"b:h"},{"id":"shared"}]},{"id":"c","handles":[]}],
+  "cases":[
+    {"name":"Empty Selection","groups":[],"expected":[]},
+    {"name":"Selected Node","groups":[["a"]],"expected":["a"]},
+    {"name":"Handle Selects Its Parent","groups":[["b:h"]],"expected":["b"]},
+    {"name":"Domains Share One Selection Iterator","groups":[["a"],["b:h"],["a","ghost"]],"expected":["a","b"]},
+    {"name":"Document Order Is Stable","groups":[["c","a","b"]],"expected":["a","b","c"]},
+    {"name":"Repeated Handles Keep One Parent","groups":[["shared","b:h"]],"expected":["b"]}
+  ]
+}

@@ -22,7 +22,7 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeDustExplosionStati
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change dust explosion: Static opening pressure p_stat", "Staubexplosion: Statischer Ansprechdruck p_stat ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change static opening pressure of the dust explosion vent", "Statischen Ansprechdruck der Staubexplosionsentlastung ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

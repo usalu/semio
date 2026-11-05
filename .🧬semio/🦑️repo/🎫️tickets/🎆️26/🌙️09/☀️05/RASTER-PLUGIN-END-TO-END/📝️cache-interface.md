@@ -1,0 +1,19 @@
+# Cache and Session Interface Probe
+
+Native `SEMIO_LANGUAGE=en repo session --help` documents `SEMIO_AGENT_SESSION` as the session address passed to child processes. It does not document a session-root override. `repo cache --help` documents `SEMIO_CACHE_BUDGET_BYTES`, which controls budget rather than path. These interfaces do not yet solve writable-root selection independently of runtime storage.
+
+Setting `XDG_CACHE_HOME` to the ticket generated cache moves the Bun bootstrap runtime store too. The command then attempted to provision Bun 1.4.2 and failed on unavailable DNS. Its diagnostic explicitly documents `SEMIO_RUNTIME_MIRROR` as a mirror of the pinned Bun release distribution. A mirror is not an installed executable path; no binary override is established by that diagnostic.
+
+No escalation request was issued. Native query session 82348 searches XDG_CACHE_HOME and is still building the repository index; native GraphQL session 18524 requests the build script file content and remains pending. Their terminal results must be inspected before drawing source-level conclusions. An existing exact approved command successfully read the original instructions and selection note, but a new repo tools exec command still failed session attachment under the sandbox.
+
+## Confirmed Source Interfaces
+
+Parent provided the supported direct-script ingress: `SEMIO_LANGUAGE=en repo <ticket>/inspect.ts <path>`. It reads source successfully in the default sandbox without invoking the build-door session attachment. The ticket `cache-inspect.ts` records the focused read-only environment-name search.
+
+`SEMIO_AGENT_SESSION_DIRECTORY` is the exact session-only registry override. It is authored in `🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json` Policy.environment.registry. `🗄️store/🟦️.ts` agentSessionRegistryRootV1 returns this override before platform/XDG fallback. Set an absolute writable ticket-generated directory and leave XDG_CACHE_HOME unchanged to retain installed Bun. Parent independently confirmed repo run advances with this setting. A local tools-exec probe returned exit 0 without a session error, but no stdout; that probe alone does not establish child execution.
+
+`SEMIO_HOST_CAPACITY_DIRECTORY` is authored in process `🏗️build/🌡️host-capacity/🧬️schema/🔣️.json` Protocol.directoryEnvironment. `🎫️gate/🟦️.ts` hostCapacityDirectoryV1 accepts this via requireMaterializedPathV1. `SEMIO_LEASE_REGISTRY_DIRECTORY` is implemented in process `🔒️leases/🧭️order/🗂️registry/🟦️.ts` and authored by its order schema. These are supported storage interfaces, but moving only this agent to a private capacity directory creates a different admission domain from peers using the original machine directory. The capacity source explicitly requires one per-user directory shared by every checkout. Do not claim a private directory preserves the existing machine-wide gate; a shared writable path must be consistently configured across participants.
+
+Build cache environment names found in authored source include SEMIO_NX_NATIVE_GRAPH_DIRECTORY, SEMIO_NX_GRAPH_DIAGNOSTIC_DIRECTORY, SEMIO_VITE_CACHE_DIRECTORY, SEMIO_DIAGNOSTIC_DIRECTORY, SEMIO_TEST_IMAGE_ROOT, SEMIO_TEST_CACHE_ROOT and SEMIO_TEST_CHECKOUT_ROOT. Several are store-issued output environments rather than caller overrides; their presence alone is not authorization to substitute arbitrary storage. The build command context opens declared leases and diagnostics cache partitions and obtains diagnostics environment from withRepositoryCacheStoreV1. No generic cache-root override was found by the focused build/caching/process scan. No installed-runtime executable override is confirmed.
+
+Both own source-query sessions were cancelled through their exact tool sessions (82348 and 18524), each exit 130. They yielded no source result and are no longer live. No peer process, gate, policy or source file was changed.

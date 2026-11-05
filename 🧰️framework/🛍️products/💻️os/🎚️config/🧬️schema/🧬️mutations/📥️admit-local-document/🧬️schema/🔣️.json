@@ -123,6 +123,9 @@
         "group": "metadata",
         "order": 60
       }
+    },
+    "surface": {
+      "$ref": "#/$defs/LocalDocumentSurface"
     }
   },
   "$defs": {
@@ -171,6 +174,9 @@
         "admittedAtMs": {
           "type": "integer",
           "minimum": 0
+        },
+        "surface": {
+          "$ref": "#/$defs/LocalDocumentSurface"
         }
       }
     },
@@ -187,6 +193,27 @@
           "items": {
             "$ref": "#/$defs/LocalDocument"
           }
+        }
+      }
+    },
+    "LocalDocumentSurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "appId"
+      ],
+      "description": "The selected presentation coordinate of a kept artifact; omitted when no presentation has been selected.",
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "appId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
         }
       }
     }

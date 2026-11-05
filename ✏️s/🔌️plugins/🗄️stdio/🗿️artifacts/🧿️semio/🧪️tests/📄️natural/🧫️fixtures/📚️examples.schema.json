@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "unknownIds",
+    "malformedSources",
+    "rows",
+    "pickerAction",
+    "publicationLane",
+    "selectorTest"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "unknownIds": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "string"
+      }
+    },
+    "malformedSources": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "string"
+      }
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 19,
+      "maxItems": 19,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subset",
+          "id",
+          "schema",
+          "editor",
+          "source",
+          "module",
+          "folder",
+          "asset",
+          "pack",
+          "commandEncoding",
+          "editorPackage",
+          "assetCopies",
+          "packCopies",
+          "editorManifest",
+          "editorMount"
+        ],
+        "properties": {
+          "subset": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "schema": {
+            "type": "string",
+            "minLength": 1
+          },
+          "editor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "module": {
+            "type": "string",
+            "minLength": 1
+          },
+          "folder": {
+            "type": "string",
+            "minLength": 1
+          },
+          "asset": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pack": {
+            "type": "string",
+            "minLength": 1
+          },
+          "commandEncoding": {
+            "enum": [
+              "json",
+              "snapshot-native"
+            ]
+          },
+          "editorPackage": {
+            "type": "string",
+            "pattern": "^semio-s-artifact-stdio-semio(-[a-z]+)+$"
+          },
+          "assetCopies": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "packCopies": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "editorManifest": {
+            "type": "string",
+            "minLength": 1
+          },
+          "editorMount": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "pickerAction": {
+      "const": "setActiveExample"
+    },
+    "publicationLane": {
+      "const": "hostOnly"
+    },
+    "selectorTest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filter",
+        "expectedTests",
+        "libraryOnly"
+      ],
+      "properties": {
+        "filter": {
+          "const": "typed_example_selection_refuses_unknown_and_malformed_sources"
+        },
+        "expectedTests": {
+          "const": 19
+        },
+        "libraryOnly": {
+          "const": true
+        }
+      }
+    }
+  }
+}

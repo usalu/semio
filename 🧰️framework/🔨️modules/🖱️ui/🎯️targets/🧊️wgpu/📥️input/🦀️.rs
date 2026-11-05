@@ -23,6 +23,14 @@ pub struct OriginalClipboardIntent { pub source: ClipboardIntentSource, pub reci
 struct RetainedInputAction {
     source: RetainedInputActionSource,
     action: RetainedStringAction,
+    cancel:RetainedInputActionHandle,
+}
+
+#[derive(Clone)]
+pub struct RetainedInputActionHandle(std::sync::Arc<std::sync::atomic::AtomicBool>);
+impl RetainedInputActionHandle {
+    pub fn cancel(&self){self.0.store(true,std::sync::atomic::Ordering::Release);}
+    fn cancelled(&self)->bool{self.0.load(std::sync::atomic::Ordering::Acquire)}
 }
 
 enum RetainedInputActionSource {
@@ -538,7 +546,7 @@ impl<E: Clone> InputState<E> {
         }
         let source = RetainedInputActionSource::Root(self.text_buffer.root().clone());
         let action = RetainedStringAction::new(descriptor, argument, source.len())?;
-        self.retained_action = Some(RetainedInputAction { source, action });
+        self.retained_action = Some(RetainedInputAction { source, action,cancel:RetainedInputActionHandle(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))) });
         Ok(())
     }
 
@@ -547,16 +555,18 @@ impl<E: Clone> InputState<E> {
             return Err(BoundedActionFault::ItemCredits);
         }
         let action = RetainedStringAction::new(descriptor, argument, source.len())?;
-        self.retained_action = Some(RetainedInputAction { source: RetainedInputActionSource::Owned(source), action });
+        self.retained_action = Some(RetainedInputAction { source: RetainedInputActionSource::Owned(source), action,cancel:RetainedInputActionHandle(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))) });
         Ok(())
     }
 
     /// 📄 Copies at most one retained payload page and yields the complete atomic action once.
     pub fn drive_retained_action_step(&mut self) -> Result<Option<QueuedActionDescriptor>, BoundedActionFault> {
+        if self.retained_action.as_ref().is_some_and(|retained|retained.cancel.cancelled()){self.retained_action=None;return Ok(None);}
         let Some(retained) = self.retained_action.as_mut() else { return Ok(None) };
         let page = retained.source.copy_page(retained.action.copied_bytes())?;
         if retained.action.push_page(&page)? == RetainedStringActionStep::Complete {
             let retained = self.retained_action.take().ok_or(BoundedActionFault::Structure)?;
+            if retained.cancel.cancelled(){return Ok(None);}
             return retained.action.finish(None).map(Some);
         }
         Ok(None)
@@ -565,6 +575,9 @@ impl<E: Clone> InputState<E> {
     pub fn retained_action_pending(&self) -> bool {
         self.retained_action.is_some()
     }
+
+    pub fn retained_action_handle(&self)->Option<RetainedInputActionHandle>{self.retained_action.as_ref().map(|retained|retained.cancel.clone())}
+    pub fn retained_action_progress(&self,handle:&RetainedInputActionHandle)->Option<(usize,usize)>{self.retained_action.as_ref().filter(|retained|std::sync::Arc::ptr_eq(&retained.cancel.0,&handle.0)&&!handle.cancelled()).map(|retained|(retained.action.copied_bytes(),retained.action.total_bytes()))}
 
     pub fn cancel_retained_action(&mut self) -> bool {
         self.retained_action.take().is_some()

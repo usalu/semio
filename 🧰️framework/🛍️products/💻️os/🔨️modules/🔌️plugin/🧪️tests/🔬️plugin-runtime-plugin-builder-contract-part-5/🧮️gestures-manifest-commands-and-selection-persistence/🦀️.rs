@@ -127,7 +127,7 @@
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         use semio_framework::manifest::{ActionAddress, ActionInvocation};
-        let invocation = ActionInvocation {
+        let invocation = ActionInvocation { expected_document_revision:None,
             address: ActionAddress { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-instance-2".into(), action_id: "targetWindow".into() },
             arguments: std::collections::BTreeMap::from([("windowId".into(),DslValue::String("main-instance-2".into()))]),
         };

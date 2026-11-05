@@ -1,0 +1,25 @@
+[package]
+name = "semio-framework-plugin-reactor-receiving-source"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+workspace = "../../../../../../../../../../.."
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-reactor-receiving-source"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

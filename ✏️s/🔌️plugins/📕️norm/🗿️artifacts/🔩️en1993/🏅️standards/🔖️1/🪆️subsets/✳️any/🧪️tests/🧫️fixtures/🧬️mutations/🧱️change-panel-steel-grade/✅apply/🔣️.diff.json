@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "materials": {
     "removed": [],
     "inserted": [],
@@ -109,7 +108,8 @@
           "stiffenerFlangeWidth": null,
           "stiffenerFlangeThickness": null,
           "lateralPressure": null,
-          "lateralPressureCoefficient": null
+          "lateralPressureCoefficient": null,
+          "steelGrade": "probe"
         }
       }
     ]
@@ -210,6 +210,7 @@
     "moved": [],
     "modified": []
   },
+  "reliabilityClass": null,
   "jointPlates": {
     "removed": [],
     "inserted": [],
@@ -222,20 +223,7 @@
     "moved": [],
     "modified": []
   },
-  "frameActions": null,
-  "frameMemberBases": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "fatigueStresses": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "bucklingLengths": {
+  "materialDuctility": {
     "removed": [],
     "inserted": [],
     "moved": [],
@@ -247,7 +235,25 @@
     "moved": [],
     "modified": []
   },
-  "materialDuctility": {
+  "bucklingLengths": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fatigueStresses": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameActions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameMemberBases": {
     "removed": [],
     "inserted": [],
     "moved": [],

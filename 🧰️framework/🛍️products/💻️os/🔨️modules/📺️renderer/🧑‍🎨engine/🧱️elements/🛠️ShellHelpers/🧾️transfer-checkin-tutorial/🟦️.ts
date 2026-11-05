@@ -135,6 +135,7 @@ export type DocumentTransferNoticeV1 =
   | "export-failed"
   | "file-saved"
   | "file-save-failed"
+  | "file-save-cancelled"
   | "file-opened"
   | "file-open-failed"
   | "no-document"
@@ -154,7 +155,8 @@ export const DOCUMENT_TRANSFER_NOTICE_LABELS_V1: Readonly<Record<DocumentTransfe
   "export-failed": { en: "The document could not be exported.", de: "Das Dokument konnte nicht exportiert werden." },
   "file-saved": { en: "Saved “{file}”.", de: "„{file}“ gespeichert." },
   "file-save-failed": { en: "The file could not be saved.", de: "Die Datei konnte nicht gespeichert werden." },
-  "file-opened": { en: "Opened “{file}” as a new document.", de: "„{file}“ als neues Dokument geöffnet." },
+  "file-save-cancelled": { en: "Saving “{file}” was cancelled.", de: "Das Speichern von „{file}“ wurde abgebrochen." },
+  "file-opened": { en: "Opened “{file}”.", de: "„{file}“ geöffnet." },
   "file-open-failed": { en: "“{file}” could not be opened; the current document is unchanged.", de: "„{file}“ konnte nicht geöffnet werden; das aktuelle Dokument ist unverändert." },
   "no-document": { en: "Focus a document window first — the Home has no document to export or import into.", de: "Bitte zuerst ein Dokumentfenster wählen — die Startseite hat kein Dokument zum Exportieren oder Importieren." },
   "import-unreadable": { en: "“{file}” is not a document archive.", de: "„{file}“ ist kein Dokumentarchiv." },

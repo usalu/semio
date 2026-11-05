@@ -725,6 +725,12 @@ impl AppActionRegistry {
         self.actions.get(id)
     }
 
+    /// 📝️ Bind an auxiliary body to the exact app or actual window action declaration.
+    pub fn staged_action_matches(&self,window_kind_id:&str,action_id:&str,body:&str)->bool {
+        let action=self.get(action_id).or_else(||self.native.as_ref().and_then(|native|native.window_action(window_kind_id,action_id))).or_else(||self.window_actions.get(window_kind_id).and_then(|actions|actions.get(action_id)));
+        action.and_then(|action|action.staging.as_ref()).is_some_and(|staging|staging.body_key==body)
+    }
+
     #[doc(hidden)]
     pub async fn window_action(&self, window_kind_id: &str, action_id: &str) -> Option<&ActionDefinition> {
         if let Some(native)=self.native.as_ref(){return native.window_action(window_kind_id,action_id)}

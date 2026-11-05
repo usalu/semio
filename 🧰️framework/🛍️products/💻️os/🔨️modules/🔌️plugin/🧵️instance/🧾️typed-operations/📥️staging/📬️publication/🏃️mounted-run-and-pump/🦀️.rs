@@ -1,6 +1,7 @@
 //! 🏃️ Mounted run and pump of the typed operation publication: the mounted run with its admitted variant, the publication pump and the mounted interaction unit. See [`super`].
 
 use super::*;
+use semio_framework_plugin_retained_command::typed_operation::pending_result_page::{PublicationPagePlan,PublicationPageIntent};
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     /// 🏃️ Drives ONE mounted operation's publication ladder for a bounded slice of this continuation
@@ -35,6 +36,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let mut observer = |next: semio_framework_value::native_encoding::NativeEncodeProgress| { progress = next; !token.is_cancelled_now() && !publication.is_cancelled() };
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
         let result = match self.publish_mounted_typed_operation_run_admitted(mounted, &mut identity,cx,retained).await {
+            Ok(()) if cx.is_cancelled()||mounted.cancellation_lease.as_ref().is_some_and(|lease|lease.publication_is_cancelled()) => Ok(()),
             Ok(()) => self.child_composition.follow_derivable_children(&mut *self.stores, &mut identity).await.map_err(Into::into),
             Err(fault) => Err(fault),
         };
@@ -42,6 +44,16 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         drop(observer);
         mounted.identity_progress = progress;
         result
+    }
+
+    /// 🤲️ Publishes a direct emission through the actual caller loan without creating another authoring ceiling.
+    pub async fn publish_original_emission_run(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,retained:RetainedCloneGrant)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+        mounted.validate_original_emission_authoring(cx)?;
+        if cx.is_cancelled(){if let Some(lease)=mounted.cancellation_lease.as_ref(){lease.cancel();}}
+        self.publish_mounted_typed_operation_run_admitted(mounted,identity,cx,retained).await?;
+        if cx.is_cancelled(){if let Some(lease)=mounted.cancellation_lease.as_ref(){lease.cancel();}}
+        if mounted.cancellation_lease.as_ref().is_some_and(|lease|lease.publication_is_cancelled()){return Ok(())}
+        self.child_composition.follow_derivable_children(&mut *self.stores,identity).await.map_err(Into::into)
     }
 
     async fn publish_mounted_typed_operation_run_admitted(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>, retained:RetainedCloneGrant) -> Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
@@ -60,18 +72,23 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let started_us=cx.now_us();
         let turn = semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.preparation, retained);
         for _ in 0..TYPED_OPERATION_PUBLICATION_PUMPS {
-            if cx.should_yield(){return Ok(())}
+            if cx.is_cancelled(){if let Some(lease)=mounted.cancellation_lease.as_ref(){lease.cancel();}}
+            if cx.fuel_exhausted()||(cx.should_yield()&&!mounted.page_publication_pending()&&!mounted.result_page_retirement_pending()&&!mounted.pending_artifact_publication.as_ref().is_some_and(|owner|owner.accepted_receipt().is_some())){return Ok(())}
             let before=cx.retained_progress();let fuel=cx.fuel_remaining();
-            if mounted.owned_child_group.is_some() {
+            let acknowledged_page = mounted.result_page_retirement_pending();
+            let custody=mounted.page_publication_pending()||mounted.pending_artifact_publication.as_ref().is_some_and(|owner|owner.accepted_receipt().is_some());
+            let cancelled=mounted.cancellation_lease.as_ref().is_some_and(|lease|lease.publication_is_cancelled());
+            let owned_child_route = !acknowledged_page && !custody && !cancelled && mounted.owned_child_group.is_some();
+            if owned_child_route {
                 record_typed_operation_unit(TypedOperationUnitKind::Store);
                 self.publish_mounted_owned_child_operation_unit(mounted,cx).await?;
-            } else if mounted.pending_child_publication.is_some() {
+            } else if !acknowledged_page && !custody && !cancelled && mounted.pending_child_publication.is_some() {
                 record_typed_operation_unit(TypedOperationUnitKind::Store);
                 self.publish_mounted_typed_child_operation_unit(mounted, cx).await?;
-            } else if mounted_typed_interaction_writes_are_next::<A>(mounted) {
+            } else if !acknowledged_page && !custody && !cancelled && mounted_typed_interaction_writes_are_next::<A>(mounted) {
                 record_typed_operation_unit(TypedOperationUnitKind::Store);
-                self.publish_mounted_typed_interaction_unit(mounted, identity).await?;
-            } else if self.tools.mounted_typed_inline_interaction_verbs_are_next(mounted) {
+                self.publish_mounted_typed_interaction_unit(mounted, identity,cx).await?;
+            } else if !acknowledged_page && !custody && !cancelled && self.tools.mounted_typed_inline_interaction_verbs_are_next(mounted) {
                 record_typed_operation_unit(TypedOperationUnitKind::Store);
                 self.publish_mounted_typed_inline_interaction_unit(mounted, identity).await?;
             } else {
@@ -99,7 +116,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
             }
             if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
-            if mounted.owned_child_group.is_some(){let delta=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;*spent=spent.checked_add(delta)?;}
+            if owned_child_route{let delta=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;*spent=spent.checked_add(delta)?;}
             if mounted.stage != MountedTypedCommandFullOperationStage::Publishing {
                 return Ok(());
             }
@@ -121,21 +138,24 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// selections no user ever asked for. `MountedTypedCommandFullOperation` needs no extra field:
     /// the writes live in the retained emit until taken here, and the lane is only entered once
     /// every durable lane is drained (`mounted_typed_interaction_writes_are_next`).
-    async fn publish_mounted_typed_interaction_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    async fn publish_mounted_typed_interaction_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
         let Some(ArtifactToolCompletionValue::Emit(Ok(emit), _)) = mounted.publication.as_mut() else {
             return Err(plugin_sdk_fault("typed-operation interaction publication lost its emit owner"));
         };
+        let d=semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of_val(&emit.interaction_writes)+std::mem::size_of::<Option<PublicationPagePlan>>()+2*std::mem::size_of_val(&mounted.page_publication.interaction_close),depth:1,..Default::default()};
+        if !cx.retained_work_can_enter(d){return Ok(())}
         let writes = std::mem::take(&mut emit.interaction_writes);
-        let meta = mounted.meta.clone();
-        if let Err(fault) = self.as_render().apply_interaction_writes(&writes, &meta, identity).await {
+        if let Err(fault) = self.as_render().apply_interaction_writes(&writes, &mounted.meta, identity).await {
             if let Some(ArtifactToolCompletionValue::Emit(Ok(emit), _)) = mounted.publication.as_mut() {
                 emit.interaction_writes = writes;
             }
             return Err(fault);
         }
-        let token = mounted.next_token();
-        let page = TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::Interaction, &("accepted", writes.len()))?;
-        mounted.queue_page(page)
+        let token = mounted.next_token();let count=writes.len()as u64;
+        mounted.page_publication.interaction_close=Some(semio_framework_value::retirement::controlled::ControlledRetirement::retain(writes));
+        mounted.page_publication.plan=Some(PublicationPagePlan{token,intent:PublicationPageIntent::Accepted{lane:TypedOperationResultLane::Interaction,count}});
+        cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}).map_err(plugin_retirement_fault)?;cx.consume_fuel(1);
+        Ok(())
     }
 
 }

@@ -60,6 +60,7 @@ import {
 import { readUiPreferences, resolveUiPreferences, subscribeUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
 import { type TreeWindowContextValue } from "../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
 import { LocalDocumentOwnerRegistryV1, type LocalDocumentOwnerV1 } from "../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
+import { StagedActionHost } from "../📝️staging/session.ts";
 import { LocalSourceRevisionRegistryV1 } from "../../🛠️ShellHelpers/📝️source-revision/registry.ts";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { type SpawnedAppEntry } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
@@ -198,6 +199,8 @@ export function useShellCoreState({
    * re-renders the shell. */
   const [localInteraction] = useState(createLocalInteractionStoreV1);
   const [localSourceRevisions] = useState(() => new LocalSourceRevisionRegistryV1());
+  const [stagedActions] = useState(() => new StagedActionHost());
+  useEffect(() => () => { void stagedActions.close(); }, [stagedActions]);
   const localSourceOwnerRef = useRef<LocalDocumentOwnerV1 | null>(null);
   const localSourceRefreshRef = useRef<(plugin: PluginWasmHandle, instanceId: number) => void>(() => {});
   useEffect(() => () => {
@@ -512,8 +515,8 @@ export function useShellCoreState({
   const sessionSwitchGateRef = useRef(createSessionAppSwitchGateV1<AppDefinition, ViewModel>());
   const [surfaceSwitchBusy, setSurfaceSwitchBusy] = useState(false);
   /** 🔇️ `true` when this session is sealed — the drop is logged once per call site, never thrown. */
-  const dropForSealedInstance = useCallback((target: { readonly pluginId: string; readonly instanceId: number }, what: string, detail?: string): boolean => {
-    if (!sealedInstancesRef.current.sealed(target.pluginId, target.instanceId)) return false;
+  const dropForSealedInstance = useCallback((handle: PluginWasmHandle | null, target: { readonly pluginId: string; readonly instanceId: number }, what: string, detail?: string): boolean => {
+    if (!sealedInstancesRef.current.sealed(handle, target.pluginId, target.instanceId)) return false;
     console.warn(sealedInstanceDropTextV1(sealedInstanceDropV1(target.pluginId, target.instanceId, what, detail)));
     return true;
   }, []);
@@ -641,7 +644,7 @@ export function useShellCoreState({
   return {
     catalog, pluginFilter, plugins, surfaceSessionFactories, backboneWorkerFactory, documentServices, hostPorts, appId, appRole,
     brand, suppressAutoIntroduction, scope, localDocumentOwnerRegistry, shellContextMenuTitleLabel, hostConfig, hostMode,
-    measuredDevice, mobile, locks, defaults, ephemeral, shellState, dispatch, localInteraction, localSourceRevisions, localSourceOwnerRef, localSourceRefreshRef, historyStore,
+    measuredDevice, mobile, locks, defaults, ephemeral, shellState, dispatch, localInteraction, localSourceRevisions, stagedActions, localSourceOwnerRef, localSourceRefreshRef, historyStore,
     historyOrderRef, historyOrderByProgramRef, exampleOptionsRef, lastDispatchedExampleIdRef, localHistoryOrderRef,
     loadedPlugins, pluginStatusById, pluginSupervisorById, session, error, sessionFault, instanceFault, localPrograms,
     uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId,

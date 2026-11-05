@@ -22,6 +22,7 @@ pub(super) fn route(_prefix: &'static str) -> Option<NativeEditPreparationRoute<
 
 #[derive(Default)]
 pub(super) struct ZipTextEdit {
+    last_work: u64,
     admitted: bool,
     entry_index: usize,
     matches: usize,
@@ -41,6 +42,7 @@ fn unit(bytes: usize) -> RetainedCloneProgress {
 
 impl ZipTextEdit {
     fn envelope(&mut self, post: &ZipSnapshot) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
+        self.last_work+=1;
         if structural_items(post).is_none_or(|items| items > MAXIMUM_STRUCTURAL_ITEMS) {
             return Err(refusal("stdio-zip-base-snapshot-edit-structural-envelope"));
         }
@@ -53,6 +55,7 @@ impl ZipTextEdit {
 
     fn scan(&mut self, post: &ZipSnapshot, name: &str, new_name: &str, grant: RetainedCloneGrant) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
         let Some(entry) = post.entries.get(self.entry_index) else {
+            self.last_work+=1;
             if self.matches != 1 || self.collision {
                 return Err(refusal("stdio-zip-base-snapshot-edit-stale-rename"));
             }
@@ -60,12 +63,14 @@ impl ZipTextEdit {
             return Ok(PagedOneItemEditStep::Progress(unit(0)));
         };
         if entry.name.len() > MAXIMUM_TEXT_BYTES {
+            self.last_work+=1;
             return Err(refusal("stdio-zip-base-snapshot-edit-entry-name-envelope"));
         }
         let bytes = entry.name.len();
         if grant.maximum_copy_bytes < bytes {
             return Ok(PagedOneItemEditStep::Progress(RetainedCloneProgress::default()));
         }
+        self.last_work+=1;
         if entry.name == name {
             self.matches = self.matches.saturating_add(1);
             self.located = Some(self.entry_index);
@@ -83,6 +88,7 @@ impl ZipTextEdit {
         if grant.maximum_copy_bytes < copied || grant.maximum_capacity_bytes < retained || grant.maximum_release_bytes < released {
             return Ok(PagedOneItemEditStep::Progress(RetainedCloneProgress::default()));
         }
+        self.last_work+=1;
         let index = self.located.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "stdio-zip-base-snapshot-edit-located"))?;
         let entry = post.entries.get_mut(index).ok_or_else(|| refusal("stdio-zip-base-snapshot-edit-entry-index"))?;
         entry.name = new_name.to_owned();
@@ -97,6 +103,7 @@ impl ZipTextEdit {
         if grant.maximum_copy_bytes < copied || grant.maximum_capacity_bytes < retained || grant.maximum_release_bytes < released {
             return Ok(PagedOneItemEditStep::Progress(RetainedCloneProgress::default()));
         }
+        self.last_work+=1;
         let previous = std::mem::replace(&mut post.comment, comment.to_owned());
         let previous_utf8 = std::mem::replace(&mut post.comment_utf8, comment_utf8);
         let inverse = ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: previous.clone(), comment_utf8: previous_utf8 });
@@ -127,7 +134,11 @@ impl PagedOneItemEdit<ZipSnapshot, ZipMutation> for ZipTextEdit {
         Ok(RetirementDemand::default())
     }
 
-    fn advance(&mut self, _before: RetainedCloneRef<'_, ZipSnapshot>, mutation: RetainedCloneRef<'_, ZipMutation>, post: PagedOneItemPost<'_, ZipSnapshot>, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
+    fn advance(&mut self, _before: RetainedCloneRef<'_, ZipSnapshot>, mutation: RetainedCloneRef<'_, ZipMutation>, post: PagedOneItemPost<'_, ZipSnapshot>, _body: usize, grant: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
+        self.last_work=0;
+        if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
+        if !receiving.prepare_work(if !self.admitted||matches!(mutation.get(),ZipMutation::RenameEntry(_))&&!self.scanned{1}else{2})?{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
+        let result=(||{
         let mutation = mutation.get();
         let post = post.mutable()?;
         if !self.admitted {
@@ -139,15 +150,20 @@ impl PagedOneItemEdit<ZipSnapshot, ZipMutation> for ZipTextEdit {
                     return self.scan(post, name, new_name, grant);
                 }
                 let step = self.rename(post, name, new_name, grant)?;
-                finish(step, post)
+                finish(step, post, &mut self.last_work)
             }
             ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, comment_utf8 }) => {
                 let step = self.comment(post, comment, *comment_utf8, grant)?;
-                finish(step, post)
+                finish(step, post, &mut self.last_work)
             }
             _ => Err(refusal("stdio-zip-base-snapshot-edit-unsupported-mutation")),
         }
+        })();
+        receiving.commit_work(self.last_work)?;
+        result
     }
+
+    fn last_turn_work(&self)->u64{self.last_work}
 
     fn begin_close(&mut self) {
         self.closing = true;
@@ -167,8 +183,9 @@ impl PagedOneItemEdit<ZipSnapshot, ZipMutation> for ZipTextEdit {
     }
 }
 
-fn finish(step: PagedOneItemEditStep<ZipMutation>, post: &ZipSnapshot) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
+fn finish(step: PagedOneItemEditStep<ZipMutation>, post: &ZipSnapshot, last_work:&mut u64) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
     if matches!(step, PagedOneItemEditStep::Complete(..)) {
+        *last_work+=1;
         crate::standards::v2_0::subsets::base::io::validate_zip_snapshot_serialization(post).map_err(|error| ValueError::new(ValueRefusalKind::InvalidValue, format!("{}-post-validation-{error}", ZipTextEdit::PREFIX)))?;
     }
     Ok(step)
@@ -201,76 +218,65 @@ mod tests {
         RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 1_048_576, maximum_release_bytes: 1_048_576, maximum_depth: 8 }
     }
 
-    fn close_source<T: semio_framework_value::retirement::RetireOwned + Sync>(mut source: semio_framework_value::RetainedCloneSource<T>) {
-        for _ in 0..4_096 {
-            if source.terminal_is_empty() {
-                return;
-            }
-            let copy = source.next_close_copy_byte_demand().expect("source close copy quote");
-            let grant = RetainedCloneGrant { maximum_items: 16, maximum_copy_bytes: copy, maximum_capacity_bytes: source.next_close_capacity_byte_demand(copy).expect("source close capacity quote"), maximum_release_bytes: source.next_close_release_byte_demand().expect("source close release quote"), maximum_depth: source.next_close_depth_demand().expect("source close depth quote") };
-            source.close_step(grant).result.expect("source close turn");
-        }
-        panic!("source failed bounded closure");
-    }
 
-    fn advance(edit: &mut ZipTextEdit, post: &mut ZipSnapshot, mutation: &ZipMutation, grant: RetainedCloneGrant) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
-        let (before, _, _) = semio_framework_value::testing::admit_owned_source(post.clone(), ());
-        let (owned, _, _) = semio_framework_value::testing::admit_owned_source(mutation.clone(), ());
-        let mut observer = |_| true;
-        let mut receiving = NativeDecodeControl::new(16_777_216, &mut observer);
-        let step = edit.advance(before.borrow(), owned.borrow(), PagedOneItemPost::Mutable(post), 0, grant, &mut receiving);
-        drop(receiving);
-        close_source(before);
-        close_source(owned);
-        step
+    type Fixture=semio_framework_os_store_one_item::testkit::PagedEditFixture<ZipSnapshot,ZipMutation,ZipTextEdit>;
+    fn close_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:16_777_216,maximum_release_bytes:16_777_216,maximum_depth:4096}}
+    fn setup(post:ZipSnapshot,mutation:ZipMutation)->Fixture{
+        use semio_framework_os_store_one_item::testkit::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
+        let before=semio_framework_value::testing::admit_owned_source(post.clone(),()).0;
+        let mutation=semio_framework_value::testing::admit_owned_source(mutation,()).0;
+        let caller=OriginalJobFixtureCaller::admit(OperationId(44793),Generation(8),RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:16_777_216,maximum_capacity_bytes:16_777_216,maximum_release_bytes:16_777_216,maximum_depth:4096},||Some(1),u64::MAX,1<<20);
+        Fixture::new(caller,OriginalJobDecodeOwner::empty(),before,mutation,post,ZipTextEdit::default())
     }
-
-    fn drive(post: &mut ZipSnapshot, mutation: &ZipMutation) -> Result<(usize, RetainedCloneProgress, ZipMutation), ValueError> {
-        let mut edit = ZipTextEdit::default();
-        let mut turns = 0;
-        loop {
-            match advance(&mut edit, post, mutation, grant())? {
-                PagedOneItemEditStep::Progress(progress) => assert!(progress.fits(grant()) && progress.copied_items <= 1),
-                PagedOneItemEditStep::Complete(progress, inverse) => return Ok((turns, progress, inverse)),
-                PagedOneItemEditStep::CompleteRows(..) => panic!("a ZIP text edit completes with one inverse mutation"),
+    fn retire<T:semio_framework_value::RetireOwned+'static>(fixture:&mut Fixture,value:T){let mut value=Some(value);let mut active=None;assert!(fixture.retire_owned(&mut value,&mut active,close_grant(),1_000_000).expect("funded ZIP fixture output retirement"));assert!(value.is_none()&&active.is_none());}
+    fn drive(fixture:&mut Fixture)->Result<(usize,RetainedCloneProgress,ZipMutation),ValueError>{
+        let mut turns=0;
+        loop{
+            let outcome=fixture.advance(grant()).expect("original ZIP caller");assert_eq!(outcome.work,fixture.last_work());
+            match outcome.edit?{
+                PagedOneItemEditStep::Progress(p)=>{assert!(p.fits(grant())&&p.copied_items<=1);if p!=Default::default(){assert!(outcome.work>0);}},
+                PagedOneItemEditStep::Complete(p,inverse)=>return Ok((turns,p,inverse)),
+                _=>panic!("ZIP edit completes with one inverse"),
             }
-            turns += 1;
-            assert!(turns < 1_000, "bounded edit converges");
+            turns+=1;assert!(turns<1000,"bounded ZIP edit converges");
         }
     }
-
     #[test]
     fn rename_scans_one_entry_per_turn_and_builds_the_exact_forward_and_inverse() {
         let fixture = fixture();
         let source = snapshot();
         let replacement = "renamed".repeat(fixture["replacementRepeats"].as_u64().expect("replacementRepeats") as usize);
         let mutation = ZipMutation::RenameEntry(rename_entry::RenameEntry { name: "before.bin".into(), new_name: replacement.clone() });
-        let mut post = source.clone();
-        let (turns, progress, inverse) = drive(&mut post, &mutation).expect("rename edit");
+        let mut fixture = setup(source.clone(),mutation.clone());
+        let (turns, progress, inverse) = drive(&mut fixture).expect("rename edit");
+        let post=fixture.post().unwrap();
         assert!(turns >= source.entries.len());
         assert!(progress.fits(grant()));
         assert_eq!(inverse, ZipMutation::RenameEntry(rename_entry::RenameEntry { name: replacement, new_name: "before.bin".into() }));
-        assert_eq!(vec![inverse], <ZipMutation as protocol::ColdMutation<ZipSnapshot>>::inverse(&mutation, &source).expect("independent mutation algebra inverse"));
+        assert_eq!(vec![inverse.clone()], <ZipMutation as protocol::ColdMutation<ZipSnapshot>>::inverse(&mutation, &source).expect("independent mutation algebra inverse"));
         assert_eq!(post.entries[0].data, source.entries[0].data);
         assert_eq!(post.entries[1], source.entries[1]);
         assert_eq!(post.comment, source.comment);
         let outcome = <ZipMutation as protocol::ColdMutation<ZipSnapshot>>::diff(&mutation, &source);
-        assert_eq!(post, protocol::apply_diff_cold(outcome.diff(), &source).expect("independent mutation algebra applies the rename"));
+        assert_eq!(post, &protocol::apply_diff_cold(outcome.diff(), &source).expect("independent mutation algebra applies the rename"));
+        retire(&mut fixture,inverse);assert!(fixture.close(close_grant(),1_000_000).unwrap());
     }
 
     #[test]
     fn comment_edit_changes_only_the_comment_and_builds_the_exact_inverse() {
         let source = snapshot();
         let mutation = ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: "replaced comment".into(), comment_utf8: false });
-        let mut post = source.clone();
-        let (_, progress, inverse) = drive(&mut post, &mutation).expect("comment edit");
+        let mut fixture = setup(source.clone(),mutation.clone());
+        let (_, progress, inverse) = drive(&mut fixture).expect("comment edit");
+        let post=fixture.post().unwrap();
         assert!(progress.fits(grant()));
         assert_eq!(post.entries, source.entries);
         assert_eq!(post.comment, "replaced comment");
         assert!(!post.comment_utf8);
-        assert_eq!(vec![inverse], <ZipMutation as protocol::ColdMutation<ZipSnapshot>>::inverse(&mutation, &source).expect("independent mutation algebra inverse"));
+        assert_eq!(vec![inverse.clone()], <ZipMutation as protocol::ColdMutation<ZipSnapshot>>::inverse(&mutation, &source).expect("independent mutation algebra inverse"));
         let outcome = <ZipMutation as protocol::ColdMutation<ZipSnapshot>>::diff(&mutation, &source);
-        assert_eq!(post, protocol::apply_diff_cold(outcome.diff(), &source).expect("independent mutation algebra applies the comment"));
+        assert_eq!(post, &protocol::apply_diff_cold(outcome.diff(), &source).expect("independent mutation algebra applies the comment"));
+        retire(&mut fixture,inverse);assert!(fixture.close(close_grant(),1_000_000).unwrap());
     }
 
     #[test]
@@ -278,25 +284,20 @@ mod tests {
         let source = snapshot();
         for (name, new_name) in [("absent.bin", "other.bin"), ("before.bin", "sibling.txt")] {
             let mutation = ZipMutation::RenameEntry(rename_entry::RenameEntry { name: name.into(), new_name: new_name.into() });
-            let mut post = source.clone();
-            let error = drive(&mut post, &mutation).expect_err("stale rename is refused");
+            let mut fixture = setup(source.clone(),mutation.clone());
+            let error = drive(&mut fixture).expect_err("stale rename is refused");
+            let post=fixture.post().unwrap();
             assert!(format!("{error:?}").contains("stale-rename"));
-            assert_eq!(post, source);
+            assert_eq!(post, &source);
+            let reset=fixture.advance(RetainedCloneGrant{maximum_items:0,..grant()}).unwrap();assert_eq!(reset.work,0);assert_eq!(reset.progress,Default::default());retire(&mut fixture,error);assert!(fixture.close(close_grant(),1_000_000).unwrap());
         }
     }
 
     #[test]
-    fn edit_waits_without_progress_when_the_grant_cannot_cover_one_turn() {
-        let source = snapshot();
-        let mutation = ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: "replaced".into(), comment_utf8: true });
-        let mut post = source.clone();
-        let mut edit = ZipTextEdit::default();
-        assert!(matches!(advance(&mut edit, &mut post, &mutation, grant()).expect("envelope turn"), PagedOneItemEditStep::Progress(_)));
-        let starved = RetainedCloneGrant { maximum_capacity_bytes: 0, ..grant() };
-        match advance(&mut edit, &mut post, &mutation, starved).expect("starved comment turn") {
-            PagedOneItemEditStep::Progress(progress) => assert_eq!(progress, RetainedCloneProgress::default()),
-            PagedOneItemEditStep::Complete(..) | PagedOneItemEditStep::CompleteRows(..) => panic!("starved grant must not complete"),
-        }
-        assert_eq!(post, source);
+    fn edit_waits_without_progress_when_the_grant_cannot_cover_one_turn(){
+        let source=snapshot();let mutation=ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment{comment:"replaced".into(),comment_utf8:true});let mut fixture=setup(source.clone(),mutation);
+        let first=fixture.advance(grant()).unwrap();assert!(matches!(first.edit,Ok(PagedOneItemEditStep::Progress(_))));assert!(first.work>0);
+        let denied=fixture.advance_with_work(grant(),0).unwrap();assert_eq!(denied.work,0);assert_eq!(denied.progress,Default::default());
+        let starved=fixture.advance(RetainedCloneGrant{maximum_capacity_bytes:0,..grant()}).unwrap();assert_eq!(starved.work,0);assert_eq!(starved.progress,Default::default());assert_eq!(fixture.post().unwrap(),&source);assert!(fixture.close(close_grant(),1_000_000).unwrap());
     }
 }

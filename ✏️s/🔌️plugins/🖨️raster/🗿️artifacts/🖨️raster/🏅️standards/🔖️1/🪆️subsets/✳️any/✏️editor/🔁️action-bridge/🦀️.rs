@@ -85,6 +85,27 @@ fn decode<T: semio_framework_value::FromValue>(action: &str, value: semio_framew
     T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("raster action '{action}' arguments do not decode: {error}")))
 }
 
+fn number_input(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<semio_framework_value::DslValue, Fault> {
+    let mut folded = fold(args, &[]);
+    if let semio_framework_value::DslValue::Object(entries) = &mut folded {
+        for (key, value) in entries {
+            if key == "value" {
+                if let semio_framework_value::DslValue::String(text) = value {
+                    let number = text.parse::<f64>().ok().filter(|number| number.is_finite()).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("raster action '{action}' requires a finite number")))?;
+                    *value = semio_framework_value::ToValue::to_value(&number);
+                }
+            }
+        }
+    }
+    Ok(folded)
+}
+
+fn mask_selection_args(args:Option<&semio_framework_value::DslValue>)->Result<semio_framework_value::DslValue,Fault> {
+    let Some(semio_framework_value::DslValue::Object(entries))=args else{return Err(Fault::from("raster.mask-intent-invalid"));};
+    if entries.len()!=2||!entries.iter().any(|(key,_)|matches!(key.as_str(),"layerId"|"layer_id"))||!entries.iter().any(|(key,_)|matches!(key.as_str(),"expectedImageKey"|"expected_image_key")){return Err(Fault::from("raster.mask-intent-invalid"));}
+    Ok(fold(args,&[]))
+}
+
 pub fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<RasterCommand, Fault> {
     const LAYER: &[(&str, &str)] = &[("id", "layer_id")];
     let plain = || fold(args, &[]);
@@ -99,7 +120,7 @@ pub fn command_from_action(action: &str, args: Option<&semio_framework_value::Ds
         "applyFilter" => RasterCommand::ApplyFilter(decode(action, layer())?),
         "transformImage" => RasterCommand::TransformImage(decode(action, layer())?),
         "fillSelection" => RasterCommand::FillSelection(decode(action, layer())?),
-        "maskFromSelection" => RasterCommand::MaskFromSelection(decode(action, layer())?),
+        "maskFromSelection" => RasterCommand::MaskFromSelection(decode(action, mask_selection_args(args)?)?),
         "dropLayerKind" => RasterCommand::DropLayerKind(decode(action, plain())?),
         "setLayerVisible" => RasterCommand::SetLayerVisible(decode(action, layer())?),
         "toggleLayerVisible" => RasterCommand::ToggleLayerVisible(decode(action, layer())?),
@@ -112,9 +133,12 @@ pub fn command_from_action(action: &str, args: Option<&semio_framework_value::Ds
         "setBrushColor" => RasterCommand::SetBrushColor(decode(action, plain())?),
         "setBrushHardness" => RasterCommand::SetBrushHardness(decode(action, plain())?),
         "setPaintTarget"=>RasterCommand::SetPaintTarget(decode(action,plain())?),
-        "setPixelSelection"=>RasterCommand::SetPixelSelection(decode(action,plain())?),
+        "selectPixels"=>return Err(Fault::from("selection intent requires original owned action arguments")),
         "setMaskValue"=>RasterCommand::SetMaskValue(decode(action,plain())?),
         "setFillTolerance" => RasterCommand::SetFillTolerance(decode(action, plain())?),
+        "setFilterKind" => RasterCommand::SetFilterKind(decode(action, plain())?),
+        "setFilterAmount" => RasterCommand::SetFilterAmount(decode(action, number_input(action, args)?)?),
+        "setImageGrid" => RasterCommand::SetImageGrid(decode(action, patch_args(args, &[]))?),
         "setBrushOpacity" => RasterCommand::SetBrushOpacity(decode(action, fold(args, &[("opacity", "value")]))?),
         "setCompositeViewport" => RasterCommand::SetCompositeViewport(decode(action, plain())?),
         "setCamera" => RasterCommand::SetCamera(decode(action, plain())?),

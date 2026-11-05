@@ -11,6 +11,10 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_norm_en1998_diff::En1998Diff;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};
+
 
 use semio_s_artifact_norm_en1998_mut_buildings::change_site_s_ap_r;
 use semio_s_artifact_norm_en1998_mut_buildings::change_site_a_gr;

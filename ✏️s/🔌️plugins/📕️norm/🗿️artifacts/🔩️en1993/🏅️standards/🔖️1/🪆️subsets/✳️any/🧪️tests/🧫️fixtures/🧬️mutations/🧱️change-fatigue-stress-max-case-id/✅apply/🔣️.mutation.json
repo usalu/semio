@@ -1,3 +1,6 @@
 {
-  "ChangeFatigueStressMaxCaseId": "fatigue-stress-1"
+  "ChangeFatigueStressMaxCaseId": {
+    "id": "fatigue-stress-1",
+    "newMaxCaseId": "lm-max-changed"
+  }
 }

@@ -135,7 +135,7 @@ fn drawing_view_reduce(
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<DrawingViewer>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    camera_emit(command, context.and_then(|context| context.view_state.as_ref()))
+    camera_emit(command, context.and_then(|context| context.view_state.as_deref()))
 }
 
 struct DrawingViewCommandJobFactory {

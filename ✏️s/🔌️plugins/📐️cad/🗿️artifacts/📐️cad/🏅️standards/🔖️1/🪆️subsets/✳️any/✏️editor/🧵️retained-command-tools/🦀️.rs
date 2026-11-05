@@ -217,7 +217,7 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadRetainedCommandWork {
         }
         self.consumed = true;
         let (emit, transient) = cad_retained_reduce(input)?;
-        let view = input.context.and_then(|context| context.view_state.as_ref()).filter(|view| view.window_id.is_some());
+        let view = input.context.and_then(|context| context.view_state.as_deref()).filter(|view| view.window_id.is_some());
         Ok(match (transient, view) {
             (Some(transient), Some(view)) => ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: semio_framework_plugin::EphemeralEmit { window_transient: vec![window_transient::addressed(view, transient)?], ..Default::default() } },
             _ => ArtifactCommandWorkStep::Complete(emit),

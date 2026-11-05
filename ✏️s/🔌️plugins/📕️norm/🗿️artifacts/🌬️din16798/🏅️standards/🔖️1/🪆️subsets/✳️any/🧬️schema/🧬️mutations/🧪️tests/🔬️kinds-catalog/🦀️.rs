@@ -12,8 +12,5 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
-    for kind in KINDS {
-        assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
-    }
+    semio_s_mutation_vectors::assert_mutation_catalogue(KINDS, &semio_framework_test_fixtures::fixture_path!("../../../../🔮️oracles/🔣️.json"));
 }

@@ -16,6 +16,9 @@ mod macros_wp2_declaration;
 mod macros_wp4_reactor;
 //#endregion 📣️FacadeMacroMounts
 pub use semio_framework_plugin_mounted_owner::{MountedOwnerIdentityV1, MountedOwnerJobReceiptV1, MountedOwnerPhaseV1, MountedOwnerPolicyV1, MountedOwnerTurnV1};
+pub use semio_framework_plugin_instance_initialization::registration as original_instance_registration;
+pub use semio_framework_plugin_instance_initialization::ephemeral as original_ephemeral;
+pub use semio_framework_plugin_window_config::OriginalWindowOwnerRegistration;
 
 #[cfg(test)] use semio_framework_ui_locale::{Label, LabelText};
 
@@ -107,6 +110,7 @@ pub use tool_contract::original_reserved_producer_laws;
 
 pub use semio_framework_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
 pub mod app {
+    pub use semio_framework_plugin_time_travel as time_travel;
     //! 🧩️ The crate's public app vocabulary: declarative app builder, plugin traits and runtime types, composed from the facet modules that own them.
     pub use semio_framework_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
     pub use semio_framework_plugin_decl_surface::{OriginalArtifactEditorBirth,OriginalArtifactViewerBirth};
@@ -118,7 +122,7 @@ pub mod app {
         WindowConfigNativePairReceiving,window_config_native_pair_demands,admit_window_config_native_pair,bounded_window_config_preparation_source_birth, bounded_window_config_preparation_factory, bounded_window_config_store_disposer,bounded_window_config_store_disposer_birth, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigAuthorityIdentity, WindowConfigBorrow, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack,
         WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigApplyCursor, WindowConfigApplyEdit, WindowConfigApplyMutation, WindowConfigReplaceCursor, WindowConfigReplaceEdit, WindowConfigReplaceMutation, WindowConfigSnapshot,
     };
-    pub use super::window_transient::{TransientView, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
+    pub use super::window_transient::{owners_factory_birth_demands, transfer_owners_birth_demands, OriginalWindowTransientOwnerRegistration, TransientView, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
     /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
     pub use semio_framework::AppDefinition;
     pub use semio_framework_ui_contract::BuiltNode;
@@ -518,6 +522,9 @@ pub use app::{
     WindowTransientOwner,
     WindowTransientOwnerBundle,
     WindowTransientOwnerRegistry,
+    transfer_owners_birth_demands,
+    owners_factory_birth_demands,
+    OriginalWindowTransientOwnerRegistration,
     WindowTransientSnapshot,
     WireArtifactInferenceBudget,
     WireArtifactInferenceCacheMode,
@@ -581,9 +588,10 @@ pub use semio_framework_ui_declaration::ui::{
 };
 /// 🎬️ The scene records plugins publish through this crate (the world3d family is re-exported by `world3d_host` above),
 /// from their owner `semio-framework-ui-scene`.
+pub use semio_framework_plugin_operation::ArtifactOperationProgress;
 pub use semio_framework_ui_scene::{
     BlockListBlock, BlockListPaletteEntry, BlockListScene, BlockListSelectionTarget, BlockListStep, Board2dScene, Canvas2dFraming, Canvas2dScene, IconRenderScene, InkCanvasInteractionDomain, InkCanvasScene,
-    NodeGraphEdgeRecord, NodeGraphHover, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, TableScene, TextEditorScene, TextSplice, TextSpliceComposition, TiledMapScene, TEXT_SPLICE_CONTEXT_SCALARS,
+    NodeGraphEdgeRecord, NodeGraphHover, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, Paint2dSelectionCancellation, Paint2dEditingOptions, Paint2dImageGrid, TableScene, TextEditorScene, TextSplice, TextSpliceComposition, TiledMapScene, TEXT_SPLICE_CONTEXT_SCALARS,
 };
 
 #[macro_export]

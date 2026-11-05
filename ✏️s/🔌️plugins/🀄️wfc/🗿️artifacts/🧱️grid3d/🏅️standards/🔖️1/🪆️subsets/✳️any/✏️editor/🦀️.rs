@@ -455,7 +455,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
             input.command,
             &ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone()),
             &ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) },
-            input.context.and_then(|context| context.view_state.as_ref()),
+            input.context.and_then(|context| context.view_state.as_deref()),
         )?;
         self.completed = true;
         Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))

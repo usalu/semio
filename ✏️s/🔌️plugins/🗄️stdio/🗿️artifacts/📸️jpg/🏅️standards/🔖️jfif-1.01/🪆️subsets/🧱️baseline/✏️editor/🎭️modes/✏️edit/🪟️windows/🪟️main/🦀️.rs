@@ -4,8 +4,11 @@ use crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg;
 use crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot as JpgSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{Buildable, BuiltNode, HasBase, WindowKindDefinition, WindowKit};
-use semio_framework_ui_contract::{self as ui, Label};
-use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::plugin_app_close_prelude::{self as ui, Label};
+use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema};
+
+pub const MAXIMUM_INTERACTIVE_ROWS: u32 = 65_536;
 
 pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
@@ -13,7 +16,7 @@ pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
     let mut definition = ImageWindowKit::editable_window_kind();
-    definition.actions.push(crate::editor::jpg_baseline::paint_region::action());
+    definition.actions.push(paint_region_action());
     definition
 }
 
@@ -44,3 +47,29 @@ fn image_view(snapshot: &JpgSnapshot) -> ImageView {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+fn integer_arg(id: &'static str, en: &'static str, de: &'static str, minimum: f64, maximum: f64, default: u32) -> ActionArgDef {
+    let mut argument = ActionArgDef::number(id, LocalizedLabel::native(en, de)).required().default_value(&default);
+    if let ArgSchema::Number { min, max, step, integer, .. } = &mut argument.schema {
+        *min = Some(minimum);
+        *max = Some(maximum);
+        *step = Some(1.0);
+        *integer = true;
+    }
+    argument
+}
+
+/// 🎨 Publishes the JPEG raster region action shared by the window and editor.
+pub fn paint_region_action() -> ActionDefinition {
+    ActionDefinition::bounded_catalog("paint-region", LocalizedLabel::native("Paint Region", "Bereich malen"), ActionKind::Mutation).with_args(vec![
+        integer_arg("x", "Left (x)", "Links (x)", 0.0, u32::MAX as f64, 0),
+        integer_arg("y", "Top (y)", "Oben (y)", 0.0, u32::MAX as f64, 0),
+        integer_arg("width", "Width", "Breite", 1.0, u32::MAX as f64, 1),
+        integer_arg("height", "Height", "Höhe", 1.0, f64::from(MAXIMUM_INTERACTIVE_ROWS), 1),
+        integer_arg("red", "Red", "Rot", 0.0, 255.0, 0),
+        integer_arg("green", "Green", "Grün", 0.0, 255.0, 0),
+        integer_arg("blue", "Blue", "Blau", 0.0, 255.0, 0),
+        integer_arg("alpha", "Alpha", "Alpha", 0.0, 255.0, 255),
+    ])
+}
+

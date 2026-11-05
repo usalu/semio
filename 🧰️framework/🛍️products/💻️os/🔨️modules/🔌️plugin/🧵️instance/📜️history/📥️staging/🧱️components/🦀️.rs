@@ -72,15 +72,26 @@ impl<A: ArtifactApp> CommandHistory<A> {
     }
 }
 
+/// 📣️ A marker occupies the same fixed physical slot as its genuine typed operation reservation.
+pub struct HostEventOperations{slots:[Option<u64>;semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS]}
+impl Default for HostEventOperations{fn default()->Self{Self{slots:[None;semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS]}}}
+impl HostEventOperations{
+ pub fn insert(&mut self,operation:u64){let index=operation as usize%self.slots.len();self.slots[index]=Some(operation);}
+ pub fn remove(&mut self,operation:&u64)->bool{let index=*operation as usize%self.slots.len();if self.slots[index]!=Some(*operation){return false}self.slots[index]=None;true}
+}
 /// 🪕️ Host events: the utilities, window roster and typed operations a host event dispatch reached.
 pub struct HostEvents {
+    pub routes: semio_framework_plugin_decl_emission::original_view::routing::OriginalHostEventRoutes,
+    pub action_delivery:semio_framework_plugin_decl_emission::original_view::delivery::OriginalHostEventDelivery,
+    pub action_event_complete:bool,
+    pub action_event_removed:bool,
     pub invocation_kind: Option<ActionKind>,
     /// 🧰️ The utility each window last showed in a dispatch's view, so a switch becomes a [`HostEvent::UtilityChanged`].
     pub host_event_utilities: HashMap<String, Option<String>>,
     /// 🪟️ The window roster the last dispatch's view carried: the windows an instance-wide [`HostEvent`] reaches.
     pub host_event_roster: Vec<semio_framework::ViewWindowInstance>,
     /// 📨️ The typed operations a [`HostEvent`] admitted: never history rows of their own.
-    pub host_event_operations: HashSet<u64>,
+    pub host_event_operations: HostEventOperations,
     /// 📬️ The window facts waiting for their original typed delivery, front first; the front is the one in flight while `delivering`.
     pub queue: std::collections::VecDeque<semio_framework_plugin_decl_emission::HostEvent>,
     /// 🏃️ Set from the first queued delivery until the queue has drained through the shared typed source.
@@ -96,9 +107,13 @@ impl HostEvents {
     pub fn new() -> Self {
         Self {
             invocation_kind: None,
+            routes: Default::default(),
+            action_delivery:Default::default(),
+            action_event_complete:false,
+            action_event_removed:false,
             host_event_utilities: HashMap::new(),
             host_event_roster: Vec::new(),
-            host_event_operations: HashSet::new(),
+            host_event_operations: HostEventOperations::default(),
             queue: std::collections::VecDeque::new(),
             delivering: false,
             reply: false,

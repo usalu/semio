@@ -6,6 +6,7 @@ use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 /// 📚 Every path a En1992 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field_arguments: &[],
     move_item: &[MoveItemRule { path: "members", kind: "change-member-order", selectors: &[], from: "fromIndex", to: "toIndex" }],
     set_field: &[
         SetFieldRule { path: "members[].longitudinal[].count", kind: "change-bar-layer-count", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("layerId")], value: "newCount" },

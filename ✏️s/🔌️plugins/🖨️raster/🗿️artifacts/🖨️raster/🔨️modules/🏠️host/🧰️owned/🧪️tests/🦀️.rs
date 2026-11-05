@@ -1,6 +1,9 @@
 //! 🧪️ Raster owned-host laws: the retained initializer, the stepwise clone and candidate authorities and their displaced-owner retirement.
 
 use super::*;
+
+#[path = "pixel-work.rs"]
+mod pixel_work;
 use semio_s_artifact_raster_raster_mutations_layers::rename_layer;
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document;
 use semio_s_artifact_raster_raster_model::{RasterTransform, RASTER_DOCUMENT_SCHEMA};
@@ -95,7 +98,7 @@ fn close_slot(slot: &mut RasterRetirementSlot) {
             return;
         }
         let demand = slot.demands(RASTER_OWNED_FIELD_BYTES).expect("Raster slot quotes its next close turn");
-        slot.close(exact_grant(demand)).expect("Raster slot closes within its quoted grant");
+        slot.close(exact_grant(demand)).result.expect("Raster slot closes within its quoted grant");
     }
     panic!("Raster retirement slot did not reach terminal-empty");
 }
@@ -259,7 +262,7 @@ fn raster_expired_deadline_advances_no_bounds_clone_or_mutation_owner() {
             break;
         }
         let demand = clone.close_demands(RASTER_OWNED_FIELD_BYTES).expect("expired clone quotes its close turn");
-        clone.close_step(exact_grant(demand)).expect("expired clone closes through retained owner");
+        clone.close_step(exact_grant(demand)).result.expect("expired clone closes through retained owner");
     }
     assert!(clone.terminal_is_empty());
     drop(clone);
@@ -323,10 +326,10 @@ fn raster_displaced_owners_retire_through_exact_demand_quoted_grants() {
     let mut slot = RasterRetirementSlot::new();
     slot.put(RasterDisplaced::String(spare));
     assert!(!slot.is_empty());
-    let empty = slot.close(RetainedCloneGrant { maximum_items: 0, ..test_wallet() }).expect("a zero-item grant retains the exact string");
+    let empty = slot.close(RetainedCloneGrant { maximum_items: 0, ..test_wallet() }).result.expect("a zero-item grant retains the exact string");
     assert_eq!(empty.progress(), RetainedCloneProgress::default());
     assert!(!slot.is_empty());
-    let starved = slot.close(RetainedCloneGrant { maximum_capacity_bytes: 0, ..test_wallet() }).expect("an unfunded birth retains the exact string");
+    let starved = slot.close(RetainedCloneGrant { maximum_capacity_bytes: 0, ..test_wallet() }).result.expect("an unfunded birth retains the exact string");
     assert_eq!(starved.progress(), RetainedCloneProgress::default());
     close_slot(&mut slot);
 

@@ -607,6 +607,35 @@
           "other",
           "workspace"
         ]
+      },
+      {
+        "name": "owned-component-script-ingress",
+        "args": [
+          "exec",
+          "--projects=app",
+          "--",
+          "repo",
+          "../📜️script.ts",
+          "components",
+          "describe",
+          "example",
+          "--profile",
+          "prototype"
+        ],
+        "selection": {
+          "kind": "owners",
+          "projects": [
+            "app"
+          ],
+          "exclude": []
+        },
+        "projects": [
+          "app"
+        ],
+        "owners": [
+          "app",
+          "lib"
+        ]
       }
     ]
   }

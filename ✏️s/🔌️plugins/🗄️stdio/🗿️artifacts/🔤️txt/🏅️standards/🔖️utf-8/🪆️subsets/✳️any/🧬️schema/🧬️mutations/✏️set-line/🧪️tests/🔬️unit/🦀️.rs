@@ -45,7 +45,7 @@ fn crlf_bare_lf_content_inverse_and_root_codecs_restore_the_native_snapshot() {
 fn rejects_lf_separator_hazards_and_unknown_fields() {
     let base = TxtSnapshot { lines: vec!["a".into(), "b".into()], line_ending: LineEnding::Lf, ..Default::default() };
     let mutation = SetLineMutation { index: 0, text: "a\r".into() };
-    assert!(!<SetLineMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
+    assert!(!<SetLineMutation as protocol::ColdMutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
     assert!(semio_framework_pack_json::from_json_str::<SetLineMutation>(r#"{"index":0,"text":"x","unknown":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     assert!(TxtMutation::decode_op(&[vec![5], vec![255]].concat()).is_err());
     let value = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(TxtMutation::SetLine(SetLineMutation { index: 1, text: "a".into() })))).unwrap();

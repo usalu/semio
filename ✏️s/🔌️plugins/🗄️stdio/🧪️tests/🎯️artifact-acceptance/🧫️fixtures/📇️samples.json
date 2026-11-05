@@ -1,385 +1,393 @@
 {
- "schema": "semio.stdio.artifact-acceptance-samples/v1",
- "source": "T19 fixture manifest (generate-invalid-fixtures.py)",
- "samples": {
-  "avi": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🧫️fixtures/🎬️.avi",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎞️movi/🧪️tests/🧫️fixtures/🎬️.avi",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/📇️idx1/🧪️tests/🧫️fixtures/🎬️.avi"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🧫️fixtures/✂️truncated/🎬️-truncated.avi",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🧫️fixtures/🪄️wrong-magic/🎬️-invalid-magic.avi"
-   ]
-  },
-  "bcf": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/✏️set-comment-applied/➡️after.bcf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/🔢️set-version-applied/➡️after.bcf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/📌️insert-topic-applied/➡️after.bcf"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.bcf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.bcf"
-   ]
-  },
-  "binary": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/💾️.bin"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/💾️-truncated.bin",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/💾️-invalid-magic.bin"
-   ]
-  },
-  "bmp": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📐️change-header-fields/➡️after.bmp",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔲️replace-pixel-data-applied/➡️after.bmp",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📤️remove-palette-entry-applied/➡️after.bmp"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/reject-dib-108.bmp",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/reject-dib-12.bmp",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/reject-dib-124.bmp"
-   ]
-  },
-  "csv": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧪️reuse-marketplaces/📊️.csv",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/📊️.csv"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/📊️-truncated.csv"
-   ]
-  },
-  "deflate": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗜️readme-level9.zz",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🗜️.zz"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🗜️readme-level9-truncated.zz",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🗜️readme-level9-invalid-magic.zz"
-   ]
-  },
-  "docx": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📜️example-readme.docx",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🧪️tests/🧫️fixtures/📜️example-readme.docx",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🧪️tests/🧫️fixtures/📜️example-readme.docx"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/📜️example-readme-truncated.docx",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/📜️example-readme-invalid-magic.docx"
-   ]
-  },
-  "dwg": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🖊️.dwg",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🖼️assets/🏛️architectural/🏛️architectural.dwg",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🖼️assets/🏛️architectural/🏛️architectural.dwg"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🖊️-truncated.dwg",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🖊️-invalid-magic.dwg"
-   ]
-  },
-  "dxf": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/🧫️fixtures/🎚️set-layer-applied/➡️after.dxf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/🧫️fixtures/🖌️set-style-applied/➡️after.dxf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧪️tests/🧫️fixtures/⏸️no-mutation-no-op/➡️after.dxf"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.dxf"
-   ]
-  },
-  "epw": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🖼️assets/🎬️demo/🧪️example/🌦️.epw"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🌦️-truncated.epw"
-   ]
-  },
-  "gif": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💃️dancing-87a/🖼️.gif",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔀️move-image/➡️after.gif",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏸️no-mutation/➡️after.gif"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🖼️-truncated.gif",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🖼️-invalid-magic.gif"
-   ]
-  },
-  "gltf": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🚚️move/➡️after.gltf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🚚️move/➡️after.gltf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🚚️move/➡️after.gltf"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.gltf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.gltf"
-   ]
-  },
-  "html": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏚️zukunft-bau-entwerfen-mit-bestand/🌐️.html",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✍️set-text-applied/📸️snapshot/➡️after/🌐️.html",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✍️set-text-applied/📸️snapshot/⬅️before/🌐️.html"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🌐️-truncated.html"
-   ]
-  },
-  "idf": {
-   "valid": [
-    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/⚡️idf/🧪️tests/1ZoneUncontrolled.idf"
-   ],
-   "invalid": []
-  },
-  "idml": {
-   "valid": [],
-   "invalid": []
-  },
-  "ifc": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📐️geometry/complex-item.ifc",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧪️tests/🧫️fixtures/🚪️set-space-applied/➡️after.ifc",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📋️set-header-applied/➡️after.ifc"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/🧫️fixtures/✂️truncated/complex-item-truncated.ifc"
-   ]
-  },
-  "jpg": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🔎️change-jfif-header/➡️after.jpg",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🖼️replace-image-applied/➡️after.jpg",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🔲️replace-pixels-applied/➡️after.jpg"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.jpg",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.jpg"
-   ]
-  },
-  "json": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✏️set-member/➡️after.json",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🔢️set-scalar/➡️after.json",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧪️tests/🧫️fixtures/🔤️set-string/➡️after.json"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/⚠️malformed.json"
-   ]
-  },
-  "las": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.las",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.las",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📍️points/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.las"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.las",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/🧫️fixtures/🪄️wrong-magic/🧊️-invalid-magic.las"
-   ]
-  },
-  "md": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📖️readme.md",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/📝️.md",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/✏️editor/🎚️config/📌️.empty.md"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/📖️readme-truncated.md"
-   ]
-  },
-  "mp3": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔊️.mp3",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🔊️.mp3"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🔊️-truncated.mp3",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🔊️-invalid-magic.mp3"
-   ]
-  },
-  "mp4": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️.mp4",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎬️.mp4"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🎬️-truncated.mp4",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🎬️-invalid-magic.mp4"
-   ]
-  },
-  "obj": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.obj",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.obj",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🧫️fixtures/🎨️set-mtllib/➡️after.obj"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.obj"
-   ]
-  },
-  "pdf": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/🧫️fixtures/🗣️set-lang/➡️after.pdf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/ℹ️set-info/➡️after.pdf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📄️set-form/➡️after.pdf"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.pdf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.pdf"
-   ]
-  },
-  "ply": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🌐️pattern-sphere/🧊️.ply",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧊️.ply"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.ply"
-   ]
-  },
-  "png": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-adam7.png",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🟥️rgba8-swatch/🖼️.png",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📅️change-timestamp/➡️after.png"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/🧫️fixtures/✂️truncated/rgba8-adam7-truncated.png",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/🧫️fixtures/🪄️wrong-magic/rgba8-adam7-invalid-magic.png"
-   ]
-  },
-  "pptx": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📽️.pptx",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧪️tests/🧫️fixtures/📽️.pptx",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧪️tests/🧫️fixtures/📽️.pptx"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/📽️-truncated.pptx",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/📽️-invalid-magic.pptx"
-   ]
-  },
-  "semio": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧪️tests/🧫️fixtures/🧰️mutate-semio-kit/🎒️.pack.semio",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧪️tests/🧫️fixtures/🔺️mutate-semio-mesh/🗣️.dsl.semio",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧪️tests/🧫️fixtures/🔤️mutate-semio-text/🎒️.pack.semio"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧪️tests/🧫️fixtures/✂️truncated/🎒️.pack-truncated.semio"
-   ]
-  },
-  "step": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/✅️cut-valid-no-op/🎯️expected.step",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/🪃️cut-skewed-bore/🎯️expected.step",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📛️set-file-name-applied/➡️after.stp"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/✂️truncated/🎯️expected-truncated.step"
-   ]
-  },
-  "stl": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏛️hexagonal-cut-concrete-forest-left/🧊️.stl",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧊️.stl"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.stl",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🧊️-invalid-magic.stl"
-   ]
-  },
-  "svg": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧪️tests/🧫️fixtures/🐁️mouse.svg",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧪️tests/🧫️fixtures/🔳️qr-code.svg",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🔳️qr-code.svg"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧪️tests/🧫️fixtures/✂️truncated/🐁️mouse-truncated.svg"
-   ]
-  },
-  "tiff": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🧭️change-byte-order/➡️after.tif",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/📤️remove-ifd-applied/➡️after.tiff",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/📥️insert-ifd-applied/➡️after.tiff"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.tif",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.tif"
-   ]
-  },
-  "tsv": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/♻️reuse-marketplaces.tsv",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/📊️.tsv"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/♻️reuse-marketplaces-truncated.tsv"
-   ]
-  },
-  "txt": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔤️.txt",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🔤️.txt"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🔤️-truncated.txt"
-   ]
-  },
-  "wav": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎙️bauen-mit-bestand-ausschnitt/🔊️.wav",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎧️example/🔊️.wav"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🔊️-truncated.wav",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🔊️-invalid-magic.wav"
-   ]
-  },
-  "xlsx": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✍️set-cell-applied/➡️after.xlsx"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/📕️reuse-marketplaces-truncated.xlsx",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/📕️reuse-marketplaces-invalid-magic.xlsx"
-   ]
-  },
-  "xml": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🏷️.xml",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧪️tests/🧫️fixtures/🍎️macos-uttype-plist/🏷️.xml",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✍️set-text-applied/➡️after.xml"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/🏷️-truncated.xml"
-   ]
-  },
-  "zip": {
-   "valid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🗜️.zip",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧪️tests/🧫️fixtures/🗜️.zip",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/➕️add-entry-applied/➡️after.zip"
-   ],
-   "invalid": [
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/🗜️-truncated.zip",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/🗜️-invalid-magic.zip"
-   ]
+  "schema": "semio.stdio.artifact-acceptance-samples/v1",
+  "source": "T19 fixture manifest (generate-invalid-fixtures.py)",
+  "samples": {
+    "avi": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🧫️fixtures/🎬️.avi",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎞️movi/🧪️tests/🧫️fixtures/🎬️.avi",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/📇️idx1/🧪️tests/🧫️fixtures/🎬️.avi"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🧫️fixtures/✂️truncated/🎬️-truncated.avi",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🧫️fixtures/🪄️wrong-magic/🎬️-invalid-magic.avi"
+      ]
+    },
+    "bcf": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/✏️set-comment-applied/➡️after.bcf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/🔢️set-version-applied/➡️after.bcf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/📌️insert-topic-applied/➡️after.bcf"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.bcf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.bcf"
+      ]
+    },
+    "binary": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/💾️.bin"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/💾️-truncated.bin",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/💾️-invalid-magic.bin"
+      ]
+    },
+    "bmp": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📐️change-header-fields/➡️after.bmp",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔲️replace-pixel-data-applied/➡️after.bmp",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📤️remove-palette-entry-applied/➡️after.bmp"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/reject-dib-108.bmp",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/reject-dib-12.bmp",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/reject-dib-124.bmp"
+      ]
+    },
+    "csv": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧪️reuse-marketplaces/📊️.csv",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/📊️.csv"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/📊️-truncated.csv"
+      ]
+    },
+    "deflate": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗜️readme-level9.zz",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🗜️.zz"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🗜️readme-level9-truncated.zz",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🗜️readme-level9-invalid-magic.zz"
+      ]
+    },
+    "docx": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📜️example-readme.docx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🧪️tests/🧫️fixtures/📜️example-readme.docx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🧪️tests/🧫️fixtures/📜️example-readme.docx"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/📜️example-readme-truncated.docx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/📜️example-readme-invalid-magic.docx"
+      ]
+    },
+    "dwg": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🖊️.dwg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🖼️assets/🏛️architectural/🏛️architectural.dwg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🖼️assets/🏛️architectural/🏛️architectural.dwg"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🖊️-truncated.dwg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🖊️-invalid-magic.dwg"
+      ]
+    },
+    "dxf": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/🧫️fixtures/🎚️set-layer-applied/➡️after.dxf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/🧫️fixtures/🖌️set-style-applied/➡️after.dxf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧪️tests/🧫️fixtures/⏸️no-mutation-no-op/➡️after.dxf"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.dxf"
+      ]
+    },
+    "epw": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🖼️assets/🎬️demo/🧪️example/🌦️.epw"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🌦️-truncated.epw"
+      ]
+    },
+    "gif": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💃️dancing-87a/🖼️.gif",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔀️move-image/➡️after.gif",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏸️no-mutation/➡️after.gif",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🖼️assets/💃️dancing/🧪️dancing/🖼️.gif"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🖼️-truncated.gif",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🖼️-invalid-magic.gif"
+      ]
+    },
+    "gltf": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🚚️move/➡️after.gltf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🚚️move/➡️after.gltf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🚚️move/➡️after.gltf"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.gltf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.gltf"
+      ]
+    },
+    "html": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏚️zukunft-bau-entwerfen-mit-bestand/🌐️.html",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✍️set-text-applied/📸️snapshot/➡️after/🌐️.html",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✍️set-text-applied/📸️snapshot/⬅️before/🌐️.html"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🌐️-truncated.html"
+      ]
+    },
+    "idf": {
+      "valid": [
+        "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/⚡️idf/🧪️tests/1ZoneUncontrolled.idf"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️tests/🎯️artifact-acceptance/🧫️fixtures/🚫️invalid-idf.idf"
+      ]
+    },
+    "idml": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/📚️examples/🎬️demo/🖼️assets/🧪️example/📚️.idml"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️tests/🎯️artifact-acceptance/🧫️fixtures/✂️truncated-idml.idml"
+      ]
+    },
+    "ifc": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📐️geometry/complex-item.ifc",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧪️tests/🧫️fixtures/🚪️set-space-applied/➡️after.ifc",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📋️set-header-applied/➡️after.ifc",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📛️set-file-name-applied/⬅️before.ifc"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/🧫️fixtures/✂️truncated/complex-item-truncated.ifc"
+      ]
+    },
+    "jpg": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🔎️change-jfif-header/➡️after.jpg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🖼️replace-image-applied/➡️after.jpg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🔲️replace-pixels-applied/➡️after.jpg"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.jpg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.jpg"
+      ]
+    },
+    "json": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✏️set-member/➡️after.json",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🔢️set-scalar/➡️after.json",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧪️tests/🧫️fixtures/🔤️set-string/➡️after.json"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/⚠️malformed.json"
+      ]
+    },
+    "las": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.las",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.las",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📍️points/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.las"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.las",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/🧫️fixtures/🪄️wrong-magic/🧊️-invalid-magic.las"
+      ]
+    },
+    "md": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📖️readme.md",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/📝️.md",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/✏️editor/🎚️config/📌️.empty.md"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/📖️readme-truncated.md"
+      ]
+    },
+    "mp3": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔊️.mp3",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🔊️.mp3"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🔊️-truncated.mp3",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🔊️-invalid-magic.mp3"
+      ]
+    },
+    "mp4": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️.mp4",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎬️.mp4"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🎬️-truncated.mp4",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🎬️-invalid-magic.mp4"
+      ]
+    },
+    "obj": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.obj",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.obj",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🧫️fixtures/🎨️set-mtllib/➡️after.obj"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.obj"
+      ]
+    },
+    "pdf": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/🧫️fixtures/🗣️set-lang/➡️after.pdf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/ℹ️set-info/➡️after.pdf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📄️set-form/➡️after.pdf"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.pdf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.pdf"
+      ]
+    },
+    "ply": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🌐️pattern-sphere/🧊️.ply",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧊️.ply"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.ply"
+      ]
+    },
+    "png": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-adam7.png",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🟥️rgba8-swatch/🖼️.png",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📅️change-timestamp/➡️after.png"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/🧫️fixtures/✂️truncated/rgba8-adam7-truncated.png",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/🧫️fixtures/🪄️wrong-magic/rgba8-adam7-invalid-magic.png"
+      ]
+    },
+    "pptx": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📽️.pptx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧪️tests/🧫️fixtures/📽️.pptx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧪️tests/🧫️fixtures/📽️.pptx"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/📽️-truncated.pptx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/📽️-invalid-magic.pptx"
+      ]
+    },
+    "semio": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧪️tests/🧫️fixtures/🧰️mutate-semio-kit/🎒️.pack.semio",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧪️tests/🧫️fixtures/🔺️mutate-semio-mesh/🗣️.dsl.semio",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧪️tests/🧫️fixtures/🔤️mutate-semio-text/🎒️.pack.semio"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧪️tests/🧫️fixtures/✂️truncated/🎒️.pack-truncated.semio"
+      ]
+    },
+    "step": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/✅️cut-valid-no-op/🎯️expected.step",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/🪃️cut-skewed-bore/🎯️expected.step",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📛️set-file-name-applied/➡️after.stp"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/✂️truncated/🎯️expected-truncated.step"
+      ]
+    },
+    "stl": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏛️hexagonal-cut-concrete-forest-left/🧊️.stl",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧊️.stl"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.stl",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🧊️-invalid-magic.stl"
+      ]
+    },
+    "svg": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧪️tests/🧫️fixtures/🐁️mouse.svg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧪️tests/🧫️fixtures/🔳️qr-code.svg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🔳️qr-code.svg"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧪️tests/🧫️fixtures/✂️truncated/🐁️mouse-truncated.svg"
+      ]
+    },
+    "tiff": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🧭️change-byte-order/➡️after.tif",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/📤️remove-ifd-applied/➡️after.tiff",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/📥️insert-ifd-applied/➡️after.tiff"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.tif",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.tif"
+      ]
+    },
+    "tsv": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/♻️reuse-marketplaces.tsv",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/📊️.tsv"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/♻️reuse-marketplaces-truncated.tsv"
+      ]
+    },
+    "txt": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔤️.txt",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🔤️.txt"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🔤️-truncated.txt"
+      ]
+    },
+    "wav": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎙️bauen-mit-bestand-ausschnitt/🔊️.wav",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎧️example/🔊️.wav"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🔊️-truncated.wav",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🔊️-invalid-magic.wav"
+      ]
+    },
+    "xlsx": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✍️set-cell-applied/➡️after.xlsx"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/📕️reuse-marketplaces-truncated.xlsx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/📕️reuse-marketplaces-invalid-magic.xlsx"
+      ]
+    },
+    "xml": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🏷️.xml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧪️tests/🧫️fixtures/🍎️macos-uttype-plist/🏷️.xml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✍️set-text-applied/➡️after.xml"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/🏷️-truncated.xml"
+      ]
+    },
+    "zip": {
+      "valid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🗜️.zip",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧪️tests/🧫️fixtures/🗜️.zip",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/➕️add-entry-applied/➡️after.zip"
+      ],
+      "invalid": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/🗜️-truncated.zip",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/🗜️-invalid-magic.zip"
+      ]
+    }
   }
- }
 }

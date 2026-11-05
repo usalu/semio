@@ -7,8 +7,8 @@
 [build]
 rustc = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📜️script.ts"
 rustc-wrapper = "repo"
-target-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/t"
-build-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/b"
+target-dir = ".cache/b/r/m/u/l/d/t"
+build-dir = ".cache/b/r/m/u/l/d/b"
 rustflags = ["-Z", "threads=0"]
 
 [unstable]

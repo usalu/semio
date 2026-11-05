@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-local-fire-ceiling-height",
   "semanticKind": "change-local-fire-ceiling-height",
-  "displayName": "Change Local Fire Ceiling Height",
+  "displayName": "Change ceiling height above the localised fire",
   "emoji": "⚙",
   "aggregateVariant": "ChangeLocalFireCeilingHeight",
   "payloadSchema": "🧬️schema/🔣️.json",

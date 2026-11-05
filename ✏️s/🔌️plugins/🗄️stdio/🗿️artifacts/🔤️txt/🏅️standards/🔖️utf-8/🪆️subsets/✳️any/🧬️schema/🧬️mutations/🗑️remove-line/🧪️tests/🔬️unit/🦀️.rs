@@ -50,8 +50,8 @@ fn one_line_to_empty_round_trips_through_production_inverse_and_codecs() {
 fn removing_the_last_visible_crlf_separator_is_refused() {
     let base = snapshot(&["a", "b"], false, LineEnding::CrLf);
     let mutation = RemoveLineMutation { index: 0 };
-    assert!(<RemoveLineMutation as MutationKind<TxtSnapshot, TxtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").is_empty());
-    assert!(!<RemoveLineMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
+    assert!(<RemoveLineMutation as protocol::ColdMutationKind<TxtSnapshot, TxtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(!<RemoveLineMutation as protocol::ColdMutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
     assert!(semio_framework_pack_json::from_json_str::<RemoveLineMutation>(r#"{"index":0,"unknown":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     assert!(semio_framework_pack_json::from_json_str::<TxtMutation>(r#"{"mutation":"remove-line","payload":{"index":0},"unknown":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
 }

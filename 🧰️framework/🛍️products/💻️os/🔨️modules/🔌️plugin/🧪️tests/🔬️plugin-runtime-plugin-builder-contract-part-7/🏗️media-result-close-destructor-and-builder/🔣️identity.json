@@ -1,0 +1,37 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "controller",
+      "parents"
+    ],
+    "properties": {
+      "controller": {
+        "type": "string",
+        "minLength": 1
+      },
+      "parents": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "expectation": {
+    "distinctParents": true,
+    "controllerPreserved": true,
+    "reloadPreservesIdentity": true
+  },
+  "output": [
+    true,
+    true,
+    36,
+    36
+  ]
+}

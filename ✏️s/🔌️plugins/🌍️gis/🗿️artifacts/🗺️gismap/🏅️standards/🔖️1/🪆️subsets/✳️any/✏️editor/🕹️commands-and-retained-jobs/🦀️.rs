@@ -149,7 +149,7 @@ impl ArtifactCommandWork<EditorApp<Gis2dPlayApp>> for GisMapWindowWork {
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let mut emit = input.command.dispatch(&doc, &config_view)?;
         if let Some(mutation) = gis2d_map_window_mutation(input.command, input.snapshot, &config) {
-            let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("gis-map-window-view-required"))?;
+            let view = input.context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("gis-map-window-view-required"))?;
             emit.window_config_mutations.push(map_config::addressed(view, mutation)?);
         }
         self.completed = true;

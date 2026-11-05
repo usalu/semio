@@ -140,6 +140,9 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
         self.operation
     }
 
+    /// 📩️ Borrows the immutable accepted receipt without advancing or acknowledging its original publication.
+    pub fn accepted_receipt(&self)->Option<LaneItemReceipt>{if self.phase==ArtifactStoreOneItemPublicationPhase::AwaitingAck{self.receipt.as_ref().copied()}else{None}}
+
     pub fn phase(&self) -> ArtifactStoreOneItemPublicationPhase {
         self.phase
     }

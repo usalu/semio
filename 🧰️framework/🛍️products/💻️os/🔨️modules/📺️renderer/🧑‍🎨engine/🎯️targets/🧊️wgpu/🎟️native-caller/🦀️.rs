@@ -73,12 +73,12 @@ impl NativeFrameCaller{
 }
 
 /// 🔔️ An actual initiating event creates a source only after the previous source physically closes.
-pub struct NativeFrameEventIssuer{source:Option<NativeFrameCaller>,clock:fn()->Option<u64>,policy:NativeFrameRootPolicyV1,finishing:bool}
+pub struct NativeFrameEventIssuer{source:Option<NativeFrameCaller>,clock:fn()->Option<u64>,policy:NativeFrameRootPolicyV1,script_deadline:Option<u64>,finishing:bool}
 impl NativeFrameEventIssuer{
  /// 🌄️ The window retains only immutable policy before asynchronous boot produces its first event.
- pub fn new(clock:fn()->Option<u64>,policy:NativeFrameRootPolicyV1)->Result<Self,ValueError>{policy.validate()?;Ok(Self{source:None,clock,policy,finishing:false})}
+ pub fn new(clock:fn()->Option<u64>,policy:NativeFrameRootPolicyV1,script_deadline:Option<u64>)->Result<Self,ValueError>{policy.validate()?;Ok(Self{source:None,clock,policy,script_deadline,finishing:false})}
  /// 📯️ Continuation notifications retain the current source, receipt, deadline, fuel and identity.
- pub fn observe_event(&mut self)->Result<bool,ValueError>{if self.source.is_some(){return Ok(false)}self.source=Some(NativeFrameCaller::new(semio_framework_trace::allocate_operation_id(),Generation(1),self.clock,self.policy)?);Ok(true)}
+ pub fn observe_event(&mut self)->Result<bool,ValueError>{if self.source.is_some(){return Ok(false)}let now=(self.clock)().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native event original clock refused"))?;let deadline=now.checked_add(self.policy.maximum_elapsed_microseconds).map(|deadline|self.script_deadline.map_or(deadline,|script|script.min(deadline))).filter(|deadline|*deadline>now).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"native event original Script deadline exhausted"))?;self.source=Some(NativeFrameCaller::from_original_deadline(semio_framework_trace::allocate_operation_id(),Generation(1),self.clock,self.policy,deadline)?);Ok(true)}
  fn source_mut(&mut self)->Result<&mut NativeFrameCaller,ValueError>{self.source.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native callback has no observed initiating event"))}
  pub fn ready(&self)->bool{self.source.as_ref().is_some_and(NativeFrameCaller::ready)}
  pub fn finishing(&self)->bool{self.finishing}

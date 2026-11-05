@@ -4,6 +4,9 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as pack;
 
+#[path = "📥️staging/🏷️reserved/🦀️.rs"]
+pub mod reserved_preparation;
+
 #[path = "📥️staging/⏯️tool-run/🦀️.rs"]
 pub mod jobs_tool_run;
 #[path = "📥️staging/⏳️operation-progress/🦀️.rs"]

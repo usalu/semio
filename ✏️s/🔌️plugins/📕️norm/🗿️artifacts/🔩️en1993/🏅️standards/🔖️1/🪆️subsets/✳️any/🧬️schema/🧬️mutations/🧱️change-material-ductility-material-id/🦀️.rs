@@ -19,7 +19,7 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMaterialDuctilityM
         verb: "change",
         entity: "material-ductility-material-id",
         kind: "change-material-ductility-material-id",
-        record: "ChangedMaterialDuctilityFatigue materialId",
+        record: "ChangedMaterialDuctilityMaterialId",
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

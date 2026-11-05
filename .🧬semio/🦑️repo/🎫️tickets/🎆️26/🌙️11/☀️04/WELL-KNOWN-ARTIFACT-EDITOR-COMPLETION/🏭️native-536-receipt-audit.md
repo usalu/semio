@@ -1,0 +1,21 @@
+# Native 536-byte Receipt Audit
+
+Read the exact repair-native-composition-authority terminal log. The failed turn reports copied_items=1, copied_bytes=0, retained_capacity_bytes=0 and released_bytes=0 while the heap observer saw 536 allocated and 536 released; failure=None. The old log has no opening turn index, constructor phase or backtrace. It cannot attribute the allocation to one phase. The measurement surrounds caller.turn_with_decoder and the action, so decoder/context setup is included. Current OriginalJobFixtureCaller::turn_original has no explicit successful-path heap allocation; this alone does not identify an allocator caller. Editor agent is adding precise caller/turn trace; no speculative source repair proposed.
+
+Partial-field denial review: OriginalArtifactInstanceAdmission::assembly_demands subtracts INITIALIZATION_CURSOR_BYTES (2*sizeof(usize)+sizeof(u8), 17 on this platform) from available copy body. Paged TimeTravel and other staged owner ports quote at least one body byte when unfinished using body.max(1), then parent adds the cursor quote. Therefore copy grants 0, 16 and 17 cannot fund the 18-byte minimum and cannot invoke initialize_component or advance component_field/component_byte. The actual regression source now tests 0,cursor-1,cursor during the neutral during-large-absent-field boundary and requires empty receipt/no published app. That regression has not yet executed against the new sources. No heavy job or source edit performed.
+
+
+## Current registration and genesis recheck
+
+Read-only inspection found no concrete 536-byte allocation site in registration advance_source, OriginalStoreGenesis.step/initializer_step, or ArtifactStoreReplayInitializer.step. These paths are synchronous; no boxed future is constructed by these entry points. Registration phases quote peer/root/field/record births. Genesis explicitly quotes Pack backing, cursor/header births and boxed releases. Its phase 6 batches up to 512 initializer units, so the debug output limited to the first 512 opening turns does not identify the failing turn.
+
+Replay initializer successful Yield uses JobOutcomeBorrow::admit_yield and into_descriptor. The admission receipt is exactly one item with zero copied/capacity/released bytes, matching the reported receipt shape, but its implementation only constructs scalar stack values and posts retained accounting. JobOutcomeDescriptorSlot::retain writes its original descriptor in place. These entry points contain no direct successful-path heap allocation or error wrapper construction. This receipt shape therefore narrows the failing turn to a semantic outcome-only unit or another item-only unit; it does not attribute the transient allocation.
+
+Replay candidate construction, causal backing, and catalog/runtime births are separate quoted paths. Fault-string conversion occurs only on error/refusal branches, whereas the observed assertion reports failure=None. No speculative source or quote change is justified. Exact phase/turn diagnostics or allocator call attribution remain needed to assign the 536 allocated and released bytes. No build was launched and no production source changed.
+
+
+## Outcome wrapper follow-up
+
+The one-item/zero-byte receipt is not unique to Yield admission: JobOutcomeDescriptor::acknowledge and the subsequent JobOutcomeDescriptorSlot removal emit the same shape. Genesis phase 6 alternates these semantic units. All three operations are scalar/in-place. OriginalStoreGenesis calls the concrete initializer trait method synchronously; no boxed future or boxed closure appears around this call. The generic FnOnce retirement wrapper posts actual progress, checks original source custody, and constructs errors only on refusal. Source validation uses lazy ok_or_else and reads existing roots. No eager allocating ok_or or transient owned error was found in these successful wrapper paths.
+
+Consequently the matched receipt alone cannot distinguish initial outcome admission, ACK, or removal, and does not establish that any is the allocation source. No further concrete candidate was identified; the pending conditional allocator debugger remains the appropriate attribution step. No additional job or instrumentation was launched.

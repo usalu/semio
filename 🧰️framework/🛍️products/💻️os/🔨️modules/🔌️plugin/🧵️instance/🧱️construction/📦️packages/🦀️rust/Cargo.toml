@@ -34,3 +34,5 @@ semio-framework-plugin-window-kits = { path = "../../../../🪟️window-kits/�
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-app = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-plugin-instance-initialization = { path = "../../../🌱️initialization/📦️packages/🦀️rust" }
+semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
+semio-framework-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }

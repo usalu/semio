@@ -1,6 +1,6 @@
 /** 🔶️ The host mode phase of useCheckInAndSync. */
-import { useBeforeUnloadGuardV1 } from "../../🚪️close-guard/🟦️.tsx";
-import { deriveSavedStateV1, isUnsavedV1 } from "../../../🛠️ShellHelpers/💾️saved-state/🟦️.ts";
+import { useShellProgramUnloadGuardV1 } from "../../🚪️program-retirement/🧹️unload/🟦️.tsx";
+import { deriveSavedStateV1 } from "../../../🛠️ShellHelpers/💾️saved-state/🟦️.ts";
 import { createAdmittedShellInstanceV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { isTerminalDocumentCheckInPhaseV1, type DocumentCheckInStatusV1 } from "@semio-tech/framework/document/check-in";
 import { useCallback, useEffect, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
@@ -54,7 +54,7 @@ export function useHostModeState({ core }: { readonly core: ShellCoreAfterDocume
   const currentSyncStatus = currentDocumentRuntimeKey ? (syncStatusByDocumentId[currentDocumentRuntimeKey] ?? null) : null;
   const syncPillState: SyncPillState = useMemo(() => computeSyncPillState(currentSyncStatus), [currentSyncStatus]);
   const currentSavedState = useMemo(() => deriveSavedStateV1(currentSyncStatus), [currentSyncStatus]);
-  useBeforeUnloadGuardV1(useMemo(() => Object.values(syncStatusByDocumentId).some((status) => isUnsavedV1(deriveSavedStateV1(status))), [syncStatusByDocumentId]));
+  useShellProgramUnloadGuardV1({ loaded: loadedPlugins, session, attachments: openDocumentSessionsRef.current, statuses: syncStatusByDocumentId });
 
   /** 📶️ Every attached document's sync status, for the footer's one hub badge — the whole point of
    * that badge is that it is NOT the active document's, so this reads the full map rather than

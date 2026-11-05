@@ -164,6 +164,7 @@ let mut timestamp_arms = Vec::new();
     let mut from_payload_value_arms = Vec::new();
     let mut input_schemas = Vec::new();
     let mut input_schema_documents = Vec::new();
+    let mut compiled_inputs = Vec::new();
     let mut kind_consts = Vec::new();
     let mut leaf_descriptors = Vec::new();
     let mut leaf_checks = Vec::new();
@@ -207,6 +208,7 @@ let mut timestamp_arms = Vec::new();
         from_payload_value_arms.push(quote! { if kind == #kind::SEMANTICS.kind { return #leaf::from_input_value(value).map(Self::#variant_ident); } });
         input_schemas.push(quote! { #leaf::PAYLOAD_SCHEMA });
         input_schema_documents.push(quote! { #leaf::PAYLOAD_SCHEMA_DOCUMENTS });
+        compiled_inputs.push(quote! { #leaf::COMPILED_INPUTS });
         kind_consts.push(quote! { #kind::SEMANTICS });
         leaf_descriptors.push(quote! { #leaf::DESCRIPTOR });
         leaf_checks.push(quote! { const {
@@ -315,6 +317,7 @@ impl #impl_generics ::protocol::Mutation<#snapshot_ty> for #aggregate_ty #where_
             }
             const INPUT_SCHEMAS: &'static [&'static str] = &[#(#input_schemas),*];
             const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = &[#(#input_schema_documents),*];
+            const COMPILED_INPUTS: &'static [Option<::protocol::CompiledMutationInputDefinitions>] = &[#(#compiled_inputs),*];
             fn input_schema(&self) -> ::core::option::Option<&'static str> {
                 match self { #(#input_schema_arms),* }
             }

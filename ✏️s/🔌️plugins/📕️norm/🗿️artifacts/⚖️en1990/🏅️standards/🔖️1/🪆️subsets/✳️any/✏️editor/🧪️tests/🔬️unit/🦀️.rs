@@ -314,3 +314,9 @@ fn the_default_document_publishes_an_accessible_node_for_every_check_handle_and_
     assert_eq!((counts.checks, counts.entities, counts.handles, counts.diagrams), (report.checks.len(), scene.entities.len(), handles.len(), diagrams.len()));
 }
 //#endregion ♿️ScreenReader
+
+#[test]
+fn compiled_input_metadata_matches_all_native_schema_rows() {
+    let findings = semio_s_plugin_norm_app_surface::norm_compiled_input_findings::<En1990PlayApp>();
+    assert!(findings.is_empty(), "{}", findings.join("\n"));
+}

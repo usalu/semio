@@ -1,0 +1,340 @@
+{
+  "version": 1,
+  "demand": {
+    "items": 1,
+    "copy": 1,
+    "capacity": 1,
+    "release": 1,
+    "depth": 1
+  },
+  "cases": [
+    {
+      "id": "empty-none",
+      "entries": 0,
+      "aliases": 0,
+      "denied": "none",
+      "partial": false,
+      "expected": {
+        "rootPresent": false,
+        "retirementPresent": true,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": true,
+        "aliasAllowed": false
+      }
+    },
+    {
+      "id": "empty-items",
+      "entries": 0,
+      "aliases": 0,
+      "denied": "items",
+      "partial": false,
+      "expected": {
+        "rootPresent": true,
+        "retirementPresent": false,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": false,
+        "aliasAllowed": true
+      }
+    },
+    {
+      "id": "empty-copy",
+      "entries": 0,
+      "aliases": 0,
+      "denied": "copy",
+      "partial": false,
+      "expected": {
+        "rootPresent": true,
+        "retirementPresent": false,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": false,
+        "aliasAllowed": true
+      }
+    },
+    {
+      "id": "empty-capacity",
+      "entries": 0,
+      "aliases": 0,
+      "denied": "capacity",
+      "partial": false,
+      "expected": {
+        "rootPresent": true,
+        "retirementPresent": false,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": false,
+        "aliasAllowed": true
+      }
+    },
+    {
+      "id": "empty-release",
+      "entries": 0,
+      "aliases": 0,
+      "denied": "release",
+      "partial": false,
+      "expected": {
+        "rootPresent": true,
+        "retirementPresent": false,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": false,
+        "aliasAllowed": true
+      }
+    },
+    {
+      "id": "empty-depth",
+      "entries": 0,
+      "aliases": 0,
+      "denied": "depth",
+      "partial": false,
+      "expected": {
+        "rootPresent": true,
+        "retirementPresent": false,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": false,
+        "aliasAllowed": true
+      }
+    },
+    {
+      "id": "populated-none",
+      "entries": 2,
+      "aliases": 0,
+      "denied": "none",
+      "partial": false,
+      "expected": {
+        "rootPresent": false,
+        "retirementPresent": true,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": true,
+        "aliasAllowed": false
+      }
+    },
+    {
+      "id": "populated-items",
+      "entries": 2,
+      "aliases": 0,
+      "denied": "items",
+      "partial": false,
+      "expected": {
+        "rootPresent": true,
+        "retirementPresent": false,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": false,
+        "aliasAllowed": true
+      }
+    },
+    {
+      "id": "populated-copy",
+      "entries": 2,
+      "aliases": 0,
+      "denied": "copy",
+      "partial": false,
+      "expected": {
+        "rootPresent": true,
+        "retirementPresent": false,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": false,
+        "aliasAllowed": true
+      }
+    },
+    {
+      "id": "populated-capacity",
+      "entries": 2,
+      "aliases": 0,
+      "denied": "capacity",
+      "partial": false,
+      "expected": {
+        "rootPresent": true,
+        "retirementPresent": false,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": false,
+        "aliasAllowed": true
+      }
+    },
+    {
+      "id": "populated-release",
+      "entries": 2,
+      "aliases": 0,
+      "denied": "release",
+      "partial": false,
+      "expected": {
+        "rootPresent": true,
+        "retirementPresent": false,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": false,
+        "aliasAllowed": true
+      }
+    },
+    {
+      "id": "populated-depth",
+      "entries": 2,
+      "aliases": 0,
+      "denied": "depth",
+      "partial": false,
+      "expected": {
+        "rootPresent": true,
+        "retirementPresent": false,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": false,
+        "aliasAllowed": true
+      }
+    },
+    {
+      "id": "aliased-root",
+      "entries": 1,
+      "aliases": 1,
+      "denied": "none",
+      "partial": false,
+      "expected": {
+        "rootPresent": false,
+        "retirementPresent": true,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": true,
+        "aliasAllowed": false
+      }
+    },
+    {
+      "id": "cancelled-partial",
+      "entries": 0,
+      "aliases": 0,
+      "denied": "none",
+      "partial": true,
+      "expected": {
+        "rootPresent": false,
+        "retirementPresent": false,
+        "allocated": 0,
+        "released": 0,
+        "staticBorrow": true,
+        "aliasAllowed": false
+      }
+    }
+  ],
+  "retirement": {
+    "rootBytes": 536,
+    "frameBytes": 32,
+    "stages": [
+      "retained",
+      "frame-funded",
+      "root-released",
+      "complete"
+    ],
+    "expected": {
+      "allocated": 32,
+      "released": 568
+    }
+  },
+  "metadataTransitions": [
+    {
+      "id": "owned-empty-clear-denied",
+      "kind": "owned-empty-clear",
+      "copyAdmitted": false,
+      "initial": {
+        "owned": true,
+        "cursor": 0,
+        "entry": false
+      },
+      "expected": {
+        "owned": true,
+        "cursor": 0,
+        "entry": false,
+        "progress": false,
+        "copiedMetadata": false
+      }
+    },
+    {
+      "id": "owned-empty-clear-paid",
+      "kind": "owned-empty-clear",
+      "copyAdmitted": true,
+      "initial": {
+        "owned": true,
+        "cursor": 0,
+        "entry": false
+      },
+      "expected": {
+        "owned": false,
+        "cursor": 0,
+        "entry": false,
+        "progress": true,
+        "copiedMetadata": true
+      }
+    },
+    {
+      "id": "sparse-cursor-advance-denied",
+      "kind": "sparse-cursor-advance",
+      "copyAdmitted": false,
+      "initial": {
+        "owned": true,
+        "cursor": 0,
+        "entry": false
+      },
+      "expected": {
+        "owned": true,
+        "cursor": 0,
+        "entry": false,
+        "progress": false,
+        "copiedMetadata": false
+      }
+    },
+    {
+      "id": "sparse-cursor-advance-paid",
+      "kind": "sparse-cursor-advance",
+      "copyAdmitted": true,
+      "initial": {
+        "owned": true,
+        "cursor": 0,
+        "entry": false
+      },
+      "expected": {
+        "owned": true,
+        "cursor": 1,
+        "entry": false,
+        "progress": true,
+        "copiedMetadata": true
+      }
+    },
+    {
+      "id": "terminal-entry-remove-denied",
+      "kind": "terminal-entry-remove",
+      "copyAdmitted": false,
+      "initial": {
+        "owned": true,
+        "cursor": 0,
+        "entry": true
+      },
+      "expected": {
+        "owned": true,
+        "cursor": 0,
+        "entry": true,
+        "progress": false,
+        "copiedMetadata": false
+      }
+    },
+    {
+      "id": "terminal-entry-remove-paid",
+      "kind": "terminal-entry-remove",
+      "copyAdmitted": true,
+      "initial": {
+        "owned": true,
+        "cursor": 0,
+        "entry": true
+      },
+      "expected": {
+        "owned": true,
+        "cursor": 0,
+        "entry": false,
+        "progress": true,
+        "copiedMetadata": true
+      }
+    }
+  ]
+}

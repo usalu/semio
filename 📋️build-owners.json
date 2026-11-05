@@ -5774,6 +5774,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/plugin-native-identity-tests-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🧪️tests/🪟️native-window/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🧪️tests/🪟️native-window/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/plugin-operation-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️cancellation/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️cancellation/📦️packages/🦀️rust/📋️project.json",

@@ -56,53 +56,30 @@ pub const SEMIO_BREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";
 /// by-INDEX addressing; `move-vertex` addresses by persistent-label id instead, which the
 /// selection channel already resolves). The action carries an explicit stable vertex id and target
 /// point, so keyboard and automation callers use the same validated address.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct SemioBrepSetVertexArgs {
     pub vertex_id: String,
     pub point: [f64; 3],
 }
 
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum SemioBrepEditCommand {
+    SetActiveExample { example_id: String },
     SetVertex(SemioBrepSetVertexArgs),
 }
 
 impl protocol::OpBinary for SemioBrepEditCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let SemioBrepEditCommand::SetVertex(args) = self;
-        let id = args.vertex_id.as_bytes();
-        let length = u32::try_from(id.len()).map_err(|_| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "vertexId is too long".into() })?;
-        let mut out = Vec::with_capacity(4 + id.len() + 24);
-        out.extend_from_slice(&length.to_le_bytes());
-        out.extend_from_slice(id);
-        for component in args.point {
-            out.extend_from_slice(&component.to_le_bytes());
-        }
-        Ok(out)
-    }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(semio_framework_pack_json::to_json_string(self).into_bytes()) }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        if bytes.len() < 28 {
-            return Err(protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "missing vertexId or point".into() });
-        }
-        let length = u32::from_le_bytes(bytes[..4].try_into().expect("four-byte slice")) as usize;
-        let Some(payload_length) = bytes.len().checked_sub(28) else {
-            return Err(protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "invalid vertexId length".into() });
-        };
-        if length == 0 || length != payload_length {
-            return Err(protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "invalid vertexId length".into() });
-        }
-        let id_end = bytes.len() - 24;
-        let vertex_id = std::str::from_utf8(&bytes[4..id_end]).map_err(|error| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 4, detail: error.to_string() })?.to_owned();
-        let point_bytes = &bytes[id_end..];
-        let read = |i: usize| f64::from_le_bytes(point_bytes[i * 8..i * 8 + 8].try_into().expect("eight-byte slice"));
-        let point = [read(0), read(1), read(2)];
-        if point.iter().any(|value| !value.is_finite()) {
-            return Err(protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 4 + length as u64, detail: "point must contain finite numbers".into() });
-        }
-        Ok(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { vertex_id, point }))
+        let value=semio_framework_pack_json::parse_bytes(bytes,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|protocol::ProtocolError::Malformed{what:"SemioBrepEditCommand",offset:0,detail:error.to_string()})?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&value)).map_err(|error|protocol::ProtocolError::Malformed{what:"SemioBrepEditCommand",offset:0,detail:error.to_string()})
     }
 }
-semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(SemioBrepEditCommand, ["set-vertex"]);
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(SemioBrepEditCommand, ["set-vertex", "setActiveExample"]);
+
+fn semio_brep_editor_example_snapshot(example_id:&str)->Result<SemioBrepSnapshot,Fault>{
+    semio_s_artifact_stdio_contract::parse_example_snapshot(example_id,semio_s_artifact_stdio_semio_brep_examples::examples::solid::ID,semio_s_artifact_stdio_semio_brep_examples::examples::solid::PRIMARY_TEXT,SEMIO_BREP_DOCUMENT_SCHEMA,|snapshot:&SemioBrepSnapshot|snapshot.schema.as_str())
+}
 
 pub fn set_vertex_action() -> ActionDefinition {
     let mut action = ActionDefinition::bounded_catalog("set-vertex", LocalizedLabel::native("Move Vertex", "Vertex verschieben"), ActionKind::Mutation)
@@ -198,7 +175,8 @@ impl ArtifactCommandWork<EditorApp<SemioBrepEditor>> for SemioBrepSetVertexWork 
     }
 }
 
-fn semio_brep_set_vertex_work(_tool_id: &'static str) -> Box<dyn ArtifactCommandWork<EditorApp<SemioBrepEditor>>> {
+fn semio_brep_set_vertex_work(tool_id: &'static str) -> Box<dyn ArtifactCommandWork<EditorApp<SemioBrepEditor>>> {
+    if tool_id==semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID{return editing::bounded_native_edit_work::<SemioBrepEditor>(tool_id)}
     Box::new(SemioBrepSetVertexWork::default())
 }
 //#endregion 🔖️Mutation
@@ -210,6 +188,8 @@ pub use semio_s_artifact_stdio_semio_brep_viewer::editor::edit_rules;
 pub struct SemioBrepEditor;
 
 impl ArtifactEditor for SemioBrepEditor {
+    fn examples()->Vec<semio_framework_plugin::ExampleSource>{vec![semio_s_artifact_stdio_semio_brep_examples::examples::solid::source()]}
+
     type Snapshot = SemioBrepSnapshot;
     type Mutation = SemioBrepMutation;
     type Config = NoConfig;
@@ -236,7 +216,7 @@ impl ArtifactEditor for SemioBrepEditor {
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
-        editing::snapshot_editing_command_id(command, |_| "set-vertex")
+        editing::snapshot_editing_command_id(command, |command|match command{SemioBrepEditCommand::SetVertex(_)=>"set-vertex",SemioBrepEditCommand::SetActiveExample{..}=>semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID})
     }
 
     fn reference_birth()->Option<fn()->Result<SemioBrepSnapshot,semio_framework_plugin::Fault>>{Some(||{
@@ -252,6 +232,7 @@ impl ArtifactEditor for SemioBrepEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        if let editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetActiveExample{example_id})=command{return Ok(Emit{effects:vec![semio_s_artifact_stdio_contract::load_example_effect(&semio_brep_editor_example_snapshot(example_id)?,SEMIO_BREP_DOCUMENT_SCHEMA)],..Default::default()})}
         let editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetVertex(args)) = command else {
             let editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
@@ -275,6 +256,7 @@ impl ArtifactEditor for SemioBrepEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref();
         editing::snapshot_editing_command_from_action(action, args, |action, args| {
+            if action==semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID{return Ok(SemioBrepEditCommand::SetActiveExample{example_id:semio_s_artifact_stdio_contract::example_id_argument(args,"")})}
             if action != "set-vertex" {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioBrepEditor")));
             }
@@ -306,8 +288,10 @@ impl editing::SnapshotEditingEditor for SemioBrepEditor {
 semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
     editor: SemioBrepEditor,
     tools: ["set-vertex"],
-    payload_schema: "semio.stdio.semio-brep-set-vertex-command.v1",
+    payload_schema: "stdio.semio.brep.tool-command.v1",
     reduce: |command, snapshot| {
+        if let editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetActiveExample{example_id})=command{return Ok(Emit{effects:vec![semio_s_artifact_stdio_contract::load_example_effect(&semio_brep_editor_example_snapshot(example_id)?,SEMIO_BREP_DOCUMENT_SCHEMA)],..Default::default()})}
+
         let editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetVertex(args)) = command else {
             return Err(Fault::from("stdio.semio.brep.set-vertex.command-mismatch"));
         };
@@ -316,6 +300,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
             None => Emit::default(),
         })
     },
+    host_tools: ["setActiveExample"],
     work: semio_brep_set_vertex_work,
     preparation_route: preparation::route,
 }
@@ -332,7 +317,12 @@ pub fn create_semio_brep_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(main::definition())
         .window_kind_def(editing::snapshot_details_window_definition())
         .default_layout(edit::layout())
-        .action_with(set_vertex_action());
+        .action_with(set_vertex_action())
+        .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_semio_brep_examples::examples::solid::ID,semio_s_artifact_stdio_semio_brep_examples::examples::solid::label())],semio_s_artifact_stdio_semio_brep_examples::examples::solid::ID))
+        .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
+        .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,semio_s_artifact_stdio_contract::set_active_example_description())
+        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,semio_framework_plugin::InteractiveJobClassification::Migrated);
     editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
@@ -342,3 +332,17 @@ pub fn create_semio_brep_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[test]
+fn typed_example_selection_refuses_unknown_and_malformed_sources(){
+    for id in ["","unknown-example","demo"]{assert!(semio_brep_editor_example_snapshot(id).is_err());}
+    for source in ["","not a semio document"]{assert!(semio_s_artifact_stdio_contract::parse_example_snapshot::<SemioBrepSnapshot>(semio_s_artifact_stdio_semio_brep_examples::examples::solid::ID,semio_s_artifact_stdio_semio_brep_examples::examples::solid::ID,source,SEMIO_BREP_DOCUMENT_SCHEMA,|snapshot|snapshot.schema.as_str()).is_err());}
+}
+
+#[cfg(test)]
+#[test]
+fn example_picker_declares_only_the_host_load_lane(){
+    let contract=<SemioBrepEditor as editing::BoundedNativeEditingEditor>::NATIVE_PUBLICATION_CONTRACTS.iter().find(|contract|contract.tool_id==semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID).unwrap();
+    assert_eq!(contract.lanes,&[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly]);
+}

@@ -187,12 +187,12 @@ impl ArtifactEditor for ObjAnyEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        Ok(crate::engine::encode_obj(snapshot).into_bytes())
+        Ok(semio_s_artifact_stdio_obj_inferences::natural_file::encode_obj(snapshot).into_bytes())
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
         let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
-        crate::engine::decode_obj(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+        semio_s_artifact_stdio_obj_inferences::natural_file::decode_obj(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
     fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {

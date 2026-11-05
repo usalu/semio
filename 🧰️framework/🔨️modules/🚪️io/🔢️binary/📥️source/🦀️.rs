@@ -17,7 +17,7 @@ fn mime(v:&str)->bool{v.split_once('/').is_some_and(|(a,b)|!a.is_empty()&&!b.is_
 #[derive(semio_framework_value::RetireOwned)]
 pub struct BinarySourceJob{
  source_identity:usize,source_length:usize,mime:[u8;128],mime_length:usize,min_bytes:usize,max_bytes:usize,max_work:u64,phase:&'static str,at:usize,body_start:usize,read:usize,source_total:usize,base64:bool,url:bool,
- work:u64,bytes:usize,total_bytes:usize,quad:[u8;4],quad_at:usize,binary:Vec<u8>,output:Vec<u8>,cancelled:bool,failed:Option<BinarySourceError>,
+ work:u64,bytes:usize,total_bytes:usize,quad:[u8;4],quad_at:usize,binary:Vec<u8>,output:Vec<u8>,cancelled:bool,failed:Option<BinarySourceError>,last_progress:RetainedCloneProgress,last_work:u64,
 }
 semio_framework_value::artifact_retire_leaf!(BinarySourceProgress);
 impl BinarySourceJob{
@@ -25,7 +25,7 @@ impl BinarySourceJob{
   if !(1..=268439552).contains(&input.max_source_bytes)||input.data.len()>input.max_source_bytes||input.mime.len()>128||!mime(&input.mime)||!(1..=67108864).contains(&input.max_bytes)||input.min_bytes>input.max_bytes||!(1..=1000000000).contains(&input.max_work){return Err(invalid("Invalid binary source contract"));}
   let source_length=input.data.len();let url=input.data.as_bytes().get(..5).is_some_and(|v|v.eq_ignore_ascii_case(b"data:"));let at=if url{5}else{0};
   let mut mime=[0;128];mime[..input.mime.len()].copy_from_slice(input.mime.as_bytes());
-  Ok(Self{source_identity:input.data.as_ptr()as usize,source_length,mime,mime_length:input.mime.len(),min_bytes:input.min_bytes,max_bytes:input.max_bytes,max_work:input.max_work,phase:if url{"header"}else{"validate"},at,body_start:0,read:at,source_total:source_length*2,base64:true,url,work:0,bytes:0,total_bytes:0,quad:[0;4],quad_at:0,binary:Vec::new(),output:Vec::new(),cancelled:false,failed:None})
+  Ok(Self{source_identity:input.data.as_ptr()as usize,source_length,mime,mime_length:input.mime.len(),min_bytes:input.min_bytes,max_bytes:input.max_bytes,max_work:input.max_work,phase:if url{"header"}else{"validate"},at,body_start:0,read:at,source_total:source_length*2,base64:true,url,work:0,bytes:0,total_bytes:0,quad:[0;4],quad_at:0,binary:Vec::new(),output:Vec::new(),cancelled:false,failed:None,last_progress:Default::default(),last_work:0})
  }
  fn check(&self)->Result<(),BinarySourceError>{if self.cancelled{return Err(BinarySourceError::Cancelled);}if self.phase=="transferred"{return Err(BinarySourceError::Incomplete);}if let Some(e)=&self.failed{return Err(e.clone());}Ok(())}
  fn header_step(&mut self,text:&str)->Result<(),BinarySourceError>{
@@ -71,11 +71,13 @@ impl BinarySourceJob{
  pub fn progress(&self)->BinarySourceProgress{BinarySourceProgress{phase:self.phase,source_completed:self.read,source_total:self.source_total,bytes:self.bytes,total_bytes:self.total_bytes,work:self.work,done:self.phase=="complete"}}
  pub fn next_copy_byte_demand(&self)->usize{if matches!(self.phase,"complete"|"transferred"){0}else{32}}
  pub fn next_capacity_byte_demand(&self)->usize{if self.phase=="validate"&&self.at==self.source_length&&self.quad_at==0{self.total_bytes}else{0}}
+ pub fn last_turn_progress(&self)->RetainedCloneProgress{self.last_progress}
+ pub fn last_turn_work(&self)->u64{self.last_work}
  pub fn advance(&mut self,source:&str,grant:RetainedCloneGrant)->Result<(BinarySourceProgress,RetainedCloneProgress),BinarySourceError>{
-  self.check()?;if source.len()!=self.source_length||source.as_ptr()as usize!=self.source_identity{return Err(invalid("Original binary source changed"));}
+  self.last_progress=Default::default();self.last_work=0;self.check()?;if source.len()!=self.source_length||source.as_ptr()as usize!=self.source_identity{return Err(invalid("Original binary source changed"));}
   let mut receipt=RetainedCloneProgress::default();
   for _ in 0..grant.maximum_items{if self.phase=="complete"{break;}let copy=self.next_copy_byte_demand();let capacity=self.next_capacity_byte_demand();if grant.maximum_depth<1||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}
-   let result=if self.work>=self.max_work{Err(invalid("Binary source work limit exceeded"))}else if self.phase=="header"{self.header_step(source)}else{self.source_step(source)};if let Err(e)=result{self.failed=Some(e.clone());return Err(e);}self.work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=capacity;
+   let before=self.binary.capacity()+self.output.capacity();let result=if self.work>=self.max_work{Err(invalid("Binary source work limit exceeded"))}else if self.phase=="header"{self.header_step(source)}else{self.source_step(source)};let allocated=(self.binary.capacity()+self.output.capacity()).saturating_sub(before);self.last_work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=allocated;self.last_progress=receipt;if let Err(e)=result{self.failed=Some(e.clone());return Err(e);}self.work+=1;
   }
   Ok((self.progress(),receipt))
  }

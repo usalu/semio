@@ -1,0 +1,10 @@
+{
+  "schema": "semio.framework.plugin.original-document-identity/v1",
+  "controllerId": "test.window.genesis@1/*#native-run",
+  "expected": {
+    "distinct": true,
+    "sameController": true,
+    "firstLength": 36,
+    "secondLength": 36
+  }
+}

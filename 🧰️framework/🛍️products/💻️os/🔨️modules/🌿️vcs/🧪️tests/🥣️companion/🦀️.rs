@@ -3,7 +3,7 @@
 //! 🧭️ The test sources stay beside their owners and are mounted here with `#[path]` below wrappers that restate the imports of the owning module; every fixture is read at run time from the vcs folder.
 #![cfg(test)]
 
-pub use protocol::{ColdMutation, Edit, Mutation, MutationApplyError, MutationDiff};
+pub use protocol::{ColdMutation, Edit, Mutation, MutationApplyError, MutationDiff, CompiledMutationInputDefinitions, CompiledMutationInputError};
 pub use semio_framework_os_vcs::*;
 pub use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 pub(crate) use semio_framework_trace_memory_testing as test_allocation;

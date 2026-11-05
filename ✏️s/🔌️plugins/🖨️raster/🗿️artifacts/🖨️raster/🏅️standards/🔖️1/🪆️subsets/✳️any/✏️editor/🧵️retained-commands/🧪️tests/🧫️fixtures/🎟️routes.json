@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"tool":"flattenLayers","accepted":true},{"tool":"mergeDown","accepted":true},{"tool":"paintStroke","accepted":true},{"tool":"setBrushSize","accepted":true},{"tool":"exportPng","accepted":false},{"tool":"selectPixels","accepted":false},{"tool":"maskFromSelection","accepted":false},{"tool":"missingRasterTool","accepted":false}]}

@@ -48,8 +48,8 @@ pub fn jack_retained_window_config_reduce<C:crate::standards::v1::subsets::any::
     _operation: &AppOperationContext,
 ) -> Result<Emit<TrinityGraphMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        TrinityJackCommand::SetViewport { viewport, .. } => commands::set_viewport::set_viewport(viewport, context.and_then(|context| context.view_state.as_ref())),
-        TrinityJackCommand::SetLodMode { value } => commands::set_lod_mode::set_lod_mode(value, context.and_then(|context| context.view_state.as_ref())),
+        TrinityJackCommand::SetViewport { viewport, .. } => commands::set_viewport::set_viewport(viewport, context.and_then(|context| context.view_state.as_deref())),
+        TrinityJackCommand::SetLodMode { value } => commands::set_lod_mode::set_lod_mode(value, context.and_then(|context| context.view_state.as_deref())),
         _ => Err(Fault::from("jack-retained-config-route-mismatch")),
     }
 }
@@ -137,7 +137,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     }
 
     fn extent(&self, command: &TrinityJackCommand, _snapshot: &JackSnapshot, _interaction: &protocol::InteractionState, context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>) -> Option<usize> {
-        matches!(command, TrinityJackCommand::TextSelect { .. }).then_some(()).and(context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.window_id.as_ref()).filter(|window_id| !window_id.is_empty()).map(|_| ())).map(|_| 1)
+        matches!(command, TrinityJackCommand::TextSelect { .. }).then_some(()).and(context.and_then(|context| context.view_state.as_deref()).and_then(|view| view.window_id.as_ref()).filter(|window_id| !window_id.is_empty()).map(|_| ())).map(|_| 1)
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<TrinityJackPlayApp<C>>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<TrinityJackPlayApp<C>>>, semio_framework_job::OriginalTurnFailure> {
@@ -150,7 +150,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
             return Err(Fault::from("jack-retained-transient-route-mismatch"));
         };
         let window_id =
-            input.context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.window_id.as_ref()).filter(|window_id| !window_id.is_empty()).cloned().ok_or_else(|| Fault::from("jack-text-selection-requires-concrete-window"))?;
+            input.context.and_then(|context| context.view_state.as_deref()).and_then(|view| view.window_id.as_ref()).filter(|window_id| !window_id.is_empty()).cloned().ok_or_else(|| Fault::from("jack-text-selection-requires-concrete-window"))?;
         let mutation = semio_framework_plugin::WindowTransientMutation::of::<JackEditorWindowTransientOwner>(
             window_id,
             crate::editor::jack::transient::SetEditorSelection { selection: Some(crate::editor::jack::transient::JackEditorSelection { start: *start, end: *end }) }.into(),

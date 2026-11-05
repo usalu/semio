@@ -569,6 +569,7 @@ impl DemoMemberWirePreparationFactory {
 }
 
 pub struct DemoMemberWirePreparation {
+    pub last_work:u64,
     pub request: Option<ArtifactStoreOneItemPreparationRequest<DemoSnapshot, MemberStoreOneItemWire, DemoMutation>>,
     pub typed_request: Option<ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation, DemoMutation>>,
     pub wire: Option<MemberStoreOneItemWire>,
@@ -602,7 +603,7 @@ impl MemberStoreOneItemWirePreparationFactory<DemoSnapshot, DemoMutation> for De
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, MemberStoreOneItemWire, DemoMutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, MemberStoreOneItemWire, DemoMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
-        Ok((Box::new(DemoMemberWirePreparation { request: Some(request), typed_request: None, wire: None, inner: None, typed: Some(Arc::clone(&self.typed)), base: None, authority: None, active: None, factory: None, offset: 0, magnitude: 0, negative: false, state: 0, closing: false }), progress))
+        Ok((Box::new(DemoMemberWirePreparation { last_work:0,request: Some(request), typed_request: None, wire: None, inner: None, typed: Some(Arc::clone(&self.typed)), base: None, authority: None, active: None, factory: None, offset: 0, magnitude: 0, negative: false, state: 0, closing: false }), progress))
     }
 }
 
@@ -684,10 +685,12 @@ impl DemoMemberWirePreparation {
 
 impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberWirePreparation {
     fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
-        if !grant.permits_one() || self.closing { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
+        self.last_work=0;let before=receiving.actual_work();let result=(||{
+        if !grant.permits_one() || self.closing || grant.maximum_depth==0 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
         if let Some(inner) = self.inner.as_mut() {
             if grant.maximum_depth < 2 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
-            return match inner.advance(body,ArtifactStoreOneItemGrant { maximum_depth: grant.maximum_depth - 1, ..grant },receiving)? {
+            let result=inner.advance(body,ArtifactStoreOneItemGrant { maximum_depth: grant.maximum_depth - 1, ..grant },receiving);self.last_work=inner.last_turn_work();
+            return match result? {
                 ArtifactStoreOneItemPreparationStep::Prepared(_, progress) => Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint(), progress)),
                 ArtifactStoreOneItemPreparationStep::Progress(_, progress) => Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint(), progress)),
                 ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemPreparationStep::Blocked),
@@ -695,7 +698,9 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberW
         }
         if self.typed_request.is_some() {
             if grant.maximum_depth <= 1 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
-            return match self.begin_typed(ArtifactStoreOneItemGrant { maximum_depth: grant.maximum_depth - 1, ..grant }) {
+            let child=ArtifactStoreOneItemGrant{maximum_depth:grant.maximum_depth-1,..grant};let original=self.typed_request.as_ref().unwrap();let factory=self.typed.as_ref().unwrap();let birth=factory.begin_demand(&original.mutation,original.lane)?;let copy=factory.begin_copy_byte_demand(&original.mutation,original.lane)?;if child.maximum_capacity_bytes<birth.capacity_bytes||child.maximum_depth<birth.depth||child.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+            if !receiving.prepare_work(1)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}self.last_work=1;
+            return match self.begin_typed(child) {
                 Ok(progress) if progress.fits(grant.retained_grant()) => Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint(), progress)),
                 Ok(progress) => { self.closing = true; Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "typed wire ingress exceeded supplied grant").with_retained_progress(progress)) },
                 Err(error) => { self.closing = true; Err(error) },
@@ -703,6 +708,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberW
         }
         if self.request.as_ref().is_some_and(|request| self.offset < request.mutation.bytes.len()) {
             if grant.maximum_copy_bytes == 0 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
+            if !receiving.prepare_work(1)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}self.last_work=1;
             let byte = self.request.as_ref().expect("wire retains original input").mutation.bytes[self.offset];
             let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 1, ..Default::default() };
             if let Err(error) = self.parse_byte(byte) { self.closing = true; return Err(error.with_retained_progress(progress)); }
@@ -712,12 +718,17 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberW
         if !matches!(self.state, 2..=4) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "member wire ended without an integer")); }
         let copied = std::mem::size_of::<ArtifactStoreOneItemPreparationRequest<DemoSnapshot, MemberStoreOneItemWire, DemoMutation>>();
         if grant.maximum_copy_bytes < copied { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
+        if !receiving.prepare_work(1)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}self.last_work=1;
         let request = self.request.take().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "member wire lost its request"))?;
         let n = if self.negative { -(i64::from(self.magnitude)) as i32 } else { self.magnitude as i32 };
         self.wire = Some(request.mutation);
         self.typed_request = Some(ArtifactStoreOneItemPreparationRequest { operation: request.operation, generation: request.generation, base_revision: request.base_revision, lane: request.lane, authority: request.authority, base: request.base, mutation: DemoMutation::SetN(SetN { n }), mutation_retirement:request.mutation_retirement,snapshot_retirement:request.snapshot_retirement });
         Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint(), RetainedCloneProgress { copied_items: 1, copied_bytes: copied, ..Default::default() }))
+    
+        })();let observed=receiving.actual_work().saturating_sub(before);let reported=self.last_work;self.last_work=reported.max(observed);let work=original_one_item_turn_work(reported,observed,false)?;if work>observed{receiving.commit_work(work-observed)?;}self.last_work=work;result
     }
+
+    fn last_turn_work(&self)->u64{self.last_work}
 
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint {
         let inner = self.inner.as_ref().map_or_else(ArtifactStoreOneItemCheckpoint::default, |inner| inner.checkpoint());

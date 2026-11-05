@@ -72,10 +72,10 @@ pub mod editor {
                 pub use component::*;
                 #[path = "."]
                 pub mod windows {
-                    pub use semio_s_artifact_stdio_las_snapshot::editor::las::modes::edit::windows::*;
+                    pub use semio_s_artifact_stdio_las_schema::editor::las::modes::edit::windows::*;
                     #[path = "."]
                     pub mod main {
-                        pub use semio_s_artifact_stdio_las_snapshot::editor::las::modes::edit::windows::main::*;
+                        pub use semio_s_artifact_stdio_las_schema::editor::las::modes::edit::windows::main::*;
                         #[cfg(test)]
                         #[path = "../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
                         mod tests;

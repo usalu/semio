@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.cold-projection-metadata.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "cloned",
+          "items",
+          "copyBytes",
+          "depth",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cloned": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "copyBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "items",
+              "copyBytes",
+              "work",
+              "terminal"
+            ],
+            "properties": {
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "copyBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "work": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "terminal": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

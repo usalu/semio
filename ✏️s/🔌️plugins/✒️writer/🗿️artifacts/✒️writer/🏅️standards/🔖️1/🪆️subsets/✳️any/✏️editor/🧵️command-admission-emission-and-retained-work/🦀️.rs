@@ -346,7 +346,7 @@ impl ArtifactCommandWork<EditorApp<WriterPlayApp>> for WriterRetainedCommandWork
         if !writer_command_admitted(input.command, input.snapshot, window_transient) {
             return Err(Fault::from("writer-command-admission"));
         }
-        let view_state = input.context.and_then(|context| context.view_state.as_ref());
+        let view_state = input.context.and_then(|context| context.view_state.as_deref());
         let window_config = input.context.and_then(|context| context.window_config.as_ref()).and_then(|snapshot| snapshot.get::<WriterMainWindowConfigOwner>());
         let (emit, ephemeral) = writer_command_emit(input.command, input.snapshot, view_state, window_config, window_transient).map_err(Fault::from)?;
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })

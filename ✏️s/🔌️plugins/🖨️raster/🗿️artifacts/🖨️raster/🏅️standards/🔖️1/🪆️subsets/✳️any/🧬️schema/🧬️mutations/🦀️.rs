@@ -9,6 +9,8 @@ extern crate semio_framework_schema as schema;
 
 use semio_s_artifact_raster_raster_diff::RasterDiff;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+#[path="🎯️targets/🦀️.rs"]
+mod original_targets;
 
 //#region 🔖️Leaves
 use semio_s_artifact_raster_raster_mutations_pixels::add_layer_asset;

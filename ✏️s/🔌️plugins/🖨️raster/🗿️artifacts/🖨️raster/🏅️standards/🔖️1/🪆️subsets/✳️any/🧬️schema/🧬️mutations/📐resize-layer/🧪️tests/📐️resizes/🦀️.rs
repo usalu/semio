@@ -41,21 +41,29 @@ async fn applies_to_committed_after() {
     assert_eq!((transform.a, transform.d), (1.0, 1.0), "resize-layer/resizes-the-canvas-layer-to-256-by-128: resizing the PIXEL EXTENT must not touch the transform's scale");
 }
 
-/// ↩️ `resize-layer` is its own inverse partner: the undo step carries the base's prior extent,
-/// defaulting to 512 exactly the way `apply_layer_patch` does when the field was unset.
+/// ↩️ The point inverse restores original pixel content, including genuinely absent dimensions.
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let inverse = inverse_raster_mutation(&base, &forward).expect("valid retained mutation inverse fixture");
-    let [RasterMutation::ResizeLayer(restore)] = inverse.as_slice() else { panic!("resize-layer/resizes-the-canvas-layer-to-256-by-128: the inverse must be exactly one resize-layer step, got {inverse:?}") };
+    let [RasterMutation::ChangeLayerPixels(restore)] = inverse.as_slice() else { panic!("resize-layer/resizes-the-canvas-layer-to-256-by-128: the inverse must be exactly one pixel-content step, got {inverse:?}") };
     assert_eq!(restore.layer_id, "canvas", "resize-layer/resizes-the-canvas-layer-to-256-by-128: the inverse must re-address the same layer");
-    assert_eq!((restore.new_width, restore.new_height), (512, 512), "resize-layer/resizes-the-canvas-layer-to-256-by-128: the inverse must carry the base's own prior extent");
+    assert_eq!((restore.content.width, restore.content.height), (Some(512), Some(512)), "resize-layer/resizes-the-canvas-layer-to-256-by-128: the inverse must carry the base's own prior extent");
     let mut snapshot = apply_raster_mutation(&base, &forward).expect("forward applies");
     for step in &inverse {
         snapshot = apply_raster_mutation(&snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "resize-layer/resizes-the-canvas-layer-to-256-by-128: inverse did not restore the before-snapshot");
+}
+
+#[test]
+fn inverse_preserves_absent_intrinsic_dimensions(){
+ let fixture=semio_framework_pack_json::parse(include_str!("optional.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let original=fixture.get("before").unwrap();
+ let mut base=before();let layer=semio_s_artifact_raster_raster_model::find_layer_mut(&mut base.layers,"canvas").unwrap();let RasterLayerNode::Pixel{width,height,..}=layer else{unreachable!()};*width=original.get("width").and_then(semio_framework_pack_json::Value::as_u64).map(|n|n as u32);*height=original.get("height").and_then(semio_framework_pack_json::Value::as_u64).map(|n|n as u32);
+ let forward=mutation();let inverse=inverse_raster_mutation(&base,&forward).unwrap();let[RasterMutation::ChangeLayerPixels(restore)]=inverse.as_slice()else{panic!("optional intrinsic dimensions require the pixel-content inverse")};assert_eq!(restore.content.width,None);assert_eq!(restore.content.height,None);
+ let mut restored=apply_raster_mutation(&base,&forward).unwrap();for step in &inverse{let next=apply_raster_mutation(&restored,step).unwrap();semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(restored);restored=next;}assert_eq!(restored,base);
+ semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(restored);semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(base);for operation in inverse{semio_s_artifact_raster_raster_mutations::retire_raster_mutation(operation);}
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point, and so

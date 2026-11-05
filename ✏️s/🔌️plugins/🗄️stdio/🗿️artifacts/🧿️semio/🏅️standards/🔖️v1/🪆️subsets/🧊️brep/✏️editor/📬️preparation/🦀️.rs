@@ -20,6 +20,7 @@ pub(super) fn route(_prefix: &'static str) -> Option<NativeEditPreparationRoute<
 
 #[derive(Default)]
 pub(super) struct BrepVertexEdit {
+    last_work: u64,
     closing: bool,
     vertex_index: usize,
     matches: usize,
@@ -36,6 +37,7 @@ impl BrepVertexEdit {
     fn scan(&mut self, post: &SemioBrepSnapshot, target: &MoveVertex, grant: RetainedCloneGrant) -> Result<PagedOneItemEditStep<SemioBrepMutation>, ValueError> {
         let unit = |bytes: usize| RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() };
         let Some(vertex) = post.vertices.get(self.vertex_index) else {
+            self.last_work+=1;
             if self.matches != 1 {
                 return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("{PREFIX}-target-count-{}", self.matches)));
             }
@@ -46,6 +48,7 @@ impl BrepVertexEdit {
         if grant.maximum_copy_bytes < bytes {
             return Ok(PagedOneItemEditStep::Progress(RetainedCloneProgress::default()));
         }
+        self.last_work+=1;
         if vertex.id == target.vertex_id {
             self.matches += 1;
             self.located = Some(self.vertex_index);
@@ -60,6 +63,7 @@ impl BrepVertexEdit {
         if grant.maximum_copy_bytes < copied || grant.maximum_capacity_bytes < retained {
             return Ok(PagedOneItemEditStep::Progress(RetainedCloneProgress::default()));
         }
+        self.last_work+=1;
         let index = self.located.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "stdio-semio-brep-set-vertex-located"))?;
         let vertex = post.vertices.get_mut(index).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "stdio-semio-brep-set-vertex-vertex-index"))?;
         let old_point = std::mem::replace(&mut vertex.point, target.new_point);
@@ -88,12 +92,21 @@ impl PagedOneItemEdit<SemioBrepSnapshot, SemioBrepMutation> for BrepVertexEdit {
         Ok(RetirementDemand::default())
     }
 
-    fn advance(&mut self, _before: RetainedCloneRef<'_, SemioBrepSnapshot>, mutation: RetainedCloneRef<'_, SemioBrepMutation>, post: PagedOneItemPost<'_, SemioBrepSnapshot>, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<SemioBrepMutation>, ValueError> {
+    fn advance(&mut self, _before: RetainedCloneRef<'_, SemioBrepSnapshot>, mutation: RetainedCloneRef<'_, SemioBrepMutation>, post: PagedOneItemPost<'_, SemioBrepSnapshot>, _body: usize, grant: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<SemioBrepMutation>, ValueError> {
+        self.last_work=0;
+        if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
+        if !receiving.prepare_work(1)?{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
+        let result=(||{
         let mutation = mutation.get();
         let target = Self::target(mutation)?;
         let post = post.mutable()?;
         if self.scanned { self.apply(post, target, grant) } else { self.scan(post, target, grant) }
+        })();
+        receiving.commit_work(self.last_work)?;
+        result
     }
+
+    fn last_turn_work(&self)->u64{self.last_work}
 
     fn begin_close(&mut self) {
         self.closing = true;
@@ -159,61 +172,37 @@ mod tests {
         RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 4_096, maximum_release_bytes: 4_096, maximum_depth: 8 }
     }
 
-    #[test]
-    fn edit_scans_one_vertex_per_turn_and_moves_exactly_the_addressed_vertex() {
-        let source = snapshot();
-        let target = source.vertices.last().expect("target vertex").id.clone();
-        let mutation = mutation(&target);
-        let mut post = source.clone();
-        let mut edit = BrepVertexEdit::default();
-        let mut turns = 0;
-        let (progress, inverse) = loop {
-            match edit.advance(&mut post, &mutation, grant()).expect("brep edit turn") {
-                PagedOneItemEditStep::Progress(progress) => assert!(progress.fits(grant()) && progress.copied_items <= 1),
-                PagedOneItemEditStep::Complete(progress, inverse) => break (progress, inverse),
-                PagedOneItemEditStep::CompleteRows(..) => panic!("the edit completes with one inverse mutation"),
-            }
-            turns += 1;
-            assert!(turns < 50_000);
-        };
-        assert!(progress.fits(grant()));
-        assert!(turns > source.vertices.len());
-        assert_eq!(post.edges, source.edges);
-        assert_eq!(post.next_label, source.next_label);
-        assert_eq!(post.vertices.last().expect("post target").point, SemioPoint3 { x: -1.0, y: -2.0, z: -3.0 });
-        assert_eq!(post.vertices[..post.vertices.len() - 1], source.vertices[..source.vertices.len() - 1]);
-        let SemioBrepMutation::MoveVertex(inverse) = inverse else { panic!("brep inverse") };
-        assert_eq!(inverse.new_point, source.vertices.last().expect("source target").point);
+
+    type Fixture=semio_framework_os_store_one_item::testkit::PagedEditFixture<SemioBrepSnapshot,SemioBrepMutation,BrepVertexEdit>;
+    fn close_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:16_777_216,maximum_release_bytes:16_777_216,maximum_depth:4096}}
+    fn setup(post:SemioBrepSnapshot,mutation:SemioBrepMutation)->Fixture{
+        use semio_framework_os_store_one_item::testkit::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
+        let before=semio_framework_value::testing::admit_owned_source(post.clone(),()).0;
+        let mutation=semio_framework_value::testing::admit_owned_source(mutation,()).0;
+        let caller=OriginalJobFixtureCaller::admit(OperationId(44791),Generation(8),RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:16_777_216,maximum_capacity_bytes:16_777_216,maximum_release_bytes:16_777_216,maximum_depth:4096},||Some(1),u64::MAX,1<<20);
+        Fixture::new(caller,OriginalJobDecodeOwner::empty(),before,mutation,post,BrepVertexEdit::default())
     }
+    fn retire<T:semio_framework_value::RetireOwned+'static>(fixture:&mut Fixture,value:T){let mut value=Some(value);let mut active=None;assert!(fixture.retire_owned(&mut value,&mut active,close_grant(),1_000_000).expect("funded fixture output retirement"));assert!(value.is_none()&&active.is_none());}
 
     #[test]
-    fn edit_refuses_an_absent_target_before_touching_any_vertex() {
-        let source = snapshot();
-        let mutation = mutation("absent");
-        let mut post = source.clone();
-        let mut edit = BrepVertexEdit::default();
-        let error = loop {
-            match edit.advance(&mut post, &mutation, grant()) {
-                Ok(PagedOneItemEditStep::Progress(_)) => {}
-                Ok(PagedOneItemEditStep::Complete(..) | PagedOneItemEditStep::CompleteRows(..)) => panic!("absent vertex must not complete"),
-                Err(error) => break error,
-            }
-        };
-        assert!(format!("{error:?}").contains("target-count-0"));
-        assert_eq!(post, source);
+    fn edit_scans_one_vertex_per_turn_and_moves_exactly_the_addressed_vertex(){
+        let source=snapshot();let id=source.vertices.last().unwrap().id.clone();let mut fixture=setup(source.clone(),mutation(&id));let mut turns=0;
+        let inverse=loop{let outcome=fixture.advance(grant()).expect("original brep caller");assert_eq!(outcome.work,fixture.last_work());assert!(outcome.work<=1);match outcome.edit.expect("brep edit"){
+            PagedOneItemEditStep::Progress(p)=>assert!(p.fits(grant())&&p.copied_items<=1),PagedOneItemEditStep::Complete(p,inverse)=>{assert!(p.fits(grant()));break inverse},_=>panic!("brep completes with one original inverse"),
+        }turns+=1;assert!(turns<10_000);};
+        let post=fixture.post().unwrap();assert_eq!(post.edges,source.edges);assert_eq!(post.faces,source.faces);assert_eq!(post.next_label,source.next_label);assert_eq!(post.vertices.last().unwrap().point,SemioPoint3{x:-1.0,y:-2.0,z:-3.0});assert_eq!(post.vertices.len(),source.vertices.len());
+        let SemioBrepMutation::MoveVertex(value)=&inverse else{panic!("brep inverse")};assert_eq!(value.new_point,source.vertices.last().unwrap().point);retire(&mut fixture,inverse);assert!(fixture.close(close_grant(),1_000_000).unwrap());
+    }
+    #[test]
+    fn edit_refuses_an_absent_target_before_touching_any_vertex(){
+        let source=snapshot();let mut fixture=setup(source.clone(),mutation("absent"));let error=loop{let outcome=fixture.advance(grant()).unwrap();match outcome.edit{Ok(PagedOneItemEditStep::Progress(_))=>{},Ok(_)=>panic!("absent brep cannot complete"),Err(error)=>{assert_eq!(outcome.work,1);break error}}};
+        assert!(format!("{error:?}").contains("target-count-0"));assert_eq!(fixture.post().unwrap(),&source);let reset=fixture.advance(RetainedCloneGrant{maximum_items:0,..grant()}).unwrap();assert_eq!(reset.work,0);assert_eq!(reset.progress,Default::default());retire(&mut fixture,error);assert!(fixture.close(close_grant(),1_000_000).unwrap());
+    }
+    #[test]
+    fn edit_waits_without_progress_when_the_grant_cannot_cover_one_turn(){
+        let source=snapshot();let id=source.vertices.last().unwrap().id.clone();let mut fixture=setup(source.clone(),mutation(&id));
+        let starved=fixture.advance(RetainedCloneGrant{maximum_copy_bytes:0,..grant()}).unwrap();assert_eq!(starved.work,0);assert_eq!(starved.progress,Default::default());assert_eq!(fixture.post().unwrap(),&source);let paid=fixture.advance(grant()).unwrap();assert_eq!(paid.work,1);
+        let denied=fixture.advance_with_work(grant(),0).unwrap();assert_eq!(denied.work,0);assert_eq!(denied.progress,Default::default());assert!(fixture.close(close_grant(),1_000_000).unwrap());
     }
 
-    #[test]
-    fn edit_waits_without_progress_when_the_grant_cannot_cover_one_turn() {
-        let source = snapshot();
-        let mutation = mutation("v-0");
-        let mut post = source.clone();
-        let mut edit = BrepVertexEdit::default();
-        let starved = RetainedCloneGrant { maximum_copy_bytes: 0, ..grant() };
-        match edit.advance(&mut post, &mutation, starved).expect("starved brep edit turn") {
-            PagedOneItemEditStep::Progress(progress) => assert_eq!(progress, RetainedCloneProgress::default()),
-            PagedOneItemEditStep::Complete(..) | PagedOneItemEditStep::CompleteRows(..) => panic!("starved grant must not complete"),
-        }
-        assert_eq!(post, source);
-    }
 }

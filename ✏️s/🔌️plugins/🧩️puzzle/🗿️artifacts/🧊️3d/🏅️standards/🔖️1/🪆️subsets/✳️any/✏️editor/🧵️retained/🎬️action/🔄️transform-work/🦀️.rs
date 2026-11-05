@@ -157,7 +157,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-transform-scan", "Measuring nearby vortices", "Nahe Vortices werden gemessen"))
             }
-            Puzzle3dTransformStage::Commit => Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(self.commit(snapshot, context.and_then(|context| context.view_state.as_ref())))),
+            Puzzle3dTransformStage::Commit => Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(self.commit(snapshot, context.and_then(|context| context.view_state.as_deref())))),
             Puzzle3dTransformStage::Complete => Err(Fault::from("puzzle3d-transform-complete-repolled")),
             Puzzle3dTransformStage::Closing => Err(Fault::from("puzzle3d-transform-closing")),
         }

@@ -8,7 +8,7 @@
         let calls = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let factory_calls = calls.clone();
         let instance = 510;
-        let meta = ActionMeta { actor: "factory-owner".into(), instance_id: instance, view_state: None };
+        let meta = ActionMeta { expected_document_revision:None, actor: "factory-owner".into(), instance_id: instance, view_state: None };
         let task = test_task("deferred-factory", move |_ctx| {
             factory_calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             async move { Ok(TaskResolution::Done) }
@@ -29,7 +29,7 @@
     #[semio_framework_async_macros::async_test]
     async fn spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it() {
         let instance = 502;
-        let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
+        let meta = ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: instance, view_state: None };
         crate::reactor_driver::set_instance_quota(instance, 2).await;
 
         for label in ["first", "second"] {
@@ -44,7 +44,7 @@
         assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await, 2, "a refused spawn must not have added a 3rd record");
 
         let other_instance = 503;
-        let other_meta = ActionMeta { actor: "local".into(), instance_id: other_instance, view_state: None };
+        let other_meta = ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: other_instance, view_state: None };
         let task = test_task("elsewhere", |_ctx| async move { Ok(TaskResolution::Done) });
         semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(other_instance, &other_meta, task).expect("a different instance must not be affected by 502's quota exhaustion");
         crate::reactor_driver::run_until_idle(8).await;
@@ -57,7 +57,7 @@
     #[semio_framework_async_macros::async_test]
     async fn key_dedupe_cancels_the_previously_live_task_under_the_same_key() {
         let instance = 504;
-        let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
+        let meta = ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: instance, view_state: None };
         let first_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let first_ran_inner = first_ran.clone();
         let first = test_task("first", move |_ctx| async move {
@@ -99,8 +99,8 @@
     async fn instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot() {
         let dying = 505;
         let survivor = 506;
-        let dying_meta = ActionMeta { actor: "local".into(), instance_id: dying, view_state: None };
-        let survivor_meta = ActionMeta { actor: "local".into(), instance_id: survivor, view_state: None };
+        let dying_meta = ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: dying, view_state: None };
+        let survivor_meta = ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: survivor, view_state: None };
 
         let dying_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let dying_ran_inner = dying_ran.clone();

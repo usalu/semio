@@ -174,3 +174,17 @@ fn batch_length_step_observes_fault_then_preserves_the_complete_source_slice() {
 
 #[path = "../🔬️targets-wgpu-input-engine-unit/🦀️.rs"]
 mod engine_tests;
+#[test]
+fn retained_action_cancellation_handles_do_not_cancel_a_later_action(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️retained-selection/🔣️.json")).unwrap();
+    let mut input=super::InputState::<super::ActionDescriptor>::default();
+    let descriptor=||super::ActionDescriptor {controller_id:"raster".into(),action:"selectPixels".into(),args:None};
+    input.begin_retained_string_action_owned(descriptor(),"path".into(),"x".repeat(fixture["firstBytes"].as_u64().unwrap() as usize)).unwrap();
+    let first=input.retained_action_handle().unwrap();assert!(input.drive_retained_action_step().unwrap().is_none());
+    assert_eq!(input.retained_action_progress(&first).unwrap().0,fixture["expectedFirstProgress"].as_u64().unwrap() as usize);
+    first.cancel();assert_eq!(input.drive_retained_action_step().unwrap().is_some(),fixture["expectedCancelledPublication"].as_bool().unwrap());assert!(!input.retained_action_pending());
+    input.begin_retained_string_action_owned(descriptor(),"path".into(),"y".repeat(fixture["secondBytes"].as_u64().unwrap() as usize)).unwrap();
+    let second=input.retained_action_handle().unwrap();first.cancel();assert!(input.retained_action_progress(&first).is_none());assert!(input.retained_action_progress(&second).is_some());
+    assert_eq!(input.drive_retained_action_step().unwrap().is_some(),fixture["expectedSecondPublication"].as_bool().unwrap());
+}
+

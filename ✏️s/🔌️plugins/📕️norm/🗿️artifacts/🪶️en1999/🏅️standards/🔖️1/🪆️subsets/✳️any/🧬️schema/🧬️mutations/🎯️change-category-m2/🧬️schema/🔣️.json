@@ -41,7 +41,6 @@
           "de": "Wöhler-Neigung m2 (0 = m1 + 2)"
         },
         "widget": "stepper",
-        "unit": "",
         "precision": 1,
         "step": 0.5,
         "role": "value",

@@ -455,15 +455,18 @@ pub use create_app_source::{CreateAppBorrowed,CreateAppRequestOwner,CreateAppSou
 #[derive(Clone, Copy)]
 pub enum QueuedKernelEventKind {
     SurfaceVisible,
+    StagedFormRequested,
     MessageShell,
     MessageBackbone,
 }
 
 pub struct QueuedKernelEvent {
     pub kind: Option<QueuedKernelEventKind>,
-    pub surface_visible: Option<String>,
+    pub surface: Option<String>,
     pub surface_body_key: Option<String>,
     pub surface_view_state: Option<Vec<u8>>,
+    pub staged_instance: Option<u32>,
+    pub staged_request: Option<Vec<u8>>,
     pub message_endpoint: Option<String>,
     pub message_payload: Option<Vec<u8>>,
 }
@@ -476,13 +479,16 @@ impl QueuedKernelEvent {
         }
         match events.pop_front().expect("one queued event is present") {
             Event::SurfaceVisible { surface, body_key, view_state } => {
-                Ok(Self { kind: Some(QueuedKernelEventKind::SurfaceVisible), surface_visible: Some(surface), surface_body_key: Some(body_key), surface_view_state: Some(view_state), message_endpoint: None, message_payload: None })
+                Ok(Self { kind: Some(QueuedKernelEventKind::SurfaceVisible), surface: Some(surface), surface_body_key: Some(body_key), surface_view_state: Some(view_state), staged_instance: None, staged_request: None, message_endpoint: None, message_payload: None })
+            }
+            Event::StagedFormRequested { instance, surface, body_key, request } => {
+                Ok(Self { kind: Some(QueuedKernelEventKind::StagedFormRequested), surface: Some(surface), surface_body_key: Some(body_key), surface_view_state: None, staged_instance: Some(instance), staged_request: Some(request), message_endpoint: None, message_payload: None })
             }
             Event::Message { source: MessageEndpoint::Shell { instance }, payload } if !payload.is_empty() && payload.len() <= semio_framework_plugin::document_backbone_binding::DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES => {
-                Ok(Self { kind: Some(QueuedKernelEventKind::MessageShell), surface_visible: None, surface_body_key: None, surface_view_state: None, message_endpoint: Some(instance.0), message_payload: Some(payload) })
+                Ok(Self { kind: Some(QueuedKernelEventKind::MessageShell), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(instance.0), message_payload: Some(payload) })
             }
             Event::Message { source: MessageEndpoint::Backbone { uri }, payload } if !payload.is_empty() && payload.len() <= store_sync::os_store::backbone::BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES => {
-                Ok(Self { kind: Some(QueuedKernelEventKind::MessageBackbone), surface_visible: None, surface_body_key: None, surface_view_state: None, message_endpoint: Some(uri), message_payload: Some(payload) })
+                Ok(Self { kind: Some(QueuedKernelEventKind::MessageBackbone), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(uri), message_payload: Some(payload) })
             }
             rejected => {
                 events.push_front(rejected);
@@ -494,9 +500,15 @@ impl QueuedKernelEvent {
     pub fn into_event(mut self) -> Event {
         match self.kind.take().expect("queued event kind is present") {
             QueuedKernelEventKind::SurfaceVisible => Event::SurfaceVisible {
-                surface: self.surface_visible.take().expect("queued surface-visible surface is present"),
+                surface: self.surface.take().expect("queued surface-visible surface is present"),
                 body_key: self.surface_body_key.take().expect("queued surface-visible body key is present"),
                 view_state: self.surface_view_state.take().expect("queued surface-visible view state is present"),
+            },
+            QueuedKernelEventKind::StagedFormRequested => Event::StagedFormRequested {
+                instance: self.staged_instance.take().expect("queued staged instance is present"),
+                surface: self.surface.take().expect("queued staged surface is present"),
+                body_key: self.surface_body_key.take().expect("queued staged body is present"),
+                request: self.staged_request.take().expect("queued original staged request is present"),
             },
             QueuedKernelEventKind::MessageShell => Event::Message {
                 source: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(self.message_endpoint.take().expect("queued shell-message instance is present")) },
@@ -509,11 +521,11 @@ impl QueuedKernelEvent {
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        if let Some(length) = self.surface_visible.as_ref().map(String::len) {
+        if let Some(length) = self.surface.as_ref().map(String::len) {
             if length > maximum_bytes {
                 return (false, 0, 0);
             }
-            drop(self.surface_visible.take().expect("queued surface-visible surface is present"));
+            drop(self.surface.take().expect("queued surface-visible surface is present"));
             return (self.remaining_bytes() == 0, 1, length);
         }
         if let Some(length) = self.surface_body_key.as_ref().map(String::len) {
@@ -529,6 +541,12 @@ impl QueuedKernelEvent {
             }
             drop(self.surface_view_state.take().expect("queued surface-visible view state is present"));
             return (self.remaining_bytes() == 0, 1, length);
+        }
+        if let Some(bytes) = self.staged_request.as_ref().map(Vec::capacity) {
+            if bytes > maximum_bytes { return (false, 0, 0); }
+            drop(self.staged_request.take().expect("queued staged request backing is present"));
+            self.staged_instance=None;
+            return (self.remaining_bytes()==0,1,bytes);
         }
         if let Some(length) = self.message_endpoint.as_ref().map(String::len) {
             if length > maximum_bytes {
@@ -550,9 +568,10 @@ impl QueuedKernelEvent {
     }
 
     fn remaining_bytes(&self) -> usize {
-        self.surface_visible.as_ref().map_or(0, String::len)
+        self.surface.as_ref().map_or(0, String::len)
             + self.surface_body_key.as_ref().map_or(0, String::len)
             + self.surface_view_state.as_ref().map_or(0, Vec::len)
+            + self.staged_request.as_ref().map_or(0, Vec::capacity)
             + self.message_endpoint.as_ref().map_or(0, String::len)
             + self.message_payload.as_ref().map_or(0, Vec::len)
     }

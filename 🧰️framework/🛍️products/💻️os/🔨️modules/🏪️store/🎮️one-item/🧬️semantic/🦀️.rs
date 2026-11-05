@@ -17,7 +17,10 @@ pub trait PagedOneItemEdit<S, M>: Default + Send + 'static {
     fn preflight(mutation: &M) -> Result<usize, String>;
     fn post_mode(&self)->PagedOneItemPostMode;
     fn advance_demands(&self,before:RetainedCloneRef<'_,S>,mutation:RetainedCloneRef<'_,M>,post:PagedOneItemPostRead<'_,S>,body:usize)->Result<RetirementDemand,ValueError>;
+    /// 🎟️ Reserves and commits the entire call through the original receiving control, including partial failures.
     fn advance(&mut self, before: RetainedCloneRef<'_, S>, mutation: RetainedCloneRef<'_, M>, post: PagedOneItemPost<'_,S>, body:usize,grant: RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<M>, ValueError>;
+    /// ⛽️ Entire latest advance work, including nested work and partial failures; denied calls reset it.
+    fn last_turn_work(&self)->u64;
     fn begin_close(&mut self);
     fn close_demands(&self, mutations: &dyn ArtifactOwnedValueRetirementFactory<M>, body: usize) -> Result<RetirementDemand, ValueError>;
     fn close_step(&mut self, mutations: &dyn ArtifactOwnedValueRetirementFactory<M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;

@@ -110,4 +110,7 @@ type En1991Snapshot {
   supportCollisions: [SupportCollision!]!
   localFires: [LocalFire!]!
   snowGuards: [SnowGuard!]!
+  railDerailments: [RailDerailment!]!
+  railLoadGroups: [RailLoadGroup!]!
+  dustExplosions: [DustExplosion!]!
 }

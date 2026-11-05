@@ -16,7 +16,10 @@ pub struct ChangeLayerPixels {
 }
 
 pub fn validate(payload: &ChangeLayerPixels, base: &RasterSnapshot) -> Result<(), protocol::OutcomeCode> {
-    let Some(RasterLayerNode::Pixel { image_key, .. }) = find_layer(&base.layers, &payload.layer_id) else { return Err(protocol::OutcomeCode::TargetMissing); };
+    let layer=find_layer(&base.layers,&payload.layer_id).ok_or(protocol::OutcomeCode::TargetMissing)?;validate_target(payload,base,layer)
+}
+pub fn validate_target(payload:&ChangeLayerPixels,base:&RasterSnapshot,layer:&RasterLayerNode)->Result<(),protocol::OutcomeCode>{
+    let RasterLayerNode::Pixel { image_key, .. } = layer else { return Err(protocol::OutcomeCode::TargetMissing); };
     if image_key != &payload.expected_image_key { return Err(protocol::OutcomeCode::TargetMismatch); }
     if let Some(key) = &payload.content.image_key {
         if !base.assets.contains_key(key) { return Err(protocol::OutcomeCode::TargetMissing); }

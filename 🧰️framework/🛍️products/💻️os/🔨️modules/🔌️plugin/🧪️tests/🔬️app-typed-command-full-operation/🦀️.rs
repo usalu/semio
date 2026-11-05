@@ -8,7 +8,7 @@ mod typed_command_full_operation_tests {
 use semio_framework_os_kernel::one_item::{ArtifactStoreOneItemCheckpoint,ArtifactStoreOneItemPreparationStep};
 use semio_framework_os_kernel::one_item;
 use semio_framework_plugin_decl_emission::ChildEmitGenesis;
-use semio_framework::ArgFormat::ArtifactRef;
+use semio_framework_artifact_reference::ArtifactRef;
 use semio_framework_plugin_operation::ArtifactDocumentAuthority;
 use semio_framework_plugin_operation::ToolOperationKey;
 use semio_framework::ArtifactDialect;
@@ -40,6 +40,54 @@ pub fn instance_source() -> String {
 
     #[doc(hidden)]
 pub const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️full-operation/🧪️tests/🧫️fixtures/🔣️.json");
+
+
+
+    fn publish_mounted_fixture_unit<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, mounted: &mut MountedTypedCommandFullOperation<A>, grant: RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) {
+        cx.with_retained_loan(grant, |same| {
+            let before = same.retained_progress();
+            let fuel = same.fuel_remaining();
+            app.typed_ctx().publish_mounted_typed_operation_unit(mounted, grant, same)?;
+            if let Some((returned_grant, progress)) = mounted.publication_ownership_progress.take() {
+                assert!(progress.fits(returned_grant) && progress.fits(grant));
+                let unposted = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_unposted(progress, before, same.retained_progress())?;
+                same.consume_retained(unposted)?;
+            }
+            if same.fuel_remaining() == fuel { same.consume_fuel(1); }
+            Ok::<_, semio_framework_job::OriginalTurnFailure>(())
+        }).expect("actual mounted publication returns each original receipt once");
+    }
+
+    fn present_mounted_page<A: ArtifactApp>(mounted: &mut MountedTypedCommandFullOperation<A>, grant: RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) -> Option<TypedOperationResultPage> {
+        for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+            let mut output = None;
+            let demand = mounted.result_page_presentation_demands().unwrap();
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
+                semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |_, grant| {
+                    let (page, progress) = mounted.take_result_page(grant)?;
+                    let complete = page.is_some();
+                    output = page;
+                    Ok((if complete { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) }, complete))
+                }).expect("original mounted page presentation")
+            });
+            let progress = match step { PluginLifecycleStep::Progress(p) | PluginLifecycleStep::Complete(p) => p, _ => Default::default() };
+            assert!(progress.fits(grant));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+            if output.is_some() || progress == Default::default() { return output; }
+        }
+        panic!("mounted result presentation exceeded the original caller bound")
+    }
+
+    fn retire_acknowledged_mounted_page<A: ArtifactApp>(mounted: &mut MountedTypedCommandFullOperation<A>, grant: RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) {
+        for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+            if !mounted.result_page_retirement_pending() { return; }
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cx.with_retained_loan(grant, |same| mounted.advance_acknowledged_result_page(same)).expect("same original producer page retirement"));
+            let progress = match step { PluginLifecycleStep::Progress(p) | PluginLifecycleStep::Complete(p) => p, _ => Default::default() };
+            assert!(progress.fits(grant));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+        }
+        panic!("original acknowledged mounted page did not retire")
+    }
 
     include!("🔎️census-oracles-and-fixture-machine/🦀️.rs");
     include!("🔐️two-turn-presence-and-root-retirement/🦀️.rs");

@@ -27,3 +27,5 @@ pub use semio_framework_plugin_window_transient::window_transient::*;
 mod retained_window_input_tests;
 #[path = "../../../../🪟️window/🫧️transient/🧪️tests/🧪️transient-root/🦀️.rs"]
 mod transient_root_tests;
+#[path = "../../../../🪟️window/🫧️transient/🌱️registration/🧪️tests/🦀️.rs"]
+mod original_registration_tests;

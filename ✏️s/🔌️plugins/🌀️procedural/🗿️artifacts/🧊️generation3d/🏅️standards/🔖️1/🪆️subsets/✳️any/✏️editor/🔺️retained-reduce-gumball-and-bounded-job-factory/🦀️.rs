@@ -26,7 +26,7 @@ fn generation3d_retained_reduce(
         return Err(Fault::from("generation3d-command-retained-route-rejected"));
     }
     if let Some(gesture) = generation3d_gumball_gesture(command) {
-        let view = context.and_then(|context| context.view_state.as_ref());
+        let view = context.and_then(|context| context.view_state.as_deref());
         let window = gesture.window.or_else(|| view.and_then(|view| view.window_id.as_deref())).unwrap_or_default();
         let phase = semio_framework_tool_machine::GesturePhase::parse(gesture.phase, gesture.reason).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), "the gumball gesture phase or abort reason is unknown"))?;
         if let semio_framework_tool_machine::GesturePhase::Abort(reason) = phase {
@@ -52,13 +52,13 @@ fn generation3d_retained_reduce(
     let selected = || interaction.selection.get("graph").map(|selection| selection.ids.clone()).unwrap_or_default();
     let component_ids: &[String] = interaction.selection.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice());
     let graph_ids: &[String] = interaction.selection.get("graph").map_or(&[], |selection| selection.ids.as_slice());
-    if let Some(ids) = generation3d_component_targets(command, context.and_then(|context| context.view_state.as_ref()), interaction.active_granularity.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map(String::as_str), component_ids, graph_ids).filter(|ids| !ids.is_empty()) {
+    if let Some(ids) = generation3d_component_targets(command, context.and_then(|context| context.view_state.as_deref()), interaction.active_granularity.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map(String::as_str), component_ids, graph_ids).filter(|ids| !ids.is_empty()) {
         semio_s_artifact_procedural_3d_editor_selection::validate_cached_components(&snapshot.host_snapshot, session, ids, Some(&operation.canonical_base_revision), operation.retained).map_err(|error|Fault::from(error.to_string()))?;
     }
     match command {
         Generation3dCommand::EditMeshSelection(payload) => semio_s_artifact_procedural_3d_editor_commands::edit_mesh_selection::apply_selected("editMeshSelection", payload, &doc, interaction.selection.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::KnifeMeshSelection(payload) => semio_s_artifact_procedural_3d_editor_commands::knife_mesh_selection::apply_selected(payload, &doc, interaction.selection.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
-        Generation3dCommand::DeleteSelection(_) if semio_s_artifact_procedural_3d_mode_edit::windows::preview::edits_components(context.and_then(|context| context.view_state.as_ref()), interaction.active_granularity.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map(String::as_str)) => semio_s_artifact_procedural_3d_editor_commands::edit_mesh_selection::delete_selected(&doc, interaction.selection.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
+        Generation3dCommand::DeleteSelection(_) if semio_s_artifact_procedural_3d_mode_edit::windows::preview::edits_components(context.and_then(|context| context.view_state.as_deref()), interaction.active_granularity.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map(String::as_str)) => semio_s_artifact_procedural_3d_editor_commands::edit_mesh_selection::delete_selected(&doc, interaction.selection.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::DeleteSelection(_payload) => Ok(delete_selection::apply_selected(&doc, &selected())),
         Generation3dCommand::SelectNextNode(_payload) => Ok(select_next_node::apply_selected(&doc, &selected())),
         Generation3dCommand::SelectPreviousNode(_payload) => Ok(select_previous_node::apply_selected(&doc, &selected())),
@@ -173,7 +173,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
                     semio_framework_os_flow::FlowSourceReadStep::Ready=>{self.source_read_ready=true;Ok(ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview})},
                 };
             }
-            let windows=generation3d_preview_windows(input.context.and_then(|context|context.view_state.as_ref()));
+            let windows=generation3d_preview_windows(input.context.and_then(|context|context.view_state.as_deref()));
             let servable=flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
             let result=self.instance_owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|{
                 let step=owner.with_session_and_gumball(|session,_|read.admit_current_output(&input.snapshot.host_snapshot,input.operation.canonical_base_revision,session,&request,_cx).map_err(|error|Fault::from(error.to_string())))??;
@@ -192,7 +192,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
             return Ok(result);
         }}
         self.consumed = true;
-        let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+        let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
         let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
             let gestures = owner.gumball.revision();

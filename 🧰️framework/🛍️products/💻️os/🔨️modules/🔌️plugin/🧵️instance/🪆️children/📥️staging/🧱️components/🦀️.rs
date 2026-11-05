@@ -52,9 +52,29 @@ pub struct ChildComposition<M: SpaceMember + MemberFactory> {
 
 impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
-    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.private_child_groups,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.child_content_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.child_member_retirements,64)?,semio_framework_plugin_child::ChildMemberRegistry::<M>::birth_demands()?.capacity_bytes])}
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.private_child_groups,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.child_content_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.child_member_retirements,64)?,semio_framework_plugin_child::ChildMemberRegistry::<M>::birth_demands()?.capacity_bytes,CompositionCoordinator::birth_demands().capacity_bytes])}
 
     /// 🛶️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
+    /// 🖋️ Initializes child indexes and registries once at the caller-funded final component address.
+    /// # Safety
+    /// The target must be exclusive uninitialized storage with the quoted fixed registry backing admitted.
+    pub unsafe fn initialize_original_at(target:*mut Self,composition:CompositionCoordinator,backing:bool){unsafe{
+        ChildMemberRegistry::initialize_empty_at(std::ptr::addr_of_mut!((*target).children),backing);
+        std::ptr::addr_of_mut!((*target).private_child_groups).write(if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)});
+        std::ptr::addr_of_mut!((*target).child_content_root).write(ManuallyDrop::new(ChildContentView::EMPTY));
+        std::ptr::addr_of_mut!((*target).child_content_generation).write(0);
+        std::ptr::addr_of_mut!((*target).child_content_retirements).write(if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)});
+        std::ptr::addr_of_mut!((*target).child_member_retirements).write(if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)});
+        std::ptr::addr_of_mut!((*target).child_member_retirement_generation).write(0);
+        std::ptr::addr_of_mut!((*target).child_member_retirement_cursor).write(0);
+        std::ptr::addr_of_mut!((*target).followed_parent_generation).write(0);
+        std::ptr::addr_of_mut!((*target).child_follow_awaits_retirement).write(false);
+        std::ptr::addr_of_mut!((*target).pending_child_pins).write(Vec::new());
+        std::ptr::addr_of_mut!((*target).composition).write(composition);
+    }}
+    /// 📏️ Every child scalar index is initialized once; retained member payloads remain uninitialized.
+    pub fn initial_copy_bytes()->usize{std::mem::size_of::<Self>()}
+
     pub fn new(composition: CompositionCoordinator) -> Self {
         Self {
             children: ChildMemberRegistry::new(),

@@ -248,8 +248,8 @@
       "rKN": 500000.0,
       "gammaEl": 1.0,
       "chordRotationDemandRad": 0.0,
-      "chordRotationUltimateRad": 0.0,
       "chordRotationYieldRad": 0.0,
+      "chordRotationUltimateRad": 0.0,
       "sectionDepthM": 0.0,
       "sectionWidthM": 0.0,
       "effectiveDepthM": 0.0,
@@ -371,19 +371,10 @@
       "baseRotationalStiffnessNm": 0.0
     }
   ],
-  "joints": [
-    {
-      "id": "joint-1",
-      "buildingId": "bldg-office",
-      "storeyId": "s1",
-      "columnId": "col-c1",
-      "beamId": "beam-b1",
-      "xM": 4.0,
-      "yM": 4.0,
-      "columnMomentRdNm": 12000000.0,
-      "beamMomentRdNm": 4000000.0
-    }
-  ],
+  "soilLayers": [],
+  "diaphragms": [],
+  "accelerograms": [],
+  "piers": [],
   "bearings": [
     {
       "id": "bear-1",
@@ -397,10 +388,19 @@
       "minSupportLengthM": 0.4
     }
   ],
-  "piers": [],
-  "accelerograms": [],
-  "diaphragms": [],
-  "soilLayers": [],
+  "joints": [
+    {
+      "id": "joint-1",
+      "buildingId": "bldg-office",
+      "storeyId": "s1",
+      "columnId": "col-c1",
+      "beamId": "beam-b1",
+      "xM": 4.0,
+      "yM": 4.0,
+      "columnMomentRdNm": 12000000.0,
+      "beamMomentRdNm": 4000000.0
+    }
+  ],
   "placements": [],
   "tieBeams": [],
   "slopes": []

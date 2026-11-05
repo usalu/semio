@@ -1,0 +1,20 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "$id":"https://semio.tech/s/norm/inspector-page-laws.schema.json",
+ "type":"object","additionalProperties":false,
+ "required":["$schema","limits","fields","choices","retirementPrefixes","deniedAxes","locales"],
+ "properties":{
+  "$schema":{"type":"string"},
+  "limits":{"type":"object","additionalProperties":false,"required":["content","pages","choices","choiceStride","path"],"properties":{"content":{"const":16},"pages":{"const":2},"choices":{"const":32},"choiceStride":{"const":31},"path":{"const":64}}},
+  "fields":{"type":"array","minItems":5,"items":{"$ref":"#/definitions/fields"}},
+  "choices":{"type":"array","minItems":4,"items":{"$ref":"#/definitions/choices"}},
+  "retirementPrefixes":{"type":"array","items":{"type":"integer","minimum":0},"minItems":9,"uniqueItems":true},
+  "deniedAxes":{"const":["items","copyBytes","capacityBytes","releaseBytes","depth"]},
+  "locales":{"const":["en","de"]}
+ },
+ "definitions":{
+  "offset":{"type":["integer","null"],"minimum":0},
+  "fields":{"type":"object","additionalProperties":false,"required":["name","count","offset","expected"],"properties":{"name":{"type":"string","minLength":1},"count":{"type":"integer","minimum":0},"offset":{"type":"integer","minimum":0},"expected":{"type":"object","additionalProperties":false,"required":["start","end","previous","next"],"properties":{"start":{"type":"integer","minimum":0},"end":{"type":"integer","minimum":0},"previous":{"$ref":"#/definitions/offset"},"next":{"$ref":"#/definitions/offset"}}}}},
+  "choices":{"type":"object","additionalProperties":false,"required":["name","count","offset","selected","expected"],"properties":{"name":{"type":"string","minLength":1},"count":{"type":"integer","minimum":1},"offset":{"type":"integer","minimum":0},"selected":{"type":"integer","minimum":0},"expected":{"type":"object","additionalProperties":false,"required":["start","end","resident","length","previous","next"],"properties":{"start":{"type":"integer","minimum":0},"end":{"type":"integer","minimum":0},"resident":{"$ref":"#/definitions/offset"},"length":{"type":"integer","minimum":1,"maximum":32},"previous":{"$ref":"#/definitions/offset"},"next":{"$ref":"#/definitions/offset"}}}}}
+ }
+}

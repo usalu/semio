@@ -332,9 +332,12 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
     pub announce_from: usize,
     pub announce_items: usize,
     pub transaction_open: bool,
+    pub turn_work:u64,
 }
 
 impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
+    /// ⛽️ Actual work of the latest original publication call; the next call clears it even when denied.
+    pub fn last_turn_work(&self)->u64{self.turn_work}
     /// 🧷️ The same original decoder cleanup loan reaches wire preparation before every outer owner retires.
     pub fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>where P:Send+Sync+'static,Mutation:Send+'static{
      self.begin_close();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if self.group_preparation.is_some()||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}let d=self.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
@@ -386,6 +389,9 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     pub fn operation(&self) -> semio_framework_job::OperationId {
         self.operation
     }
+
+    /// 📩️ Borrows the immutable accepted receipt without advancing or acknowledging its original publication.
+    pub fn accepted_receipt(&self)->Option<LaneItemReceipt>{if self.phase==ArtifactStoreOneItemPublicationPhase::AwaitingAck{self.receipt.as_ref().copied()}else{None}}
 
     pub fn phase(&self) -> ArtifactStoreOneItemPublicationPhase {
         self.phase

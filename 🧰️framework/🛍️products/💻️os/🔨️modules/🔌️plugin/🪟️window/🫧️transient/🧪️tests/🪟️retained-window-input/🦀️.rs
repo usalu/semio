@@ -65,13 +65,14 @@ fn retained_window_input_preserves_owner_generation() {
     let mut identities = std::collections::BTreeSet::new();
     let mut digests = std::collections::BTreeSet::new();
     let mut owner = WindowTransientStore::<ReplacementWindow>::new(Default::default());
-    let factory=ReplacementWindow::build_owners().state_retirement;
+    let owners=ReplacementWindow::build_owners();let factory=owners.state_retirement.clone();
     for row in fixture["cases"].as_array().unwrap() {
         let snapshot = WindowTransientSnapshot {
             window_id: row["windowId"].as_str().unwrap().into(),
             window_kind_id: if row["windowKindId"] == "canvas" { "canvas" } else { "world" },
             generation: row["generation"].as_u64().unwrap(),
             document_generation: row["documentGeneration"].as_u64().unwrap(),
+            mutation_issuer:CapturedWindowMutationIssuer::capture(owners.mutation_retirement.clone()),
             snapshot: owner.current_read_erased().unwrap(),
         };
         assert_eq!(snapshot.generation(), row["generation"].as_u64().unwrap());
@@ -98,6 +99,7 @@ fn retained_window_input_preserves_owner_generation() {
 struct ReplacementWindow;
 
 impl WindowTransientOwner for ReplacementWindow {
+    fn owners_birth_demands()->RetirementDemand{transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
     const WINDOW_KIND_ID: &'static str = "canvas";
     type State = semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
     type Mutation = semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;

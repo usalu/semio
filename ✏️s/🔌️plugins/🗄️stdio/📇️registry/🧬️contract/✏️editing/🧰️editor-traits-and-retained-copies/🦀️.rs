@@ -82,7 +82,7 @@ pub trait BoundedNativeEditingEditor: SnapshotEditingEditor {
     where
         Self: Sized,
     {
-        Box::new(BoundedArtifactCommandWork::new(tool_id, bounded_native_edit_reduce::<Self>, Self::native_edit_extent))
+        bounded_native_edit_work::<Self>(tool_id)
     }
 
     /// 📬️ Supplies an exact mutation predicate and retained Store cursor for native edits whose
@@ -95,6 +95,11 @@ pub trait BoundedNativeEditingEditor: SnapshotEditingEditor {
     {
         None
     }
+}
+
+/// 🧵️ Builds the default bounded reducer while allowing an editor to retain specialized work for other tools.
+pub fn bounded_native_edit_work<E:BoundedNativeEditingEditor>(tool_id:&'static str)->Box<dyn ArtifactCommandWork<EditorApp<E>>>{
+    Box::new(BoundedArtifactCommandWork::new(tool_id,bounded_native_edit_reduce::<E>,E::native_edit_extent))
 }
 
 pub type ArtifactPreparationFactory<S, M> = std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<S, M>>;

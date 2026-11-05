@@ -9,8 +9,8 @@
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit keyed fixture identity authority");
-        test_retained_keyed_dispatch::<KeyedTestApp>(
-            keyed_test_registry().await,
+        test_retained_keyed_dispatch::<KeyedTestApp, _, _>(
+            keyed_test_registry,
             |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value },
             |value| TestMutation::SetCount(SetCount { value }),
             |snapshot| snapshot.count,
@@ -105,8 +105,8 @@
         fn clock() -> Option<u64> {
             Some(1_000)
         }
-        test_retained_keyed_dispatch::<KeyedTestApp>(
-            keyed_test_registry().await,
+        test_retained_keyed_dispatch::<KeyedTestApp, _, _>(
+            keyed_test_registry,
             |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value },
             |value| TestMutation::SetCount(SetCount { value }),
             |snapshot| snapshot.count,

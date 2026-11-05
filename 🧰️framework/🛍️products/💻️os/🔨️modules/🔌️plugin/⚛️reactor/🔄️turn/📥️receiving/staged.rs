@@ -1,12 +1,11 @@
 //! 📥️ Standalone staged bytes remain original-owned through Pack, census, exact movement and close.
-use super::ReceivingSource;
+use super::{ReceivingSource,retired};
 use semio_framework::action_staging::{StagedFormLimits,StagedFormRequest,StagedFormRequestCursor};
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_job_native_decode::{OriginalNativeDecodeIssued,OriginalNativeDecodePolicy,OriginalNativeDecodeSource};
 use semio_framework_os_kernel::os_pack::pack_rt::{RetainedRecordReceiving,wire_value_spec,take_received_wire_value};
 use semio_framework_value::{DslValue,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement};
 use std::mem::{ManuallyDrop,size_of};
-fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 fn fold(primary:semio_framework_job::OriginalReceivingPrimary)->ValueError{primary.primary.or(primary.quote_refusal).or(primary.allocation_refusal).unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native construction refused"))}
 #[derive(semio_framework_value::RetireOwned)]

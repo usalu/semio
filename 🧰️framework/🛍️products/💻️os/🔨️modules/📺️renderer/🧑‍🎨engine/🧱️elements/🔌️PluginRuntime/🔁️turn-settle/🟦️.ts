@@ -360,8 +360,11 @@ function pluginTurnStalledError(actorId: string, results: readonly WireTurnResul
  * the actor has nothing left to hand this turn. Accepted patches are acknowledged between turns to
  * release bounded publication capacity. See {@link PLUGIN_UI_QUIESCENT_CONTINUATIONS} for the two
  * outcomes of a publication-free streak. */
-export async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: Lane, requiredSurfaceIds?: ReadonlySet<string>, acceptPatches?: (result: WireTurnResult) => readonly ShardEventEnvelope[] | PluginPatchAcceptance | Promise<readonly ShardEventEnvelope[] | PluginPatchAcceptance>, drainOperations = false, activation?: ShardActorActivationLease, call?: TypedOperationCall, requestedSurfaceIds?: ReadonlySet<string>, report?: (outcome: SettleOutcomeV1) => void): Promise<WireTurnResult> {
+export async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: Lane, requiredSurfaceIds?: ReadonlySet<string>, acceptPatches?: (result: WireTurnResult) => readonly ShardEventEnvelope[] | PluginPatchAcceptance | Promise<readonly ShardEventEnvelope[] | PluginPatchAcceptance>, drainOperations = false, activation?: ShardActorActivationLease, call?: TypedOperationCall, requestedSurfaceIds?: ReadonlySet<string>, report?: (outcome: SettleOutcomeV1) => void, cancellation?: Readonly<{signal:AbortSignal;events:readonly ShardEventEnvelope[]}>): Promise<WireTurnResult> {
   const results: WireTurnResult[] = [initial];
+  let cancellationSent=false;
+  const cancelled=()=>cancellation?.signal.aborted===true;
+  const cancellationPending=()=>cancelled()&&!cancellationSent;
   const acknowledge = async (result: WireTurnResult): Promise<readonly ShardEventEnvelope[]> => {
     activation?.assertActive();
     retainTurnPresence(result);
@@ -372,32 +375,34 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
     results.push(...accepted.turns);
     return [...accepted.acknowledgements, ...typedOperationAcknowledgements(result), ...accepted.turns.flatMap(typedOperationAcknowledgements)];
   };
-  const hasWork = () => (drainOperations || !hasRequiredUiPatches(results, requiredSurfaceIds)) && wireTurnStatusTag(results.at(-1)?.status) === "more-work";
-  const outstanding = () => !hasRequiredUiPatches(results, requiredSurfaceIds);
-  const owed = () => settleOwesRequestedSurfacesV1(results, requestedSurfaceIds);
+  const hasWork = () => (cancelled() || drainOperations || !hasRequiredUiPatches(results, requiredSurfaceIds)) && wireTurnStatusTag(results.at(-1)?.status) === "more-work";
+  const outstanding = () => !cancelled()&&!hasRequiredUiPatches(results, requiredSurfaceIds);
+  const owed = () => !cancelled()&&settleOwesRequestedSurfacesV1(results, requestedSurfaceIds);
   let acknowledgements = await hopTrace.timeAsync("turn.accept", { actorId, patches: initial.uiPatches.length }, () => acknowledge(initial));
   let quiesced = false;
   let sliced = false;
   let zeroProgress = 0;
   const startedMs = performance.now();
   let continuations = 0;
-  for (let continuation = 0; !quiesced && !sliced && (acknowledgements.length > 0 || hasWork()) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
+  for (let continuation = 0; !quiesced && !sliced && (cancellationPending() || acknowledgements.length > 0 || hasWork()) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
     continuations = continuation + 1;
     const collected = results.length;
-    const continued = await submitPluginTurn(actorId, acknowledgements, lane, undefined, undefined, activation);
+    const cancellationEvents=cancellationPending()?cancellation!.events:[];
+    cancellationSent||=cancelled();
+    const continued = await submitPluginTurn(actorId, [...acknowledgements,...cancellationEvents], lane, undefined, undefined, activation);
     results.push(continued);
     acknowledgements = await hopTrace.timeAsync("turn.accept", { actorId, patches: continued.uiPatches.length }, () => acknowledge(continued));
     const closeDecide = hopTrace.open("turn.decide", { actorId, results: results.length });
     const progressed = acknowledgements.length > 0 || results.slice(collected).some((turn) => turn.uiPatches.length > 0 || turn.effects.length > 0);
     zeroProgress = progressed ? 0 : zeroProgress + 1;
-    if (zeroProgress >= PLUGIN_UI_QUIESCENT_CONTINUATIONS && !outstanding()) quiesced = true;
+    if (zeroProgress >= PLUGIN_UI_QUIESCENT_CONTINUATIONS && !outstanding() && !cancelled()) quiesced = true;
     else if (zeroProgress >= PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT) { closeDecide(); throw pluginTurnStalledError(actorId, results, requiredSurfaceIds, zeroProgress, continuation + 1, call); }
-    sliced = drainOperations && !quiesced && settleYieldsToRefreshV1(results, startedMs, performance.now(), acknowledgements.length > 0, outstanding(), owed());
+    sliced = !cancelled() && drainOperations && !quiesced && settleYieldsToRefreshV1(results, startedMs, performance.now(), acknowledgements.length > 0, outstanding(), owed());
     const yielding = !quiesced && !sliced && (continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && hasWork();
     closeDecide();
     if (yielding) await hopTrace.timeAsync("turn.yield", { actorId }, () => yieldPluginUiContinuation());
   }
-  if (!quiesced && !sliced && (acknowledgements.length > 0 || hasWork())) {
+  if (!quiesced && !sliced && (cancellationPending() || acknowledgements.length > 0 || hasWork())) {
     const published = results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null));
     throw new Error(
       `[TRACE] PluginRuntime: actor ${actorId} did not publish its requested UI surfaces within ${PLUGIN_UI_CONTINUATION_LIMIT} continuations ` +
@@ -405,12 +410,13 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
         `effects=${results.reduce((count, result) => count + result.effects.length, 0)}, status=${wireTurnStatusTag(results.at(-1)?.status)}, faults=${JSON.stringify(settleShellFaultMessages(actorId, results))})`,
     );
   }
-  if (requiredSurfaceIds?.size && !hasRequiredUiPatches(results, requiredSurfaceIds)) {
+  if (!cancelled() && requiredSurfaceIds?.size && !hasRequiredUiPatches(results, requiredSurfaceIds)) {
     const published = new Set(results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null)));
     const missing = [...requiredSurfaceIds].filter((surface) => !published.has(surface));
     throw new Error(`PluginRuntime: actor ${actorId} stopped without publishing requested UI surfaces (missing=${JSON.stringify(missing)}, status=${wireTurnStatusTag(results.at(-1)?.status)}, faults=${JSON.stringify(settleShellFaultMessages(actorId, results))})`);
   }
   activation?.assertActive();
+  if(cancelled())throw cancellation!.signal.reason??new Error("staging.cancelled");
   report?.({
     stop: quiesced ? "quiesced" : sliced ? "sliced" : hasWork() ? "ceiling" : "idle",
     continuations,

@@ -3,6 +3,9 @@
 
 use semio_framework_test_fixtures::fixture_path;
 
+#[path="../🧮️physical/🦀️.rs"]
+mod physical;
+
 #[semio_framework_async_macros::async_test]
 async fn committed_vectors_hold() {
     let root = fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations");

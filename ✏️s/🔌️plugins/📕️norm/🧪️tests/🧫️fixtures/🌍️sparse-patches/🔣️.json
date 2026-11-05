@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "type": "En1997PilesPatch",
+      "value": {
+        "length": 4.5
+      }
+    },
+    {
+      "type": "En1997LayersPatch",
+      "value": {
+        "phiPrimeDeg": 25
+      }
+    },
+    {
+      "type": "En1997FootingsPatch",
+      "value": {
+        "width": 2.5
+      }
+    }
+  ]
+}

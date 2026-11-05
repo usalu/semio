@@ -1,0 +1,21 @@
+{
+  "schema": "reserved.original-request-custody.v1",
+  "domain": "cad",
+  "tools": [
+    "import-media"
+  ],
+  "denialPreservesRequest": true,
+  "denialPreservesInputAddress": true,
+  "requestRemainsUntilPrivateClose": true,
+  "borrows": [
+    "snapshot",
+    "config",
+    "history",
+    "completion"
+  ],
+  "mediaCloneCount": 0,
+  "freshDecoderCount": 0,
+  "closeUsesActualChildWork": true,
+  "unknownTool": "unregistered-reserved-route",
+  "unknownPreservesRequest": true
+}

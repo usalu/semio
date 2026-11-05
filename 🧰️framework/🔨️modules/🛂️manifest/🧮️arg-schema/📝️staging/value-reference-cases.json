@@ -1,0 +1,459 @@
+{
+  "base": {
+    "source": {
+      "activation": "1",
+      "instance": "7",
+      "guestLifetime": "3",
+      "operation": "19",
+      "sourceGeneration": "0",
+      "serial": "1",
+      "controller": "editor",
+      "token": {
+        "action": "insertBridgeSls",
+        "generation": "4",
+        "revision": "revision-37",
+        "window": "editor-left"
+      }
+    },
+    "slot": "0",
+    "purpose": "commit"
+  },
+  "cases": [
+    {
+      "name": "original",
+      "changes": [],
+      "allowed": true
+    },
+    {
+      "name": "u64-max-slot",
+      "changes": [
+        {
+          "path": [
+            "slot"
+          ],
+          "value": "18446744073709551615"
+        }
+      ],
+      "allowed": true
+    },
+    {
+      "name": "u32-max-instance",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "instance"
+          ],
+          "value": "4294967295"
+        }
+      ],
+      "allowed": true
+    },
+    {
+      "name": "u32-overflow",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "instance"
+          ],
+          "value": "4294967296"
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "u64-overflow",
+      "changes": [
+        {
+          "path": [
+            "slot"
+          ],
+          "value": "18446744073709551616"
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "numeric-slot",
+      "changes": [
+        {
+          "path": [
+            "slot"
+          ],
+          "value": 7
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "leading-zero",
+      "changes": [
+        {
+          "path": [
+            "slot"
+          ],
+          "value": "01"
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "negative",
+      "changes": [
+        {
+          "path": [
+            "slot"
+          ],
+          "value": "-1"
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "exponent",
+      "changes": [
+        {
+          "path": [
+            "slot"
+          ],
+          "value": "1e3"
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "trailing-linebreak",
+      "changes": [
+        {
+          "path": [
+            "slot"
+          ],
+          "value": "7\n"
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "empty-controller",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "controller"
+          ],
+          "value": ""
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "invalid-purpose",
+      "changes": [
+        {
+          "path": [
+            "purpose"
+          ],
+          "value": "ready"
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "unknown-reference-field",
+      "changes": [
+        {
+          "path": [
+            "extra"
+          ],
+          "value": true
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "unknown-source-field",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "extra"
+          ],
+          "value": true
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "unknown-token-field",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "token",
+            "extra"
+          ],
+          "value": true
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "zero-activation",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "activation"
+          ],
+          "value": "0"
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "zero-lifetime",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "guestLifetime"
+          ],
+          "value": "0"
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "zero-serial",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "serial"
+          ],
+          "value": "0"
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "empty-action",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "token",
+            "action"
+          ],
+          "value": ""
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "overflow-token",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "token",
+            "generation"
+          ],
+          "value": "18446744073709551616"
+        }
+      ],
+      "allowed": false
+    },
+    {
+      "name": "missing-source",
+      "changes": [
+        {
+          "path": [
+            "source"
+          ],
+          "remove": true
+        }
+      ],
+      "allowed": false
+    }
+  ],
+  "matches": [
+    {
+      "name": "exact",
+      "changes": [],
+      "expected": true
+    },
+    {
+      "name": "source.activation",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "activation"
+          ],
+          "value": "2"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "source.instance",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "instance"
+          ],
+          "value": "8"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "source.guestLifetime",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "guestLifetime"
+          ],
+          "value": "4"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "source.operation",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "operation"
+          ],
+          "value": "20"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "source.sourceGeneration",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "sourceGeneration"
+          ],
+          "value": "1"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "source.serial",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "serial"
+          ],
+          "value": "2"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "source.controller",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "controller"
+          ],
+          "value": "other"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "source.token.action",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "token",
+            "action"
+          ],
+          "value": "other"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "source.token.generation",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "token",
+            "generation"
+          ],
+          "value": "5"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "source.token.revision",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "token",
+            "revision"
+          ],
+          "value": "revision-38"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "source.token.window",
+      "changes": [
+        {
+          "path": [
+            "source",
+            "token",
+            "window"
+          ],
+          "value": "editor-right"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "slot",
+      "changes": [
+        {
+          "path": [
+            "slot"
+          ],
+          "value": "1"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "purpose",
+      "changes": [
+        {
+          "path": [
+            "purpose"
+          ],
+          "value": "seed"
+        }
+      ],
+      "expected": false
+    }
+  ]
+}

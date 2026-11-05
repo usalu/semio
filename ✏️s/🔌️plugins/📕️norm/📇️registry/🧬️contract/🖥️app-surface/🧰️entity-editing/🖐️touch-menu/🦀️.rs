@@ -9,22 +9,6 @@ use crate::viewport3d::config::Lang;
 use crate::accessibility::focus_order::{shortcut_action_id, ShortcutAction};
 use std::sync::{Mutex, PoisonError};
 
-static OPEN: Mutex<Vec<String>> = Mutex::new(Vec::new());
-
-/// 📣 Records whether the Edit menu of the artifact `domain` is open, as the viewport panel just rendered it; the shell hook reads it to close the menu on an outside tap or Escape without owning the lane.
-pub fn note_touch_menu(domain: &str, open: bool) {
-    let mut store = OPEN.lock().unwrap_or_else(PoisonError::into_inner);
-    store.retain(|known| known != domain);
-    if open {
-        store.push(domain.to_owned());
-    }
-}
-
-/// 🖐️ Whether the Edit menu of the artifact `domain` (`norm.en1993`) is open.
-pub fn touch_menu_open(domain: &str) -> bool {
-    OPEN.lock().unwrap_or_else(PoisonError::into_inner).iter().any(|known| known == domain)
-}
-
 /// 🖐️ The window role the touch menu publishes its accessibility nodes under (`norm-<variant>-touch-menu`).
 pub const TOUCH_MENU_ROLE: &str = "menu";
 

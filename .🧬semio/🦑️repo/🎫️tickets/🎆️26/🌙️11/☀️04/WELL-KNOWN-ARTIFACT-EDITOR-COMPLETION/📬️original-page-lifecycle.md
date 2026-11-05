@@ -1,0 +1,15 @@
+# Original Page Lifecycle Repair
+
+The producer page now survives acknowledgement until its original caller funds physical retirement. Normal publication drains acknowledged pages before child, interaction, or ordinary publication work. The pump records that cleanup receipt once, including when a child group remains mounted. Entering close preserves a retained original page until the retirement ladder closes it.
+
+The retained-command host fixtures now pass the admitting original caller through ingress, worker and host continuation steps. They use current runtime command admission rather than removed wire admission APIs. The page fixtures use public presentation and funded acknowledgement retirement ports.
+
+The permanent neutral acknowledgement corpus has thirteen rows. Twelve rows now exercise original fixed backing buffers in the existing registered fairness test: successful publication, terminal acknowledgement, each denied currency, invalid token fields, and a different original caller. The Artifact row is mounted against the actual committed document publisher in the document cancellation test, retaining its real pending publication authority. Receiver projections close before acknowledgement; cleanup reaches terminal emptiness after each row.
+
+Validation: the nightly Rust parser accepted the host module, shared test root, fairness and document leaves, full operation source, and publication pump. This establishes syntax only. Actual tests-01 compilation and execution remain pending; no green runtime claim is made. Native component compilation remains active and is not restarted for these edits.
+
+Open integration checks: fresh full Rust diagnostics; original page heap accounting and denial assertions; native sparse app construction; component staging and real browser journeys. The current descriptor snapshot predates these kernel edits and must be rebuilt before final browser evidence.
+
+The Artifact integration now requires its per-case initial token to equal the real serialized committed receipt before replacing its byte backing. The schema declares per-case initial tokens, preserving the publisher generation-after, sequence, and attempt. Direct fixture publication reconciles each ownership receipt once and charges a fuel unit if the actual unit did not. The independent XState/Ajv oracle executed: 14 passing tests, 13 scenario machines plus schema validation. This does not substitute for native Rust execution.
+
+The next full tests01 compile reached the retained host and reported fifteen current API errors. Repairs now capture owned InvocationResult values in explicit receiver slots instead of returning non-Copy values through retained loans, close returned results through actual owned retirement ports, preserve RetainedWorkOutcome.work, convert lifecycle failures to original failures, borrow genuine native control in the child fixture, correct its ArtifactRef type, and branch separately for different caller lifetimes. Fresh semantic compilation is queued; parser checks remain green.

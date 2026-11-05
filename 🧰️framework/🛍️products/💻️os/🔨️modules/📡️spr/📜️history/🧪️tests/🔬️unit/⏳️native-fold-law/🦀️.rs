@@ -33,7 +33,7 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
                             assert_eq!(conflicts[0].messages[0].message, "Änderung");
                             assert_eq!(conflicts[0].messages[0].target, vec!["Aé😀"]);
                             let protocol::ConflictKind::Quarantined { envelopes } = &conflicts[0].kind else { panic!("quarantine kind preserved") };
-                            assert_eq!(envelopes[0].diff.payload, vec![0xaa,0xbb,0xcc]);
+                            assert!(envelopes[0].diff.payload.iter().eq([0xaa,0xbb,0xcc]));
                             assert!(matches!(&conflicts[1].kind, protocol::ConflictKind::Degraded { edit_ids } if edit_ids == &vec!["edit-b".to_string()]));
                         } assert_eq!(replay_order, fold.applied); assert_eq!(fold, expected); assert_eq!(transitions, source.transitions.iter().map(|transition| transition.to_envelope(&source.doc_id)).collect::<Vec<_>>()); reached = true; break; },
                     protocol::HistoryFoldJobStep::Rejected { .. } => panic!("native history fold: {:?}", job.rejection()),
@@ -47,8 +47,9 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
         for _ in 0..stop.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1, 7).unwrap(),7, &mut || false).unwrap(); }
         let completed = job.completed();
         job.request_cancel();
-        let mut closed = false;
-        for _ in 0..100000 { if matches!(job.close_step(job.next_step_grant(1, 0).unwrap()), Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(_))) { closed = true; break; } }
+        let mut closed = false;let already_empty=job.terminal_is_empty();let mut close_work=0_u64;
+        for _ in 0..100000 { let grant=job.next_step_grant(1,0).unwrap();let turn=job.close_step(grant);close_work=close_work.checked_add(turn.work).unwrap();let step=turn.result.unwrap();assert!(step.progress().fits(grant));if matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)){closed=true;break;} }
+        assert_eq!(close_work==0,already_empty,"cancelled fold retirement reports its actual owned effects");
         assert!(closed && job.terminal_is_empty());
         assert_eq!(job.completed(), completed);
         assert_eq!(source.fold().unwrap(), expected);

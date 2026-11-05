@@ -1,6 +1,6 @@
 {
   "ChangeJointPlateGroupMethod": {
-    "id": "frame-action-1",
-    "newGroupMethod": "NodalMoment"
+    "id": "joint-plate-1",
+    "newGroupMethod": "InstantaneousCentre"
   }
 }

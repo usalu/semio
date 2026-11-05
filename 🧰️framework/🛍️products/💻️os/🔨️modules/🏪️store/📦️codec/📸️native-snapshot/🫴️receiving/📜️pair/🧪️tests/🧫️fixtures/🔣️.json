@@ -1,22 +1,105 @@
 {
-  "document": {
-    "id": "original.pair.源",
-    "schema": "test.wfc2d.original",
-    "edits": [],
-    "transitions": []
-  },
-  "cancelPrefixes": [
-    0,
-    64,
-    1024,
-    1000000
+  "version": 1,
+  "causes": [
+    "semantic",
+    "quote",
+    "allocation"
   ],
-  "deniedAxes": [
-    "items",
-    "copy",
-    "capacity",
-    "release",
-    "depth"
+  "turns": [
+    {
+      "id": "denied",
+      "work": 0,
+      "items": 0,
+      "capture": false,
+      "expected": {
+        "stage": "unchanged",
+        "causes": []
+      }
+    },
+    {
+      "id": "attempted-refusal",
+      "work": 3,
+      "items": 0,
+      "capture": true,
+      "expected": {
+        "stage": "retained-failure",
+        "causes": [
+          "semantic",
+          "quote",
+          "allocation"
+        ]
+      }
+    },
+    {
+      "id": "occupied",
+      "work": 0,
+      "items": 0,
+      "capture": false,
+      "expected": {
+        "stage": "retained-failure",
+        "causes": [
+          "semantic",
+          "quote",
+          "allocation"
+        ]
+      }
+    }
   ],
-  "maximumTurns": 1000000
+  "expectedWork": 3,
+  "closeOrder": [
+    "semantic",
+    "quote",
+    "allocation",
+    "receiver",
+    "decoder",
+    "caller"
+  ],
+  "grantCases": [
+    {
+      "caller": [
+        1,
+        8,
+        3,
+        2,
+        4
+      ],
+      "source": [
+        4,
+        5,
+        0,
+        9,
+        2
+      ],
+      "expected": [
+        1,
+        5,
+        0,
+        2,
+        2
+      ]
+    },
+    {
+      "caller": [
+        0,
+        0,
+        7,
+        0,
+        0
+      ],
+      "source": [
+        1,
+        8,
+        3,
+        2,
+        4
+      ],
+      "expected": [
+        0,
+        0,
+        3,
+        0,
+        0
+      ]
+    }
+  ]
 }

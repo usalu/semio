@@ -23,7 +23,7 @@
           "de": "Das adressierte Element (Rahmeneinwirkung), per Kennung."
         },
         "ref": {
-          "groupMethod": "joint-plate"
+          "kind": "joint-plate"
         },
         "group": "target",
         "order": 10

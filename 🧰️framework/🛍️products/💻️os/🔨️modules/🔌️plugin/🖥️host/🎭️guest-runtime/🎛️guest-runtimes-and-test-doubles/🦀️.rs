@@ -61,7 +61,7 @@ impl GuestRuntime for GuestRuntimes {
         }
     }
 
-    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &mut [Event], budget: Budget, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         match self {
             Self::Owned(r) => r.execute_turn(inst, events, budget, identity).await,
             Self::Wasmtime(r) => r.execute_turn(inst, events, budget, identity).await,
@@ -183,7 +183,7 @@ impl GuestRuntime for RecordingRuntime {
         Ok(GuestInstance { actor, state: GuestInstanceState::Mock(crate::MockInstanceState::default()) })
     }
     async fn drop_instance(&self, _inst: GuestInstance) {}
-    async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
+    async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &mut [Event], budget: Budget, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         *self.last_turn_budget.lock().expect("lock") = Some(budget);
         let retained_receipt = budget.retained.return_original(semio_framework_value::RetainedCloneProgress::default(),0).expect("recorded idle turn spends nothing");
         Ok(TurnResult {

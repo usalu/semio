@@ -18,6 +18,7 @@ import {readCompletedCargoCaptureMetadataV1} from "./📥️capture/📋️contr
 import {publishedCargoArtifactDirectoryV1} from "./📤️published/🟦️.ts";
 import { withCompilerCapacityScopeV1, compileUnitsForHostV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, renewableCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../🏗️build/🎟️capacity/🟦️.ts";
 import { checkResourceLeaseControl, watchResourceLeaseControlDeadlineV1, requireMaterializedPathV1 } from "../../🔒️leases/🟦️.ts";
+import {requireCargoCompilerOutputPathsV1} from "./📏️paths/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { stageArtifacts } from "../📤️publication/🟦️.ts";
 import { terminateOwnedChildTree } from "../../🪓️termination/🟦️.ts";
@@ -212,7 +213,7 @@ export function requireCargoCompilerPathEnvelopeV1(manifest:string,args:readonly
  const profile=cargoRequestedProfileV1(args)??buildModePolicy(policy.mode).cargoProfile,targets=[authored.lib?.name??name.replaceAll("-","_"),...(authored.bin??[]).flatMap(row=>row.name?[row.name]:[])],delimiter=args.indexOf("--"),head=delimiter<0?args:args.slice(0,delimiter);let target:string|undefined;
  for(let index=0;index<head.length;index++){const argument=head[index]!;if(argument==="--target")target=head[++index];else if(argument.startsWith("--target="))target=argument.slice(9);}
  const targetDirectory=target?(isAbsolute(target)?basename(target).replace(/\.json$/u,""):target):"";
- for(const crate of targets){for(const extension of["rmeta","rlib","dylib","dll","pdb","d"]){requireMaterializedPathV1(join(policy.buildDirectory,targetDirectory,profile,"build",name,"0".repeat(16),"out",`lib${crate}-${"0".repeat(16)}.${extension}`));requireMaterializedPathV1(join(policy.buildDirectory,"t","0".repeat(32),targetDirectory,profile,`lib${crate}.${extension}`));}}
+ requireCargoCompilerOutputPathsV1(policy.buildDirectory,targets.map(crateName=>({packageName:name,crateName,profile,platform:targetDirectory||null})));
 }
 
 /** 📦️ Captures Cargo's declared deliverables, including link dependencies, without copying compiler state.

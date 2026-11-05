@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema",
+    "owner",
+    "artifactSchema",
+    "codec",
+    "sample",
+    "members",
+    "invalidSample",
+    "invalidMethod"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "semio.stdio.zip.iso21320.native-file/v1"
+    },
+    "owner": {
+      "const": "s.stdio.zip@2.0/iso21320#editor"
+    },
+    "artifactSchema": {
+      "const": "stdio.zip"
+    },
+    "codec": {
+      "const": {
+        "formatKind": "s.stdio.zip@2.0",
+        "extension": ".zip",
+        "mediaType": "application/zip",
+        "binary": true
+      }
+    },
+    "sample": {
+      "type": "string",
+      "minLength": 1
+    },
+    "invalidSample": {
+      "type": "string",
+      "minLength": 1
+    },
+    "invalidMethod": {
+      "const": 12
+    },
+    "members": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "bytes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bytes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        }
+      }
+    }
+  }
+}

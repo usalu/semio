@@ -27,6 +27,7 @@ use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
 use crate::ArtifactEditor;
 use crate::EditorApp;
+use std::mem::{size_of,size_of_val};
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -68,7 +69,7 @@ pub(crate) struct NaturalFileImportJob<E: ArtifactEditor> {
 impl<E: ArtifactEditor> NaturalFileImportJob<E> {
     pub fn new(request: ArtifactReservedToolJobRequest<EditorApp<E>>) -> Result<Self, Fault> {
         let ArtifactReservedToolJobRequest { retained: _, contract, input, completion, .. } = request;
-        let ArtifactReservedToolInput::Media { port, mut media } = input else { unreachable!("natural-file import builder admits only media") };
+        let Some(ArtifactReservedToolInput::Media { port, mut media }) = input else { unreachable!("natural-file import builder admits only media") };
         let codec = E::natural_file_codec().ok_or_else(|| plugin_sdk_fault("natural-file import lost its codec declaration"))?;
         let byte_length = natural_file_input_bytes(&port, codec, &media).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("media.natural-import"), error.to_string()))?.len();
         if byte_length > contract.max_raw_wire_bytes {
@@ -301,6 +302,26 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
 }
 
 impl<E: ArtifactEditor> ArtifactReservedJob for NaturalFileImportJob<E> {}
+
+pub(crate) struct NaturalFileImportWork<E:ArtifactEditor>{job:Option<NaturalFileImportJob<E>>,closing:bool}
+impl<E:ArtifactEditor> Default for NaturalFileImportWork<E>{fn default()->Self{Self{job:None,closing:false}}}
+impl<E:ArtifactEditor> semio_framework_plugin_decl_app::tool_contract::ArtifactReservedWork<EditorApp<E>> for NaturalFileImportWork<E>{
+ fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<E>>,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_request(request,cx))}
+ fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{use semio_framework_job::InteractiveJob;self.job.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"natural-file work has no outcome owner"))?.borrow_outcome(descriptor)}
+ fn begin_close(&mut self){self.closing=true;if let Some(job)=self.job.as_mut(){semio_framework_job::InteractiveJob::begin_close(job)}}
+ fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(job)=self.job.as_ref(){job.close_owned_demands(body)}else{Ok(Default::default())}}
+ fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{use semio_framework_job::InteractiveJob;if let Some(job)=self.job.as_mut(){let step=job.close_step(cx)?;if job.terminal_is_empty(){self.job=None;}return Ok(step)}Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+ fn terminal_is_empty(&self)->bool{self.job.is_none()}
+}
+impl<E:ArtifactEditor> NaturalFileImportWork<E>{
+ fn step_request<'a>(&'a mut self,request:&mut ArtifactReservedToolJobRequest<EditorApp<E>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+  use semio_framework_value::ValueRefusalKind;
+  if self.job.is_none(){let bytes=size_of::<NaturalFileImportJob<E>>()+size_of::<ArtifactReservedToolInput>()+size_of::<ArtifactToolCompletion<EditorApp<E>>>();let g=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||g.maximum_items==0||g.maximum_depth==0||g.maximum_copy_bytes<bytes{return Ok(None)}let codec=E::natural_file_codec().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"natural-file work lost its declared codec"))?;let Some(ArtifactReservedToolInput::Media{port,media})=request.input.as_ref()else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"natural-file work requires its actual media source").into())};let MediaPayload::Intrinsic{schema,value:DslValue::Bytes(input)}=&media.payload else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"natural-file work requires owned intrinsic bytes").into())};if port!=semio_framework_plugin_decl_app::NATURAL_FILE_PORT||schema!=codec.format_kind||input.len()>request.contract.max_raw_wire_bytes{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"natural-file work source does not match its declared format or byte bound").into())}let byte_length=input.len();let Some(ArtifactReservedToolInput::Media{port,mut media})=request.input.take()else{unreachable!()};let MediaPayload::Intrinsic{value:DslValue::Bytes(source),..}=&mut media.payload else{unreachable!()};let source=std::mem::take(source);
+   self.job=Some(NaturalFileImportJob{port,media:Some(media),decoder:None,completion:Some(request.completion.clone()),emit:None,pending_completion_rejection:None,retirement:None,pending_bytes:Some(source),pending_media_value:None,pending_media_text:None,pending_port:None,contract:request.contract,byte_cursor:0,byte_length,decode_progress:Default::default(),stage:NaturalFileImportStage::Decode,completed:false,state:[0;17],fault:semio_framework_plugin_decl_app::tool_contract::BoundedFaultText::new(),pending:None,outcomes:semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),closing:false});cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(None)
+  }
+   let job=self.job.as_mut().unwrap();if job.decoder.is_none(){if E::admit_natural_file_decode_owner(&mut job.pending_bytes,job.contract,&mut job.decoder,cx)?&&matches!(job.decoder,Some(NaturalFileDecodeOwner::Synchronous(_))){job.stage=NaturalFileImportStage::Account;}return Ok(None)}job.step_original(cx)
+ }
+}
 
 impl<E:ArtifactEditor> NaturalFileImportJob<E>{
     fn close_owned_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{

@@ -1,0 +1,14 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "title":"Set Filter Options","type":"object","additionalProperties":false,"required":["filter","amount"],
+  "properties":{"filter":{"type":"string","enum":["invert","grayscale","clear","flipHorizontal","flipVertical","brightness","contrast","saturation","gamma","threshold","posterize","blur","sharpen"]},"amount":{"type":"number","minimum":-1,"maximum":256}},
+  "allOf":[
+    {"if":{"properties":{"filter":{"enum":["invert","grayscale","clear","flipHorizontal","flipVertical"]}}},"then":{"properties":{"amount":{"const":0}}}},
+    {"if":{"properties":{"filter":{"enum":["brightness","contrast","saturation"]}}},"then":{"properties":{"amount":{"minimum":-1,"maximum":1}}}},
+    {"if":{"properties":{"filter":{"const":"gamma"}}},"then":{"properties":{"amount":{"minimum":0.01,"maximum":10}}}},
+    {"if":{"properties":{"filter":{"const":"threshold"}}},"then":{"properties":{"amount":{"minimum":0,"maximum":255}}}},
+    {"if":{"properties":{"filter":{"const":"posterize"}}},"then":{"properties":{"amount":{"type":"integer","minimum":2,"maximum":256}}}},
+    {"if":{"properties":{"filter":{"const":"blur"}}},"then":{"properties":{"amount":{"type":"integer","minimum":0,"maximum":16}}}},
+    {"if":{"properties":{"filter":{"const":"sharpen"}}},"then":{"properties":{"amount":{"minimum":0,"maximum":5}}}}
+  ]
+}

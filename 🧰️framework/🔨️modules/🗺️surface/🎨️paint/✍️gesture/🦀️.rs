@@ -54,20 +54,20 @@ fn mask_placement(host:&RasterHost,mask:&MaskState,parent:Affine,owner:Affine)->
 
 /// 🎯️ Where the selected layer's paint target sits: its pixel grid in the world and its pixel extent; `None` when the
 /// layer is hidden, protected, missing or has no such target.
-fn target(host:&RasterHost,layers:&[LayerNode],id:&str,parent:Affine)->Option<(Affine,(u32,u32))>{
+pub(super) fn target(host:&RasterHost,layers:&[LayerNode],id:&str,parent:Affine,selecting:bool)->Option<(Affine,(u32,u32))>{
     for layer in layers {match layer{
-        LayerNode::Pixel {id:layer_id,visible:true,locked:false,transform,width,height,image_key,mask,..} if layer_id==id=>{
+        LayerNode::Pixel {id:layer_id,visible:true,locked,transform,width,height,image_key,mask,..} if layer_id==id&&(selecting||!*locked)=>{
             return match host.paint_target{
                 PaintTarget::Mask=>mask.as_ref().map(|mask|mask_placement(host,mask,parent,*transform)),
                 PaintTarget::Pixels=>{
-                    let extent=image_key.as_deref().and_then(|key|host.buffers.paint.get(key)).map(|image|(image.width,image.height)).unwrap_or((*width,*height));
+                    let fallback=RasterHost::layer_pixel_buffer_key(id);let extent=host.buffers.paint.get(image_key.as_deref().unwrap_or(&fallback)).map(|image|(image.width,image.height)).unwrap_or((*width,*height));
                     Some((centered(parent* *transform,*width,*height,extent),extent))
                 }
             };
         }
-        LayerNode::Group {id:layer_id,visible:true,locked:false,transform,children,mask,..}=>{
+        LayerNode::Group {id:layer_id,visible:true,locked,transform,children,mask,..} if selecting||!*locked=>{
             if layer_id==id&&host.paint_target==PaintTarget::Mask{return mask.as_ref().map(|mask|mask_placement(host,mask,parent,*transform));}
-            if let Some(value)=target(host,children,id,parent* *transform){return Some(value);}
+            if let Some(value)=target(host,children,id,parent* *transform,selecting){return Some(value);}
         }
         _=>{}
     }}
@@ -77,7 +77,7 @@ fn target(host:&RasterHost,layers:&[LayerNode],id:&str,parent:Affine)->Option<(A
 impl PaintGesture {
     pub fn begin(host:&RasterHost,point:Point,erase:bool)->Option<Self>{
         let id=host.selected_ids.first()?;
-        let (matrix,extent)=target(host,&host.document.layers,id,Affine::IDENTITY)?;
+        let (matrix,extent)=target(host,&host.document.layers,id,Affine::IDENTITY,false)?;
         let [a,b,c,d,e,f]=matrix.as_coeffs();let determinant=a*d-b*c;
         if !determinant.is_finite()||determinant.abs()<1e-12{return None;}
         let inverse=Affine::new([d/determinant,-b/determinant,-c/determinant,a/determinant,(c*f-d*e)/determinant,(b*e-a*f)/determinant]);
@@ -99,7 +99,7 @@ impl PaintGesture {
 
     /// 🎯️ Whether the gesture still holds: the same layer selected, its same target paintable at the same pixel grid.
     pub fn matches(&self,host:&RasterHost)->bool{
-        host.selected_ids.first()==Some(&self.command.layer_id)&&host.paint_target==self.command.target&&target(host,&host.document.layers,&self.command.layer_id,Affine::IDENTITY).is_some_and(|(world,extent)|world.as_coeffs()==self.world.as_coeffs()&&extent==self.extent)
+        host.selected_ids.first()==Some(&self.command.layer_id)&&host.paint_target==self.command.target&&target(host,&host.document.layers,&self.command.layer_id,Affine::IDENTITY,false).is_some_and(|(world,extent)|world.as_coeffs()==self.world.as_coeffs()&&extent==self.extent)
     }
 
     pub fn push(&mut self,world:Point){

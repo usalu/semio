@@ -10,6 +10,7 @@ impl semio_framework_plugin::WindowTransientOwner for Generation3dGeneratePrevie
     const WINDOW_KIND_ID: &'static str = super::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW;
     type State = Generation3dPreviewWindowTransient;
     type Mutation = Generation3dPreviewWindowTransientMutation;
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         Generation3dPreviewWindowTransientOwner::build_owners()
     }

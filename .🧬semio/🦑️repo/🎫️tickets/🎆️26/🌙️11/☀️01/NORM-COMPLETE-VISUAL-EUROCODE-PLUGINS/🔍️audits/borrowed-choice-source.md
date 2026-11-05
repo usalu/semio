@@ -1,0 +1,13 @@
+# Borrowed Scalar Choice Source
+
+Neutral JSON and a closed schema plus two native tests were authored before changing the control interface. Existing fixed arrays remain source-owned resident choices. Dynamic providers now lend two-string views through StagedScalarChoiceSource instead of constructing self-referential slices. The actual IFC owner implements the same interface and retains its existing paid backing/retirement. The cursor keeps the existing maximum of 32 choices and rejects missing, duplicate or empty keys; no grants, resource ceilings or source boundaries were changed. A borrowed iterator supports actual readonly test projections; the sole slice prefix projection now uses take(count).
+
+The native tests compare exact localized select rows against independent serde_json fixture values, exercise malformed/oversized sources, denied grants without choice reads, and close every cursor/output prefix through the real retirement owner. Authoritative root Cargo handle 70179 remains active. This is not a passing test claim; the handle was requested before the production interface and has not returned an observed terminal result. New test include paths were checked against the actual contract fixture location. All other active gates retain their existing ownership.
+
+## Actual Native Verification
+
+Initial70179 reached compilation and failed with E0515 in the new commitArgs status delegation; the borrowed DSL traversal was factored into the same underlying source-lifetime helper, with no clone or resource-limit changes. Successor23951 ran the actual production SDK package and completed exit0: both dynamic choice tests passed. This proves the scalar cursor cases only; broader original staged source/binding/body integration remains assigned to the actual reactor test host.
+
+## Shared Compiler Blockers
+
+Follow-up native28549 terminated on foreign paint cancellation conversion declarations; a read of the live tree confirmed another worker had already supplied the canonical protocol-owned derive and strict manual decoder, so root made no paint edit. Retry84485 then reached actual E0119: two identical PersistentList canonical-tree implementations differed only in refusal prose and redundant Sync/static bounds already required by the trait. The later duplicate was removed by exact source match, preserving the existing original-array implementation and its allocation-free ordinal child access. The current tree was asserted to contain exactly one such implementation. This repair is required to run the SDK and initial descriptor compiler gates; no allocation proof is inferred from precompiler failure.

@@ -24,6 +24,7 @@ impl semio_framework_plugin::WindowTransientOwner for Generation3dViewPreviewWin
     const WINDOW_KIND_ID: &'static str = super::WINDOW_KIND_ID;
     type State = Generation3dViewTransient;
     type Mutation = Generation3dViewTransientMutation;
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
         let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());

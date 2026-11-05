@@ -214,7 +214,7 @@ pub struct LasDiff {
 
 /// 🧪️ Shared demo-case fixtures (moved out of `mod tests` so both `demo_diff_cases` below AND
 /// `mod tests` itself can use them without a `tests::` qualification cycle).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn base_point(seed: u8) -> LasPoint {
     LasPoint {
@@ -235,7 +235,7 @@ pub(crate) fn base_point(seed: u8) -> LasPoint {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn base_vlr(record_id: u16) -> LasVlr {
     LasVlr { user_id: "LASF_Spec".into(), record_id, description: format!("vlr {record_id}"), data: vec![record_id as u8; 3] }

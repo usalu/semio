@@ -29,6 +29,7 @@ thread_local! {
     static APPLY_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static INVERSE_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static DIFF_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static DIFF_RETIRES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 #[path="🌳️immutable-root/🦀️.rs"]
@@ -45,7 +46,7 @@ struct Diff { ops: Vec<Op> }
 fn refusal(message: &str) -> MutationApplyError { MutationApplyError { code: "mutation.apply.missing-target".into(), message: message.into(), target: Vec::new() } }
 
 impl<D> MutationDiff<D> for Diff {
-
+    fn retire_cold(self) { DIFF_RETIRES.set(DIFF_RETIRES.get() + 1); }
 }
 impl ColdMutationDiff<PlainDocument> for Diff {
     fn absorb(&mut self,other:Self){self.ops.extend(other.ops);}
@@ -206,35 +207,42 @@ impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation
     }
 }
 
-struct Construction { original: semio_framework_value::retained_clone::RetainedCloneGrant, spent: semio_framework_value::retained_clone::RetainedCloneProgress }
-impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructionRecipient for Construction {
-    fn grant(&mut self, demand: semio_framework_value::RetirementDemand) -> Result<semio_framework_value::retained_clone::RetainedCloneGrant, ValueError> {
-        if !semio_framework_value::retained_clone::retained_clone_grant_admits(self.original, demand) { return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "original construction denied")); }
-        Ok(self.original)
-    }
-    fn accept(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant, progress: semio_framework_value::retained_clone::RetainedCloneProgress) -> Result<(), ValueError> {
-        if !progress.fits(grant) { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "original construction receipt changed")); }
-        self.spent = self.spent.checked_add(progress)?;
-        if !self.spent.fits(self.original) { return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "original construction turn exhausted")); }
-        Ok(())
-    }
+const RECEIVER_TURNS:usize=1_100_032;
+fn receiver_clock()->Option<u64>{Some(1)}
+fn receiver_source(original:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retained_clone::RetainedCloneGrant{
+    let extent=|bytes:usize|bytes.max(WIDE).checked_mul(RECEIVER_TURNS).expect("finite fixture source extent");
+    semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:original.maximum_items.max(1).checked_mul(RECEIVER_TURNS).unwrap(),maximum_copy_bytes:extent(original.maximum_copy_bytes),maximum_capacity_bytes:extent(original.maximum_capacity_bytes),maximum_release_bytes:extent(original.maximum_release_bytes),maximum_depth:original.maximum_depth.max(4096)}
 }
-
-struct Receiver { owner: semio_framework_job::OriginalJobDecodeOwner, construction: Construction }
+trait ReceiverReceipt{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress;}
+impl ReceiverReceipt for ArtifactStoreOneItemPreparationStep{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.ownership_progress()}}
+impl ReceiverReceipt for semio_framework_value::retained_clone::RetainedCloneStep{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.progress()}}
+impl ReceiverReceipt for semio_framework_os_store_replay_operation::ArtifactReplayPreparationStep{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.progress()}}
+impl ReceiverReceipt for paged::PagedOneItemEditStep<DocumentMutation>{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{match self{Self::Progress(p)|Self::Complete(p,_)|Self::CompleteRows(p,_)|Self::CompleteOutcome(p,_,_)|Self::RefusedOutcome(p,_)=>*p}}}
+impl<T:ReceiverReceipt> ReceiverReceipt for Result<T,ValueError>{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.as_ref().map_or_else(ValueError::retained_progress,ReceiverReceipt::receipt)}}
+impl<T:ReceiverReceipt,U> ReceiverReceipt for (T,U){fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.0.receipt()}}
+struct Received<T>{value:T,progress:semio_framework_value::retained_clone::RetainedCloneProgress}
+impl<T> ReceiverReceipt for Received<T>{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.progress}}
+struct Receiver { owner: semio_framework_job::OriginalJobDecodeOwner, caller:semio_framework_job::OriginalJobFixtureCaller }
 impl Receiver {
-    fn new(original: semio_framework_value::retained_clone::RetainedCloneGrant) -> Self { Self { owner: semio_framework_job::OriginalJobDecodeOwner::empty(), construction: Construction { original, spent: Default::default() } } }
-    fn run<T>(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<T, ValueError>) -> Result<T, ValueError> {
-        self.construction.original = grant;
-        self.construction.spent = Default::default();
-        let mut observer = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
-        self.owner.receive(grant, &mut observer, &mut self.construction, operation)
+    fn new(original: semio_framework_value::retained_clone::RetainedCloneGrant) -> Self { Self { owner: semio_framework_job::OriginalJobDecodeOwner::empty(),caller:semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),receiver_source(original),receiver_clock,u64::MAX,RECEIVER_TURNS as u64*16) } }
+    fn run<T:ReceiverReceipt>(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<T, ValueError>) -> Result<T, ValueError> {
+        self.caller.turn_with_decoder(grant,&mut self.owner,|cx|{
+            let result=cx.with_native_receiving(operation);
+            let progress=result.as_ref().map_or_else(ValueError::retained_progress,ReceiverReceipt::receipt);
+            cx.consume_receiving_retained(grant,progress)?;
+            result.map_err(Into::into)
+        }).map_err(|failure|{
+            assert!(failure.receipt_refusal.is_none()&&failure.context_refusal.is_none(),"original fixture failure must retain coherent receipts: {failure:?}");
+            failure.primary_value().expect("fixture returns its original value refusal").clone().with_retained_progress(failure.effects)
+        })
     }
+    fn born<T>(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(T,semio_framework_value::retained_clone::RetainedCloneProgress),ValueError>)->Result<T,ValueError>{self.run(grant,|control|operation(control).map(|(value,progress)|Received{value,progress})).map(|result|result.value)}
     fn finish(mut self) {
         for _ in 0..100_000 {
-            if self.owner.terminal_is_empty() { return; }
+            if self.owner.terminal_is_empty() {let stock=self.caller.stock();self.caller.retire(stock);return;}
             let demand = self.owner.retirement_demands(WIDE).unwrap();
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            assert!(self.owner.close_step(grant).result.unwrap().progress().fits(grant));
+            self.caller.turn(grant,|cx|cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,demand,|grant|self.owner.close_step(grant))?;Ok(())})).unwrap();
         }
         panic!("original receiving owner did not close");
     }
@@ -307,15 +315,17 @@ fn prepare_with(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<Documen
 }
 
 fn close<P>(owner: &mut Box<dyn ArtifactStoreOneItemPreparation<P, DocumentMutation>>) {
+    let mut last=None;
     for _ in 0..100_000 {
         if owner.terminal_is_empty() { return; }
         let copy = owner.next_close_copy_byte_demand().unwrap();
         let quote = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_close_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: owner.next_close_release_byte_demand().unwrap(), maximum_depth: owner.next_close_depth_demand().unwrap() };
         let (step, heap) = observe(|| owner.close_step(quote).unwrap());
+        last=Some((quote,step.progress()));
         assert!(step.progress().fits(quote.retained_grant()), "close receipt {:?} exceeds its quote {quote:?}", step.progress());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes), "close accounting disagrees with its receipt");
     }
-    panic!("preparation did not close under its quoted grants");
+    panic!("preparation did not close under its quoted grants: last={last:?}, checkpoint={:?}",owner.checkpoint());
 }
 
 fn completed(outcome: Outcome) -> (PlainDocument, Vec<DocumentMutation>, usize) {
@@ -450,12 +460,21 @@ impl ColdDiffAlgebra<i64> for ScalarDiff {
 }
 
 impl MutationDiff<i64> for ScalarDiff {
-
+    fn retire_cold(self){DIFF_RETIRES.set(DIFF_RETIRES.get()+1);}
 }
 impl ColdMutationDiff<i64> for ScalarDiff {
     fn absorb(&mut self, other: Self) { self.delta += other.delta; }
 
     fn apply(&self, post: &mut i64, _: ApplyCapability) -> MutationApplyResult<()> { APPLY_CALLS.set(APPLY_CALLS.get() + 1); *post += self.delta; Ok(()) }
+}
+
+impl ColdMutation<i64> for DocumentMutation {
+    type ReferenceDiff=ScalarDiff;
+    fn diff(&self,_:&i64)->MutationOutcome<ScalarDiff>{DIFF_CALLS.set(DIFF_CALLS.get()+1);MutationOutcome::new(ScalarDiff::default())}
+    fn inverse(&self,base:&i64)->Result<Vec<Self>,ValueError>{
+        INVERSE_CALLS.set(INVERSE_CALLS.get()+1);
+        match self{Self::Insert{index,..}if *index<=*base as usize=>Ok(Vec::new()),_=>Err(out_of_range())}
+    }
 }
 
 /// 🧮️ The typed native decision produces the exact portable scalar projection and call counts independently verified by SQLite.
@@ -511,7 +530,7 @@ fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
     use paged::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
     use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
     #[derive(Default)]
-    struct InvalidReceiptEdit;
+    struct InvalidReceiptEdit{last_work:u64}
     impl PagedOneItemEdit<Document,DocumentMutation> for InvalidReceiptEdit {
         const PREFIX:&'static str="invalid-receipt-test";
         fn recognizes(_:&DocumentMutation)->bool { true }
@@ -519,10 +538,14 @@ fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
         fn post_mode(&self)->semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPostMode{semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPostMode::Mutable}
         fn advance_demands(&self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,_post:semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPostRead<'_,Document>,_body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
         fn advance(&mut self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,post:semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPost<'_,Document>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<DocumentMutation>,ValueError> {
+            self.last_work=0;
+            if grant.maximum_items==0{return Ok(PagedOneItemEditStep::Progress(Default::default()));}
             let post=post.mutable()?;
+            self.last_work=1;
             let inverse=vec![DocumentMutation::SetText {index:0,text:node_text(post,0).clone()}];
             Ok(PagedOneItemEditStep::CompleteRows(RetainedCloneProgress{copied_items:1,copied_bytes:grant.maximum_copy_bytes+1,..Default::default()},inverse))
         }
+        fn last_turn_work(&self)->u64{self.last_work}
         fn begin_close(&mut self){}
         fn close_demands(&self,_:&dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(Default::default())}
         fn close_step(&mut self,_:&dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>,_:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}

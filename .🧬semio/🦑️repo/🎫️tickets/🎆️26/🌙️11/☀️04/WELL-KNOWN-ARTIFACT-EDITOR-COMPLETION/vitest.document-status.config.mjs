@@ -1,0 +1,1 @@
+export default { test: { include: ['**/🧑‍🎨engine/🧪️tests/💾️document-status/🟦️.ts'], root: process.cwd(), environment: 'jsdom', maxWorkers: 1, minWorkers: 1, fileParallelism: false, testTimeout: 5000 } };

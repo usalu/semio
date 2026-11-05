@@ -342,7 +342,7 @@ async fn the_inspector_emits_set_field_and_list_verbs() {
         tree_viewport_rows: Some(32),
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(inspect(&tree, Locale::En, None, &TreeWindows::for_body(&view, BODY)).expect("editor")))
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(inspect(&tree, Locale::En, Some(mock_inspector_admission), &TreeWindows::for_body(&view, BODY)).expect("editor")))
     .expect("json");
     assert!(json.contains("setField"), "{json}");
     assert!(json.contains("insertItem") || json.contains("removeItem"), "{json}");
@@ -741,6 +741,7 @@ fn nested_rows_are_set_inserted_and_removed_through_parent_selectors() {
     let member = |id: &str, actions: Vec<DslValue>| obj(vec![("id", DslValue::String(id.into())), ("actions", DslValue::Array(actions))]);
     let tree = obj(vec![("members", DslValue::Array(vec![member("M1", vec![action("A1")]), member("M2", vec![action("A1"), action("A2")])]))]);
     const RULES: NormEditRules = NormEditRules {
+        set_field_arguments: &[],
         move_item: &[],
         set_field: &[SetFieldRule { path: "members[].actions[].nK", kind: "change-action-n-k", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("actionId")], value: "newNK" }],
         insert_item: &[InsertItemRule { path: "members[].actions", kind: "insert-member-action", selectors: &[SelectorKey::Id("memberId")], index: "index", item: "action" }],
@@ -768,6 +769,7 @@ fn a_reorder_names_its_row_by_position_and_raises_the_order_kind_with_parent_sel
     let row = |id: &str| obj(vec![("id", DslValue::String(id.into()))]);
     let tree = obj(vec![("members", DslValue::Array(vec![row("a"), row("b"), row("c")])), ("groups", DslValue::Array(vec![obj(vec![("id", DslValue::String("g1".into())), ("items", DslValue::Array(vec![row("x"), row("y")]))])]))]);
     const RULES: NormEditRules = NormEditRules {
+        set_field_arguments: &[],
         move_item: &[
             MoveItemRule { path: "members", kind: "change-member-order", selectors: &[], from: "fromIndex", to: "toIndex" },
             MoveItemRule { path: "groups[].items", kind: "change-group-item-order", selectors: &[SelectorKey::Id("groupId")], from: "fromIndex", to: "toIndex" },
@@ -798,6 +800,7 @@ fn a_null_write_raises_the_clear_kind_of_a_leaf_that_declares_one() {
     let obj = |entries: Vec<(&str, DslValue)>| DslValue::object(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
     let tree = obj(vec![("members", DslValue::Array(vec![obj(vec![("id", DslValue::String("M1".into())), ("tightness", DslValue::String("leaky".into()))])]))]);
     const RULES: NormEditRules = NormEditRules {
+        set_field_arguments: &[],
         move_item: &[],
         set_field: &[
             SetFieldRule { path: "members[].tightness", kind: "change-member-tightness", selectors: &[SelectorKey::Id("memberId")], value: "newTightness" },
@@ -860,6 +863,7 @@ fn an_insert_remedy_appends_its_typed_row_at_the_computed_position_through_the_i
     assert_eq!(get_value_at_path(&tree, "stiffeners[id=s-mid].xM").ok().and_then(DslValue::as_f64), Some(3.0));
     assert!(apply_remedy_edit(&report, "mock.stiffener", 0, 0, &mut tree).is_err(), "a second application never duplicates the row");
     const RULES: NormEditRules = NormEditRules {
+        set_field_arguments: &[],
         move_item: &[],
         set_field: &[],
         insert_item: &[InsertItemRule { path: "stiffeners", kind: "insert-stiffener", selectors: &[], index: "index", item: "stiffener" }],
@@ -918,4 +922,8 @@ mod marker_cells {
     fn without_a_controller_every_marker_row_is_read_only() {
         assert!(!body(None, Locale::En).contains(".marker.m0.input"));
     }
+}
+
+fn mock_inspector_admission(path: &str) -> Option<FieldSpec> {
+    Some(FieldSpec { read_only: !matches!(path, "resistanceKn" | "items[0]" | "items[1]"), can_insert: path == "items", can_remove: path == "items", ..FieldSpec::EMPTY })
 }

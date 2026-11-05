@@ -72,7 +72,7 @@ message En1997AnchorsPatch {
   optional double tendon_yield_force = 10;
   optional double min_free_length = 11;
   optional double test_factor = 12;
-  En1997AnchorsTestsRows tests = 13;
+  optional En1997AnchorsTestsRows tests = 13;
 }
 message En1997AnchorsRemoved {
   string id = 1;
@@ -197,7 +197,7 @@ message En1997FootingsPatch {
   optional double embedment = 3;
   optional double base_inclination_deg = 4;
   optional double settlement_limit = 5;
-  En1997FootingsLoadCasesRows load_cases = 6;
+  optional En1997FootingsLoadCasesRows load_cases = 6;
 }
 message En1997FootingsRemoved {
   string id = 1;
@@ -234,7 +234,7 @@ message En1997LabTestsPatch {
   optional double stress_increment = 9;
   optional double secondary_compression_index = 10;
   optional double design_life = 11;
-  En1997LabTestsPointsRows points = 12;
+  optional En1997LabTestsPointsRows points = 12;
 }
 message En1997LabTestsPointsInserted {
   uint64 index = 1;
@@ -449,7 +449,7 @@ message En1997PilesPatch {
   optional double elastic_compression = 24;
   optional double hammer_efficiency = 25;
   optional string concrete_class = 26;
-  En1997PilesTestProfilesRows test_profiles = 27;
+  optional En1997PilesTestProfilesRows test_profiles = 27;
 }
 message En1997PilesRemoved {
   string id = 1;
@@ -651,7 +651,7 @@ message En1997InvestigationsPatch {
   optional double ground_level = 3;
   optional double depth = 4;
   optional string kind = 5;
-  En1997InvestigationsReadingsRows readings = 6;
+  optional En1997InvestigationsReadingsRows readings = 6;
 }
 message En1997CharacteristicBasesInserted {
   uint64 index = 1;

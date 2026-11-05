@@ -45,7 +45,7 @@ impl OpBinary for RasterMutation {
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(raster_mutation_from_dsl(RasterMutationDsl::decode_op(bytes)?))
+        raster_mutation_from_dsl(RasterMutationDsl::decode_op(bytes)?).map_err(|error|protocol::ProtocolError::Malformed{what:"raster mutation",offset:0,detail:error.to_string()})
     }
 }
 }

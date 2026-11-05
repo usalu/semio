@@ -23,7 +23,7 @@
       {
         "id": "lab-T1",
         "patch": {
-          "kind": "directShear-alt"
+          "kind": "directShear"
         }
       }
     ]

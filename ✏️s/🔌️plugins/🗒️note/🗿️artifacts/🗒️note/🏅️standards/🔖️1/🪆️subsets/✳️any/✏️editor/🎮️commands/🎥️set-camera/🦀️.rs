@@ -15,7 +15,7 @@ pub struct SetCamera {
 }
 
 pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
-    let view = ctx.view_state.as_ref().ok_or_else(|| Fault::from("note-composite-window-context-required"))?;
+    let view = ctx.view_state.as_deref().ok_or_else(|| Fault::from("note-composite-window-context-required"))?;
     let config = crate::editor::note::window::NoteCompositeWindowConfig { camera: payload.camera.clone() };
     Ok(Emit { window_config_mutations: vec![crate::editor::note::window::addressed_config(view, config)?], ..Default::default() })
 }

@@ -250,13 +250,13 @@ impl<PA: PluginApp> RuntimeLiveCleanupJob<PA> {
 pub fn runtime_drain_maintenance_source<PA:PluginApp>(cell:&RuntimeAppCell<PA>,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
     cx.with_original_retirement(|cx|{
         let mut instance=match cell.background_instance(){Ok(instance)=>instance,Err(RuntimeInstanceRefusal::Contended)=>return Ok(PluginLifecycleStep::Blocked{reason:"original maintenance source is borrowed"}),Err(RuntimeInstanceRefusal::Poisoned)=>return Err(plugin_internal_fault("original maintenance source is poisoned").into())};
-        if instance.app.maintenance_source_terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(Default::default()))}
+        if instance.app.maintenance_source_terminal_is_empty(cx){return Ok(PluginLifecycleStep::Complete(Default::default()))}
         cx.with_retained_loan(cell.mounted_policy.close,|cx|{
-            let grant=cx.retained_grant();let demand=instance.app.maintenance_source_close_demands(grant.maximum_copy_bytes)?;
+            let grant=cx.retained_grant();let demand=instance.app.maintenance_source_close_demands(grant.maximum_copy_bytes,cx)?;
             if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::AwaitingInput{reason:"original maintenance drain retains its quoted authority"})}
             let before=cx.retained_progress();let step=instance.app.maintenance_source_close_step(cx,grant)?;let after=cx.retained_progress();
             let actual=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};
-            if step.progress().unwrap_or_default()!=actual||matches!(step,PluginLifecycleStep::Complete(_))&&!instance.app.maintenance_source_terminal_is_empty(){return Err(plugin_internal_fault("original maintenance drain receipt or terminal witness disagrees").into())}
+            if step.progress().unwrap_or_default()!=actual||matches!(step,PluginLifecycleStep::Complete(_))&&!instance.app.maintenance_source_terminal_is_empty(cx){return Err(plugin_internal_fault("original maintenance drain receipt or terminal witness disagrees").into())}
             Ok(step)
         })
     })

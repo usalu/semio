@@ -41,27 +41,20 @@ enum Puzzle5dPasteStage {
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
 struct Puzzle5dPasteOwners {
-    pub raw: Vec<u8>,
-    pub snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,
-    pub args: Option<Value>,
     pub fragment_value: Option<Value>,
     pub fragment_parts: Vec<Puzzle5dPart>,
     pub id_map: HashMap<String, String>,
     pub fresh_ids: Puzzle5dFreshIds,
     pub mutations: Vec<Puzzle5dMutation>,
-    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
     pub pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
 }
 
 pub struct Puzzle5dPasteJob {
-    pub raw: Vec<u8>,
     pub raw_cursor: usize,
     pub raw_page: [u8; PUZZLE5D_RESERVED_PAGE_BYTES],
     pub raw_page_len: usize,
     pub progress: u64,
     pub stage: Puzzle5dPasteStage,
-    pub snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,
-    pub args: Option<Value>,
     pub fragment_value: Option<Value>,
     pub fragment_parts: Vec<Puzzle5dPart>,
     pub cursor: usize,
@@ -73,25 +66,22 @@ pub struct Puzzle5dPasteJob {
     pub id_map: HashMap<String, String>,
     pub fresh_ids: Puzzle5dFreshIds,
     pub mutations: Vec<Puzzle5dMutation>,
-    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
     pub pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
     pub completed: bool,
     pub outbox: crate::puzzle_job::JobOutbox,
     pub closing: bool,
+    close_staged:bool,
     pub owners: crate::puzzle_job::WorkClosing<Puzzle5dPasteOwners>,
 }
 
-impl Puzzle5dPasteJob {
-    pub fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, args: Option<Value>) -> Self {
+impl Default for Puzzle5dPasteJob {
+    fn default() -> Self {
         Self {
-            raw: request.raw_wire,
             raw_cursor: 0,
             raw_page: [0; PUZZLE5D_RESERVED_PAGE_BYTES],
             raw_page_len: 0,
             progress: 0,
             stage: Puzzle5dPasteStage::Envelope,
-            snapshot: Some(request.snapshot),
-            args,
             fragment_value: None,
             fragment_parts: Vec::new(),
             cursor: 0,
@@ -103,22 +93,25 @@ impl Puzzle5dPasteJob {
             id_map: HashMap::new(),
             fresh_ids: Puzzle5dFreshIds::default(),
             mutations: Vec::new(),
-            completion: Some(request.completion),
             pending_completion_rejection: None,
             completed: false,
             outbox: Default::default(),
             closing: false,
+            close_staged:false,
             owners: Default::default(),
         }
     }
 
+}
+
+impl Puzzle5dPasteJob {
     pub fn checkpoint(&self) -> crate::puzzle_job::JobTurn {
         puzzle5d_job_checkpoint(self.stage as u8, self.cursor, self.progress)
     }
 }
 
 impl Puzzle5dPasteJob {
-    pub fn turn(&mut self, cx: &mut StepContext<'_>) -> crate::puzzle_job::JobTurn {
+    pub fn turn(&mut self,request:&mut ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx: &mut StepContext<'_>) -> crate::puzzle_job::JobTurn {
         if self.closing || cx.is_cancelled() {
             return crate::puzzle_job::JobTurn::Cancelled;
         }
@@ -127,21 +120,21 @@ impl Puzzle5dPasteJob {
         }
         match self.stage {
             Puzzle5dPasteStage::Envelope => {
-                if let Some(outcome) = puzzle5d_step_envelope(&self.raw, &mut self.raw_cursor, &mut self.raw_page, &mut self.raw_page_len, &mut self.progress, cx) {
+                if let Some(outcome) = puzzle5d_step_envelope(&request.raw_wire, &mut self.raw_cursor, &mut self.raw_page, &mut self.raw_page_len, &mut self.progress, cx) {
                     return outcome;
                 }
                 self.stage = Puzzle5dPasteStage::Decode;
             }
             Puzzle5dPasteStage::Decode => {
-                let Some(args) = self.args.as_ref() else {
+                let Some(semio_framework_plugin::ArtifactReservedToolInput::Action{args:Some(args),..})=request.input.as_ref() else {
                     self.stage = Puzzle5dPasteStage::Complete;
                     return self.checkpoint();
                 };
-                let Some(fragment_value) = args.get("fragment").cloned() else {
+                let Some(fragment_value) = args.get("fragment") else {
                     self.stage = Puzzle5dPasteStage::Complete;
                     return self.checkpoint();
                 };
-                let fragment: ClipboardFragment = match puzzle5d_record_from_projection(fragment_value) {
+                let fragment: ClipboardFragment = match ClipboardFragment::from_value(fragment_value.clone()) {
                     Ok(fragment) => fragment,
                     Err(error) => return puzzle5d_job_fault(error.to_string()),
                 };
@@ -155,7 +148,7 @@ impl Puzzle5dPasteJob {
                     Ok(value) => Some(value),
                     Err(error) => return puzzle5d_job_fault(error.to_string()),
                 };
-                self.placement = match puzzle5d_paste_placement(args) {
+                self.placement = match crate::editor::puzzle5d::entities::puzzle5d_paste_placement_from_dsl(args) {
                     Ok(placement) => placement,
                     Err(error) => return puzzle5d_job_fault(error.to_string()),
                 };
@@ -179,7 +172,7 @@ impl Puzzle5dPasteJob {
                 }
             }
             Puzzle5dPasteStage::TargetParts => {
-                let rows = self.snapshot.as_ref().map(|snapshot| &snapshot.typed().parts).map(Vec::as_slice).unwrap_or(&[]);
+                let rows=request.snapshot.typed().parts.as_slice();
                 if let Some(row) = rows.get(self.cursor) {
                     self.cursor += 1;
                     self.fresh_ids.observe_part(&row.id);
@@ -198,7 +191,7 @@ impl Puzzle5dPasteJob {
                 }
             }
             Puzzle5dPasteStage::TargetFasteners => {
-                let rows = self.snapshot.as_ref().map(|snapshot| &snapshot.typed().fasteners).map(Vec::as_slice).unwrap_or(&[]);
+                let rows=request.snapshot.typed().fasteners.as_slice();
                 if let Some(row) = rows.get(self.cursor) {
                     self.cursor += 1;
                     self.fresh_ids.observe_fastener(&row.id);
@@ -255,14 +248,14 @@ impl Puzzle5dPasteJob {
                 }
             }
             Puzzle5dPasteStage::Complete => {
-                if !self.raw.is_empty() {
-                    return crate::puzzle_job::JobTurn::Prepare(std::mem::take(&mut self.raw));
+                if !request.raw_wire.is_empty() {
+                    return crate::puzzle_job::JobTurn::Yield;
                 }
                 if !self.completed {
                     let mut fresh: Vec<String> = self.id_map.values().cloned().collect();
                     fresh.sort();
                     let emit = Emit { artifact_mutations: std::mem::take(&mut self.mutations), interaction_writes: vec![InteractionWrite::replace(PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_GRANULARITY_PART, fresh)], ..Default::default() };
-                    let Some(completion) = self.completion.as_ref() else { return puzzle5d_job_fault("puzzle5d paste lost its completion authority") };
+                    let completion=&request.completion;
                     if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
                         let message = rejected.fault.message.clone();
                         self.pending_completion_rejection = Some(rejected);
@@ -281,7 +274,7 @@ impl Puzzle5dPasteJob {
 
 impl Puzzle5dPasteJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step_value<'a>(&'a mut self,request:&mut ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
             crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
@@ -290,61 +283,26 @@ impl Puzzle5dPasteJob {
             }
             crate::puzzle_job::OutboxPhase::Idle => {}
         }
-        let turn = if cx.fuel_exhausted() || cx.deadline_exceeded() { crate::puzzle_job::JobTurn::Yield } else { self.turn(cx) };
+        if self.stage==Puzzle5dPasteStage::Complete&&!request.raw_wire.is_empty(){return crate::editor::puzzle5d::session::support::puzzle5d_prepare_original_wire(&mut request.raw_wire,&mut self.outbox,cx)}
+        let turn = if cx.fuel_exhausted() || cx.deadline_exceeded() { crate::puzzle_job::JobTurn::Yield } else { self.turn(request,cx) };
         self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
-impl InteractiveJob for Puzzle5dPasteJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
+impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dPasteJob {
+    fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.outbox.borrow_outcome(descriptor)
     }
 
-    fn begin_close(&mut self) {
-        if std::mem::replace(&mut self.closing, true) {
-            return;
-        }
-        self.owners.stage(Puzzle5dPasteOwners {
-            raw: std::mem::take(&mut self.raw),
-            snapshot: self.snapshot.take(),
-            args: self.args.take(),
-            fragment_value: self.fragment_value.take(),
-            fragment_parts: std::mem::take(&mut self.fragment_parts),
-            id_map: std::mem::take(&mut self.id_map),
-            fresh_ids: std::mem::take(&mut self.fresh_ids),
-            mutations: std::mem::take(&mut self.mutations),
-            completion: self.completion.take(),
-            pending_completion_rejection: self.pending_completion_rejection.take(),
-        });
+    fn begin_close(&mut self){self.closing=true}
+    fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if !self.close_staged{return Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Puzzle5dPasteOwners>(),depth:1,..Default::default()})}crate::puzzle_job::job_close_demands(&self.outbox,&self.owners,body)
     }
-
-    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
-        self.begin_close();
-        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, cx)
-    }) }
-
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.copy_bytes)
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        self.closing=true;if !self.close_staged{let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;return semio_framework_job::close_original_retained_step(cx,demand,|_|{self.owners.stage(Puzzle5dPasteOwners{fragment_value:self.fragment_value.take(),fragment_parts:std::mem::take(&mut self.fragment_parts),id_map:std::mem::take(&mut self.id_map),fresh_ids:std::mem::take(&mut self.fresh_ids),mutations:std::mem::take(&mut self.mutations),pending_completion_rejection:self.pending_completion_rejection.take()});self.close_staged=true;semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})}crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx)
     }
-
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, maximum_copy_bytes)?.capacity_bytes)
-    }
-
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.release_bytes)
-    }
-
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.depth)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.outbox.terminal_is_empty() && self.owners.is_empty()
-    }
+    fn terminal_is_empty(&self)->bool{self.closing&&self.close_staged&&self.outbox.terminal_is_empty()&&self.owners.is_empty()}
 }
-
-impl ArtifactReservedJob for Puzzle5dPasteJob {}
 //#endregion 🧵️ReservedJobs

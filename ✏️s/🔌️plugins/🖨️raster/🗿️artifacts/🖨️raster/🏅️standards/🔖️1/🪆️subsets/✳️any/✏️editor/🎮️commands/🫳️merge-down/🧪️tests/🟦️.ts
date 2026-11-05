@@ -6,10 +6,11 @@ import {mergeDownPlan} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {RasterStackJob,type RasterStackLayer} from "@semio-tech/framework/pixels/compositing/layers";
+const validate=new Ajv().addVocabulary(["x-semio-execution"]).compile(schema);
 const images=Object.fromEntries(Object.entries(fixture.images).map(([key,image])=>[key,{...image,pixels:Uint8Array.from(image.pixels)}]));
 function composite(layers:RasterStackLayer[]){const job=new RasterStackJob({layers,images});while(!job.advance(1).done){}return job.result();}
 for(const row of fixture.cases)test(row.name,async()=>{
-  expect(new Ajv().compile(schema)({layerId:row.layerId})).toBe(true);
+  expect(validate({layerId:row.layerId})).toBe(true);
   const plan=mergeDownPlan(row.layers,row.layerId);
   expect(plan.parentId).toBe(row.parentId);expect(plan.index).toBe(row.index);
   expect(plan.layers.map(layer=>layer.id)).toEqual(["lower","upper"]);
@@ -26,7 +27,6 @@ for(const invalid of fixture.invalid)test(invalid.name+" refuses merge",()=>{
   expect(()=>mergeDownPlan(layers,invalid.id)).toThrow();
 });
 test("merge command rejects malformed targets",()=>{
-  const validate=new Ajv().compile(schema);
   for(const value of [{},{layerId:""},{layerId:" "},{layerId:"x",extra:1}])expect(validate(value)).toBe(false);
 });
 

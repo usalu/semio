@@ -23,10 +23,16 @@
         },
         "group": "combination",
         "order": 10,
-        "options": [
-          "6.10",
-          "6.10ab"
-        ]
+        "options": {
+          "6.10": {
+            "en": "Equation 6.10",
+            "de": "Gleichung 6.10"
+          },
+          "6.10ab": {
+            "en": "Equations 6.10a and 6.10b",
+            "de": "Gleichungen 6.10a und 6.10b"
+          }
+        }
       }
     }
   }

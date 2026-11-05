@@ -2,6 +2,87 @@
 use super::*;
 
 #[test]
+fn inspector_stages_every_filter_with_its_authoritative_amount_bounds() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎚️config/🧪️tests/🧫️fixtures/filter-options.json")).unwrap();
+    let mut document = semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
+    document.layers.push(semio_s_artifact_raster_raster_model::create_layer_of_kind("pixel"));
+    let id = layer_node_id(&document.layers[0]).to_owned();
+    for labels in [&RasterPlayLabels::NATIVE_EN, &RasterPlayLabels::NATIVE_DE] {
+        for row in fixture["cases"].as_array().unwrap() {
+            let config = RasterConfig { filter_kind: row["filter"].as_str().unwrap().into(), filter_amount: row["amount"].as_f64().unwrap(), ..Default::default() };
+            let tree = render(&document, &config, &[id.clone()], labels).unwrap();
+            let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+            let projection: serde_json::Value = serde_json::from_str(&text).unwrap();
+            let mut pending = vec![&projection];
+            let mut amount_found = false;
+            let mut apply_found = false;
+            while let Some(node) = pending.pop() {
+                match node["key"].as_str().unwrap_or("") {
+                    "raster-inspector.filter-kind.input" => {
+                        assert_eq!(node["bindings"][0]["action"]["name"], "setFilterKind");
+                        assert_eq!(node["bindings"][0]["trigger"], "change");
+                        for filter in fixture["cases"].as_array().unwrap() { assert!(node.to_string().contains(filter["filter"].as_str().unwrap())); }
+                    }
+                    "raster-inspector.filter-amount.input" => {
+                        amount_found = true;
+                        assert_eq!(node["component"]["min"], row["min"]);
+                        assert_eq!(node["component"]["max"], row["max"]);
+                        assert_eq!(node["bindings"][0]["action"]["name"], "setFilterAmount");
+                        assert_eq!(node["bindings"][0]["trigger"], "commit");
+                    }
+                    "raster-inspector.apply-filter" => {
+                        apply_found = true;
+                        assert_eq!(node["component"]["target"]["activation"], "applyFilter");
+                        assert_eq!(node["component"]["target"]["args"]["filter"], row["filter"]);
+                        assert_eq!(node["component"]["target"]["args"]["amount"], row["amount"]);
+                    }
+                    _ => {}
+                }
+                pending.extend(node["children"].as_array().unwrap());
+            }
+            assert_eq!(amount_found, !row["min"].is_null());
+            assert!(apply_found);
+        }
+    }
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
+}
+
+#[test]
+fn inspector_pixel_actions_match_the_neutral_semantic_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️selection/operations.json")).unwrap();
+    for kind in ["pixel", "group"] {
+        let mut document = semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
+        document.layers.push(semio_s_artifact_raster_raster_model::create_layer_of_kind(kind));
+        let id = layer_node_id(&document.layers[0]).to_owned();
+        for (locale, labels) in [("en", &RasterPlayLabels::NATIVE_EN), ("de", &RasterPlayLabels::NATIVE_DE)] {
+            for target in ["pixels", "mask"] {
+                let config = RasterConfig { paint_target: target.into(), ..Default::default() };
+                let tree = render(&document, &config, &[id.clone()], labels).unwrap();
+                let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+                let projection: serde_json::Value = serde_json::from_str(&text).unwrap();
+                for row in fixture["actions"].as_array().unwrap() {
+                    let key = format!("raster-inspector.{}", row["key"].as_str().unwrap());
+                    let mut pending = vec![&projection];
+                    let mut found = false;
+                    while let Some(node) = pending.pop() {
+                        if node["key"] == key {
+                            found = true;
+                            assert!(node.to_string().contains(row["labels"][locale].as_str().unwrap()));
+                            assert_eq!(node["component"]["target"]["activation"], row["command"]);
+                            assert_eq!(node["component"]["target"]["args"]["layerId"], id);
+                            for (field, value) in row["args"].as_object().unwrap() { assert_eq!(&node["component"]["target"]["args"][field], value); }
+                        }
+                        pending.extend(node["children"].as_array().unwrap());
+                    }
+                    assert_eq!(found, kind == "pixel" || target == "mask" && row["command"] == "fillSelection", "{kind} {target} {key}");
+                }
+            }
+        }
+        semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
+    }
+}
+
+#[test]
 fn inspector_projects_selected_properties_and_foreground_in_both_languages() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
     let mut document: RasterDocument = semio_framework_pack_json::from_json_str(r#"{"schema":"raster.document","id":"inspection","title":"Inspection","layers":[{"kind":"pixel","id":"paint.foreground","name":"123","mask":null,"width":32,"height":32,"imageKey":null},{"kind":"pixel","id":"paint.background","name":"Background","mask":null,"width":64,"height":64,"imageKey":null}]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

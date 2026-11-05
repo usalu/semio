@@ -324,15 +324,6 @@ pub struct En1991Snapshot {
     pub rotating_machines: Vec<RotatingMachine>,
     #[dsl(table)]
     #[state(artifact)]
-    pub dust_explosions: Vec<DustExplosion>,
-    #[dsl(table)]
-    #[state(artifact)]
-    pub rail_load_groups: Vec<RailLoadGroup>,
-    #[dsl(table)]
-    #[state(artifact)]
-    pub rail_derailments: Vec<RailDerailment>,
-    #[dsl(table)]
-    #[state(artifact)]
     pub fatigue_models: Vec<FatigueModel>,
     #[dsl(table)]
     #[state(artifact)]
@@ -343,6 +334,15 @@ pub struct En1991Snapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub snow_guards: Vec<SnowGuard>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub rail_derailments: Vec<RailDerailment>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub rail_load_groups: Vec<RailLoadGroup>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub dust_explosions: Vec<DustExplosion>,
 }
 
 impl En1991Snapshot {
@@ -1093,14 +1093,18 @@ pub struct DustExplosion {
     /// 💥 Dust explosion constant K_St [bar m/s] of the stored dust.
     pub kst: f64,
     /// 💥 Maximum explosion pressure p_max [Pa] of the dust in a closed vessel.
+    #[dsl(unit = "Pa")]
     pub p_max: f64,
     /// 📦 Volume V [m³] of the silo or bin compartment.
     pub volume: f64,
     /// 🪟 Vent area A_v [m²] of the explosion venting.
+    #[dsl(unit = "m2")]
     pub vent_area: f64,
     /// 🔓 Static opening pressure p_stat [Pa] of the vent panels.
+    #[dsl(unit = "Pa")]
     pub static_opening_pressure: f64,
     /// 🛡️ Reduced explosion pressure p_red [Pa] the structure is designed for.
+    #[dsl(unit = "Pa")]
     pub design_pressure: f64,
 }
 
@@ -1121,12 +1125,15 @@ pub struct RailLoadGroup {
     /// ↕️ Factor of the lateral force (nosing) of the group, entered from Table 6.11.
     pub factor_lateral: f64,
     /// 🏋️ LM71 axle load [N] of the group the design assumes (factor times alpha times 250 kN).
+    #[dsl(unit = "N")]
     pub assumed_axle_load: f64,
     /// 📏 LM71 distributed load [N/m] of the group the design assumes.
     pub assumed_udl: f64,
     /// ↔️ Traction or braking force [N] of the group the design assumes.
+    #[dsl(unit = "N")]
     pub assumed_longitudinal: f64,
     /// ↕️ Lateral force (nosing) [N] of the group the design assumes.
+    #[dsl(unit = "N")]
     pub assumed_lateral: f64,
 }
 
@@ -1143,8 +1150,10 @@ pub struct RailDerailment {
     /// 🏋️ Vertical line load [N/m] along the track the design assumes for the derailed vehicles.
     pub assumed_line_load: f64,
     /// ↔️ Length [m] over which the line load acts along the track.
+    #[dsl(unit = "m")]
     pub loaded_length: f64,
     /// ↕️ Distance [m] of the line load from the track axis, transverse to the track.
+    #[dsl(unit = "m")]
     pub offset: f64,
 }
 

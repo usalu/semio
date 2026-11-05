@@ -1,0 +1,1 @@
+{"wire":"ordered-field-list","construction":"original-owned-native-receiving","retainedOutput":"persistent-pages","maximumItems":1048576,"maximumCopyBytes":1073741824,"maximumCapacityBytes":1073741824,"maximumReleaseBytes":1073741824,"maximumDepth":4096,"rows":[[],[7],[0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32]],"cancelAfterTurns":[0,1,2,8,32,96]}

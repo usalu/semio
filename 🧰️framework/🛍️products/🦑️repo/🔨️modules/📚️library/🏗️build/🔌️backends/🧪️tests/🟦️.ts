@@ -124,3 +124,24 @@ test("schemas that name a build tool accept every registered id and nothing else
   expect(text,path).not.toMatch(/"enum":\s*\[\s*"nx",\s*"bazel"\s*\]/u);expect(text,path).not.toContain("^(nx|bazel)$");
  }
 });
+
+import environmentCases from "./🌿️environment.json" with {type:"json"};
+import environmentSchema from "./🧬️environment.json" with {type:"json"};
+import {nxChildEnvironment} from "../../../⚡️caching/🚀️bootstrap/📜️script.ts";
+
+test("backend process defaults reach startup and preserve explicit environment",async()=>{
+ expect(ajv.compile(environmentSchema)(environmentCases)).toBe(true);
+ const {buildBackendProcessEnvironmentV1}=await import("../🟦️.ts");
+ expect(nxChildEnvironment({},["watch"],true).NX_DAEMON).toBe("true");
+ for(const row of environmentCases.cases){
+  const before=structuredClone(row.environment);
+  const actual=buildBackendProcessEnvironmentV1(row.backend,row.environment);
+  const oracle=structuredClone(row.environment),defaults=buildBackendRowV1(row.backend).processEnvironment??{};
+  expect(new Ajv({strict:true,useDefaults:true}).compile({type:"object",properties:Object.fromEntries(Object.entries(defaults).map(([key,value])=>[key,{type:"string",default:value}]))})(oracle),row.id).toBe(true);
+  expect(actual,row.id).toEqual(row.expected);
+  expect(actual,row.id).toEqual(oracle);
+  expect(actual,row.id).toEqual(Object.assign({},buildBackendRowV1(row.backend).processEnvironment,row.environment));
+  expect(row.environment,row.id).toEqual(before);
+  if(row.backend==="nx")expect(nxChildEnvironment(row.environment,["run","workspace:components"],false).NX_DAEMON,row.id).toBe(row.expected.NX_DAEMON);
+ }
+});

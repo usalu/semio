@@ -280,3 +280,9 @@ fn the_new_document_palette_offers_the_full_showcase_and_its_dsl_round_trips_to_
     }
     assert_eq!(semio_s_artifact_norm_en1995_io::text::snapshot::decode_en1995_dsl(&source.document()).expect("the palette entry parses"), showcase);
 }
+
+#[test]
+fn compiled_input_metadata_matches_all_native_schema_rows() {
+    let findings = semio_s_plugin_norm_app_surface::norm_compiled_input_findings::<En1995PlayApp>();
+    assert!(findings.is_empty(), "{}", findings.join("\n"));
+}

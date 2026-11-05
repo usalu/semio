@@ -33,14 +33,20 @@ pub(crate) fn governing(report: &CheckReport, entity: &str) -> Option<usize> {
 }
 
 impl NormSelection {
-    /// 🪄️ Resolves `picked` interaction addresses (scoped `kind/id`, `check/id` or raw entity ids, `#part` suffixes allowed) and the stored `check_index`; picks come first, the checked entity is added, an unselected check falls back to the governing check of the first picked entity.
+    /// 🪄️ Resolves interaction addresses and the stored check: an explicit check pick wins, otherwise entity picks retain a stored check only when it belongs to a picked owner, falling back to the first picked entity's governing check.
     pub fn resolve(report: &CheckReport, check_index: Option<u32>, picked: &[String]) -> Self {
         let mut entities: Vec<String> = Vec::new();
         let mut owners: Vec<String> = Vec::new();
         let mut check = check_index.map(|index| index as usize).filter(|index| *index < report.checks.len());
+        let mut picked_check = false;
         for address in picked {
             match picked_target(address) {
-                (true, id) => check = report.checks.iter().position(|candidate| candidate.id == id).or(check),
+                (true, id) => {
+                    if let Some(index) = report.checks.iter().position(|candidate| candidate.id == id) {
+                        check = Some(index);
+                        picked_check = true;
+                    }
+                }
                 (false, id) if !id.is_empty() && !entities.contains(&id) => {
                     let owner = semio_s_plugin_norm_structural_scene::projection_kit::base_id(&id).to_owned();
                     if !owners.contains(&owner) && owner != semio_s_plugin_norm_structural_scene::projection_kit::GLOBAL_BADGE {
@@ -50,6 +56,9 @@ impl NormSelection {
                 }
                 _ => {}
             }
+        }
+        if !picked_check && !owners.is_empty() && check.is_some_and(|index| !owners.iter().any(|owner| owner == semio_s_plugin_norm_structural_scene::projection_kit::base_id(&report.checks[index].subject.entity_id))) {
+            check = None;
         }
         if check.is_none() {
             check = entities.first().and_then(|entity| governing(report, entity));
@@ -62,6 +71,11 @@ impl NormSelection {
         }
         let paths = subject.map(|subject| subject.path.clone()).filter(|path| !path.is_empty()).into_iter().collect();
         Self { entities, picked: owners, check, paths, units: None }
+    }
+
+    /// 🖱️ Interaction selection is the event source: an exact check pick keeps its field, an entity pick chooses its governing check, and the local check is a fallback only without picks.
+    pub fn from_interaction(report: &CheckReport, fallback_check: Option<u32>, picked: &[String]) -> Self {
+        Self::resolve(report, picked.is_empty().then_some(fallback_check).flatten(), picked)
     }
 
     /// 🎯️ The entity every window focuses on: the selected check's entity, else the first picked one.
@@ -91,6 +105,16 @@ impl NormSelection {
     /// ✅️ The check row to mark selected in the checks window.
     pub fn checks_selected(&self) -> Option<u32> {
         self.check.map(|index| index as u32)
+    }
+
+    fn checks_owners(&self, report: &CheckReport) -> Vec<String> {
+        let selected_owner = self.check.and_then(|index| report.checks.get(index)).map(|check| semio_s_plugin_norm_structural_scene::projection_kit::base_id(&check.subject.entity_id));
+        if selected_owner.is_some_and(|owner| !self.picked.is_empty() && !self.picked.iter().any(|picked| picked == owner)) { Vec::new() } else { self.picked.clone() }
+    }
+
+    /// 📋️ The checks state keeps the selected row visible while retaining compatible entity filtering.
+    pub fn checks_state(&self, report: &CheckReport, base: ChecksViewState) -> ChecksViewState {
+        ChecksViewState { selected: self.check, owners: self.checks_owners(report), ..base }
     }
 
     /// 🧊️ Viewport highlight addresses for the scene entities whose document entity is selected (`id` or `id:part`).
@@ -188,9 +212,16 @@ impl<F: NormFamily> LiveView<F> {
         Self::from_host(host, settled, check_index, picked)
     }
 
-    /// 🫧️ Like [`Self::within`] over the committed `document` with the provisional writes of `transient` laid over it (drag first, then ghost): every window paints the preview document and the incremental session re-evaluates only the affected units; no overlay is the committed document. The check the view lane holds (a click on a check row or a stepping shortcut) wins over the stored `check_index`, so the selected check, its entity in the viewport and the camera framing follow the shortcut. While a drag is open the geometry follows every frame but the report is only re-evaluated when the T1 debounce (60 ms after the last tick, or a commit) is due; in between the last preview report is shown.
+    /// 🫧️ Paints the committed document with provisional drag/ghost writes and incremental evaluation. Interaction picks carry the current entity or exact check; without picks, the view-lane check wins over stored configuration. During a drag geometry follows every frame while evaluation follows the T1 debounce, retaining the last preview report between evaluations.
     pub fn with_lanes(document: F::Document, check_index: Option<u32>, picked: &[String], transient: &crate::NormTransient) -> Self {
         let mut view = Self::over_lanes(document, transient.view.check.or(check_index), picked, transient);
+        if !picked.is_empty() {
+            view.selection = NormSelection::from_interaction(view.host.report(), transient.view.check.or(check_index), picked);
+            view.focus = view.selection.primary(view.host.report());
+        } else if transient.view.check.is_some() {
+            view.selection = NormSelection::resolve(view.host.report(), transient.view.check, picked);
+            view.focus = view.selection.primary(view.host.report());
+        }
         view.selection.units = unit_system_of(&transient.view);
         view
     }
@@ -232,9 +263,9 @@ impl<F: NormFamily> LiveView<F> {
         pending_of(self.settled, &self.progress)
     }
 
-    /// ✅️ The checks view state over the window's own grouping, sort and filter: this selection, the entities picked in the viewport (the list narrows to their checks) and the evaluation progress.
+    /// ✅️ The checks view state over the window's grouping, sort and filter: selection and progress, narrowed to picked owners only while the selected check stays visible.
     pub fn checks_view(&self, base: ChecksViewState) -> ChecksViewState {
-        ChecksViewState { selected: self.selection.check, pending: self.pending(), owners: self.selection.picked.clone(), ..base }
+        ChecksViewState { selected: self.selection.check, pending: self.pending(), owners: self.selection.checks_owners(self.host.report()), ..base }
     }
 
     /// ✅️ The checks window of this live view: its pending progress, its selected check and the list narrowed to the entities picked in the viewport of the interaction `domain`.

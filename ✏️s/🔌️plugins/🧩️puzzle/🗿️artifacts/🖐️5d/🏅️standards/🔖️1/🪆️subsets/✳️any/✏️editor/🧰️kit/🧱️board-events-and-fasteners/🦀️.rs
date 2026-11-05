@@ -247,7 +247,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, semio_framework_job::OriginalTurnFailure> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _, interaction: _, hover: _hover, context, .. } = *input;
-        let view_state = context.and_then(|context| context.view_state.as_ref());
+        let view_state = context.and_then(|context| context.view_state.as_deref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
         let projection = puzzle5d_editor_projection(snapshot);
         let source = Self::source(command)?;

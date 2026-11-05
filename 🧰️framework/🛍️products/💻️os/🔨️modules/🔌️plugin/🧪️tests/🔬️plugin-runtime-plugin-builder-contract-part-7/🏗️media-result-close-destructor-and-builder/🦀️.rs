@@ -122,9 +122,23 @@
         assert_eq!(owner.interaction_store.local_actor_id(), &actor);
         let roots = [owner.store.local_actor_id(), owner.config_store.local_actor_id(), owner.draft_store.local_actor_id(), owner.interaction_store.local_actor_id()];
         assert_eq!(serde_json::to_value(roots.map(|actor| actor.0.as_str())).expect("independent actor projection"), serde_json::json!([fixture["actors"]["opened"], fixture["actors"]["opened"], fixture["actors"]["opened"], fixture["actors"]["opened"]]));
+        let parent_id = owner.store.envelope().id.clone();
+        let mut sibling = bundle.create_app(TestApp::<false>::APP_ID, actor.clone(), mounted_policy, &mut identity).expect("second registered app factory births").expect("second registered app");
+        assert_eq!(sibling.app_id().await, TestApp::<false>::APP_ID);
+        let TestRuntimeApps::Test(sibling_owner) = &mut sibling;
+        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(sibling_owner, mounted_policy);
+        let sibling_id = sibling_owner.store.envelope().id.clone();
+        let identity_law: serde_json::Value = serde_json::from_str(include_str!("🔣️identity.json")).expect("neutral parent identity law");
+        assert_eq!(parent_id != sibling_id, identity_law["expectation"]["distinctParents"].as_bool().unwrap());
+        assert_ne!(parent_id, TestApp::<false>::APP_ID);
+        assert_ne!(sibling_id, TestApp::<false>::APP_ID);
+        let independent_projection = serde_json::to_value((parent_id != sibling_id, sibling_owner.app.instance_id().await == TestApp::<false>::APP_ID, parent_id.len(), sibling_id.len())).expect("independent identity output projection");
+        assert_eq!(independent_projection, identity_law["output"]);
         let pack = owner.document_pack().await.expect("stored document");
         artifact_app_laws::load_document(owner, &pack, &mut identity).await.expect("production reload");
         assert_eq!(owner.store.local_actor_id(), &actor, "reload retains the opened actor");
+        assert_eq!(owner.store.envelope().id, parent_id, "reload retains actual parent identity");
+        artifact_app_laws::close_registered_fixture_app(&mut sibling, mounted_policy,cx).expect("second fixture paid terminal close");
         assert!(bundle.create_app("unknown-app", actor, mounted_policy, &mut identity).expect("unknown app is not a fault").is_none());
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
 

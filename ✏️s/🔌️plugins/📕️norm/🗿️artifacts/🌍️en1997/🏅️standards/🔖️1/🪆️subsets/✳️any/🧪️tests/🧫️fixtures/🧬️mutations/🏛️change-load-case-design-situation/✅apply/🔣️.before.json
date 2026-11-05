@@ -51,7 +51,7 @@
       "loadCases": [
         {
           "id": "lc-bsP",
-          "designSituation": "persistent",
+          "designSituation": "transient",
           "verticalPermanent": 400000.0,
           "verticalVariable": 150000.0,
           "horizontalPermanent": 20000.0,

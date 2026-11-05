@@ -1,0 +1,1 @@
+{"cases":[{"seed":"actor:local","valid":true},{"seed":"actor:α\n\t","valid":true},{"seed":"","valid":false}],"grantDenials":["items","copy","capacity","depth"],"work":1,"wire":"transparent-string","source":"original-caller"}

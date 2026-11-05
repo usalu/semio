@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/testing/engineering-witness.json",
+  "title": "NormEngineeringWitness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "variant", "example", "serves", "locales", "field", "check", "states", "journey"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "variant": {"type": "string", "minLength": 1},
+    "example": {"type": "string", "minLength": 1},
+    "serves": {"type": "object", "additionalProperties": false, "required": ["react", "wgpu"], "properties": {"react": {"type": "string", "format": "uri"}, "wgpu": {"type": "string", "format": "uri"}}},
+    "locales": {"type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": {"enum": ["en", "de"]}},
+    "field": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "key", "owner", "ownerWindow", "argument", "label", "limit", "unit"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1}, "key": {"type": "string", "minLength": 1}, "owner": {"type": "string", "minLength": 1},
+        "ownerWindow": {"type": "string", "minLength": 1},
+        "argument": {"type": "string", "minLength": 1}, "unit": {"type": "string", "minLength": 1},
+        "limit": {"type": "number", "exclusiveMinimum": 0},
+        "label": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}}
+      }
+    },
+    "check": {"type": "string", "minLength": 1},
+    "states": {"type": "object", "additionalProperties": false, "required": ["before", "after"], "properties": {"before": {"$ref": "#/$defs/State"}, "after": {"$ref": "#/$defs/State"}}},
+    "journey": {"const": ["boot", "edit", "undo", "redo", "reload"]}
+  },
+  "$defs": {"State": {"type": "object", "additionalProperties": false, "required": ["value", "utilization"], "properties": {"value": {"type": "number", "minimum": 0}, "utilization": {"type": "number", "minimum": 0}}}}
+}

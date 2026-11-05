@@ -885,11 +885,6 @@ enum HollowFabrication {
   HOLLOW_FABRICATION_HOT_FINISHED = 1;
   HOLLOW_FABRICATION_COLD_FORMED = 2;
 }
-
-enum FatigueConsequence {
-  FATIGUE_CONSEQUENCE_LOW = 0;
-  FATIGUE_CONSEQUENCE_HIGH = 1;
-}
 enum BoltGroupMethod {
   BOLT_GROUP_METHOD_ELASTIC = 0;
   BOLT_GROUP_METHOD_INSTANTANEOUS_CENTRE = 1;
@@ -898,6 +893,18 @@ enum StressRelief {
   STRESS_RELIEF_AS_WELDED = 0;
   STRESS_RELIEF_STRESS_RELIEVED = 1;
   STRESS_RELIEF_NON_WELDED = 2;
+}
+message FatigueStress {
+  string id = 1;
+  string detail_id = 2;
+  string max_case_id = 3;
+  string min_case_id = 4;
+  double fibre_z = 5;
+  double fibre_y = 6;
+  StressRelief relief = 7;
+  double concentration = 8;
+  double thickness = 9;
+  double cycles = 10;
 }
 enum BucklingPlane {
   BUCKLING_PLANE_MAJOR_AXIS = 0;
@@ -917,26 +924,6 @@ enum NodeBRestraint {
   NODE_B_RESTRAINT_FIXED = 1;
   NODE_B_RESTRAINT_PINNED = 2;
 }
-enum FormingProcess {
-  FORMING_PROCESS_ROLL_FORMING = 0;
-  FORMING_PROCESS_OTHER_FORMING = 1;
-}
-enum FastenerKind {
-  FASTENER_KIND_SELF_TAPPING_SCREW = 0;
-  FASTENER_KIND_BLIND_RIVET = 1;
-}
-message FatigueStress {
-  string id = 1;
-  string detail_id = 2;
-  string max_case_id = 3;
-  string min_case_id = 4;
-  double fibre_z = 5;
-  double fibre_y = 6;
-  StressRelief relief = 7;
-  double concentration = 8;
-  double thickness = 9;
-  double cycles = 10;
-}
 message BucklingLength {
   string id = 1;
   string member_id = 2;
@@ -948,6 +935,10 @@ message BucklingLength {
   NodeBRestraint restraint_b = 8;
   double column_stiffness_b = 9;
   double beam_stiffness_b = 10;
+}
+enum FormingProcess {
+  FORMING_PROCESS_ROLL_FORMING = 0;
+  FORMING_PROCESS_OTHER_FORMING = 1;
 }
 message FormingGain {
   string id = 1;
@@ -963,6 +954,10 @@ message MaterialDuctility {
   string material_id = 2;
   double elongation = 3;
   double ultimate_strain = 4;
+}
+enum FastenerKind {
+  FASTENER_KIND_SELF_TAPPING_SCREW = 0;
+  FASTENER_KIND_BLIND_RIVET = 1;
 }
 message FastenedJoint {
   string id = 1;
@@ -984,4 +979,8 @@ message FastenedJoint {
   double shear_force = 17;
   double tension_force = 18;
   double shear_resistance = 19;
+}
+enum FatigueConsequence {
+  FATIGUE_CONSEQUENCE_LOW = 0;
+  FATIGUE_CONSEQUENCE_HIGH = 1;
 }

@@ -75,3 +75,13 @@ mod tests;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use super::bounds::StlBounds;
 //#endregion 🔁️Re-exports
+
+//#region 🔖️SceneGeometry
+/// 🧊️ What the mesh windows draw: three positions per facet in file order and no point markers.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn scene_geometry(snapshot: &crate::StlSnapshot) -> (Vec<[f64; 3]>, Vec<u32>, Vec<[f64; 3]>) {
+    let positions: Vec<[f64; 3]> = snapshot.triangles.iter().flat_map(|triangle| triangle.vertices).collect();
+    let triangles = (0..positions.len() as u32).collect();
+    (positions, triangles, Vec::new())
+}
+//#endregion 🔖️SceneGeometry

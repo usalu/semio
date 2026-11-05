@@ -3,7 +3,7 @@
  * 🧫️ `📇️registry/🧬️contract/🧪️tests/🧫️fixtures/🗑️delete-entities/🔣️.json`; 🔗️ executor `📇️registry/🧬️contract/🖥️app-surface/🧰️entity-editing/🗑️delete/🟦️.ts`. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { entitiesArgsV1, executeDeleteEntitiesV1, NORM_DELETE_NOTICES_V1, type BilingualTextV1, type DocumentTreeV1 } from "../../📇️registry/🧬️contract/🖥️app-surface/🧰️entity-editing/🗑️delete/🟦️.ts";
+import { entitiesArgsV1, executeDeleteEntitiesV1, executeDeleteSelectionV1, NORM_DELETE_NOTICES_V1, type BilingualTextV1, type DocumentTreeV1 } from "../../📇️registry/🧬️contract/🖥️app-surface/🧰️entity-editing/🗑️delete/🟦️.ts";
 
 type CaseV1 = Readonly<{ id: string; collection: string; ids: readonly string[]; outcome: "emitted" | "refused"; edits?: readonly unknown[]; remaining: readonly string[]; mutations?: number; undoSteps?: number; code?: string; message?: BilingualTextV1; refuseRemovalAt?: number; resolverError?: string }>;
 
@@ -31,7 +31,12 @@ export function deleteEntitiesFailuresV1(fixture: DeleteEntitiesFixtureV1 = read
   }
   const original = JSON.stringify(fixture.document);
   for (const row of fixture.cases) {
-    const verdict = executeDeleteEntitiesV1<string>(fixture.document, { collection: row.collection, ids: row.ids }, (_tree, edit) => (edit.index === row.refuseRemovalAt ? { ok: false, error: row.resolverError ?? "invariant" } : { ok: true, mutations: [`remove ${edit.path}[${edit.index}]`] }));
+    const resolve = (_tree: DocumentTreeV1, edit: Readonly<{ path: string; index: number }>) => edit.index === row.refuseRemovalAt ? { ok: false as const, error: row.resolverError ?? "invariant" } : { ok: true as const, mutations: [`remove ${edit.path}[${edit.index}]`] };
+    const verdict = executeDeleteSelectionV1<string>(fixture.document, row.collection, row.ids, resolve);
+    const args = { collection: row.collection, ids: row.ids };
+    const parsed = entitiesArgsV1(args);
+    const admitted = executeDeleteEntitiesV1<string>(fixture.document, args, resolve);
+    expect(parsed.ok ? JSON.stringify(admitted) === JSON.stringify(verdict) : admitted.outcome === "invalid" && admitted.error === parsed.error, `'${row.id}' preserves raw argument admission before the typed reducer`);
     expect(JSON.stringify(fixture.document) === original, `'${row.id}' leaves the input document untouched`);
     if (row.outcome === "emitted") {
       expect(verdict.outcome === "emitted", `'${row.id}' is emitted`);

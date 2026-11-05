@@ -1,0 +1,13 @@
+{
+  "path": "partNumberRule.source",
+  "value": "dn * 10 + 150",
+  "sourceBefore": "dn * 10 + 50",
+  "functionId": "partno",
+  "dn": 50,
+  "multiplier": 10,
+  "offsetBefore": 50,
+  "offsetAfter": 150,
+  "checkId": "iso16757.5.6.10.partNumber",
+  "computedBefore": 550,
+  "computedAfter": 650
+}

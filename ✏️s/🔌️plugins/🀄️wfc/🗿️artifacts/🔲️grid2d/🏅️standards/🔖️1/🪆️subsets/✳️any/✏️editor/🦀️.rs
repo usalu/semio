@@ -320,7 +320,7 @@ impl ArtifactCommandWork<EditorApp<Grid2dEditor>> for Grid2dCommandWork {
         }
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
-        let view_state = input.context.and_then(|context| context.view_state.as_ref());
+        let view_state = input.context.and_then(|context| context.view_state.as_deref());
         Ok(ArtifactCommandWorkStep::Complete(Grid2dEditor::dispatch(input.command, &doc, &cfg, view_state)?))
     
         })();

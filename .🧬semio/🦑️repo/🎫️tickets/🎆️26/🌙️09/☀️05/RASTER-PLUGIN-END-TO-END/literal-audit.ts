@@ -1,0 +1,4 @@
+import{readFileSync,readdirSync}from"node:fs";import{join}from"node:path";
+const excluded=new Set(["node_modules","target","dist","build","bazel-out","bazel-bin","bazel-testlogs","🗑️generated"]);
+function scan(root:string):void{for(const row of readdirSync(root,{withFileTypes:true})){if(row.name.startsWith(".")||excluded.has(row.name))continue;const path=join(root,row.name);if(row.isDirectory())scan(path);else if(row.isFile()&&row.name.endsWith(".rs")){const text=readFileSync(path,"utf8");for(const match of text.matchAll(/\bPaint2dScene\s*\{/g)){const start=match.index!;let depth=1,at=start+match[0].length;for(;at<text.length&&depth;at++){if(text[at]==="{")depth++;else if(text[at]==="}")depth--;}const body=text.slice(start,at);console.log(path+":"+(text.slice(0,start).split("\n").length)+":options="+/editing_options\s*:/.test(body)+":head="+body.slice(0,90).replaceAll("\n"," "));}}}}
+for(const root of process.argv.slice(2))scan(root);

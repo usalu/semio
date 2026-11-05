@@ -28,4 +28,6 @@ semio-framework-value.workspace = true
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
+semio-framework-job = { path = "../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-trace = { workspace = true }
 serde_json.workspace = true

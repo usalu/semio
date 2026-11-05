@@ -1,0 +1,182 @@
+{
+  "schema": "semio.os.config.local-document-surface/v1",
+  "cases": [
+    {
+      "name": "admit a selected surface",
+      "before": {
+        "documents": []
+      },
+      "mutation": {
+        "mutation": "admitLocalDocument",
+        "documentId": "kept-gif",
+        "schema": "stdio.gif",
+        "name": "Dancing",
+        "storage": "folder",
+        "target": "/data/os/local-documents/kept-gif",
+        "admittedAtMs": 7,
+        "surface": {
+          "pluginId": "stdio-image",
+          "appId": "s.stdio.gif@87a/*#editor"
+        }
+      },
+      "after": {
+        "documents": [
+          {
+            "documentId": "kept-gif",
+            "schema": "stdio.gif",
+            "name": "Dancing",
+            "storage": "folder",
+            "target": "/data/os/local-documents/kept-gif",
+            "admittedAtMs": 7,
+            "surface": {
+              "pluginId": "stdio-image",
+              "appId": "s.stdio.gif@87a/*#editor"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "reselect a subset without changing the document schema",
+      "before": {
+        "documents": [
+          {
+            "documentId": "kept-gif",
+            "schema": "stdio.gif",
+            "name": "Dancing",
+            "storage": "folder",
+            "target": "/data/os/local-documents/kept-gif",
+            "admittedAtMs": 7,
+            "surface": {
+              "pluginId": "stdio-image",
+              "appId": "s.stdio.gif@87a/*#editor"
+            }
+          }
+        ]
+      },
+      "mutation": {
+        "mutation": "admitLocalDocument",
+        "documentId": "kept-gif",
+        "schema": "stdio.gif",
+        "name": "Dancing",
+        "storage": "folder",
+        "target": "/data/os/local-documents/kept-gif",
+        "admittedAtMs": 7,
+        "surface": {
+          "pluginId": "stdio-image",
+          "appId": "s.stdio.gif@89a/*#editor"
+        }
+      },
+      "after": {
+        "documents": [
+          {
+            "documentId": "kept-gif",
+            "schema": "stdio.gif",
+            "name": "Dancing",
+            "storage": "folder",
+            "target": "/data/os/local-documents/kept-gif",
+            "admittedAtMs": 7,
+            "surface": {
+              "pluginId": "stdio-image",
+              "appId": "s.stdio.gif@89a/*#editor"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "keep an archive without a selected surface",
+      "before": {
+        "documents": [
+          {
+            "documentId": "kept-gif",
+            "schema": "stdio.gif",
+            "name": "Dancing",
+            "storage": "folder",
+            "target": "/data/os/local-documents/kept-gif",
+            "admittedAtMs": 7,
+            "surface": {
+              "pluginId": "stdio-image",
+              "appId": "s.stdio.gif@89a/*#editor"
+            }
+          }
+        ]
+      },
+      "mutation": {
+        "mutation": "admitLocalDocument",
+        "documentId": "kept-gif",
+        "schema": "stdio.gif",
+        "name": "Dancing",
+        "storage": "folder",
+        "target": "/data/os/local-documents/kept-gif",
+        "admittedAtMs": 7
+      },
+      "after": {
+        "documents": [
+          {
+            "documentId": "kept-gif",
+            "schema": "stdio.gif",
+            "name": "Dancing",
+            "storage": "folder",
+            "target": "/data/os/local-documents/kept-gif",
+            "admittedAtMs": 7
+          }
+        ]
+      }
+    },
+    {
+      "name": "retire and restore the exact selected surface",
+      "before": {
+        "documents": [
+          {
+            "documentId": "kept-gif",
+            "schema": "stdio.gif",
+            "name": "Dancing",
+            "storage": "folder",
+            "target": "/data/os/local-documents/kept-gif",
+            "admittedAtMs": 7,
+            "surface": {
+              "pluginId": "stdio-image",
+              "appId": "s.stdio.gif@89a/*#editor"
+            }
+          }
+        ]
+      },
+      "mutation": {
+        "mutation": "retireLocalDocument",
+        "documentId": "kept-gif"
+      },
+      "after": {
+        "documents": []
+      }
+    }
+  ],
+  "invalidSurfaces": [
+    null,
+    {},
+    {
+      "pluginId": "stdio-image"
+    },
+    {
+      "pluginId": "",
+      "appId": "s.stdio.gif@89a/*#editor"
+    },
+    {
+      "pluginId": "stdio-image",
+      "appId": ""
+    },
+    {
+      "pluginId": "stdio-image",
+      "appId": 7
+    },
+    {
+      "pluginId": "stdio-image",
+      "appId": "s.stdio.gif@89a/*#editor",
+      "role": "editor"
+    },
+    {
+      "pluginId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "appId": "editor"
+    }
+  ]
+}

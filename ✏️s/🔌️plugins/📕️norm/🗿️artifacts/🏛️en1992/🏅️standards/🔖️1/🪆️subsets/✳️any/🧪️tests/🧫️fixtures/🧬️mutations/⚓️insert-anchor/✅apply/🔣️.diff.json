@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "title": null,
   "designWorkingLifeYears": null,
   "deltaCDev": null,
@@ -53,7 +52,8 @@
               "tK": 0.0,
               "vKPunch": 0.0
             }
-          ]
+          ],
+          "headDiameter": 0.0
         }
       }
     ],
@@ -66,5 +66,6 @@
     "inserted": [],
     "moved": [],
     "modified": []
-  }
+  },
+  "reliabilityClass": null
 }

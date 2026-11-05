@@ -27,7 +27,7 @@
           "de": "Das adressierte Element (Anschluss), per Kennung."
         },
         "ref": {
-          "forceMethod": "connection"
+          "kind": "connection"
         },
         "group": "target",
         "order": 10

@@ -71,24 +71,4 @@ pub mod standards {
         }
     }
 }
-#[path = "."]
-pub mod editor {
-    #[path = "."]
-    pub mod las {
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-}
+

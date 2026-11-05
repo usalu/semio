@@ -320,7 +320,7 @@ pub fn wit_lifecycle_receipt_to_kernel(value: wit_lifetime::Receipt) -> semio_fr
     }
 }
 
-pub async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result<(Vec<wit_events::Event>, Option<(wit_reactor::CommandPageCursor, Vec<u8>)>, Option<wit_reactor::ColdDocumentPairPage>), TurnFault> {
+pub async fn kernel_turn_inputs_to_wit(events: &mut [Event], instance_id: u32) -> Result<(Vec<wit_events::Event>, Option<(wit_reactor::CommandPageCursor, Vec<u8>)>, Option<wit_reactor::ColdDocumentPairPage>), TurnFault> {
     let mut ordinary = Vec::with_capacity(events.len());
     let mut command = None;
     let mut cold = None;
@@ -338,7 +338,7 @@ pub async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Re
                 }
                 cold = Some(kernel_cold_page_to_wit(page)?);
             }
-            event => ordinary.push(kernel_event_to_wit(event, instance_id).await),
+            event => ordinary.push(kernel_event_to_wit(event, instance_id).await?),
         }
     }
     Ok((ordinary, command, cold))
@@ -350,8 +350,9 @@ pub async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Re
 /// 🐛️ WIT `request-event.from` was renamed `origin` — `from` is WIT-reserved (the SAME
 /// reserved-keyword class B1's report already fixed for `stream`/`result`; this one was
 /// fixed by A2 between B1's last pass and now, per the packet brief's "guest side is green").
-pub async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Event {
-    match event {
+pub async fn kernel_event_to_wit(event: &mut Event, instance_id: u32) -> Result<wit_events::Event,TurnFault> {
+    if matches!(event,Event::StagedFormRequested{..}){return staged_form_event_to_wit(event,instance_id);}
+    Ok(match event {
         Event::InstanceOpen { request, app_id, actor, config, assets, capabilities, quotas } => {
             let mut wit_capabilities = Vec::with_capacity(capabilities.len());
             for capability in capabilities {
@@ -381,6 +382,7 @@ pub async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events:
         Event::SurfaceVisible { surface, body_key, view_state } => {
             wit_events::Event::SurfaceVisible(wit_events::SurfaceVisibleEvent { surface: wit_surface_ref(instance_id, surface).await, body_key: body_key.clone(), view_state: view_state.clone() })
         }
+        Event::StagedFormRequested { .. } => unreachable!("staged donor was selected before ordinary conversion"),
         Event::SurfaceHidden { surface } => wit_events::Event::SurfaceHidden(wit_events::SurfaceHiddenEvent { surface: wit_surface_ref(instance_id, surface).await }),
         Event::SurfaceResized { surface, width, height } => wit_events::Event::SurfaceResized(wit_events::SurfaceResizedEvent { surface: wit_surface_ref(instance_id, surface).await, width: *width, height: *height }),
         Event::PatchAck { receipt, surface, revision } => wit_events::Event::PatchAck(wit_events::PatchAckEvent { receipt: kernel_patch_receipt_to_wit(*receipt), surface: wit_surface_ref(instance_id, surface).await, revision: *revision }),
@@ -397,7 +399,7 @@ pub async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events:
         Event::Request { req, from, capability, payload } => {
             wit_events::Event::Request(wit_events::RequestEvent { req: req.0, params: wit_events::RequestParams { origin: kernel_message_endpoint_to_wit(from).await, capability: capability.clone(), payload: payload.clone() } })
         }
-    }
+    })
 }
 
 async fn kernel_activation_event_to_wit(reason: &semio_framework::kernel::ActivationEvent) -> wit_events::ActivationEvent {
@@ -427,3 +429,7 @@ async fn kernel_broker_grant_to_wit(grant: &BrokerCapabilityGrant) -> wit_capabi
 //#endregion 🔀️EffectEventMarshal
 //#endregion 🐎️WasmtimeRuntime
 //#endregion 🎭️GuestRuntime
+
+#[path="staged.rs"]
+mod staged;
+use staged::staged_form_event_to_wit;

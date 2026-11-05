@@ -83,5 +83,7 @@ semio-framework-plugin-actor-host = { path = "../../../../🌐host/📦️packag
 semio-framework-plugin-reactor-patches = { path = "../../../../⚛️reactor/🩹️patches/📦️packages/🦀️rust" }
 semio-framework-ui-runtime-presentation = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/🖼️presentation/📦️packages/🦀️rust" }
 
+semio-framework-plugin-runtime-exchange = { path = "../../../../⚛️reactor/🏃️runtime/🔄️exchange/📦️packages/🦀️rust" }
+
 [features]
 artifact-app-testing = []

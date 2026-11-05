@@ -69,7 +69,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
                     };
                     let instance_id = self.tools.live_runtime_instance_id.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "intrinsic media import requires a bound live app instance"))?;
                     let actor = self.stores.store.local_actor_id().0.clone();
-                    self.dispatch_ctx().dispatch_import_media(port, media, &ActionMeta { actor, instance_id, view_state: None }, cx).await.map(|_| MediaConsumption::Applied).map_err(MediaArtifactError::Import)
+                    self.dispatch_ctx().dispatch_import_media(port, media, &ActionMeta { expected_document_revision:None, actor, instance_id, view_state: None }, cx).await.map(|_| MediaConsumption::Applied).map_err(MediaArtifactError::Import)
                 }
             };
         }
@@ -84,7 +84,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         let actor = self.stores.store.local_actor_id().0.clone();
         let media_type = A::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
         let media = natural_file_input_media(codec, media_type, artifact.data);
-        self.dispatch_ctx().dispatch_import_media(port, media, &ActionMeta { actor, instance_id, view_state: None }, cx)
+        self.dispatch_ctx().dispatch_import_media(port, media, &ActionMeta { expected_document_revision:None, actor, instance_id, view_state: None }, cx)
             .await
             .map(|_| MediaConsumption::Applied)
             .map_err(|fault| MediaArtifactError::Payload(fault.message))

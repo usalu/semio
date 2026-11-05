@@ -73,8 +73,8 @@ async fn fold_excludes_edits_quarantined_by_an_unaccepted_conflict() {
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: protocol::ArtifactDiff { schema: protocol::SchemaId("schema-f".to_string()), payload: vec![1] },
-        inverse: protocol::InverseMutation { schema: protocol::SchemaId("schema-f".to_string()), payload: Vec::new() },
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId("schema-f".to_string()), payload: semio_framework_value::paged::PagedBytes::<{isize::MAX as usize}>::try_from_slice(&[1]).unwrap() },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId("schema-f".to_string()), payload: semio_framework_value::paged::PagedBytes::<{isize::MAX as usize}>::try_from_slice(&[]).unwrap() },
         timestamp: protocol::HybridLogicalTimestamp { actor: 2, physical_ms: 100, logical: 0 },
         transaction: None, verb: None, line: None,
     };

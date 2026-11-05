@@ -25,6 +25,7 @@ use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCo
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, EphemeralEmit, Fault};
 use semio_framework_tool_machine::{drive_gesture, GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 use semio_framework_value_derive::{FromValue, ToValue};
+use std::mem::size_of;
 
 //#region 🔖️Payload
 /// 🪪️ The editor whose paint tool authors every stroke transaction: `<appId>#paintStroke`.
@@ -36,7 +37,7 @@ pub const RASTER_PAINT_TOOL_KEY: &str = "stroke:0";
 /// 🖌️ One stroke dispatch as both hosts send it: the layer, the tool (`brush` or `eraser`) and the samples in the target
 /// image's pixels, in drawing order, split into their x and y columns; `phase` places it in the streamed stroke `gesture`
 /// names (`stream`, `commit`, `abort` with a `reason`; absent: the whole stroke at once).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "paint-stroke")]
 pub struct PaintStroke {
     pub layer_id: String,
@@ -108,10 +109,9 @@ pub fn hex_color(value: &str) -> Option<Vec<f64>> {
 }
 
 /// ✂️ The session's pixel selection as the leaf's runs, when it selects THIS layer's target.
-pub fn selection(config: &RasterConfig, layer_id: &str) -> Result<Option<Vec<RasterSelectionSpan>>, Fault> {
+pub fn selection(config: &RasterConfig, layer_id: &str) -> Result<Option<semio_s_artifact_raster_raster_model::RasterSelectionSpans>, Fault> {
     let Some(selection) = config.pixel_selection.as_ref().filter(|selection| selection.layer_id == layer_id && selection.target == config.paint_target) else { return Ok(None) };
-    let count = selection.validate()?;
-    crate::selection::selection_spans(&selection.spans, count)?;
+    selection.validate()?;
     Ok(Some(selection.spans.clone()))
 }
 
@@ -286,14 +286,11 @@ impl GestureTool for RasterPaintTool {
     fn resume(state: &RasterStrokeToolState) -> Result<Self, ToolRefusal> {
         let definition = <paint_tool::PaintTool as machine::Machine>::definition();
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: definition.fingerprint, states: state.states.clone(), history: Vec::new(), done: false };
-        let leaf: RasterMutation = semio_framework_value::FromValue::from_value(state.stroke.clone()).map_err(|_| ToolRefusal::Closed)?;
-        if !matches!(leaf, RasterMutation::PaintStroke(_)) {
-            return Err(ToolRefusal::Closed);
-        }
+        let leaf=RasterMutation::PaintStroke(state.stroke.clone());
         let snapshot = machine::restore::<paint_tool::PaintTool, machine::NoMigrations>(&persisted, PaintToolContext { stroke: Some(leaf.clone()) }, &[]).map_err(|_| ToolRefusal::Closed)?;
         let transaction = ToolTransaction::resume(state.transaction.clone(), vec![(RASTER_PAINT_TOOL_KEY.to_string(), leaf)]);
         let runner = ToolMachineRunner::resume(RASTER_PAINT_TOOL_ID, protocol::ActorId(state.authoring_seed.as_str().into()), PaintToolContext::default(), snapshot, Some(transaction), PaintToolHost)?;
-        Ok(Self { runner, press: state.gesture.clone(), authoring_seed: state.authoring_seed.clone() })
+        Ok(Self { runner, press: state.gesture.clone(), authoring_seed: state.authoring_seed.as_str().to_owned() })
     }
 
     fn verb(&self) -> &str {
@@ -324,7 +321,8 @@ impl GestureTool for RasterPaintTool {
         let (snapshot, transaction) = self.runner.into_parts();
         let transaction = transaction.filter(|transaction| transaction.state() == ToolTransactionState::Open)?;
         let (_, leaf) = transaction.entries().iter().find(|(key, _)| key == RASTER_PAINT_TOOL_KEY)?;
-        Some(RasterStrokeToolState { gesture: self.press, states: machine::persist(&snapshot).states, authoring_seed: self.authoring_seed, transaction: transaction.reference().clone(), stroke: semio_framework_value::ToValue::to_value(leaf) })
+        let RasterMutation::PaintStroke(leaf)=leaf else{return None;};
+        Some(RasterStrokeToolState { gesture: self.press, states: machine::persist(&snapshot).states, authoring_seed: self.authoring_seed.into(), transaction: transaction.reference().clone(), stroke: leaf.clone(),preview:None })
     }
 }
 
@@ -342,7 +340,7 @@ pub fn raster_tool_commit(tool: &str, authoring_seed: &str, stroke: RasterMutati
 /// `document` by the ONE rasterizer — a preview only this window sees, never history. `None` at rest or when the leaf
 /// does not apply. The caller retires the preview it renders.
 pub fn raster_stroke_preview(document: &RasterSnapshot, transient: &RasterCompositeWindowTransient) -> Option<RasterSnapshot> {
-    let leaf: RasterMutation = semio_framework_value::FromValue::from_value(transient.stroke.as_ref()?.stroke.clone()).ok()?;
+    let leaf=RasterMutation::PaintStroke(transient.stroke.as_ref()?.stroke.clone());
     semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation(document, &leaf).ok()
 }
 //#endregion 🛠️PaintTool
@@ -353,11 +351,13 @@ pub fn raster_stroke_preview(document: &RasterSnapshot, transient: &RasterCompos
 /// another press aborts the open stroke (`captureLost`) first; an abort, a commit with nothing to paint, an unrestorable
 /// stroke and a late tick of a press the window already closed leave zero trace; a stroke the layer cannot take is refused.
 pub fn handle_in_window(payload: &PaintStroke, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, window: &RasterCompositeWindowTransient) -> Result<(Emit<RasterMutation, RasterConfigMutation>, RasterCompositeWindowTransient), Fault> {
-    let phase = GesturePhase::parse(payload.phase.as_deref(), payload.reason.as_deref()).ok_or_else(|| raster_fault("raster.stroke.phase-invalid"))?;
+    let refresh=payload.phase.as_deref()==Some("refresh");
+    if refresh&&window.stroke.is_none(){return Ok((Emit::default(),window.clone()));}
+    let phase = if refresh{GesturePhase::Stream}else{GesturePhase::parse(payload.phase.as_deref(), payload.reason.as_deref()).ok_or_else(|| raster_fault("raster.stroke.phase-invalid"))?};
     if payload.xs.len() != payload.ys.len() || payload.xs.len() > RASTER_STROKE_MAXIMUM_POINTS || !payload.xs.iter().chain(&payload.ys).all(|value| value.is_finite()) {
         return Err(raster_fault("raster.paint.points-invalid"));
     }
-    let gesture = payload.gesture.as_deref().filter(|gesture| !gesture.is_empty());
+    let gesture = if refresh{window.stroke.as_deref().map(|state|state.gesture.as_str())}else{payload.gesture.as_deref().filter(|gesture| !gesture.is_empty())};
     if matches!(phase, GesturePhase::Stream | GesturePhase::Commit) && gesture.is_none() {
         return Err(raster_fault("raster.stroke.gesture-required"));
     }
@@ -405,53 +405,9 @@ pub fn handle(payload: &PaintStroke, doc: &ArtifactView<'_, RasterSnapshot>, cfg
     }
 }
 
-//#region 🧵️RetainedWork
-/// 🧵️ The retained work of `paintStroke`: one dispatch through the dispatching Composite window's paint tool, publishing
-/// the edit on the document lane and the window's next tool state on the window-transient lane.
-#[derive(Default)]
-pub struct PaintStrokeWork {
-    consumed: bool,
-}
-
-impl<A: RasterWorkApp> ArtifactCommandWork<A> for PaintStrokeWork {
-    fn tool_id(&self) -> &'static str {
-        "paintStroke"
-    }
-
-    fn extent(&self, command: &RasterCommand, _snapshot: &RasterSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>) -> Option<usize> {
-        matches!(command, RasterCommand::PaintStroke(_)).then_some(1)
-    }
-
-    fn work_demands(&self, input: &ArtifactCommandInputs<'_, A>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        let RasterCommand::PaintStroke(payload) = input.command else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "raster paint command required")) };
-        let samples = payload.xs.len().saturating_add(payload.ys.len()).saturating_mul(size_of::<f64>());
-        let copy_bytes = size_of::<(Emit<RasterMutation, RasterConfigMutation>, RasterCompositeWindowTransient)>().saturating_add(samples);
-        Ok(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: samples, depth: 1, ..Default::default() })
-    }
-
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
-        let original: Result<_, Fault> = (|| {
-        if self.consumed {
-            return Err(Fault::from("raster-paint-stroke-work-repeated"));
-        }
-        self.consumed = true;
-        let RasterCommand::PaintStroke(payload) = input.command else { return Err(Fault::from("raster-paint-stroke-route-mismatch")) };
-        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
-        let cfg = ConfigView { snapshot: input.config, window: None };
-        let window = transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
-        let (emit, next) = handle_in_window(payload, &doc, &cfg, &window)?;
-        let window_transient = match input.context.and_then(|context| context.view_state.as_ref()) {
-            Some(view) if next != window => vec![transient::addressed(view, next)?],
-            None if next != window => return Err(raster_fault("raster.stroke.window-required")),
-            _ => Vec::new(),
-        };
-        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { window_transient, ..Default::default() } })
-    
-        })();
-        original.map_err(semio_framework_job::OriginalTurnFailure::from)
-    }
-}
-//#endregion 🧵️RetainedWork
+#[path="🧵️work/🦀️.rs"]
+mod work;
+pub use work::PaintStrokeWork;
 
 //#region 🧪️Tests
 //#endregion 🧪️Tests

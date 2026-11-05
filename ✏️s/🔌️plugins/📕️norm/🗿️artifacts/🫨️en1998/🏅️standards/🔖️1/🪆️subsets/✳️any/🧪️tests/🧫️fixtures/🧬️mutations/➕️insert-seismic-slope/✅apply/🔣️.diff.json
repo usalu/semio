@@ -49,20 +49,7 @@
     "moved": [],
     "modified": []
   },
-  "joints": null,
-  "bearings": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "piers": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "accelerograms": {
+  "soilLayers": {
     "removed": [],
     "inserted": [],
     "moved": [],
@@ -74,19 +61,36 @@
     "moved": [],
     "modified": []
   },
-  "soilLayers": {
+  "accelerograms": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "placements": {
+  "piers": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "tieBeams": null,
+  "bearings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tieBeams": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "slopes": {
     "removed": [],
     "inserted": [
@@ -106,6 +110,12 @@
         }
       }
     ],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": []
   }

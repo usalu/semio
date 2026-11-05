@@ -1,0 +1,58 @@
+{
+  "schema": {
+    "type": "array",
+    "minItems": 3,
+    "items": {
+      "type": "object",
+      "required": [
+        "name",
+        "commit",
+        "outcome",
+        "destroy"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "commit": {
+          "enum": [
+            "accepted",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "opened",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "destroy": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "deferred persistence accepted",
+      "commit": "accepted",
+      "outcome": "opened",
+      "destroy": false
+    },
+    {
+      "name": "persistence failure releases instance",
+      "commit": "failed",
+      "outcome": "failed",
+      "destroy": true
+    },
+    {
+      "name": "cancelled persistence releases instance",
+      "commit": "cancelled",
+      "outcome": "cancelled",
+      "destroy": true
+    }
+  ]
+}

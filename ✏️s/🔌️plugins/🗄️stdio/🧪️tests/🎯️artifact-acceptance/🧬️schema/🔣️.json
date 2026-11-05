@@ -3,55 +3,479 @@
   "$id": "semio.stdio.artifact-acceptance/v1",
   "title": "🎯️ Per-artifact acceptance matrix of the well-known stdio artifacts",
   "type": "object",
-  "required": ["schema", "artifacts", "nonArtifacts"],
+  "required": [
+    "schema",
+    "artifacts",
+    "nonArtifacts"
+  ],
   "additionalProperties": false,
   "properties": {
-    "schema": { "const": "semio.stdio.artifact-acceptance/v1" },
-    "nonArtifacts": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-    "artifacts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/artifact" } }
+    "schema": {
+      "const": "semio.stdio.artifact-acceptance/v1"
+    },
+    "nonArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    }
   },
   "$defs": {
-    "oracle": { "enum": ["json", "xml", "text", "csv", "tsv", "html", "zip", "ooxml", "zlib", "png", "gif", "bmp", "jpeg", "tiff", "pdf", "svg", "wav", "mp3", "mp4", "avi", "stl", "obj", "ply", "gltf", "las", "step", "ifc", "dxf", "dwg", "epw", "bcf", "binary", "semio", "none"] },
+    "oracle": {
+      "enum": [
+        "json",
+        "xml",
+        "text",
+        "csv",
+        "tsv",
+        "html",
+        "zip",
+        "ooxml",
+        "zlib",
+        "png",
+        "gif",
+        "bmp",
+        "jpeg",
+        "tiff",
+        "pdf",
+        "svg",
+        "wav",
+        "mp3",
+        "mp4",
+        "avi",
+        "stl",
+        "obj",
+        "ply",
+        "gltf",
+        "las",
+        "step",
+        "ifc",
+        "dxf",
+        "dwg",
+        "epw",
+        "bcf",
+        "binary",
+        "semio",
+        "none"
+      ]
+    },
     "artifact": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["batch", "artifact", "directory", "kind", "plugin", "extension", "oracle", "surface", "edit", "export", "invalid"],
+      "required": [
+        "batch",
+        "artifact",
+        "directory",
+        "kind",
+        "plugin",
+        "extension",
+        "oracle",
+        "surface",
+        "edit",
+        "export",
+        "invalid",
+        "persistence",
+        "sample",
+        "ownerApp"
+      ],
       "properties": {
-        "batch": { "enum": ["A", "B", "C", "D", "E", "F", "G", "H"] },
-        "artifact": { "type": "string", "pattern": "^[a-z0-9]+$" },
-        "directory": { "type": "string", "minLength": 1 },
-        "kind": { "type": "string", "pattern": "^s\\.stdio\\.[a-z0-9]+$" },
-        "plugin": { "type": ["string", "null"] },
-        "extension": { "type": "string", "pattern": "^\\.[a-z0-9]+$" },
-        "oracle": { "$ref": "#/$defs/oracle" },
-        "surface": { "enum": ["shipped", "missing"] },
-        "ownerApp": { "type": "string", "description": "Definition-only artifact whose natural file opens in another plugin's editor: the full app id of that editor, which must exist in a family manifest and in the natural-file lifecycle fixture." },
-        "sample": { "type": "string", "description": "Repository path relative to the artifact directory; absent selects the smallest file with the extension inside the artifact tree." },
+        "batch": {
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "H"
+          ]
+        },
+        "artifact": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+$"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "pattern": "^s\\.stdio\\.[a-z0-9]+$"
+        },
+        "plugin": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "extension": {
+          "type": "string",
+          "pattern": "^\\.[a-z0-9]+$"
+        },
+        "oracle": {
+          "$ref": "#/$defs/oracle"
+        },
+        "surface": {
+          "enum": [
+            "shipped",
+            "missing"
+          ]
+        },
+        "ownerApp": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "#editor$",
+          "description": "Exact editor app id expected for this natural sample, including standard and subset."
+        },
+        "sample": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+          "description": "Exact repository-relative natural file listed in the valid sample manifest. No fallback to another subset."
+        },
         "edit": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["mode"],
+          "required": [
+            "mode"
+          ],
           "properties": {
-            "mode": { "enum": ["verb", "rendered", "scan", "none"] },
-            "path": { "enum": ["main", "details"], "description": "Where the edit is made: the main window, or the Details split pane of read-only main-window editors (snapshot-edit actions such as setSnapshotValue)." },
-            "field": { "type": "string", "description": "Details path only: the field whose Details control (aria-label prefix `<field>:`) is edited." },
-            "verb": { "type": "string" },
-            "args": { "type": "object", "additionalProperties": { "type": "string" } },
-            "control": { "type": "string" },
-            "value": { "type": "string" }
+            "mode": {
+              "enum": [
+                "verb",
+                "rendered"
+              ]
+            },
+            "path": {
+              "enum": [
+                "main",
+                "details"
+              ],
+              "description": "Where the edit is made: the main window, or the Details split pane of read-only main-window editors (snapshot-edit actions such as setSnapshotValue)."
+            },
+            "field": {
+              "type": "string",
+              "pattern": "^/(?:[^~]|~[01])+$",
+              "description": "Exact JSON pointer of a scalar snapshot leaf; the Details node id is derived from this pointer."
+            },
+            "verb": {
+              "type": "string"
+            },
+            "args": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "control": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            },
+            "valueKind": {
+              "enum": [
+                "text",
+                "number",
+                "toggle"
+              ],
+              "description": "Native scalar input owner of the exact Details JSON pointer."
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "required": [
+                  "path"
+                ],
+                "properties": {
+                  "path": {
+                    "const": "details"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "field",
+                  "valueKind",
+                  "value",
+                  "verb"
+                ],
+                "properties": {
+                  "mode": {
+                    "const": "rendered"
+                  },
+                  "verb": {
+                    "const": "setSnapshotValue"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "required": [
+                  "mode"
+                ],
+                "properties": {
+                  "mode": {
+                    "const": "verb"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "verb",
+                  "args"
+                ]
+              }
+            },
+            {
+              "if": {
+                "required": [
+                  "mode"
+                ],
+                "properties": {
+                  "mode": {
+                    "const": "rendered"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "path",
+                  "verb",
+                  "value"
+                ]
+              }
+            },
+            {
+              "if": {
+                "required": [
+                  "path"
+                ],
+                "properties": {
+                  "path": {
+                    "const": "main"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "control"
+                ]
+              }
+            }
+          ]
+        },
+        "export": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format"
+          ],
+          "properties": {
+            "format": {
+              "$ref": "#/$defs/oracle"
+            }
           }
         },
-        "export": { "type": "object", "additionalProperties": false, "required": ["format"], "properties": { "format": { "$ref": "#/$defs/oracle" } } },
         "invalid": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["bytes", "expect"],
+          "required": [
+            "bytes",
+            "expect",
+            "kind"
+          ],
           "properties": {
-            "bytes": { "type": "string", "description": "Hex octets of an input the format must refuse." },
-            "expect": { "enum": ["refusal-notice"] }
+            "bytes": {
+              "type": "string",
+              "pattern": "^(?:[0-9a-fA-F]{2})*$",
+              "description": "Hex octets: malformed tests refuse decoded content; unsupported-format tests refuse routing by extension."
+            },
+            "expect": {
+              "enum": [
+                "refusal-notice"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "malformed",
+                "unsupported-format"
+              ]
+            },
+            "extension": {
+              "type": "string",
+              "pattern": "^\\.[a-z0-9-]+$"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "unsupported-format"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "required": [
+                  "extension"
+                ]
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "extension"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "persistence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "comparison",
+            "requireEditedExport",
+            "requireUndoRedoExport",
+            "requirePersistedUuid"
+          ],
+          "properties": {
+            "comparison": {
+              "enum": [
+                "bytes",
+                "json",
+                "zip-members"
+              ]
+            },
+            "requireEditedExport": {
+              "const": true
+            },
+            "requireUndoRedoExport": {
+              "const": true
+            },
+            "requirePersistedUuid": {
+              "const": true
+            }
+          }
+        },
+        "validPayloads": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-fA-F]{2})*$"
+          },
+          "description": "Additional arbitrary byte payloads that must import and export unchanged through the owner editor."
+        },
+        "authoredExample": {
+          "$ref": "#/$defs/authoredExample"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "artifact": {
+                "const": "binary"
+              }
+            },
+            "required": [
+              "artifact"
+            ]
+          },
+          "then": {
+            "required": [
+              "validPayloads"
+            ],
+            "properties": {
+              "invalid": {
+                "properties": {
+                  "kind": {
+                    "const": "unsupported-format"
+                  }
+                }
+              }
+            }
           }
         }
+      ]
+    },
+    "authoredExample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "field",
+        "baseline",
+        "documentSchema",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "field": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "baseline": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+        }
       }
+    },
+    "entryMode": {
+      "enum": [
+        "natural-file",
+        "authored-example"
+      ]
     }
   }
 }

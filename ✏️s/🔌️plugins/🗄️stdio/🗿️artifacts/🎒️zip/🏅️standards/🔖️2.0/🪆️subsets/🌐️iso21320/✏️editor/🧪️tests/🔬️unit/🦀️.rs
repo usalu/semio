@@ -53,3 +53,28 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_member() {
     assert_eq!(state.entries.iter().map(|entry| entry.name.as_str()).collect::<Vec<_>>(), ["a.txt", "m.txt", "b.txt"]);
     assert_eq!(emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }
+
+#[test]
+fn natural_file_codec_preserves_exact_iso_owner_and_refuses_nonconforming_zip() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let codec = ZipIso21320Editor::natural_file_codec().expect("ISO ZIP declares its native source");
+    let actual = serde_json::json!({
+        "formatKind": codec.format_kind, "extension": codec.extension,
+        "mediaType": codec.media_type, "binary": codec.binary
+    });
+    assert_eq!(actual, law["codec"]);
+    assert_eq!({ let dialect = ZipIso21320Editor::DIALECT; format!("{}@{}/{}#editor", dialect.artifact_kind, dialect.standard.0, dialect.subset.0) }, law["owner"].as_str().unwrap());
+    assert_eq!(ZipIso21320Editor::DOCUMENT_SCHEMA, law["artifactSchema"].as_str().unwrap());
+    let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🏷️rename-entry-applied/➡️after.zip");
+    let snapshot = ZipIso21320Editor::decode_natural_file(bytes).unwrap();
+    let members: Vec<_> = snapshot.entries.iter().map(|entry| serde_json::json!({"name": entry.name, "bytes": entry.data})).collect();
+    assert_eq!(serde_json::to_value(members).unwrap(), law["members"]);
+    let encoded = ZipIso21320Editor::encode_natural_file(&snapshot).unwrap();
+    let reparsed = ZipIso21320Editor::decode_natural_file(&encoded).unwrap();
+    assert_eq!(reparsed, snapshot);
+    assert!(ZipIso21320Editor::decode_natural_file(include_bytes!("🧫️fixtures/⛔️bzip2.zip")).is_err());
+    let mut encrypted = snapshot;
+    encrypted.entries[0].metadata.local.flags |= 1;
+    encrypted.entries[0].metadata.central.flags |= 1;
+    assert!(ZipIso21320Editor::encode_natural_file(&encrypted).is_err());
+}

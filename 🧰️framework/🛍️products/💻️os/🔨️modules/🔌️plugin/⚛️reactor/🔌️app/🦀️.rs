@@ -88,11 +88,11 @@ pub trait PluginApp: Send + 'static {
     /// 🌱️ Exact physical allocation needed by the selected live maintenance authority.
     fn maintenance_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
     /// 📏️ Quotes only the maintenance job's still-retained original sources before its caller may return.
-    fn maintenance_source_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
+    fn maintenance_source_close_demands(&self,body:usize,cx:&semio_framework_job::StepContext<'_>)->Result<RetirementDemand,ValueError>;
     /// 🧷️ Drains those sources under their unchanged original maintenance caller and decoder.
     fn maintenance_source_close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>;
     /// 🪹️ The original maintenance source and its final shell have fully returned.
-    fn maintenance_source_terminal_is_empty(&self)->bool;
+    fn maintenance_source_terminal_is_empty(&self,cx:&semio_framework_job::StepContext<'_>)->bool;
 
     /// 🪪️ Binds the host's live instance identity before any operation-scoped work starts.
     async fn bind_instance_id(&mut self, _instance_id: u32) {}
@@ -463,6 +463,10 @@ pub trait PluginApp: Send + 'static {
     /// 📏️ Original callers can fund the exact next action without changing source or cancellation identity.
     fn render_demand(&self,_body_key:&str,_maximum_body_bytes:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
     /// 📨️ The original staged input lends its stationary donor to one retained controller work owner.
+    /// 🛂️ Admit only the auxiliary body declared by the captured action and actual window.
+    fn staged_action_matches(&self,_action:&str,_body:&str,_view:&ViewModel)->bool{false}
+    /// 🧷️ Identify only render work retained under this exact original caller.
+    fn render_work_request_owned(&mut self,_cx:&semio_framework_job::StepContext<'_>)->bool{false}
     fn receive_render_work_request(&mut self,_body_key:&str,_request:&mut Option<semio_framework::action_staging::StagedFormRequest>,_view:&ViewModel,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"staging.render-request-unsupported").into())}
     /// ♻️ Revokes the original private render before its donated input and context can retire.
     fn close_render_work_request(&mut self,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{Ok(Some(true))}

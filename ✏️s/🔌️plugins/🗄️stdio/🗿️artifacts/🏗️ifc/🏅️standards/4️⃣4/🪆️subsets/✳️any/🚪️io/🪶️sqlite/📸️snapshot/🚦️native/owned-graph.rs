@@ -5,7 +5,7 @@ use semio_framework_value::{
     RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetireOwned, RetirementDemand, ValueError, ValueRefusalKind,
     retirement::{RetireOwned as RetireOwnedTrait, RetirementCursor, RetirementStep},
 };
-use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,OriginalReceivingPrimary};
 use std::mem::size_of;
 fn invalid() -> ValueError {
     ValueError::literal(ValueRefusalKind::InvalidValue, "literal IFC Pack value forest has invalid shape, ownership or references")
@@ -113,7 +113,14 @@ impl GraphReceiving {
             _ => Ok(fixed()),
         }
     }
-    pub(super) fn step(&mut self, native: &mut NativeDecodeControl<'_>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+    pub(super) fn step(&mut self,native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
+        if self.closing||self.closed||self.is_ready(){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+        let demand=match self.demands(body){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
+        if !funds(grant,demand){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+        let mut work=0;let requested=grant;let turn=native.receive_construction_step(demand,|native,granted|{let result=self.step_unposted(native,body,requested.restricted_by(granted),&mut work);RetainedWorkOutcome{result:result.map(RetainedCloneStep::Progress),work}});
+        RetainedWorkOutcome{result:turn.result.map(|step|step.progress()).map_err(|failure|OriginalReceivingPrimary{primary:failure.primary,quote_refusal:failure.receipt_refusal,allocation_refusal:None,progress:failure.progress}),work:turn.work}
+    }
+    fn step_unposted(&mut self, native: &mut NativeDecodeControl<'_>, body: usize, grant: RetainedCloneGrant, work:&mut u64) -> Result<RetainedCloneProgress, ValueError> {
         if self.closing || self.closed || self.is_ready() {
             return Ok(Default::default());
         }
@@ -122,6 +129,8 @@ impl GraphReceiving {
             return Ok(Default::default());
         }
         native.checkpoint()?;
+        if !native.prepare_work(1)? { return Ok(Default::default()); }
+        native.commit_work(1)?;*work=1;
         if self.phase == 0 {
             native.begin_stage(0)?;
         }

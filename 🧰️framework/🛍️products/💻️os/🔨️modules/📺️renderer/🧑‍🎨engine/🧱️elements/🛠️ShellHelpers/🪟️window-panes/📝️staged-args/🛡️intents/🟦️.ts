@@ -84,8 +84,8 @@ export class StagedFormSession<Node=string,Revision=string> {
  }
  /** 🎛️ Lets ordinary controls reflect the same original resident gate used by dispatch. */
  canInteract(node:Node,trigger:string):boolean{return this.control(node,trigger)!==undefined;}
- canExecute():boolean{const current=this.current();return !!current&&current.status.ready&&sameStagedFormToken(current.status.token,this.token);}
- executionArgs():StagedArgs|undefined{return this.canExecute()?this.args:undefined;}
+ canExecute():boolean{return this.executionArgs()!==undefined;}
+ executionArgs():StagedArgs|undefined{const current=this.current(),args=current?.status.commitArgs;return current?.status.ready&&args!==null&&typeof args==='object'&&!Array.isArray(args)&&sameStagedFormToken(current.status.token,this.token)?args:undefined;}
  reset(args:StagedArgs):boolean{if(this.closed)return false;const next=this.next();if(!next)return false;this.args=args;this.token=next;this.proof=undefined;this.page=undefined;return true;}
  revise(revision:string):boolean{if(this.closed||!revision)return false;if(revision===this.token.revision)return true;const next=this.next();if(!next)return false;this.token=Object.freeze({...next,revision});this.proof=undefined;this.page=undefined;return true;}
  close():void{this.closed=true;this.proof=undefined;this.page=undefined;}

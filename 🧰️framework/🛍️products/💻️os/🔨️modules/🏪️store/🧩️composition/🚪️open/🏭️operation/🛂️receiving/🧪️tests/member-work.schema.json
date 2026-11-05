@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "budget",
+    "cases"
+  ],
+  "properties": {
+    "budget": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "request",
+          "report",
+          "primary",
+          "effects",
+          "observed",
+          "posted",
+          "refused"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "request": {
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "report": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "primary": {
+            "type": "boolean"
+          },
+          "effects": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "observed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "posted": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "refused": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

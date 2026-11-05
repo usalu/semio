@@ -110,6 +110,9 @@ type En1991Artifact {
   supportCollisions: [SupportCollision!]!
   localFires: [LocalFire!]!
   snowGuards: [SnowGuard!]!
+  railDerailments: [RailDerailment!]!
+  railLoadGroups: [RailLoadGroup!]!
+  dustExplosions: [DustExplosion!]!
 }
 type FloorArea {
   id: String!
@@ -336,6 +339,7 @@ type Footbridge {
   loadedLength: Float!
   deckWidth: Float!
   naturalFrequency: Float!
+  assumedServiceAxle: Float!
 }
 type RailDynamic {
   id: String!
@@ -387,4 +391,31 @@ type SnowGuard {
   roofId: String!
   slopeLength: Float!
   assumedForce: Float!
+}
+type RailDerailment {
+  id: String!
+  situation: String!
+  assumedLineLoad: Float!
+  loadedLength: Float!
+  offset: Float!
+}
+type RailLoadGroup {
+  id: String!
+  loadGroup: String!
+  factorVertical: Float!
+  factorLongitudinal: Float!
+  factorLateral: Float!
+  assumedAxleLoad: Float!
+  assumedUdl: Float!
+  assumedLongitudinal: Float!
+  assumedLateral: Float!
+}
+type DustExplosion {
+  id: String!
+  kst: Float!
+  pMax: Float!
+  volume: Float!
+  ventArea: Float!
+  staticOpeningPressure: Float!
+  designPressure: Float!
 }

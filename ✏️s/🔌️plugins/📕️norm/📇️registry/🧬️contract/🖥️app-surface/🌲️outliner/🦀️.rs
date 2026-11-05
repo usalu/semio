@@ -1,6 +1,10 @@
 //! 🌲️ Entity outliner of the norm app surface: collections as groups, entities as rows with status glyph, selection, filter and add/remove. See [`super`].
 
-use crate::*;
+include!("../📋️prelude/🦀️.rs");
+
+use semio_s_plugin_norm_app_surface_foundation::*;
+use semio_s_plugin_norm_app_surface_live_core::*;
+pub use semio_s_plugin_norm_app_surface_interaction_topology::*;
 use semio_framework_value::DslValue;
 
 //#region 🌲️State
@@ -34,63 +38,9 @@ pub struct OutlinerContext<'a, 'w> {
     pub state: &'a OutlinerState,
 }
 
-/// 🌲️ One entity of a collection.
-#[derive(Clone, Debug)]
-pub struct EntityRow<'a> {
-    pub path: String,
-    pub id: String,
-    pub title: String,
-    pub index: usize,
-    pub value: &'a DslValue,
-}
 //#endregion 🌲️State
 
 //#region 🌲️Model
-fn string_field<'a>(value: &'a DslValue, key: &str) -> Option<&'a str> {
-    match value.get(key) {
-        Some(DslValue::String(raw)) if !raw.is_empty() => Some(raw.as_str()),
-        _ => None,
-    }
-}
-
-/// 🆔️ The entity's `id`, empty when it has none.
-pub fn entity_id(value: &DslValue) -> String {
-    string_field(value, "id").unwrap_or_default().to_string()
-}
-
-/// 🏷️ `id — name` when both exist, else whichever exists, else the position.
-pub fn entity_title(value: &DslValue, index: usize) -> String {
-    let id = string_field(value, "id");
-    let name = string_field(value, "name").or_else(|| string_field(value, "label")).or_else(|| string_field(value, "title"));
-    match (id, name) {
-        (Some(id), Some(name)) if id != name => format!("{id} — {name}"),
-        (Some(id), _) => id.to_string(),
-        (None, Some(name)) => name.to_string(),
-        (None, None) => format!("#{}", index + 1),
-    }
-}
-
-/// 🔎️ Case-insensitive match of every blank-separated filter word against the haystack; an empty filter admits all.
-pub fn filter_matches(filter: &str, haystack: &str) -> bool {
-    let haystack = haystack.to_lowercase();
-    filter.split_whitespace().all(|word| haystack.contains(&word.to_lowercase()))
-}
-
-/// 🌲️ The rows of a collection that pass the filter, in document order.
-pub fn collection_rows<'a>(path: &str, items: &'a [DslValue], filter: &str) -> Vec<EntityRow<'a>> {
-    items
-        .iter()
-        .enumerate()
-        .map(|(index, value)| EntityRow { path: list_element_path(path, value, index), id: entity_id(value), title: entity_title(value, index), index, value })
-        .filter(|row| filter_matches(filter, &format!("{} {}", row.title, row.path)))
-        .collect()
-}
-
-/// 🌲️ Whether a collection is entity-shaped: empty, or only objects.
-pub fn is_entity_collection(items: &[DslValue]) -> bool {
-    items.iter().all(|item| matches!(item, DslValue::Object(_)))
-}
-
 fn is_selected(state: &OutlinerState, row: &EntityRow<'_>) -> bool {
     state.selected.iter().any(|selected| *selected == row.path || (!row.id.is_empty() && *selected == row.id))
 }
@@ -102,12 +52,6 @@ fn row_label(context: &OutlinerContext<'_, '_>, row: &EntityRow<'_>) -> String {
         Some(feedback) => format!("{} · {}", row.title, utilization_text(feedback.status, feedback.utilization)),
         None => row.title.clone(),
     }
-}
-
-/// 🎯️ The interaction address of an entity row (`collection/id`, unique per collection); the selection mirror resolves it to the entity id, the viewport highlights the same entity.
-pub fn row_address(row: &EntityRow<'_>) -> Option<String> {
-    let collection = row.path.split('[').next().unwrap_or_default();
-    (!row.id.is_empty() && !collection.is_empty()).then(|| crate::protocol::wire::encode_scoped_identity(&[collection, row.id.as_str()]).ok()).flatten()
 }
 
 fn drag_payload(id: &str) -> UiAssemblyResult<ui::UiFixedMap<ui::UiText>> {
@@ -131,18 +75,21 @@ fn reorder_items(context: &OutlinerContext<'_, '_>, row: &EntityRow<'_>, collect
     Ok(items)
 }
 
-fn entity_row(context: &OutlinerContext<'_, '_>, row: &EntityRow<'_>, count: usize, body: BuiltNode) -> UiAssemblyResult<BuiltNode> {
+fn entity_row(context: &OutlinerContext<'_, '_>, row: &EntityRow<'_>, count: usize, meta_fn: Option<NormFieldMetaFn>, body: BuiltNode) -> UiAssemblyResult<BuiltNode> {
     let selected = is_selected(context.state, row);
     let collection = row.path.split('[').next().unwrap_or_default();
     let reorder = !row.id.is_empty() && context.state.reorderable.contains(&collection);
     let locale = context.locale;
-    let remove_args = action_args_map(vec![("path", ui_value_text(&row.path)?), ("index", UiValue::Number(0.0))])?;
-    let remove = tree_item_with_action(format!("norm-outliner.{}.remove", row.path), norm_ui_label(format!("{} — {}", chrome("Remove", "Entfernen", locale), row.title))?, None, norm_action(context.controller_id, "removeItem", Some(remove_args))?)?;
     let address = context.state.interaction_domain.and_then(|_| row_address(row));
     let item = ui::tree_item(norm_ui_label(row_label(context, row))?).try_id(address.clone().unwrap_or_else(|| format!("norm-outliner.{}", row.path))).map_err(|_| ui_error("ui.node.id"))?.default_open(selected).selected(selected);
     let item = if address.is_some() { item.granularity(ui_text("entity")?) } else { item };
     let item = if reorder { bind_on(item.draggable(true).drag_data(drag_payload(&row.id)?), Trigger::Drop, context.controller_id, "moveEntity", action_args_map(vec![("path", ui_value_text(collection)?), ("over", ui_value_text(&row.id)?)])?)? } else { item };
-    let mut item = item.try_child(body).map_err(|_| ui_error("ui.node.child"))?.try_child(remove).map_err(|_| ui_error("ui.node.child"))?;
+    let mut item = item.try_child(body).map_err(|_| ui_error("ui.node.child"))?;
+    if meta_fn.and_then(|lookup| lookup(&row.path)).is_some_and(|meta| meta.can_remove) {
+    let remove_args = action_args_map(vec![("path", ui_value_text(&row.path)?), ("index", UiValue::Number(0.0))])?;
+    let remove = tree_item_with_action(format!("norm-outliner.{}.remove", row.path), norm_ui_label(format!("{} — {}", chrome("Remove", "Entfernen", locale), row.title))?, None, norm_action(context.controller_id, "removeItem", Some(remove_args))?)?;
+        item = item.try_child(remove).map_err(|_| ui_error("ui.node.child"))?;
+    }
     if reorder {
         for moved in reorder_items(context, row, collection, count)? {
             item = item.try_child(moved).map_err(|_| ui_error("ui.node.child"))?;
@@ -160,7 +107,7 @@ fn filter_input(context: &OutlinerContext<'_, '_>, path: &str) -> UiAssemblyResu
 }
 
 /// 🌲️ A collection as a windowed group of entity rows plus an add action; `body` draws one entity's contents (its inspector).
-pub fn render_collection(context: &OutlinerContext<'_, '_>, path: &str, label: &str, items: &[DslValue], default_open: bool, mut body: impl FnMut(&EntityRow<'_>) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+pub fn render_collection(context: &OutlinerContext<'_, '_>, path: &str, label: &str, items: &[DslValue], default_open: bool, meta_fn: Option<NormFieldMetaFn>, mut body: impl FnMut(&EntityRow<'_>) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
     let locale = context.locale;
     let rows = collection_rows(path, items, &context.state.filter);
     let section_id = inputs_section_id(path);
@@ -173,21 +120,24 @@ pub fn render_collection(context: &OutlinerContext<'_, '_>, path: &str, label: &
         &rows,
         |row| {
             let inner = body(row)?;
-            entity_row(context, row, items.len(), inner)
+            entity_row(context, row, items.len(), meta_fn, inner)
         },
         norm_ui_label(chrome("Empty list", "Leere Liste", locale))?,
     )?;
     if !context.windows.is_open(&section_id, default_open) {
         return Ok(list);
     }
-    let insert_args = action_args_map(vec![("path", ui_value_text(path)?), ("index", UiValue::Number(items.len() as f64))])?;
-    let add = tree_item_with_action(format!("norm-outliner.{path}.add"), norm_ui_label(chrome("Add item", "Eintrag hinzufügen", locale))?, None, norm_action(context.controller_id, "insertItem", Some(insert_args))?)?;
+    let can_insert = meta_fn.and_then(|lookup| lookup(path)).is_some_and(|meta| meta.can_insert);
     let mut children = UiFixedList::default();
     if let Some(filter) = filter_input(context, path)? {
         children.try_push(filter).map_err(|_| ui_error("ui.fixed-capacity"))?;
     }
     children.try_push(list).map_err(|_| ui_error("ui.fixed-capacity"))?;
-    children.try_push(add).map_err(|_| ui_error("ui.fixed-capacity"))?;
+    if can_insert {
+    let insert_args = action_args_map(vec![("path", ui_value_text(path)?), ("index", UiValue::Number(items.len() as f64))])?;
+    let add = tree_item_with_action(format!("norm-outliner.{path}.add"), norm_ui_label(chrome("Add item", "Eintrag hinzufügen", locale))?, None, norm_action(context.controller_id, "insertItem", Some(insert_args))?)?;
+        children.try_push(add).map_err(|_| ui_error("ui.fixed-capacity"))?;
+    }
     tree_group(format!("norm-outliner.{path}.group"), norm_ui_label(label)?, true, children)
 }
 //#endregion 🌲️Render

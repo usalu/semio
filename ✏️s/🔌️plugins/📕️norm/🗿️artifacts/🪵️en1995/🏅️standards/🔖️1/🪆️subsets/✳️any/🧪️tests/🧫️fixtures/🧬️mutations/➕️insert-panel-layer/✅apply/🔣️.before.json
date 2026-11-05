@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC2",
   "members": [
     {
       "id": "beam-B1",
@@ -96,6 +95,31 @@
       ]
     }
   ],
+  "ulsEquation": "eq610",
+  "cases": [
+    {
+      "id": "case-kser",
+      "labelEn": "Slip modulus of the support dowels",
+      "labelDe": "Verschiebungsmodul der Auflagerdübel",
+      "entryId": "T-83",
+      "numbers": [
+        {
+          "id": "d",
+          "value": 12.0
+        },
+        {
+          "id": "rho_m1",
+          "value": 420.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "dowel"
+        }
+      ]
+    }
+  ],
   "placements": [],
   "tapers": [],
   "cutouts": [],
@@ -123,29 +147,5 @@
   "trusses": [],
   "bracings": [],
   "decks": [],
-  "ulsEquation": "eq610",
-  "cases": [
-    {
-      "id": "case-kser",
-      "labelEn": "Slip modulus of the support dowels",
-      "labelDe": "Verschiebungsmodul der Auflagerdübel",
-      "entryId": "T-83",
-      "numbers": [
-        {
-          "id": "d",
-          "value": 12.0
-        },
-        {
-          "id": "rho_m1",
-          "value": 420.0
-        }
-      ],
-      "texts": [
-        {
-          "id": "kind",
-          "value": "dowel"
-        }
-      ]
-    }
-  ]
+  "reliabilityClass": "RC2"
 }

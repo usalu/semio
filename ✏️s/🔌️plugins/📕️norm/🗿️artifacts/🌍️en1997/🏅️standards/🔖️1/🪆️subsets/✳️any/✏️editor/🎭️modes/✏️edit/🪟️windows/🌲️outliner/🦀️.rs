@@ -24,7 +24,7 @@ pub fn render(host: &crate::Host, selection: &NormSelection, locale: Locale, con
     let collections: Vec<OutlinedCollection> = ENTITY_KINDS.iter().map(|k| OutlinedCollection { path: k.collection, label_en: k.label_en, label_de: k.label_de }).collect();
     let state = selection.outliner_state_in(super::checks::INTERACTION_DOMAIN);
     let report: &CheckReport = host.report();
-    render_outliner_document(&semio_framework_value::ToValue::to_value(host.document()), &collections, Some(semio_s_artifact_norm_en1997_checks::lookup_field_meta), &OutlinerContext { report, locale, controller_id, windows, state: &state })
+    render_outliner_document(&semio_framework_value::ToValue::to_value(host.document()), &collections, Some(crate::field_meta::en1997_field_meta), &OutlinerContext { report, locale, controller_id, windows, state: &state })
 }
 //#endregion 🔖️Render
 

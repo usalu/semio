@@ -19,6 +19,10 @@ impl Choices {
         self.rows.as_mut().expect("original choice backing").push(StagedScalarChoice { key, label });
     }
 }
+impl semio_framework_plugin_decl_staged_form::StagedScalarChoiceSource for Choices {
+    fn len(&self)->usize{self.rows().len()}
+    fn choice(&self,index:usize)->Option<StagedScalarChoice<'_>>{self.rows().get(index).copied()}
+}
 impl Drop for Choices {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.rows.is_none(), "declaration choices require original retirement");

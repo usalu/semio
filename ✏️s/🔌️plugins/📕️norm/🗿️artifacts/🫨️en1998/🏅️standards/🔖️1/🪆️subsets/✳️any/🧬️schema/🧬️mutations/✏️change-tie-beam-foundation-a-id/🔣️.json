@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-tie-beam-foundation-a-id",
   "semanticKind": "change-tie-beam-foundation-a-id",
-  "displayName": "Change tie beam: First tieBeam",
+  "displayName": "Change first foundation of the tie beam",
   "emoji": "✏️",
   "aggregateVariant": "ChangeTieBeamFoundationAId",
   "payloadSchema": "🧬️schema/🔣️.json",

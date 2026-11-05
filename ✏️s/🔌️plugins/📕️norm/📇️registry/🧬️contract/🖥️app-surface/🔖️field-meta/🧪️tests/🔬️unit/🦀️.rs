@@ -72,3 +72,27 @@ fn choice_and_plain_fields_expose_their_kind() {
     assert_eq!(FieldSpec::EMPTY.affects, Affects::AllChecks);
     assert_eq!(FieldSpec::EMPTY.tier, Tier::Basic);
 }
+
+#[test]
+fn native_setter_admission_preserves_descriptions_and_explicit_readonly_intent() {
+    let blocked = admit_field_meta(Some(MM_LENGTH), false).expect("descriptive readonly metadata");
+    assert!(blocked.read_only);
+    assert_eq!(blocked.label, MM_LENGTH.label);
+    assert_eq!(blocked.kind, MM_LENGTH.kind);
+    assert!(!admit_field_meta(Some(MM_LENGTH), true).unwrap().read_only);
+    assert!(admit_field_meta(Some(FieldSpec { read_only: true, ..MM_LENGTH }), true).unwrap().read_only);
+    let fallback = admit_field_meta(None, false).expect("unknown readonly metadata");
+    assert!(fallback.read_only);
+    assert_eq!(field_label("products[id=P1].identifier", Some(fallback), Locale::En), "identifier");
+    assert_eq!(field_label("products[id=P1].identifier", Some(fallback), Locale::De), "identifier");
+}
+
+#[test]
+fn list_capabilities_do_not_change_scalar_admission() {
+    let meta = admit_list_meta(admit_field_meta(None, false), true, true).unwrap();
+    assert!(meta.read_only);
+    assert!(meta.can_insert && meta.can_remove);
+    let meta = admit_list_meta(admit_field_meta(None, true), false, false).unwrap();
+    assert!(!meta.read_only);
+    assert!(!meta.can_insert && !meta.can_remove);
+}

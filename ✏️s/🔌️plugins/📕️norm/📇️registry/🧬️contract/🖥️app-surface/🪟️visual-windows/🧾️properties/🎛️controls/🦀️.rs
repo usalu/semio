@@ -171,6 +171,7 @@ pub struct FieldView {
     pub label: String,
     pub help: Option<String>,
     pub control: FieldControl,
+    pub read_only: bool,
     pub range: Option<(f64, f64)>,
     pub soft_range: Option<(f64, f64)>,
     pub step: Option<f64>,
@@ -182,7 +183,7 @@ pub struct FieldView {
 
 impl FieldView {
     pub fn new(path: impl Into<String>, label: impl Into<String>, control: FieldControl) -> Self {
-        Self { path: path.into(), label: label.into(), help: None, control, range: None, soft_range: None, step: None, precision: 3, ndp: None, clause: None, bulk: None }
+        Self { path: path.into(), label: label.into(), help: None, control, read_only: false, range: None, soft_range: None, step: None, precision: 3, ndp: None, clause: None, bulk: None }
     }
 
     /// 🎛️ The action the controls of this field raise: `setField` for one row, `setFields` for a bulk edit.
@@ -303,9 +304,27 @@ fn select_of(value: &str, options: &[FieldOption], row_id: &str, name: &str, fie
     finish(bind_change(select, controller_id, field.verb(), field.args()?)?, name)
 }
 
+fn readonly_value(field: &FieldView, value: &semio_framework_value::DslValue, locale: Locale) -> String {
+    use semio_framework_value::DslValue;
+    match (&field.control, value) {
+        (_, DslValue::Null) if field.bulk.is_some() => mixed_label(matches!(locale, Locale::De)).to_owned(),
+        (_, DslValue::Null) => chrome("empty", "leer", locale),
+        (FieldControl::Quantity { unit }, DslValue::Number(number)) => format_quantity_text(number.as_f64(), unit, field.precision, locale),
+        (FieldControl::Int, DslValue::Number(number)) => format_number(number.as_f64(), 0, locale),
+        (FieldControl::Choice(options) | FieldControl::EntityRef { options, .. }, DslValue::String(raw)) => options.iter().find(|option| option.value == *raw).map(|option| option.label.clone()).unwrap_or_else(|| raw.clone()),
+        (_, DslValue::String(raw)) => raw.clone(),
+        (_, DslValue::Bool(on)) => if *on { chrome("Yes", "Ja", locale) } else { chrome("No", "Nein", locale) },
+        (_, DslValue::Number(number)) => format_number(number.as_f64(), field.precision, locale),
+        _ => chrome("empty", "leer", locale),
+    }
+}
+
 /// 🎛️ The controls of one field row for its current document value (several for a slider-backed quantity).
 pub fn field_controls(field: &FieldView, value: &semio_framework_value::DslValue, row_id: &str, controller_id: &'static str, locale: Locale) -> UiAssemblyResult<Vec<BuiltNode>> {
     use semio_framework_value::DslValue;
+    if field.read_only {
+        return Ok(vec![tree_item_desc(format!("{row_id}.readonly"), norm_ui_label(chrome("Read only", "Schreibgeschützt", locale))?, Some(readonly_value(field, value, locale)))?]);
+    }
     let name = field.labelled();
     let mut nodes = Vec::new();
     match (&field.control, value) {

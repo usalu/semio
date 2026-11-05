@@ -67,7 +67,7 @@ const admits = (node: Schema, value: Json): boolean => {
 };
 
 /** ✍️️ The committed text of `value` at schema position `node`: `json.dumps(indent=2, ensure_ascii=False)` plus a newline. */
-const encode = (schemas: Schemas, value: Json, node: Schema, base: Schema, indent = ""): string => {
+export const encode = (schemas: Schemas, value: Json, node: Schema, base: Schema, indent = ""): string => {
   const resolved = schemas.resolve(node, base);
   const { node: position, base: owner } = resolved;
   const branches = (position.oneOf ?? position.anyOf) as Schema[] | undefined;
@@ -199,7 +199,7 @@ const setup = async (artifact: string): Promise<Setup> => {
     corpus: wires(subset),
   };
 };
-const setups = await Promise.all(artifacts.map(setup));
+export const setups = await Promise.all(artifacts.map(setup));
 
 describe("norm wire twins", () => {
   test("cover all fifteen artifacts", () => expect(setups).toHaveLength(15));
@@ -221,7 +221,7 @@ describe("norm wire twins", () => {
           expect(refuses(twins[wire.role], value)).toBe(!admitted);
           if (!admitted) return;
           const parsed = twins[wire.role](value) as Json;
-          expect(`${encode(schemas, parsed, roots[wire.role], roots[wire.role])}\n`).toBe(wire.text);
+          expect(`${encode(schemas, parsed, roots[wire.role], roots[wire.role])}\n` === wire.text, `canonical wire bytes differ: ${wire.path}`).toBe(true);
           const broken = splice(value, wire.role === "mutation" && external);
           expect(oracles[wire.role](broken)).toBe(false);
           expect(refuses(twins[wire.role], broken)).toBe(true);

@@ -1,0 +1,99 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "locale",
+          "value",
+          "options",
+          "select",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "locale": {
+            "enum": [
+              "en",
+              "de"
+            ]
+          },
+          "value": {
+            "type": "string"
+          },
+          "includeNoExample": {
+            "type": "boolean"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "label"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "select": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "text",
+              "offered",
+              "emitted",
+              "label"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "offered": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "emitted": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

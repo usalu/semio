@@ -1,0 +1,1 @@
+{"maximumBytes":4096,"page":[0,1,2,253,254,255],"refusals":["empty","oversized","sealed","total-capacity"],"deniedAxes":["items","copy","depth"],"receiptRefusal":"queue-owns-page-before-parent-receipt"}

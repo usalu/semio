@@ -203,6 +203,12 @@ impl ArtifactEditor for Din18599PlayApp {
 semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory!(Din18599BoundedCommandJobFactory, Din18599PlayApp);
 
 impl semio_s_plugin_norm_app_surface::NormRetainedEditor for Din18599PlayApp {
+    fn inspector_rules() -> &'static semio_s_plugin_norm_app_surface::NormEditRules { &semio_s_artifact_norm_din18599_mutations::EDIT_RULES }
+
+    fn inspector_resolve(document: &Self::Snapshot, edit: &semio_s_plugin_norm_app_surface::NormEdit) -> Result<Vec<Self::Mutation>, String> {
+        semio_s_artifact_norm_din18599_mutations::resolve_edit(document, edit)
+    }
+
     type Family = DinV18599Family;
 
     type ResultsWindowConfigOwner = results::ResultsWindowConfigOwner;

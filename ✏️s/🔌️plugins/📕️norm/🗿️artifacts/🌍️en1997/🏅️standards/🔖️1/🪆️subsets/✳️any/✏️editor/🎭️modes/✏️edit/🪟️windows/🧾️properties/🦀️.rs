@@ -21,7 +21,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🧾️ Typed properties and outliner; the selection opens its rows and marks the field paths of the selected check.
 pub fn render(host: &crate::Host, selection: &NormSelection, locale: Locale, controller_id: &'static str, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let options = selection.inspector_options();
-    render_inspector_with_cases::<crate::En1997Family, semio_s_artifact_norm_en1997_checks::catalogue::En1997Cases>(host, locale, controller_id, Some(semio_s_artifact_norm_en1997_checks::lookup_field_meta), windows, &options)
+    render_inspector_with_cases::<crate::En1997Family, semio_s_artifact_norm_en1997_checks::catalogue::En1997Cases>(host, locale, controller_id, Some(crate::field_meta::en1997_field_meta), windows, &options)
 }
 //#endregion 🔖️Render
 

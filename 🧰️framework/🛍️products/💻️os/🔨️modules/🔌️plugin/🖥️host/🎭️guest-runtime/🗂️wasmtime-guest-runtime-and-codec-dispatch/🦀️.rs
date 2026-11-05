@@ -187,7 +187,7 @@ impl GuestRuntime for WasmtimeRuntime {
     /// A malformed entry is SKIPPED rather than failing the turn, matching `AppCommand::
     /// Presence`'s own roster-decode convention: presence is best-effort and TTL-scoped, so
     /// one bad update must not cost the actor an otherwise valid turn's patches and effects.
-    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &mut [Event], budget: Budget, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("execute_turn called on a non-wasmtime GuestInstance".to_string()));
         };

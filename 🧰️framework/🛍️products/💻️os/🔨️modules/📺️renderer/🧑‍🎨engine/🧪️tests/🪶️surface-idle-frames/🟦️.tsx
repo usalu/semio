@@ -81,7 +81,7 @@ function paint2dNode(brushSize: number): UiComponentSceneNode {
   return {
     controllerId: "controller",
     surfaceId: "surface",
-    paint2d: { documentSyncJson: JSON.stringify({ layers: [] }), assetsJson: "{}", cameraJson: CAMERA_JSON, selectionJson: "[]", activeUtility: "select", brushSize, brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24, viewMode: "composite" },
+    paint2d: { documentSyncJson: JSON.stringify({ layers: [] }), assetsJson: "{}", cameraJson: CAMERA_JSON, selectionJson: "[]", activeUtility: "select", brushSize, brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,editingOptions:{filterKind:"brightness" as const,filterAmount:0,imageGrid:{x:0,y:0,width:512,height:512,bilinear:true}}, viewMode: "composite" },
   } as unknown as UiComponentSceneNode;
 }
 

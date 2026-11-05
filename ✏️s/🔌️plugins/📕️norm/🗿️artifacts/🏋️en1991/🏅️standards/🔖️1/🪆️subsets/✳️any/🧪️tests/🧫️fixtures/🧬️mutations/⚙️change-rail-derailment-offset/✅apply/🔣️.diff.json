@@ -246,6 +246,34 @@
     "moved": [],
     "modified": []
   },
+  "dustExplosions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "railLoadGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "railDerailments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "rail-derailment-1",
+        "patch": {
+          "situation": null,
+          "assumedLineLoad": null,
+          "loadedLength": null,
+          "offset": 2.0
+        }
+      }
+    ]
+  },
   "fatigueModels": {
     "removed": [],
     "inserted": [],
@@ -269,21 +297,5 @@
     "inserted": [],
     "moved": [],
     "modified": []
-  },
-  "railDerailments": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": [
-      {
-        "id": "rail-derailment-1",
-        "patch": {
-          "situation": null,
-          "assumedLineLoad": null,
-          "loadedLength": null,
-          "offset": 2.0
-        }
-      }
-    ]
   }
 }

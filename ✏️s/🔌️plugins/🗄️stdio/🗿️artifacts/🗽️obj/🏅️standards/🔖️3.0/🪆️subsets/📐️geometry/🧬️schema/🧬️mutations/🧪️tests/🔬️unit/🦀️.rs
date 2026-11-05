@@ -1,3 +1,4 @@
+use protocol::{ColdMutation, OpText, OpBinary};
 use crate::{schema::snapshot::ObjFace, schema::snapshot::ObjVertex};
 use crate::{schema::snapshot::ObjFaceVertex, schema::snapshot::ObjGroup, schema::snapshot::ObjObject};
 use crate::ObjSnapshot;

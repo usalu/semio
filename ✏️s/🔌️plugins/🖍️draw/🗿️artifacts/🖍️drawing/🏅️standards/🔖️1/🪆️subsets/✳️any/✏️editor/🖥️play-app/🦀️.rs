@@ -209,9 +209,9 @@ impl ArtifactEditor for DrawingPlayApp {
         semio_s_artifact_draw_drawing_editor_interaction::clipboard::cut(doc.snapshot,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids).unwrap_or_default()
     }
 
-    fn build_reserved_tool_job(request:semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<Self>>)->Result<Option<semio_framework_plugin::ArtifactReservedToolJob>,Fault>{
-        if !DRAWING_CLIPBOARD_RESERVED_IDS.contains(&request.tool_id.as_str()){return Ok(None);}
-        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(crate::clipboard_job::DrawingClipboardJob::new(request)?)))
+    fn build_reserved_tool_job(request:&mut Option<semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if body.is_none()&&!request.as_ref().is_some_and(|request|DRAWING_CLIPBOARD_RESERVED_IDS.contains(&request.tool_id.as_str())){return Ok(false);}
+        semio_framework_plugin::tool_contract::admit_reserved_work::<semio_framework_plugin::EditorApp<Self>,crate::clipboard_job::DrawingClipboardJob>(request,body,cx)
     }
 
     /// 🏷️ `app_commands!`'s generated `command_id()`.

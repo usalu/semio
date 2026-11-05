@@ -44,7 +44,7 @@
         "displayUnit": "kN/m²",
         "displayFactor": 0.001,
         "precision": 1,
-        "step": 1000000.0
+        "step": 1000000
       }
     }
   }

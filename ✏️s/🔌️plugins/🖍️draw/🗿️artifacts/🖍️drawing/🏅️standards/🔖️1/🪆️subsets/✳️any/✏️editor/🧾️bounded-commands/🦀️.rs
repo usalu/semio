@@ -145,7 +145,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     ) -> Option<usize> {
         if self.completed || command.command_id() != self.tool_id || drawing_bounded_extent(command, snapshot, interaction) != Some(1) { return None; }
         match command {
-            DrawingCommand::SetCamera(_) | DrawingCommand::SetCameraZoom(_) | DrawingCommand::EngagementInput(_) => context?.view_state.as_ref().map(|_| 1),
+            DrawingCommand::SetCamera(_) | DrawingCommand::SetCameraZoom(_) | DrawingCommand::EngagementInput(_) => context?.view_state.as_deref().map(|_| 1),
             _ => Some(1),
         }
     }
@@ -160,7 +160,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("drawing-window-work-terminal")); }
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
-        let active_utility = input.context.and_then(|context| context.view_state.as_ref()).map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility);
+        let active_utility = input.context.and_then(|context| context.view_state.as_deref()).map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility);
         let mut session = DrawingSession::new(active_utility, &input.operation.authoring_seed);
         session.identity_cancel=Some(cx.cancel_token());
         session.interaction.ids = input.interaction.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
@@ -172,14 +172,14 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         match input.command {
             DrawingCommand::SetCamera(payload) => {
                 payload.camera.validate().map_err(|error| Fault::from(error.to_string()))?;
-                let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("drawing-canvas-window-required"))?;
+                let view = input.context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("drawing-canvas-window-required"))?;
                 let mut config = session.window_config;
                 config.viewport = payload.camera;
                 config.framed = true;
                 emit.window_config_mutations.push(canvas_window::config::addressed(view, config)?);
             }
             DrawingCommand::SetCameraZoom(payload) => {
-                let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("drawing-canvas-window-required"))?;
+                let view = input.context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("drawing-canvas-window-required"))?;
                 let mut config = session.window_config;
                 config.viewport.zoom = payload.value;
                 config.framed = true;
@@ -187,7 +187,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
                 emit.window_config_mutations.push(canvas_window::config::addressed(view, config)?);
             }
             DrawingCommand::EngagementInput(payload) => {
-                let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("drawing-canvas-window-required"))?;
+                let view = input.context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("drawing-canvas-window-required"))?;
                 session.window_transient.engagement_input = payload.value.clone();
                 transient = Some(canvas_window::transient::addressed(view, session.window_transient)?);
             }

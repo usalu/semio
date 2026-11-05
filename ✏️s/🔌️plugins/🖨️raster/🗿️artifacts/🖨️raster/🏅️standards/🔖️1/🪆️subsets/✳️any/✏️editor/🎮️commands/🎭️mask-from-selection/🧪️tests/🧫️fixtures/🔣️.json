@@ -1,6 +1,20 @@
 {
   "width": 3,
   "height": 2,
+  "intent": {"layerId":"paint","expectedImageKey":null},
+  "scopedAction": {"layerId":"paint","expectedImageKey":"image-6a5b078c041617b1","windowId":"raster-composite"},
+  "maximumFieldUtf8Bytes": 4096,
+  "mountedIntent": {"method":"all","mode":"replace","path":"[]","expectedRgba":[255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255]},
+  "guards": ["missing","layer","target","width","height","source"],
+  "cancelAfterTurns": [0,1,2,4],
+  "discovery": {"prefixLayers":48,"identifierBytes":4096,"copyPageBytes":1024,"cancelAfterTurns":[0,1,2,47],"maximumDepth":32,"refusedDepth":33,"inheritedLockDepths":[0,7,31]},
+  "assetCapacity": 64,
+  "spanRegressions": [
+    {"name":"sparse-gaps","width":12,"height":1,"spans":[{"start":2,"length":1,"coverage":64},{"start":9,"length":2,"coverage":200}],"expectedAlpha":[0,0,64,0,0,0,0,0,0,200,200,0]},
+    {"name":"adjacent-single-pixels","width":8,"height":1,"pattern":{"start":0,"stride":1,"length":1,"count":8,"coverageCycle":[64,128,255]},"expectedAlpha":[64,128,255,64,128,255,64,128]},
+    {"name":"paged-prefix","width":40,"height":1,"pattern":{"start":0,"stride":1,"length":1,"count":33,"coverageCycle":[1,128,255]},"expectedAlpha":[1,128,255,1,128,255,1,128,255,1,128,255,1,128,255,1,128,255,1,128,255,1,128,255,1,128,255,1,128,255,1,128,255,0,0,0,0,0,0,0]}
+  ],
+  "execution": {"shape":"resumable","maximumRawBytes":139264,"fixedInputHeaderBytes":65536,"maximumInputEscapedFields":3,"maximumOutputEscapedFields":4,"maximumFieldUtf8Bytes":4096,"maximumEscapedBytesPerUtf8Byte":6,"maximumPixels":16777216,"channels":4,"maximumEncodedBytesPerSample":4,"headerBytes":8192,"maximumOutputBytes":268541952,"publicationLane":"artifact"},
   "selection": [
     {
       "start": 0,

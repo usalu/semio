@@ -50,7 +50,7 @@ type En1997AnchorsPatch {
   tendonYieldForce: JSON
   minFreeLength: JSON
   testFactor: JSON
-  tests: En1997AnchorsTestsRows!
+  tests: En1997AnchorsTestsRows
 }
 type En1997AnchorsRemoved {
   id: String!
@@ -175,7 +175,7 @@ type En1997FootingsPatch {
   embedment: JSON
   baseInclinationDeg: JSON
   settlementLimit: JSON
-  loadCases: En1997FootingsLoadCasesRows!
+  loadCases: En1997FootingsLoadCasesRows
 }
 type En1997FootingsRemoved {
   id: String!
@@ -212,7 +212,7 @@ type En1997LabTestsPatch {
   stressIncrement: JSON
   secondaryCompressionIndex: JSON
   designLife: JSON
-  points: En1997LabTestsPointsRows!
+  points: En1997LabTestsPointsRows
 }
 type En1997LabTestsPointsInserted {
   index: Int!
@@ -427,7 +427,7 @@ type En1997PilesPatch {
   elasticCompression: JSON
   hammerEfficiency: JSON
   concreteClass: JSON
-  testProfiles: En1997PilesTestProfilesRows!
+  testProfiles: En1997PilesTestProfilesRows
 }
 type En1997PilesRemoved {
   id: String!
@@ -629,7 +629,7 @@ type En1997InvestigationsPatch {
   groundLevel: JSON
   depth: JSON
   kind: JSON
-  readings: En1997InvestigationsReadingsRows!
+  readings: En1997InvestigationsReadingsRows
 }
 type En1997CharacteristicBasesInserted {
   index: Int!

@@ -1,3 +1,4 @@
+use semio_framework_plugin::WindowKit;
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 use semio_framework_plugin::app::TableWindowKit;
 use semio_framework_plugin::BuiltNode;

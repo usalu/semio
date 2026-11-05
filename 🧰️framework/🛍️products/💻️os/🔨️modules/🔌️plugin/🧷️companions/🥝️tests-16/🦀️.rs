@@ -3,6 +3,10 @@
 //! 🧭️ The test sources stay where they are and are mounted here with `#[path]`; every name they use from the former facade root is spelled with the crate that owns it.
 
 #[cfg(test)]
+#[global_allocator]
+static ORIGINAL_EMISSION_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+
+#[cfg(test)]
 extern crate semio_framework_os_kernel as store;
 #[cfg(test)]
 extern crate semio_framework_os_kernel as protocol;

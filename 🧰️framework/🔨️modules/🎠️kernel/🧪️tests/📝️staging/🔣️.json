@@ -1,0 +1,25 @@
+{
+  "event": {
+    "stagedFormRequested": {
+      "surface": "7:form",
+      "bodyKey": "norm.inspector.form",
+      "request": [
+        0,
+        1,
+        127,
+        255
+      ],
+      "instance": 7
+    }
+  },
+  "separate": {
+    "surfaceVisible": {
+      "surface": "7:viewport",
+      "bodyKey": "norm.viewport",
+      "viewState": [
+        2,
+        3
+      ]
+    }
+  }
+}

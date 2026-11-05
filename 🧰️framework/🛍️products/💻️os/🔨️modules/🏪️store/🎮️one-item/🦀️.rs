@@ -240,6 +240,16 @@ pub enum ArtifactStoreOneItemAdvance {
     Blocked,
 }
 
+/// ⛽️ Reported work covers the entire call; native observations are its included subset or the sole evidence on native-only paths.
+pub fn original_one_item_turn_work(reported:u64,observed:u64,coordinated:bool)->Result<u64,ValueError>{
+    if reported!=0&&observed>reported{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"one-item work report omitted observed native effects"));}
+    Ok(if reported!=0{reported}else{observed.max(u64::from(coordinated))})
+}
+
 #[path="🧬️semantic/🦀️.rs"]
 pub mod semantic;
 pub use semantic::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPost,PagedOneItemPostMode,PagedOneItemPostRead};
+
+#[cfg(feature="testkit")]
+#[path="🧪️fixture/🦀️.rs"]
+pub mod testkit;

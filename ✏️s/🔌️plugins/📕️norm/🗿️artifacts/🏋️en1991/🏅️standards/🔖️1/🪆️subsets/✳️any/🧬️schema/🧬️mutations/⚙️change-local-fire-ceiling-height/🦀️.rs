@@ -22,7 +22,7 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeLocalFireCeilingHe
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change localised fire: Ceiling height H", "lokaler Brand: Deckenhöhe H ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change ceiling height above the localised fire", "Deckenhöhe über dem lokalen Brand ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

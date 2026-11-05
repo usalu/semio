@@ -26,14 +26,37 @@ use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 
 /// 🚦️ The actual caller turn answers the parent history decoder's yield and cancellation checkpoints.
-struct StepTurn<'a, 'b>(&'a semio_framework_job::StepContext<'b>);
+struct StepTurn<'a,'b>{actual:std::sync::Mutex<&'a mut semio_framework_job::StepContext<'b>>,closing:bool}
 
 impl protocol::RetainedHistoryTurn for StepTurn<'_, '_> {
-    fn should_yield(&self) -> bool {
-        self.0.should_yield()
+    fn should_yield(&self)->bool{self.actual.try_lock().map_or(true,|cx|if self.closing{cx.retirement_should_yield()}else{cx.should_yield()})}
+    fn is_cancelled(&self)->bool{self.actual.try_lock().map_or(true,|cx|cx.is_cancelled())}
+}
+struct StepWork<'a,'b,'c>(&'a StepTurn<'b,'c>);
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for StepWork<'_,'_,'_>{
+    fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{
+        let cx=self.0.actual.try_lock().map_err(|_|ValueError::invariant("original archive caller is already borrowed"))?;
+        let paused=if self.0.closing{cx.retirement_should_yield()}else{cx.should_yield()};
+        Ok(!paused&&(self.0.closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))
     }
-    fn is_cancelled(&self) -> bool {
-        self.0.is_cancelled()
+}
+
+/// 🧾️ Retains a producer's original failure beside any independent caller receiving refusal.
+fn receive_archive<T>(cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,turn:semio_framework_value::RetainedWorkOutcome<T>,progress:RetainedCloneProgress,observed:u64)->Result<T,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    use semio_framework_job_native_decode::{OriginalNativeDecodeSource,OriginalNativeDecodeIssued};
+    let outcome=OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,OriginalNativeDecodeIssued{value:turn.result,grant,progress,work:turn.work},observed);
+    match (outcome.value,outcome.receiving_refusal) {
+        (Ok(value),None)=>Ok(value),
+        (Ok(_),Some(failure))=>{let mut failure:semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure=failure.into();failure.effects=progress;Err(failure)},
+        (Err(error),receiving)=>{
+            let Some(receiving)=receiving else{let mut failure:semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure=error.into();failure.effects=progress;return Err(failure)};
+            let semio_framework_job::OriginalTurnPrimary::Value(quote_refusal)=receiving.primary else{unreachable!("native work reconciliation authors only value refusals")};
+            Err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure{
+                effects:progress,
+                primary:semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Receiving(semio_framework_job::OriginalReceivingPrimary{primary:Some(error),quote_refusal:Some(quote_refusal),allocation_refusal:None,progress}),
+                receipt_refusal:receiving.receipt_refusal,context_refusal:receiving.context_refusal
+            })
+        }
     }
 }
 
@@ -140,7 +163,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         })
     }
 
-    pub(crate) fn drive_document_archive_terminal(&mut self, active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn drive_document_archive_terminal(&mut self, active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let target = active.terminal_target.ok_or_else(|| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive terminal cleanup has no target"))?;
         if let Some(handle) = active.replacement {
             if self.store_replacement_jobs.get(handle.operation.0).is_some() {
@@ -156,7 +179,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             }
             active.replacement = None;
             if target == ActiveDocumentArchiveLoadState::Ready {
-                return Err(document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "ready recursive document archive lost its replacement acknowledgement authority"));
+                return Err(document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "ready recursive document archive lost its replacement acknowledgement authority").into());
             }
         }
         if active.inputs_are_empty() {
@@ -167,10 +190,15 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             active.phase = ActiveDocumentArchiveLoadPhase::Terminal;
             return Ok(removed(RetainedCloneProgress::default()));
         }
-        match active.close_step(grant).map_err(plugin_retirement_fault)? {
+        let fuel=cx.fuel_remaining();
+        let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:true};
+        let turn=active.close_step(grant,&mut StepWork(&actual));drop(actual);
+        let progress=match &turn.result {Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
+        let observed=active.last_turn_native_work();
+        match receive_archive(cx,grant,fuel,turn,progress,observed)? {
             RetainedCloneStep::Complete(progress) => {
                 if !active.inputs_are_empty() {
-                    return Err(document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive cleanup returned Complete with a live owner"));
+                    return Err(document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive cleanup returned Complete with a live owner").into());
                 }
                 active.state = target;
                 active.phase = ActiveDocumentArchiveLoadPhase::Terminal;
@@ -190,7 +218,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         let item = item();
         let missing = |message: &'static str| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, message);
         if active.terminal_target.is_some() {
-            return self.drive_document_archive_terminal(active, grant).map_err(Into::into);
+            return self.drive_document_archive_terminal(active, grant,cx);
         }
         if active.state == ActiveDocumentArchiveLoadState::Pending {
             active.state = ActiveDocumentArchiveLoadState::Running;
@@ -200,12 +228,12 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             ActiveDocumentArchiveLoadPhase::DecodeParent => {
                 let archive = active.archive.as_ref().ok_or_else(|| missing("recursive document archive parent input owner is absent"))?;
                 let decoder = active.history.as_mut().ok_or_else(|| missing("recursive document archive parent history decoder is absent"))?;
-                let rejected = |error: ValueError| {
-                    let progress = error.retained_progress();
-                    document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, format!("document archive parent SPR was rejected: {error}")).with_retained_progress(progress)
-                };
-                let step = decoder.step(&archive.parent_spr, &StepTurn(&*cx), grant, &mut active.decoded_history).map_err(rejected)?;
-                let progress = decoder.take_receipt().map_or_else(RetainedCloneProgress::default, |(_, progress)| progress);
+                let fuel=cx.fuel_remaining();
+                let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:false};
+                let turn=decoder.step(&archive.parent_spr,&actual,grant,&mut active.decoded_history,&mut StepWork(&actual));drop(actual);
+                let progress=decoder.take_receipt().map_or_else(||match &turn.result {Err(error)=>error.retained_progress(),_=>Default::default()},|(_,progress)|progress);
+                let observed=decoder.last_turn_native_work();
+                let step=receive_archive(cx,grant,fuel,turn,progress,observed)?;
                 match step {
                     protocol::RetainedHistorySourceStep::Fault => Err(document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, format!("document archive parent SPR was rejected: {:?}", decoder.fault())).with_retained_progress(progress).into()),
                     protocol::RetainedHistorySourceStep::Ready => {

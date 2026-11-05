@@ -1,0 +1,97 @@
+{
+  "cases": [
+    {
+      "name": "durable opening",
+      "failure": "none",
+      "opened": true,
+      "operations": [
+        "identity",
+        "archive",
+        "write",
+        "attach",
+        "record",
+        "publish"
+      ]
+    },
+    {
+      "name": "missing identity",
+      "failure": "identity",
+      "opened": false,
+      "operations": [
+        "identity"
+      ]
+    },
+    {
+      "name": "failed archive write",
+      "failure": "write",
+      "opened": false,
+      "operations": [
+        "identity",
+        "archive",
+        "write"
+      ]
+    },
+    {
+      "name": "failed attachment",
+      "failure": "attach",
+      "opened": false,
+      "operations": [
+        "identity",
+        "archive",
+        "write",
+        "attach"
+      ]
+    },
+    {
+      "name": "unacknowledged catalog",
+      "failure": "record",
+      "opened": false,
+      "operations": [
+        "identity",
+        "archive",
+        "write",
+        "attach",
+        "record",
+        "close",
+        "unlist"
+      ]
+    },
+    {
+      "name": "unmounted panel",
+      "failure": "publish",
+      "opened": false,
+      "operations": [
+        "identity",
+        "archive",
+        "write",
+        "attach",
+        "record",
+        "publish",
+        "close",
+        "unlist"
+      ]
+    },
+    {
+      "name": "cancelled write",
+      "failure": "cancel",
+      "opened": false,
+      "operations": [
+        "identity",
+        "archive",
+        "write"
+      ]
+    },
+    {
+      "name": "attachment owner replaced",
+      "failure": "stale",
+      "opened": false,
+      "operations": [
+        "identity",
+        "archive",
+        "write",
+        "attach",
+        "close"
+      ]
+    }
+  ]
+}

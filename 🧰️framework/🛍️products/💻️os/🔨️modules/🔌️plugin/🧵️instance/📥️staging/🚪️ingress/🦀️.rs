@@ -68,7 +68,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
             semio_framework_schema_registry::register_referenced_schema_documents(documents);
         }
         let snapshot = Self::isolate_artifact_app_initial_snapshot().await?;
-        let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &app_id, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &semio_framework_os_kernel::os_identity::time_ordered_id(), snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(A::DIALECT.into());
         let config_id = format!("{}-config", app_id);
         let config_envelope = create_config_envelope::<A::Config, A::ConfigMutation>(A::config_schema().await, &config_id, A::initial_config().await, None);
@@ -169,7 +169,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
             stores: InstanceStores::new(store, config_store, draft_store, presence_store, window_config_store, window_transient_store, artifact_one_item_factory, config_one_item_factory, draft_one_item_factory, presence_one_item_factory, transient_one_item_factory, presence_local_root_retirement_factory, transient_local_root_retirement_factory, unsupported_publication_contracts, interaction_store),
             roster: PeerRoster::new(),
             ingress: ActionIngress::new(),
-            original_typing:Default::default(),original_emission:Default::default(),original_typed_command:Default::default(),original_typed_tag:std::mem::ManuallyDrop::new(None),original_typed_tag_close:Default::default(),
+            original_typing:Default::default(),original_emission:Default::default(),original_typed_command:Default::default(),original_host_event_command:Default::default(),original_command_scope:None,original_host_event_scope:None,original_typed_tag:std::mem::ManuallyDrop::new(None),original_typed_tag_close:Default::default(),
             interaction: LocalInteraction::new(),
             history: CommandHistory::new(),
             host_events: HostEvents::new(),

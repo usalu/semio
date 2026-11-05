@@ -1,0 +1,1 @@
+{"payloadBytes":37,"headerWords":3,"work":3,"cases":[{"mode":"unposted","fails":false},{"mode":"posted","fails":false},{"mode":"failedPartial","fails":true}],"physicalObserver":"original-job-and-allocator","receiptCount":1}

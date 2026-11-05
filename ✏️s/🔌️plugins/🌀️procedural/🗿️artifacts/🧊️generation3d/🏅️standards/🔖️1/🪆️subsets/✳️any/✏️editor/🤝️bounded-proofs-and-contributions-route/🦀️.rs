@@ -130,7 +130,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
         };
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: None };
-        let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+        let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
         let _ = (&doc, &cfg);
         let mut emit = Emit::default();
         self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {

@@ -1,0 +1,16 @@
+# Paged Fixture Work Port Audit
+
+Read-only inventory found two direct custom test PagedOneItemEdit implementations in the framework: SourceProbeEdit in store/paged-one-item/tests/source-custody at line51, and InvalidReceiptEdit in store/paged-one-item/mutation-apply/tests at line515. The stdio IDML retained mutation test imports and exercises the generic MutationApplyEdit, but declares no independent PagedOneItemEdit implementation. No third custom fixture forwarder was established by this scan.
+
+SourceProbeEdit currently drops RetainedWorkOutcome.work when calling before.bind, mutation.bind and post.bind via .result?. A truthful port must reset last work at the start of advance, capture each actual outcome.work before inspecting or propagating its result, and preserve it on partial failure. Binding denial must remain zero work where the binding outcome says zero. Final complete/refused semantic decision is its own actual unit; copied_items is a physical receipt, not the source of CPU work. Assertion counters are not work meters.
+
+InvalidReceiptEdit deliberately returns an invalid physical receipt with an owning inverse so the outer issuer retirement path is tested. Its fixed actual inverse/decision action can report one semantic unit once entered, while denied/precondition paths remain zero. Adding a work port must not make the intentionally invalid copied-byte receipt valid or lose the inverse owner. The fixture must preserve its bad-receipt regression.
+
+For any forwarding wrapper, reset its scalar before fallible prechecks, call the real child, then copy child.last_turn_work regardless of Ok/Err before forwarding the result. Do not implement the getter as u64::from(result.is_ok()), derive CPU from retained copied_items, or reset nested work after an error. Editor implementation owner received these exact paths and instructions. No source or manifest changed; no compilation launched.
+
+
+## Three actual preparation forwarders
+
+Editor clarified the three intended ArtifactStoreOneItemPreparation wrappers (distinct from the two PagedOneItemEdit fixtures): ProbedRetainedClonePreparation in store/tests/bin03/unit/retained-clone-preparation-fixtures:385, DemoMemberWirePreparation in store/testing/doubles/store:685, and DemoOneItemPreparation in store/testing/doubles/preparation:235. Exact emoji paths were sent directly to editor.
+
+Probed wrapper is pure child advance forwarding after close/depth guards: reset work before guards, retain the Result, copy the child's actual work before returning either Ok or Err. DemoMemberWire wrapper must additionally charge its actual parse-byte action before parse_byte can fail, its request-to-typed-request transition, and its real typed admission action; guard denials remain zero. DemoOneItem wrapper must preserve sealer work before propagating its Result and independently account for its local accepted transfer if counted by the work contract. Initial diff/apply/inverse/edit preparation must mark its real semantic work before diff/apply can refuse. Pending edit seal admission is a real unit once entered, while its quoted-denial branch is zero. Already-prepared/cancelled/blocked guards do not perform a fresh unit. All three need their own reset scalar to avoid leaking stale child work when a later call returns before delegation.

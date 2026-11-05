@@ -1,7 +1,9 @@
 /** 🟠️ The close document phase of useShellUriAndDocuments. */
+import { admitProgramRetirementV1, type ProgramRetirementRequestV1 } from "../../🚪️program-retirement/🟦️.ts";
+import { quiesceSessionWorkV1 } from "../../🔀️surface-switch/🟦️.ts";
 import { awaitSavedV1, deriveSavedStateV1, guardDocumentCloseV1, type SavedStateV1 } from "../../../🛠️ShellHelpers/💾️saved-state/🟦️.ts";
 import { DOCUMENT_CLOSE_FLUSH_TIMEOUT_MS_V1, type ClosePromptV1 } from "../../🚪️close-guard/🟦️.tsx";
-import { useCallback, useEffect, useMemo, useState } from "../../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
 import { type BackboneWorkerRequest, encodeBackboneWorkerRequest, type PersistenceBinding } from "@semio-tech/framework/backbone";
 import { syncAttachDocumentIdV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { requestBackboneFilePath, requestBackboneFolderPath } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
@@ -147,39 +149,136 @@ export function useCloseDocumentState({ shellStateRef, openDocumentSessionsRef, 
   const attachSyncTarget = useCallback((target: SyncAttachTargetV1): Promise<void> => openSyncTarget(target).catch(tellSyncAttachFailureV1(showTransientNoticeRef.current)), [openSyncTarget]);
 
   const [closePrompt, setClosePrompt] = useState<ClosePromptV1 | null>(null);
+  const closeRequestRef = useRef<AbortController | null>(null);
+  const retirementReservationsRef = useRef(new WeakMap<object, Map<number, symbol>>());
+  useEffect(() => () => { const request = closeRequestRef.current; closeRequestRef.current = null; request?.abort(); }, []);
   /** 🚪️ A person's close of a document: acknowledged-saved closes at once; otherwise the shell waits (bounded, cancellable) for the store to acknowledge, and asks before discarding when it cannot. */
   const requestCloseDocument = useCallback(async (runtimeKey: string, afterClose?: () => void): Promise<"close" | "stay"> => {
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
     const name = entry?.documentId ?? runtimeKey;
     const abort = new AbortController();
-    const saved = (): SavedStateV1 => deriveSavedStateV1(shellStateRef.current.sync.syncStatusByDocumentId[runtimeKey] ?? null);
+    closeRequestRef.current?.abort();
+    closeRequestRef.current = abort;
+    const isCurrent = (): boolean => closeRequestRef.current === abort && openDocumentSessionsRef.current.get(runtimeKey) === entry;
+    const saved = (): SavedStateV1 => {
+      if (!isCurrent()) abort.abort();
+      const state = deriveSavedStateV1(shellStateRef.current.sync.syncStatusByDocumentId[runtimeKey] ?? null);
+      return entry !== undefined && state.kind === "unknown" ? { kind: "unsaved", pending: 0, failure: null } : state;
+    };
     const decision = await guardDocumentCloseV1({
       saved,
+      isCurrent,
       signal: abort.signal,
       flush: async (signal) => {
         setClosePrompt({ runtimeKey, name, phase: "saving", failure: null, onKeep: () => abort.abort(), onDiscard: () => undefined });
         return awaitSavedV1({ saved, signal, timeoutMs: DOCUMENT_CLOSE_FLUSH_TIMEOUT_MS_V1 });
       },
       confirmDiscard: () => new Promise<boolean>((resolve) => {
+        const finish = (discard: boolean): void => { abort.signal.removeEventListener("abort", keep); resolve(discard); };
+        const keep = (): void => finish(false);
+        if (abort.signal.aborted) return keep();
+        abort.signal.addEventListener("abort", keep, { once: true });
         const state = saved();
-        setClosePrompt({ runtimeKey, name, phase: "confirm", failure: state.kind === "unsaved" ? state.failure : null, onKeep: () => resolve(false), onDiscard: () => resolve(true) });
+        if (abort.signal.aborted) return keep();
+        setClosePrompt({ runtimeKey, name, phase: "confirm", failure: state.kind === "unsaved" ? state.failure : null, onKeep: () => finish(false), onDiscard: () => finish(true) });
       }),
     });
+    if (closeRequestRef.current !== abort) return "stay";
+    const stillOwned = openDocumentSessionsRef.current.get(runtimeKey) === entry;
+    closeRequestRef.current = null;
     setClosePrompt(null);
+    if (!stillOwned) return "stay";
     if (decision === "close") {
-      closeDocument(runtimeKey);
+      closeDocument(runtimeKey, entry?.clientInstanceId);
       afterClose?.();
     }
     return decision;
   }, [closeDocument]);
+
+  const requestProgramRetirement: ProgramRetirementRequestV1 = useCallback(async (requested, held) => {
+    const owners = requested.filter((owner, index) => requested.findIndex(candidate => candidate.handle === owner.handle && candidate.session.instanceId === owner.session.instanceId) === index);
+    if (owners.some(owner => retirementReservationsRef.current.get(owner.handle)?.has(owner.session.instanceId))) return null;
+    const reservation = Symbol(), retired = new Set<typeof owners[number]>();
+    for (const owner of owners) {
+      let lane = retirementReservationsRef.current.get(owner.handle);
+      if (!lane) { lane = new Map(); retirementReservationsRef.current.set(owner.handle, lane); }
+      lane.set(owner.session.instanceId, reservation);
+    }
+    const releaseReservations = (): void => { for (const owner of owners) { const lane = retirementReservationsRef.current.get(owner.handle); if (lane?.get(owner.session.instanceId) === reservation) lane.delete(owner.session.instanceId); } };
+    const abort = new AbortController();
+    closeRequestRef.current?.abort();
+    closeRequestRef.current = abort;
+    const current = (): boolean => closeRequestRef.current === abort && held() && owners.every(owner => core.loadedPluginsRef.current.some(entry => entry.handle === owner.handle));
+    const clear = (): void => { if (closeRequestRef.current === abort) { closeRequestRef.current = null; setClosePrompt(null); } };
+    try {
+      const admission = await admitProgramRetirementV1({
+        owners, signal: abort.signal, current,
+        quiesce: async owner => (await quiesceSessionWorkV1(() => core.sessionWorkRef.current.pending(owner.session.pluginId, owner.session.instanceId))).settled,
+        seal: owner => {
+          const { pluginId, instanceId } = owner.session, ledger = core.sealedInstancesRef.current;
+          const already = ledger.sealed(owner.handle, pluginId, instanceId);
+          ledger.seal(owner.handle, pluginId, instanceId);
+          return () => { if (!already && !retired.has(owner)) ledger.unseal(owner.handle, pluginId, instanceId); };
+        },
+        persist: async owner => {
+          setClosePrompt({ runtimeKey: owner.session.pluginId + "#" + owner.session.instanceId, name: owner.name, phase: "saving", failure: null, onKeep: () => abort.abort(), onDiscard: () => undefined });
+          await core.persistProgramDocumentRef.current(owner, abort.signal);
+        },
+        confirmDiscard: (owner, failure) => new Promise<boolean>(resolve => {
+          const finish = (discard: boolean): void => { abort.signal.removeEventListener("abort", keep); resolve(discard); };
+          const keep = (): void => finish(false);
+          if (abort.signal.aborted || !current()) return keep();
+          abort.signal.addEventListener("abort", keep, { once: true });
+          setClosePrompt({ runtimeKey: owner.session.pluginId + "#" + owner.session.instanceId, name: owner.name, phase: "confirm", failure: { code: failure instanceof Error ? failure.message : "program-retirement.persistence-failed" }, onKeep: keep, onDiscard: () => finish(true) });
+        }),
+      });
+      if (admission === null) { releaseReservations(); clear(); return null; }
+      if (closeRequestRef.current === abort) setClosePrompt(null);
+      let started = false, settled = false, releaseRequested = false;
+      const release = (): void => { abort.abort(); admission.release(); releaseReservations(); clear(); };
+      return {
+        current: admission.current,
+        release: () => { if (started && !settled) releaseRequested = true; else release(); },
+        retire: async () => {
+          if (started) return false;
+          if (!admission.current()) { admission.release(); releaseReservations(); clear(); return false; }
+          started = true;
+          clear();
+          try {
+            for (const owner of owners) {
+              for (const [runtimeKey, entry] of [...openDocumentSessionsRef.current]) {
+            if (entry.plugin === owner.handle && entry.session.instanceId === owner.session.instanceId && entry.session.app.id === owner.session.app.id) closeDocument(runtimeKey, entry.clientInstanceId);
+          }
+              await core.documentAttachmentLanesRef.current.get(owner.handle)?.get(owner.session.instanceId)?.drain();
+              retired.add(owner);
+              await owner.handle.destroyApp(owner.session.instanceId);
+            }
+            return true;
+          } catch (failure) {
+            releaseRequested = true;
+            throw failure;
+          } finally {
+            settled = true;
+            if (releaseRequested) release();
+          }
+        },
+      };
+    } catch (failure) {
+      releaseReservations(); clear();
+      console.warn("[os-shell] program retirement admission failed", failure);
+      return null;
+    }
+  }, [closeDocument]);
+  core.admitProgramRetirementRef.current = requestProgramRetirement;
 
   /** ✂️ Detaches the attached document; a local folder binding is forgotten with it, so a reload offers nothing back. */
   const detachSyncBackbone = useCallback(() => {
     if (syncBackboneUri) {
       const runtimeKey = syncBackboneUri.replace(/^actor:\/\//, "");
       const entry = openDocumentSessionsRef.current.get(runtimeKey);
-      if (entry !== undefined && entry.scope === undefined && entry.persistenceBindings.some((binding) => binding.kind === "folder")) forgetLocalFolder(entry.documentId);
       void requestCloseDocument(runtimeKey, () => {
+        if (entry !== undefined && entry.scope === undefined && entry.persistenceBindings.some((binding) => binding.kind === "folder")) forgetLocalFolder(entry.documentId);
+        if (shellStateRef.current.sync.syncBackboneUri !== syncBackboneUri) return;
         dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
         dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
       });

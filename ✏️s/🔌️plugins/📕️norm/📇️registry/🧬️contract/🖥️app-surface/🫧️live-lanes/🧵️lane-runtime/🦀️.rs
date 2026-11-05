@@ -59,13 +59,6 @@ pub const VIEW_ACTION_STEP_COMBINATION: &str = "viewportStepCombination";
 pub const VIEW_ACTION_MENU: &str = "viewportTouchMenu";
 pub const VIEW_ACTION_FRAME: &str = "viewportTouchFrame";
 
-/// 🖐️ The window actions that open and close the touch Edit menu (the shell answers a long press with the first); both become [`VIEW_ACTION_MENU`] of `viewportAct`.
-pub const TOUCH_MENU_OPEN: &str = "norm.touch.menu-open";
-pub const TOUCH_MENU_CLOSE: &str = "norm.touch.menu-close";
-
-/// 🖐️ The window action a double tap raises: it toggles the camera between the whole scene and the selected entities ([`VIEW_ACTION_FRAME`] of `viewportAct`).
-pub const TOUCH_FRAME_SELECTION: &str = "norm.touch.frame-selection";
-
 /// 🪟️ Prefix of the `setFields` paths that address the transient view lane instead of the document.
 pub const VIEW_PATH_PREFIX: &str = "view.";
 pub const VIEW_PATH_ACTIVE_COMBINATION: &str = "view.activeCombination";

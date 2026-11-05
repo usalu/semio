@@ -2,5 +2,5 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Authored Bounded Nx Cache Directory",
   "type": "string",
-  "const": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/nx/artifacts"
+  "const": ".cache/b/r/m/nx/artifacts"
 }

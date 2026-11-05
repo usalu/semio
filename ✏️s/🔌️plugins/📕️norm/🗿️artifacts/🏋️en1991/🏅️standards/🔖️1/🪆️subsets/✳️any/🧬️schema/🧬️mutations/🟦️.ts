@@ -10,12 +10,55 @@ import { type ChangeFireDuration, parseChangeFireDuration } from "./⏱️change
 import { type ChangeAssumedGasTemperature, parseChangeAssumedGasTemperature } from "./♨️change-assumed-gas-temperature/🧬️schema/🟦️.ts";
 import { type ChangeSiloKind, parseChangeSiloKind } from "./⚖️change-silo-kind/🧬️schema/🟦️.ts";
 import { type ChangeAssumedConstructionQk, parseChangeAssumedConstructionQk } from "./⚙️change-assumed-construction-qk/🧬️schema/🟦️.ts";
+import { type ChangeDustExplosionDesignPressure, parseChangeDustExplosionDesignPressure } from "./⚙️change-dust-explosion-design-pressure/🧬️schema/🟦️.ts";
+import { type ChangeDustExplosionKst, parseChangeDustExplosionKst } from "./⚙️change-dust-explosion-kst/🧬️schema/🟦️.ts";
+import { type ChangeDustExplosionPMax, parseChangeDustExplosionPMax } from "./⚙️change-dust-explosion-p-max/🧬️schema/🟦️.ts";
+import { type ChangeDustExplosionStaticOpeningPressure, parseChangeDustExplosionStaticOpeningPressure } from "./⚙️change-dust-explosion-static-opening-pressure/🧬️schema/🟦️.ts";
+import { type ChangeDustExplosionVentArea, parseChangeDustExplosionVentArea } from "./⚙️change-dust-explosion-vent-area/🧬️schema/🟦️.ts";
+import { type ChangeDustExplosionVolume, parseChangeDustExplosionVolume } from "./⚙️change-dust-explosion-volume/🧬️schema/🟦️.ts";
+import { type ChangeFatigueModelAssumedAxleLoad, parseChangeFatigueModelAssumedAxleLoad } from "./⚙️change-fatigue-model-assumed-axle-load/🧬️schema/🟦️.ts";
+import { type ChangeFatigueModelAssumedUdl, parseChangeFatigueModelAssumedUdl } from "./⚙️change-fatigue-model-assumed-udl/🧬️schema/🟦️.ts";
+import { type ChangeLocalFireAssumedFlux, parseChangeLocalFireAssumedFlux } from "./⚙️change-local-fire-assumed-flux/🧬️schema/🟦️.ts";
+import { type ChangeLocalFireCeilingHeight, parseChangeLocalFireCeilingHeight } from "./⚙️change-local-fire-ceiling-height/🧬️schema/🟦️.ts";
+import { type ChangeLocalFireFireDiameter, parseChangeLocalFireFireDiameter } from "./⚙️change-local-fire-fire-diameter/🧬️schema/🟦️.ts";
+import { type ChangeLocalFireHeatReleaseRate, parseChangeLocalFireHeatReleaseRate } from "./⚙️change-local-fire-heat-release-rate/🧬️schema/🟦️.ts";
+import { type ChangeLocalFireHorizontalDistance, parseChangeLocalFireHorizontalDistance } from "./⚙️change-local-fire-horizontal-distance/🧬️schema/🟦️.ts";
+import { type ChangeRailDerailmentAssumedLineLoad, parseChangeRailDerailmentAssumedLineLoad } from "./⚙️change-rail-derailment-assumed-line-load/🧬️schema/🟦️.ts";
+import { type ChangeRailDerailmentLoadedLength, parseChangeRailDerailmentLoadedLength } from "./⚙️change-rail-derailment-loaded-length/🧬️schema/🟦️.ts";
+import { type ChangeRailDerailmentOffset, parseChangeRailDerailmentOffset } from "./⚙️change-rail-derailment-offset/🧬️schema/🟦️.ts";
+import { type ChangeRailLoadGroupAssumedAxleLoad, parseChangeRailLoadGroupAssumedAxleLoad } from "./⚙️change-rail-load-group-assumed-axle-load/🧬️schema/🟦️.ts";
+import { type ChangeRailLoadGroupAssumedLateral, parseChangeRailLoadGroupAssumedLateral } from "./⚙️change-rail-load-group-assumed-lateral/🧬️schema/🟦️.ts";
+import { type ChangeRailLoadGroupAssumedLongitudinal, parseChangeRailLoadGroupAssumedLongitudinal } from "./⚙️change-rail-load-group-assumed-longitudinal/🧬️schema/🟦️.ts";
+import { type ChangeRailLoadGroupAssumedUdl, parseChangeRailLoadGroupAssumedUdl } from "./⚙️change-rail-load-group-assumed-udl/🧬️schema/🟦️.ts";
+import { type ChangeRailLoadGroupFactorLateral, parseChangeRailLoadGroupFactorLateral } from "./⚙️change-rail-load-group-factor-lateral/🧬️schema/🟦️.ts";
+import { type ChangeRailLoadGroupFactorLongitudinal, parseChangeRailLoadGroupFactorLongitudinal } from "./⚙️change-rail-load-group-factor-longitudinal/🧬️schema/🟦️.ts";
+import { type ChangeRailLoadGroupFactorVertical, parseChangeRailLoadGroupFactorVertical } from "./⚙️change-rail-load-group-factor-vertical/🧬️schema/🟦️.ts";
 import { type ChangeRotatingMachineEccentricity, parseChangeRotatingMachineEccentricity } from "./⚙️change-rotating-machine-eccentricity/🧬️schema/🟦️.ts";
 import { type ChangeRotatingMachineFrequency, parseChangeRotatingMachineFrequency } from "./⚙️change-rotating-machine-frequency/🧬️schema/🟦️.ts";
 import { type ChangeRotatingMachineMass, parseChangeRotatingMachineMass } from "./⚙️change-rotating-machine-mass/🧬️schema/🟦️.ts";
 import { type ChangeSiloK, parseChangeSiloK } from "./⚙️change-silo-k/🧬️schema/🟦️.ts";
+import { type ChangeSnowGuardAssumedForce, parseChangeSnowGuardAssumedForce } from "./⚙️change-snow-guard-assumed-force/🧬️schema/🟦️.ts";
+import { type ChangeSnowGuardSlopeLength, parseChangeSnowGuardSlopeLength } from "./⚙️change-snow-guard-slope-length/🧬️schema/🟦️.ts";
+import { type ChangeSupportCollisionAssumedForceX, parseChangeSupportCollisionAssumedForceX } from "./⚙️change-support-collision-assumed-force-x/🧬️schema/🟦️.ts";
+import { type ChangeSupportCollisionAssumedForceY, parseChangeSupportCollisionAssumedForceY } from "./⚙️change-support-collision-assumed-force-y/🧬️schema/🟦️.ts";
+import { type ChangeSupportCollisionHeight, parseChangeSupportCollisionHeight } from "./⚙️change-support-collision-height/🧬️schema/🟦️.ts";
+import { type ChangeSupportCollisionPositionX, parseChangeSupportCollisionPositionX } from "./⚙️change-support-collision-position-x/🧬️schema/🟦️.ts";
+import { type InsertDustExplosion, parseInsertDustExplosion } from "./⚙️insert-dust-explosion/🧬️schema/🟦️.ts";
+import { type InsertFatigueModel, parseInsertFatigueModel } from "./⚙️insert-fatigue-model/🧬️schema/🟦️.ts";
+import { type InsertLocalFire, parseInsertLocalFire } from "./⚙️insert-local-fire/🧬️schema/🟦️.ts";
+import { type InsertRailDerailment, parseInsertRailDerailment } from "./⚙️insert-rail-derailment/🧬️schema/🟦️.ts";
+import { type InsertRailLoadGroup, parseInsertRailLoadGroup } from "./⚙️insert-rail-load-group/🧬️schema/🟦️.ts";
 import { type InsertRotatingMachine, parseInsertRotatingMachine } from "./⚙️insert-rotating-machine/🧬️schema/🟦️.ts";
+import { type InsertSnowGuard, parseInsertSnowGuard } from "./⚙️insert-snow-guard/🧬️schema/🟦️.ts";
+import { type InsertSupportCollision, parseInsertSupportCollision } from "./⚙️insert-support-collision/🧬️schema/🟦️.ts";
+import { type RemoveDustExplosion, parseRemoveDustExplosion } from "./⚙️remove-dust-explosion/🧬️schema/🟦️.ts";
+import { type RemoveFatigueModel, parseRemoveFatigueModel } from "./⚙️remove-fatigue-model/🧬️schema/🟦️.ts";
+import { type RemoveLocalFire, parseRemoveLocalFire } from "./⚙️remove-local-fire/🧬️schema/🟦️.ts";
+import { type RemoveRailDerailment, parseRemoveRailDerailment } from "./⚙️remove-rail-derailment/🧬️schema/🟦️.ts";
+import { type RemoveRailLoadGroup, parseRemoveRailLoadGroup } from "./⚙️remove-rail-load-group/🧬️schema/🟦️.ts";
 import { type RemoveRotatingMachine, parseRemoveRotatingMachine } from "./⚙️remove-rotating-machine/🧬️schema/🟦️.ts";
+import { type RemoveSnowGuard, parseRemoveSnowGuard } from "./⚙️remove-snow-guard/🧬️schema/🟦️.ts";
+import { type RemoveSupportCollision, parseRemoveSupportCollision } from "./⚙️remove-support-collision/🧬️schema/🟦️.ts";
 import { type ChangeFireLoadDensityQf, parseChangeFireLoadDensityQf } from "./⛽change-fire-load-density-qf/🧬️schema/🟦️.ts";
 import { type ChangeAltitude, parseChangeAltitude } from "./❄️change-altitude/🧬️schema/🟦️.ts";
 import { type ChangeEnSk, parseChangeEnSk } from "./❄️change-en-sk/🧬️schema/🟦️.ts";
@@ -102,6 +145,7 @@ import { type ChangeCraneHoistRatedLoad, parseChangeCraneHoistRatedLoad } from "
 import { type ChangeCraneHoistReleaseDevice, parseChangeCraneHoistReleaseDevice } from "./🏗️change-crane-hoist-release-device/🧬️schema/🟦️.ts";
 import { type ChangeCraneHoistReleaseFraction, parseChangeCraneHoistReleaseFraction } from "./🏗️change-crane-hoist-release-fraction/🧬️schema/🟦️.ts";
 import { type ChangeCraneX, parseChangeCraneX } from "./🏗️change-crane-x/🧬️schema/🟦️.ts";
+import { type ChangeFatigueModelLane, parseChangeFatigueModelLane } from "./🏗️change-fatigue-model-lane/🧬️schema/🟦️.ts";
 import { type ChangeStageActivity, parseChangeStageActivity } from "./🏗️change-stage-activity/🧬️schema/🟦️.ts";
 import { type ChangeStageAssumedQk, parseChangeStageAssumedQk } from "./🏗️change-stage-assumed-qk/🧬️schema/🟦️.ts";
 import { type ChangeStageDurationDays, parseChangeStageDurationDays } from "./🏗️change-stage-duration-days/🧬️schema/🟦️.ts";
@@ -242,6 +286,7 @@ import { type InsertSpecialVehicle, parseInsertSpecialVehicle } from "./🚛️i
 import { type RemoveSpecialVehicle, parseRemoveSpecialVehicle } from "./🚛️remove-special-vehicle/🧬️schema/🟦️.ts";
 import { type ChangeSelfWeightAssumedGk, parseChangeSelfWeightAssumedGk } from "./🚧change-self-weight-assumed-gk/🧬️schema/🟦️.ts";
 import { type ChangeAssumedBridgeFootway, parseChangeAssumedBridgeFootway } from "./🚶change-assumed-bridge-footway/🧬️schema/🟦️.ts";
+import { type ChangeFootbridgeAssumedServiceAxle, parseChangeFootbridgeAssumedServiceAxle } from "./🚶️change-footbridge-assumed-service-axle/🧬️schema/🟦️.ts";
 import { type ChangeFootbridgeDeckWidth, parseChangeFootbridgeDeckWidth } from "./🚶️change-footbridge-deck-width/🧬️schema/🟦️.ts";
 import { type ChangeFootbridgeLoadedLength, parseChangeFootbridgeLoadedLength } from "./🚶️change-footbridge-loaded-length/🧬️schema/🟦️.ts";
 import { type ChangeFootbridgeNaturalFrequency, parseChangeFootbridgeNaturalFrequency } from "./🚶️change-footbridge-natural-frequency/🧬️schema/🟦️.ts";
@@ -255,8 +300,13 @@ import { type ChangeLaneOffset, parseChangeLaneOffset } from "./🛣️change-la
 import { type ChangeLaneWidth, parseChangeLaneWidth } from "./🛣️change-lane-width/🧬️schema/🟦️.ts";
 import { type InsertBridgeLane, parseInsertBridgeLane } from "./🛣️insert-bridge-lane/🧬️schema/🟦️.ts";
 import { type RemoveBridgeLane, parseRemoveBridgeLane } from "./🛣️remove-bridge-lane/🧬️schema/🟦️.ts";
+import { type ChangeFatigueModelModel, parseChangeFatigueModelModel } from "./🛤️change-fatigue-model-model/🧬️schema/🟦️.ts";
+import { type ChangeRailDerailmentSituation, parseChangeRailDerailmentSituation } from "./🛤️change-rail-derailment-situation/🧬️schema/🟦️.ts";
 import { type ChangeRailDynamicDeterminantLength, parseChangeRailDynamicDeterminantLength } from "./🛤️change-rail-dynamic-determinant-length/🧬️schema/🟦️.ts";
 import { type ChangeRailDynamicMaintenance, parseChangeRailDynamicMaintenance } from "./🛤️change-rail-dynamic-maintenance/🧬️schema/🟦️.ts";
+import { type ChangeRailLoadGroupLoadGroup, parseChangeRailLoadGroupLoadGroup } from "./🛤️change-rail-load-group-load-group/🧬️schema/🟦️.ts";
+import { type ChangeSnowGuardRoofId, parseChangeSnowGuardRoofId } from "./🛤️change-snow-guard-roof-id/🧬️schema/🟦️.ts";
+import { type ChangeSupportCollisionLocation, parseChangeSupportCollisionLocation } from "./🛤️change-support-collision-location/🧬️schema/🟦️.ts";
 import { type InsertRailDynamic, parseInsertRailDynamic } from "./🛤️insert-rail-dynamic/🧬️schema/🟦️.ts";
 import { type RemoveRailDynamic, parseRemoveRailDynamic } from "./🛤️remove-rail-dynamic/🧬️schema/🟦️.ts";
 import { type ChangeSelfWeightThickness, parseChangeSelfWeightThickness } from "./🥞change-self-weight-thickness/🧬️schema/🟦️.ts";
@@ -551,7 +601,57 @@ export type En1991Mutation =
   | { ChangeRotatingMachineEccentricity: ChangeRotatingMachineEccentricity }
   | { ChangeRotatingMachineFrequency: ChangeRotatingMachineFrequency }
   | { InsertRotatingMachine: InsertRotatingMachine }
-  | { RemoveRotatingMachine: RemoveRotatingMachine };
+  | { RemoveRotatingMachine: RemoveRotatingMachine }
+  | { ChangeDustExplosionDesignPressure: ChangeDustExplosionDesignPressure }
+  | { ChangeDustExplosionKst: ChangeDustExplosionKst }
+  | { ChangeDustExplosionPMax: ChangeDustExplosionPMax }
+  | { ChangeDustExplosionStaticOpeningPressure: ChangeDustExplosionStaticOpeningPressure }
+  | { ChangeDustExplosionVentArea: ChangeDustExplosionVentArea }
+  | { ChangeDustExplosionVolume: ChangeDustExplosionVolume }
+  | { ChangeFatigueModelAssumedAxleLoad: ChangeFatigueModelAssumedAxleLoad }
+  | { ChangeFatigueModelAssumedUdl: ChangeFatigueModelAssumedUdl }
+  | { ChangeFatigueModelLane: ChangeFatigueModelLane }
+  | { ChangeFatigueModelModel: ChangeFatigueModelModel }
+  | { ChangeFootbridgeAssumedServiceAxle: ChangeFootbridgeAssumedServiceAxle }
+  | { ChangeLocalFireAssumedFlux: ChangeLocalFireAssumedFlux }
+  | { ChangeLocalFireCeilingHeight: ChangeLocalFireCeilingHeight }
+  | { ChangeLocalFireFireDiameter: ChangeLocalFireFireDiameter }
+  | { ChangeLocalFireHeatReleaseRate: ChangeLocalFireHeatReleaseRate }
+  | { ChangeLocalFireHorizontalDistance: ChangeLocalFireHorizontalDistance }
+  | { ChangeRailDerailmentAssumedLineLoad: ChangeRailDerailmentAssumedLineLoad }
+  | { ChangeRailDerailmentLoadedLength: ChangeRailDerailmentLoadedLength }
+  | { ChangeRailDerailmentOffset: ChangeRailDerailmentOffset }
+  | { ChangeRailDerailmentSituation: ChangeRailDerailmentSituation }
+  | { ChangeRailLoadGroupAssumedAxleLoad: ChangeRailLoadGroupAssumedAxleLoad }
+  | { ChangeRailLoadGroupAssumedLateral: ChangeRailLoadGroupAssumedLateral }
+  | { ChangeRailLoadGroupAssumedLongitudinal: ChangeRailLoadGroupAssumedLongitudinal }
+  | { ChangeRailLoadGroupAssumedUdl: ChangeRailLoadGroupAssumedUdl }
+  | { ChangeRailLoadGroupFactorLateral: ChangeRailLoadGroupFactorLateral }
+  | { ChangeRailLoadGroupFactorLongitudinal: ChangeRailLoadGroupFactorLongitudinal }
+  | { ChangeRailLoadGroupFactorVertical: ChangeRailLoadGroupFactorVertical }
+  | { ChangeRailLoadGroupLoadGroup: ChangeRailLoadGroupLoadGroup }
+  | { ChangeSnowGuardAssumedForce: ChangeSnowGuardAssumedForce }
+  | { ChangeSnowGuardRoofId: ChangeSnowGuardRoofId }
+  | { ChangeSnowGuardSlopeLength: ChangeSnowGuardSlopeLength }
+  | { ChangeSupportCollisionAssumedForceX: ChangeSupportCollisionAssumedForceX }
+  | { ChangeSupportCollisionAssumedForceY: ChangeSupportCollisionAssumedForceY }
+  | { ChangeSupportCollisionHeight: ChangeSupportCollisionHeight }
+  | { ChangeSupportCollisionLocation: ChangeSupportCollisionLocation }
+  | { ChangeSupportCollisionPositionX: ChangeSupportCollisionPositionX }
+  | { InsertDustExplosion: InsertDustExplosion }
+  | { InsertFatigueModel: InsertFatigueModel }
+  | { InsertLocalFire: InsertLocalFire }
+  | { InsertRailDerailment: InsertRailDerailment }
+  | { InsertRailLoadGroup: InsertRailLoadGroup }
+  | { InsertSnowGuard: InsertSnowGuard }
+  | { InsertSupportCollision: InsertSupportCollision }
+  | { RemoveDustExplosion: RemoveDustExplosion }
+  | { RemoveFatigueModel: RemoveFatigueModel }
+  | { RemoveLocalFire: RemoveLocalFire }
+  | { RemoveRailDerailment: RemoveRailDerailment }
+  | { RemoveRailLoadGroup: RemoveRailLoadGroup }
+  | { RemoveSnowGuard: RemoveSnowGuard }
+  | { RemoveSupportCollision: RemoveSupportCollision };
 
 export const parseEn1991Mutation: NormWireReader<En1991Mutation> = normWireExternal<En1991Mutation>({
   ChangeAnnex: parseChangeAnnex,
@@ -828,4 +928,54 @@ export const parseEn1991Mutation: NormWireReader<En1991Mutation> = normWireExter
   ChangeRotatingMachineFrequency: parseChangeRotatingMachineFrequency,
   InsertRotatingMachine: parseInsertRotatingMachine,
   RemoveRotatingMachine: parseRemoveRotatingMachine,
+  ChangeDustExplosionDesignPressure: parseChangeDustExplosionDesignPressure,
+  ChangeDustExplosionKst: parseChangeDustExplosionKst,
+  ChangeDustExplosionPMax: parseChangeDustExplosionPMax,
+  ChangeDustExplosionStaticOpeningPressure: parseChangeDustExplosionStaticOpeningPressure,
+  ChangeDustExplosionVentArea: parseChangeDustExplosionVentArea,
+  ChangeDustExplosionVolume: parseChangeDustExplosionVolume,
+  ChangeFatigueModelAssumedAxleLoad: parseChangeFatigueModelAssumedAxleLoad,
+  ChangeFatigueModelAssumedUdl: parseChangeFatigueModelAssumedUdl,
+  ChangeFatigueModelLane: parseChangeFatigueModelLane,
+  ChangeFatigueModelModel: parseChangeFatigueModelModel,
+  ChangeFootbridgeAssumedServiceAxle: parseChangeFootbridgeAssumedServiceAxle,
+  ChangeLocalFireAssumedFlux: parseChangeLocalFireAssumedFlux,
+  ChangeLocalFireCeilingHeight: parseChangeLocalFireCeilingHeight,
+  ChangeLocalFireFireDiameter: parseChangeLocalFireFireDiameter,
+  ChangeLocalFireHeatReleaseRate: parseChangeLocalFireHeatReleaseRate,
+  ChangeLocalFireHorizontalDistance: parseChangeLocalFireHorizontalDistance,
+  ChangeRailDerailmentAssumedLineLoad: parseChangeRailDerailmentAssumedLineLoad,
+  ChangeRailDerailmentLoadedLength: parseChangeRailDerailmentLoadedLength,
+  ChangeRailDerailmentOffset: parseChangeRailDerailmentOffset,
+  ChangeRailDerailmentSituation: parseChangeRailDerailmentSituation,
+  ChangeRailLoadGroupAssumedAxleLoad: parseChangeRailLoadGroupAssumedAxleLoad,
+  ChangeRailLoadGroupAssumedLateral: parseChangeRailLoadGroupAssumedLateral,
+  ChangeRailLoadGroupAssumedLongitudinal: parseChangeRailLoadGroupAssumedLongitudinal,
+  ChangeRailLoadGroupAssumedUdl: parseChangeRailLoadGroupAssumedUdl,
+  ChangeRailLoadGroupFactorLateral: parseChangeRailLoadGroupFactorLateral,
+  ChangeRailLoadGroupFactorLongitudinal: parseChangeRailLoadGroupFactorLongitudinal,
+  ChangeRailLoadGroupFactorVertical: parseChangeRailLoadGroupFactorVertical,
+  ChangeRailLoadGroupLoadGroup: parseChangeRailLoadGroupLoadGroup,
+  ChangeSnowGuardAssumedForce: parseChangeSnowGuardAssumedForce,
+  ChangeSnowGuardRoofId: parseChangeSnowGuardRoofId,
+  ChangeSnowGuardSlopeLength: parseChangeSnowGuardSlopeLength,
+  ChangeSupportCollisionAssumedForceX: parseChangeSupportCollisionAssumedForceX,
+  ChangeSupportCollisionAssumedForceY: parseChangeSupportCollisionAssumedForceY,
+  ChangeSupportCollisionHeight: parseChangeSupportCollisionHeight,
+  ChangeSupportCollisionLocation: parseChangeSupportCollisionLocation,
+  ChangeSupportCollisionPositionX: parseChangeSupportCollisionPositionX,
+  InsertDustExplosion: parseInsertDustExplosion,
+  InsertFatigueModel: parseInsertFatigueModel,
+  InsertLocalFire: parseInsertLocalFire,
+  InsertRailDerailment: parseInsertRailDerailment,
+  InsertRailLoadGroup: parseInsertRailLoadGroup,
+  InsertSnowGuard: parseInsertSnowGuard,
+  InsertSupportCollision: parseInsertSupportCollision,
+  RemoveDustExplosion: parseRemoveDustExplosion,
+  RemoveFatigueModel: parseRemoveFatigueModel,
+  RemoveLocalFire: parseRemoveLocalFire,
+  RemoveRailDerailment: parseRemoveRailDerailment,
+  RemoveRailLoadGroup: parseRemoveRailLoadGroup,
+  RemoveSnowGuard: parseRemoveSnowGuard,
+  RemoveSupportCollision: parseRemoveSupportCollision,
 });

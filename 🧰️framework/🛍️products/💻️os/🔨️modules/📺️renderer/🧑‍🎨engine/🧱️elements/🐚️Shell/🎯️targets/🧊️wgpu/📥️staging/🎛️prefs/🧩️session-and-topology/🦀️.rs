@@ -33,7 +33,7 @@ impl PrefsState {
         if supplied_window == Some("spawned") {
             arguments.insert("windowId".into(), semio_framework_value::DslValue::from(serde_json::json!(window_instance_id)));
         }
-        Ok(semio_framework::manifest::ActionInvocation {
+        Ok(semio_framework::manifest::ActionInvocation { expected_document_revision:None,
             address: semio_framework::manifest::ActionAddress { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), mode_id: session.view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone()), window_kind_id, window_instance_id, action_id: action.action.clone() },
             arguments,
         })

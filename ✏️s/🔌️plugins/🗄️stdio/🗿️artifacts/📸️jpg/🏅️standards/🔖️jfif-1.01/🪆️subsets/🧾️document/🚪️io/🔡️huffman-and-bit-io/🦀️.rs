@@ -289,3 +289,7 @@ pub(crate) fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: 
     Ok(out)
 }
 //#endregion BlockCodec
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

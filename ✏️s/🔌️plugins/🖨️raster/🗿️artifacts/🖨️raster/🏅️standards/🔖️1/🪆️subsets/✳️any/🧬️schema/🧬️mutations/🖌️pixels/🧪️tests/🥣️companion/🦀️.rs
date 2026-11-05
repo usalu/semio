@@ -5,6 +5,10 @@
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
+#[path="🎟️fixtures/🦀️.rs"]
+mod original_fixtures;
+pub(crate) use original_fixtures::{selection_fixture,mutation_fixture,retire_fixture,for_pixel_cases,assert_selection_refused};
+
 #[path = "../../../🌈️apply-filter/🧪️tests/🦀️.rs"]
 mod apply_filter_tests;
 #[path = "../../../🔄️transform-image/🧪️tests/🦀️.rs"]

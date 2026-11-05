@@ -521,7 +521,7 @@ def parse_proto(path):
         body = strip_line_comments(block_body(text, em.end()))
         mem = [x for x in re.findall(r"(\w+)\s*=\s*\d+", body)]
         mem = [x for x in mem if not x.endswith("_UNSPECIFIED")]
-        own = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", em.group(1)).upper() + "_"
+        own = "_".join(words(em.group(1))).upper() + "_"
         if mem and all(x.startswith(own) and len(x) > len(own) for x in mem): mem = [x[len(own):] for x in mem]
         elif len(mem) > 1 and all("_" in x for x in mem) and len({x.split("_")[0] for x in mem}) == 1: mem = [x.split("_", 1)[1] for x in mem]
         elif len(mem) > 1:

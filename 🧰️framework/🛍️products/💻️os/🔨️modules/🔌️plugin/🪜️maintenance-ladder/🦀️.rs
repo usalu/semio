@@ -532,6 +532,18 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
 
     /// 🔁️ One granted turn of the next archive load; a closing app cancels every load and drops it once terminal-empty.
     pub fn drive_document_archive_load_retirements(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        let demand=match self.shared().document_archive_target(closing) {
+            Some((_,operation))=>self.ingest.document_archive_load_demands(self.ingest.document_archive_loads.get(operation).ok_or_else(||maintenance_fault("archive-load.owner","archive load original source changed before its quote"))?,closing,grant.maximum_copy_bytes)?,
+            None=>self.ingest.document_archive_loads.empty_backing_byte_demand().map_or(Default::default(),|bytes|RetirementDemand{release_bytes:bytes,depth:1,..Default::default()})
+        };
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|{
+            let step=self.drive_document_archive_original(same,grant,closing)?;
+            let terminal=self.shared().document_archive_target(closing).is_none()&&(!closing||self.ingest.document_archive_loads.empty_backing_byte_demand().is_none_or(|bytes|bytes==0));
+            Ok((step,terminal))
+        })
+    }
+
+    fn drive_document_archive_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let Some((index, operation)) = self.shared().document_archive_target(closing) else {
             if closing && self.ingest.document_archive_loads.empty_backing_byte_demand().is_some_and(|bytes| bytes != 0) {
@@ -545,6 +557,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         let cursor = if closing { &mut self.close.close_document_archive_cursor } else { &mut self.maintenance.maintenance_document_archive_cursor };
         *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
         let mut active = self.ingest.document_archive_loads.remove(operation).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive retirement authority changed during one bounded step"))?;
+        if closing&&active.terminal()&&active.terminal_is_empty(){drop(active);return Ok(PluginLifecycleStep::Progress(item()));}
         if closing && !active.terminal() {
             active.request_terminal(ActiveDocumentArchiveLoadState::Cancelled);
         }
@@ -554,10 +567,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             return funded.map(|_| PluginLifecycleStep::Progress(empty)).map_err(Into::into);
         }
         let step=self.ingest.advance_document_archive_load(&mut *self.stores, &mut *self.child_composition, &mut active, grant, cx);
-        if closing && active.terminal() && active.terminal_is_empty() {
-            drop(active);
-            return Ok(PluginLifecycleStep::Progress(item()));
-        }
         self.ingest.document_archive_loads.insert_admitted(operation, active);
         step
     }

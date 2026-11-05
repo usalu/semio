@@ -42,6 +42,10 @@ impl<A: ArtifactApp> ToolOperations<A> {
             let Some(completed_units) = operation.progress.filter(|_| !operation.terminal_seen) else { return };
             let Some(definition) = self.registry.get(&operation.verb) else { return };
             result.push(ArtifactOperationProgress {
+                tool_id: operation.verb.clone(),
+                actor: operation.meta.actor.as_str().to_owned(),
+                app_instance_id: operation.meta.instance_id,
+                window_id: operation.meta.view_state.as_deref().and_then(|view| view.window_id.clone()),
                 operation_id: operation.operation.operation.0,
                 generation: operation.operation.generation.0,
                 label: definition.label.clone(),

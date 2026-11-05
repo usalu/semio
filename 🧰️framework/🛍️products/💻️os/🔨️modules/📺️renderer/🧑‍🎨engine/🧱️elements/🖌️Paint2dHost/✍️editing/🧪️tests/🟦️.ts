@@ -3,6 +3,75 @@ import { expect, test } from "bun:test";
 import sharp from "sharp";
 import { editSelection, maskLayers, pixelLayers, layerPoint, selectionSpans, selectionBounds, type SelectionScanOptions } from "../🟦️.ts";
 import { surfacePaintEditingFixture as fixtures, paintStrokeRevisionFixture as revisions, paintMaskStrokeFixture as maskStrokes } from "@semio-tech/framework-surface-ts/testing/fixtures";
+import sourceCases from "../📥️source/🧪️tests/🔣️.json";
+import {preparePixelSourceBytes, prepareBlankPixelSource, pixelReadbackView} from "../📥️source/🟦️.ts";
+import base64 from "base64-js";
+import editingFixture from "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎚️paint2d-editing/🔣️.json";
+import editingSchema from "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/🎨️paint2d-scene/🎚️editing/🧬️schema/🔣️.json";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
+import type {Paint2dEditingOptions} from "@semio-tech/framework";
+
+test("editing options agree with the neutral scene schema",()=>{
+  const validate=semioSchemaAjvV1({allErrors:true}).compile<Paint2dEditingOptions>(editingSchema);
+  expect(validate(editingFixture.initial)).toBe(true);expect(validate(editingFixture.options)).toBe(true);expect(validate(editingFixture.edge)).toBe(true);
+  for(const invalid of editingFixture.invalid)expect(validate(invalid)).toBe(false);
+});
+
+for(const row of sourceCases.cases)test(`pixel source ${row.name}`,async()=>{
+  const progress:number[]=[];
+  const bytes=await preparePixelSourceBytes(row.encoded,{onProgress:p=>progress.push(p)});
+  expect([...bytes]).toEqual(row.bytes);
+  expect([...bytes]).toEqual([...base64.toByteArray(row.encoded)]);
+  expect(progress.at(-1)).toBe(1);
+  expect(progress.every((value,index)=>value>=0&&value<=1&&(index===0||value>=progress[index-1]!))).toBe(true);
+});
+for(const encoded of sourceCases.invalid)test(`pixel source refuses ${encoded}`,async()=>{
+  await expect(preparePixelSourceBytes(encoded)).rejects.toThrow();
+});
+for(const row of sourceCases.admission)test(`pixel source respects caller byte admission ${row.maximumOutputBytes}`,async()=>{
+  const result=preparePixelSourceBytes("Zg==",{maximumOutputBytes:row.maximumOutputBytes});
+  if(row.valid)expect([...await result]).toEqual([...base64.toByteArray("Zg==")]);else await expect(result).rejects.toThrow();
+});
+test("pixel source preparation yields while retaining exact bytes",async()=>{
+  const row=sourceCases.large,encoded=row.pattern.repeat(row.repeat),progress:number[]=[];
+  let yielded=false;setTimeout(()=>{yielded=true;},0);
+  const bytes=await preparePixelSourceBytes(encoded,{onProgress:p=>progress.push(p)});
+  expect(bytes.length).toBe(row.decodedBytes);expect(yielded).toBe(true);
+  expect(bytes).toEqual(base64.toByteArray(encoded));
+  expect(progress.some(p=>p>0&&p<0.5)).toBe(true);
+  expect(progress.some(p=>p>0.5&&p<1)).toBe(true);
+  expect(progress.every((value,index)=>index===0||value>=progress[index-1]!)).toBe(true);
+});
+for(const at of sourceCases.cancelAt)test(`pixel source cancellation ${at} refuses output`,async()=>{
+  const controller=new AbortController();if(at==="before")controller.abort();
+  await expect(preparePixelSourceBytes(sourceCases.large.pattern.repeat(sourceCases.large.repeat),{
+    signal:controller.signal,onProgress:p=>{if(at==="validation"&&p>0&&p<0.5||at==="decoding"&&p>0.5&&p<1||at==="complete"&&p===1)controller.abort();}
+  })).rejects.toMatchObject({name:"AbortError"});
+});
+test("pixel readback preserves the owned browser buffer and exact view extent",()=>{
+  const buffer=new ArrayBuffer(20),source=new Uint8ClampedArray(buffer,4,8);source.set([0,255,128,255,3,2,1,0]);
+  const view=pixelReadbackView(source);
+  expect(view.buffer).toBe(buffer);expect(view.byteOffset).toBe(4);expect(view.byteLength).toBe(8);expect([...view]).toEqual([...source]);
+});
+for(const row of sourceCases.blank)test(`blank ${row.target} source matches independent image creation`,async()=>{
+  const image=await prepareBlankPixelSource(row.width,row.height,row.target as "pixels"|"mask");
+  const oracle=await sharp({create:{width:row.width,height:row.height,channels:4,background:{r:row.value,g:row.value,b:row.value,alpha:row.value/255}}}).raw().toBuffer();
+  expect(image.width).toBe(row.width);expect(image.height).toBe(row.height);expect([...image.pixels]).toEqual([...oracle]);
+});
+test("blank mask source initializes in cancellable grants",async()=>{
+  const row=sourceCases.blankBoundary,progress:number[]=[];let yielded=false;setTimeout(()=>{yielded=true;},0);
+  const image=await prepareBlankPixelSource(row.width,row.height,"mask",{onProgress:p=>progress.push(Math.round(p*row.bytes))});
+  expect(progress).toEqual(row.progress);expect(yielded).toBe(true);expect(image.pixels.every(value=>value===255)).toBe(true);
+  for(const cancelAt of [0,32768,row.bytes]){
+    const controller=new AbortController();
+    await expect(prepareBlankPixelSource(row.width,row.height,"mask",{signal:controller.signal,onProgress:p=>{if(Math.round(p*row.bytes)===cancelAt)controller.abort();}})).rejects.toMatchObject({name:"AbortError"});
+  }
+});
+test("blank source rejects invalid targets and extents",async()=>{
+  await expect(prepareBlankPixelSource(0,2,"mask")).rejects.toThrow();
+  await expect(prepareBlankPixelSource(16384,16384,"mask")).rejects.toThrow();
+  await expect(prepareBlankPixelSource(1,1,"other" as "mask")).rejects.toThrow();
+});
 
 for(const fixture of fixtures.cases) test(fixture.name,()=>{
   const [layer]=pixelLayers(JSON.stringify(fixture.document),JSON.stringify(fixture.assets));

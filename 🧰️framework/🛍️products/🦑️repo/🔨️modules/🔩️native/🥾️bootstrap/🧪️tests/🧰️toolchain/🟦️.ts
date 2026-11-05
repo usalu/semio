@@ -314,6 +314,13 @@ ensure_user_cc
   expect(readFileSync(join(bin, "c++"), "utf8")).not.toContain("# wrong-os");
   const hostTriple = spawnSync("uname", ["-m"], {encoding: "utf8"}).stdout.trim() === "aarch64" || spawnSync("uname", ["-m"], {encoding: "utf8"}).stdout.trim() === "arm64" ? "aarch64-linux-gnu" : "x86_64-linux-gnu";
   expect(readFileSync(join(bin, "c++"), "utf8")).toContain(hostTriple);
+  const selected = join(generated, "selected-compiler");
+  mkdirSync(selected, {recursive: true});
+  const selectedDriver = '#!/bin/sh\nexec /vendor/clang -target aarch64-macos "$@"\n';
+  for (const name of ["cc", "c++"]) writeFileSync(join(selected, name), selectedDriver, {mode: 0o755});
+  const preserved = execute(script, {HOME: home, XDG_DATA_HOME: data, LOCAL_BIN: selected, PATH: `${selected}:/usr/bin:/bin`});
+  expect(preserved.status, preserved.stderr).toBe(0);
+  for (const name of ["cc", "c++"]) expect(readFileSync(join(selected, name), "utf8")).toBe(selectedDriver);
   for (const name of ["cc", "c++"]) writeFileSync(join(system, name), "#!/bin/sh\nprintf system\\n\n", {mode: 0o755});
   const kept = execute(script, {HOME: home, XDG_DATA_HOME: data, LOCAL_BIN: join(generated, "refresh-empty"), PATH: `${system}:/usr/bin:/bin`});
   expect(kept.status, kept.stderr).toBe(0);
@@ -733,4 +740,22 @@ tar -xzf "$ARCHIVE" -C "$DEST"
 `, {PATH: `${bin}:${process.env.PATH}`, ARCHIVE: archive, DEST: dest});
   expect(result.status, result.stderr).toBe(0);
   expect(readFileSync(join(dest, "dotnet"), "utf8")).toBe("sdk");
+});
+
+test("owned C driver translates Rust vendors into the pinned backend target grammar without changing arguments",()=>{
+ const cases:readonly {input:readonly string[];target:string;rest:readonly string[]}[]=JSON.parse(readFileSync(new URL("./compiler-targets.json",import.meta.url),"utf8"));
+ expect(new Ajv().validate({type:"array",minItems:9,items:{type:"object",additionalProperties:false,required:["input","target","rest"],properties:{input:{type:"array",items:{type:"string"}},target:{type:"string",pattern:"^[a-zA-Z0-9_]+-[a-zA-Z0-9_.]+(?:-[a-zA-Z0-9_.]+)?$"},rest:{type:"array",items:{type:"string"}}}}},cases)).toBe(true);
+ const compilerData=join(generated,"compiler data"),compilerBin=join(generated,"compiler bin"),backend=join(compilerData,"semio/zig/v0.14.1/zig");
+ mkdirSync(join(compilerData,"semio/zig/v0.14.1"),{recursive:true});mkdirSync(compilerBin,{recursive:true});
+ writeFileSync(backend,'#!/bin/sh\nprintf "%s\\n" "$@"\n',{mode:0o755});
+ const quote=(value:string)=>"'"+value.replaceAll("'","'\\''")+"'";
+ for(const row of cases){
+  const script=body("ensure_user_cc","ensure_user_pkg_config")+'\nlog(){ :; }\nhost_pin(){ printf "{}"; }\npin_field(){ printf "0.14.1"; }\ncommand(){ if [ "$1" = "-v" ] && { [ "$2" = cc ] || [ "$2" = c++ ]; }; then return 1; fi; builtin command "$@"; }\nensure_user_cc\n"$LOCAL_BIN/cc" '+row.input.map(quote).join(" ");
+  const result=execute(script,{LOCAL_BIN:compilerBin,XDG_DATA_HOME:compilerData});
+  expect(result.status,result.stderr).toBe(0);expect(result.stdout.trim().split("\n"),JSON.stringify(row)).toEqual(["cc","-target",row.target,...row.rest]);
+ }
+ for(const name of ["cc","c++","gcc","g++"]){
+  const missing=spawnSync(join(compilerBin,name),["--target"],{encoding:"utf8"});
+  expect(missing.status).toBe(2);expect(missing.stderr).toContain("C compiler target requires a value");
+ }
 });

@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC2",
   "members": [
     {
       "id": "beam-B1",
@@ -96,6 +95,8 @@
       ]
     }
   ],
+  "ulsEquation": "eq610",
+  "cases": [],
   "placements": [],
   "tapers": [],
   "cutouts": [],
@@ -106,6 +107,5 @@
   "trusses": [],
   "bracings": [],
   "decks": [],
-  "ulsEquation": "eq610",
-  "cases": []
+  "reliabilityClass": "RC2"
 }

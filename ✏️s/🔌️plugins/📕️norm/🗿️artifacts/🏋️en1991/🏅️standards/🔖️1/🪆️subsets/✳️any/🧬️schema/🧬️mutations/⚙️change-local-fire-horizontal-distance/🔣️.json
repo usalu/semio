@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-local-fire-horizontal-distance",
   "semanticKind": "change-local-fire-horizontal-distance",
-  "displayName": "Change Local Fire Horizontal Distance",
+  "displayName": "Change horizontal distance from the localised fire",
   "emoji": "⚙",
   "aggregateVariant": "ChangeLocalFireHorizontalDistance",
   "payloadSchema": "🧬️schema/🔣️.json",

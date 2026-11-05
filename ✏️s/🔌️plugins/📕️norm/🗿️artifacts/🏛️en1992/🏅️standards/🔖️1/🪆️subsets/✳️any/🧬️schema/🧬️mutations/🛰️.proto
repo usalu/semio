@@ -162,6 +162,7 @@ message En1992Mutation {
     ChangeStudRowDiameter change_stud_row_diameter = 158;
     InsertStudRow insert_stud_row = 159;
     RemoveStudRow remove_stud_row = 160;
+    ChangeMemberBearingWidth change_member_bearing_width = 161;
   }
 }
 message ChangeAnnex {
@@ -849,4 +850,8 @@ message InsertStudRow {
 message RemoveStudRow {
   string member_id = 1;
   uint64 index = 2;
+}
+message ChangeMemberBearingWidth {
+  string member_id = 1;
+  double new_value = 2;
 }

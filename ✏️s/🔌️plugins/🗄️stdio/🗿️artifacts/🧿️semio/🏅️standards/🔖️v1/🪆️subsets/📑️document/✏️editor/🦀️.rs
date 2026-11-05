@@ -84,12 +84,8 @@ const SEMIO_DOCUMENT_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const SEMIO_DOCUMENT_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "s.stdio.semio.document.tool-command.v1";
 const SEMIO_DOCUMENT_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
-fn semio_document_editor_example_snapshot(example_id: &str) -> SemioDocumentSnapshot {
-    if example_id == semio_s_artifact_stdio_semio_base_examples::examples::demo::ID {
-        <SemioDocumentSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_semio_base_examples::examples::demo::PRIMARY_TEXT).unwrap_or_default()
-    } else {
-        SemioDocumentSnapshot::default()
-    }
+fn semio_document_editor_example_snapshot(example_id: &str) -> Result<SemioDocumentSnapshot, Fault> {
+    semio_s_artifact_stdio_contract::parse_example_snapshot(example_id, semio_s_artifact_stdio_semio_base_examples::examples::memo::ID, semio_s_artifact_stdio_semio_base_examples::examples::memo::PRIMARY_TEXT, SEMIO_DOCUMENT_DOCUMENT_SCHEMA, |snapshot: &SemioDocumentSnapshot| snapshot.schema.as_str())
 }
 
 fn semio_document_editor_command_id(command: &SemioDocumentEditCommand) -> &'static str {
@@ -124,7 +120,7 @@ fn semio_document_editor_retained_reduce(
 ) -> Result<Emit<SemioDocumentMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         SemioDocumentEditCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&semio_document_editor_example_snapshot(example_id), SEMIO_DOCUMENT_DOCUMENT_SCHEMA)],
+            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&semio_document_editor_example_snapshot(example_id)?, SEMIO_DOCUMENT_DOCUMENT_SCHEMA)],
             ..Default::default()
         }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
@@ -156,7 +152,6 @@ impl ArtifactOwnedToolJobFactory for SemioDocumentEditorExampleFactory {
     const TOOL_IDS: &'static [&'static str] = SEMIO_DOCUMENT_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_DOCUMENT_DOCUMENT_SCHEMA;
 
-    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioDocumentSnapshot, "stdio.semio.document");
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_DOCUMENT_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 pub use semio_s_artifact_stdio_semio_document_mutations::editor::edit_rules;
@@ -168,7 +163,7 @@ pub struct SemioDocumentEditor;
 impl ArtifactEditor for SemioDocumentEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![semio_s_artifact_stdio_semio_base_examples::examples::demo::source()]
+        vec![semio_s_artifact_stdio_semio_base_examples::examples::memo::source()]
     }
     type Snapshot = SemioDocumentSnapshot;
     type Mutation = SemioDocumentMutation;
@@ -184,6 +179,8 @@ impl ArtifactEditor for SemioDocumentEditor {
 
     const DIALECT: Dialect = SEMIO_DOCUMENT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_DOCUMENT_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioDocumentSnapshot, "stdio.semio.document");
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<SemioDocumentEditor>,
@@ -237,7 +234,7 @@ impl ArtifactEditor for SemioDocumentEditor {
         match command {
             SemioDocumentEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             SemioDocumentEditCommand::SetActiveExample { example_id } => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&semio_document_editor_example_snapshot(example_id), SEMIO_DOCUMENT_DOCUMENT_SCHEMA)],
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&semio_document_editor_example_snapshot(example_id)?, SEMIO_DOCUMENT_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
         }
@@ -277,7 +274,7 @@ pub fn create_semio_document_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition())
         .default_layout(edit::layout())
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
-        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_semio_base_examples::examples::demo::ID, semio_s_artifact_stdio_semio_base_examples::examples::demo::label())], semio_s_artifact_stdio_semio_base_examples::examples::demo::ID))
+        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_semio_base_examples::examples::memo::ID, semio_s_artifact_stdio_semio_base_examples::examples::memo::label())], semio_s_artifact_stdio_semio_base_examples::examples::memo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
@@ -291,3 +288,10 @@ pub fn create_semio_document_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[test]
+fn typed_example_selection_refuses_unknown_and_malformed_sources(){
+    for id in ["","unknown-example","demo"]{assert!(semio_document_editor_example_snapshot(id).is_err());}
+    for source in ["","not a semio document"]{assert!(semio_s_artifact_stdio_contract::parse_example_snapshot::<SemioDocumentSnapshot>(semio_s_artifact_stdio_semio_base_examples::examples::memo::ID,semio_s_artifact_stdio_semio_base_examples::examples::memo::ID,source,SEMIO_DOCUMENT_DOCUMENT_SCHEMA,|snapshot|snapshot.schema.as_str()).is_err());}
+}

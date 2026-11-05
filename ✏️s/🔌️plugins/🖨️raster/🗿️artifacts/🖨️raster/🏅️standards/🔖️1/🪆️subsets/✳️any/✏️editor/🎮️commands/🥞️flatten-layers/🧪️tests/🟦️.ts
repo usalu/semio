@@ -5,8 +5,8 @@ import sharp from "sharp";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {RasterStackJob,type RasterStackLayer} from "@semio-tech/framework/pixels/compositing/layers";
+const validate=new Ajv().addVocabulary(["x-semio-execution"]).compile(schema);
 test("flatten command preserves visible appearance and placement",async()=>{
-  const validate=new Ajv().compile(schema);
   for(const labels of Object.values(fixture.labels))expect(validate({name:labels.name})).toBe(true);
   for(const name of ["","   ","x".repeat(121)])expect(validate({name})).toBe(false);
   const images=Object.fromEntries(Object.entries(fixture.images).map(([key,image])=>[key,{...image,pixels:Uint8Array.from(image.pixels)}]));

@@ -1,0 +1,24 @@
+{
+  "toolIds": [
+    "flattenLayers",
+    "mergeDown"
+  ],
+  "maximumRawBytes": 65536,
+  "maximumChunkBytes": 4096,
+  "maximumWorkUnitsPerStep": 1024,
+  "maximumOutputBytes": 372842496,
+  "maximumStepMicros": 7500,
+  "maximumDepth": 64,
+  "maximumItemsPerStep": 1,
+  "maximumPixels": 16777216,
+  "channels": 4,
+  "maximumEncodedBytesPerSample": 4,
+  "maximumLayerNodes": 4096,
+  "maximumSelectedLayerNodes": 1024,
+  "maximumAssetEntries": 64,
+  "maximumIdentifierUtf8Bytes": 4096,
+  "maximumEscapedBytesPerUtf8Byte": 6,
+  "maximumLayerRowSyntaxBytes": 512,
+  "maximumAssetRowSyntaxBytes": 128,
+  "fixedHeaderBytes": 65536
+}

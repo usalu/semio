@@ -62,7 +62,7 @@ async fn a_transform_gesture_moves_vertex_columns_in_their_declared_type_and_kee
     let emit = <PlyAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).expect("the transform resolves");
     assert_eq!(emit.artifact_mutations.len(), 3);
     let mut state = base.clone();
-    emit.artifact_mutations.iter().for_each(|mutation| apply_mutation(&mut state, mutation));
+    emit.artifact_mutations.iter().for_each(|mutation| { apply_mutation(&mut state, mutation); });
     assert_eq!(state.elements[0].rows[0].values, vec![PlyValue::Float(3.0), PlyValue::Float(5.0), PlyValue::Double(7.0), PlyValue::UChar(200)]);
     let refused = <PlyAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &PlySnapshot::default()).err().expect("no vertex element");
     assert!(refused.message.contains("vertex"));
@@ -82,7 +82,7 @@ fn natural_ply_round_trips_edits_agrees_with_an_independent_text_reader_and_refu
     let event = editing::SnapshotEditEvent::SetValue { path: editing::TRANSFORM_PATH.into(), value: semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"scale":[2,2,2]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) };
     let emit = <PlyAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("transform resolves");
     let mut edited = snapshot.clone();
-    emit.artifact_mutations.iter().for_each(|mutation| apply_mutation(&mut edited, mutation));
+    emit.artifact_mutations.iter().for_each(|mutation| { apply_mutation(&mut edited, mutation); });
     let saved = <PlyAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("ply saves");
     let text = String::from_utf8(saved.clone()).expect("an ascii ply is text");
     let body: Vec<&str> = text.lines().skip_while(|line| *line != "end_header").skip(1).collect();
@@ -99,11 +99,11 @@ fn natural_ply_round_trips_edits_agrees_with_an_independent_text_reader_and_refu
 #[test]
 fn the_scene_draws_triangles_and_falls_back_to_points_without_faces() {
     let snapshot = <PlyAnyEditor as ArtifactEditor>::decode_natural_file(include_bytes!("../🧫️fixtures/📂️natural/sample.ply")).expect("ply opens");
-    let (positions, triangles, markers) = crate::engine::scene_geometry(&snapshot);
+    let (positions, triangles, markers) = semio_s_artifact_stdio_ply_inferences::schema::inferences::scene_geometry(&snapshot);
     assert_eq!((positions.len(), triangles, markers.len()), (3, vec![0, 1, 2], 0));
     let mut points = snapshot.clone();
     points.elements.retain(|element| element.name == "vertex");
-    let (positions, triangles, markers) = crate::engine::scene_geometry(&points);
+    let (positions, triangles, markers) = semio_s_artifact_stdio_ply_inferences::schema::inferences::scene_geometry(&points);
     assert_eq!((positions.len(), triangles.len(), markers.len()), (0, 0, 3));
 }
 
@@ -116,7 +116,7 @@ async fn a_details_edit_of_one_vertex_coordinate_changes_only_that_cell() {
     let emit = <PlyAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("the coordinate edit resolves");
     assert_eq!(emit.artifact_mutations.len(), 1);
     let mut edited = snapshot.clone();
-    emit.artifact_mutations.iter().for_each(|mutation| apply_mutation(&mut edited, mutation));
+    emit.artifact_mutations.iter().for_each(|mutation| { apply_mutation(&mut edited, mutation); });
     assert_eq!(edited.elements[0].rows[1].values, vec![PlyValue::Float(5.0), PlyValue::Float(0.0), PlyValue::Float(0.0)]);
     assert_eq!(edited.elements[0].rows[0], snapshot.elements[0].rows[0]);
     assert_eq!(edited.elements[1], snapshot.elements[1]);
@@ -151,7 +151,7 @@ async fn the_binary_encode_path_round_trips_and_the_snapshot_keeps_the_opened_fo
     use crate::standards::v1_0::subsets::any::schema::snapshot::PlyFormat;
     let ascii = <PlyAnyEditor as ArtifactEditor>::decode_natural_file(include_bytes!("../🧫️fixtures/📂️natural/sample.ply")).expect("ply opens");
     assert_eq!(ascii.format, PlyFormat::Ascii);
-    let binary = crate::engine::encode_ply_with_format(&ascii, PlyFormat::BinaryLittleEndian).expect("binary ply encodes");
+    let binary = semio_s_artifact_stdio_ply_inferences::natural_file::encode_ply_with_format(&ascii, PlyFormat::BinaryLittleEndian).expect("binary ply encodes");
     assert!(binary.starts_with(b"ply\nformat binary_little_endian 1.0\n"));
     let reopened = <PlyAnyEditor as ArtifactEditor>::decode_natural_file(&binary).expect("binary ply reopens");
     assert_eq!(reopened.format, PlyFormat::BinaryLittleEndian);
@@ -168,8 +168,8 @@ fn ply_rs_reads_the_saved_edit_back_to_the_edited_model_in_ascii_and_binary() {
     let event = editing::SnapshotEditEvent::SetValue { path: editing::TRANSFORM_PATH.into(), value: semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"scale":[2,2,2]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) };
     let emit = <PlyAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("transform resolves");
     let mut edited = snapshot.clone();
-    emit.artifact_mutations.iter().for_each(|mutation| apply_mutation(&mut edited, mutation));
-    for saved in [<PlyAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("ply saves"), crate::engine::encode_ply_with_format(&edited, PlyFormat::BinaryLittleEndian).expect("binary ply saves")] {
+    emit.artifact_mutations.iter().for_each(|mutation| { apply_mutation(&mut edited, mutation); });
+    for saved in [<PlyAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("ply saves"), semio_s_artifact_stdio_ply_inferences::natural_file::encode_ply_with_format(&edited, PlyFormat::BinaryLittleEndian).expect("binary ply saves")] {
         let by_ply_rs = oracle_round_trip(&saved).expect("ply-rs parses the saved file");
         let reopened = <PlyAnyEditor as ArtifactEditor>::decode_natural_file(&by_ply_rs).expect("the ply-rs output reopens");
         assert_eq!(reopened.elements[0].rows, edited.elements[0].rows);

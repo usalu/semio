@@ -18,7 +18,7 @@ pub mod mutation {
         pub new_height: u32,
     }
 
-    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ResizeLayer where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::resize_layer::mutation::ResizeLayer> {
+    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ResizeLayer where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels::ChangeLayerPixels> {
         const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "layer", kind: "resize-layer", record: "ResizedLayer" };
 
         fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {

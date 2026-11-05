@@ -1,0 +1,290 @@
+{
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "required": [
+        "id",
+        "owners",
+        "quiet",
+        "stale",
+        "cancel",
+        "approved",
+        "released"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "owners": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "saved",
+              "keep",
+              "discard"
+            ]
+          }
+        },
+        "quiet": {
+          "type": "boolean"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "cancel": {
+          "type": "boolean"
+        },
+        "approved": {
+          "type": "boolean"
+        },
+        "released": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "cases": [
+    {
+      "id": "all-saved",
+      "owners": [
+        "saved",
+        "saved"
+      ],
+      "quiet": true,
+      "stale": false,
+      "cancel": false,
+      "approved": true,
+      "released": 0
+    },
+    {
+      "id": "second-kept",
+      "owners": [
+        "saved",
+        "keep"
+      ],
+      "quiet": true,
+      "stale": false,
+      "cancel": false,
+      "approved": false,
+      "released": 2
+    },
+    {
+      "id": "discard",
+      "owners": [
+        "discard"
+      ],
+      "quiet": true,
+      "stale": false,
+      "cancel": false,
+      "approved": true,
+      "released": 0
+    },
+    {
+      "id": "draining",
+      "owners": [
+        "saved"
+      ],
+      "quiet": false,
+      "stale": false,
+      "cancel": false,
+      "approved": false,
+      "released": 0
+    },
+    {
+      "id": "stale-during-save",
+      "owners": [
+        "saved"
+      ],
+      "quiet": true,
+      "stale": true,
+      "cancel": false,
+      "approved": false,
+      "released": 1
+    },
+    {
+      "id": "cancel-during-save",
+      "owners": [
+        "keep"
+      ],
+      "quiet": true,
+      "stale": false,
+      "cancel": true,
+      "approved": false,
+      "released": 1
+    }
+  ],
+  "ledgerSchema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "required": [
+        "slots",
+        "commands",
+        "queries"
+      ],
+      "properties": {
+        "slots": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4
+          }
+        },
+        "queries": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "ledgerCases": [
+    {
+      "slots": 2,
+      "commands": [
+        [
+          "seal",
+          "old",
+          "stdio",
+          1
+        ]
+      ],
+      "queries": [
+        [
+          "fresh",
+          "stdio",
+          1,
+          false
+        ],
+        [
+          "old",
+          "stdio",
+          1,
+          true
+        ]
+      ]
+    },
+    {
+      "slots": 1,
+      "commands": [
+        [
+          "seal",
+          "old",
+          "stdio",
+          1
+        ],
+        [
+          "unseal",
+          "old",
+          "stdio",
+          1
+        ],
+        [
+          "seal",
+          "old",
+          "stdio",
+          1
+        ]
+      ],
+      "queries": [
+        [
+          "old",
+          "stdio",
+          1,
+          true
+        ]
+      ]
+    },
+    {
+      "slots": 2,
+      "commands": [
+        [
+          "seal",
+          "old",
+          "stdio",
+          1
+        ],
+        [
+          "seal",
+          "old",
+          "stdio",
+          2
+        ],
+        [
+          "seal",
+          "old",
+          "stdio",
+          3
+        ]
+      ],
+      "queries": [
+        [
+          "old",
+          "stdio",
+          1,
+          false
+        ],
+        [
+          "old",
+          "stdio",
+          2,
+          true
+        ],
+        [
+          "old",
+          "stdio",
+          3,
+          true
+        ]
+      ]
+    },
+    {
+      "slots": 2,
+      "commands": [
+        [
+          "seal",
+          "old",
+          "stdio",
+          1
+        ],
+        [
+          "seal",
+          "fresh",
+          "stdio",
+          1
+        ],
+        [
+          "forget",
+          "old",
+          "stdio",
+          1
+        ]
+      ],
+      "queries": [
+        [
+          "old",
+          "stdio",
+          1,
+          false
+        ],
+        [
+          "fresh",
+          "stdio",
+          1,
+          true
+        ]
+      ]
+    }
+  ]
+}

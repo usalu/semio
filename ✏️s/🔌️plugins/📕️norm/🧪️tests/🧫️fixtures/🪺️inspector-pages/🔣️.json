@@ -1,0 +1,20 @@
+{
+ "$schema":"./🧬️.json",
+ "limits":{"content":16,"pages":2,"choices":32,"choiceStride":31,"path":64},
+ "fields":[
+  {"name":"empty","count":0,"offset":0,"expected":{"start":0,"end":0,"previous":null,"next":null}},
+  {"name":"one-page","count":16,"offset":0,"expected":{"start":0,"end":16,"previous":null,"next":null}},
+  {"name":"first-page","count":35,"offset":0,"expected":{"start":0,"end":16,"previous":null,"next":16}},
+  {"name":"middle-page","count":35,"offset":16,"expected":{"start":16,"end":32,"previous":0,"next":32}},
+  {"name":"last-page","count":35,"offset":32,"expected":{"start":32,"end":35,"previous":16,"next":null}}
+ ],
+ "choices":[
+  {"name":"resident-outside-first","count":65,"offset":0,"selected":64,"expected":{"start":0,"end":31,"resident":64,"length":32,"previous":null,"next":31}},
+  {"name":"resident-outside-middle","count":65,"offset":31,"selected":64,"expected":{"start":31,"end":62,"resident":64,"length":32,"previous":0,"next":62}},
+  {"name":"resident-inside-last","count":65,"offset":62,"selected":64,"expected":{"start":62,"end":65,"resident":null,"length":3,"previous":31,"next":null}},
+  {"name":"short-choice","count":2,"offset":0,"selected":1,"expected":{"start":0,"end":2,"resident":null,"length":2,"previous":null,"next":null}}
+ ],
+ "retirementPrefixes":[0,1,2,4,8,16,32,64,128],
+ "deniedAxes":["items","copyBytes","capacityBytes","releaseBytes","depth"],
+ "locales":["en","de"]
+}

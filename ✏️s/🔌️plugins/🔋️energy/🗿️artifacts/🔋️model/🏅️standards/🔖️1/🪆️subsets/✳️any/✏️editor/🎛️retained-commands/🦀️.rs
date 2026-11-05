@@ -39,7 +39,7 @@ pub(super) fn energy_model_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EnergyModelEditor>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<EnergyModelMutation, EnergyModelConfigMutation, NoDraftMutation>, Fault> {
-    if let Some(camera) = camera_emit(command, _context.and_then(|context| context.view_state.as_ref())) {
+    if let Some(camera) = camera_emit(command, _context.and_then(|context| context.view_state.as_deref())) {
         return camera;
     }
     reduce(command, &ArtifactView::with_operation(snapshot, history, operation.clone()))

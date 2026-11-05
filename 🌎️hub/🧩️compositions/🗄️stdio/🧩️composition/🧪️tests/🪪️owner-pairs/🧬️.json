@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "rows"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact",
+          "owner",
+          "family",
+          "runtimeEnum",
+          "library",
+          "standard",
+          "subset",
+          "kind",
+          "documentSchema",
+          "contribution",
+          "playground",
+          "roles"
+        ],
+        "properties": {
+          "artifact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "family": {
+            "type": "string",
+            "minLength": 1
+          },
+          "runtimeEnum": {
+            "type": "string",
+            "minLength": 1
+          },
+          "library": {
+            "type": "string",
+            "minLength": 1
+          },
+          "standard": {
+            "type": "string",
+            "minLength": 1
+          },
+          "subset": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "documentSchema": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contribution": {
+            "type": "string",
+            "minLength": 1
+          },
+          "playground": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "owner",
+              "variant",
+              "app",
+              "aliases",
+              "ports"
+            ],
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1
+              },
+              "variant": {
+                "type": "string",
+                "minLength": 1
+              },
+              "app": {
+                "type": "string",
+                "minLength": 1
+              },
+              "aliases": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "ports": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "react",
+                  "wgpu"
+                ],
+                "properties": {
+                  "react": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "wgpu": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          },
+          "roles": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "variant",
+                "type",
+                "factory",
+                "source",
+                "app"
+              ],
+              "properties": {
+                "role": {
+                  "enum": [
+                    "editor",
+                    "viewer"
+                  ]
+                },
+                "variant": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "type": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "factory": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "app": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "maxItems": 2
+          }
+        }
+      },
+      "maxItems": 2
+    }
+  }
+}

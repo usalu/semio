@@ -359,7 +359,7 @@ pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf, 
     semio_framework_os_renderer_wgpu_native_platform::install_native_host_temporal_formatter(std::sync::Arc::new(semio_framework_os_renderer_wgpu_native_platform::native_temporal::SystemTemporalFormatter::default()));
     let event_loop = winit::event_loop::EventLoop::<HostUserEvent>::with_user_event().build().expect("event loop");
     let proxy = event_loop.create_proxy();
-    let caller = semio_framework_os_renderer_wgpu_host_plumbing::native_caller::NativeFrameEventIssuer::new(semio_framework_job::default_now_us, semio_framework_os_renderer_wgpu_host_plumbing::native_caller::NativeFrameRootPolicyV1::initiating_event()).expect("native initiating event policy");
+    let caller = semio_framework_os_renderer_wgpu_host_plumbing::native_launch::native_frame_event_issuer().expect("native original initiating event admission");
     let mut app = WinitApp::new(proxy, plugin_filter.to_string(), plugin_modules_root, services, caller);
     let _ = event_loop.run_app(&mut app);
 }

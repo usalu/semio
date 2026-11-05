@@ -42,7 +42,7 @@
         "order": 20,
         "unit": "m³",
         "precision": 7,
-        "step": 1e-06
+        "step": 0.000001
       }
     }
   }

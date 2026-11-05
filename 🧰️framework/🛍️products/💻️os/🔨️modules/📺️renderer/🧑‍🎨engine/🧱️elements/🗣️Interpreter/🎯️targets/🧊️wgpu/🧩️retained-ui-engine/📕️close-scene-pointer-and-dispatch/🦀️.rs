@@ -76,6 +76,7 @@ pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Resu
     });
     if let Some(retired) = retirement {
         let owner = ScenePointerTarget::from(retired);
+        if owner.kind==semio_framework_ui_declaration::ui::SurfaceKind::Paint2d{semio_framework_os_renderer_wgpu_engine_board::paint2d::cancel_paint2d_pixel_selection(&owner.host_id);}
         semio_framework_os_renderer_wgpu_scene_state::retire_scene_identity(&owner);
     }
     if complete {
@@ -100,6 +101,21 @@ pub fn tree_window_measures(window_id: &str) -> Option<(f64, Vec<semio_framework
 
 pub fn retained_scene_target(window_id: &str, node: NodeId) -> Option<ScenePointerTarget> {
     UI_ENGINE.with(|cell| retained_scene_target_in(&cell.borrow(), window_id, node))
+}
+
+/// ⎋️ Offers only a live selection owner's exact cancellation authority to its current actor and window.
+pub fn retained_selection_cancellation(target:&ScenePointerTarget,actor:&str,instance_id:u32)->Option<ActionDescriptor>{
+    if !scene_pointer_target_is_live(target){return None;}
+    UI_ENGINE.with(|cell|{
+        let engine=cell.borrow();
+        let retained=engine.tree(&target.window_id)?.node(target.node)?;
+        let UiNode::ComponentScene(scene)=&retained.spec.0 else{return None;};
+        let authority=scene.paint_2d.as_ref()?.selection_cancellation.as_ref()?;
+        if authority.actor!=actor||authority.app_instance_id!=instance_id||authority.window_id!=target.window_id{return None;}
+        let exact=|value:&str|value.len()==16&&value.bytes().all(|byte|byte.is_ascii_digit()||(b'a'..=b'f').contains(&byte));
+        if !exact(&authority.operation_id)||!exact(&authority.generation){return None;}
+        Some(ActionDescriptor{controller_id:scene.controller_id.clone(),action:"cancelTypedOperation".into(),args:Some(semio_framework_value::DslValue::Object(vec![("operationId".into(),semio_framework_value::DslValue::String(authority.operation_id.clone())),("generation".into(),semio_framework_value::DslValue::String(authority.generation.clone()))]))})
+    })
 }
 
 pub fn retained_scene_target_at(window_id: &str, x: f32, y: f32) -> Option<ScenePointerTarget> {

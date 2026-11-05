@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️change-lab-test-kind",
   "semanticKind": "change-lab-test-kind",
-  "displayName": "Change LabTestKind",
+  "displayName": "Change laboratory test method",
   "emoji": "🧪️",
   "aggregateVariant": "ChangeLabTestKind",
   "payloadSchema": "🧬️schema/🔣️.json",

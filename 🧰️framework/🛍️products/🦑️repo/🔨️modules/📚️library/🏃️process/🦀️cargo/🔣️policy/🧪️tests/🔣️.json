@@ -24,12 +24,12 @@
   "defaults": [
     {
       "mode": "prototype",
-      "directory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/prototype/captures",
+      "directory": ".cache/b/r/m/cargo/prototype/captures",
       "retain": false
     },
     {
       "mode": "release",
-      "directory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/release/captures",
+      "directory": ".cache/b/r/m/cargo/release/captures",
       "retain": false
     }
   ],

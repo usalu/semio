@@ -1095,13 +1095,13 @@ pub struct En1991Diff {
     #[state(artifact)]
     pub rail_derailments: En1991RailDerailmentDelta,
     #[state(artifact)]
-    pub fatigue_models: En1991FatigueModelDelta,
+    pub fatigue_models: Option<En1991FatigueModelDelta>,
     #[state(artifact)]
-    pub support_collisions: En1991SupportCollisionDelta,
+    pub support_collisions: Option<En1991SupportCollisionDelta>,
     #[state(artifact)]
-    pub local_fires: En1991LocalFireDelta,
+    pub local_fires: Option<En1991LocalFireDelta>,
     #[state(artifact)]
-    pub snow_guards: En1991SnowGuardDelta,
+    pub snow_guards: Option<En1991SnowGuardDelta>,
 }
 //#endregion 🔖️Diff
 

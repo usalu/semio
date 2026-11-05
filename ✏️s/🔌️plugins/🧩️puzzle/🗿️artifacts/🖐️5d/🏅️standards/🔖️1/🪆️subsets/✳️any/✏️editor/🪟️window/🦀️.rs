@@ -468,7 +468,8 @@ macro_rules! owners {
             const WINDOW_KIND_ID: &'static str = $kind;
             type State = Puzzle5dWindowTransient;
             type Mutation = Puzzle5dWindowTransientMutation;
-            fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
                 let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
                 let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
                 let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(

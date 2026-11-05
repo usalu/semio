@@ -3,6 +3,9 @@ use crate::change_member_bearing_width::ChangeMemberBearingWidth;
 use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 pub fn diff(payload: &ChangeMemberBearingWidth, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    if !payload.new_value.is_finite() || !(0.0..=1.0).contains(&payload.new_value) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "The bearing width must be finite and between zero and one metre.", Vec::<String>::new());
+    }
     let Some(m) = base.members.iter().find(|m| m.id == payload.member_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Member {} not found.", payload.member_id), Vec::<String>::new());
     };
@@ -14,3 +17,7 @@ pub fn diff(payload: &ChangeMemberBearingWidth, base: &En1992Snapshot) -> protoc
         ..Default::default()
     })
 }
+
+#[cfg(test)]
+#[path = "🧪️.rs"]
+mod tests;

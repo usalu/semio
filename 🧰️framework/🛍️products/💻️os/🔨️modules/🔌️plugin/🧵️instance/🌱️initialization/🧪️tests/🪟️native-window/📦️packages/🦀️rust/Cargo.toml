@@ -1,0 +1,55 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-plugin-native-identity-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-native-identity-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 32768
+maxSourceFiles = 8
+maxActiveLines = 512
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🧪️.rs"
+
+[dev-dependencies]
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-2d-compute = { path = "../../../../../../../../../../🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { path = "../../../../../../../../../../🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-manifest-app-surface = { path = "../../../../../../../../../../🔨️modules/🛂️manifest/🧱️app-surface/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
+semio-framework-os-store-codec-registry = { path = "../../../../../../../🏪️store/📦️codec/📦️packages/🦀️rust" }
+semio-framework-os-store-operation-wire = { path = "../../../../../../../🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-app = { path = "../../../../../../📜️declaration/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-decl-emission = { path = "../../../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-views = { path = "../../../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-construction = { path = "../../../../../🧱️construction/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-initialization = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-plugin-interaction = { path = "../../../../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-framework-plugin-mounted-owner = { path = "../../../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio-framework-plugin-ownership = { path = "../../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-app = { path = "../../../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config = { path = "../../../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
+semio-framework-plugin-window-kits = { path = "../../../../../../🪟️window-kits/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-schema-composition = { path = "../../../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-ui-runtime = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+serde_json.workspace = true
+semio-framework-value-native-owned = { path = "../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-app = { path = "../../../../../📦️packages/🦀️rust" }

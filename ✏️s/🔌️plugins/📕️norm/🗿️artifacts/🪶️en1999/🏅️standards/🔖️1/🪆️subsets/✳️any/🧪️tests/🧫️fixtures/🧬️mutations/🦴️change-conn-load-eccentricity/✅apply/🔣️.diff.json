@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "materials": null,
   "sections": null,
   "members": null,
@@ -50,5 +49,6 @@
     "inserted": [],
     "moved": [],
     "modified": []
-  }
+  },
+  "reliabilityClass": null
 }

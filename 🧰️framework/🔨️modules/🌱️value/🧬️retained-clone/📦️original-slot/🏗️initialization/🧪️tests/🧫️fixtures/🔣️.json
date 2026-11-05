@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "large-option",
+      "payloadBytes": 56000,
+      "pageBytes": 32768,
+      "extentBytes": 56001,
+      "chunks": [
+        32768,
+        23233
+      ]
+    },
+    {
+      "name": "multiple-pages",
+      "payloadBytes": 98304,
+      "pageBytes": 16384,
+      "extentBytes": 98305,
+      "chunks": [
+        16384,
+        16384,
+        16384,
+        16384,
+        16384,
+        16384,
+        1
+      ]
+    },
+    {
+      "name": "small-option",
+      "payloadBytes": 15,
+      "pageBytes": 7,
+      "extentBytes": 16,
+      "chunks": [
+        7,
+        7,
+        2
+      ]
+    }
+  ],
+  "invalidRanges": [
+    {
+      "offset": 56002,
+      "count": 0
+    },
+    {
+      "offset": 56000,
+      "count": 2
+    },
+    {
+      "offset": 0,
+      "count": 56002
+    }
+  ]
+}

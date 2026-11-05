@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "members": {
     "removed": [],
     "inserted": [],
@@ -66,15 +65,36 @@
       }
     ]
   },
-  "diaphragms": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "trusses": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "bracings": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "decks": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "diaphragms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "trusses": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bracings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "decks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "ulsEquation": null,
   "cases": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
-  }
+  },
+  "reliabilityClass": null
 }

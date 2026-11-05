@@ -1,0 +1,21 @@
+# Original Native Document Identity
+
+Two native births through one app controller previously passed the same controller identifier into document genesis. The original StoreSet now creates a time-ordered UUID inside its funded metadata construction and moves it into the document label. Config, draft, interaction and controller labels retain their authored controller coordinate.
+
+The metadata forecast reserves exactly 36 bytes for the document UUID and three controller-derived labels with their suffixes. UUID allocation occurs only after admission, and existing metadata retirement releases its retained label. No extra unaccounted owner or suspended pre-admission allocation is introduced.
+
+The actual-native-window registration regression now opens and closes the real native owner twice, retains its physical heap/paid-close receipt checks and compares observed identity properties against adjacent language-neutral identity JSON. Adjacent JSON Schema constrains the fixture. Independent ticket identity-oracle.mjs validates the fixture with AJV and reproduces distinct 36-character identities with the existing third-party uuid library. That oracle passed. Native Rust execution remains pending, including locating the actual test mount; source-only assertions are not a passing Rust regression.
+
+Production files: plugin/instance/initialization/stores Rust implementation and construction/factory module documentation. Test files: initialization/registration/tests Rust lifecycle regression, identity JSON and identity schema JSON.
+
+Separate reference identity and archive-load regressions belong to completion_audit. Mounted crates: semio-framework-plugin-tests-12-2 (builder) and semio-framework-plugin-tests-11-2 (whole-document media load/replacement).
+
+Mounted the previously orphaned fixture and native lifecycle regression in dedicated first-party test-only companion semio-framework-plugin-native-identity-tests, with project @semio-tech/plugin-native-identity-tests-rs. Its manifest uses 29 explicit first-party dependencies plus the existing workspace serde_json test dependency. Root Cargo membership and build-owner catalog include the new package. The owned sequential driver will run its exact native lifecycle test after the current OBJ job and surface retry.
+
+Real native compile attempts verified production initialization, instance-app and construction crates compile. Newly mounted previously orphaned test code needed direct native-owned receiver owner dependency, explicit constructor/app types, current paid-close RetainedWorkOutcome wrappers, and public PluginApp method disambiguation. These test-only gaps are repaired; priority native retry3 is pending. Earlier failed logs remain as evidence, not current passing claims.
+
+Native real runtime investigation: construction frame252816bytes cannot fit preparation copy32768 (quote505632), so opening never admits its first frame (born0,released0). Measured parts252272, live712, services251552, lanes88, actor-close136. Inline services dominate; merely boxing the outer/parts frame shifts the oversized copy into later admission and is not a valid fix. Exact17child size instrumentation is queued. No grant, timeout or iteration limit was relaxed. Root independently reviews architecture before any service owner split.
+
+Measured17service children (bytes): policy120,roster1800,ingress1208,interaction1280,history1152,host_events1592,txn208,children25344,pending55808,tools57120,media12720,ingest304,maintenance136,close840,tool_runs360,time_travel56120,tool_machines35432. Six large children total242544bytes; merely externalizing parts does not make these individual births/transfers fit copy32768. Canonical child owner representation/admission requires a bounded split.
+
+Current execution status after bounded final-address construction: the production constructor compiled, and the real mounted lifecycle test now opens its first native app and checks its snapshot before cleanup. The test then fails during app close, not opening. Parent GDB traced the536-byte unquoted allocation/release to PeerPresenceRoot::empty_shared lazy fallback construction. Parent owns clean absent-presence custody repair; full two-birth uniqueness and paid-close law is still red until that closes. Detailed measured design and current evidence are in 🏭️native-sparse-construction-review.md.

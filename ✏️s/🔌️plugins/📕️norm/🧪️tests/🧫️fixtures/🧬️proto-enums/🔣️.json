@@ -1,0 +1,12 @@
+{
+  "NodeARestraint": [
+    "FRAMED",
+    "FIXED",
+    "PINNED"
+  ],
+  "NodeBRestraint": [
+    "FRAMED",
+    "FIXED",
+    "PINNED"
+  ]
+}

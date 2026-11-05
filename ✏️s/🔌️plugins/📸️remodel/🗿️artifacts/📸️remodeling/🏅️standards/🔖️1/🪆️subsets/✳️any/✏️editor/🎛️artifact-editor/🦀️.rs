@@ -4,6 +4,10 @@ use super::*;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️RemodelingPlayApp
+#[cfg(test)]
+#[path="🧪️host-event/🦀️.rs"]
+mod host_event_birth_tests;
+
 impl ArtifactEditor for RemodelingPlayApp {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
@@ -83,6 +87,10 @@ impl ArtifactEditor for RemodelingPlayApp {
     }
 
     /// 📨️ A closing window aborts the import it started with zero trace; every other host fact leaves an import running.
+    fn host_event_demands(event: &semio_framework_plugin::HostEvent) -> Option<semio_framework_value::RetirementDemand> {
+        if !matches!(event,semio_framework_plugin::HostEvent::Retiring{..}){return None}let header=std::mem::size_of::<RemodelingCommand>();Some(semio_framework_value::RetirementDemand{copy_bytes:header.saturating_mul(2).saturating_add(7),capacity_bytes:header.saturating_add(7),depth:1,..Default::default()})
+    }
+
     fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<RemodelingCommand> {
         match event {
             semio_framework_plugin::HostEvent::Retiring { .. } => Some(RemodelingCommand::ImportAbort(import_abort::ImportAbort { reason: Some("retired".to_string()) })),

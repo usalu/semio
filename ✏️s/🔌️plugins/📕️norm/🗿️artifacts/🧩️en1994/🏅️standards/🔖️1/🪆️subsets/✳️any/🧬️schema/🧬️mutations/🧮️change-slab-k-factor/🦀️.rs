@@ -18,7 +18,7 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeSlabKFactor where 
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "slab-k-factor", kind: "change-slab-k-factor", record: "ChangedSlabKFactor" };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change m-k factor k of the slab", "m-k-Beiwert k der Decke ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change slab coefficient k of the m-k method", "Deckenbeiwert k des m-k-Verfahrens ändern")
     }
 }
 

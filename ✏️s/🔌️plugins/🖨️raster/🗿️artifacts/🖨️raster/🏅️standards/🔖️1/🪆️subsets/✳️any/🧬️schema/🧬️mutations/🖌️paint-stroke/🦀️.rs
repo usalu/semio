@@ -10,7 +10,6 @@
 use semio_s_artifact_raster_raster_diff::Painted;
 use semio_s_artifact_raster_raster_diff::Refusal;
 use semio_s_artifact_raster_raster_diff::Reshape;
-use semio_s_artifact_raster_raster_diff::asset_image;
 use semio_s_artifact_raster_raster_diff::canvas;
 use semio_s_artifact_raster_raster_diff::inverse_pixel_region;
 use semio_s_artifact_raster_raster_diff::painted;
@@ -57,21 +56,8 @@ pub struct RasterBrush {
     pub color: Vec<f64>,
 }
 
-/// ✂️ One run of a pixel selection the stroke is clipped to: `length` pixels from row-major pixel index `start`, each
-/// covered `coverage` out of 255.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, schema::ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
-#[dsl(keyword="selection-span")]
-#[artifact_schema(id="s.raster.raster.selectionspan")]
-pub struct RasterSelectionSpan {
-    #[state(config)]
-    pub start: u32,
-    #[state(config)]
-    pub length: u32,
-    #[state(config)]
-    pub coverage: u32,
-}
+pub use semio_s_artifact_raster_raster_model::RasterSelectionSpan;
+use semio_s_artifact_raster_raster_model::RasterSelectionSpans;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -83,7 +69,7 @@ pub struct PaintStroke {
     pub tool: String,
     pub brush: RasterBrush,
     pub points: Vec<RasterStrokePoint>,
-    pub selection: Option<Vec<RasterSelectionSpan>>,
+    pub selection: Option<RasterSelectionSpans>,
 }
 
 /// 🏗️ Builder — wraps an unclipped stroke in its dispatch variant.
@@ -105,7 +91,7 @@ pub fn grey_byte(color: &[f64]) -> u8 {
 
 /// 🧯️ The payload-intrinsic laws the schema states (vocabularies, bounds, finite points), checked again before any pixel
 /// moves; the first one broken, as the field it names.
-fn invariant(payload: &PaintStroke) -> Result<(), (&'static str, String)> {
+pub fn invariant_fields(payload: &PaintStroke) -> Result<(), (&'static str, String)> {
     let unit = |value: f64| value.is_finite() && (0.0..=1.0).contains(&value);
     if !RASTER_PAINT_TARGETS.contains(&payload.target.as_str()) {
         return Err(("target", format!("Paint target \"{}\" is neither pixels nor mask.", payload.target)));
@@ -120,24 +106,17 @@ fn invariant(payload: &PaintStroke) -> Result<(), (&'static str, String)> {
     if !(brush.size.is_finite() && (0.1..=4096.0).contains(&brush.size)) || !unit(brush.hardness) || !unit(brush.opacity) || brush.color.len() != 4 || !brush.color.iter().all(|channel| unit(*channel)) {
         return Err(("brush", "The brush needs a size of 0.1 to 4096 pixels, hardness and opacity within 0..1 and four colour channels within 0..1.".to_string()));
     }
-    selection_invariant(payload.selection.as_deref())
-}
-
-/// ✂️ The selection law every repaint states (`ordered-selection-runs`): runs are non-empty, ordered, disjoint and cover at
-/// most 255.
-pub fn selection_invariant(selection: Option<&[RasterSelectionSpan]>) -> Result<(), (&'static str, String)> {
-    let mut next = 0_u64;
-    for span in selection.into_iter().flatten() {
-        if span.length == 0 || span.coverage > 255 || u64::from(span.start) < next {
-            return Err(("selection", "Selection runs are non-empty, ordered, disjoint and cover at most 255.".to_string()));
-        }
-        next = u64::from(span.start) + u64::from(span.length);
-    }
     Ok(())
 }
 
+/// 🧯️ Complete intrinsic stroke validation for cold application.
+pub fn invariant(payload: &PaintStroke) -> Result<(), (&'static str, String)> {
+    invariant_fields(payload)
+}
+
 /// ✂️ The per-pixel coverage `spans` select on an image of `count` pixels; `None` when a run reaches past the image.
-pub fn selection_mask(spans: &[RasterSelectionSpan], count: usize) -> Option<Vec<u8>> {
+pub fn selection_mask(spans: &RasterSelectionSpans, count: usize) -> Option<Vec<u8>> {
+    if spans.maximum_end()>count as u64{return None;}
     let mut mask = vec![0_u8; count];
     for span in spans {
         let start = span.start as usize;
@@ -149,6 +128,11 @@ pub fn selection_mask(spans: &[RasterSelectionSpan], count: usize) -> Option<Vec
 /// 🖌️ The rasterizer operation `payload` means on its target.
 pub fn operation(payload: &PaintStroke) -> PixelOperation {
     let points = payload.points.iter().map(|point| [point.x, point.y]).collect();
+    operation_with_points(payload,points)
+}
+
+/// 🧵️ Adopts points already copied and validated by the bounded interactive owner.
+pub fn operation_with_points(payload:&PaintStroke,points:Vec<[f64;2]>)->PixelOperation {
     let brush = &payload.brush;
     let erase = payload.tool == "eraser";
     match payload.target.as_str() {
@@ -279,31 +263,38 @@ pub fn inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<
 /// lossless carrier, so the restored child is the exact one), the layer (or its mask) pointed back at it — with its prior
 /// placement when the repaint was `reshape`d — and the painted image released when the repaint brought it in.
 pub fn painted_inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion>>(painted: Painted, base: &RasterSnapshot, layer_id: &str, target: &str, reshape: Option<&Reshape>) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
     use crate::add_layer_asset::mutation::AddLayerAsset;
     use crate::change_layer_mask::ChangeLayerMask;
     use crate::change_layer_pixels::ChangeLayerPixels;
     use crate::remove_layer_asset::mutation::RemoveLayerAsset;
     let mut steps = Vec::new();
-    if let Some(previous) = painted.canvas.previous.as_deref().filter(|previous| *previous != painted.key && released(base, previous, layer_id, target)) {
-        let Ok(image) = asset_image(base, previous) else { return Vec::new() };
-        steps.push(Op::from(AddLayerAsset { asset_id: previous.to_string(), asset: image }));
+    let previous=painted.canvas.previous.as_deref().filter(|previous| *previous != painted.key && released(base, previous, layer_id, target));
+    let detach=previous.is_some()&&!base.assets.contains_key(&painted.key)&&base.assets.len()==semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY;
+    if detach{
+        match &painted.canvas.mask{
+            Some(mask)=>steps.push(Op::from(ChangeLayerMask{layer_id:layer_id.into(),expected:Some(RasterLayerMask{image_key:Some(painted.key.clone()),..mask.clone()}),mask:None})),
+            None=>steps.push(Op::from(ChangeLayerPixels{layer_id:layer_id.into(),expected_image_key:Some(painted.key.clone()),content:RasterPixelContent{image_key:None,width:reshape.map_or(painted.canvas.extent.0,|shape|Some(shape.width)),height:reshape.map_or(painted.canvas.extent.1,|shape|Some(shape.height))},transform:None})),
+        }
+        steps.push(Op::from(RemoveLayerAsset{asset_id:painted.key.clone()}));
+    }
+    if let Some(previous) = previous {
+        let owner=base.assets.get(previous).and_then(|child|child.local_owner::<semio_s_artifact_raster_raster_model::SemioImageSnapshot>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"raster.asset-owner-unavailable"))?;
+        let asset=<semio_s_artifact_raster_raster_model::RasterImagePayload as semio_framework_value::owned::NativeReceiveMap<std::sync::Arc<semio_s_artifact_raster_raster_model::SemioImageSnapshot>>>::from_native(owner);
+        steps.push(Op::from(AddLayerAsset { asset_id: previous.to_string(), asset }));
     }
     match &painted.canvas.mask {
-        Some(mask) => steps.push(Op::from(ChangeLayerMask { layer_id: layer_id.to_string(), expected: Some(RasterLayerMask { image_key: Some(painted.key.clone()), ..mask.clone() }), mask: Some(mask.clone()) })),
+        Some(mask) => steps.push(Op::from(ChangeLayerMask { layer_id: layer_id.to_string(), expected: if detach{None}else{Some(RasterLayerMask { image_key: Some(painted.key.clone()), ..mask.clone() })}, mask: Some(mask.clone()) })),
         None => steps.push(Op::from(ChangeLayerPixels {
             layer_id: layer_id.to_string(),
-            expected_image_key: Some(painted.key.clone()),
+            expected_image_key: if detach{None}else{Some(painted.key.clone())},
             content: RasterPixelContent { image_key: painted.canvas.previous.clone(), width: painted.canvas.extent.0, height: painted.canvas.extent.1 },
             transform: reshape.map(|_| painted.canvas.placement.clone()),
         })),
     }
-    if !base.assets.contains_key(&painted.key) {
+    if !detach&&!base.assets.contains_key(&painted.key) {
         steps.push(Op::from(RemoveLayerAsset { asset_id: painted.key }));
     }
-    steps
-
-    })())
+    Ok(steps)
 }
 //#endregion 🔖️Inverse
 

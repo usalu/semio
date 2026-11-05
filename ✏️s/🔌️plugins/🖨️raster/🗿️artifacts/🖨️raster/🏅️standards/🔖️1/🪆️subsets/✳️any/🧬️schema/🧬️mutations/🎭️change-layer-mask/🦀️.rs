@@ -15,7 +15,10 @@ pub struct ChangeLayerMask {
 }
 
 pub fn validate(payload: &ChangeLayerMask, base: &RasterSnapshot) -> Result<(), protocol::OutcomeCode> {
-    let Some(RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = find_layer(&base.layers, &payload.layer_id) else { return Err(protocol::OutcomeCode::TargetMissing); };
+    let layer=find_layer(&base.layers,&payload.layer_id).ok_or(protocol::OutcomeCode::TargetMissing)?;validate_target(payload,base,layer)
+}
+pub fn validate_target(payload:&ChangeLayerMask,base:&RasterSnapshot,layer:&RasterLayerNode)->Result<(),protocol::OutcomeCode>{
+    let (RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = layer else { return Err(protocol::OutcomeCode::TargetMissing); };
     if mask != &payload.expected { return Err(protocol::OutcomeCode::TargetMismatch); }
     if let Some(mask) = &payload.mask {
         if let Some(key) = &mask.image_key {

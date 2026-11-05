@@ -24,7 +24,7 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeEmbWallKind where 
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Support (freeEarth | cantilever) of the embedded wall", "Eingespannte Wand: Stützung (freeEarth | cantilever) ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change support type of the embedded wall", "Stützungsart der eingebundenen Wand ändern")
     }
 }
 

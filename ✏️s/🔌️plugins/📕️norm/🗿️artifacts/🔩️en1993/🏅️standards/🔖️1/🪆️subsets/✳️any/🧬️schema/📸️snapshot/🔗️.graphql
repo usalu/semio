@@ -846,11 +846,6 @@ enum HollowFabrication {
   HotFinished
   ColdFormed
 }
-
-enum FatigueConsequence {
-  Low
-  High
-}
 enum BoltGroupMethod {
   Elastic
   InstantaneousCentre
@@ -859,6 +854,18 @@ enum StressRelief {
   AsWelded
   StressRelieved
   NonWelded
+}
+type FatigueStress {
+  id: String!
+  detailId: String!
+  maxCaseId: String!
+  minCaseId: String!
+  fibreZ: Float!
+  fibreY: Float!
+  relief: StressRelief!
+  concentration: Float!
+  thickness: Float!
+  cycles: Float!
 }
 enum BucklingPlane {
   MajorAxis
@@ -878,26 +885,6 @@ enum NodeBRestraint {
   Fixed
   Pinned
 }
-enum FormingProcess {
-  RollForming
-  OtherForming
-}
-enum FastenerKind {
-  SelfTappingScrew
-  BlindRivet
-}
-type FatigueStress {
-  id: String!
-  detailId: String!
-  maxCaseId: String!
-  minCaseId: String!
-  fibreZ: Float!
-  fibreY: Float!
-  relief: StressRelief!
-  concentration: Float!
-  thickness: Float!
-  cycles: Float!
-}
 type BucklingLength {
   id: String!
   memberId: String!
@@ -909,6 +896,10 @@ type BucklingLength {
   restraintB: NodeBRestraint!
   columnStiffnessB: Float!
   beamStiffnessB: Float!
+}
+enum FormingProcess {
+  RollForming
+  OtherForming
 }
 type FormingGain {
   id: String!
@@ -924,6 +915,10 @@ type MaterialDuctility {
   materialId: String!
   elongation: Float!
   ultimateStrain: Float!
+}
+enum FastenerKind {
+  SelfTappingScrew
+  BlindRivet
 }
 type FastenedJoint {
   id: String!
@@ -945,4 +940,8 @@ type FastenedJoint {
   shearForce: Float!
   tensionForce: Float!
   shearResistance: Float!
+}
+enum FatigueConsequence {
+  Low
+  High
 }

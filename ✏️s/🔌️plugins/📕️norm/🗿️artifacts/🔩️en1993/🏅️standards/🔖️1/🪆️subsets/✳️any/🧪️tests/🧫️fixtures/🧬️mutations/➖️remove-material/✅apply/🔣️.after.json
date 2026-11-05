@@ -1,6 +1,5 @@
 {
   "annex": "En",
-  "reliabilityClass": "RC2",
   "materials": [],
   "sections": [
     {
@@ -592,6 +591,7 @@
   "placements": [],
   "jointPlates": [],
   "foundationBlocks": [],
+  "reliabilityClass": "RC2",
   "frameActions": [],
   "frameMemberBases": [],
   "fatigueStresses": [],

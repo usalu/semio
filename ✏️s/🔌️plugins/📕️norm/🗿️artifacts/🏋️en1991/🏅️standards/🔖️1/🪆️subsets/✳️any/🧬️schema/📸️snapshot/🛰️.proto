@@ -223,4 +223,10 @@ message En1991Snapshot {
   repeated LocalFire local_fires = 110;
   // @state artifact
   repeated SnowGuard snow_guards = 111;
+  // @state artifact
+  repeated RailDerailment rail_derailments = 112;
+  // @state artifact
+  repeated RailLoadGroup rail_load_groups = 113;
+  // @state artifact
+  repeated DustExplosion dust_explosions = 114;
 }

@@ -23,7 +23,7 @@
           "de": "Das adressierte Element (Ermüdungsmodell), per Kennung."
         },
         "ref": {
-          "lane": "fatigue-model"
+          "kind": "fatigue-model"
         },
         "group": "target",
         "order": 10

@@ -1,0 +1,1 @@
+{"schema":"raster.original-operation-targets.v1","cases":[{"input":{"mutation":"renameLayer","layerId":"ink","newName":"Name"},"target":"layer/ink"},{"input":{"mutation":"removeLayerAsset","assetId":"image-1234"},"target":"asset/image-1234"}]}

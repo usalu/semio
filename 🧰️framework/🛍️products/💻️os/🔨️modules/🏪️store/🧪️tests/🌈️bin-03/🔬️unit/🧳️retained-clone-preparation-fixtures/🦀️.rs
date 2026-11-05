@@ -158,6 +158,7 @@ struct DemoRetainedCloneEdit {
 }
 
 struct DemoRetainedCloneEditCursor {
+    last_work:u64,
     mode: DemoRetainedCloneEditMode,
     phase: u8,
     inverse: Option<Vec<DemoMutation>>,
@@ -200,35 +201,41 @@ impl RetainedCloneEdit<DemoSnapshot, DemoMutation> for DemoRetainedCloneEdit {
     fn snapshot_cursor_birth_demand(&self) -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 } }
     fn begin(&self, grant: RetainedCloneGrant) -> Result<(Self::Cursor, RetainedCloneProgress), ValueError> {
         let progress=self.begin_demand().admit(grant)?;
-        Ok((DemoRetainedCloneEditCursor { mode: self.mode, phase: 0, inverse: None, semantic_refusal: std::mem::ManuallyDrop::new(None), active_retirement: None, cancelled: false, closing: false },progress))
+        Ok((DemoRetainedCloneEditCursor { mode: self.mode, phase: 0, inverse: None, semantic_refusal: std::mem::ManuallyDrop::new(None), active_retirement: None, cancelled: false, closing: false,last_work:0 },progress))
     }
 }
 
 impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEditCursor {
+    fn next_work_demand(&self,_:RetainedCloneRef<'_,DemoSnapshot>,_:&DemoSnapshot,_:RetainedCloneRef<'_,DemoMutation>,_:usize)->Result<u64,ValueError>{Ok(if self.phase==2{2}else{1})}
+    fn last_turn_work(&self)->u64{self.last_work}
     fn foreign_step_presence(&self)->bool{false}
     fn advance_demands(&self, _: RetainedCloneRef<'_, DemoSnapshot>, _: &DemoSnapshot, _: RetainedCloneRef<'_, DemoMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { copy_bytes: if self.phase >= 2 { std::mem::size_of::<DemoSnapshot>() } else { 0 }, capacity_bytes: if self.phase == 1 { std::mem::size_of::<DemoMutation>() } else { 0 }, depth: 1, ..Default::default() }) }
     fn advance(&mut self, base: RetainedCloneRef<'_, DemoSnapshot>, post: &mut DemoSnapshot, mutation: RetainedCloneRef<'_, DemoMutation>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
+        self.last_work=0;
         if self.cancelled || self.closing || grant.maximum_items == 0 {
             return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress::default()));
         }
         if self.semantic_refusal.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original preparation retains its semantic refusal owner")); }
         if self.mode == DemoRetainedCloneEditMode::OverBudget {
+            self.last_work=1;
             return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress {
                 copied_items: grant.maximum_items.saturating_add(1),
                 copied_bytes: grant.maximum_copy_bytes.saturating_add(1),
                 retained_capacity_bytes: grant.maximum_capacity_bytes.saturating_add(1), released_bytes: 0 }));
         }
         if self.phase == 0 {
+            self.last_work=1;
             self.phase = 1;
             return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: 0 }));
         }
         if self.mode == DemoRetainedCloneEditMode::Fault {
+            self.last_work=1;
             return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "retained clone fixture edit fault"));
         }
         if self.phase == 1 {
             let bytes = std::mem::size_of::<DemoMutation>();
             if grant.maximum_capacity_bytes < bytes { return Ok(RetainedCloneEditStep::Progress(Default::default())); }
-            let inverse = mutation.get().inverse(base.get())?;
+            self.last_work=1;let inverse = mutation.get().inverse(base.get())?;
             let valid = inverse.len() == 1;
             self.inverse = Some(inverse);
             if !valid { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "retained clone fixture expected one exact inverse row").with_retained_progress(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: bytes, ..Default::default() })); }
@@ -237,11 +244,11 @@ impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEd
         }
         let copied_bytes = std::mem::size_of::<DemoSnapshot>();
         if grant.maximum_copy_bytes < copied_bytes { return Ok(RetainedCloneEditStep::Progress(Default::default())); }
-        let outcome = mutation.get().diff(base.get());
+        self.last_work=1;let outcome = mutation.get().diff(base.get());
         if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
             return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "retained clone fixture mutation rejected against its immutable base"));
         }
-        let original = match protocol::apply_diff_cold(outcome.diff(), base.get()) { Ok(original) => original, Err(error) => { *self.semantic_refusal = Some(error); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original retained mutation application refused")); } };
+        self.last_work+=1;let original = match protocol::apply_diff_cold(outcome.diff(), base.get()) { Ok(original) => original, Err(error) => { *self.semantic_refusal = Some(error); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original retained mutation application refused")); } };
         *post = original;
         self.phase = 3;
         Ok(RetainedCloneEditStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes, retained_capacity_bytes: 0, released_bytes: 0 }))
@@ -262,6 +269,7 @@ impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEd
     }
 
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.last_work=0;
         let empty = RetainedCloneProgress::default();
         if !self.closing || grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
@@ -277,14 +285,15 @@ impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEd
             return Ok(RetainedCloneStep::Progress(empty));
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        self.last_work=1;
         if self.active_retirement.is_some() {
-            let step = artifact_retirement_box_close_step(&mut self.active_retirement, child).result?;
+            let turn=artifact_retirement_box_close_step(&mut self.active_retirement, child);self.last_work=turn.work;let step=turn.result?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if self.semantic_refusal.is_some() { return artifact_retirement_admit_owned(&mut self.semantic_refusal, &mut self.active_retirement, child).result; }
+        if self.semantic_refusal.is_some() { let turn=artifact_retirement_admit_owned(&mut self.semantic_refusal, &mut self.active_retirement, child);self.last_work=turn.work;return turn.result; }
         if let Some(inverse) = self.inverse.as_mut() {
             if let Some(mutation) = inverse.pop() {
-                return match DemoMutationRetirementFactory.retire_owned(mutation, child).result {
+                let turn=DemoMutationRetirementFactory.retire_owned(mutation, child);self.last_work=turn.work;return match turn.result {
                     Ok((owner, progress)) => {
                         self.active_retirement = Some(owner);
                         Ok(RetainedCloneStep::Progress(progress))
@@ -355,7 +364,7 @@ fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, De
             Ok((inner,mut progress)) => {
                 assert!(progress.fits(child.retained_grant()),"original typed ingress must honor its supplied child grant");
                 progress.retained_capacity_bytes += wrapper;
-                Ok((Box::new(ProbedRetainedClonePreparation { inner:Some(inner),dropped:Some(Arc::clone(&self.dropped)),counter:None,closing:false }),progress))
+                Ok((Box::new(ProbedRetainedClonePreparation { last_work:0,inner:Some(inner),dropped:Some(Arc::clone(&self.dropped)),counter:None,closing:false }),progress))
             }
             Err((error,original))=>Err((error,original)),
         }
@@ -363,6 +372,7 @@ fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, De
 }
 
 struct ProbedRetainedClonePreparation {
+    last_work:u64,
     inner: Option<Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>>,
     dropped: Option<Arc<std::sync::atomic::AtomicUsize>>,
     counter: Option<semio_framework_value::FactoryAuthority>,
@@ -384,9 +394,10 @@ impl ProbedRetainedClonePreparation {
 
 impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for ProbedRetainedClonePreparation {
     fn advance(&mut self,body:usize,grant:ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactStoreOneItemPreparationStep,ValueError> {
-        if self.closing || grant.maximum_depth<=1 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
-        self.inner.as_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"probe no longer owns its typed preparation"))?.advance(body,ArtifactStoreOneItemGrant { maximum_depth:grant.maximum_depth-1,..grant },receiving)
+        self.last_work=0;if self.closing || grant.maximum_depth<=1 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
+        let inner=self.inner.as_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"probe no longer owns its typed preparation"))?;let result=inner.advance(body,ArtifactStoreOneItemGrant { maximum_depth:grant.maximum_depth-1,..grant },receiving);self.last_work=inner.last_turn_work();result
     }
+    fn last_turn_work(&self)->u64{self.last_work}
     fn checkpoint(&self)->ArtifactStoreOneItemCheckpoint { self.inner.as_ref().map_or_else(ArtifactStoreOneItemCheckpoint::default,|inner|inner.checkpoint()) }
     fn prepared(&self)->Option<&ArtifactStoreOneItemPrepared<DemoSnapshot,DemoMutation>> { self.inner.as_ref().and_then(|inner|inner.prepared()) }
     fn take_prepared(&mut self)->Option<ArtifactStoreOneItemPrepared<DemoSnapshot,DemoMutation>> { self.inner.as_mut().and_then(|inner|inner.take_prepared()) }
@@ -451,6 +462,8 @@ impl RetainedCloneEdit<RetainedTextSnapshot, RetainedTextMutation> for RetainedT
 }
 
 impl RetainedCloneEditCursor<RetainedTextSnapshot, RetainedTextMutation> for RetainedTextEditCursor {
+    fn next_work_demand(&self,_:RetainedCloneRef<'_,RetainedTextSnapshot>,_:&RetainedTextSnapshot,_:RetainedCloneRef<'_,RetainedTextMutation>,_:usize)->Result<u64,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained text edit must not admit after contiguous-capacity refusal"))}
+    fn last_turn_work(&self)->u64{0}
     fn foreign_step_presence(&self)->bool{false}
     fn advance_demands(&self, _: RetainedCloneRef<'_, RetainedTextSnapshot>, _: &RetainedTextSnapshot, _: RetainedCloneRef<'_, RetainedTextMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained text edit must not quote after contiguous-capacity refusal")) }
     fn advance(&mut self, _base: RetainedCloneRef<'_, RetainedTextSnapshot>, _post: &mut RetainedTextSnapshot, _mutation: RetainedCloneRef<'_, RetainedTextMutation>, body:usize,_grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {

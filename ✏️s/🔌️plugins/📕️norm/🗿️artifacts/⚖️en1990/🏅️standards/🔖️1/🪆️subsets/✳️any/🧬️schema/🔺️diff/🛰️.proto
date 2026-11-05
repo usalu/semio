@@ -160,7 +160,7 @@ message En1990SeismicModification {
 }
 message En1990SeismicPatch {
   optional double a_ek = 1;
-  optional ImportanceClass importance_class = 2;
+  optional string importance_class = 2;
 }
 message En1990MemberDelta {
   repeated En1990MemberRemoval removed = 1;

@@ -1,0 +1,15 @@
+{
+  "schema": "semio.norm.selection-sequence/v1",
+  "checks": [
+    {"id":"a","entity":"B1","utilization":0.64},
+    {"id":"b","entity":"B2","utilization":1.12},
+    {"id":"c","entity":"B1","utilization":0.95}
+  ],
+  "events": [
+    {"kind":"pick","entity":"B1","check":2,"focus":"B1"},
+    {"kind":"step","forward":false,"check":1,"focus":"B2"},
+    {"kind":"pick","entity":"B1","check":2,"focus":"B1"},
+    {"kind":"step","forward":true,"check":0,"focus":"B1"},
+    {"kind":"pick","entity":"B2","check":1,"focus":"B2"}
+  ]
+}

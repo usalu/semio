@@ -22,3 +22,36 @@ fn native_retirement_loan_closes_original_returned_payload_after_cancellation(){
 fn neutral_original_close_loan_forwards_actual_cancelled_native_authority(){
  let mut accepted=|_|true;let mut recipient=NativeDecodeRetirementRecipient::new();let mut control=NativeDecodeControl::new(128,&mut accepted);control.install_retirement_recipient(&mut recipient).unwrap();control.charge(32).unwrap();let ledger=control.ledger_identity();let identity=control.retirement_recipient_identity();let mut owned=control.pause_with_retirement().unwrap();let mut cancelled=|_|false;assert_eq!(owned.decode(&mut cancelled,|c|c.checkpoint()).unwrap_err().kind,ValueRefusalKind::Canceled);let g=grant(RetirementDemand{capacity_bytes:3,depth:1,..Default::default()});owned.retire(g,&mut cancelled,|retirement|retirement.with_original_close(|original|{assert_eq!(original.ledger_identity(),ledger);assert_eq!(original.retirement_recipient_identity(),identity);original.charge(1)?;original.charge(2)?;assert_eq!(original.charge(1).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);Ok(())})).unwrap();assert_eq!(owned.owned_bytes(),35);let(actual,_)=owned.detach();assert_eq!(actual.owned_bytes(),35);assert!(crate::ErasedSnapshotRetirement::terminal_is_empty(&recipient));
 }
+
+/// 🪢️ Encoding loans spend the original retirement hop through success, retained refusal and unwind.
+#[test]
+fn native_retirement_encoding_receiver_keeps_one_original_ledger_and_hop(){
+ let mut initial=|_|true;let mut recipient=NativeDecodeRetirementRecipient::new();let mut original=NativeDecodeControl::new(128,&mut initial);original.install_retirement_recipient(&mut recipient).unwrap();original.charge(32).unwrap();let ledger=original.ledger_identity();let identity=original.retirement_recipient_identity();let mut owner=original.pause_with_retirement().unwrap();
+ let calls=std::cell::Cell::new(0);let mut permitted=|_:NativeDecodeProgress|{calls.set(calls.get()+1);true};
+ let mut partial=None;let mut unwound=None;let mut outputs=Vec::new();
+ owner.retire(grant(RetirementDemand{capacity_bytes:8,depth:1,..Default::default()}),&mut permitted,|loan|{
+  assert_eq!(loan.ledger_identity(),ledger);assert_eq!(loan.retirement_recipient_identity(),identity);loan.charge(2)?;
+  let(result,heap)=observe(||loan.with_encoding_receiver(|maximum,observer,allocation|{
+   assert_eq!(maximum,6);let mut encoder=crate::native_encoding::NativeEncodeControl::new_forwarded(maximum,observer,allocation);encoder.copy_text("abc")
+  }));assert_eq!(heap,(3,0));outputs.push(result?);assert_eq!(loan.spent,5);
+  let(result,heap)=observe(||loan.with_encoding_receiver::<(),ValueError>(|maximum,observer,allocation|{
+   assert_eq!(maximum,3);let mut encoder=crate::native_encoding::NativeEncodeControl::new_forwarded(maximum,observer,allocation);partial=Some(encoder.copy_text("xy")?);Err(ValueError::literal(ValueRefusalKind::InvalidValue,"retained encoding refusal"))
+  }));assert_eq!(heap,(2,0));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::InvalidValue);assert_eq!(loan.spent,7);
+  let panic=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{
+   let _=loan.with_encoding_receiver::<(),ValueError>(|maximum,observer,allocation|{
+    assert_eq!(maximum,1);let mut encoder=crate::native_encoding::NativeEncodeControl::new_forwarded(maximum,observer,allocation);unwound=Some(encoder.copy_text("z")?);panic!("retirement encoding unwind");
+   });
+  }));assert!(panic.is_err());assert_eq!(loan.spent,8);assert_eq!(loan.owned_bytes(),40);
+  let before=calls.get();assert_eq!(loan.charge(1).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(calls.get(),before);
+  let(result,heap)=observe(||loan.with_encoding_receiver(|maximum,observer,allocation|{
+   assert_eq!(maximum,0);let mut encoder=crate::native_encoding::NativeEncodeControl::new_forwarded(maximum,observer,allocation);encoder.copy_text("denied")
+  }));assert_eq!(heap,(0,0));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(loan.spent,8);Ok(())
+ }).unwrap();
+ assert!(calls.get()>0);assert_eq!(owner.owned_bytes(),40);
+ let mut refused=|_:NativeDecodeProgress|false;let before=owner.owned_bytes();let(result,heap)=observe(||owner.retire(grant(RetirementDemand{capacity_bytes:4,depth:1,..Default::default()}),&mut refused,|loan|loan.with_encoding_receiver(|maximum,observer,allocation|{
+  let mut encoder=crate::native_encoding::NativeEncodeControl::new_forwarded(maximum,observer,allocation);encoder.copy_text("no")
+ })));assert_eq!(heap,(0,0));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(owner.owned_bytes(),before);
+ let(detached,_)=owner.detach();assert_eq!(detached.owned_bytes(),40);assert!(crate::ErasedSnapshotRetirement::terminal_is_empty(&recipient));
+ outputs.push(partial.take().unwrap());outputs.push(unwound.take().unwrap());assert_eq!(outputs.iter().map(String::as_str).collect::<Vec<_>>(),["abc","xy","z"]);
+ for output in outputs{let mut closing=ControlledRetirement::retain(output);for _ in 0..64{if closing.terminal_is_empty(){break}let d=closing.next_demand(4096).unwrap();let(step,heap)=observe(||closing.step(grant(d)).unwrap());let p=step.progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));}assert!(closing.terminal_is_empty());}
+}

@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"Persistent List Array Wire","type":"array","items":{},"x-semio-construction":"original-native-receiving","x-semio-root-shape":"list","x-semio-cold-construction":"refuse"}

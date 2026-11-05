@@ -1,0 +1,13 @@
+{"cases":[
+ {"name":"plain-text","schema":{"kind":"string"},"expected":""},
+ {"name":"false-boolean","schema":{"kind":"boolean"},"expected":false},
+ {"name":"unconstrained-null","schema":{"kind":"any"},"expected":null},
+ {"name":"empty-object","schema":{"kind":"object","fields":[]},"expected":{}},
+ {"name":"empty-array","schema":{"kind":"array","items":{"kind":"boolean"}},"expected":[]},
+ {"name":"minimum-array","schema":{"kind":"array","items":{"kind":"boolean"},"minItems":2},"expected":[false,false]},
+ {"name":"integer-ceiling","schema":{"kind":"number","min":2.25,"integer":true},"expected":3},
+ {"name":"exclusive-step","schema":{"kind":"number","min":2,"minExclusive":true,"step":0.25,"integer":false},"expected":2.25},
+ {"name":"soft-minimum","schema":{"kind":"number","min":2,"minExclusive":true,"softMin":3.5,"integer":false},"expected":3.5},
+ {"name":"negative-upper-bound","schema":{"kind":"number","max":-2,"integer":false},"expected":-2},
+ {"name":"bounded-vector","schema":{"kind":"vector","dims":3,"min":2},"expected":[2,2,2]}
+]}

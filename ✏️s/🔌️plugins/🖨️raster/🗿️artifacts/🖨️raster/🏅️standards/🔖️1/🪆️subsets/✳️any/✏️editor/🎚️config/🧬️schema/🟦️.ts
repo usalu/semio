@@ -1,5 +1,6 @@
 import { parsePixelLayerSelectionV1 } from "@semio-tech/framework/pixels/selection";
 import type {RasterSelectionSpan} from "../../../🧬️schema/🧬️mutations/🟦️.ts";
+import {RASTER_FILTERS, parseApplyFilter, type RasterFilter} from "../../../🧬️schema/🧬️mutations/🟦️.ts";
 /** 🧬️ RasterConfig */
 export interface RasterCamera {
   /** ⚙️ @state config */
@@ -26,6 +27,8 @@ export interface RasterPixelSelection {
 }
 
 export interface RasterConfig {
+  /** 📐️ @state config */
+  imageGrid:RasterImageGrid;
   /** 🧽️ @state config */
   brushSize: number;
   /** 🪥️ @state config */
@@ -38,6 +41,10 @@ export interface RasterConfig {
   maskValue:number;
   /** 🪣️ The bucket's colour tolerance (0..255). */
   fillTolerance:number;
+  /** 🌈️ @state config */
+  filterKind:RasterFilter;
+  /** 🎚️ @state config */
+  filterAmount:number;
   pixelSelection?:RasterPixelSelection;
   /** 🖼️ @state config */
   compositeViewport?: RasterConfigViewportSize;
@@ -99,6 +106,7 @@ export const rasterRasterConfigGuardConstant = <T extends string | number | bool
 
 export function parseRasterConfig(value: unknown, at = "$"): RasterConfig {
   const row = rasterRasterConfigGuardObject(value, at);
+  parseApplyFilter({layerId:"config",filter:row.filterKind,amount:row.filterAmount,selection:null});
   const pixelSelection=row.pixelSelection===undefined?undefined:parsePixelLayerSelectionV1(row.pixelSelection,`${at}.pixelSelection`);
   if(pixelSelection&&pixelSelection.target!==row.paintTarget)rasterRasterConfigGuardReject(`${at}.pixelSelection.target`,"selection target differs from paint target");
   return {
@@ -110,6 +118,9 @@ export function parseRasterConfig(value: unknown, at = "$"): RasterConfig {
     paintTarget:rasterRasterConfigGuardMember(row["paintTarget"],`${at}.paintTarget`,["pixels","mask"]),
     maskValue:rasterRasterConfigGuardInteger(row["maskValue"],`${at}.maskValue`,{minimum:0,maximum:255}),
     fillTolerance:rasterRasterConfigGuardInteger(row["fillTolerance"],`${at}.fillTolerance`,{minimum:0,maximum:255}),
+    filterKind:rasterRasterConfigGuardMember(row["filterKind"],`${at}.filterKind`,Object.keys(RASTER_FILTERS) as RasterFilter[]),
+    filterAmount:rasterRasterConfigGuardNumber(row["filterAmount"],`${at}.filterAmount`,{minimum:-1,maximum:256}),
+    imageGrid:parseRasterImageGrid(row.imageGrid,`${at}.imageGrid`),
     compositeViewport: row["compositeViewport"] === undefined ? undefined : parseRasterConfigViewportSize(row["compositeViewport"], `${at}.compositeViewport`),
     camera: parseRasterCamera(row["camera"], `${at}.camera`),
   };
@@ -141,4 +152,13 @@ export function parseRasterPixelSelection(value: unknown, at = "$"): RasterPixel
     height: rasterRasterConfigGuardInteger(row["height"], `${at}.height`, {"minimum": 1, "maximum": 16384}),
     spans: rasterRasterConfigGuardArray(row["spans"], `${at}.spans`).map((item, index) => ((row1) => ({ start: rasterRasterConfigGuardInteger(row1["start"], `${at}.spans[${index}].start`, {"minimum": 0, "maximum": 16777215}), length: rasterRasterConfigGuardInteger(row1["length"], `${at}.spans[${index}].length`, {"minimum": 1, "maximum": 16777216}), coverage: rasterRasterConfigGuardInteger(row1["coverage"], `${at}.spans[${index}].coverage`, {"minimum": 0, "maximum": 255}) }))(rasterRasterConfigGuardClosed(rasterRasterConfigGuardObject(item, `${at}.spans[${index}]`), `${at}.spans[${index}]`, ["start", "length", "coverage"]))),
   };
+}
+
+/** 📐️ Session pixel-grid dimensions and crop origin, separate from layer display transforms. */
+export interface RasterImageGrid {x:number;y:number;width:number;height:number;bilinear:boolean}
+
+/** 🧮️ Validates an intrinsic pixel grid before an editing action is applied. */
+export function parseRasterImageGrid(value:unknown,at="$"):RasterImageGrid {
+  const row=rasterRasterConfigGuardClosed(rasterRasterConfigGuardObject(value,at),at,["x","y","width","height","bilinear"]);
+  return {x:rasterRasterConfigGuardInteger(row.x,`${at}.x`,{minimum:0,maximum:16384}),y:rasterRasterConfigGuardInteger(row.y,`${at}.y`,{minimum:0,maximum:16384}),width:rasterRasterConfigGuardInteger(row.width,`${at}.width`,{minimum:1,maximum:16384}),height:rasterRasterConfigGuardInteger(row.height,`${at}.height`,{minimum:1,maximum:16384}),bilinear:rasterRasterConfigGuardBoolean(row.bilinear,`${at}.bilinear`)};
 }

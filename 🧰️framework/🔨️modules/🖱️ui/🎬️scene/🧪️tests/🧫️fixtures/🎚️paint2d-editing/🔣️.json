@@ -1,0 +1,18 @@
+{
+  "options": {"filterKind": "gamma", "filterAmount": 1.8, "imageGrid": {"x": 2, "y": 3, "width": 5, "height": 4, "bilinear": false}},
+  "initial": {"filterKind": "brightness", "filterAmount": 0, "imageGrid": {"x": 0, "y": 0, "width": 512, "height": 512, "bilinear": true}},
+  "edge": {"filterKind": "invert", "filterAmount": 0, "imageGrid": {"x": 16384, "y": 16384, "width": 1, "height": 1, "bilinear": false}},
+  "invalid": [
+    {"filterKind": "curves", "filterAmount": 0, "imageGrid": {"x": 0, "y": 0, "width": 1, "height": 1, "bilinear": true}},
+    {"filterKind": "invert", "filterAmount": 0},
+    {"filterKind": "invert", "filterAmount": 0, "imageGrid": {"x": -1, "y": 0, "width": 1, "height": 1, "bilinear": true}},
+    {"filterKind": "invert", "filterAmount": 0, "imageGrid": {"x": 0, "y": 0, "width": 0, "height": 1, "bilinear": true}},
+    {"filterKind": "invert", "filterAmount": 0, "extra": true, "imageGrid": {"x": 0, "y": 0, "width": 1, "height": 1, "bilinear": true}}
+  ],
+  "commands": [
+    {"action": "setFilterKind", "args": {"value": "gamma"}},
+    {"action": "setFilterAmount", "args": {"value": 1.8}},
+    {"action": "setImageGrid", "args": {"field": "width", "value": "5"}},
+    {"action": "setImageGrid", "args": {"field": "bilinear", "value": "false"}}
+  ]
+}

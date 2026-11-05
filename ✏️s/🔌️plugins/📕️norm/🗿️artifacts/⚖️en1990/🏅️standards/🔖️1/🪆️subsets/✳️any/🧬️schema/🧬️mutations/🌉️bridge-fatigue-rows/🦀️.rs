@@ -18,3 +18,7 @@ pub mod insert_fatigue_spectrum;
 #[path = "../🔄️remove-fatigue-spectrum/🦀️.rs"]
 pub mod remove_fatigue_spectrum;
 //#endregion 🪢️Mounts
+
+#[cfg(test)]
+#[path = "🧪️tests/🛬️native/🦀️.rs"]
+mod native_receiving_tests;

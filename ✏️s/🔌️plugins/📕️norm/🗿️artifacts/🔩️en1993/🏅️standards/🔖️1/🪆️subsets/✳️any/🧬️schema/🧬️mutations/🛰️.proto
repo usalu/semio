@@ -564,61 +564,138 @@ message En1993Mutation {
     ChangeCfRequiredRestraintStiffness change_cf_required_restraint_stiffness = 560;
     ChangePlatedStiffenerEccentricity change_plated_stiffener_eccentricity = 561;
     ChangePlatedPatchMomentResistance change_plated_patch_moment_resistance = 562;
-    ChangePlatedTransverseStiffenerInertia change_plated_transverse_stiffener_inertia = 563;
-    ChangePlatedCorrugationProjection change_plated_corrugation_projection = 564;
-    ChangePlatedStiffenerFlangeWidth change_plated_stiffener_flange_width = 565;
-    ChangePlatedStiffenerFlangeThickness change_plated_stiffener_flange_thickness = 566;
-    ChangePlatedLateralPressureCoefficient change_plated_lateral_pressure_coefficient = 567;
-    ChangeTensionCableHorizontalForce change_tension_cable_horizontal_force = 568;
-    ChangeTowerLateralForceCoefficient change_tower_lateral_force_coefficient = 569;
-    ChangeTowerPermittedAmplitudeRatio change_tower_permitted_amplitude_ratio = 570;
-    ChangePileInterlockBendingFactor change_pile_interlock_bending_factor = 571;
-    ChangePileInterlockStiffnessFactor change_pile_interlock_stiffness_factor = 572;
-    ChangeCraneFlangeEffectiveWidth change_crane_flange_effective_width = 573;
-    ChangeCraneDetailCategoryStress change_crane_detail_category_stress = 574;
-    ChangeRestraintIntermediatePosition change_restraint_intermediate_position = 575;
-    ChangeRestraintLatSpringPosition change_restraint_lat_spring_position = 576;
-    ChangeRestraintLatSpringStiffness change_restraint_lat_spring_stiffness = 577;
-    ChangeRestraintHingeToRestraint change_restraint_hinge_to_restraint = 578;
-    ChangeBuiltUpChordFlangeThickness change_built_up_chord_flange_thickness = 579;
-    ChangeBuiltUpChordWebThickness change_built_up_chord_web_thickness = 580;
-    ChangeJointPlateJointId change_joint_plate_joint_id = 581;
-    ChangeJointPlateLabel change_joint_plate_label = 582;
-    ChangeJointPlateRole change_joint_plate_role = 583;
-    ChangeJointPlatePlateHeight change_joint_plate_plate_height = 584;
-    ChangeJointPlatePlateWidth change_joint_plate_plate_width = 585;
-    ChangeJointPlatePlateThickness change_joint_plate_plate_thickness = 586;
-    ChangeJointPlatePlateCount change_joint_plate_plate_count = 587;
-    ChangeJointPlatePlateFy change_joint_plate_plate_fy = 588;
-    ChangeJointPlatePlateFu change_joint_plate_plate_fu = 589;
-    ChangeJointPlateBoltClass change_joint_plate_bolt_class = 590;
-    ChangeJointPlateBoltDiameter change_joint_plate_bolt_diameter = 591;
-    ChangeJointPlateHoleDiameter change_joint_plate_hole_diameter = 592;
-    ChangeJointPlateBoltRows change_joint_plate_bolt_rows = 593;
-    ChangeJointPlateBoltsPerRow change_joint_plate_bolts_per_row = 594;
-    ChangeJointPlatePitch change_joint_plate_pitch = 595;
-    ChangeJointPlateGauge change_joint_plate_gauge = 596;
-    ChangeJointPlateEndDistance change_joint_plate_end_distance = 597;
-    ChangeJointPlateEdgeDistance change_joint_plate_edge_distance = 598;
-    ChangeJointPlateShearPlanes change_joint_plate_shear_planes = 599;
-    ChangeJointPlateEccentricity change_joint_plate_eccentricity = 600;
-    ChangeJointPlateWeldThroat change_joint_plate_weld_throat = 601;
-    ChangeJointPlateWeldFu change_joint_plate_weld_fu = 602;
-    ChangeJointPlateWeldBetaW change_joint_plate_weld_beta_w = 603;
-    ChangeFoundationJointId change_foundation_joint_id = 604;
-    ChangeFoundationLabel change_foundation_label = 605;
-    ChangeFoundationBlockLength change_foundation_block_length = 606;
-    ChangeFoundationBlockWidth change_foundation_block_width = 607;
-    ChangeFoundationBlockDepth change_foundation_block_depth = 608;
-    ChangeFoundationConcreteFck change_foundation_concrete_fck = 609;
-    ChangeFoundationGroutFck change_foundation_grout_fck = 610;
-    ChangeFoundationGroutThickness change_foundation_grout_thickness = 611;
-    ChangeFoundationAnchorCount change_foundation_anchor_count = 612;
-    ChangeFoundationAnchorClass change_foundation_anchor_class = 613;
-    ChangeFoundationAnchorDiameter change_foundation_anchor_diameter = 614;
-    ChangeFoundationAnchorStressArea change_foundation_anchor_stress_area = 615;
-    ChangeFoundationAnchorEmbedment change_foundation_anchor_embedment = 616;
-    ChangeFoundationAnchorEdgeDistance change_foundation_anchor_edge_distance = 617;
+    ChangePlatedCorrugationProjection change_plated_corrugation_projection = 563;
+    ChangePlatedStiffenerFlangeWidth change_plated_stiffener_flange_width = 564;
+    ChangeTensionCableHorizontalForce change_tension_cable_horizontal_force = 565;
+    ChangeTowerLateralForceCoefficient change_tower_lateral_force_coefficient = 566;
+    ChangeTowerPermittedAmplitudeRatio change_tower_permitted_amplitude_ratio = 567;
+    ChangePileInterlockBendingFactor change_pile_interlock_bending_factor = 568;
+    ChangePileInterlockStiffnessFactor change_pile_interlock_stiffness_factor = 569;
+    ChangeCraneFlangeEffectiveWidth change_crane_flange_effective_width = 570;
+    ChangeCraneDetailCategoryStress change_crane_detail_category_stress = 571;
+    ChangeRestraintIntermediatePosition change_restraint_intermediate_position = 572;
+    ChangeRestraintLatSpringPosition change_restraint_lat_spring_position = 573;
+    ChangeRestraintLatSpringStiffness change_restraint_lat_spring_stiffness = 574;
+    ChangeRestraintHingeToRestraint change_restraint_hinge_to_restraint = 575;
+    ChangeBuiltUpChordFlangeThickness change_built_up_chord_flange_thickness = 576;
+    ChangeBuiltUpChordWebThickness change_built_up_chord_web_thickness = 577;
+    ChangeJointPlateJointId change_joint_plate_joint_id = 578;
+    ChangeJointPlateLabel change_joint_plate_label = 579;
+    ChangeJointPlateRole change_joint_plate_role = 580;
+    ChangeJointPlatePlateHeight change_joint_plate_plate_height = 581;
+    ChangeJointPlatePlateWidth change_joint_plate_plate_width = 582;
+    ChangeJointPlatePlateThickness change_joint_plate_plate_thickness = 583;
+    ChangeJointPlatePlateCount change_joint_plate_plate_count = 584;
+    ChangeJointPlatePlateFy change_joint_plate_plate_fy = 585;
+    ChangeJointPlatePlateFu change_joint_plate_plate_fu = 586;
+    ChangeJointPlateBoltClass change_joint_plate_bolt_class = 587;
+    ChangeJointPlateBoltDiameter change_joint_plate_bolt_diameter = 588;
+    ChangeJointPlateHoleDiameter change_joint_plate_hole_diameter = 589;
+    ChangeJointPlateBoltRows change_joint_plate_bolt_rows = 590;
+    ChangeJointPlateBoltsPerRow change_joint_plate_bolts_per_row = 591;
+    ChangeJointPlatePitch change_joint_plate_pitch = 592;
+    ChangeJointPlateGauge change_joint_plate_gauge = 593;
+    ChangeJointPlateEndDistance change_joint_plate_end_distance = 594;
+    ChangeJointPlateEdgeDistance change_joint_plate_edge_distance = 595;
+    ChangeJointPlateShearPlanes change_joint_plate_shear_planes = 596;
+    ChangeJointPlateEccentricity change_joint_plate_eccentricity = 597;
+    ChangeJointPlateWeldThroat change_joint_plate_weld_throat = 598;
+    ChangeJointPlateWeldFu change_joint_plate_weld_fu = 599;
+    ChangeJointPlateWeldBetaW change_joint_plate_weld_beta_w = 600;
+    ChangeFoundationJointId change_foundation_joint_id = 601;
+    ChangeFoundationLabel change_foundation_label = 602;
+    ChangeFoundationBlockLength change_foundation_block_length = 603;
+    ChangeFoundationBlockWidth change_foundation_block_width = 604;
+    ChangeFoundationBlockDepth change_foundation_block_depth = 605;
+    ChangeFoundationConcreteFck change_foundation_concrete_fck = 606;
+    ChangeFoundationGroutFck change_foundation_grout_fck = 607;
+    ChangeFoundationGroutThickness change_foundation_grout_thickness = 608;
+    ChangeFoundationAnchorCount change_foundation_anchor_count = 609;
+    ChangeFoundationAnchorClass change_foundation_anchor_class = 610;
+    ChangeFoundationAnchorDiameter change_foundation_anchor_diameter = 611;
+    ChangeFoundationAnchorStressArea change_foundation_anchor_stress_area = 612;
+    ChangeFoundationAnchorEmbedment change_foundation_anchor_embedment = 613;
+    ChangeFoundationAnchorEdgeDistance change_foundation_anchor_edge_distance = 614;
+    ChangeBridgeConsequence change_bridge_consequence = 615;
+    ChangeBucklingLengthBeamStiffnessA change_buckling_length_beam_stiffness_a = 616;
+    ChangeBucklingLengthBeamStiffnessB change_buckling_length_beam_stiffness_b = 617;
+    ChangeBucklingLengthColumnStiffnessA change_buckling_length_column_stiffness_a = 618;
+    ChangeBucklingLengthColumnStiffnessB change_buckling_length_column_stiffness_b = 619;
+    ChangeBucklingLengthMemberId change_buckling_length_member_id = 620;
+    ChangeBucklingLengthPlane change_buckling_length_plane = 621;
+    ChangeBucklingLengthRestraintA change_buckling_length_restraint_a = 622;
+    ChangeBucklingLengthRestraintB change_buckling_length_restraint_b = 623;
+    ChangeBucklingLengthSway change_buckling_length_sway = 624;
+    ChangeFastenedJointBaseStrength change_fastened_joint_base_strength = 625;
+    ChangeFastenedJointBaseThickness change_fastened_joint_base_thickness = 626;
+    ChangeFastenedJointCount change_fastened_joint_count = 627;
+    ChangeFastenedJointDiameter change_fastened_joint_diameter = 628;
+    ChangeFastenedJointEdgeDistance change_fastened_joint_edge_distance = 629;
+    ChangeFastenedJointEndDistance change_fastened_joint_end_distance = 630;
+    ChangeFastenedJointGauge change_fastened_joint_gauge = 631;
+    ChangeFastenedJointHeadStrength change_fastened_joint_head_strength = 632;
+    ChangeFastenedJointHeadThickness change_fastened_joint_head_thickness = 633;
+    ChangeFastenedJointKind change_fastened_joint_kind = 634;
+    ChangeFastenedJointMemberId change_fastened_joint_member_id = 635;
+    ChangeFastenedJointPerRow change_fastened_joint_per_row = 636;
+    ChangeFastenedJointPitch change_fastened_joint_pitch = 637;
+    ChangeFastenedJointShearForce change_fastened_joint_shear_force = 638;
+    ChangeFastenedJointShearResistance change_fastened_joint_shear_resistance = 639;
+    ChangeFastenedJointSheetWidth change_fastened_joint_sheet_width = 640;
+    ChangeFastenedJointTensionForce change_fastened_joint_tension_force = 641;
+    ChangeFastenedJointWasherDiameter change_fastened_joint_washer_diameter = 642;
+    ChangeFatigueConsequence change_fatigue_consequence = 643;
+    ChangeFatigueStressConcentration change_fatigue_stress_concentration = 644;
+    ChangeFatigueStressCycles change_fatigue_stress_cycles = 645;
+    ChangeFatigueStressDetailId change_fatigue_stress_detail_id = 646;
+    ChangeFatigueStressFibreY change_fatigue_stress_fibre_y = 647;
+    ChangeFatigueStressFibreZ change_fatigue_stress_fibre_z = 648;
+    ChangeFatigueStressMaxCaseId change_fatigue_stress_max_case_id = 649;
+    ChangeFatigueStressMinCaseId change_fatigue_stress_min_case_id = 650;
+    ChangeFatigueStressRelief change_fatigue_stress_relief = 651;
+    ChangeFatigueStressThickness change_fatigue_stress_thickness = 652;
+    ChangeFormingGainBends change_forming_gain_bends = 653;
+    ChangeFormingGainForming change_forming_gain_forming = 654;
+    ChangeFormingGainGrossArea change_forming_gain_gross_area = 655;
+    ChangeFormingGainMemberId change_forming_gain_member_id = 656;
+    ChangeFormingGainUltimateStrength change_forming_gain_ultimate_strength = 657;
+    ChangeFormingGainUsedYield change_forming_gain_used_yield = 658;
+    ChangeFrameActionEndRatio change_frame_action_end_ratio = 659;
+    ChangeFrameActionFx change_frame_action_fx = 660;
+    ChangeFrameActionFz change_frame_action_fz = 661;
+    ChangeFrameActionKind change_frame_action_kind = 662;
+    ChangeFrameActionLoadCaseId change_frame_action_load_case_id = 663;
+    ChangeFrameActionMy change_frame_action_my = 664;
+    ChangeFrameActionStartRatio change_frame_action_start_ratio = 665;
+    ChangeFrameActionTargetId change_frame_action_target_id = 666;
+    ChangeFrameMemberBasisBasis change_frame_member_basis_basis = 667;
+    ChangeFrameMemberBasisMemberId change_frame_member_basis_member_id = 668;
+    ChangeJointBeamWebFy change_joint_beam_web_fy = 669;
+    ChangeJointBeamWebThickness change_joint_beam_web_thickness = 670;
+    ChangeJointPlateGroupMethod change_joint_plate_group_method = 671;
+    ChangeJointWeldForceLongitudinal change_joint_weld_force_longitudinal = 672;
+    ChangeJointWeldForceTransverse change_joint_weld_force_transverse = 673;
+    ChangeMaterialDuctilityElongation change_material_ductility_elongation = 674;
+    ChangeMaterialDuctilityMaterialId change_material_ductility_material_id = 675;
+    ChangeMaterialDuctilityUltimateStrain change_material_ductility_ultimate_strain = 676;
+    ChangePanelDesignTemperature change_panel_design_temperature = 677;
+    ChangePanelSteelGrade change_panel_steel_grade = 678;
+    ChangePanelSteelSubgrade change_panel_steel_subgrade = 679;
+    ChangeSectionFabrication change_section_fabrication = 680;
+    InsertBucklingLength insert_buckling_length = 681;
+    InsertFastenedJoint insert_fastened_joint = 682;
+    InsertFatigueStress insert_fatigue_stress = 683;
+    InsertFormingGain insert_forming_gain = 684;
+    InsertFrameAction insert_frame_action = 685;
+    InsertFrameMemberBasis insert_frame_member_basis = 686;
+    InsertMaterialDuctility insert_material_ductility = 687;
+    RemoveBucklingLength remove_buckling_length = 688;
+    RemoveFastenedJoint remove_fastened_joint = 689;
+    RemoveFatigueStress remove_fatigue_stress = 690;
+    RemoveFormingGain remove_forming_gain = 691;
+    RemoveFrameAction remove_frame_action = 692;
+    RemoveFrameMemberBasis remove_frame_member_basis = 693;
+    RemoveMaterialDuctility remove_material_ductility = 694;
   }
 }
 message ChangeAnnex {
@@ -2864,10 +2941,6 @@ message ChangePlatedPatchMomentResistance {
   string id = 1;
   double new_patch_moment_resistance = 2;
 }
-message ChangePlatedTransverseStiffenerInertia {
-  string id = 1;
-  double new_transverse_stiffener_inertia = 2;
-}
 message ChangePlatedCorrugationProjection {
   string id = 1;
   double new_corrugation_projection = 2;
@@ -2875,14 +2948,6 @@ message ChangePlatedCorrugationProjection {
 message ChangePlatedStiffenerFlangeWidth {
   string id = 1;
   double new_stiffener_flange_width = 2;
-}
-message ChangePlatedStiffenerFlangeThickness {
-  string id = 1;
-  double new_stiffener_flange_thickness = 2;
-}
-message ChangePlatedLateralPressureCoefficient {
-  string id = 1;
-  double new_lateral_pressure_coefficient = 2;
 }
 message ChangeTensionCableHorizontalForce {
   string id = 1;
@@ -3083,4 +3148,317 @@ message ChangeFoundationAnchorEmbedment {
 message ChangeFoundationAnchorEdgeDistance {
   string id = 1;
   double new_anchor_edge_distance = 2;
+}
+message ChangeBridgeConsequence {
+  string id = 1;
+  FatigueConsequence new_consequence = 2;
+}
+message ChangeBucklingLengthBeamStiffnessA {
+  string id = 1;
+  double new_beam_stiffness_a = 2;
+}
+message ChangeBucklingLengthBeamStiffnessB {
+  string id = 1;
+  double new_beam_stiffness_b = 2;
+}
+message ChangeBucklingLengthColumnStiffnessA {
+  string id = 1;
+  double new_column_stiffness_a = 2;
+}
+message ChangeBucklingLengthColumnStiffnessB {
+  string id = 1;
+  double new_column_stiffness_b = 2;
+}
+message ChangeBucklingLengthMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeBucklingLengthPlane {
+  string id = 1;
+  BucklingPlane new_plane = 2;
+}
+message ChangeBucklingLengthRestraintA {
+  string id = 1;
+  NodeARestraint new_restraint_a = 2;
+}
+message ChangeBucklingLengthRestraintB {
+  string id = 1;
+  NodeBRestraint new_restraint_b = 2;
+}
+message ChangeBucklingLengthSway {
+  string id = 1;
+  FrameSway new_sway = 2;
+}
+message ChangeFastenedJointBaseStrength {
+  string id = 1;
+  double new_base_strength = 2;
+}
+message ChangeFastenedJointBaseThickness {
+  string id = 1;
+  double new_base_thickness = 2;
+}
+message ChangeFastenedJointCount {
+  string id = 1;
+  uint64 new_count = 2;
+}
+message ChangeFastenedJointDiameter {
+  string id = 1;
+  double new_diameter = 2;
+}
+message ChangeFastenedJointEdgeDistance {
+  string id = 1;
+  double new_edge_distance = 2;
+}
+message ChangeFastenedJointEndDistance {
+  string id = 1;
+  double new_end_distance = 2;
+}
+message ChangeFastenedJointGauge {
+  string id = 1;
+  double new_gauge = 2;
+}
+message ChangeFastenedJointHeadStrength {
+  string id = 1;
+  double new_head_strength = 2;
+}
+message ChangeFastenedJointHeadThickness {
+  string id = 1;
+  double new_head_thickness = 2;
+}
+message ChangeFastenedJointKind {
+  string id = 1;
+  FastenerKind new_kind = 2;
+}
+message ChangeFastenedJointMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeFastenedJointPerRow {
+  string id = 1;
+  uint64 new_per_row = 2;
+}
+message ChangeFastenedJointPitch {
+  string id = 1;
+  double new_pitch = 2;
+}
+message ChangeFastenedJointShearForce {
+  string id = 1;
+  double new_shear_force = 2;
+}
+message ChangeFastenedJointShearResistance {
+  string id = 1;
+  double new_shear_resistance = 2;
+}
+message ChangeFastenedJointSheetWidth {
+  string id = 1;
+  double new_sheet_width = 2;
+}
+message ChangeFastenedJointTensionForce {
+  string id = 1;
+  double new_tension_force = 2;
+}
+message ChangeFastenedJointWasherDiameter {
+  string id = 1;
+  double new_washer_diameter = 2;
+}
+message ChangeFatigueConsequence {
+  string id = 1;
+  FatigueConsequence new_consequence = 2;
+}
+message ChangeFatigueStressConcentration {
+  string id = 1;
+  double new_concentration = 2;
+}
+message ChangeFatigueStressCycles {
+  string id = 1;
+  double new_cycles = 2;
+}
+message ChangeFatigueStressDetailId {
+  string id = 1;
+  string new_detail_id = 2;
+}
+message ChangeFatigueStressFibreY {
+  string id = 1;
+  double new_fibre_y = 2;
+}
+message ChangeFatigueStressFibreZ {
+  string id = 1;
+  double new_fibre_z = 2;
+}
+message ChangeFatigueStressMaxCaseId {
+  string id = 1;
+  string new_max_case_id = 2;
+}
+message ChangeFatigueStressMinCaseId {
+  string id = 1;
+  string new_min_case_id = 2;
+}
+message ChangeFatigueStressRelief {
+  string id = 1;
+  StressRelief new_relief = 2;
+}
+message ChangeFatigueStressThickness {
+  string id = 1;
+  double new_thickness = 2;
+}
+message ChangeFormingGainBends {
+  string id = 1;
+  uint64 new_bends = 2;
+}
+message ChangeFormingGainForming {
+  string id = 1;
+  FormingProcess new_forming = 2;
+}
+message ChangeFormingGainGrossArea {
+  string id = 1;
+  double new_gross_area = 2;
+}
+message ChangeFormingGainMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeFormingGainUltimateStrength {
+  string id = 1;
+  double new_ultimate_strength = 2;
+}
+message ChangeFormingGainUsedYield {
+  string id = 1;
+  double new_used_yield = 2;
+}
+message ChangeFrameActionEndRatio {
+  string id = 1;
+  double new_end_ratio = 2;
+}
+message ChangeFrameActionFx {
+  string id = 1;
+  double new_fx = 2;
+}
+message ChangeFrameActionFz {
+  string id = 1;
+  double new_fz = 2;
+}
+message ChangeFrameActionKind {
+  string id = 1;
+  FrameActionKind new_kind = 2;
+}
+message ChangeFrameActionLoadCaseId {
+  string id = 1;
+  string new_load_case_id = 2;
+}
+message ChangeFrameActionMy {
+  string id = 1;
+  double new_my = 2;
+}
+message ChangeFrameActionStartRatio {
+  string id = 1;
+  double new_start_ratio = 2;
+}
+message ChangeFrameActionTargetId {
+  string id = 1;
+  string new_target_id = 2;
+}
+message ChangeFrameMemberBasisBasis {
+  string id = 1;
+  MemberForceBasis new_basis = 2;
+}
+message ChangeFrameMemberBasisMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeJointBeamWebFy {
+  string id = 1;
+  double new_beam_web_fy = 2;
+}
+message ChangeJointBeamWebThickness {
+  string id = 1;
+  double new_beam_web_thickness = 2;
+}
+message ChangeJointPlateGroupMethod {
+  string id = 1;
+  BoltGroupMethod new_group_method = 2;
+}
+message ChangeJointWeldForceLongitudinal {
+  string id = 1;
+  double new_weld_force_longitudinal = 2;
+}
+message ChangeJointWeldForceTransverse {
+  string id = 1;
+  double new_weld_force_transverse = 2;
+}
+message ChangeMaterialDuctilityElongation {
+  string id = 1;
+  double new_elongation = 2;
+}
+message ChangeMaterialDuctilityMaterialId {
+  string id = 1;
+  string new_material_id = 2;
+}
+message ChangeMaterialDuctilityUltimateStrain {
+  string id = 1;
+  double new_ultimate_strain = 2;
+}
+message ChangePanelDesignTemperature {
+  string id = 1;
+  double new_design_temperature = 2;
+}
+message ChangePanelSteelGrade {
+  string id = 1;
+  string new_steel_grade = 2;
+}
+message ChangePanelSteelSubgrade {
+  string id = 1;
+  string new_steel_subgrade = 2;
+}
+message ChangeSectionFabrication {
+  string id = 1;
+  HollowFabrication new_fabrication = 2;
+}
+message InsertBucklingLength {
+  optional uint64 index = 1;
+  BucklingLength buckling_length = 2;
+}
+message InsertFastenedJoint {
+  optional uint64 index = 1;
+  FastenedJoint fastened_joint = 2;
+}
+message InsertFatigueStress {
+  optional uint64 index = 1;
+  FatigueStress fatigue_stress = 2;
+}
+message InsertFormingGain {
+  optional uint64 index = 1;
+  FormingGain forming_gain = 2;
+}
+message InsertFrameAction {
+  optional uint64 index = 1;
+  FrameAction frame_action = 2;
+}
+message InsertFrameMemberBasis {
+  optional uint64 index = 1;
+  FrameMemberBasis frame_member_basis = 2;
+}
+message InsertMaterialDuctility {
+  optional uint64 index = 1;
+  MaterialDuctility material_ductility = 2;
+}
+message RemoveBucklingLength {
+  uint64 index = 1;
+}
+message RemoveFastenedJoint {
+  uint64 index = 1;
+}
+message RemoveFatigueStress {
+  uint64 index = 1;
+}
+message RemoveFormingGain {
+  uint64 index = 1;
+}
+message RemoveFrameAction {
+  uint64 index = 1;
+}
+message RemoveFrameMemberBasis {
+  uint64 index = 1;
+}
+message RemoveMaterialDuctility {
+  uint64 index = 1;
 }

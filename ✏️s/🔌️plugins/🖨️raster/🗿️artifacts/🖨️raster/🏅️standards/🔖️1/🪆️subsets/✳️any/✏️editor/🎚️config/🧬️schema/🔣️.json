@@ -12,9 +12,15 @@
     "brushHardness",
     "paintTarget",
     "maskValue",
-    "fillTolerance"
+    "fillTolerance",
+    "filterKind",
+    "filterAmount",
+    "imageGrid"
   ],
   "properties": {
+    "imageGrid":{"$ref":"#/$defs/RasterImageGrid","x-semio-state":"config"},
+    "filterKind": {"type":"string","enum":["invert","grayscale","clear","flipHorizontal","flipVertical","brightness","contrast","saturation","gamma","threshold","posterize","blur","sharpen"],"x-semio-state":"config"},
+    "filterAmount": {"type":"number","minimum":-1,"maximum":256,"x-semio-state":"config"},
     "brushSize": {
       "type": "number",
       "format": "double",
@@ -69,7 +75,17 @@
       "x-semio-state": "config"
     }
   },
+  "allOf": [
+    {"if":{"properties":{"filterKind":{"enum":["invert","grayscale","clear","flipHorizontal","flipVertical"]}}},"then":{"properties":{"filterAmount":{"const":0}}}},
+    {"if":{"properties":{"filterKind":{"enum":["brightness","contrast","saturation"]}}},"then":{"properties":{"filterAmount":{"minimum":-1,"maximum":1}}}},
+    {"if":{"properties":{"filterKind":{"const":"gamma"}}},"then":{"properties":{"filterAmount":{"minimum":0.01,"maximum":10}}}},
+    {"if":{"properties":{"filterKind":{"const":"threshold"}}},"then":{"properties":{"filterAmount":{"minimum":0,"maximum":255}}}},
+    {"if":{"properties":{"filterKind":{"const":"posterize"}}},"then":{"properties":{"filterAmount":{"type":"integer","minimum":2,"maximum":256}}}},
+    {"if":{"properties":{"filterKind":{"const":"blur"}}},"then":{"properties":{"filterAmount":{"type":"integer","minimum":0,"maximum":16}}}},
+    {"if":{"properties":{"filterKind":{"const":"sharpen"}}},"then":{"properties":{"filterAmount":{"minimum":0,"maximum":5}}}}
+  ],
   "$defs": {
+    "RasterImageGrid":{"type":"object","additionalProperties":false,"required":["x","y","width","height","bilinear"],"properties":{"x":{"type":"integer","minimum":0,"maximum":16384},"y":{"type":"integer","minimum":0,"maximum":16384},"width":{"type":"integer","minimum":1,"maximum":16384},"height":{"type":"integer","minimum":1,"maximum":16384},"bilinear":{"type":"boolean"}}},
     "RasterCamera": {
       "title": "RasterCamera",
       "type": "object",

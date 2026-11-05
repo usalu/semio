@@ -264,7 +264,7 @@ async fn history_labels_survive_a_text_and_a_pack_reload_in_every_locale() {
     for case in cases {
         let (id, verb) = (text(&case["id"]), text(&case["verb"]));
         let artifact_mutations = authored(&command(case));
-        let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta("author") };
+        let meta = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta("author") };
         live.dispatch_emit(verb, Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(artifact_mutations), &meta, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{id}: {fault:?}"));
     }
     let expected: Vec<(String, String, String)> = cases.iter().map(|case| (text(&case["verb"]).to_string(), text(&case["expected"]["en"]).to_string(), text(&case["expected"]["de"]).to_string())).collect();

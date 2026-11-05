@@ -7,8 +7,18 @@ import schema from "../../🧬️schema/🔣️.json";
 import fixture from "../🧫️fixtures/🖌️brush-style/🔣️.json";
 
 const validate=new Ajv({strict:false,validateFormats:false}).compile(schema);
+import grids from "../🧫️fixtures/image-grid.json";
+test("session grid settings match independent JSON Schema and preserve exact values",()=>{
+  for(const imageGrid of grids.cases){const value={...config("#2878dc",1),imageGrid};expect(validate(value)).toBe(true);expect(parseRasterConfig(value).imageGrid).toEqual(imageGrid);}
+  for(const invalid of grids.invalid){const value={...config("#2878dc",1),imageGrid:{...grids.cases[0],...invalid}};expect(validate(value)).toBe(false);expect(()=>parseRasterConfig(value)).toThrow();}
+});
+import filters from "../🧫️fixtures/filter-options.json";
+test("session filter choices obey the neutral ranges and independent JSON Schema",()=>{
+  for(const row of filters.cases){const value={...config("#2878dc",1),filterKind:row.filter,filterAmount:row.amount};expect(validate(value)).toBe(true);expect(parseRasterConfig(value)).toEqual({...value,compositeViewport:undefined});}
+  for(const row of filters.invalid){const value={...config("#2878dc",1),filterKind:row.filter,filterAmount:row.amount};expect(validate(value)).toBe(false);expect(()=>parseRasterConfig(value)).toThrow();}
+});
 const paintTarget=(value:string):"mask"|"pixels"=>{if(value==="mask"||value==="pixels")return value;throw new Error(`Unknown paint target ${JSON.stringify(value)}`);};
-const config=(brushColor:string,brushHardness:number)=>({brushSize:24,brushOpacity:1,brushColor,brushHardness,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,camera:{x:0,y:0,zoom:1}});
+const config=(brushColor:string,brushHardness:number)=>({brushSize:24,brushOpacity:1,brushColor,brushHardness,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,filterKind:"invert" as const,filterAmount:0,imageGrid:{x:0,y:0,width:512,height:512,bilinear:false},camera:{x:0,y:0,zoom:1}});
 for(const row of fixture.cases) test(`brush style ${row.color} at hardness ${row.hardness}`,async()=>{
   const value=config(row.color,row.hardness);
   expect(validate(value)).toBe(true);

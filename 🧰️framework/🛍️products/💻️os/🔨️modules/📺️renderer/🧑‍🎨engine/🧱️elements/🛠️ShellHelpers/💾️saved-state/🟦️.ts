@@ -42,13 +42,15 @@ export function saveFailureTextV1(failure: Readonly<{ code: string; message?: st
 
 export type CloseGuardPortV1 = Readonly<{
   saved: () => SavedStateV1;
+  isCurrent: () => boolean;
   flush: (signal: AbortSignal) => Promise<"flushed" | "failed" | "cancelled">;
   confirmDiscard: () => Promise<boolean>;
   signal: AbortSignal;
 }>;
 
-/** 🚪️ Leaving a document: an acknowledged-saved document closes at once; otherwise flush first and only close when the flush acknowledged, or after the person explicitly confirmed discarding on failure or cancel. */
+/** 🚪️ Leaving a document requires acknowledgment or explicit discard; cancelling keeps it open. */
 export async function guardDocumentCloseV1(port: CloseGuardPortV1): Promise<"close" | "stay"> {
+  if (port.signal.aborted || !port.isCurrent()) return "stay";
   if (!isUnsavedV1(port.saved())) return "close";
   let outcome: "flushed" | "failed" | "cancelled";
   try {
@@ -56,8 +58,10 @@ export async function guardDocumentCloseV1(port: CloseGuardPortV1): Promise<"clo
   } catch {
     outcome = "failed";
   }
-  if (outcome === "flushed" && !isUnsavedV1(port.saved())) return "close";
-  return (await port.confirmDiscard()) ? "close" : "stay";
+  if (port.signal.aborted || !port.isCurrent() || outcome === "cancelled") return "stay";
+  if (outcome === "flushed" && port.saved().kind === "saved") return "close";
+  const discard = await port.confirmDiscard();
+  return discard && !port.signal.aborted && port.isCurrent() ? "close" : "stay";
 }
 
 /** ⏳️ Waits until the acknowledged state turns saved (the worker retries writes with backoff in the background and publishes status), a bounded `timeoutMs` passes, or `signal` cancels. */
@@ -66,8 +70,8 @@ export async function awaitSavedV1(input: Readonly<{ saved: () => SavedStateV1; 
   for (;;) {
     const state = input.saved();
     input.progress?.(state);
-    if (!isUnsavedV1(state)) return "flushed";
     if (input.signal.aborted) return "cancelled";
+    if (state.kind === "saved") return "flushed";
     if (Date.now() >= deadline) return "failed";
     await new Promise<void>((resolve) => {
       const timer = setTimeout(() => { input.signal.removeEventListener("abort", wake); resolve(); }, input.pollMs ?? 100);

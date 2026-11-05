@@ -5,6 +5,9 @@ use crate::tool_contract::ArtifactToolCompletionValue;
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{mem::ManuallyDrop,sync::{Arc,Mutex,MutexGuard,TryLockResult}};
 struct Cell<A:ArtifactApp>{value:Mutex<Option<ArtifactToolCompletionValue<A>>>,authoring:Mutex<Option<crate::tool_contract::OriginalAuthoringEffect>>}
+#[path="🌱️birth/🦀️.rs"]
+mod birth;
+pub use birth::OriginalCompletionBirth;
 pub struct CompletionCell<A:ArtifactApp>{inner:ManuallyDrop<Arc<Cell<A>>>,returned:bool}
 impl<A:ArtifactApp> CompletionCell<A>{
     pub fn new()->Self{Self{inner:ManuallyDrop::new(Arc::new(Cell{value:Mutex::new(None),authoring:Mutex::new(None)})),returned:false}}

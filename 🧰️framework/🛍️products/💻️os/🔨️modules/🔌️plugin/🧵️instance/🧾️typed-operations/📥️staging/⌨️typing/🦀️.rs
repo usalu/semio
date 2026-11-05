@@ -14,9 +14,9 @@ use crate::typed_bundle::TypedCtx;
 //#region 🔖️Driver
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     /// 🚦️ Actual tag capture and bounded roster retirement settle before the declared command producer consumes its arguments.
-    pub async fn prepare_original_tool_dispatch(&mut self,action:&str,args:Option<&DslValue>,metadata:&mut Option<ActionMeta>,typing:&mut crate::original_typing::OriginalTypingDispatch<A>,typing_ready:&mut bool,tag:&mut Option<ToolTag>,ready:&mut bool,decision:&mut Option<bool>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
+    pub async fn prepare_original_tool_dispatch(&mut self,action:&str,args:Option<&DslValue>,metadata:&mut Option<ActionMeta>,typing:&mut crate::original_typing::OriginalTypingDispatch<A>,typing_ready:&mut bool,tag:&mut Option<ToolTag>,ready:&mut bool,decision:&mut Option<bool>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
         if !*typing_ready{
-            if !typing.complete(){if !self.advance_original_typing_dispatch(action,args,metadata,typing,cx).await?{return Ok(None)}}
+            if !typing.complete(){if !self.advance_original_typing_dispatch(action,args,metadata,typing,identity,cx).await?{return Ok(None)}}
             typing.finish_into(typing_ready,decision,metadata,cx)?;return Ok(None)
         }
         let meta=metadata.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original dispatch metadata was not restored"))?;
@@ -38,16 +38,16 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if !self.capture_original_tool_tag(action,args,meta,cx,tag,ready).await?{return Ok(None)}
         if self.tools.original_scrub_dispatch.is_none(){
             let frozen=X::freezes_document(&*self.time_travel,&*self.tool_runs)&&matches!(tag,Some(ToolTag::Scrub(ScrubTag{phase:ScrubPhase::Tick{..}|ScrubPhase::Commit{..},..})));
-            Host::<A>::admit(&self.tool_machines.presses,meta.view_state.as_ref(),frozen,&mut self.tools.original_scrub_dispatch,cx)?;return Ok(None)
+            Host::<A>::admit(&self.tool_machines.presses,meta.view_state.as_deref(),frozen,&mut self.tools.original_scrub_dispatch,cx)?;return Ok(None)
         }
-        self.tools.original_scrub_dispatch.as_mut().unwrap().advance(&mut self.tool_machines.presses,meta.view_state.as_ref(),tag,decision,cx)?;
+        self.tools.original_scrub_dispatch.as_mut().unwrap().advance(&mut self.tool_machines.presses,meta.view_state.as_deref(),tag,decision,cx)?;
         Ok(None)
     }
 
     /// 🧺️ The actual original source settles each typing transaction before the addressed verb resumes.
-    pub async fn advance_original_typing_before(&mut self,action:&str,args:Option<&DslValue>,metadata:&mut Option<ActionMeta>,typing:&mut crate::original_typing::OriginalTypingDispatch<A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.advance_original_typing_pass(action,args,metadata,typing,false,cx).await}
-    pub async fn advance_original_typing_dispatch(&mut self,action:&str,args:Option<&DslValue>,metadata:&mut Option<ActionMeta>,typing:&mut crate::original_typing::OriginalTypingDispatch<A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.advance_original_typing_pass(action,args,metadata,typing,true,cx).await}
-    async fn advance_original_typing_pass(&mut self,action:&str,args:Option<&DslValue>,metadata:&mut Option<ActionMeta>,typing:&mut crate::original_typing::OriginalTypingDispatch<A>,control:bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub async fn advance_original_typing_before(&mut self,action:&str,args:Option<&DslValue>,metadata:&mut Option<ActionMeta>,typing:&mut crate::original_typing::OriginalTypingDispatch<A>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.advance_original_typing_pass(action,args,metadata,typing,false,identity,cx).await}
+    pub async fn advance_original_typing_dispatch(&mut self,action:&str,args:Option<&DslValue>,metadata:&mut Option<ActionMeta>,typing:&mut crate::original_typing::OriginalTypingDispatch<A>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.advance_original_typing_pass(action,args,metadata,typing,true,identity,cx).await}
+    async fn advance_original_typing_pass(&mut self,action:&str,args:Option<&DslValue>,metadata:&mut Option<ActionMeta>,typing:&mut crate::original_typing::OriginalTypingDispatch<A>,control:bool,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         use crate::original_typing::OriginalTypingCommit;
         use semio_framework_tool_machine::OriginalToolLedgerSource;
         use semio_framework_job::{admit_original_construction,OriginalConstructionDemand};
@@ -78,9 +78,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 let meta=typing.original_metadata.as_ref().ok_or_else(invalid)?;let window=typing.after.as_ref().ok_or_else(invalid)?.as_str();let key=typing.key.ok_or_else(invalid)?;
                 if !self.tool_machines.typing.original_resident_live(window,key)?{typing.transition(1,cx)?;return Ok(false)}
                 let state=self.tool_machines.typing.open(window).ok_or_else(invalid)?;
-                let explicit=typing.suppress&&meta.view_state.as_ref().and_then(|view|view.window_id.as_deref()).unwrap_or("")==window;
+                let explicit=typing.suppress&&meta.view_state.as_deref().and_then(|view|view.window_id.as_deref()).unwrap_or("")==window;
                 if crate::original_typing::original_typing_commit_required(typing.all,explicit,state.deadline_ms,typing.now,!typing.control,None)==Some(true){typing.transition(3,cx)?;return Ok(false)}
-                if typing.retire_windows&&!window.is_empty()&&meta.view_state.as_ref().is_some_and(|view|!view.window_instances.is_empty()){
+                if typing.retire_windows&&!window.is_empty()&&meta.view_state.as_deref().is_some_and(|view|!view.window_instances.is_empty()){
                     match typing.roster_step(cx)?{Some(false)=>{typing.transition(3,cx)?;},Some(true)=>{},None=>{}}
                 }else{typing.transition(1,cx)?;}
             },
@@ -92,9 +92,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             },
             4=>{
                 if !typing.close_row(cx)?{return Ok(false)}
-                if typing.metadata.is_some(){if typing.close_copy(cx)?{typing.transition(5,cx)?;}return Ok(false)}
-                if typing.copy.is_none(){semio_framework_plugin_decl_emission::OriginalActionMetaCopy::admit(cx,&mut typing.copy)?;return Ok(false)}
-                let copy=typing.copy.as_mut().unwrap();if copy.advance(&mut typing.original_metadata,cx)?{copy.take_into(&mut typing.metadata,cx)?;}
+                if typing.metadata.is_some(){typing.transition(5,cx)?;return Ok(false)}
+                typing.original_metadata.as_ref().ok_or_else(invalid)?.admit_routing_alias(&mut typing.metadata,cx)?;
             },
             5=>{if typing.prepare_verb(cx)?{typing.make_input(cx)?;}},
             6=>{
@@ -103,7 +102,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             },
             7=>{
                 let operation=typing.receipt.as_ref().ok_or_else(invalid)?.output.get("operationId").and_then(DslValue::as_str).and_then(|value|value.parse::<u64>().ok()).ok_or_else(invalid)?;
-                if let Some(mounted)=self.tools.tool_operations.get(operation){if mounted.terminal_fault.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original typing transaction publication refused").into())}if mounted.published_artifact&&!typing.published{typing.observe_publication(cx)?;return Ok(false)}self.advance_typed_operation_publication_one(cx).await.map_err(semio_framework_job::OriginalTurnFailure::from)?;return Ok(false)}
+                if let Some(mounted)=self.tools.tool_operations.get(operation){if mounted.terminal_fault.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original typing transaction publication refused").into())}if mounted.published_artifact&&!typing.published{typing.observe_publication(cx)?;return Ok(false)}self.advance_typed_operation_publication_one(identity,cx).await.map_err(semio_framework_job::OriginalTurnFailure::from)?;return Ok(false)}
                 if typing.expect_artifact&&!typing.published{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original typing transaction retired without observed Store publication").into())}typing.transition(8,cx)?;
             },
             8=>{

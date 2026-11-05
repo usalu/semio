@@ -94,7 +94,7 @@ fn original_resident_binding_plan_borrows_exact_neutral_values() {
     let cases:serde_json::Value=serde_json::from_str(include_str!("binding-cases.json")).unwrap();
     let contract:serde_json::Value=serde_json::from_str(include_str!("cases.json")).unwrap();
     let token:StagedFormToken=serde_json::from_value(contract["token"].clone()).unwrap();
-    let status=StagedFormStatus{token:token.clone(),ready:false,diagnostics:Vec::new(),diagnostic_offset:"0".into(),diagnostic_total:"0".into()};
+    let status=StagedFormStatus{token:token.clone(),ready:false,commit_args:None,diagnostics:Vec::new(),diagnostic_offset:"0".into(),diagnostic_total:"0".into()};
     for row in cases["invalid"].as_array().unwrap(){
         let binding=StagedFormBinding{token:token.clone(),layout:StagedFormLayout::Replace,edits:vec![serde_json::from_value(row["edit"].clone()).unwrap()]};
         let input=DslValue::from(&row["input"]);
@@ -146,4 +146,59 @@ fn finite_native_staging_census_matches_neutral_reservations_and_refuses_resumpt
 fn staged_original_donor_context_matches_shared_vectors(){
     let law:serde_json::Value=serde_json::from_str(include_str!("handoff-cases.json")).unwrap();let context=&law["context"];
     for row in law["cases"].as_array().unwrap(){let request:super::StagedFormRequest=serde_json::from_value(serde_json::json!({"token":{"action":"applyIfcTemplate","revision":"0".repeat(64),"generation":row["generation"],"window":row["window"]},"locale":row["locale"],"args":{}})).unwrap();let locale=serde_json::from_value(context["locale"].clone()).unwrap();assert_eq!(request.context_matches(context["window"].as_str(),locale),row["expected"].as_bool().unwrap());assert!(!request.context_matches(None,locale));}
+}
+
+#[test]
+fn source_commit_readiness_matches_the_neutral_typed_argument_contract() {
+    let law:serde_json::Value=serde_json::from_str(include_str!("commit-cases.json")).unwrap();
+    for row in law["cases"].as_array().unwrap() {
+        let status=serde_json::json!({"token":law["token"],"ready":row["ready"],"commitArgs":row["commitArgs"],"diagnostics":[],"diagnosticOffset":"0","diagnosticTotal":"0"});
+        let actual=serde_json::from_value::<StagedFormStatus>(status).ok().is_some_and(|status|status.admitted());
+        assert_eq!(actual,row["allowed"].as_bool().unwrap());
+    }
+}
+
+fn reference_changed_value(base:&serde_json::Value,changes:&serde_json::Value)->serde_json::Value{
+ let mut value=base.clone();
+ for change in changes.as_array().unwrap(){
+  let path=change["path"].as_array().unwrap();let mut target=&mut value;
+  for key in &path[..path.len()-1]{target=target.get_mut(key.as_str().unwrap()).unwrap();}
+  let key=path.last().unwrap().as_str().unwrap();
+  if change.get("remove").and_then(serde_json::Value::as_bool)==Some(true){target.as_object_mut().unwrap().remove(key);}else{target.as_object_mut().unwrap().insert(key.into(),change["value"].clone());}
+ }value
+}
+#[test]
+fn source_value_reference_coordinates_match_neutral_shape_and_independent_serde(){
+ use semio_framework_value::{FromValue,ToValue};
+ let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/value-reference-cases.json")).unwrap();
+ for row in fixture["cases"].as_array().unwrap(){
+  let value=reference_changed_value(&fixture["base"],&row["changes"]);let expected=row["allowed"].as_bool().unwrap();
+  let native=StagedValueReference::from_value(DslValue::from(&value)).ok().filter(StagedValueReference::admitted);
+  let independent=serde_json::from_value::<StagedValueReference>(value.clone()).ok().filter(StagedValueReference::admitted);
+  assert_eq!(native.is_some(),expected,"{}",row["name"]);assert_eq!(independent.is_some(),expected,"{}",row["name"]);
+  if let Some(native)=native{assert_eq!(serde_json::Value::from(native.to_value()),value);assert_eq!(serde_json::to_value(native).unwrap(),value);}
+ }
+ let original:StagedValueReference=serde_json::from_value(fixture["base"].clone()).unwrap();
+ for row in fixture["matches"].as_array().unwrap(){
+  let value=reference_changed_value(&fixture["base"],&row["changes"]);let candidate:StagedValueReference=serde_json::from_value(value.clone()).unwrap();let expected=row["expected"].as_bool().unwrap();
+  assert_eq!(original.matches(&candidate),expected,"{}",row["name"]);assert_eq!(value==fixture["base"],expected,"{}",row["name"]);
+ }
+}
+
+#[test]
+fn diagnostic_status_counters_match_exact_neutral_u64_and_page_bounds() {
+    let law:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/status-counter-cases.json")).unwrap();
+    for row in law["cases"].as_array().unwrap() {
+        let diagnostics=vec![law["diagnostic"].clone();row["count"].as_u64().unwrap()as usize];
+        let wire=serde_json::json!({"token":law["token"],"ready":false,"commitArgs":null,"diagnostics":diagnostics,"diagnosticOffset":row["offset"],"diagnosticTotal":row["total"]});
+        let expected=row["allowed"].as_bool().unwrap();
+        let serde=serde_json::from_value::<StagedFormStatus>(wire.clone()).ok();
+        assert_eq!(serde.as_ref().is_some_and(StagedFormStatus::admitted),expected,"{}",row["id"]);
+        let native=<StagedFormStatus as semio_framework_value::FromValue>::from_value(DslValue::from(&wire)).ok();
+        assert_eq!(native.as_ref().is_some_and(StagedFormStatus::admitted),expected,"{}",row["id"]);
+        if expected {
+            assert_eq!(serde_json::to_value(serde.unwrap()).unwrap(),wire);
+            assert_eq!(serde_json::to_value(native.unwrap()).unwrap(),wire);
+        }
+    }
 }

@@ -44,6 +44,6 @@ fn inverse_and_root_codecs_restore_a_visible_terminator() {
 fn rejects_losing_the_only_visible_crlf_terminator_and_unknown_fields() {
     let base = TxtSnapshot { lines: vec!["a".into()], trailing_newline: true, line_ending: LineEnding::CrLf, ..Default::default() };
     let mutation = SetTrailingNewlineMutation { value: false };
-    assert!(!<SetTrailingNewlineMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
+    assert!(!<SetTrailingNewlineMutation as protocol::ColdMutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
     assert!(semio_framework_pack_json::from_json_str::<SetTrailingNewlineMutation>(r#"{"value":true,"unknown":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
 }

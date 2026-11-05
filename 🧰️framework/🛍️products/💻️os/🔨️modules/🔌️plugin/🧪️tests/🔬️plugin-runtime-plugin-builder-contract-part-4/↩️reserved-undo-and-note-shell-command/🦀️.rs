@@ -26,7 +26,7 @@
             window_instances: vec![ViewWindowInstance { id: "world-1".into(), window_kind_id: "world".into() }],
             ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
-        let invocation = ActionInvocation {
+        let invocation = ActionInvocation { expected_document_revision:None,
             address: ActionAddress {
                 plugin_id: "test".into(),
                 app_id: TestApp::<false>::APP_ID.into(),
@@ -39,7 +39,8 @@
         };
         assert!(semio_framework_plugin_reactor_app::addressed_action_view(&view, &invocation.address).is_err(), "strict window projection rejects a missing instance");
         let admitted = semio_framework_plugin_reactor_app::admit_addressed_action_view(&view, &invocation.address).expect("reserved undo is admitted without window ownership");
-        let meta = ActionMeta { view_state: Some(admitted), ..meta() };
+        assert!(std::ptr::eq(admitted,&view),"reserved admission borrows the actual fixture view");
+        let meta = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(view, semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..meta() };
         let mut args=Some(DslValue::Object(invocation.arguments.into_iter().collect()));let mut fault=None;let admitted=artifact_app_laws::dispatch_addressed_fixture_on_original(&mut app.0,&invocation.address,&mut args,&mut fault,Some("edit"),&meta,&mut identity,cx).await.expect("actor reserved undo");
         assert!(admitted.mutations.is_empty());
         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)), "first turn must admit spawn-job");

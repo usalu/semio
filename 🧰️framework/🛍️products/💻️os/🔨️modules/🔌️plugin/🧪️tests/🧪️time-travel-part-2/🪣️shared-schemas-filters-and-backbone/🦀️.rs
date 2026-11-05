@@ -58,7 +58,7 @@ async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
         other => panic!("the filter is a choice: {other:?}"),
     };
     assert_eq!(declared, HistoryCommandFilter::ALL.map(|filter| filter.value().to_string()), "the declared options are the runtime's filters, in order");
-    let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(&actor) };
+    let meta = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(&actor) };
     for value in &declared {
         let args = DslValue::Object(vec![("value".into(), DslValue::String(value.clone()))]);
         let admitted = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&args), &meta, &mut identity).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));

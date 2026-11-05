@@ -1,4 +1,4 @@
-union En1994Mutation = ChangeAnnex | ChangeReliabilityClass | ChangeStructureKind | ChangeSteelFYPa | ChangeFireRating | ChangeInsulationThicknessM | ChangeFatigueDetail | InsertBeam | RemoveBeam | ChangeBeamActionQAreaPa | ChangeBeamSpanM | ChangeBeamSlabThicknessM | ChangeBeamTransverseAs | ChangeBeamConstruction | InsertColumn | RemoveColumn | ChangeColumnActionForceN | ChangeColumnKind | InsertSlab | RemoveSlab | ChangeSlabActionQAreaPa | ChangeSlabThicknessM | ChangeBeamSpacingM | ChangeBeamSupport | ChangeBeamRebarProduct | ChangeBeamConcreteFCkPa | ChangeBeamConcreteECmPa | ChangeBeamLtbLengthM | ChangeBeamHoggingRebarM2PerM | ChangeBeamBarSpacingM | ChangeBeamCrackWidthLimitM | ChangeBeamFatigueCycles | ChangeBeamSteelDesignation | ChangeBeamSteelHeightM | ChangeBeamSteelWidthM | ChangeBeamSteelWebThicknessM | ChangeBeamSteelTfM | ChangeBeamSteelAreaM2 | ChangeBeamSteelWPlYM3 | ChangeBeamSteelSecondMomentM4 | ChangeBeamSteelShearAreaM2 | ChangeBeamSteelRootRadiusM | ChangeBeamSheetingProfile | ChangeBeamSheetingHeightM | ChangeBeamSheetingRibWidthM | ChangeBeamSheetingThicknessM | ChangeBeamSheetingRibsParallel | ChangeBeamActionKind | ChangeBeamActionCategory | ChangeBeamActionStage | ChangeBeamActionPointForceN | ChangeBeamActionDeltaSigmaPa | ChangeBeamActionDeltaTauPa | ChangeColumnLengthM | ChangeColumnOuterSizeM | ChangeColumnWallThicknessM | ChangeColumnSteelAreaM2 | ChangeColumnSteelFYPa | ChangeColumnConcreteAreaM2 | ChangeColumnConcreteFCkPa | ChangeColumnRebarAreaM2 | ChangeColumnRebarFYkPa | ChangeColumnSecondMomentM4 | ChangeColumnBucklingCurve | ChangeColumnRebarProduct | ChangeColumnActionKind | ChangeColumnActionCategory | ChangeColumnActionStage | ChangeColumnActionMomentNm | ChangeSlabSpanM | ChangeSlabSupport | ChangeSlabFCkPa | ChangeSlabMFactor | ChangeSlabKFactor | ChangeSlabReinforcementM2PerM | ChangeSlabSheetingProfile | ChangeSlabSheetingHeightM | ChangeSlabSheetingRibWidthM | ChangeSlabSheetingThicknessM | ChangeSlabSheetingRibsParallel | ChangeSlabActionKind | ChangeSlabActionCategory | ChangeSlabActionStage | ChangeSlabActionPointForceN | ChangeSlabActionDeltaSigmaPa | ChangeSlabActionDeltaTauPa | ChangeBeamAdjacentSpanM | ChangeBeamPatchBearingLengthM | ChangeBeamBridgeLanes | ChangeColumnIntroducedForceN | ChangeBeamCrackedLengthFraction | ChangeColumnSectionHeightM | ChangeColumnSectionWidthM | ChangeColumnSectionTwM | ChangeColumnSectionTfM | ChangeColumnRebarCoverM | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | ChangeBeamStudCrossSpacingM | ChangeBeamStudEdgeDistanceM | ChangeBeamTransverseAsTop | ChangeBeamEndPlateWidthM | ChangeBeamEndPlateHeightM | ChangeBeamEndZoneLengthM | InsertBeamAction | RemoveBeamAction | InsertColumnAction | RemoveColumnAction | InsertSlabAction | RemoveSlabAction | ChangeBeamActionXM | ChangeSlabActionXM | ChangeSlabActionYM | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId
+union En1994Mutation = ChangeAnnex | ChangeReliabilityClass | ChangeStructureKind | ChangeSteelFYPa | ChangeFireRating | ChangeInsulationThicknessM | ChangeFatigueDetail | InsertBeam | RemoveBeam | ChangeBeamActionQAreaPa | ChangeBeamSpanM | ChangeBeamSlabThicknessM | ChangeBeamTransverseAs | ChangeBeamConstruction | InsertColumn | RemoveColumn | ChangeColumnActionForceN | ChangeColumnKind | InsertSlab | RemoveSlab | ChangeSlabActionQAreaPa | ChangeSlabThicknessM | ChangeBeamSpacingM | ChangeBeamSupport | ChangeBeamRebarProduct | ChangeBeamConcreteFCkPa | ChangeBeamConcreteECmPa | ChangeBeamLtbLengthM | ChangeBeamHoggingRebarM2PerM | ChangeBeamBarSpacingM | ChangeBeamCrackWidthLimitM | ChangeBeamFatigueCycles | ChangeBeamSteelDesignation | ChangeBeamSteelHeightM | ChangeBeamSteelWidthM | ChangeBeamSteelWebThicknessM | ChangeBeamSteelTfM | ChangeBeamSteelAreaM2 | ChangeBeamSteelWPlYM3 | ChangeBeamSteelSecondMomentM4 | ChangeBeamSteelShearAreaM2 | ChangeBeamSteelRootRadiusM | ChangeBeamSheetingProfile | ChangeBeamSheetingHeightM | ChangeBeamSheetingRibWidthM | ChangeBeamSheetingThicknessM | ChangeBeamSheetingRibsParallel | ChangeBeamActionKind | ChangeBeamActionCategory | ChangeBeamActionStage | ChangeBeamActionPointForceN | ChangeBeamActionDeltaSigmaPa | ChangeBeamActionDeltaTauPa | ChangeColumnLengthM | ChangeColumnOuterSizeM | ChangeColumnWallThicknessM | ChangeColumnSteelAreaM2 | ChangeColumnSteelFYPa | ChangeColumnConcreteAreaM2 | ChangeColumnConcreteFCkPa | ChangeColumnRebarAreaM2 | ChangeColumnRebarFYkPa | ChangeColumnSecondMomentM4 | ChangeColumnBucklingCurve | ChangeColumnRebarProduct | ChangeColumnActionKind | ChangeColumnActionCategory | ChangeColumnActionStage | ChangeColumnActionMomentNm | ChangeSlabSpanM | ChangeSlabSupport | ChangeSlabFCkPa | ChangeSlabMFactor | ChangeSlabKFactor | ChangeSlabReinforcementM2PerM | ChangeSlabSheetingProfile | ChangeSlabSheetingHeightM | ChangeSlabSheetingRibWidthM | ChangeSlabSheetingThicknessM | ChangeSlabSheetingRibsParallel | ChangeSlabActionKind | ChangeSlabActionCategory | ChangeSlabActionStage | ChangeSlabActionPointForceN | ChangeSlabActionDeltaSigmaPa | ChangeSlabActionDeltaTauPa | ChangeBeamAdjacentSpanM | ChangeBeamPatchBearingLengthM | ChangeBeamBridgeLanes | ChangeColumnIntroducedForceN | ChangeBeamCrackedLengthFraction | ChangeColumnSectionHeightM | ChangeColumnSectionWidthM | ChangeColumnSectionTwM | ChangeColumnSectionTfM | ChangeColumnRebarCoverM | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | ChangeBeamStudCrossSpacingM | ChangeBeamStudEdgeDistanceM | ChangeBeamTransverseAsTop | ChangeBeamEndPlateWidthM | ChangeBeamEndPlateHeightM | ChangeBeamEndZoneLengthM | InsertBeamAction | RemoveBeamAction | InsertColumnAction | RemoveColumnAction | InsertSlabAction | RemoveSlabAction | ChangeBeamActionXM | ChangeSlabActionXM | ChangeSlabActionYM | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeStudDiameterM | ChangeStudFUPa | ChangeStudHeightM | ChangeStudXM | InsertStud | RemoveStud
 type ChangeAnnex {
   newAnnex: AnnexChoice!
 }
@@ -509,4 +509,27 @@ type ChangeCaseLabelDe {
 type ChangeCaseEntryId {
   caseId: String!
   newValue: String!
+}
+type ChangeStudDiameterM {
+  id: String!
+  newDiameterM: Float!
+}
+type ChangeStudFUPa {
+  id: String!
+  newFUPa: Float!
+}
+type ChangeStudHeightM {
+  id: String!
+  newHeightM: Float!
+}
+type ChangeStudXM {
+  id: String!
+  newXM: Float!
+}
+type InsertStud {
+  index: Int!
+  item: Stud!
+}
+type RemoveStud {
+  id: String!
 }

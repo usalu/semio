@@ -1,4 +1,8 @@
 //! 🔄️ Mounted typed command full operations and their job.
+pub use semio_framework_plugin_result_page::{result_page_wire,pending_result_page};
+#[path="📃️mounted/🦀️.rs"]
+mod mounted_page;
+pub use mounted_page::{MountedPagePublication,MountedUiCopy};
 use semio_framework_plugin_operation::{ToolCancellationLeaseRetirement, original_lease_cursor_admit, original_lease_cursor_release};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 pub(crate) use semio_framework_actor::typed_operation_diagnostics as diagnostic_publication;
@@ -109,6 +113,7 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub owned_child_result_pending: bool,
     pub captured_child_content: Option<std::sync::Arc<ChildContentView>>,
     pub captured_child_content_generation: u64,
+    pub page_publication:MountedPagePublication,
     pub result_page: Option<TypedOperationResultPage>,
     pub diagnostics: Option<diagnostic_publication::OperationDiagnosticPublication>,
     pub result_page_presented: bool,
@@ -155,7 +160,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  pub fn original_frame_release_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Box<Self>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
  /// 📐️ Fresh boxed placement writes the fixed header once and moves original field headers.
  pub fn original_emission_birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+2*size_of::<semio_framework_plugin_job::original_emission::OriginalEmissionInput<A>>()+size_of::<semio_framework_job::OriginalCallerSourceLoan>()+size_of::<semio_framework_job::OriginalSourceBinding>()+2*size_of::<Box<Self>>()+size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
- pub fn lease_retirement_ready(&self)->bool{self.stage==MountedTypedCommandFullOperationStage::Retiring&&self.session.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.session_rejected.is_none()&&!self.worker_semantic_pending&&!self.worker_outcome_pending&&self.worker_fault_capture.is_none()&&self.publication.is_none()&&self.publication_retirement.is_none()&&self.pending_artifact_publication.is_none()&&self.pending_stream_abort.is_none()&&!self.pending_publication_outcome.pending()&&self.pending_child_publication.is_none()&&self.owned_child_group.is_none()&&self.captured_child_content.is_none()&&self.result_page.is_none()&&self.pending_window_config_receipt.is_none()&&self.raw_input.is_none()&&self.output_chunks.is_none()&&self.output_retirement.is_none()&&self.reserved_producer.is_none()&&self.completion.is_none()&&self.completion_retirement.is_none()&&self.meta.view_state.is_none()&&self.original_emission_caller.is_none()&&self.window_config_authority.is_none()&&self.window_transient_authority.is_none()&&self.actor_capture.is_none()&&self.actor_capture_pending.terminal_is_empty()&&self.verb.capacity()==0&&!self.meta.actor.has_owner()&&self.retained_close_fault.is_none()&&(self.cancellation_lease.is_some()||self.cancellation_retirement.is_some())}
+ pub fn lease_retirement_ready(&self)->bool{self.stage==MountedTypedCommandFullOperationStage::Retiring&&self.session.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.session_rejected.is_none()&&!self.worker_semantic_pending&&!self.worker_outcome_pending&&self.worker_fault_capture.is_none()&&self.publication.is_none()&&self.publication_retirement.is_none()&&self.pending_artifact_publication.is_none()&&self.pending_stream_abort.is_none()&&!self.pending_publication_outcome.pending()&&self.pending_child_publication.is_none()&&self.owned_child_group.is_none()&&self.captured_child_content.is_none()&&self.result_page.is_none()&&self.page_publication.terminal_is_empty()&&self.pending_window_config_receipt.is_none()&&self.raw_input.is_none()&&self.output_chunks.is_none()&&self.output_retirement.is_none()&&self.reserved_producer.is_none()&&self.completion.is_none()&&self.completion_retirement.is_none()&&self.meta.view_state.is_none()&&self.original_emission_caller.is_none()&&self.window_config_authority.is_none()&&self.window_transient_authority.is_none()&&self.actor_capture.is_none()&&self.actor_capture_pending.terminal_is_empty()&&self.verb.capacity()==0&&!self.meta.actor.has_owner()&&self.retained_close_fault.is_none()&&(self.cancellation_lease.is_some()||self.cancellation_retirement.is_some())}
  pub fn lease_retirement_demands(&self,canonical:&ToolCancellationHandle,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.cancellation_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}else{owner.retirement_demands(canonical,body)};}Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}
  pub fn lease_retirement_step(&mut self,canonical:&ToolCancellationHandle,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let demand=self.lease_retirement_demands(canonical,grant.maximum_copy_bytes)?;if !plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -347,7 +352,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     }
 
     pub fn queue_page(&mut self, page: TypedOperationResultPage) -> Result<(), Fault> {
-        if self.stage != MountedTypedCommandFullOperationStage::Publishing || self.result_page.is_some() {
+        if self.stage != MountedTypedCommandFullOperationStage::Publishing || self.result_page.is_some() || self.page_publication_pending() {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.result-page-state"), "typed operation can retain exactly one unacknowledged result page"));
         }
         self.result_page = Some(page);
@@ -356,41 +361,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         Ok(())
     }
 
-    pub fn reject_cancelled_publication(&mut self) -> Result<bool, Fault> {
-        if self.stage != MountedTypedCommandFullOperationStage::Publishing {
-            return Ok(false);
-        }
-        let lease = self.cancellation_lease.as_ref().ok_or_else(|| plugin_sdk_fault("typed-operation publication lacks its exact cancellation lease"))?;
-        if !lease.publication_is_cancelled() {
-            return Ok(false);
-        }
-        if self.publication.is_none() {
-            if let Some(completion) = self.completion.as_ref() {
-                self.publication = completion.take()?;
-            }
-        }
-        if let Some(pending) = self.pending_artifact_publication.as_mut() {
-            pending.begin_close();
-        }
-        if let Some(pending) = self.pending_child_publication.as_mut() {
-            pending.begin_close();
-        }
-        self.ui_pending = false;
-        let page = match self.terminal_fault.as_ref() {
-            Some(fault) => {
-                let mut framed = [0; TYPED_OPERATION_FAULT_PAGE_BYTES];
-                let len = fault.framed_page_bytes(&mut framed);
-                TypedOperationResultPage::try_new(self.next_token(), TypedOperationResultLane::Fault, &framed[..len])?
-            }
-            None => {
-                let lane = semio_framework_plugin_decl_app::cancellation_result_lane(self.user_cancel_requested, false);
-                let detail: &[u8] = if lane == TypedOperationResultLane::Terminal { b"" } else { b"typed-operation cancelled before its next publication unit" };
-                TypedOperationResultPage::try_new(self.next_token(), lane, detail)?
-            }
-        };
-        self.queue_page(page)?;
-        Ok(true)
-    }
+    pub fn reject_cancelled_publication(&mut self)->Result<bool,Fault>{if self.stage!=MountedTypedCommandFullOperationStage::Publishing||self.page_publication_pending(){return Ok(false)}let lease=self.cancellation_lease.as_ref().ok_or_else(||plugin_sdk_fault("typed-operation publication lacks its exact cancellation lease"))?;Ok(lease.publication_is_cancelled())}
 
     pub fn result_page_presentation_demands(&self)->Result<RetirementDemand,ValueError>{self.result_page.as_ref().map_or(Ok(Default::default()),|page|{let mut d=page.presentation_demand()?;d.copy_bytes+=size_of::<bool>();Ok(d)})}
     pub fn take_result_page(&mut self,grant:RetainedCloneGrant) -> Result<(Option<TypedOperationResultPage>,RetainedCloneProgress),Fault> {
@@ -404,16 +375,22 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         Ok((result,progress))
     }
 
-    /// 🧪️ Supplies each production presentation turn with the fixture issuer's unchanged grant.
-    #[cfg(any(test, feature = "artifact-app-testing"))]
-    pub(crate) fn take_fixture_result_page(&mut self,grant:RetainedCloneGrant)->Option<TypedOperationResultPage>{
-        loop{let((page,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.take_result_page(grant).expect("original fixture page presentation"));assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if page.is_some()||progress==RetainedCloneProgress::default(){return page;}}
+    /// 📬️ Retires the acknowledged producer page under its unchanged original caller before another publication.
+    pub fn advance_acknowledged_result_page(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        if !self.source_identity.matches(cx) {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "result page retirement requires its original source caller").into());
+        }
+        self.validate_original_producer_source(cx)?;
+        let grant = cx.retained_grant();
+        let demand = self.result_page_retirement_demands(grant.maximum_copy_bytes)?;
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |_, grant| {
+            let progress = self.result_page_retirement_step(grant)?;
+            let complete = !self.result_page_retirement_pending();
+            Ok((if complete { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) }, complete))
+        }).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
-    /// 🧪️ Pays the original page retirement through the production close port after exact ACK.
-    #[cfg(any(test, feature = "artifact-app-testing"))]
-    pub(crate) fn close_fixture_original_page(&mut self,grant:RetainedCloneGrant){for _ in 0..100000{if !self.result_page_retirement_pending(){return;}let(p,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.result_page_retirement_step(grant).expect("original fixture producer page close"));assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert_ne!(p,Default::default(),"original fixture close grant funds the exact producer page");}panic!("original fixture producer page did not close");}
-    /// ♻️ Exact ACK retains the original page until its funded physical closure.
-    pub(crate) fn result_page_retirement_pending(&self)->bool{self.result_page.is_some()&&self.stage!=MountedTypedCommandFullOperationStage::AwaitingAck}
+
+    pub fn result_page_retirement_pending(&self)->bool{self.result_page.is_some()&&self.stage!=MountedTypedCommandFullOperationStage::AwaitingAck}
     pub(crate) fn result_page_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.result_page.as_ref().map_or(Ok(Default::default()),|page|{let mut d=page.next_close_demand(body.saturating_sub(size_of::<Option<TypedOperationResultPage>>()+size_of::<bool>()))?;d.copy_bytes+=size_of::<Option<TypedOperationResultPage>>()+size_of::<bool>();Ok(d)})}
     pub(crate) fn result_page_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,Fault>{
         if !self.result_page_retirement_pending(){return Ok(Default::default());}
@@ -559,6 +536,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         if self.result_page_retirement_pending(){return self.result_page_retirement_demands(body);}
+        if !self.page_publication.terminal_is_empty(){return self.page_publication.close_demands(body);}
         if self.close_fault_pending() { return self.close_fault_demands(body); }
         if self.worker_retirement_pending() { return self.worker_retirement_demands(body); }
         if let Some(owner)=self.diagnostics.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<diagnostic_publication::OperationDiagnosticPublication>>(),..item})}else{owner.next_demand(body)}}
@@ -587,6 +565,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         let item = RetainedCloneProgress { copied_items: 1, ..empty };
         if self.stage != MountedTypedCommandFullOperationStage::Retiring { return Ok(PluginLifecycleStep::Blocked { reason: "typed operation is not admitted for retirement" }); }
         if self.result_page_retirement_pending(){return self.result_page_retirement_step(grant).map(PluginLifecycleStep::Progress).map_err(Into::into);}
+        if !self.page_publication.terminal_is_empty(){let turn=self.page_publication.close_step(grant);cx.consume_fuel(turn.work);return turn.result.map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
         if self.result_page.is_some() { return Ok(PluginLifecycleStep::Blocked { reason: "typed operation retains an unacknowledged result page" }); }
         if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(empty)); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
@@ -645,8 +624,6 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         if self.stage == MountedTypedCommandFullOperationStage::Retiring { return self.retirement_step(cx); }
         self.user_cancel_requested = true;
         if let Some(owner)=self.diagnostics.as_mut(){owner.begin_close();}
-        self.result_page = None;
-        self.result_page_presented = false;
         self.ui_pending = false;
         self.progress_pending = false;
         self.stage = MountedTypedCommandFullOperationStage::Retiring;
@@ -673,7 +650,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             && self.pending_child_publication.is_none()
             && self.owned_child_group.is_none()
             && self.captured_child_content.is_none()
-            && self.result_page.is_none()
+            && self.result_page.is_none()&&self.page_publication.terminal_is_empty()
             && self.diagnostics.is_none()
             && self.raw_input.is_none()
             && self.output_chunks.is_none()

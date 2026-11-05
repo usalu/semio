@@ -3862,7 +3862,8 @@
       "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/resize-geometry/schema.json": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-geometry/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutations.json": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
-      "https://semio.dev/norm/oracle-case.schema.json": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness/🧬️schema/🔣️.json"
+      "https://semio.dev/norm/oracle-case.schema.json": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+      "semio.norm.mechanics.ltb-sample-pairs/v1": "✏️s/🔌️plugins/📕️norm/🧮️mechanics/🧬️schema/🏗️ltb-sample-pairs/🔣️.json"
     },
     "✏️s/🔌️plugins/📖️playbook": {
       "https://json.schemas.assets.semio-tech.com/app/playbook/playbook/config/mutation/replace-config/schema.json": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace/🧬️schema/🔣️.json",
@@ -4446,7 +4447,8 @@
       "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/transform-image/schema.json": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️transform-image/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/write-pixel-region/schema.json": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲write-pixel-region/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutations.json": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json",
-      "https://json.schemas.assets.semio-tech.com/s/raster/raster/snapshot.json": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json"
+      "https://json.schemas.assets.semio-tech.com/s/raster/raster/snapshot.json": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/s/raster/select-pixels.json": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️select-pixels/🧬️schema/🔣️.json"
     },
     "✏️s/🔌️plugins/🗄️stdio": {
       "https://json.schemas.assets.semio-tech.com/app/stdio/avi/config/schema.json": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/✏️editor/🎚️config/🧬️schema/🔣️.json",

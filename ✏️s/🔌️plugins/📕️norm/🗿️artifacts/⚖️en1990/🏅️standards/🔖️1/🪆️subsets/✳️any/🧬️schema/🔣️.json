@@ -833,7 +833,9 @@
         "secondActionSd": {
           "type": "number"
         },
-        "memberId": {"type": "string"}
+        "memberId": {
+          "type": "string"
+        }
       }
     },
     "TestSeries": {
@@ -883,9 +885,16 @@
         "required": {
           "type": "number"
         },
-        "pairs": {"type": "string"},
-        "theoryVariation": {"type": "number", "format": "double"},
-        "theoryMean": {"type": "number"}
+        "pairs": {
+          "type": "string"
+        },
+        "theoryVariation": {
+          "type": "number",
+          "format": "double"
+        },
+        "theoryMean": {
+          "type": "number"
+        }
       }
     },
     "Placement": {

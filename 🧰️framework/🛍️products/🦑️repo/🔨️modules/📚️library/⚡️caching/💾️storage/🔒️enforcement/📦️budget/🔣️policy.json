@@ -33,7 +33,7 @@
   },
   "partitions": {
     "rust": {
-      "directory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed",
+      "directory": ".cache/b/r",
       "capacityBytes": 103080263680,
       "maximumLogicalBytes": 103079215104
     },

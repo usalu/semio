@@ -125,8 +125,10 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-placement-z | 📍️change-placement-z | ✅apply  |
       | change-placement-yaw | 📍️change-placement-yaw | ✅apply  |
       | insert-placement | ➕️insert-placement | ✅apply  |
+      | insert-placement-dupe | ➕️insert-placement | ⛔dupe |
       | remove-placement | ➖️remove-placement | ✅apply  |
       | insert-deck | ➕️insert-deck | ✅apply  |
+      | insert-deck-dupe | ➕️insert-deck | ⛔dupe |
       | remove-deck | ➖️remove-deck | ✅apply  |
       | change-deck-lamination-product | 🌉️change-deck-lamination-product | ✅apply  |
       | change-deck-bar-product | 🌉️change-deck-bar-product | ✅apply  |
@@ -147,6 +149,7 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-deck-wheel-load | 🌉️change-deck-wheel-load | ✅apply  |
       | change-deck-wheel-contact | 🌉️change-deck-wheel-contact | ✅apply  |
       | insert-diaphragm | ➕️insert-diaphragm | ✅apply  |
+      | insert-diaphragm-dupe | ➕️insert-diaphragm | ⛔dupe |
       | remove-diaphragm | ➖️remove-diaphragm | ✅apply  |
       | change-diaphragm-kind | 🛡️change-diaphragm-kind | ✅apply  |
       | change-diaphragm-method | 🛡️change-diaphragm-method | ✅apply  |
@@ -161,6 +164,7 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-diaphragm-length | 🛡️change-diaphragm-length | ✅apply  |
       | change-diaphragm-shear-resistance | 🛡️change-diaphragm-shear-resistance | ✅apply  |
       | insert-truss | ➕️insert-truss | ✅apply  |
+      | insert-truss-dupe | ➕️insert-truss | ⛔dupe |
       | remove-truss | ➖️remove-truss | ✅apply  |
       | change-truss-kind | 🔺️change-truss-kind | ✅apply  |
       | change-truss-product | 🔺️change-truss-product | ✅apply  |
@@ -175,6 +179,7 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-truss-restraint-length | 🔺️change-truss-restraint-length | ✅apply  |
       | change-truss-bracing-capacity | 🔺️change-truss-bracing-capacity | ✅apply  |
       | insert-bracing | ➕️insert-bracing | ✅apply  |
+      | insert-bracing-dupe | ➕️insert-bracing | ⛔dupe |
       | remove-bracing | ➖️remove-bracing | ✅apply  |
       | change-bracing-kind | ✖️change-bracing-kind | ✅apply  |
       | change-bracing-member | ✖️change-bracing-member | ✅apply  |
@@ -187,15 +192,18 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-bracing-resistance | ✖️change-bracing-resistance | ✅apply  |
       | change-bracing-stiffness | ✖️change-bracing-stiffness | ✅apply  |
       | insert-panel-layer | ➕️insert-panel-layer | ✅apply  |
+      | insert-panel-layer-dupe | ➕️insert-panel-layer | ⛔dupe |
       | remove-panel-layer | ➖️remove-panel-layer | ✅apply  |
       | change-panel-layer-thickness | 🧱️change-panel-layer-thickness | ✅apply  |
       | change-panel-layer-orientation | 🧱️change-panel-layer-orientation | ✅apply  |
       | change-panel-layer-grade | 🧱️change-panel-layer-grade | ✅apply  |
       | insert-fastener-position | ➕️insert-fastener-position | ✅apply  |
+      | insert-fastener-position-dupe | ➕️insert-fastener-position | ⛔dupe |
       | remove-fastener-position | ➖️remove-fastener-position | ✅apply  |
       | change-fastener-position-x | 📍️change-fastener-position-x | ✅apply  |
       | change-fastener-position-y | 📍️change-fastener-position-y | ✅apply  |
       | insert-taper | ➕️insert-taper | ✅apply  |
+      | insert-taper-dupe | ➕️insert-taper | ⛔dupe |
       | remove-taper | ➖️remove-taper | ✅apply  |
       | change-taper-member | 📐️change-taper-member | ✅apply  |
       | change-taper-kind | 📐️change-taper-kind | ✅apply  |
@@ -208,6 +216,7 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-taper-rods | 📐️change-taper-rods | ✅apply  |
       | change-taper-rod-resistance | 📐️change-taper-rod-resistance | ✅apply  |
       | insert-cutout | ➕️insert-cutout | ✅apply  |
+      | insert-cutout-dupe | ➕️insert-cutout | ⛔dupe |
       | remove-cutout | ➖️remove-cutout | ✅apply  |
       | change-cutout-member | 🕳️change-cutout-member | ✅apply  |
       | change-cutout-kind | 🕳️change-cutout-kind | ✅apply  |
@@ -220,6 +229,7 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-cutout-rods | 🕳️change-cutout-rods | ✅apply  |
       | change-cutout-rod-resistance | 🕳️change-cutout-rod-resistance | ✅apply  |
       | insert-fastener | ➕️insert-fastener | ✅apply  |
+      | insert-fastener-dupe | ➕️insert-fastener | ⛔dupe |
       | remove-fastener | ➖️remove-fastener | ✅apply  |
       | change-fastener-connection | 🔩️change-fastener-connection | ✅apply  |
       | change-fastener-member | 🔩️change-fastener-member | ✅apply  |
@@ -233,6 +243,7 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-fastener-offset-y | 🔩️change-fastener-offset-y | ✅apply  |
       | change-fastener-load-angle | 🔩️change-fastener-load-angle | ✅apply  |
       | insert-panel | ➕️insert-panel | ✅apply  |
+      | insert-panel-dupe | ➕️insert-panel | ⛔dupe |
       | remove-panel | ➖️remove-panel | ✅apply  |
       | change-panel-strength-class | 🧱️change-panel-strength-class | ✅apply  |
       | change-panel-span | 🧱️change-panel-span | ✅apply  |
@@ -240,6 +251,7 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-panel-load | 🧱️change-panel-load | ✅apply  |
       | change-panel-fire-duration | 🧱️change-panel-fire-duration | ✅apply  |
       | insert-floor | ➕️insert-floor | ✅apply  |
+      | insert-floor-dupe | ➕️insert-floor | ⛔dupe |
       | remove-floor | ➖️remove-floor | ✅apply  |
       | change-floor-member | 🏠️change-floor-member | ✅apply  |
       | change-floor-span | 🏠️change-floor-span | ✅apply  |
@@ -477,6 +489,6 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
   @mode-round-trip
   Scenario: Re-emit the real committed EN 1995 document from the parsed carrier
     Given the real committed text artifact asset://🏠️glulam-floor-beam/🏠️glulam-floor-beam/🗣️.dsl.semio
-    And its committed binary twin asset://🏠️glulam-floor-beam/🎒️.pack.semio
+    And its committed binary twin asset://🏠️glulam-floor-beam/🏠️glulam-floor-beam/🎒️.pack.semio
     When each implementation parses the artifact and prints it back to its canonical carrier bytes
     Then both reproduce the committed file byte for byte and agree on the parsed fields and the digest of what they emitted

@@ -1,6 +1,7 @@
 import {noticeLanguagesV1} from "../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
-import{readOwnedCommandAuxiliaryInputV1,publishOwnedAuxiliaryInputV1,type OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
-export type{OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
+import{readOwnedCommandAuxiliaryInputV1,publishOwnedAuxiliaryInputV1,OwnedAuxiliaryPublicationFailureV1,type OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
+export {OwnedAuxiliaryPublicationFailureV1}from"./📥️auxiliary/🟦️.ts";
+export type{OwnedCommandAuxiliaryInputV1,OwnedAuxiliaryPublicationContextV1,OwnedAuxiliaryPublicationPhaseV1}from"./📥️auxiliary/🟦️.ts";
 import {captureOwnedCommandBodyV1,writeOwnedCommandOutputV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
 import {resultStreamV1} from "../🏗️build/📤️output/🟦️.ts";
 import {bunTestCeilingV1} from "../🧪️testing/🟨️bun/🧯️ceiling/🟦️.ts";
@@ -160,7 +161,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   const stopTimeout = startOwnedCommandTimeoutV1(timeoutMs,() => terminate(`timeout ${timeoutMs}ms`));
   let auxiliaryFailed=false,auxiliaryFailure:unknown;
   try {
-    const auxiliaryPublication=auxiliary?publishOwnedAuxiliaryInputV1(child.stdio[3] as import("node:stream").Writable|null,auxiliary.text,error=>{if(!auxiliaryFailed){auxiliaryFailed=true;auxiliaryFailure=error;}terminate("auxiliary input publication refused");}):Promise.resolve();
+    const auxiliaryPublication=auxiliary?publishOwnedAuxiliaryInputV1(child.stdio[3] as import("node:stream").Writable|null,auxiliary.text,(error,phase)=>{if(!auxiliaryFailed){auxiliaryFailed=true;auxiliaryFailure=new OwnedAuxiliaryPublicationFailureV1(error,phase);}terminate("auxiliary input publication refused");}):Promise.resolve();
     const inputPublication = options.input === undefined || !child.stdin ? Promise.resolve() : new Promise<void>(accept => {
       child.stdin!.once("finish", accept); child.stdin!.once("close", accept);
       child.stdin!.once("error", () => { if (!closed && !stopped) terminate("input publication refused"); accept(); });

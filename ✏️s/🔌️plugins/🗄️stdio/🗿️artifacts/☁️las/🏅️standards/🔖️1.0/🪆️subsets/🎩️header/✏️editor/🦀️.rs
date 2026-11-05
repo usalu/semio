@@ -187,11 +187,11 @@ impl ArtifactEditor for LasAnyEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::engine::encode_las(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+        semio_s_artifact_stdio_las_schema::schema::inferences::encode_las(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        crate::engine::decode_las(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+        semio_s_artifact_stdio_las_schema::schema::inferences::decode_las(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
     fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {

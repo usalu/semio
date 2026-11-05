@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️change-beam-cracked-length-fraction",
   "semanticKind": "change-beam-cracked-length-fraction",
-  "displayName": "ChangeBeamCrackedLengthFraction",
+  "displayName": "Change cracked length fraction of each span at internal supports, cl. 5.4.2.3 (0 = uncracked analysis)",
   "emoji": "〰️",
   "aggregateVariant": "ChangeBeamCrackedLengthFraction",
   "payloadSchema": "🧬️schema/🔣️.json",

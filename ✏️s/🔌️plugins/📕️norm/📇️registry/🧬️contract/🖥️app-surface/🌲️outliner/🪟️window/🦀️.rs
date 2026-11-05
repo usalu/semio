@@ -31,15 +31,15 @@ pub fn render_outliner_document(tree: &DslValue, entities: &[OutlinedCollection]
             }
         }
     }
-    outline(tree, listed, context)
+    outline(tree, listed, meta_fn, context)
 }
 
-fn outline(tree: &DslValue, collections: impl IntoIterator<Item = (String, String)>, context: &OutlinerContext<'_, '_>) -> UiAssemblyResult<BuiltNode> {
+fn outline(tree: &DslValue, collections: impl IntoIterator<Item = (String, String)>, meta_fn: Option<NormFieldMetaFn>, context: &OutlinerContext<'_, '_>) -> UiAssemblyResult<BuiltNode> {
     let locale = context.locale;
     let mut groups = Vec::new();
     for (path, label) in collections {
         let Some(DslValue::Array(items)) = tree.get(&path) else { continue };
-        groups.push(render_collection(context, &path, &label, items, true, |row| {
+        groups.push(render_collection(context, &path, &label, items, true, meta_fn, |row| {
             let action = match worst_check_index(context.report, row) {
                 Some(index) => Some(norm_action(context.controller_id, "setSelectedCheckIndex", Some(action_args_map(vec![("index", UiValue::Number(index as f64))])?))?),
                 None => None,

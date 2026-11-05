@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-site-cu-kpa",
   "semanticKind": "change-site-cu-kpa",
-  "displayName": "Change Time-averaged undrained shear strength c_u in kPa of the top 30 m (0 = not given)",
+  "displayName": "Change time averaged undrained shear strength of the top 30 metres in kilopascals (0 = not given)",
   "emoji": "✏️",
   "aggregateVariant": "ChangeSiteCUKpa",
   "payloadSchema": "🧬️schema/🔣️.json",

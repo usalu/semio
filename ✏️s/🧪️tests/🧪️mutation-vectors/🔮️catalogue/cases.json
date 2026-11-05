@@ -1,0 +1,122 @@
+{
+  "cases": [
+    {
+      "name": "registered-vector",
+      "kinds": [
+        "change-a"
+      ],
+      "manifest": {
+        "mutationCatalogs": [
+          {
+            "vectors": [
+              {
+                "mutationId": "change-a"
+              }
+            ]
+          }
+        ]
+      },
+      "missing": []
+    },
+    {
+      "name": "narrative-is-not-a-vector",
+      "kinds": [
+        "change-a"
+      ],
+      "manifest": {
+        "rationale": "change-a",
+        "mutationCatalogs": []
+      },
+      "missing": [
+        "change-a"
+      ]
+    },
+    {
+      "name": "multiple-catalogues-preserve-all-registered-kinds",
+      "kinds": [
+        "change-a",
+        "change-b"
+      ],
+      "manifest": {
+        "mutationCatalogs": [
+          {
+            "vectors": [
+              {
+                "mutationId": "change-a"
+              }
+            ]
+          },
+          {
+            "vectors": [
+              {
+                "mutationId": "change-b"
+              }
+            ]
+          }
+        ]
+      },
+      "missing": []
+    },
+    {
+      "name": "missing-registration",
+      "kinds": [
+        "change-b",
+        "change-a"
+      ],
+      "manifest": {
+        "mutationCatalogs": [
+          {
+            "vectors": [
+              {
+                "mutationId": "change-a"
+              }
+            ]
+          }
+        ]
+      },
+      "missing": [
+        "change-b"
+      ]
+    },
+    {
+      "name": "missing-catalogues",
+      "kinds": [
+        "change-a"
+      ],
+      "manifest": {},
+      "error": "mutation-catalogue.catalogs"
+    },
+    {
+      "name": "wrong-vectors",
+      "kinds": [
+        "change-a"
+      ],
+      "manifest": {
+        "mutationCatalogs": [
+          {
+            "vectors": "change-a"
+          }
+        ]
+      },
+      "error": "mutation-catalogue.vectors"
+    },
+    {
+      "name": "wrong-vector-member",
+      "kinds": [
+        "change-a"
+      ],
+      "manifest": {
+        "mutationCatalogs": [
+          {
+            "vectors": [
+              {
+                "rationale": "change-a"
+              }
+            ]
+          }
+        ]
+      },
+      "error": "mutation-catalogue.kind"
+    }
+  ]
+}

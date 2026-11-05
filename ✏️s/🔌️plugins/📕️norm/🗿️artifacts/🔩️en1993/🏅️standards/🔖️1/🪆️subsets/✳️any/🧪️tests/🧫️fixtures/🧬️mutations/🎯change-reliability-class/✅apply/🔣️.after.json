@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC3",
   "materials": [
     {
       "id": "mat-s355",
@@ -240,6 +239,7 @@
   "placements": [],
   "jointPlates": [],
   "foundationBlocks": [],
+  "reliabilityClass": "RC3",
   "frameActions": [],
   "frameMemberBases": [],
   "fatigueStresses": [],

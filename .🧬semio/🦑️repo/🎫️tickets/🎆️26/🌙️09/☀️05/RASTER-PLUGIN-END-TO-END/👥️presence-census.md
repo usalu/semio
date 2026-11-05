@@ -1,0 +1,7 @@
+# Presence Ownership Bound Census
+
+The app, editor and viewer Presence associated types now require RetireOwned, matching the original generic ephemeral declaration's cancellation needs. A source census covered the plugin framework and artifact plugins. It selected twenty-eight nontrivial or alias type names from their associated-type declarations, then found twenty-four concrete definitions outside schema-only counterpart files. Every selected concrete definition has a derive or authored retirement macro; NotePresence and FlowPresence use artifact_retire_struct. No additional runtime definition needed modification.
+
+The script reports 289 schema counterpart definitions separately. They are not treated as additional mounted associated-type implementations. Puzzle presence names, for example, explicitly reexport the framework NoPresence. This is a source census, not a compilation proof or complete Rust name-resolution analysis. Initial overescaped-regex samples that returned no concrete definitions were discarded; the retained script requires a concrete NoPresence sample and recognizes explicit retirement macros.
+
+Current corrected census: twenty-four concrete definitions, zero unproven, two authored macro names. The neutral ordered-window oracle independently passed twenty checks with SQLite ordered uniqueness/rollback and Ajv schema validation; native window and ephemeral lifecycle laws remain unexecuted.

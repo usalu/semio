@@ -28,7 +28,7 @@ async fn block_list_gestures_reach_mounted_document_commands() {
         let args = context::action_args(&case["args"]);
         let command = FormsPlayApp::command_from_action(action, Some((args).clone()), None).expect("scene gesture decodes");
         assert_eq!(command.command_id(), action, "scene and retained command must share one identity");
-        let invocation = semio_framework::manifest::ActionInvocation {
+        let invocation = semio_framework::manifest::ActionInvocation { expected_document_revision:None,
             address: semio_framework::manifest::ActionAddress {
                 plugin_id: "forms".into(),
                 app_id: definition.id.clone(),

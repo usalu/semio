@@ -272,7 +272,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
                 export_document::emit(payload, &doc, meshes.as_deref())?
             }
             Generation3dCommand::ImportDocument(payload) => {
-                let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+                let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
                 let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
                 self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
                     let mut emit = import_document::emit(payload, &doc, &cfg)?;

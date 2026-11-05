@@ -264,5 +264,17 @@
     ],
     "moved": [],
     "modified": []
+  },
+  "railLoadGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "railDerailments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

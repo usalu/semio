@@ -1,7 +1,7 @@
 //! 🧪️ Interaction topology tests: a hand-built document, scene and report, and a scene far beyond the 512-byte action argument the retired touch-menu payload could carry.
 
 use super::*;
-use semio_s_plugin_norm_compliance::{LocalizedCopy, SubjectRef};
+use semio_s_plugin_norm_compliance::{CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, SubjectRef};
 use semio_s_plugin_norm_structural_scene::{Aabb, Appearance, EntityKind, EntityRef, Geometry, LocalizedCopy as Text, MaterialRole, PickPolicy, SceneEntity, SceneRevision, Vec3, SCENE_SCHEMA_ID};
 
 fn entity(kind: EntityKind, id: &str) -> SceneEntity {

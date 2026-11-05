@@ -22,7 +22,7 @@ fn native_body_split_caps_match_shared_schema_and_typed_page_classification(){
     struct Source{status:StagedFormStatus,page:StagedFormPageBinding,content:usize,pages:usize,fake:bool}
     impl StagedBodySource for Source{fn identity(&self)->usize{self as*const _ as usize}fn title(&self)->&str{"Page"}fn status(&self)->&StagedFormStatus{&self.status}fn controls(&self)->usize{self.content+self.pages}fn control(&self,index:usize)->Result<StagedBodyControl<'_>,semio_framework_value::ValueError>{Ok(StagedBodyControl{scalar:StagedScalarControl{owner:self.identity(),address:index as u64,controller:"ifc",label:"Field",description:None,disabled:false,kind:if index>=self.content||self.fake{StagedScalarKind::Button{page:true}}else{StagedScalarKind::ReadOnly{value:"x"}}},required:false,error:None,binding:if index>=self.content{Some(StagedBodyBinding::Page(&self.page))}else{None}})}}
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/body-composition-cases.json")).unwrap();
-    for case in fixture["cases"].as_array().unwrap(){let token=StagedFormToken{action:"applyIfcTemplate".into(),generation:"1".into(),revision:"r1".into(),window:"w1".into()};let source=Source{status:StagedFormStatus{token:token.clone(),ready:false,diagnostics:Vec::new(),diagnostic_offset:"0".into(),diagnostic_total:"0".into()},page:StagedFormPageBinding{token,page:StagedFormPage{field_offset:"16".into(),diagnostic_offset:"0".into(),choice:None}},content:case["content"].as_u64().unwrap()as usize,pages:case["pages"].as_u64().unwrap()as usize,fake:false};assert_eq!(staged_body_composition(&source).is_ok(),case["allowed"].as_bool().unwrap());let forged=Source{fake:true,..source};assert_eq!(staged_body_composition(&forged).is_ok(),case["allowed"].as_bool().unwrap());}
+    for case in fixture["cases"].as_array().unwrap(){let token=StagedFormToken{action:"applyIfcTemplate".into(),generation:"1".into(),revision:"r1".into(),window:"w1".into()};let source=Source{status:StagedFormStatus{token:token.clone(),ready:false,commit_args:None,diagnostics:Vec::new(),diagnostic_offset:"0".into(),diagnostic_total:"0".into()},page:StagedFormPageBinding{token,page:StagedFormPage{field_offset:"16".into(),diagnostic_offset:"0".into(),choice:None}},content:case["content"].as_u64().unwrap()as usize,pages:case["pages"].as_u64().unwrap()as usize,fake:false};assert_eq!(staged_body_composition(&source).is_ok(),case["allowed"].as_bool().unwrap());let forged=Source{fake:true,..source};assert_eq!(staged_body_composition(&forged).is_ok(),case["allowed"].as_bool().unwrap());}
 }
 #[test]
 fn native_typed_staged_bindings_match_closed_neutral_wire_without_intermediate_clones(){
@@ -64,7 +64,7 @@ fn native_staged_body_actual_original_receiving_keeps_resident_source_and_paid_c
     for cut in [0,1,2,8,32,64,128,256]{
         let token=StagedFormToken{action:"applyIfcTemplate".into(),generation:"7".into(),revision:"a".repeat(64),window:"real-window".into()};
         let binding=serde_json::json!({"token":token,"layout":"preserve","edits":[{"source":"text","path":["entries","0","value"]}]});
-        let source=Source{status:StagedFormStatus{token,ready:false,diagnostics:Vec::new(),diagnostic_offset:"0".into(),diagnostic_total:"0".into()},binding:serde_json::from_value(binding.clone()).unwrap()};
+        let source=Source{status:StagedFormStatus{token,ready:false,commit_args:None,diagnostics:Vec::new(),diagnostic_offset:"0".into(),diagnostic_total:"0".into()},binding:serde_json::from_value(binding.clone()).unwrap()};
         let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();let recipient=cx.original_recipient_identity();let mut cursor=StagedBodyCursor::default();let mut output=None;
         for _ in 0..cut{
             let grant=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};let before=cx.retained_progress();
@@ -90,7 +90,7 @@ fn native_staged_status_payload_carries_only_exact_bounded_source_metadata(){
     let mut warm=UiMapBuilder::try_new().unwrap();warm.try_insert("warm".into(),UiValue::Null).unwrap();close(UiValue::Map(warm.finish()));
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:32768,maximum_depth:64};
     for row in fixture["statuses"].as_array().unwrap(){
-        let status=StagedFormStatus{token:StagedFormToken{action:"applyIfcTemplate".into(),generation:"18446744073709551615".into(),revision:"0123456789abcdef".repeat(4),window:"real-window".into()},ready:row["ready"].as_bool().unwrap(),diagnostics:Vec::new(),diagnostic_offset:"0".into(),diagnostic_total:"0".into()};
+        let status=StagedFormStatus{token:StagedFormToken{action:"applyIfcTemplate".into(),generation:"18446744073709551615".into(),revision:"0123456789abcdef".repeat(4),window:"real-window".into()},ready:row["ready"].as_bool().unwrap(),commit_args:row["ready"].as_bool().unwrap().then(||semio_framework_value::DslValue::Object(Vec::new())),diagnostics:Vec::new(),diagnostic_offset:"0".into(),diagnostic_total:"0".into()};
         let source=StagedStatusPayload{status:&status};let mut cursor=StagedPayloadCursor::default();let mut output=None;for _ in 0..256{if matches!(cursor.step(&source,&mut output,grant).unwrap(),RetainedCloneStep::Complete(_)){break}}
         let output=output.unwrap();assert_eq!(serde_json::to_value(&output).unwrap(),serde_json::to_value(&status).unwrap());close(output);assert!(cursor.terminal_is_empty());
     }
@@ -149,3 +149,6 @@ fn native_staged_collection_sources_keep_exact_payloads_and_charge_no_cold_arena
     let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||list.push_initialized(&mut donor));assert!(result.unwrap());assert!(donor.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     close(UiValue::List(list.finish_initialized()));
 }
+
+#[path = "staged-borrowed-binding-tests.rs"]
+mod borrowed_binding_tests;

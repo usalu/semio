@@ -291,7 +291,7 @@ export const shellChromeDe = {
     saved: { label: { normal: "Gespeichert", beginner: "Gespeichert" } },
     unavailable: { label: { normal: "Anzeige nicht verfügbar", beginner: "Anzeige nicht verfügbar" } },
   },
-} satisfies Pick<UiTranslationSchema["ui"], "nav" | "search" | "palette" | "panel" | "tree" | "find" | "fullscreen" | "mobilePanel" | "panelToggle" | "display">;
+} satisfies Pick<UiTranslationSchema["ui"], "nav" | "search" | "palette" | "rowControlFocus" | "windowFocus" | "panel" | "tree" | "find" | "fullscreen" | "mobilePanel" | "panelToggle" | "display">;
 
 /** 🖥️ Shell navigation, search, panel and display chrome labels (`en`). */
 export const shellChromeEn = {
@@ -584,4 +584,4 @@ export const shellChromeEn = {
     saved: { label: { normal: "Saved", beginner: "Saved" } },
     unavailable: { label: { normal: "Display unavailable", beginner: "Display unavailable" } },
   },
-} satisfies Pick<UiTranslationSchema["ui"], "nav" | "search" | "palette" | "panel" | "tree" | "find" | "fullscreen" | "mobilePanel" | "panelToggle" | "display">;
+} satisfies Pick<UiTranslationSchema["ui"], "nav" | "search" | "palette" | "rowControlFocus" | "windowFocus" | "panel" | "tree" | "find" | "fullscreen" | "mobilePanel" | "panelToggle" | "display">;

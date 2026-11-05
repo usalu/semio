@@ -6,6 +6,7 @@ use semio_s_plugin_norm_app_surface::{IdRemoval, InsertItemRule, NormEdit, NormE
 
 /// 📚 Every path an EN1998 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field_arguments: &[],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "towers[].mRdNm", kind: "change-tower-m-rd-nm", selectors: &[SelectorKey::Id("id")], value: "newMRdNm" },
@@ -296,8 +297,8 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         InsertItemRule { path: "piers", kind: "insert-pier", selectors: &[], index: "index", item: "pier" },
         InsertItemRule { path: "bearings", kind: "insert-bearing", selectors: &[], index: "index", item: "bearing" },
         InsertItemRule { path: "joints", kind: "insert-joint", selectors: &[], index: "index", item: "joint" },
-        InsertItemRule { path: "tieBeams", kind: "insert-tie-beam", selectors: &[], index: "index", item: "tie_beam" },
-        InsertItemRule { path: "slopes", kind: "insert-seismic-slope", selectors: &[], index: "index", item: "seismic_slope" },
+        InsertItemRule { path: "tieBeams", kind: "insert-tie-beam", selectors: &[], index: "index", item: "tieBeam" },
+        InsertItemRule { path: "slopes", kind: "insert-seismic-slope", selectors: &[], index: "index", item: "seismicSlope" },
         InsertItemRule { path: "diaphragms", kind: "insert-diaphragm", selectors: &[], index: "index", item: "diaphragm" },
         InsertItemRule { path: "accelerograms", kind: "insert-accelerogram", selectors: &[], index: "index", item: "accelerogram" },
         InsertItemRule { path: "soilLayers", kind: "insert-soil-layer", selectors: &[], index: "index", item: "layer" },

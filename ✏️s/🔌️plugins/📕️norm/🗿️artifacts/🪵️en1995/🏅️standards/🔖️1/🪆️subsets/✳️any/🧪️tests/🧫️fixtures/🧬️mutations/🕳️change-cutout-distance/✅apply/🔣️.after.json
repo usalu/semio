@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC2",
   "members": [
     {
       "id": "beam-B1",
@@ -96,30 +95,6 @@
       ]
     }
   ],
-  "placements": [],
-  "tapers": [],
-  "cutouts": [
-    {
-      "id": "cutout-1",
-      "memberId": "beam-B1",
-      "kind": "notch",
-      "face": "bottom",
-      "distanceM": 1.0,
-      "lengthM": 0.15,
-      "depthM": 0.06,
-      "centreHeightM": 0.0,
-      "slope": 0.0,
-      "rods": 0,
-      "rodResistanceN": 0.0
-    }
-  ],
-  "fasteners": [],
-  "panels": [],
-  "floors": [],
-  "diaphragms": [],
-  "trusses": [],
-  "bracings": [],
-  "decks": [],
   "ulsEquation": "eq610",
   "cases": [
     {
@@ -144,5 +119,30 @@
         }
       ]
     }
-  ]
+  ],
+  "placements": [],
+  "tapers": [],
+  "cutouts": [
+    {
+      "id": "cutout-1",
+      "memberId": "beam-B1",
+      "kind": "notch",
+      "face": "bottom",
+      "distanceM": 1.0,
+      "lengthM": 0.15,
+      "depthM": 0.06,
+      "centreHeightM": 0.0,
+      "slope": 0.0,
+      "rods": 0,
+      "rodResistanceN": 0.0
+    }
+  ],
+  "fasteners": [],
+  "panels": [],
+  "floors": [],
+  "diaphragms": [],
+  "trusses": [],
+  "bracings": [],
+  "decks": [],
+  "reliabilityClass": "RC2"
 }

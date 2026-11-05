@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "id": "closed-catalog-without-live-actor",
+      "catalogVisible": true,
+      "sameUuid": false,
+      "fileOpened": false,
+      "exactOwner": false,
+      "persisted": false,
+      "expected": {
+        "canClick": true,
+        "passed": false
+      }
+    },
+    {
+      "id": "reopened-exact-durable-document",
+      "catalogVisible": true,
+      "sameUuid": true,
+      "fileOpened": true,
+      "exactOwner": true,
+      "persisted": true,
+      "expected": {
+        "canClick": true,
+        "passed": true
+      }
+    },
+    {
+      "id": "foreign-compatible-owner",
+      "catalogVisible": true,
+      "sameUuid": true,
+      "fileOpened": true,
+      "exactOwner": false,
+      "persisted": true,
+      "expected": {
+        "canClick": true,
+        "passed": false
+      }
+    },
+    {
+      "id": "unacknowledged-open",
+      "catalogVisible": true,
+      "sameUuid": true,
+      "fileOpened": false,
+      "exactOwner": true,
+      "persisted": true,
+      "expected": {
+        "canClick": true,
+        "passed": false
+      }
+    },
+    {
+      "id": "unpersisted-open",
+      "catalogVisible": true,
+      "sameUuid": true,
+      "fileOpened": true,
+      "exactOwner": true,
+      "persisted": false,
+      "expected": {
+        "canClick": true,
+        "passed": false
+      }
+    }
+  ]
+}

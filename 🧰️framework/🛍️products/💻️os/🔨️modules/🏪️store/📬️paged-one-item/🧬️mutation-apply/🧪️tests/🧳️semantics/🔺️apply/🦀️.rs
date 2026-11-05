@@ -1,10 +1,11 @@
 //! 🔺️ Central fixture plans preflight every index and stage shared roots before capability-authorized exchange.
 use super::*;
 use semio_framework_os_spr::{RetainedDiff,RetainedDiffApply,RetainedDiffPreflightAdvance};
-use semio_framework_value::{shared_issuance::{SealedShared, SharedIssuer}, retained_clone::{RetainedCloneSource, RetainedCloneSourceTake}};
+use semio_framework_value::{shared_issuance::{SealedShared, SharedIssuer}, retained_clone::{RetainedCloneSource, RetainedCloneSourceTake,RetainedCloneSourceAdmission}};
 use semio_framework_value_persistent::{list::persistent::PersistentList, list::persistent::PersistentSet, list::persistent::PersistentSplice, list::persistent::PersistentSpliceKind};
 impl RetainedDiff<Document> for Diff{type Apply=Plan;}
 pub(crate) struct Plan{
+ row_admission:ManuallyDrop<Option<RetainedCloneSourceAdmission<SealedShared<Node>,SealedShared<Node>,()>>>,list_admission:ManuallyDrop<Option<RetainedCloneSourceAdmission<PersistentList<Node>,PersistentList<Node>,()>>>,
  fields:[RetainedFieldPreparation<String>;2],strings:ManuallyDrop<[Option<String>;2]>,sealed:ManuallyDrop<[Option<SealedShared<String>>;2]>,node:ManuallyDrop<Option<Node>>,row:ManuallyDrop<Option<SealedShared<Node>>>,row_source:ManuallyDrop<Option<RetainedCloneSource<SealedShared<Node>>>>,
  list_source:ManuallyDrop<Option<RetainedCloneSource<PersistentList<Node>>>>,candidate:ManuallyDrop<Option<PersistentList<Node>>>,prepared:ManuallyDrop<Option<PersistentList<Node>>>,set:Option<PersistentSet<Node>>,splice:Option<PersistentSplice<Node>>,retirement:RetainedCloneClose,
  phase:u8,index:usize,length:usize,valid:bool,committed:bool,closing:bool,
@@ -13,10 +14,11 @@ impl Plan{
  fn fixed()->usize{size_of::<u8>()+2*size_of::<usize>()+size_of::<Option<String>>()+size_of::<Option<PersistentList<Node>>>()+size_of::<Option<SealedShared<Node>>>()}
  fn op<'a>(&self,d:&'a Diff)->Option<&'a Op>{d.ops.get(self.index)}
  fn source<'a>(&self,d:RetainedCloneRef<'a,Diff>,field:usize)->Option<RetainedCloneRef<'a,String>>{let index=self.index;match (self.op(d.get()),field){(Some(Op::Insert{..}),0)=>Some(d.project(index*2,move|d|match &d.ops[index]{Op::Insert{id,..}=>id,_=>unreachable!()})),(Some(Op::Insert{..}|Op::SetText{..}),1)=>Some(d.project(index*2+1,move|d|match &d.ops[index]{Op::Insert{text,..}|Op::SetText{text,..}=>text,_=>unreachable!()})),_=>None}}
- fn source_birth<T:semio_framework_value::retirement::RetireOwned+Sync+'static>()->RetirementDemand{demand(RetainedCloneSource::<T>::constructor_copy_bytes()+2*size_of::<T>(),RetainedCloneSource::<T>::owned_constructor_capacity_bytes::<()>())}
  fn field_demand(&self,d:RetainedCloneRef<'_,Diff>,field:usize,body:usize)->Result<RetirementDemand,ValueError>{if let Some(source)=self.source(d,field){let mut q=if self.fields[field].value().is_some(){self.fields[field].exchange_demand()?}else{self.fields[field].demand(source,body.saturating_sub(Self::fixed()))?};q.copy_bytes+=Self::fixed();Ok(q)}else{Ok(demand(Self::fixed()+2*size_of::<SealedShared<String>>(),0))}}
  fn field_step(&mut self,d:RetainedCloneRef<'_,Diff>,field:usize,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{if let Some(source)=self.source(d,field){if self.fields[field].value().is_some(){let(s,p)=self.fields[field].take(child(g,Self::fixed()))?;self.strings[field]=s;self.phase+=1;Ok(add(p,Self::fixed()))}else{self.fields[field].advance(source,body.saturating_sub(Self::fixed()),child(g,Self::fixed())).map(|s|add(s.progress(),Self::fixed()))}}else{if field==0{if let Some(Op::SetText{index,..})=self.op(d.get()){let source=self.list_source.as_ref().unwrap().try_borrow()?;let(alias,_)=source.get().get(*index).unwrap().id.try_duplicate(child(g,Self::fixed())).result?;self.sealed[0]=Some(alias);}}self.phase+=1;Ok(progress(demand(Self::fixed()+2*size_of::<SealedShared<String>>(),0)))}}
  fn cleanup_demand(&self,body:usize)->Result<Option<RetirementDemand>,ValueError>{
+  if let Some(a)=self.row_admission.as_ref(){return source_admission_close_demand(a).map(Some);}
+  if let Some(a)=self.list_admission.as_ref(){return source_admission_close_demand(a).map(Some);}
   if let Some(p)=self.set.as_ref(){return Ok(Some(if p.terminal_is_empty(){demand(size_of::<Option<PersistentSet<Node>>>(),0)}else{p.close_demand(body)?}));}
   if let Some(p)=self.splice.as_ref(){return Ok(Some(if p.terminal_is_empty(){demand(size_of::<Option<PersistentSplice<Node>>>(),0)}else{p.close_demand(body)?}));}
   for f in &self.fields{if !f.terminal_is_empty(){return f.close_demand(body).map(Some);}}
@@ -25,6 +27,8 @@ impl Plan{
   Ok(None)
  }
  fn cleanup(&mut self,g:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
+  if self.row_admission.is_some(){return close_source_admission(&mut self.row,&mut self.row_admission,&mut self.row_source,g).map(Some);}
+  if self.list_admission.is_some(){return close_source_admission(&mut self.candidate,&mut self.list_admission,&mut self.list_source,g).map(Some);}
   if let Some(p)=self.set.as_mut(){if p.terminal_is_empty(){self.set=None;return Ok(Some(RetainedCloneStep::Progress(progress(demand(size_of::<Option<PersistentSet<Node>>>(),0)))));}return p.close_step(g).result.map(|s|Some(RetainedCloneStep::Progress(s.progress())));}
   if let Some(p)=self.splice.as_mut(){if p.terminal_is_empty(){self.splice=None;return Ok(Some(RetainedCloneStep::Progress(progress(demand(size_of::<Option<PersistentSplice<Node>>>(),0)))));}return p.close_step(g).result.map(|s|Some(RetainedCloneStep::Progress(s.progress())));}
   for f in &mut self.fields{if !f.terminal_is_empty(){return f.close_step(g).map(|s|Some(RetainedCloneStep::Progress(s.progress())));}}
@@ -36,14 +40,14 @@ impl Plan{
 }
 fn source_close_demand<T:semio_framework_value::retirement::RetireOwned+Sync+'static>(s:&RetainedCloneSource<T>,body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:s.next_close_copy_byte_demand()?,capacity_bytes:s.next_close_capacity_byte_demand(body)?,release_bytes:s.next_close_release_byte_demand()?,depth:s.next_close_depth_demand()?})}
 impl RetainedDiffApply<Document,Diff> for Plan{
- fn new()->Self{Self{fields:std::array::from_fn(|_|Default::default()),strings:ManuallyDrop::new(std::array::from_fn(|_|None)),sealed:ManuallyDrop::new(std::array::from_fn(|_|None)),node:ManuallyDrop::new(None),row:ManuallyDrop::new(None),row_source:ManuallyDrop::new(None),list_source:ManuallyDrop::new(None),candidate:ManuallyDrop::new(None),prepared:ManuallyDrop::new(None),set:None,splice:None,retirement:Default::default(),phase:0,index:0,length:0,valid:true,committed:false,closing:false}}
+ fn new()->Self{Self{row_admission:ManuallyDrop::new(None),list_admission:ManuallyDrop::new(None),fields:std::array::from_fn(|_|Default::default()),strings:ManuallyDrop::new(std::array::from_fn(|_|None)),sealed:ManuallyDrop::new(std::array::from_fn(|_|None)),node:ManuallyDrop::new(None),row:ManuallyDrop::new(None),row_source:ManuallyDrop::new(None),list_source:ManuallyDrop::new(None),candidate:ManuallyDrop::new(None),prepared:ManuallyDrop::new(None),set:None,splice:None,retirement:Default::default(),phase:0,index:0,length:0,valid:true,committed:false,closing:false}}
  fn preflight_demand(&self,d:RetainedCloneRef<'_,Diff>,p:RetainedCloneRef<'_,Document>,_:RetainedCloneRef<'_, Document>,body:usize)->Result<RetirementDemand,ValueError>{Ok(match self.phase{
   0=>demand(Self::fixed()+size_of::<Op>(),0),
   1=>{let mut q=PersistentList::<Node>::projection_demand();q.copy_bytes+=Self::fixed();q},
-  2|15=>{let mut q=Self::source_birth::<PersistentList<Node>>();q.copy_bytes+=Self::fixed();q},
+  2|15=>{let mut q=source_admission_demand(&self.list_admission)?;q.copy_bytes+=Self::fixed();q},
   3=>demand(Self::fixed(),0),4=>return self.field_demand(d,0,body),5=>return self.field_demand(d,1,body),
   6|7=>{let field=usize::from(self.phase==7);demand(Self::fixed()+2*size_of::<String>()+size_of::<SealedShared<String>>(),if self.sealed[field].is_none(){SealedShared::<String>::birth_bytes()}else{0})},
-  8=>demand(Self::fixed()+2*size_of::<Node>(),0),9=>demand(Self::fixed()+2*size_of::<Node>(),SealedShared::<Node>::birth_bytes()),10=>{let mut q=Self::source_birth::<SealedShared<Node>>();q.copy_bytes+=Self::fixed();q},
+  8=>demand(Self::fixed()+2*size_of::<Node>(),0),9=>demand(Self::fixed()+2*size_of::<Node>(),SealedShared::<Node>::birth_bytes()),10=>{let mut q=source_admission_demand(&self.row_admission)?;q.copy_bytes+=Self::fixed();q},
   11=>demand(Self::fixed()+size_of::<PersistentSet<Node>>()+size_of::<PersistentSplice<Node>>(),0),
   12=>{let list=self.list_source.as_ref().unwrap().try_borrow()?;let mut q=if let Some(set)=self.set.as_ref(){set.demand(list,self.row_source.as_ref().unwrap().try_borrow()?)?}else{self.splice.as_ref().unwrap().demand(list,self.row_source.as_ref().map(|s|s.try_borrow()).transpose()?)?};q.copy_bytes+=Self::fixed();q},
   13=>{let mut q=if let Some(_)=self.set.as_ref(){PersistentList::<Node>::projection_demand()}else{self.splice.as_ref().unwrap().take_demand()};q.copy_bytes+=Self::fixed();q},
@@ -54,13 +58,13 @@ impl RetainedDiffApply<Document,Diff> for Plan{
  fn preflight(&mut self,d:RetainedCloneRef<'_,Diff>,p:RetainedCloneRef<'_,Document>,post:RetainedCloneRef<'_, Document>,body:usize,g:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{let q=self.preflight_demand(d,p,post,body)?;if !fits(q,g){return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()));}let mut r=progress(q);match self.phase{
   0=>{if self.index==0{self.length=post.get().nodes.len();}if let Some(op)=d.get().ops.get(self.index){match op{Op::Insert{index,..}if *index<=self.length=>self.length+=1,Op::Remove{index}if *index<self.length=>self.length-=1,Op::SetText{index,..}if *index<self.length=>{},_=>self.valid=false};self.index+=1;if !self.valid{self.phase=17;return Ok(RetainedDiffPreflightAdvance::Ready(r,false));}}else{self.index=0;self.phase=1;}},
   1=>{let original=p.project(0,|p|&p.nodes);let(candidate,receipt)=PersistentList::project(original,child(g,Self::fixed())).result?.unwrap();*self.candidate=Some(candidate);self.phase=2;r=add(receipt,Self::fixed());},
-  2|15=>{let value=self.candidate.take().unwrap();let fixed=Self::fixed()+2*size_of::<PersistentList<Node>>();match admit_source(value,child(g,fixed)){Ok((s,receipt))=>{*self.list_source=Some(s);self.phase=if self.index==d.get().ops.len(){16}else{3};r=add(receipt,fixed);},Err((e,value))=>{*self.candidate=Some(value);return Err(e);}}},
+  2|15=>{let(done,receipt)=advance_source_admission(&mut self.candidate,&mut self.list_admission,&mut self.list_source,child(g,Self::fixed()))?;if done{self.phase=if self.index==d.get().ops.len(){16}else{3};}r=add(receipt,Self::fixed());},
   3=>{self.phase=if matches!(self.op(d.get()),Some(Op::Remove{..})){11}else{4};},
   4=>r=self.field_step(d,0,body,g)?,5=>r=self.field_step(d,1,body,g)?,
   6|7=>{let field=usize::from(self.phase==7);if self.sealed[field].is_none(){let value=self.strings[field].take().unwrap();let fixed=Self::fixed()+2*size_of::<String>();match SealedShared::admit(value,SharedIssuer::owned(),child(g,fixed)).result{Ok((s,receipt))=>{self.sealed[field]=Some(s);r=add(receipt,fixed);},Err((e,value))=>{self.strings[field]=Some(value);return Err(e);}}}self.phase+=1;},
   8=>{*self.node=Some(Node{id:self.sealed[0].take().unwrap(),text:self.sealed[1].take().unwrap()});self.phase=9;},
   9=>{let value=self.node.take().unwrap();let fixed=Self::fixed()+2*size_of::<Node>();match SealedShared::admit(value,SharedIssuer::owned(),child(g,fixed)).result{Ok((s,receipt))=>{*self.row=Some(s);self.phase=10;r=add(receipt,fixed);},Err((e,value))=>{*self.node=Some(value);return Err(e);}}},
-  10=>{let value=self.row.take().unwrap();let fixed=Self::fixed()+2*size_of::<SealedShared<Node>>();match admit_source(value,child(g,fixed)){Ok((s,receipt))=>{*self.row_source=Some(s);self.phase=11;r=add(receipt,fixed);},Err((e,value))=>{*self.row=Some(value);return Err(e);}}},
+  10=>{let(done,receipt)=advance_source_admission(&mut self.row,&mut self.row_admission,&mut self.row_source,child(g,Self::fixed()))?;if done{self.phase=11;}r=add(receipt,Self::fixed());},
   11=>{match self.op(d.get()).unwrap(){Op::Insert{index,..}=>self.splice=Some(PersistentSplice::new(PersistentSpliceKind::Insert,*index)),Op::Remove{index}=>self.splice=Some(PersistentSplice::new(PersistentSpliceKind::Remove,*index)),Op::SetText{index,..}=>self.set=Some(PersistentSet::new(*index))};self.phase=12;},
   12=>{let list=self.list_source.as_ref().unwrap().try_borrow()?;let s=if let Some(set)=self.set.as_mut(){set.advance(list,self.row_source.as_ref().unwrap().try_borrow()?,child(g,Self::fixed())).result?}else{self.splice.as_mut().unwrap().advance(list,self.row_source.as_ref().map(|s|s.try_borrow()).transpose()?,child(g,Self::fixed())).result?};r=add(s.progress(),Self::fixed());if matches!(s,RetainedCloneStep::Complete(_)){self.phase=13;}},
   13=>{let(value,receipt)=if let Some(set)=self.set.as_mut(){set.take(child(g,Self::fixed())).result?.unwrap()}else{self.splice.as_mut().unwrap().take(child(g,Self::fixed())).result?.unwrap()};*self.candidate=Some(value);self.begin_operation_close();self.phase=14;r=add(receipt,Self::fixed());},
@@ -74,21 +78,21 @@ impl RetainedDiffApply<Document,Diff> for Plan{
  fn begin_close(&mut self){self.closing=true;self.begin_operation_close();}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(q)=self.cleanup_demand(body)?{return Ok(q);}if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<Node>(false,&None,body);}if self.node.is_some(){return self.retirement.next_owner_demands::<Node>(true,&None,body);}if self.row.is_some(){return self.retirement.next_owner_demands::<SealedShared<Node>>(true,&None,body);}if self.sealed.iter().any(Option::is_some){return self.retirement.next_owner_demands::<SealedShared<String>>(true,&None,body);}if self.strings.iter().any(Option::is_some){return self.retirement.next_owner_demands::<String>(true,&None,body);}if self.candidate.is_some()||self.prepared.is_some(){return self.retirement.next_owner_demands::<PersistentList<Node>>(true,&None,body);}Ok(Default::default())}
  fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{assert!(self.closing);let q=self.close_demand(g.maximum_copy_bytes)?;if !fits(q,g){return Ok(RetainedCloneStep::Progress(Default::default()));}if let Some(s)=self.cleanup(g)?{return Ok(s);}if !self.retirement.is_empty(){return self.retirement.step_granted(g).result.map(|s|RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.node,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.row,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}for s in self.sealed.iter_mut(){if let Some(p)=self.retirement.begin_granted(s,g).result?{return Ok(RetainedCloneStep::Progress(p.progress()));}}for s in self.strings.iter_mut(){if let Some(p)=self.retirement.begin_granted(s,g).result?{return Ok(RetainedCloneStep::Progress(p.progress()));}}if let Some(s)=self.retirement.begin_granted(&mut self.candidate,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.prepared,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}Ok(RetainedCloneStep::Complete(Default::default()))}
- fn terminal_is_empty(&self)->bool{self.fields.iter().all(|f|f.terminal_is_empty())&&self.strings.iter().all(Option::is_none)&&self.sealed.iter().all(Option::is_none)&&self.node.is_none()&&self.row.is_none()&&self.row_source.is_none()&&self.list_source.is_none()&&self.candidate.is_none()&&self.prepared.is_none()&&self.set.is_none()&&self.splice.is_none()&&self.retirement.is_empty()}
+ fn terminal_is_empty(&self)->bool{self.row_admission.is_none()&&self.list_admission.is_none()&&self.fields.iter().all(|f|f.terminal_is_empty())&&self.strings.iter().all(Option::is_none)&&self.sealed.iter().all(Option::is_none)&&self.node.is_none()&&self.row.is_none()&&self.row_source.is_none()&&self.list_source.is_none()&&self.candidate.is_none()&&self.prepared.is_none()&&self.set.is_none()&&self.splice.is_none()&&self.retirement.is_empty()}
 }
-impl Drop for Plan{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty);if empty{unsafe{ManuallyDrop::drop(&mut self.strings);ManuallyDrop::drop(&mut self.sealed);ManuallyDrop::drop(&mut self.node);ManuallyDrop::drop(&mut self.row);ManuallyDrop::drop(&mut self.row_source);ManuallyDrop::drop(&mut self.list_source);ManuallyDrop::drop(&mut self.candidate);ManuallyDrop::drop(&mut self.prepared);}}}}
+impl Drop for Plan{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty);if empty{unsafe{ManuallyDrop::drop(&mut self.row_admission);ManuallyDrop::drop(&mut self.list_admission);ManuallyDrop::drop(&mut self.strings);ManuallyDrop::drop(&mut self.sealed);ManuallyDrop::drop(&mut self.node);ManuallyDrop::drop(&mut self.row);ManuallyDrop::drop(&mut self.row_source);ManuallyDrop::drop(&mut self.list_source);ManuallyDrop::drop(&mut self.candidate);ManuallyDrop::drop(&mut self.prepared);}}}}
 
-fn admit_source<A:semio_framework_value::retirement::RetireOwned+Sync+'static>(value:A,grant:RetainedCloneGrant)->Result<(RetainedCloneSource<A,A>,RetainedCloneProgress),(ValueError,A)>{
- let mut admission=RetainedCloneSource::admission_owned(value,());let mut total=RetainedCloneProgress::default();let mut failure=None;
- for _ in 0..64{
-  match admission.advance(grant).result{Ok(step)=>{let p=step.progress();total.copied_items+=p.copied_items;total.copied_bytes+=p.copied_bytes;total.retained_capacity_bytes+=p.retained_capacity_bytes;total.released_bytes+=p.released_bytes;},Err(error)=>{failure=Some(error);break}}
-  if admission.phase()=="ready"{break}
- }
- let mut output=None;
- if failure.is_none(){match admission.take_output(&mut output,grant).result{Ok(step)=>{let p=step.progress();total.copied_items+=p.copied_items;total.copied_bytes+=p.copied_bytes;},Err(error)=>failure=Some(error)}}
- if let Some(source)=output{return Ok((source,total))}
- let error=failure.unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original source admission did not publish"));
- let mut back=None;for _ in 0..64{if back.is_some(){break}let _=admission.return_inputs(&mut back,grant);}
- let(value,())=back.expect("a refused source admission pays its input back");
- Err((error,value))
+fn source_admission_demand<A:semio_framework_value::retirement::RetireOwned+Sync+'static>(owner:&Option<RetainedCloneSourceAdmission<A,A,()>>)->Result<RetirementDemand,ValueError>{match owner{Some(a)if a.terminal_is_empty()=>Ok(demand(size_of::<RetainedCloneSourceAdmission<A,A,()>>(),0)),Some(a)=>a.next_demand(),None=>Ok(demand(size_of::<A>()+size_of::<RetainedCloneSourceAdmission<A,A,()>>(),0))}}
+fn advance_source_admission<A:semio_framework_value::retirement::RetireOwned+Sync+'static>(input:&mut Option<A>,owner:&mut Option<RetainedCloneSourceAdmission<A,A,()>>,output:&mut Option<RetainedCloneSource<A,A>>,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),ValueError>{
+ let d=source_admission_demand(owner)?;if !fits(d,grant){return Ok((false,Default::default()));}
+ if owner.as_ref().is_some_and(RetainedCloneSourceAdmission::terminal_is_empty){owner.take();return Ok((true,progress(d)));}
+ if let Some(a)=owner.as_mut(){let turn=if a.phase()=="ready"{a.take_output(output,grant)}else{a.advance(grant)};return turn.result.map(|step|(false,step.progress()));}
+ *owner=Some(RetainedCloneSource::admission_owned(input.take().expect("original source input retained"),()));Ok((false,progress(d)))
+}
+fn source_admission_close_demand<A:semio_framework_value::retirement::RetireOwned+Sync+'static>(owner:&RetainedCloneSourceAdmission<A,A,()>)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){Ok(demand(size_of::<RetainedCloneSourceAdmission<A,A,()>>(),0))}else if owner.phase()=="ready"{owner.next_demand()}else{owner.next_return_demand()}}
+fn close_source_admission<A:semio_framework_value::retirement::RetireOwned+Sync+'static>(input:&mut Option<A>,owner:&mut Option<RetainedCloneSourceAdmission<A,A,()>>,output:&mut Option<RetainedCloneSource<A,A>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ let a=owner.as_mut().expect("original source admission retained");let d=source_admission_close_demand(a)?;if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
+ if a.terminal_is_empty(){owner.take();return Ok(RetainedCloneStep::Progress(progress(d)));}
+ if a.phase()=="ready"{return a.take_output(output,grant).result;}
+ let mut back=None;let step=a.return_inputs(&mut back,grant).result?;if let Some((value,()))=back{assert!(input.is_none());*input=Some(value);}Ok(RetainedCloneStep::Progress(step.progress()))
 }

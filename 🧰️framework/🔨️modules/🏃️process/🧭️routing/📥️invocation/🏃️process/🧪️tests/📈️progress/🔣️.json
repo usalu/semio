@@ -846,19 +846,19 @@
         {
           "at": 0,
           "elapsed": 15000,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 10,
           "elapsed": 15010,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 249,
           "elapsed": 15249,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         }
       ],
@@ -873,25 +873,25 @@
         {
           "at": 0,
           "elapsed": 0,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 249,
           "elapsed": 249,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 250,
           "elapsed": 250,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 300,
           "elapsed": 300,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         }
       ],
@@ -907,19 +907,19 @@
         {
           "at": 0,
           "elapsed": 0,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 1,
           "elapsed": 1,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 2,
           "elapsed": 2,
-          "path": "/repo/.cache/b/rust/fixed/m/t/p",
+          "path": "/repo/.cache/b/r/m/t/p",
           "kind": "cache"
         }
       ],
@@ -935,19 +935,19 @@
         {
           "at": 0,
           "elapsed": 100,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 10,
           "elapsed": 101,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 20,
           "elapsed": 0,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         }
       ],
@@ -963,13 +963,13 @@
         {
           "at": 100,
           "elapsed": 0,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 90,
           "elapsed": 1,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         }
       ],
@@ -984,13 +984,13 @@
         {
           "at": 0,
           "elapsed": 0,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 1,
           "elapsed": 1,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
@@ -1012,13 +1012,13 @@
         {
           "at": 0,
           "elapsed": 0,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {
           "at": 1,
           "elapsed": 1,
-          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "path": "/repo/.cache/b/r/m/b/p",
           "kind": "cache"
         },
         {

@@ -28,9 +28,9 @@ async fn scripted_turn_is_returned_exactly_once_fifo() {
     runtime.script_turn(actor, first).await;
     runtime.script_turn(actor, second).await;
 
-    let got_first = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1), &mut identity)).expect("first scripted turn");
+    let got_first = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &mut [], Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1), &mut identity)).expect("first scripted turn");
     assert_eq!(got_first.fuel_used, 7);
-    let got_second = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1), &mut identity)).expect("second scripted turn");
+    let got_second = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &mut [], Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1), &mut identity)).expect("second scripted turn");
     assert_eq!(got_second.fuel_used, 9);
     semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
 }
@@ -45,7 +45,7 @@ async fn exhausted_script_queue_is_a_loud_error_not_a_fabricated_idle_turn() {
     let compiled = runtime.compile(&PackageRef { package: PackageId("cad".to_string()), hash: hash(2).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(7);
     let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("instantiate");
-    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1), &mut identity)).expect_err("no script queued");
+    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &mut [], Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1), &mut identity)).expect_err("no script queued");
     assert!(matches!(error, TurnFault::Exhausted));
     semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
 }
@@ -61,7 +61,7 @@ async fn scripted_fault_surfaces_as_trapped() {
     let actor = RuntimeActorId(9);
     let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("instantiate");
     runtime.script_fault(actor, "epoch deadline exceeded").await;
-    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1), &mut identity)).expect_err("scripted fault");
+    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &mut [], Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1), &mut identity)).expect_err("scripted fault");
     assert!(matches!(error, TurnFault::Trapped(message) if message == "epoch deadline exceeded"));
     semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
 }

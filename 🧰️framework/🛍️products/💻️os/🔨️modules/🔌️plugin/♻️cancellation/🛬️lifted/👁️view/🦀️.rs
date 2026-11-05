@@ -5,6 +5,10 @@ use semio_framework_ui_locale::LocalizedLabel;
 
 #[derive(Clone, Debug)]
 pub struct ArtifactOperationProgress {
+    pub tool_id: String,
+    pub actor: String,
+    pub app_instance_id: u32,
+    pub window_id: Option<String>,
     pub operation_id: u64,
     pub generation: u64,
     pub label: LocalizedLabel,

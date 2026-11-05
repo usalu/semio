@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "descriptor": "🌎️hub/🧩️compositions/📕️norm/🧩️component/🔣️.json",
+  "suites": [
+    "🧪️tests/🏷️mutation-label-census/🟦️.ts",
+    "🧪️tests/🧪️wire-twins/🟦️.ts",
+    "🧪️tests/🔬️package-runner/🟦️.ts",
+    "🧪️tests/🧬️schema-sync/🟦️.ts",
+    "🧪️tests/🏷️field-meta-choices/🟦️.ts",
+    "🧪️tests/🚆️action-payloads/🟦️.ts",
+    "🧪️tests/🧬️mutation-aggregate/🟦️.ts",
+    "🧪️tests/🪟️visual-imports/🟦️.ts",
+    "🧮️mechanics/🧪️tests/🏗️ltb-sample-pairs/🟦️.ts",
+    "🧪️tests/🧬️schema-typecheck/🟦️.ts",
+    "🧪️tests/🩹️sparse-patch/🟦️.ts",
+    "🧪️tests/🧾️operation-consistency/🟦️.ts",
+    "🧪️tests/🗑️delete-entities/🧪️tests/🟦️.ts",
+    "🧪️tests/⏪️time-travel/🧪️contract/🟦️.ts",
+    "🧪️tests/🪆️nested-edit/🟦️.ts",
+    "🧪️tests/🛡️inspector-admission/🟦️.ts",
+    "🧪️tests/📥️insert-bindings/🟦️.ts",
+    "🧪️tests/🧭️edit-bindings/🟦️.ts",
+    "🧪️tests/🪺️inspector-forms/🟦️.ts",
+    "🧪️tests/🧭️payload-bindings/🟦️.ts",
+    "🧪️tests/🔮️catalogue/🟦️.ts"
+  ],
+  "expectedEditors": 15
+}

@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-pixels-codecs"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Owned raster image codecs and shared image contracts"
+
+[package.metadata.semio]
+role = "framework"
+id = "pixels-codecs"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-io-binary-source = { path = "../../../../🚪️io/🔢️binary/📥️source/📦️packages/🦀️rust" }
+semio-framework-io-base64 = { path = "../../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-framework-deflate = { path = "../../../../🗜️deflate/📦️packages/🦀️rust" }
+
+[features]
+testkit = []
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }

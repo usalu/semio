@@ -1,0 +1,148 @@
+{
+  "schema": {
+    "type": "array",
+    "minItems": 6,
+    "items": {
+      "type": "object",
+      "required": [
+        "name",
+        "observerClient",
+        "messageClient",
+        "activeClient",
+        "status",
+        "observed",
+        "persisted",
+        "consumed",
+        "dispatched"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "observerClient": {
+          "type": "string"
+        },
+        "messageClient": {
+          "type": "string"
+        },
+        "activeClient": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "object"
+        },
+        "observed": {
+          "type": "boolean"
+        },
+        "persisted": {
+          "type": "boolean"
+        },
+        "consumed": {
+          "type": "boolean"
+        },
+        "dispatched": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "cases": [
+    {
+      "observerClient": "live",
+      "messageClient": "live",
+      "activeClient": "live",
+      "status": {
+        "persisted": true,
+        "pendingMutations": 0,
+        "remote": null
+      },
+      "observed": true,
+      "persisted": true,
+      "consumed": false,
+      "dispatched": true,
+      "name": "active acknowledged observer also dispatches"
+    },
+    {
+      "observerClient": "live",
+      "messageClient": "live",
+      "activeClient": "live",
+      "status": {
+        "persisted": true,
+        "pendingMutations": 0,
+        "remote": null,
+        "writeFailure": {
+          "code": "disk-full"
+        }
+      },
+      "observed": true,
+      "persisted": false,
+      "consumed": false,
+      "dispatched": true,
+      "name": "typed write failure reaches observer and ordinary status"
+    },
+    {
+      "observerClient": "live",
+      "messageClient": "live",
+      "activeClient": "live",
+      "status": {
+        "persisted": true,
+        "pendingMutations": 1,
+        "remote": null
+      },
+      "observed": true,
+      "persisted": false,
+      "consumed": false,
+      "dispatched": true,
+      "name": "pending status is not durable"
+    },
+    {
+      "observerClient": "live",
+      "messageClient": "live",
+      "activeClient": null,
+      "status": {
+        "persisted": true,
+        "pendingMutations": 0,
+        "remote": null
+      },
+      "observed": true,
+      "persisted": true,
+      "consumed": true,
+      "dispatched": false,
+      "name": "temporary observer consumes without active owner"
+    },
+    {
+      "observerClient": "live",
+      "messageClient": "live",
+      "activeClient": "new",
+      "status": {
+        "persisted": true,
+        "pendingMutations": 0,
+        "remote": null
+      },
+      "observed": true,
+      "persisted": true,
+      "consumed": true,
+      "dispatched": false,
+      "name": "stale observer cannot claim newer active entry"
+    },
+    {
+      "observerClient": "other",
+      "messageClient": "live",
+      "activeClient": "live",
+      "status": {
+        "persisted": true,
+        "pendingMutations": 0,
+        "remote": null
+      },
+      "observed": false,
+      "persisted": true,
+      "consumed": false,
+      "dispatched": true,
+      "name": "unobserved active client dispatches"
+    }
+  ]
+}

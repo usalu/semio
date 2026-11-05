@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "ledger": "same-original",
+  "recipient": "same-recipient",
+  "initialOwned": 32,
+  "hopCapacity": 8,
+  "cases": [
+    {
+      "id": "success",
+      "actions": [
+        {
+          "kind": "charge",
+          "bytes": 2
+        },
+        {
+          "kind": "encode",
+          "bytes": 3
+        }
+      ],
+      "expected": {
+        "owned": 37,
+        "spent": 5,
+        "remaining": 3,
+        "refused": 0
+      }
+    },
+    {
+      "id": "overspend",
+      "actions": [
+        {
+          "kind": "charge",
+          "bytes": 2
+        },
+        {
+          "kind": "encode",
+          "bytes": 7
+        }
+      ],
+      "expected": {
+        "owned": 34,
+        "spent": 2,
+        "remaining": 6,
+        "refused": 1
+      }
+    },
+    {
+      "id": "partial-error",
+      "actions": [
+        {
+          "kind": "charge",
+          "bytes": 2
+        },
+        {
+          "kind": "error",
+          "bytes": 2
+        }
+      ],
+      "expected": {
+        "owned": 36,
+        "spent": 4,
+        "remaining": 4,
+        "refused": 0
+      }
+    },
+    {
+      "id": "unwind",
+      "actions": [
+        {
+          "kind": "charge",
+          "bytes": 2
+        },
+        {
+          "kind": "unwind",
+          "bytes": 1
+        }
+      ],
+      "expected": {
+        "owned": 35,
+        "spent": 3,
+        "remaining": 5,
+        "refused": 0
+      }
+    },
+    {
+      "id": "observer-denied",
+      "actions": [
+        {
+          "kind": "deny",
+          "bytes": 3
+        }
+      ],
+      "expected": {
+        "owned": 32,
+        "spent": 0,
+        "remaining": 8,
+        "refused": 1
+      }
+    },
+    {
+      "id": "no-restored-authority",
+      "actions": [
+        {
+          "kind": "charge",
+          "bytes": 2
+        },
+        {
+          "kind": "encode",
+          "bytes": 3
+        },
+        {
+          "kind": "encode",
+          "bytes": 3
+        },
+        {
+          "kind": "encode",
+          "bytes": 1
+        }
+      ],
+      "expected": {
+        "owned": 40,
+        "spent": 8,
+        "remaining": 0,
+        "refused": 1
+      }
+    }
+  ]
+}

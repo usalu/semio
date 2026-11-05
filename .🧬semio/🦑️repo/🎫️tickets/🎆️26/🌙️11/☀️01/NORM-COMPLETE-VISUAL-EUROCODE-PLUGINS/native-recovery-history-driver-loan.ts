@@ -1,0 +1,22 @@
+import fs from 'node:fs';
+const b='🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/';
+const p=b+'🦀️.rs';let s=fs.readFileSync(p,'utf8');
+function replace(a:string,c:string){if(!s.includes(a))throw Error('Missing source '+a.slice(0,120));s=s.replace(a,c);}
+replace('    closing: bool,\n    run: impl FnOnce','    closing: bool,\n    work: &mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient,\n    run: impl FnOnce');
+replace('let result = control.scoped_stage(|original| Ok::<_, std::convert::Infallible>(run(original))).unwrap();','let result = control.with_work_recipient(work,|original|original.scoped_stage(|native|Ok::<_,ValueError>(run(native))));');
+replace('    Ok(result)\n}\n\nimpl RetainedHistoryDecode','    result\n}\n\nimpl RetainedHistoryDecode');
+s=s.replaceAll('grant: RetainedCloneGrant, history: &mut Option<HistoryLog>) ->','grant: RetainedCloneGrant, history: &mut Option<HistoryLog>, work: &mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient) ->');
+s=s.replaceAll('self.step_result(source,turn,grant, history)','self.step_result(source,turn,grant, history,work)');
+s=s.replaceAll('grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep','grant: RetainedCloneGrant, work: &mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep');
+s=s.replaceAll('self.close_step_result(source,turn,grant)','self.close_step_result(source,turn,grant,work)');
+s=s.replaceAll('fn close_step_result<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant) ->','fn close_step_result<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, work: &mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient) ->');
+s=s.replaceAll('grant.maximum_capacity_bytes, false, |control|','grant.maximum_capacity_bytes, false, work, |control|');
+s=s.replaceAll('grant.maximum_capacity_bytes, true, |control|','grant.maximum_capacity_bytes, true, work, |control|');
+fs.writeFileSync(p,s);
+const t=b+'🛬️decode/🗂️file/🧪️tests/🦀️.rs';s=fs.readFileSync(t,'utf8');
+const split=s.indexOf('struct CancelledTurn');if(split<0)throw Error('Missing test region');const prefix=s.slice(0,split);let suffix=s.slice(split);
+suffix=suffix.replace('let mut history=None;let mut step=','let mut history=None;let mut work=DriverWork{remaining:1_000_000,quantum:4096};let mut step=');
+suffix=suffix.replaceAll('driver.step(&source,&turn,g,&mut history).unwrap()','{let result=driver.step(&source,&turn,g,&mut history,&mut work);assert!(result.work<=work.quantum.min(work.remaining));work.remaining-=result.work;result.result.unwrap()}');
+suffix=suffix.replace('driver.close_step(&source,&super::super::RetainedHistoryUninterrupted,g).unwrap()','{let result=driver.close_step(&source,&super::super::RetainedHistoryUninterrupted,g,&mut work);assert!(result.work<=work.quantum.min(work.remaining));work.remaining-=result.work;result.result.unwrap()}');
+suffix='struct DriverWork{remaining:u64,quantum:u64}\nimpl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for DriverWork{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,semio_framework_value::ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.quantum.min(self.remaining)))}}\n'+suffix;
+fs.writeFileSync(t,prefix+suffix);

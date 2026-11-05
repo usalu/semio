@@ -128,12 +128,17 @@
         let alice = sample_presence_peer("user:alice#s1", Some(3), true);
         let bob = sample_presence_peer("user:bob#s1", Some(5), false);
         assert!(publish_presence_roster(&mut app, 1, Some(9), &[alice.clone(), bob], 1000,cx).await.fault.is_none());
+        for _ in 0..semio_framework_plugin_testing_laws::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
+            if app.roster.peer_presence_retirements.is_empty(){break}
+            app.maintenance.maintenance_stage=5;app_maintenance_turn(&mut app,cx).expect("original empty root physically retires before held-root law");
+        }
+        assert!(app.roster.peer_presence_retirements.is_empty());
         let (captured, typed_captured) = app.dispatch_ctx().test_capture_presence_roots(&TestCommand::Increment, &meta()).await.expect("actual shared typed capture helper");
-        assert!(std::sync::Arc::ptr_eq(&captured, &app.roster.peer_presence), "operation capture clones one peer root Arc");
+        assert!(std::sync::Arc::ptr_eq(&captured, app.roster.peer_presence.as_ref().expect("live peer capture root")), "operation capture clones one peer root Arc");
 
         assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000,cx).await.fault.is_none());
         assert_eq!(captured.len(), 2, "captured roster remains revision-stable");
-        assert_eq!(app.roster.peer_presence.len(), 1, "live roster advances independently");
+        assert_eq!(app.roster.peer_presence_root().len(), 1, "live roster advances independently");
         assert_maintenance_reports_block(&mut app, 5, "the shared old peer root",cx);
         app.maintenance.maintenance_stage = 6;
         let _ = app_maintenance_turn(&mut app,cx).expect("app-typed retirement selects its displaced entry");
@@ -230,7 +235,7 @@
         }
         let outcome = cancelled.take_presence_outcome().expect("cancelled roster outcome");
         assert_eq!(outcome.fault.expect("cancel is observable").code.0, "interactive-job.peer-roster-cancelled");
-        assert!(cancelled.peer_presence.is_empty(), "cancelled roster never publishes metadata");
+        assert!(cancelled.roster.peer_presence_root().is_empty(), "cancelled roster never publishes metadata");
         assert_eq!(cancelled.presence_store.peers_root().len(), 0, "cancelled roster never publishes app-typed presence");
 
         drain_and_close_fixture(&mut cancelled, mounted_policy,cx);
@@ -249,7 +254,7 @@
         }
         let outcome = stale.take_presence_outcome().expect("stale roster outcome");
         assert_eq!(outcome.fault.expect("stale generation is observable").code.0, "interactive-job.peer-roster-publication-authority");
-        assert!(stale.peer_presence.is_empty(), "stale roster never changes the live peer root");
+        assert!(stale.roster.peer_presence_root().is_empty(), "stale roster never changes the live peer root");
         assert_eq!(stale.presence_store.peers_root().len(), 0, "stale roster never changes the typed peer root");
         drain_and_close_fixture(&mut stale, mounted_policy,cx);
 

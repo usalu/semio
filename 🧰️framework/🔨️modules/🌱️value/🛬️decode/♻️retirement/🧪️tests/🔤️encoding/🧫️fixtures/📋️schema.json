@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "ledger",
+    "recipient",
+    "initialOwned",
+    "hopCapacity",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "ledger": {
+      "const": "same-original"
+    },
+    "recipient": {
+      "const": "same-recipient"
+    },
+    "initialOwned": {
+      "const": 32
+    },
+    "hopCapacity": {
+      "const": 8
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "actions",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "actions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "bytes"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "charge",
+                    "encode",
+                    "error",
+                    "unwind",
+                    "deny"
+                  ]
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "owned",
+              "spent",
+              "remaining",
+              "refused"
+            ],
+            "properties": {
+              "owned": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "spent": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "remaining": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "refused": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

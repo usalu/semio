@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "result",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "result": {
+            "enum": [
+              "true",
+              "void",
+              "false",
+              "async-true",
+              "async-false",
+              "reject",
+              "throw"
+            ]
+          },
+          "expected": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

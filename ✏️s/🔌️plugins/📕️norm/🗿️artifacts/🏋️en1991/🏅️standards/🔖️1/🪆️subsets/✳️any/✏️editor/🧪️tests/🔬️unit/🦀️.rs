@@ -293,3 +293,9 @@ fn the_insert_palette_offers_placements_with_both_labels() {
     assert!(specs.iter().all(|spec| !spec.label_en.is_empty() && !spec.label_de.is_empty()));
     assert!(specs.iter().all(|spec| spec.id != "case"));
 }
+
+#[test]
+fn compiled_input_metadata_matches_all_native_schema_rows() {
+    let findings = semio_s_plugin_norm_app_surface::norm_compiled_input_findings::<En1991PlayApp>();
+    assert!(findings.is_empty(), "{}", findings.join("\n"));
+}

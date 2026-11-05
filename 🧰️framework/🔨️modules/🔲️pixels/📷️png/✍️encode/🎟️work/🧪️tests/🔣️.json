@@ -1,0 +1,1 @@
+{"format":"PNG","compression":"zlib-stored","blockBytes":4096,"maximumWorkBody":4096,"cases":[{"width":2,"height":1,"rgba":[255,0,0,255,0,0,255,128],"encodedBytes":77},{"width":513,"height":3,"patternMultiplier":37,"encodedBytes":6232}],"cancelTurns":[0,1,2,3,4,8],"deniedAxes":["items","copy","capacity","depth"]}

@@ -223,7 +223,7 @@ pub struct SemanticDescriptor {
 pub use protocol::mutation::{
     validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_descriptor_roster_uniqueness, validate_mutation_leaf_source, MutationComposition, MutationDiffParticipation, MutationDomainOperation,
     MutationInvertibility, MutationLanguageSurface, MutationLeaf, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError,
-    MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, ValidatedMutationLeafSourceScope,
+    MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, CompiledMutationInputDefinitions, CompiledMutationInputError, ValidatedMutationLeafSourceScope,
 };
 //#endregion 🪪️MutationLeafDescriptor
 

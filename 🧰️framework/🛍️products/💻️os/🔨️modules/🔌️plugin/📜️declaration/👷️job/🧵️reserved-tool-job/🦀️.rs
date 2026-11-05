@@ -43,14 +43,16 @@ mod original_request_retirement;
 
 /// 🧭️ Owned input for an app-defined implementation of a framework-reserved route. The runtime
 /// selects the exact owner/factory/tool/schema proof before constructing this value.
+#[derive(semio_framework_value::RetireOwned)]
 pub enum ArtifactReservedToolInput {
-    Action { args: Option<DslValue>, interaction: protocol::InteractionState, hover: InteractionHoverState },
+    Action { args: Option<DslValue>, interaction: store::os_store::snapshot_read::SnapshotRead<protocol::InteractionState> },
     Media { port: String, media: Media },
 }
 
 /// 🧊️ Immutable app state plus an owned reserved-route input. Implementations only construct a
 /// persistent job here; producer work belongs in that job's bounded `step` calls.
 pub struct ArtifactReservedToolJobRequest<A: ArtifactApp> {
+    pub source_binding: semio_framework::action_bus::OriginalToolSourceBinding,
     pub retained:RetainedCloneGrant,
     pub controller_id: String,
     pub tool_id: String,
@@ -76,9 +78,14 @@ pub struct ArtifactReservedToolJobRequest<A: ArtifactApp> {
     /// (`Option<Arc<ChildContentRoot>>`); a job releases it as soon as it has decoded.
     pub children: ChildContentView,
     pub raw_wire: Vec<u8>,
-    pub input: ArtifactReservedToolInput,
+    pub input: Option<ArtifactReservedToolInput>,
     pub completion: ArtifactToolCompletion<A>,
 }
+#[path="../🎟️request/♻️reserved/🦀️.rs"]
+mod reserved_request_retirement;
+#[path="../🎟️request/🏭️reserved/🦀️.rs"]
+mod reserved_work;
+pub use reserved_work::{ArtifactReservedWork,ArtifactReservedRequestJob,admit_reserved_work};
 
 /// 📬️ Completed document mutations paired with their ephemeral output.
 pub(super) type ArtifactToolEmission<A> = (ArtifactMutationOutcome<<A as ArtifactApp>::Mutation, <A as ArtifactApp>::ConfigMutation, <A as ArtifactApp>::DraftMutation>, EphemeralEmit<A>);

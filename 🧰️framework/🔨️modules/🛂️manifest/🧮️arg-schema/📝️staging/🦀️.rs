@@ -160,9 +160,18 @@ pub struct StagedActionDefinition {
 pub struct StagedFormStatus {
     pub token: StagedFormToken,
     pub ready: bool,
+    pub commit_args: Option<DslValue>,
     pub diagnostics: Vec<StagedFormDiagnostic>,
     pub diagnostic_offset: String,
     pub diagnostic_total: String,
+}
+impl StagedFormStatus {
+    /// 🚦️ Execution readiness requires an exact source-owned argument object.
+    pub fn admitted(&self)->bool {
+        let counter=|value:&str|StagedFormTextFormat::DecimalU64.admits(value).then(||value.parse::<u64>().ok()).flatten();
+        let (Some(offset),Some(total))=(counter(&self.diagnostic_offset),counter(&self.diagnostic_total))else{return false};
+        self.token.admitted()&&self.diagnostics.len()<=STAGED_FORM_STATUS_DIAGNOSTICS&&offset.checked_add(self.diagnostics.len()as u64).is_some_and(|end|end<=total)&&match &self.commit_args{Some(DslValue::Object(_))=>self.ready,None=>!self.ready,_=>false}
+    }
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
@@ -275,3 +284,41 @@ fn canonical_integer(value: &str) -> bool {
 #[cfg(test)]
 #[path = "tests.rs"]
 mod tests;
+
+
+/// 🪪️ Descriptive coordinates name an original native issuer without granting custody.
+#[derive(Clone,Debug,PartialEq,Eq,Serialize,Deserialize,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::RetireOwned)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+#[value(rename_all="camelCase",deny_unknown_fields)]
+pub struct StagedValueOrigin{
+ pub activation:String,
+ pub instance:String,
+ pub guest_lifetime:String,
+ pub operation:String,
+ pub source_generation:String,
+ pub serial:String,
+ pub controller:String,
+ pub token:StagedFormToken,
+}
+impl StagedValueOrigin{
+ pub fn admitted(&self)->bool{
+  let exact=StagedFormTextFormat::DecimalU64;
+  self.token.admitted()&&!self.controller.is_empty()&&
+  [&self.activation,&self.instance,&self.guest_lifetime,&self.operation,&self.source_generation,&self.serial].into_iter().all(|value|exact.admits(value))&&
+  [&self.activation,&self.guest_lifetime,&self.serial].into_iter().all(|value|value!="0")&&self.instance.parse::<u32>().is_ok()
+ }
+}
+/// 🎯️ A source entry retains its distinct draft, seed, variant or executable role.
+#[derive(Clone,Copy,Debug,PartialEq,Eq,Serialize,Deserialize,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::RetireOwned)]
+#[serde(rename_all="camelCase")]
+#[value(rename_all="camelCase")]
+pub enum StagedValuePurpose{Draft,Seed,Variant,Commit}
+/// 🔖️ A live native registry must match these coordinates to its actual issued value owner.
+#[derive(Clone,Debug,PartialEq,Eq,Serialize,Deserialize,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::RetireOwned)]
+#[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
+pub struct StagedValueReference{pub source:StagedValueOrigin,pub slot:String,pub purpose:StagedValuePurpose}
+impl StagedValueReference{
+ pub fn admitted(&self)->bool{self.source.admitted()&&StagedFormTextFormat::DecimalU64.admits(&self.slot)}
+ pub fn matches(&self,other:&Self)->bool{self.admitted()&&other.admitted()&&self==other}
+}

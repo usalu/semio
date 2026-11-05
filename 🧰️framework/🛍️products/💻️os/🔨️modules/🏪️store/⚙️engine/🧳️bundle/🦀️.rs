@@ -82,7 +82,17 @@ pub use commit_metadata::{advance_batch_metadata,BatchCommitMetadataStep};
 /// ⏭️ Advances at most one preparation, fold, cursor, preflight, or atomic move-publication
 /// unit. Exactly one admitted mutation is folded into the staged edit per fold turn; the
 /// post-snapshot each item produced is an already-built `Arc` and is moved into the stage.
-pub fn advance_apply_batch<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, VcsError>
+pub fn advance_apply_batch<P,Mutation>(store:&mut StoreParts<'_,P,Mutation>,publication:&mut ArtifactStoreBatchPublication<P,Mutation>,body:usize,grant:ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactStoreOneItemAdvance,VcsError>
+where P:semio_framework_os_spr::StoreState,Mutation:semio_framework_os_spr::StoreMutationFor<P>{
+    publication.turn_work=0;let before=receiving.actual_work();
+    let result=advance_apply_batch_inner(store,publication,body,grant,receiving);
+    let observed=receiving.actual_work().saturating_sub(before);
+    let coordination=match &result{Ok(ArtifactStoreOneItemAdvance::Blocked|ArtifactStoreOneItemAdvance::AwaitingAck(_)|ArtifactStoreOneItemAdvance::Complete)=>0,Ok(_)=>1,Err(_)=>0};
+    let reported=publication.turn_work;publication.turn_work=reported.max(observed).max(coordination);
+    publication.turn_work=semio_framework_os_store_one_item::original_one_item_turn_work(reported,observed,coordination!=0).map_err(VcsError::InverseRefused)?;result
+}
+
+fn advance_apply_batch_inner<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, VcsError>
 where
     P: semio_framework_os_spr::StoreState,
     Mutation: semio_framework_os_spr::StoreMutationFor<P>,
@@ -185,6 +195,7 @@ where
             let owner = publication.preparation.as_mut().expect("validated batched publication item preparation");
             if owner.prepared().is_none() {
                 let result=owner.advance(body,item_grant,receiving).and_then(|step|validate_original_preparation_step(step,item_grant,owner.prepared().is_some()));
+                publication.turn_work=owner.last_turn_work();
                 let step=match result {Ok(step)=>step,Err(reason)=>{publication.fault=Some(reason);publication.begin_close();return Ok(ArtifactStoreOneItemAdvance::PreparationRefused)}};
                 return match step {
                     ArtifactStoreOneItemPreparationStep::Progress(checkpoint, ownership) => Ok(ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint, ownership)),

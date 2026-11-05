@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️change-roof-ce",
   "semanticKind": "change-roof-ce",
-  "displayName": "Change Roof C E",
+  "displayName": "Change exposure coefficient of the roof",
   "emoji": "🏠",
   "aggregateVariant": "ChangeRoofCE",
   "payloadSchema": "🧬️schema/🔣️.json",

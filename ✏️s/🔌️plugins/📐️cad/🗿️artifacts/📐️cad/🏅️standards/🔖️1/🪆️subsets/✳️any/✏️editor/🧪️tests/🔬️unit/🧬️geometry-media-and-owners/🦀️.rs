@@ -251,103 +251,23 @@ async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
 }
 
 #[test]
-fn cad_media_pricing_retains_exact_source_through_progress_cancel_and_refusal() {
-    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎞️media-pricing.json")).expect("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎞️media-pricing.json").leak()).unwrap();
-    let source = format!("{}{}", fixture["prefix"].as_str().unwrap().repeat(fixture["repeat"].as_u64().unwrap() as usize), fixture["suffix"].as_str().unwrap());
-    let unit = fixture["maximumUnitBytes"].as_u64().unwrap() as usize;
-    let maximum = fixture["closeMaximumBytes"].as_u64().unwrap() as usize;
-    let close_grant = |work: &CadMediaWork, items: usize| {
-        use semio_framework_job::InteractiveJob as _;
-        let copy = work.next_close_copy_byte_demand().unwrap().max(maximum);
-        semio_framework_value::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: copy, maximum_capacity_bytes: work.next_close_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: work.next_close_release_byte_demand().unwrap(), maximum_depth: work.next_close_depth_demand().unwrap().max(1) }
-    };
-    let expected_bytes = fixture["sourceBytes"].as_u64().unwrap() as usize;
-    let expected_checksum = fixture["sourceChecksum"].as_str().unwrap().parse::<u64>().unwrap();
-    assert_eq!(source.as_bytes().len(), expected_bytes);
-    assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&source).unwrap()).unwrap().into_bytes(), source.as_bytes());
-    for form in fixture["forms"].as_array().unwrap() {
-        for cancel_at in fixture["cancelAtBytes"].as_array().unwrap().iter().map(|row| row.as_u64().unwrap() as usize).chain(std::iter::once(expected_bytes)) {
-            let payload = match form.as_str().unwrap() {
-                "intrinsicText" => MediaPayload::Intrinsic { schema: "cad.pricing.test".into(), value: semio_framework_value::DslValue::String(source.clone()) },
-                "intrinsicBytes" => MediaPayload::Intrinsic { schema: "cad.pricing.test".into(), value: semio_framework_value::DslValue::Bytes(source.as_bytes().to_vec()) },
-                "structuredText" => MediaPayload::Structured { schema: "cad.pricing.test".into(), json: source.clone() },
-                _ => panic!("unknown declared media form"),
-            };
-            let mut work = CadMediaWork::new("geometry:in".into(), Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload }, None);
-            let pointer = work.borrowed_source().unwrap().as_ptr();
-            let cancel = semio_framework_job::root_cancel_token();
-            let mut sequence = 0;
-            let before = work.priced_bytes;
-            assert_eq!(work.price_source(0).unwrap(), 0);
-            assert_eq!(work.priced_bytes, before);
-            let mut zero_retained = semio_framework_job::RetainedCloneProgress::default();
-            let mut zero = semio_framework_job::StepContext::new(semio_framework_job::OperationId(99), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(0,100_000,UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut sequence, &mut zero_retained);
-            assert!(!work.price_step(&mut zero).unwrap());
-            assert_eq!(work.priced_bytes, before);
-            let mut expired_retained = semio_framework_job::RetainedCloneProgress::default();
-            let mut expired = semio_framework_job::StepContext::new(semio_framework_job::OperationId(99), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1,0,UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut sequence, &mut expired_retained);
-            assert!(!work.price_step(&mut expired).unwrap());
-            assert_eq!(work.priced_bytes, before);
-            assert_eq!(expired.fuel_remaining(), 1);
-            for _ in 0..fixture["maximumPricingSteps"].as_u64().unwrap() {
-                if work.priced_bytes >= cancel_at { break; }
-                let before = work.priced_bytes;
-                let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-                let mut context = semio_framework_job::StepContext::new(semio_framework_job::OperationId(99), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fixture["grantWorkUnits"].as_u64().unwrap(), 100_000, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut sequence, &mut context_retained);
-                assert!(!work.price_step(&mut context).unwrap());
-                let charged = work.priced_bytes - before;
-                assert_eq!(context.fuel_remaining(), 0);
-                assert!(charged <= unit);
-                assert_eq!(work.priced_bytes - before, charged);
-                assert_eq!(work.borrowed_source().unwrap().as_ptr(), pointer);
-                assert!(!work.consumed);
-            }
-            assert_eq!(work.priced_bytes, cancel_at);
-            if cancel_at == expected_bytes {
-                assert!(work.pricing_complete);
-                assert_eq!(work.priced_bytes, expected_bytes);
-                assert_eq!(work.price_checksum, expected_checksum);
-            }
-            let mut checkpoint = [0u8; 24];
-            assert_eq!(work.checkpoint(&mut checkpoint, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).unwrap(), 24);
-            let price_before = (work.priced_bytes, work.price_checksum, work.pricing_complete);
-            work.restore(&checkpoint).unwrap();
-            assert_eq!((work.priced_bytes, work.price_checksum, work.pricing_complete), price_before);
-            semio_framework_async::poll::resolve_ready(cancel.cancel());
-            let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-            let mut context = semio_framework_job::StepContext::new(semio_framework_job::OperationId(99), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fixture["grantWorkUnits"].as_u64().unwrap(), 100_000, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut sequence, &mut context_retained);
-            assert_eq!(work.price_step(&mut context).unwrap_err().code.0, "interactive-job.cancelled");
-            assert_eq!((work.priced_bytes, work.price_checksum, work.pricing_complete), price_before);
-            assert_eq!(work.borrowed_source().unwrap().as_ptr(), pointer);
-            assert!(!work.consumed);
-            work.begin_close();
-            assert_eq!(semio_framework_job::close_with_self_funded_context(close_grant(&work, 0), |cx| work.close_step(cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
-            for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap() {
-                let grant = close_grant(&work, 1);
-                match semio_framework_job::close_with_self_funded_context(grant, |cx| work.close_step(cx)).expect("original fixture close turn") {
-                    semio_framework_job::InteractiveJobCloseStep::Complete { .. } => break,
-                    semio_framework_job::InteractiveJobCloseStep::Pending { progress } => { assert!(progress.copied_items <= 1); assert!(progress.released_bytes <= grant.maximum_release_bytes); },
-                    step => panic!("priced source blocked exact bounded close: {step:?}"),
-                }
-            }
-            assert!(work.terminal_is_empty());
-        }
-    }
-    let mut work = CadMediaWork::new("geometry:in".into(), Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "cad.pricing.test".into(), json: "x".repeat(fixture["refusedBytes"].as_u64().unwrap() as usize) } }, None);
-    let pointer = work.borrowed_source().unwrap().as_ptr();
-    assert_eq!(work.price_source(unit).unwrap_err().code.0, "cad.media-input-capacity");
-    assert_eq!(work.borrowed_source().unwrap().as_ptr(), pointer);
-    assert_eq!(work.priced_bytes, 0);
-    work.begin_close();
-    for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap() {
-        let grant = close_grant(&work, 1);
-        match semio_framework_job::close_with_self_funded_context(grant, |cx| work.close_step(cx)).expect("original fixture close turn") {
-            semio_framework_job::InteractiveJobCloseStep::Complete { .. } => break,
-            semio_framework_job::InteractiveJobCloseStep::Pending { progress } => { assert!(progress.copied_items <= 1); assert!(progress.released_bytes <= grant.maximum_release_bytes); },
-            step => panic!("refused source blocked exact bounded close: {step:?}"),
-        }
-    }
-    assert!(work.terminal_is_empty());
+fn cad_media_pricing_retains_exact_source_through_progress_cancel_and_refusal(){
+ use semio_framework_plugin::{artifact_app_laws::OriginalWorkFixture,tool_contract::ArtifactReservedWork};
+ use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome};
+ fn media(caller:&mut OriginalWorkFixture,source:&str,form:&str)->Media{
+  let grant=OriginalWorkFixture::stock();let schema="cad.pricing.test";let copy=source.len()+schema.len()+2*std::mem::size_of::<Media>();let capacity=source.len()+schema.len();let mut output=None;
+  caller.turn(grant,|cx|{semio_framework_job::admit_original_construction(cx,&mut output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:capacity,release_bytes:0,depth:1},|_|{let payload=match form{"intrinsicText"=>MediaPayload::Intrinsic{schema:schema.into(),value:semio_framework_value::DslValue::String(source.into())},"intrinsicBytes"=>MediaPayload::Intrinsic{schema:schema.into(),value:semio_framework_value::DslValue::Bytes(source.as_bytes().to_vec())},"structuredText"=>MediaPayload::Structured{schema:schema.into(),json:source.into()},_=>unreachable!()};RetainedWorkOutcome{result:Ok((Media{media_type:MediaType{class:MediaClass::ThreeD,form:MediaForm::Mesh},payload},RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,..Default::default()})),work:1}})?;Ok(())}).unwrap();output.unwrap()
+ }
+ let fixture:serde_json::Value=serde_json::from_str(std::fs::read_to_string(fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎞️media-pricing.json")).unwrap().leak()).unwrap();
+ let source=format!("{}{}",fixture["prefix"].as_str().unwrap().repeat(fixture["repeat"].as_u64().unwrap()as usize),fixture["suffix"].as_str().unwrap());let count=fixture["sourceBytes"].as_u64().unwrap()as usize;let checksum=fixture["sourceChecksum"].as_str().unwrap().parse::<u64>().unwrap();assert_eq!(source.len(),count);assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&source).unwrap()).unwrap(),source);let grant=OriginalWorkFixture::stock();
+ for form in fixture["forms"].as_array().unwrap(){for cut in fixture["cancelAtBytes"].as_array().unwrap().iter().map(|row|row.as_u64().unwrap()as usize).chain(std::iter::once(count)){
+  let mut caller=OriginalWorkFixture::new();let media=media(&mut caller,&source,form.as_str().unwrap());let pointer=CadMediaWork::borrowed_source(&media).unwrap().as_ptr();let mut work=CadMediaWork::default();
+  caller.work_turn(grant,0,|cx|{let before=cx.retained_progress();assert!(!work.price_step(&media,cx).unwrap());assert_eq!(work.priced_bytes,0);assert_eq!(cx.retained_progress(),before);Ok(())}).unwrap();
+  while work.priced_bytes<cut&&!work.pricing_complete{caller.work_turn(grant,1,|cx|{let before=work.priced_bytes;assert!(!work.price_step(&media,cx).unwrap());assert!(work.priced_bytes-before<=fixture["maximumUnitBytes"].as_u64().unwrap()as usize);assert_eq!(CadMediaWork::borrowed_source(&media).unwrap().as_ptr(),pointer);Ok(())}).unwrap();}
+  if cut<count{caller.cancel().cancel_now();let error=caller.turn(grant,|cx|Ok(work.price_step(&media,cx).unwrap_err())).unwrap();assert_eq!(error.code.0,"interactive-job.cancelled");caller.retire_owned(error,grant);}else{assert_eq!(work.priced_bytes,count);assert_eq!(work.price_checksum,checksum);}
+  work.begin_close();caller.turn(grant,|cx|cx.with_original_retirement(|cx|work.close_step(cx))).unwrap();assert!(work.terminal_is_empty());assert_eq!(CadMediaWork::borrowed_source(&media).unwrap().as_ptr(),pointer);caller.retire_owned(media,grant);caller.finish();
+ }}
+ let mut caller=OriginalWorkFixture::new();let source="x".repeat(fixture["refusedBytes"].as_u64().unwrap()as usize);let media=media(&mut caller,&source,"structuredText");let pointer=CadMediaWork::borrowed_source(&media).unwrap().as_ptr();let mut work=CadMediaWork::default();let error=caller.turn(grant,|cx|{let before=cx.retained_progress();let result=work.price_step(&media,cx);assert_eq!(cx.retained_progress(),before);Ok(result.unwrap_err())}).unwrap();assert_eq!(error.code.0,"cad.media-input-capacity");assert_eq!(CadMediaWork::borrowed_source(&media).unwrap().as_ptr(),pointer);assert_eq!(work.priced_bytes,0);caller.retire_owned(error,grant);work.begin_close();caller.turn(grant,|cx|cx.with_original_retirement(|cx|work.close_step(cx))).unwrap();assert!(work.terminal_is_empty());caller.retire_owned(media,grant);caller.finish();
 }
 
 #[test]

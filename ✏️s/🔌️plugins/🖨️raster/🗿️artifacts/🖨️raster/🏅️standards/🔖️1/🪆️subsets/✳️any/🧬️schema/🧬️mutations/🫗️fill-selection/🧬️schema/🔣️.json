@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/fill-selection/schema.json",
   "title": "FillSelection",
-  "x-semio-inverse-rows": { "bounded": 3 },
+  "x-semio-inverse-rows": { "bounded": 4 },
   "description": "One fill of a layer's pixels or of its mask over the pixel selection (the whole image without one), stated as its intent: the layer, the target, the fill colour and the selection. Every application fills through the shared pixel engine and files the filled image as a new content-addressed asset; a fill that changes no pixel is `mutation.no-op`, a missing layer or image is `mutation.target-missing`, a locked layer, a layer without pixels, a mask target without a mask or a selection past the image is `mutation.target-mismatch`.",
   "x-semio-invariant": [
     {

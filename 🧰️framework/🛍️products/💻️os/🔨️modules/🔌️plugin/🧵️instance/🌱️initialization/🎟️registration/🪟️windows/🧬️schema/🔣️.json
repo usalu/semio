@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "windowKinds",
+    "owners",
+    "turn",
+    "maximumTurns",
+    "cancelAfter",
+    "deniedAxes",
+    "foreignOperationRefused",
+    "terminalDropBytes"
+  ],
+  "properties": {
+    "windowKinds": {
+      "const": [
+        "composite",
+        "navigator"
+      ]
+    },
+    "owners": {
+      "const": [
+        17,
+        29
+      ]
+    },
+    "turn": {
+      "const": {
+        "items": 1,
+        "copyBytes": 4096,
+        "capacityBytes": 4096,
+        "releaseBytes": 4096,
+        "depth": 64
+      }
+    },
+    "maximumTurns": {
+      "const": 128
+    },
+    "cancelAfter": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        16,
+        32
+      ]
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "depth"
+      ]
+    },
+    "foreignOperationRefused": {
+      "const": true
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  }
+}

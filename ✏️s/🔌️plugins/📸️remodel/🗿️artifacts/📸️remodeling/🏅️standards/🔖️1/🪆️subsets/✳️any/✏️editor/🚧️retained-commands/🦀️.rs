@@ -208,14 +208,14 @@ impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowComma
             let (emit, next) = imported?;
             let window_transient = match next == resting {
                 true => Vec::new(),
-                false => vec![transient::addressed(input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(import_video_frame_payload::import_window_required)?, next)?],
+                false => vec![transient::addressed(input.context.and_then(|context| context.view_state.as_deref()).ok_or_else(import_video_frame_payload::import_window_required)?, next)?],
             };
             self.completed = true;
             return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { window_transient, ..Default::default() } });
         }
         let mut emit = input.command.dispatch(&document, &config_view)?;
         if matches!(input.command, RemodelingCommand::SetCamera(_) | RemodelingCommand::SetLayerVisibility(_) | RemodelingCommand::SetFrameCursor(_) | RemodelingCommand::SetReportTable(_)) {
-            let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("remodeling-window-view-required"))?;
+            let view = input.context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("remodeling-window-view-required"))?;
             if let Some(mutation) = remodeling_window_config_mutation(input.command, window, view)? { emit.window_config_mutations.push(mutation); }
         }
         self.completed = true;

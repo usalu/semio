@@ -1,0 +1,1 @@
+{"schema":"raster.resize-layer.optional-inverse.v1","before":{"width":null,"height":null},"inverse":{"mutation":"changeLayerPixels","width":null,"height":null}}

@@ -13,12 +13,12 @@
         },
         {
           "op": "acquire",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m",
           "mode": "exclusive"
         },
         {
           "op": "acquire",
-          "resource": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home",
+          "resource": "cargo:registry:/w/.cache/b/r/m/cargo/home",
           "mode": "shared",
           "waitedMilliseconds": 20000
         }
@@ -26,13 +26,13 @@
       "violations": [
         {
           "kind": "out-of-order",
-          "held": "repo:compiler-writer:/w/.cache/rust/fixed/m",
-          "requested": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home"
+          "held": "repo:compiler-writer:/w/.cache/b/r/m",
+          "requested": "cargo:registry:/w/.cache/b/r/m/cargo/home"
         },
         {
           "kind": "hold-and-wait",
-          "held": "repo:compiler-writer:/w/.cache/rust/fixed/m",
-          "requested": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home"
+          "held": "repo:compiler-writer:/w/.cache/b/r/m",
+          "requested": "cargo:registry:/w/.cache/b/r/m/cargo/home"
         }
       ]
     },
@@ -57,31 +57,31 @@
         },
         {
           "op": "acquire",
-          "resource": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home",
+          "resource": "cargo:registry:/w/.cache/b/r/m/cargo/home",
           "mode": "shared"
         },
         {
           "op": "acquire",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m",
           "mode": "shared"
         },
         {
           "op": "acquire",
-          "resource": "cargo:registry-fetch:/w/.cache/rust/fixed/m/cargo/home:-",
+          "resource": "cargo:registry-fetch:/w/.cache/b/r/m/cargo/home:-",
           "mode": "exclusive",
           "waitedMilliseconds": 20000
         },
         {
           "op": "release",
-          "resource": "cargo:registry-fetch:/w/.cache/rust/fixed/m/cargo/home:-"
+          "resource": "cargo:registry-fetch:/w/.cache/b/r/m/cargo/home:-"
         },
         {
           "op": "release",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m"
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m"
         },
         {
           "op": "acquire",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m",
           "mode": "exclusive",
           "waitedMilliseconds": 20000
         }
@@ -94,17 +94,17 @@
       "steps": [
         {
           "op": "acquire",
-          "resource": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home",
+          "resource": "cargo:registry:/w/.cache/b/r/m/cargo/home",
           "mode": "shared"
         },
         {
           "op": "acquire",
-          "resource": "cargo:registry-fetch:/w/.cache/rust/fixed/m/cargo/home:-",
+          "resource": "cargo:registry-fetch:/w/.cache/b/r/m/cargo/home:-",
           "mode": "exclusive"
         },
         {
           "op": "acquire",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m",
           "mode": "shared",
           "waitedMilliseconds": 20000
         }
@@ -112,13 +112,13 @@
       "violations": [
         {
           "kind": "out-of-order",
-          "held": "cargo:registry-fetch:/w/.cache/rust/fixed/m/cargo/home:-",
-          "requested": "repo:compiler-writer:/w/.cache/rust/fixed/m"
+          "held": "cargo:registry-fetch:/w/.cache/b/r/m/cargo/home:-",
+          "requested": "repo:compiler-writer:/w/.cache/b/r/m"
         },
         {
           "kind": "hold-and-wait",
-          "held": "cargo:registry-fetch:/w/.cache/rust/fixed/m/cargo/home:-",
-          "requested": "repo:compiler-writer:/w/.cache/rust/fixed/m"
+          "held": "cargo:registry-fetch:/w/.cache/b/r/m/cargo/home:-",
+          "requested": "repo:compiler-writer:/w/.cache/b/r/m"
         }
       ]
     },
@@ -128,12 +128,12 @@
       "steps": [
         {
           "op": "acquire",
-          "resource": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home",
+          "resource": "cargo:registry:/w/.cache/b/r/m/cargo/home",
           "mode": "exclusive"
         },
         {
           "op": "acquire",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m",
           "mode": "exclusive",
           "waitedMilliseconds": 20000
         }
@@ -217,7 +217,7 @@
         },
         {
           "op": "acquire",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m",
           "mode": "shared",
           "waitedMilliseconds": 20000
         }
@@ -226,7 +226,7 @@
         {
           "kind": "hold-and-wait",
           "held": "semio.compiler.cpu/v1/0",
-          "requested": "repo:compiler-writer:/w/.cache/rust/fixed/m"
+          "requested": "repo:compiler-writer:/w/.cache/b/r/m"
         }
       ]
     },
@@ -236,7 +236,7 @@
       "steps": [
         {
           "op": "acquire",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m",
           "mode": "shared"
         },
         {
@@ -260,7 +260,7 @@
       "steps": [
         {
           "op": "acquire",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m",
           "mode": "shared"
         },
         {
@@ -275,7 +275,7 @@
         },
         {
           "op": "acquire",
-          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]",
+          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/b/r/m/b/p\",\"prototype\"]",
           "mode": "exclusive",
           "waitedMilliseconds": 20000
         }
@@ -283,13 +283,13 @@
       "violations": [
         {
           "kind": "out-of-order",
-          "held": "repo:compiler-writer:/w/.cache/rust/fixed/m",
-          "requested": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]"
+          "held": "repo:compiler-writer:/w/.cache/b/r/m",
+          "requested": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/b/r/m/b/p\",\"prototype\"]"
         },
         {
           "kind": "hold-and-wait",
           "held": "semio.compiler.cpu/v1/0",
-          "requested": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]"
+          "requested": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/b/r/m/b/p\",\"prototype\"]"
         }
       ]
     },
@@ -299,23 +299,23 @@
       "steps": [
         {
           "op": "acquire",
-          "resource": "[\"semio.cargo.store-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\"]",
+          "resource": "[\"semio.cargo.store-lease/v1\",\"/w/.cache/b/r/m/b/p\"]",
           "mode": "shared"
         },
         {
           "op": "acquire",
-          "resource": "[\"semio.cargo.build-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]",
+          "resource": "[\"semio.cargo.build-lease/v1\",\"/w/.cache/b/r/m/b/p\",\"prototype\"]",
           "mode": "shared"
         },
         {
           "op": "acquire",
-          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]",
+          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/b/r/m/b/p\",\"prototype\"]",
           "mode": "exclusive",
           "waitedMilliseconds": 20000
         },
         {
           "op": "acquire",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m",
           "mode": "shared"
         },
         {
@@ -339,12 +339,12 @@
       "steps": [
         {
           "op": "acquire",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m",
           "mode": "shared"
         },
         {
           "op": "acquire",
-          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]",
+          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/b/r/m/b/p\",\"prototype\"]",
           "mode": "exclusive",
           "waitedMilliseconds": 20000
         }
@@ -352,8 +352,8 @@
       "violations": [
         {
           "kind": "out-of-order",
-          "held": "repo:compiler-writer:/w/.cache/rust/fixed/m",
-          "requested": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]"
+          "held": "repo:compiler-writer:/w/.cache/b/r/m",
+          "requested": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/b/r/m/b/p\",\"prototype\"]"
         }
       ]
     },
@@ -363,13 +363,13 @@
       "steps": [
         {
           "op": "acquire",
-          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]",
+          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/b/r/m/b/p\",\"prototype\"]",
           "mode": "exclusive",
           "waitedMilliseconds": 20000
         },
         {
           "op": "acquire",
-          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "resource": "repo:compiler-writer:/w/.cache/b/r/m",
           "mode": "shared"
         },
         {

@@ -14,11 +14,12 @@ fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"sta
 fn resource()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"staging.resource-limit")}
 impl StagedPayloadSource for StagedDslPayload<'_>{
     fn identity(&self)->usize{self.source as*const _ as usize}
-    fn node(&self,path:&[usize])->Result<StagedPayloadNode<'_>,ValueError>{
-        let mut current=self.source;let mut key=None;
-        for index in path{match current{DslValue::Object(rows)=>{let row=rows.get(*index).ok_or_else(invalid)?;key=Some(row.0.as_str());current=&row.1;},DslValue::Array(rows)=>{key=None;current=rows.get(*index).ok_or_else(invalid)?;},_=>return Err(invalid())}}
-        let value=dsl_kind(current)?;Ok(StagedPayloadNode{key,value})
-    }
+    fn node(&self,path:&[usize])->Result<StagedPayloadNode<'_>,ValueError>{dsl_node(self.source,path)}
+}
+pub(super) fn dsl_node<'a>(source:&'a DslValue,path:&[usize])->Result<StagedPayloadNode<'a>,ValueError>{
+    let mut current=source;let mut key=None;
+    for index in path{match current{DslValue::Object(rows)=>{let row=rows.get(*index).ok_or_else(invalid)?;key=Some(row.0.as_str());current=&row.1;},DslValue::Array(rows)=>{key=None;current=rows.get(*index).ok_or_else(invalid)?;},_=>return Err(invalid())}}
+    let value=dsl_kind(current)?;Ok(StagedPayloadNode{key,value})
 }
 pub(super) fn dsl_kind(current:&DslValue)->Result<StagedPayloadKind<'_>,ValueError>{
         Ok(match current{

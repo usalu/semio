@@ -1,5 +1,6 @@
 /** 🖱️ The window, drag and axis callbacks and effects of the docking mode shell. */
 import * as React from "react";
+import { createWindowCloseAdmissionV1, type WindowCloseRequestV1 } from "../🚪️close-admission/🟦️.ts";
 import type { ResizableGroupHandle } from "../../↔️Resizable/🟦️.tsx";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext/.forwardRef at module top level, which requires a non-circular import (see
@@ -16,7 +17,7 @@ import { applyAxisGroupLayoutDelta, modeAxisGroupLayout, readModeAxisKind, readM
 import type { useModeLayoutState } from "../🧭️mode-layout-state-and-sync/🟦️.tsx";
 
 /** 🪟 Builds the stack drop registration, the window activation, close and maximize callbacks and the pointer drag callbacks. */
-export function useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, setLayoutState, onActiveWindowChange, onWindowClose, setMaximizedStackPath, modeBodyRef, dropZoneRef, setDropZone, setPendingDrag }: Pick<ReturnType<typeof useModeLayoutState>, "stackDropElementsRef" | "setLayoutState" | "setMaximizedStackPath" | "modeBodyRef" | "dropZoneRef" | "setDropZone" | "setPendingDrag"> & { readonly activeWindowId: string | null; readonly onActiveWindowChange: ((windowId: string | null) => void) | undefined; readonly onWindowClose: ((windowId: string) => void) | undefined }) {
+export function useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, setLayoutState, onActiveWindowChange, onWindowClose, setMaximizedStackPath, modeBodyRef, dropZoneRef, setDropZone, setPendingDrag }: Pick<ReturnType<typeof useModeLayoutState>, "stackDropElementsRef" | "setLayoutState" | "setMaximizedStackPath" | "modeBodyRef" | "dropZoneRef" | "setDropZone" | "setPendingDrag"> & { readonly activeWindowId: string | null; readonly onActiveWindowChange: ((windowId: string | null) => void) | undefined; readonly onWindowClose: WindowCloseRequestV1 | undefined }) {
   const registerStackDropTargets = reactHostPort.useCallback((path: ModeLayoutPath, corner: WindowStackCorner, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
     if (!tabBarElement && !bodyElement) {
       const prev = stackDropElementsRef.current.get(path);
@@ -66,18 +67,25 @@ export function useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, s
     [deactivateActiveWindow],
   );
 
-  const closeWindow = reactHostPort.useCallback(
-    (windowId: string) => {
-      onWindowClose?.(windowId);
-      setLayoutState((prev) => {
+  const closeOwnerRef = reactHostPort.useRef({ activeWindowId, onActiveWindowChange, onWindowClose });
+  closeOwnerRef.current = { activeWindowId, onActiveWindowChange, onWindowClose };
+  const closeAdmissionRef = reactHostPort.useRef<ReturnType<typeof createWindowCloseAdmissionV1> | null>(null);
+  reactHostPort.useEffect(() => {
+    const admission = createWindowCloseAdmissionV1({
+      request: windowId => closeOwnerRef.current.onWindowClose?.(windowId),
+      commit: windowId => setLayoutState(prev => {
         const next = collapseLayout(removeWindowFromLayout(prev, windowId)) ?? { kind: "stack", children: [] };
-        const remaining = modeCollectWindowIds(next);
-        if (activeWindowId === windowId) onActiveWindowChange?.(remaining[0] ?? null);
+        if (closeOwnerRef.current.activeWindowId === windowId) closeOwnerRef.current.onActiveWindowChange?.(modeCollectWindowIds(next)[0] ?? null);
         return next;
-      });
-    },
-    [activeWindowId, onActiveWindowChange, onWindowClose],
-  );
+      }),
+      report: error => console.error("[ui] window close admission failed", error),
+    });
+    closeAdmissionRef.current = admission;
+    return () => { admission.dispose(); if (closeAdmissionRef.current === admission) closeAdmissionRef.current = null; };
+  }, []);
+  const closeWindow = reactHostPort.useCallback((windowId: string) => {
+    void closeAdmissionRef.current?.close(windowId);
+  }, []);
 
   const toggleMaximize = reactHostPort.useCallback((stackPath: ModeLayoutPath) => {
     setMaximizedStackPath((prev) => (prev === stackPath ? null : stackPath));

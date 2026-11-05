@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-plugin-norm-app-surface-edit-rules = { workspace = true }
 pack = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }

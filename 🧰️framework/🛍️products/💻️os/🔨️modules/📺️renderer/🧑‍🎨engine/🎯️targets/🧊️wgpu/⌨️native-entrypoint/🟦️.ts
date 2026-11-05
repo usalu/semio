@@ -9,7 +9,7 @@ import { runOwnedCommand } from "../../../../../../../../🔨️modules/🏃️p
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { once } from "node:events";
 import nativeLaunchDeclaration from "./🎟️launch/🔣️.json" with { type: "json" };
-import { nativeLaunchEnvironmentV1, readNativeLaunchDeclarationV1 } from "./🎟️launch/🟦️.ts";
+import { nativeLaunchEnvironmentV1, readNativeLaunchDeclarationV1, selectNativeLaunchDeclarationV1 } from "./🎟️launch/🟦️.ts";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { Server } from "node:http";
 import { dirname, isAbsolute, join, resolve } from "node:path";
@@ -66,7 +66,7 @@ export async function runRunScript(context: Readonly<{ root: string; repoRoot: s
   {
     const binary=playgroundNativeHostArtifactV1(repo,row.nativeHost,profile)??nativeRendererBinary(resolve(context.root,"../📦️packages/🦀️rust"),profile);
     if(!existsSync(binary))throw new Error(`Missing native host artifact: ${binary}`);
-    await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], nativeLaunchEnvironmentV1(context.invocation, { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_PLUGIN_MODULES: runtime, SEMIO_RUNTIME_ASSETS: repo }, readNativeLaunchDeclarationV1(nativeLaunchDeclaration), Date.now()), repo,context.invocation,createRequestedIssuedResourceControlV1(runtimeControl,0,signal),row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
+    await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], nativeLaunchEnvironmentV1(context.invocation, { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_PLUGIN_MODULES: runtime, SEMIO_RUNTIME_ASSETS: repo }, selectNativeLaunchDeclarationV1(readNativeLaunchDeclarationV1(nativeLaunchDeclaration),row.nativeLaunchPolicy,path=>readFileSync(join(repo,path),"utf8")), Date.now()), repo,context.invocation,createRequestedIssuedResourceControlV1(runtimeControl,0,signal),row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
   }
   });
   });

@@ -2,6 +2,12 @@
 //! with the session colour and selection; a fill the layer or the session cannot take leaves zero trace.
 
 use semio_s_artifact_raster_raster_editor::config::RasterConfig;
+use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+
+fn receive_persistent_fixture(value:semio_framework_value::DslValue,grant:semio_framework_value::RetainedCloneGrant)->semio_s_artifact_raster_raster_model::RasterSelectionSpans{
+ let mut caller=OriginalWorkFixture::new();let output=caller.receive_native(value,grant);caller.finish();output
+}
+use semio_framework_value::ToValue;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView};
@@ -20,7 +26,7 @@ fn document(locked: bool, masked: bool) -> RasterSnapshot {
 }
 
 fn selected(target: &str) -> RasterConfig {
-    RasterConfig { paint_target: target.into(), pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: target.into(), width: 4, height: 3, spans: vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }] }), ..RasterConfig::default() }
+    RasterConfig { paint_target: target.into(), pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: target.into(), width: 4, height: 3, spans: receive_persistent_fixture(vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }].to_value(),OriginalWorkFixture::stock()) }), ..RasterConfig::default() }
 }
 
 fn fill() -> FillSelection {
@@ -38,7 +44,9 @@ fn a_pixel_fill_is_one_leaf_with_the_session_colour_and_selection() {
     let RasterMutation::FillSelection(leaf) = fill_selection_leaf(&fill(), &document, &session).expect("the fill builds") else { panic!("a selection fill") };
     assert_eq!((leaf.layer_id.as_str(), leaf.target.as_str()), ("ink", "pixels"));
     assert_eq!(leaf.color, vec![1.0, 128.0 / 255.0, 0.0, 1.0]);
-    assert_eq!(leaf.selection, Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }]));
+    assert_eq!(leaf.selection.as_ref().map(|selection|selection.iter().copied().collect::<Vec<_>>()), Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }]));
+    assert!(std::ptr::eq(leaf.selection.as_ref().unwrap().get(0).unwrap(),session.pixel_selection.as_ref().unwrap().spans.get(0).unwrap()));
+    let mut caller=OriginalWorkFixture::new();caller.retire_owned((leaf,session),OriginalWorkFixture::stock());caller.finish();
     retire(document);
 }
 
@@ -49,10 +57,12 @@ fn a_mask_fill_is_the_mask_value_at_the_brush_opacity() {
     let RasterMutation::FillSelection(leaf) = fill_selection_leaf(&fill(), &document, &session).expect("the mask fill builds") else { panic!("a selection fill") };
     assert_eq!(leaf.target, "mask");
     assert_eq!(leaf.color, vec![0.2, 0.2, 0.2, 0.5]);
-    assert_eq!(leaf.selection, Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }]));
-    let whole = RasterConfig { pixel_selection: None, ..session };
+    assert_eq!(leaf.selection.as_ref().map(|selection|selection.iter().copied().collect::<Vec<_>>()), Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }]));
+    let mut caller=OriginalWorkFixture::new();caller.retire_owned(leaf,OriginalWorkFixture::stock());caller.finish();
+    let mut whole=session;let selection=whole.pixel_selection.take();
     let RasterMutation::FillSelection(leaf) = fill_selection_leaf(&fill(), &document, &whole).expect("the whole-mask fill builds") else { panic!("a selection fill") };
     assert_eq!(leaf.selection, None, "without a selection the whole image fills");
+    let mut caller=OriginalWorkFixture::new();caller.retire_owned((selection,whole),OriginalWorkFixture::stock());caller.finish();
     retire(document);
 }
 
@@ -64,6 +74,7 @@ fn a_fill_the_layer_or_the_session_cannot_take_is_refused() {
         ("invalid colour", document(false, false), RasterConfig { brush_color: "orange".into(), ..selected("pixels") }),
     ] {
         assert!(fill_selection_leaf(&fill(), &document, &session).is_err(), "{case} must be refused");
+        let mut caller=OriginalWorkFixture::new();caller.retire_owned(session,OriginalWorkFixture::stock());caller.finish();
         retire(document);
     }
     let document = document(false, false);

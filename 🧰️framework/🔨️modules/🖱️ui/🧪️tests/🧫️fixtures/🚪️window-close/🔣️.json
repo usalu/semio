@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "name": "synchronous approval",
+      "result": "true",
+      "expected": true
+    },
+    {
+      "name": "implicit approval",
+      "result": "void",
+      "expected": true
+    },
+    {
+      "name": "synchronous keep",
+      "result": "false",
+      "expected": false
+    },
+    {
+      "name": "asynchronous approval",
+      "result": "async-true",
+      "expected": true
+    },
+    {
+      "name": "asynchronous keep",
+      "result": "async-false",
+      "expected": false
+    },
+    {
+      "name": "rejected admission",
+      "result": "reject",
+      "expected": false
+    },
+    {
+      "name": "thrown admission",
+      "result": "throw",
+      "expected": false
+    }
+  ]
+}

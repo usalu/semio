@@ -62,17 +62,17 @@ message En1993Diff {
   // @state artifact
   bytes foundation_blocks = 30;
   // @state artifact
-  bytes material_ductility = 33;
+  bytes material_ductility = 31;
   // @state artifact
-  bytes forming_gains = 34;
+  bytes forming_gains = 32;
   // @state artifact
-  bytes buckling_lengths = 35;
+  bytes buckling_lengths = 33;
   // @state artifact
-  bytes fatigue_stresses = 36;
+  bytes fatigue_stresses = 34;
   // @state artifact
-  bytes frame_actions = 31;
+  bytes frame_actions = 35;
   // @state artifact
-  bytes frame_member_bases = 32;
+  bytes frame_member_bases = 36;
   // @state artifact
   bytes fastened_joints = 37;
 }
@@ -152,6 +152,7 @@ message En1993SectionPatch {
   optional double w_pl_y = 17;
   optional double w_pl_z = 18;
   optional double area_net = 19;
+  optional string fabrication = 20;
 }
 message En1993MemberDelta {
   repeated En1993MemberRemoval removed = 1;
@@ -202,7 +203,7 @@ message En1993MemberPatch {
   optional string web_material_id = 23;
   optional string torsion_load = 24;
   optional double torque_position = 25;
-  optional WarpingSupport warping_support = 26;
+  optional string warping_support = 26;
 }
 message En1993LoadCaseDelta {
   repeated En1993LoadCaseRemoval removed = 1;
@@ -258,7 +259,7 @@ message En1993MemberActionModification {
 message En1993MemberActionPatch {
   optional string member_id = 1;
   optional string load_case_id = 2;
-  optional DesignAction action = 3;
+  optional bytes action = 3;
 }
 message En1993JointDelta {
   repeated En1993JointRemoval removed = 1;
@@ -329,7 +330,7 @@ message En1993JointPatch {
   optional double column_moment_resistance = 43;
   optional double beam_inertia = 44;
   optional double beam_span = 45;
-  optional int64 braced_frame = 46;
+  optional uint32 braced_frame = 46;
   optional double stiffness_ratio = 47;
   optional double transformation_parameter = 48;
   optional string assumed_class = 49;
@@ -345,6 +346,10 @@ message En1993JointPatch {
   optional double base_moment = 59;
   optional double base_lever_left = 60;
   optional double base_lever_right = 61;
+  optional double beam_web_thickness = 62;
+  optional double beam_web_fy = 63;
+  optional double weld_force_longitudinal = 64;
+  optional double weld_force_transverse = 65;
 }
 message En1993FatigueDetailDelta {
   repeated En1993FatigueDetailRemoval removed = 1;
@@ -375,6 +380,7 @@ message En1993FatigueDetailPatch {
   optional string method = 3;
   optional bytes spectrum = 4;
   optional string stress_history = 5;
+  optional string consequence = 6;
 }
 message En1993FireExposureDelta {
   repeated En1993FireExposureRemoval removed = 1;
@@ -452,8 +458,8 @@ message En1993ColdFormedMemberPatch {
   optional double shear_force = 16;
   optional double support_reaction = 17;
   optional double support_length = 18;
-  optional int64 crippling_category = 19;
-  optional int64 stiffened_support = 20;
+  optional uint32 crippling_category = 19;
+  optional uint32 stiffened_support = 20;
   optional double bending_moment = 21;
   optional double moment_resistance = 22;
   optional double sheeting_stiffness = 23;
@@ -499,7 +505,7 @@ message En1993PlatedPanelPatch {
   optional double compression_stress = 11;
   optional double half_width = 12;
   optional double equivalent_span = 13;
-  optional int64 hogging = 14;
+  optional uint32 hogging = 14;
   optional string patch_type = 15;
   optional double patch_force = 16;
   optional double patch_length = 17;
@@ -527,13 +533,16 @@ message En1993PlatedPanelPatch {
   optional double corrugation_depth = 39;
   optional double web_height = 40;
   optional double stiffener_spacing = 41;
-  optional StiffenerShape stiffener_shape = 42;
+  optional string stiffener_shape = 42;
   optional double stiffener_depth = 43;
   optional double stiffener_thickness = 44;
   optional double stiffener_flange_width = 45;
   optional double stiffener_flange_thickness = 46;
   optional double lateral_pressure = 47;
   optional double lateral_pressure_coefficient = 48;
+  optional string steel_grade = 49;
+  optional string steel_subgrade = 50;
+  optional double design_temperature = 51;
 }
 message En1993SiloShellDelta {
   repeated En1993SiloShellRemoval removed = 1;
@@ -681,6 +690,7 @@ message En1993BridgeFatiguePatch {
   optional double surfacing_thickness = 22;
   optional double wheel_load = 23;
   optional double wheel_patch = 24;
+  optional string consequence = 25;
 }
 message En1993TowerLegDelta {
   repeated En1993TowerLegRemoval removed = 1;
@@ -807,7 +817,7 @@ message En1993CraneRunwayPatch {
   optional double max_wheel_load = 8;
   optional double load_factor = 9;
   optional double rail_inertia = 10;
-  optional int64 rail_fixed = 11;
+  optional uint32 rail_fixed = 11;
   optional double flange_effective_width = 12;
   optional double flange_thickness = 13;
   optional double wheel_eccentricity = 14;
@@ -852,8 +862,8 @@ message En1993StoreyPatch {
   optional double vertical_load = 4;
   optional double horizontal_load = 5;
   optional double drift = 6;
-  optional int64 columns = 7;
-  optional int64 plastic_analysis = 8;
+  optional uint32 columns = 7;
+  optional uint32 plastic_analysis = 8;
   optional double building_height = 9;
   optional double bracing_load = 10;
   optional double bracing_length = 11;
@@ -895,7 +905,7 @@ message En1993RestraintPatch {
   optional string load_distribution = 10;
   optional double design_moment = 11;
   optional double design_axial = 12;
-  optional int64 general_method = 13;
+  optional uint32 general_method = 13;
   optional double hinge_to_restraint = 14;
 }
 message En1993BuiltUpMemberDelta {
@@ -929,13 +939,13 @@ message En1993BuiltUpMemberPatch {
   optional double chord_inertia = 5;
   optional double chord_distance = 6;
   optional double panel_spacing = 7;
-  optional int64 planes = 8;
+  optional uint32 planes = 8;
   optional double batten_inertia = 9;
   optional double diagonal_area = 10;
   optional double diagonal_length = 11;
   optional double design_axial = 12;
   optional double design_moment = 13;
-  optional int64 back_to_back = 14;
+  optional uint32 back_to_back = 14;
   optional double min_radius = 15;
   optional double chain_spacing = 16;
   optional string chord_shape = 17;
@@ -1090,12 +1100,12 @@ message En1993JointRowPatch {
   optional double extension_edge = 8;
   optional double alpha_factor = 9;
   optional double pitch_to_previous = 10;
-  optional int64 bolts = 11;
+  optional uint32 bolts = 11;
   optional double bolt_diameter = 12;
   optional double bolt_stress_area = 13;
   optional double grip_length = 14;
   optional string bolt_class = 15;
-  optional int64 group_with_previous = 16;
+  optional uint32 group_with_previous = 16;
 }
 message En1993FrameNodeDelta {
   repeated En1993FrameNodeRemoval removed = 1;
@@ -1218,23 +1228,24 @@ message En1993JointPlatePatch {
   optional double plate_height = 4;
   optional double plate_width = 5;
   optional double plate_thickness = 6;
-  optional int64 plate_count = 7;
+  optional uint32 plate_count = 7;
   optional double plate_fy = 8;
   optional double plate_fu = 9;
   optional string bolt_class = 10;
   optional double bolt_diameter = 11;
   optional double hole_diameter = 12;
-  optional int64 bolt_rows = 13;
-  optional int64 bolts_per_row = 14;
+  optional uint32 bolt_rows = 13;
+  optional uint32 bolts_per_row = 14;
   optional double pitch = 15;
   optional double gauge = 16;
   optional double end_distance = 17;
   optional double edge_distance = 18;
-  optional int64 shear_planes = 19;
+  optional uint32 shear_planes = 19;
   optional double eccentricity = 20;
   optional double weld_throat = 21;
   optional double weld_fu = 22;
   optional double weld_beta_w = 23;
+  optional string group_method = 24;
 }
 message En1993FoundationBlockDelta {
   repeated En1993FoundationBlockRemoval removed = 1;
@@ -1268,7 +1279,7 @@ message En1993FoundationBlockPatch {
   optional double concrete_fck = 6;
   optional double grout_fck = 7;
   optional double grout_thickness = 8;
-  optional int64 anchor_count = 9;
+  optional uint32 anchor_count = 9;
   optional string anchor_class = 10;
   optional double anchor_diameter = 11;
   optional double anchor_stress_area = 12;
@@ -1302,11 +1313,11 @@ message En1993FrameActionPatch {
   optional string load_case_id = 1;
   optional string target_id = 2;
   optional string kind = 3;
-  optional string fx = 4;
-  optional string fz = 5;
-  optional string my = 6;
-  optional string start_ratio = 7;
-  optional string end_ratio = 8;
+  optional double fx = 4;
+  optional double fz = 5;
+  optional double my = 6;
+  optional double start_ratio = 7;
+  optional double end_ratio = 8;
 }
 message En1993FrameMemberBasisDelta {
   repeated En1993FrameMemberBasisRemoval removed = 1;
@@ -1334,4 +1345,174 @@ message En1993FrameMemberBasisModification {
 message En1993FrameMemberBasisPatch {
   optional string member_id = 1;
   optional string basis = 2;
+}
+message En1993FatigueStressDelta {
+  repeated En1993FatigueStressRemoval removed = 1;
+  repeated En1993FatigueStressInsertion inserted = 2;
+  repeated En1993FatigueStressRelocation moved = 3;
+  repeated En1993FatigueStressModification modified = 4;
+}
+message En1993FatigueStressRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1993FatigueStressInsertion {
+  uint32 index = 1;
+  FatigueStress row = 2;
+}
+message En1993FatigueStressRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1993FatigueStressModification {
+  string id = 1;
+  En1993FatigueStressPatch patch = 2;
+}
+message En1993FatigueStressPatch {
+  optional string detail_id = 1;
+  optional string max_case_id = 2;
+  optional string min_case_id = 3;
+  optional double fibre_z = 4;
+  optional double fibre_y = 5;
+  optional string relief = 6;
+  optional double concentration = 7;
+  optional double thickness = 8;
+  optional double cycles = 9;
+}
+message En1993BucklingLengthDelta {
+  repeated En1993BucklingLengthRemoval removed = 1;
+  repeated En1993BucklingLengthInsertion inserted = 2;
+  repeated En1993BucklingLengthRelocation moved = 3;
+  repeated En1993BucklingLengthModification modified = 4;
+}
+message En1993BucklingLengthRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1993BucklingLengthInsertion {
+  uint32 index = 1;
+  BucklingLength row = 2;
+}
+message En1993BucklingLengthRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1993BucklingLengthModification {
+  string id = 1;
+  En1993BucklingLengthPatch patch = 2;
+}
+message En1993BucklingLengthPatch {
+  optional string member_id = 1;
+  optional string plane = 2;
+  optional string sway = 3;
+  optional string restraint_a = 4;
+  optional double column_stiffness_a = 5;
+  optional double beam_stiffness_a = 6;
+  optional string restraint_b = 7;
+  optional double column_stiffness_b = 8;
+  optional double beam_stiffness_b = 9;
+}
+message En1993FormingGainDelta {
+  repeated En1993FormingGainRemoval removed = 1;
+  repeated En1993FormingGainInsertion inserted = 2;
+  repeated En1993FormingGainRelocation moved = 3;
+  repeated En1993FormingGainModification modified = 4;
+}
+message En1993FormingGainRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1993FormingGainInsertion {
+  uint32 index = 1;
+  FormingGain row = 2;
+}
+message En1993FormingGainRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1993FormingGainModification {
+  string id = 1;
+  En1993FormingGainPatch patch = 2;
+}
+message En1993FormingGainPatch {
+  optional string member_id = 1;
+  optional string forming = 2;
+  optional double ultimate_strength = 3;
+  optional double gross_area = 4;
+  optional uint32 bends = 5;
+  optional double used_yield = 6;
+}
+message En1993MaterialDuctilityDelta {
+  repeated En1993MaterialDuctilityRemoval removed = 1;
+  repeated En1993MaterialDuctilityInsertion inserted = 2;
+  repeated En1993MaterialDuctilityRelocation moved = 3;
+  repeated En1993MaterialDuctilityModification modified = 4;
+}
+message En1993MaterialDuctilityRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1993MaterialDuctilityInsertion {
+  uint32 index = 1;
+  MaterialDuctility row = 2;
+}
+message En1993MaterialDuctilityRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1993MaterialDuctilityModification {
+  string id = 1;
+  En1993MaterialDuctilityPatch patch = 2;
+}
+message En1993MaterialDuctilityPatch {
+  optional string material_id = 1;
+  optional double elongation = 2;
+  optional double ultimate_strain = 3;
+}
+message En1993FastenedJointDelta {
+  repeated En1993FastenedJointRemoval removed = 1;
+  repeated En1993FastenedJointInsertion inserted = 2;
+  repeated En1993FastenedJointRelocation moved = 3;
+  repeated En1993FastenedJointModification modified = 4;
+}
+message En1993FastenedJointRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1993FastenedJointInsertion {
+  uint32 index = 1;
+  FastenedJoint row = 2;
+}
+message En1993FastenedJointRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1993FastenedJointModification {
+  string id = 1;
+  En1993FastenedJointPatch patch = 2;
+}
+message En1993FastenedJointPatch {
+  optional string member_id = 1;
+  optional string kind = 2;
+  optional double diameter = 3;
+  optional double washer_diameter = 4;
+  optional uint32 count = 5;
+  optional uint32 per_row = 6;
+  optional double head_thickness = 7;
+  optional double base_thickness = 8;
+  optional double head_strength = 9;
+  optional double base_strength = 10;
+  optional double end_distance = 11;
+  optional double edge_distance = 12;
+  optional double pitch = 13;
+  optional double gauge = 14;
+  optional double sheet_width = 15;
+  optional double shear_force = 16;
+  optional double tension_force = 17;
+  optional double shear_resistance = 18;
 }

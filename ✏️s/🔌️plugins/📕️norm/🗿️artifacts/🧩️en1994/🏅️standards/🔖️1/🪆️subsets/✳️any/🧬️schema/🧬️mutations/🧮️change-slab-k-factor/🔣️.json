@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-slab-k-factor",
   "semanticKind": "change-slab-k-factor",
-  "displayName": "ChangeSlabKFactor",
+  "displayName": "Change slab coefficient k of the m-k method",
   "emoji": "🧮️",
   "aggregateVariant": "ChangeSlabKFactor",
   "payloadSchema": "🧬️schema/🔣️.json",

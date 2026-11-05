@@ -2602,75 +2602,9 @@
           ]
         },
         {
-          "mutationId": "insert-member",
-          "sourceMutationDirectoryName": "➕️insert-member",
-          "mutationDirectoryName": "➕️insert-member",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-storey",
-          "sourceMutationDirectoryName": "➕️insert-storey",
-          "mutationDirectoryName": "➕️insert-storey",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-system",
-          "sourceMutationDirectoryName": "➕️insert-system",
-          "mutationDirectoryName": "➕️insert-system",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
           "mutationId": "remove-storey-variable",
           "sourceMutationDirectoryName": "➖️remove-storey-variable",
           "mutationDirectoryName": "➖️remove-storey-variable",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-member",
-          "sourceMutationDirectoryName": "➖️remove-member",
-          "mutationDirectoryName": "➖️remove-member",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-storey",
-          "sourceMutationDirectoryName": "➖️remove-storey",
-          "mutationDirectoryName": "➖️remove-storey",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-system",
-          "sourceMutationDirectoryName": "➖️remove-system",
-          "mutationDirectoryName": "➖️remove-system",
           "scenarios": [
             {
               "id": "apply",
@@ -2715,6 +2649,72 @@
           "mutationId": "remove-tower-variable",
           "sourceMutationDirectoryName": "➖️remove-tower-variable",
           "mutationDirectoryName": "➖️remove-tower-variable",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-member",
+          "sourceMutationDirectoryName": "➕️insert-member",
+          "mutationDirectoryName": "➕️insert-member",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-member",
+          "sourceMutationDirectoryName": "➖️remove-member",
+          "mutationDirectoryName": "➖️remove-member",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-storey",
+          "sourceMutationDirectoryName": "➕️insert-storey",
+          "mutationDirectoryName": "➕️insert-storey",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-storey",
+          "sourceMutationDirectoryName": "➖️remove-storey",
+          "mutationDirectoryName": "➖️remove-storey",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-system",
+          "sourceMutationDirectoryName": "➕️insert-system",
+          "mutationDirectoryName": "➕️insert-system",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-system",
+          "sourceMutationDirectoryName": "➖️remove-system",
+          "mutationDirectoryName": "➖️remove-system",
           "scenarios": [
             {
               "id": "apply",
@@ -4044,17 +4044,17 @@
         "change-tower-variable-category",
         "change-tower-variable-qk-n",
         "insert-storey-variable",
-        "insert-member",
-        "insert-storey",
-        "insert-system",
         "remove-storey-variable",
-        "remove-member",
-        "remove-storey",
-        "remove-system",
         "insert-bridge-variable",
         "remove-bridge-variable",
         "insert-tower-variable",
         "remove-tower-variable",
+        "insert-member",
+        "remove-member",
+        "insert-storey",
+        "remove-storey",
+        "insert-system",
+        "remove-system",
         "change-soil-layer-foundation-id",
         "change-soil-layer-thickness-m",
         "change-soil-unit-wt-nm3",
@@ -4125,20 +4125,20 @@
         "change-pier-steel-fyk-mpa",
         "change-pier-axial-load-n",
         "change-bearing-bridge-id",
-        "change-joint-beam-id",
-        "change-joint-column-id",
-        "change-joint-storey-id",
         "change-joint-building-id",
+        "change-joint-storey-id",
+        "change-joint-column-id",
+        "change-joint-beam-id",
         "change-bearing-pier-id",
         "change-bearing-device",
         "change-bearing-xm",
-        "change-joint-ym",
         "change-joint-xm",
+        "change-joint-ym",
         "change-bearing-stiffness-n-per-m",
         "change-bearing-d-rd-m",
         "change-bearing-seat-length-m",
-        "change-joint-beam-moment-rd-nm",
         "change-joint-column-moment-rd-nm",
+        "change-joint-beam-moment-rd-nm",
         "change-bearing-min-support-m",
         "insert-pier",
         "remove-pier",

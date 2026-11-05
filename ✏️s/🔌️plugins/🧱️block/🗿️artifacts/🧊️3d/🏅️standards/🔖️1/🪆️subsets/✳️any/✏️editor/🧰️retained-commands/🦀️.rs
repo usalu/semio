@@ -119,7 +119,7 @@ impl ArtifactCommandWork<EditorApp<Block3dPlayApp>> for Block3dWindowPreviewWork
         _interaction: &crate::protocol::InteractionState,
         context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block3dPlayApp>>>,
     ) -> Option<usize> {
-        let view_state = context.and_then(|context| context.view_state.as_ref())?;
+        let view_state = context.and_then(|context| context.view_state.as_deref())?;
         let targets_world = view_state.active_window_kind_id.as_deref() == Some(world::BLOCK3D_WINDOW_WORLD)
             && view_state.window_id.as_deref().is_some_and(|window_id| !window_id.is_empty());
         (targets_world && command.command_id() == self.tool_id).then_some(1)
@@ -131,7 +131,7 @@ impl ArtifactCommandWork<EditorApp<Block3dPlayApp>> for Block3dWindowPreviewWork
             return Err(Fault::from("block3d-window-preview-work-repeated"));
         }
         self.consumed = true;
-        let view_state = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("block3d-window-preview-requires-view"))?;
+        let view_state = input.context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("block3d-window-preview-requires-view"))?;
         if view_state.active_window_kind_id.as_deref() != Some(world::BLOCK3D_WINDOW_WORLD) {
             return Err(Fault::from("block3d-window-preview-kind-mismatch"));
         }

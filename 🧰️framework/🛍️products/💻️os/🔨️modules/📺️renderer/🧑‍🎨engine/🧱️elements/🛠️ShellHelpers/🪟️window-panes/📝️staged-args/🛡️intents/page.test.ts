@@ -10,7 +10,7 @@ import { STAGED_FORM_PAGE_ACTION, STAGED_FORM_EVENT_ACTION, type StagedFormPageB
 function fixture(token = cases.token) {
   const page = structuredClone(pages.page);
   const action = { scope: "ifc", name: STAGED_FORM_PAGE_ACTION, version: 1 };
-  let status: StagedFormStatus = { token, ready: true, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0" };
+  let status: StagedFormStatus = { token, ready: true, commitArgs: cases.args, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0" };
   let control: StagedResidentControl<string> = { node: "page-1", key: "next-page", trigger: "activate", disabled: false, editable: true, input: "none", action, binding: { token, page } as StagedFormPageBinding };
   const source: StagedControlSource<string, string> = { view: () => ({ surface: "form", revision: "publication" }), status: () => status, read: (node, trigger) => control.node === node && control.trigger === trigger ? control : undefined };
   const session = new StagedFormSession({ token, locale: "de", controllerId: "ifc" }, cases.args);
@@ -65,7 +65,7 @@ test("old preserved text proof cannot authorize paging; newest invalid status ca
   expect(f.session.handle(f.intent(2n)).kind).toBe("refused");
   expect(f.session.request()).toEqual(current);
   f.setControl(pageControl(current.token));
-  f.setStatus({ token: current.token, ready: false, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0" });
+  f.setStatus({ token: current.token, ready: false, commitArgs: null, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0" });
   expect(f.session.publish(f.source)).toBe(true);
   expect(f.session.handle(f.intent(2n)).kind).toBe("staged");
   expect(f.session.request()?.args.count).toBe("-");
@@ -90,7 +90,7 @@ test("fresh text drafts preserve current page in both request and transition res
   const f = fixture(); f.session.publish(f.source); f.session.handle(f.intent());
   const request = f.session.request()!;
   const action = { ...f.action, name: STAGED_FORM_EVENT_ACTION };
-  f.setStatus({ token: request.token, ready: true, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0" });
+  f.setStatus({ token: request.token, ready: true, commitArgs: cases.args, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0" });
   f.setControl({ node: "text-1", key: "count", trigger: "change", disabled: false, editable: true, input: "text", action, binding: { token: request.token, layout: "preserve", edits: [{ source: "text", path: ["count"] }] } });
   expect(f.session.publish(f.source)).toBe(true);
   const result = f.session.handle({ ...f.intent(2n), node: "text-1", nodeKey: "count", trigger: "change", action, input: "-" });
@@ -105,7 +105,7 @@ test("a new page publication retains the original sequence watermark", () => {
   const f = fixture(); f.session.publish(f.source);
   expect(f.session.handle(f.intent(9007199254740993n)).kind).toBe("staged");
   const current = f.session.request()!;
-  f.setStatus({ token: current.token, ready: true, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0" });
+  f.setStatus({ token: current.token, ready: true, commitArgs: cases.args, diagnostics: [], diagnosticOffset: "0", diagnosticTotal: "0" });
   f.setControl({ node: "page-1", key: "next-page", trigger: "activate", disabled: false, editable: true, input: "none", action: f.action, binding: { token: current.token, page: { fieldOffset: "32", diagnosticOffset: "0" } } });
   expect(f.session.publish(f.source)).toBe(true);
   expect(f.session.canExecute()).toBe(true);

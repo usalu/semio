@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC3",
   "title": "Concrete \u0000日本",
   "designWorkingLifeYears": 0.5,
   "deltaCDev": 0.5,
@@ -193,5 +192,6 @@
       "yaw": 0.5
     }
   ],
-  "cases": []
+  "cases": [],
+  "reliabilityClass": "RC3"
 }

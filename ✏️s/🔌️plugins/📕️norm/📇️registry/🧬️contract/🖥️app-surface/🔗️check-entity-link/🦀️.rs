@@ -65,10 +65,32 @@ pub fn focus_effect(domain: &str, focus: &CheckFocus) -> Option<semio_framework_
     if focus.targets.is_empty() || focus.owner == CheckOwner::Global {
         return None;
     }
-    let targets = semio_framework_pack_json::to_json_string(&DslValue::Array(focus.targets.iter().map(|target| DslValue::object(vec![("granularity".to_string(), DslValue::String(target.granularity.clone())), ("id".to_string(), DslValue::String(target.id.clone()))])).collect()));
-    Some(semio_framework_plugin::Effect::ReplayShellCommand {
+    Some(selection_effect(domain, &focus.targets))
+}
+
+fn selection_effect(domain: &str, targets: &[ShellSelectTarget]) -> semio_framework_plugin::Effect {
+    let targets = semio_framework_pack_json::to_json_string(&DslValue::Array(targets.iter().map(|target| DslValue::object(vec![("granularity".to_string(), DslValue::String(target.granularity.clone())), ("id".to_string(), DslValue::String(target.id.clone()))])).collect()));
+    semio_framework_plugin::Effect::ReplayShellCommand {
         action_id: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
         args: Some(DslValue::object(vec![("domainId".to_string(), DslValue::String(domain.to_owned())), ("targets".to_string(), DslValue::String(targets)), ("merge".to_string(), DslValue::String("replace".to_owned())), ("method".to_string(), DslValue::String("pick".to_owned()))])),
+    }
+}
+
+/// ☑️ Publishes the exact check identity through the same interaction selection mechanism as a viewport pick; the shared resolver derives its entity and field from the report.
+pub fn check_selection_effect(domain: &str, report: &CheckReport, index: usize) -> Option<semio_framework_plugin::Effect> {
+    let check = report.checks.get(index)?;
+    Some(selection_effect(domain, &[ShellSelectTarget { granularity: crate::viewport3d::picking::GRANULARITY_CHECK.to_owned(), id: crate::check_address(&check.id)? }]))
+}
+
+/// 🎹️ Resolves a keyboard check step from current interaction selection and publishes its exact check; a later entity pick replaces it without recency inference.
+pub fn check_step_selection_effect(domain: &str, report: &CheckReport, lane: &crate::ViewLane, picked: &[String], event: crate::LaneEvent, scene: impl FnOnce() -> StructuralScene) -> Option<semio_framework_plugin::Effect> {
+    let crate::LaneEvent::ViewStep { step, forward } = event else { return None };
+    if !matches!(step, crate::ViewStep::Check | crate::ViewStep::Governing) { return None; }
+    let selection = crate::NormSelection::from_interaction(report, lane.check, picked);
+    let view = crate::ViewLane { check: selection.check.map(|index| index as u32), ..lane.clone() };
+    crate::resolve_view_step(step, forward, report, scene, &view).into_iter().find_map(|event| match event {
+        crate::LaneEvent::ViewCheck(Some(index)) => check_selection_effect(domain, report, index as usize),
+        _ => None,
     })
 }
 

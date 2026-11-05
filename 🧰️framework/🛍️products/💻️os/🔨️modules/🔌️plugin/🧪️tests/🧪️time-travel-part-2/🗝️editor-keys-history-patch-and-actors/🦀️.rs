@@ -124,7 +124,7 @@ async fn every_route_authors_as_its_acting_actor() {
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
-    let acting = |actor: &str| ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(actor) };
+    let acting = |actor: &str| ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("ada".into()), mounted_policy, &mut identity).await;
     PluginApp::bind_actor(&mut app, "ada").await;
     let first: TestMutation = SetCount { value: 1 }.into();

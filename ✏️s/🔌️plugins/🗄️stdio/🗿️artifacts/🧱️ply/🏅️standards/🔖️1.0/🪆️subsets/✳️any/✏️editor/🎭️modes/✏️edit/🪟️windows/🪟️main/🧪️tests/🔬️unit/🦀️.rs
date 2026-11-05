@@ -1,3 +1,4 @@
+use semio_framework_plugin::WindowKit;
 use crate::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot;
 use semio_framework_plugin::MeshWindowKit;
 use crate::editor::ply::modes::edit::windows::main::*;

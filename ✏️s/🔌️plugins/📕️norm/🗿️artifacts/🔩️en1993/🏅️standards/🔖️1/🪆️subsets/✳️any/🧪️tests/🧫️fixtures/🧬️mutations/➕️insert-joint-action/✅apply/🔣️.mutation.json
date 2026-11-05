@@ -5,8 +5,8 @@
     "element": {
       "id": "jf-1-2",
       "loadCaseId": "g-permanent",
-      "shear": 213333,
-      "tension": 0
+      "shear": 213333.0,
+      "tension": 0.0
     }
   }
 }

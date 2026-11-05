@@ -21,7 +21,7 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiteCUKpa where Op
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Time-averaged undrained shear strength c_u in kPa of the top 30 m (0 = not given)", "Zeitlich gemittelte undränierte Scherfestigkeit c_u in kPa der obersten 30 m (0 = nicht angegeben) ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change time averaged undrained shear strength of the top 30 metres in kilopascals (0 = not given)", "Zeitlich gemittelte undränierte Scherfestigkeit der obersten 30 Meter in Kilopascal (0 = nicht angegeben) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-site-cu-kpa".into()]

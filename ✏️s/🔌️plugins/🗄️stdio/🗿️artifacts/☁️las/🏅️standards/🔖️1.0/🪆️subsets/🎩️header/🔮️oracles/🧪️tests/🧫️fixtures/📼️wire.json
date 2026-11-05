@@ -1,0 +1,11 @@
+{
+  "userId": "SEMIO",
+  "recordId": 42,
+  "description": "Raw Bytes",
+  "data": [
+    0,
+    255,
+    128,
+    65
+  ]
+}

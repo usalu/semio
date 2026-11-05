@@ -1,0 +1,26 @@
+{
+  "InsertDeck": {
+    "index": 0,
+    "deck": {
+      "id": "deck-1",
+      "laminationProduct": "solid",
+      "barProduct": "threaded-bar",
+      "spanM": 8.0,
+      "deckWidthM": 4.0,
+      "deckDepthM": 0.25,
+      "laminationWidthM": 0.05,
+      "barSpacingM": 0.8,
+      "barDiameterM": 0.032,
+      "plateSideM": 0.15,
+      "initialPrestressPa": 1000000.0,
+      "lossRelaxation": 0.15,
+      "lossCreep": 0.25,
+      "lossMoisture": 0.1,
+      "barResistancePa": 700000000.0,
+      "shearStressPa": 100000.0,
+      "compressionPerpendicularPa": 1000000.0,
+      "wheelLoadN": 100000.0,
+      "wheelContactM": 0.4
+    }
+  }
+}

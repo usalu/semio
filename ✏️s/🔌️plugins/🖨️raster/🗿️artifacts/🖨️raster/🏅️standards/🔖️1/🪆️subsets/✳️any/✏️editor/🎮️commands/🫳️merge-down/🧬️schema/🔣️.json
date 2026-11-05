@@ -3,6 +3,7 @@
   "title": "Merge Raster Layer Down",
   "description": "Merges a visible layer and the preceding visible normal-blend sibling into one pixel layer at their original parent position. Other layers and shared assets remain editable. Backdrop-dependent blend modes and adjustment siblings are refused. Undo restores both source layers.",
   "type": "object",
+  "x-semio-execution": {"shape":"resumable","maximumRawBytes":65536,"maximumWorkUnitsPerStep":1024,"maximumOutputBytes":372842496,"maximumSelectedLayerNodes":1024,"maximumLayerNodes":4096,"publicationLane":"artifact"},
   "required": [
     "layerId"
   ],

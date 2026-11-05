@@ -1,4 +1,4 @@
-union En1990Mutation = ChangeAnnex | ChangeProjectId | ChangeAltitudeM | ChangeConsequenceClass | ChangeReliabilityClass | ChangeDesignWorkingLifeCategory | ChangeDesignWorkingLifeYears | ChangeReferencePeriodYears | ChangeSupervisionLevel | ChangeInspectionLevel | ChangeBetaComputed | RemoveEffect | RemoveMember | RemoveSeismic | RemoveAccidental | RemoveVariable | RemovePermanent | InsertEffect | InsertMember | InsertSeismic | InsertAccidental | InsertVariable | InsertPermanent | ChangePermanentKind | ChangePermanentGk | ChangeVariableCategory | ChangeVariableQk | ChangeVariableGroup | ChangeAccidentalAd | ChangeSeismicAEk | ChangeSeismicImportanceClass | ChangeMemberLabelEn | ChangeMemberLabelDe | ChangeMemberRdStr | ChangeMemberRdGeo | ChangeMemberRdEquStab | ChangeMemberRdEquDestab | ChangeMemberRdFat | ChangeMemberSpan | ChangeMemberPrecamber | ChangeMemberDeflectionW1 | ChangeMemberDeflectionW2 | ChangeMemberDeflectionW3 | ChangeMemberDeflLimitRatio | ChangeMemberDeflLimitRatioW3 | ChangeMemberSlsLimitChar | ChangeMemberSlsLimitFreq | ChangeMemberSlsLimitQp | ChangeMemberVibrationFrequency | ChangeMemberVibFreqMin | ChangeBridgeMemberId | ChangeBridgeDeckAcceleration | ChangeBridgeDeckAccelLimit | ChangeBridgeDeckTwist | ChangeBridgeDeckTwistLimit | ChangeBridgeDeflection | ChangeBridgeDeflectionLimit | ChangeEffectMemberId | ChangeEffectActionId | ChangeEffectInfluence | ChangeFatigueMemberId | ChangeFatigueDetailCategory | ChangeFatigueStressRange | ChangeFatigueCycles | ChangeReliabilityResistanceDist | ChangeReliabilityResistanceMean | ChangeReliabilityResistanceSd | ChangeReliabilityActionDist | ChangeReliabilityActionMean | ChangeReliabilityActionSd | ChangeTestQuantity | ChangeTestDistribution | ChangeTestSampleSize | ChangeTestMean | ChangeTestStdDev | ChangeTestVariationKnown | ChangeTestConversionFactor | ChangeTestRequired | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | ChangeStructureKind | InsertBridgeSls | RemoveBridgeSls | InsertFatigueSpectrum | RemoveFatigueSpectrum | InsertReliabilityAnalysis | RemoveReliabilityAnalysis | InsertTestSeries | RemoveTestSeries | InsertPlacement | RemovePlacement | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeMemberFrameHeight | ChangeMemberFrameDrift | ChangeMemberStoreyHeight | ChangeMemberStoreyDrift | ChangeBridgeTrackGauge | ChangeBridgeLineSpeed | ChangeBridgeBallastDepth | ChangeBridgeDeckMass | ChangeBridgeNaturalFrequency | ChangeBridgeEndRotation | ChangeBridgeBasicWindSpeed | ChangeMemberMaterialStrengthK | ChangeMemberMaterialConvFactor | ChangeMemberMatPartialFactor | ChangeMemberMatDesignStrength | ChangeMemberNominalDimension | ChangeMemberDimensionTolerance | ChangeMemberDesignDimension | ChangeMemberMemberAlphaCr | ChangeMemberSecondOrderAnalysis | ChangeBridgeDampingRatio | ChangeFactorOverrideFactor | ChangeFactorOverrideTarget | ChangeFactorOverrideValue | ChangeFactorOverrideJustif | InsertFactorOverride | RemoveFactorOverride | ChangeTrafficGroupGroup | ChangeTrafficGroupVariableId | InsertTrafficGroup | RemoveTrafficGroup
+union En1990Mutation = ChangeAnnex | ChangeProjectId | ChangeAltitudeM | ChangeConsequenceClass | ChangeReliabilityClass | ChangeDesignWorkingLifeCategory | ChangeDesignWorkingLifeYears | ChangeReferencePeriodYears | ChangeSupervisionLevel | ChangeInspectionLevel | ChangeBetaComputed | RemoveEffect | RemoveMember | RemoveSeismic | RemoveAccidental | RemoveVariable | RemovePermanent | InsertEffect | InsertMember | InsertSeismic | InsertAccidental | InsertVariable | InsertPermanent | ChangePermanentKind | ChangePermanentGk | ChangeVariableCategory | ChangeVariableQk | ChangeVariableGroup | ChangeAccidentalAd | ChangeSeismicAEk | ChangeSeismicImportanceClass | ChangeMemberLabelEn | ChangeMemberLabelDe | ChangeMemberRdStr | ChangeMemberRdGeo | ChangeMemberRdEquStab | ChangeMemberRdEquDestab | ChangeMemberRdFat | ChangeMemberSpan | ChangeMemberPrecamber | ChangeMemberDeflectionW1 | ChangeMemberDeflectionW2 | ChangeMemberDeflectionW3 | ChangeMemberDeflLimitRatio | ChangeMemberDeflLimitRatioW3 | ChangeMemberSlsLimitChar | ChangeMemberSlsLimitFreq | ChangeMemberSlsLimitQp | ChangeMemberVibrationFrequency | ChangeMemberVibFreqMin | ChangeBridgeMemberId | ChangeBridgeDeckAcceleration | ChangeBridgeDeckAccelLimit | ChangeBridgeDeckTwist | ChangeBridgeDeckTwistLimit | ChangeBridgeDeflection | ChangeBridgeDeflectionLimit | ChangeEffectMemberId | ChangeEffectActionId | ChangeEffectInfluence | ChangeFatigueMemberId | ChangeFatigueDetailCategory | ChangeFatigueStressRange | ChangeFatigueCycles | ChangeReliabilityResistanceDist | ChangeReliabilityResistanceMean | ChangeReliabilityResistanceSd | ChangeReliabilityActionDist | ChangeReliabilityActionMean | ChangeReliabilityActionSd | ChangeTestQuantity | ChangeTestPairs | ChangeTestDistribution | ChangeTestSampleSize | ChangeTestMean | ChangeTestStdDev | ChangeTestVariationKnown | ChangeTestConversionFactor | ChangeTestRequired | ChangeTestTheoryVariation | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | ChangeStructureKind | InsertBridgeSls | RemoveBridgeSls | InsertFatigueSpectrum | RemoveFatigueSpectrum | InsertReliabilityAnalysis | RemoveReliabilityAnalysis | InsertTestSeries | RemoveTestSeries | InsertPlacement | RemovePlacement | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeMemberFrameHeight | ChangeMemberFrameDrift | ChangeMemberStoreyHeight | ChangeMemberStoreyDrift | ChangeBridgeTrackGauge | ChangeBridgeLineSpeed | ChangeBridgeBallastDepth | ChangeBridgeDeckMass | ChangeBridgeNaturalFrequency | ChangeBridgeEndRotation | ChangeBridgeBasicWindSpeed | ChangeMemberMaterialStrengthK | ChangeMemberMaterialConvFactor | ChangeMemberMatPartialFactor | ChangeMemberMatDesignStrength | ChangeMemberNominalDimension | ChangeMemberDimensionTolerance | ChangeMemberDesignDimension | ChangeMemberMemberAlphaCr | ChangeMemberSecondOrderAnalysis | ChangeBridgeDampingRatio | ChangeFactorOverrideFactor | ChangeFactorOverrideTarget | ChangeFactorOverrideValue | ChangeFactorOverrideJustif | InsertFactorOverride | RemoveFactorOverride | ChangeTrafficGroupGroup | ChangeTrafficGroupVariableId | ChangeReliabilityMemberId | InsertTrafficGroup | RemoveTrafficGroup
 type ChangeAnnex {
   newAnnex: AnnexChoice!
 }
@@ -266,6 +266,10 @@ type ChangeTestQuantity {
   id: String!
   newQuantity: String!
 }
+type ChangeTestPairs {
+  id: String!
+  newPairs: String!
+}
 type ChangeTestDistribution {
   id: String!
   newDistribution: TestDistribution!
@@ -293,6 +297,10 @@ type ChangeTestConversionFactor {
 type ChangeTestRequired {
   id: String!
   newRequired: Float!
+}
+type ChangeTestTheoryVariation {
+  id: String!
+  newTheoryVariation: Float!
 }
 type ChangePlacementX {
   id: String!
@@ -491,6 +499,10 @@ type ChangeTrafficGroupGroup {
 type ChangeTrafficGroupVariableId {
   id: String!
   newVariableId: String!
+}
+type ChangeReliabilityMemberId {
+  id: String!
+  newMemberId: String!
 }
 type InsertTrafficGroup {
   index: Int

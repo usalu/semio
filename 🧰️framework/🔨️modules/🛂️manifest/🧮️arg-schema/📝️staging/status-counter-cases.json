@@ -1,0 +1,149 @@
+{
+  "token": {
+    "action": "insertItem",
+    "generation": "1",
+    "revision": "r1",
+    "window": "properties"
+  },
+  "diagnostic": {
+    "path": [
+      "value"
+    ],
+    "code": "fixture",
+    "label": {
+      "en": "Fixture",
+      "de": "Prüfung"
+    }
+  },
+  "cases": [
+    {
+      "id": "empty-page",
+      "offset": "0",
+      "total": "0",
+      "count": 0,
+      "allowed": true
+    },
+    {
+      "id": "u64-max-empty",
+      "offset": "18446744073709551615",
+      "total": "18446744073709551615",
+      "count": 0,
+      "allowed": true
+    },
+    {
+      "id": "above-js-safe",
+      "offset": "9007199254740993",
+      "total": "9007199254740994",
+      "count": 1,
+      "allowed": true
+    },
+    {
+      "id": "page-fits",
+      "offset": "1",
+      "total": "17",
+      "count": 16,
+      "allowed": true
+    },
+    {
+      "id": "overflow-offset",
+      "offset": "18446744073709551616",
+      "total": "0",
+      "count": 0,
+      "allowed": false
+    },
+    {
+      "id": "overflow-total",
+      "offset": "0",
+      "total": "18446744073709551616",
+      "count": 0,
+      "allowed": false
+    },
+    {
+      "id": "leading-zero-offset",
+      "offset": "01",
+      "total": "0",
+      "count": 0,
+      "allowed": false
+    },
+    {
+      "id": "leading-zero-total",
+      "offset": "0",
+      "total": "01",
+      "count": 0,
+      "allowed": false
+    },
+    {
+      "id": "numeric-offset",
+      "offset": 0,
+      "total": "0",
+      "count": 0,
+      "allowed": false
+    },
+    {
+      "id": "numeric-total",
+      "offset": "0",
+      "total": 0,
+      "count": 0,
+      "allowed": false
+    },
+    {
+      "id": "empty-offset",
+      "offset": "",
+      "total": "0",
+      "count": 0,
+      "allowed": false
+    },
+    {
+      "id": "empty-total",
+      "offset": "0",
+      "total": "",
+      "count": 0,
+      "allowed": false
+    },
+    {
+      "id": "linebreak-offset",
+      "offset": "1\n",
+      "total": "0",
+      "count": 0,
+      "allowed": false
+    },
+    {
+      "id": "linebreak-total",
+      "offset": "0",
+      "total": "1\n",
+      "count": 0,
+      "allowed": false
+    },
+    {
+      "id": "offset-after-total",
+      "offset": "2",
+      "total": "1",
+      "count": 0,
+      "allowed": false,
+      "schemaAllowed": true
+    },
+    {
+      "id": "page-overrun",
+      "offset": "1",
+      "total": "1",
+      "count": 1,
+      "allowed": false,
+      "schemaAllowed": true
+    },
+    {
+      "id": "page-count-limit",
+      "offset": "0",
+      "total": "17",
+      "count": 17,
+      "allowed": false
+    },
+    {
+      "id": "u64-addition-overflow",
+      "offset": "18446744073709551615",
+      "total": "18446744073709551615",
+      "count": 1,
+      "allowed": false,
+      "schemaAllowed": true
+    }
+  ]
+}

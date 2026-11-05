@@ -193,7 +193,7 @@ test("the authored policy lets a graph holder wait for the pinned graph snapshot
 
 test("the Bazel slot picker is the innermost lock: any held whole-build pin may precede it, and while it is held no other blocking lease may be requested", () => {
   const live = readLeaseOrderPolicyV1(authored), directory = "/repo/.cache/b/l/m/data", held = (resource: string, mode: "shared" | "exclusive") => ({ directory, resource, mode, atMs: 0, task: 1 }), request = (resource: string, nonblocking = false) => ({ directory, resource, mode: "exclusive" as const, nonblocking });
-  const gates = ["bazel-slot-gate", "bazel-slot-gate:service"], holds = ["build-graph:/repo/.cache/b/g/m/snapshots/" + "a".repeat(64) + ".json", "build-graph-store:/repo/.cache/b/g/m", "rust-code:/repo/.cache/b/t/m/rc/" + "b".repeat(64), "repo:compiler-writer:/repo/.cache/rust/fixed/m", "rustup:home", "cargo:registry:/h", "semio.compiler.host-capacity/v1", "artifact:/a/b", "nx-tooling-activation", "bazel-slot-s0", "bazel-snapshot-restore"];
+  const gates = ["bazel-slot-gate", "bazel-slot-gate:service"], holds = ["build-graph:/repo/.cache/b/g/m/snapshots/" + "a".repeat(64) + ".json", "build-graph-store:/repo/.cache/b/g/m", "rust-code:/repo/.cache/b/t/m/rc/" + "b".repeat(64), "repo:compiler-writer:/repo/.cache/b/r/m", "rustup:home", "cargo:registry:/h", "semio.compiler.host-capacity/v1", "artifact:/a/b", "nx-tooling-activation", "bazel-slot-s0", "bazel-snapshot-restore"];
   const highest = Math.max(...live.classes.filter(row => row.id !== "bazel-picker").map(row => row.rank));
   for (const gate of gates) {
     expect(classifyLeaseResourceV1(live, gate).id, gate).toBe("bazel-picker");
@@ -219,7 +219,7 @@ test("a shared whole-build pin that nobody waits for is unordered: nothing reque
   }
   expect(classifyLeaseResourceV1(live, "rust-code-publication:/repo/.cache/b/t/m/rc").id, "the publication writer stays ordered").toBe("namespace");
   expect(classifyLeaseResourceV1(live, "build-graph-store:/repo/.cache/b/g/m").id).toBe("graph");
-  for (const resource of ['["semio.cargo.build-lease/v1","/b","prototype"]', "artifact-capture:/a/b"]) expect(checkLeaseOrderV1(live, [held("repo:compiler-writer:/repo/.cache/rust/fixed/m")], request(resource, "shared"))?.heldClass, `${resource} under the compiler writer custody`).toBe("image");
+  for (const resource of ['["semio.cargo.build-lease/v1","/b","prototype"]', "artifact-capture:/a/b"]) expect(checkLeaseOrderV1(live, [held("repo:compiler-writer:/repo/.cache/b/r/m")], request(resource, "shared"))?.heldClass, `${resource} under the compiler writer custody`).toBe("image");
   const exclusive = (resource: string) => held(resource, "exclusive"), pinRequest = request(pins[1]!, "shared");
   expect(checkHoldAndWaitV1(live, [exclusive("rust-code-publication:/repo/.cache/b/t/m/rc")], pinRequest, 60000)?.kind, "an exclusive namespace holder still may not wait for a pin").toBe("hold-and-wait");
   for (const from of ["nx:daemon-service:" + "b".repeat(64), "semio.compiler.host-capacity/v1", '["semio.cargo.custody-lease/v1","/b","prototype"]']) expect(checkHoldAndWaitV1(live, [exclusive(from)], request(pins[0]!, "shared"), 60000), `${from} keeps its declared edge to the pin`).toBeUndefined();

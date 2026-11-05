@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {"filter":"invert","amount":0,"min":null,"max":null},
+    {"filter":"grayscale","amount":0,"min":null,"max":null},
+    {"filter":"clear","amount":0,"min":null,"max":null},
+    {"filter":"flipHorizontal","amount":0,"min":null,"max":null},
+    {"filter":"flipVertical","amount":0,"min":null,"max":null},
+    {"filter":"brightness","amount":0.25,"min":-1,"max":1},
+    {"filter":"contrast","amount":-0.5,"min":-1,"max":1},
+    {"filter":"saturation","amount":0.75,"min":-1,"max":1},
+    {"filter":"gamma","amount":1.25,"min":0.01,"max":10},
+    {"filter":"threshold","amount":128,"min":0,"max":255},
+    {"filter":"posterize","amount":4,"min":2,"max":256},
+    {"filter":"blur","amount":2,"min":0,"max":16},
+    {"filter":"sharpen","amount":1.5,"min":0,"max":5}
+  ],
+  "invalid": [
+    {"filter":"unknown","amount":0},
+    {"filter":"invert","amount":1},
+    {"filter":"brightness","amount":2},
+    {"filter":"gamma","amount":0},
+    {"filter":"threshold","amount":256},
+    {"filter":"posterize","amount":3.5},
+    {"filter":"posterize","amount":1},
+    {"filter":"blur","amount":0.5},
+    {"filter":"sharpen","amount":-1}
+  ]
+}

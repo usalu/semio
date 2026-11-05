@@ -119,3 +119,36 @@ fn both_directions_agree() {
         assert!(back.rows.contains(&index) && focus_of_check(&report, &scene, index, CameraPreset::Iso).is_some());
     }
 }
+
+#[semio_framework_async_macros::async_test]
+async fn pick_step_and_fresh_pick_follow_the_real_interaction_machine() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🎞️sequence.json")).expect("selection sequence");
+    let mut report = CheckReport::default();
+    for row in fixture["checks"].as_array().unwrap() {
+        report.push(check(row["id"].as_str().unwrap(), row["entity"].as_str().unwrap(), row["utilization"].as_f64().unwrap(), CheckStatus::Pass));
+    }
+    let scene = scene();
+    let topology = crate::domain_topology(&DslValue::object(Vec::new()), &scene, &report, None);
+    let spec = crate::protocol::SelectionSpec { modes: vec![crate::protocol::SelectionMode::Multiple], methods: vec![crate::protocol::SelectionMethod::Pick], merges: vec![crate::protocol::MergeMode::Replace], transitive: false, broadcast: false };
+    let mut interaction = crate::protocol::DomainSelection::default();
+    let mut lane = crate::ViewLane::default();
+    for row in fixture["events"].as_array().unwrap() {
+        let targets = if row["kind"] == "pick" {
+            vec![crate::protocol::InteractionTarget { granularity: "member".into(), id: entity_address(EntityKind::Member, row["entity"].as_str().unwrap()).unwrap() }]
+        } else {
+            let forward = row["forward"].as_bool().unwrap();
+            let effect = check_step_selection_effect("norm.sequence", &report, &lane, &interaction.ids, LaneEvent::ViewStep { step: ViewStep::Check, forward }, || scene.clone()).expect("step selection effect");
+            let semio_framework_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) } = effect else { panic!("interaction selection replay") };
+            assert_eq!(action_id, semio_framework::INTERACTION_SELECT_ACTION_ID);
+            let targets: Vec<ShellSelectTarget> = serde_json::from_str(args.get("targets").unwrap().as_str().unwrap()).expect("framework targets");
+            lane = crate::step_view(&lane, ViewStep::Check, forward, &report, || scene.clone());
+            targets.into_iter().map(|target| crate::protocol::InteractionTarget { granularity: target.granularity, id: target.id }).collect()
+        };
+        interaction = crate::protocol::next_selection(&spec, &interaction, &topology, &crate::protocol::SelectionInput { targets, merge: crate::protocol::MergeMode::Replace, mode: crate::protocol::SelectionMode::Multiple }).await;
+        let selected = crate::NormSelection::from_interaction(&report, lane.check, &interaction.ids);
+        assert_eq!(selected.check, row["check"].as_u64().map(|index| index as usize));
+        assert_eq!(selected.primary(&report).as_deref(), row["focus"].as_str());
+        let checks = crate::plan_checks(&report, &selected.checks_state(&report, ChecksViewState::default()), Locale::En);
+        assert!(checks.iter().any(|group| group.rows.contains(&selected.check.unwrap())));
+    }
+}

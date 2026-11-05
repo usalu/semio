@@ -8,6 +8,7 @@ use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 /// 📚 Every path an DIN EN 16798 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field_arguments: &[],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "zones[].tOpSummerC", kind: "change-zone-t-op-summer", selectors: &[SelectorKey::Id("zoneId")], value: "newTOpSummerC" },

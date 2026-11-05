@@ -22,7 +22,7 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRoofCE where Op: p
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change exposure coefficient cE of the roof", "Dach: Aussetzungskoeffizient cE ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change exposure coefficient of the roof", "Expositionsbeiwert des Daches ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -341,8 +341,8 @@ for (const row of fixture.roleTargets) {
 }
 for (const row of fixture.modeSteps) rows.push({ id: row.id, appId: exports.stepModeIdV1(row.modeIds, row.activeModeId, row.step), roles: [] });
 const ledger = exports.createSealedInstanceLedgerV1(fixture.sealed.slots);
-for (const [pluginId, instanceId] of fixture.sealed.seal) ledger.seal(pluginId, instanceId);
-for (const [pluginId, instanceId] of fixture.sealed.expectedSealed) rows.push({ id: "sealed:" + exports.sessionInstanceKeyV1(pluginId, instanceId), appId: ledger.sealed(pluginId, instanceId) ? "sealed" : null, roles: [] });
+for (const [pluginId, instanceId] of fixture.sealed.seal) ledger.seal(ledger, pluginId, instanceId);
+for (const [pluginId, instanceId] of fixture.sealed.expectedSealed) rows.push({ id: "sealed:" + exports.sessionInstanceKeyV1(pluginId, instanceId), appId: ledger.sealed(ledger, pluginId, instanceId) ? "sealed" : null, roles: [] });
 rows.push({ id: "sealed-drop", appId: exports.sealedInstanceDropTextV1(exports.sealedInstanceDropV1(fixture.sealed.drop.pluginId, fixture.sealed.drop.instanceId, fixture.sealed.drop.what, fixture.sealed.drop.detail)), roles: [] });
 rows.push({ id: "sealed-drop-bare", appId: exports.sealedInstanceDropTextV1(exports.sealedInstanceDropV1(fixture.sealed.dropWithoutDetail.pluginId, fixture.sealed.dropWithoutDetail.instanceId, fixture.sealed.dropWithoutDetail.what)), roles: [] });
 for (const row of fixture.busyLabel) rows.push({ id: "busy:" + row.locale, appId: exports.surfaceSwitchBusyTextV1(row.locale), roles: [] });
@@ -467,12 +467,12 @@ export async function testSurfaceSwitch(): Promise<void> {
 
   {
     const ledger = createSealedInstanceLedgerV1(fixture.sealed.slots);
-    for (const [pluginId, instanceId] of fixture.sealed.seal) ledger.seal(pluginId, instanceId);
+    for (const [pluginId, instanceId] of fixture.sealed.seal) ledger.seal(ledger, pluginId, instanceId);
     assert.equal(ledger.size(), fixture.sealed.expectedSize, "sealed: the ledger is bounded");
-    for (const [pluginId, instanceId, expected] of fixture.sealed.expectedSealed) assert.equal(ledger.sealed(pluginId, instanceId), expected, `sealed: ${pluginId}#${instanceId}`);
+    for (const [pluginId, instanceId, expected] of fixture.sealed.expectedSealed) assert.equal(ledger.sealed(ledger, pluginId, instanceId), expected, `sealed: ${pluginId}#${instanceId}`);
     const [unsealPlugin, unsealInstance] = fixture.sealed.unseal.target;
-    ledger.unseal(unsealPlugin, unsealInstance);
-    assert.equal(ledger.sealed(unsealPlugin, unsealInstance), fixture.sealed.unseal.sealedAfterUnseal, "sealed: a kept predecessor comes back out of the ledger");
+    ledger.unseal(ledger, unsealPlugin, unsealInstance);
+    assert.equal(ledger.sealed(ledger, unsealPlugin, unsealInstance), fixture.sealed.unseal.sealedAfterUnseal, "sealed: a kept predecessor comes back out of the ledger");
     assert.equal(ledger.size(), fixture.sealed.unseal.sizeAfterUnseal, "sealed: unsealing removes exactly one");
     const drop = sealedInstanceDropV1(fixture.sealed.drop.pluginId, fixture.sealed.drop.instanceId, fixture.sealed.drop.what, fixture.sealed.drop.detail);
     assert.equal(drop.code, fixture.sealed.drop.code, "sealed: the drop carries the stable code");

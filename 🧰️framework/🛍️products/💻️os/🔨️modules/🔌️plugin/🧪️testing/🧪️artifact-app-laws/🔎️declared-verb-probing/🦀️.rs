@@ -268,7 +268,7 @@ where
         semio_framework::DslValue::Object(entries) => entries.iter().cloned().collect(),
         _ => std::collections::BTreeMap::new(),
     };
-    let invocation = semio_framework::manifest::ActionInvocation {
+    let invocation = semio_framework::manifest::ActionInvocation { expected_document_revision:None,
         address: semio_framework::manifest::ActionAddress {
             plugin_id: String::new(),
             app_id: app.app.instance_id().await.to_string(),
@@ -301,7 +301,7 @@ where
         semio_framework::DslValue::Object(entries) => entries.iter().cloned().collect(),
         _ => std::collections::BTreeMap::new(),
     };
-    let invocation = semio_framework::manifest::ActionInvocation {
+    let invocation = semio_framework::manifest::ActionInvocation { expected_document_revision:None,
         address: semio_framework::manifest::ActionAddress {
             plugin_id: String::new(),
             app_id,

@@ -1,0 +1,1 @@
+export default {test:{root:process.cwd(),environment:"node",maxWorkers:1,include:["**/🧑‍🎨engine/🧪️tests/🗃️catalog-acknowledgment/🟦️.ts","**/🧑‍🎨engine/🧪️tests/🗃️catalog-artifact/🟦️.ts","**/🧑‍🎨engine/🧪️tests/🗃️catalog-artifact/💾️opening.ts"]}};

@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import Ajv from "ajv";
+import commitFixture from "./🧫️fixtures/🔣️.json";
 import { openPickedFileV1, readPickedFileHeadV1, type PickedFileFlowPortV1, type PickedFileOutcomeV1 } from "../../🧱️elements/🏛️ShellHost/📂️picked-file-opening/🟦️.ts";
 
 type Owner = { id: string };
@@ -13,7 +15,7 @@ function harness(overrides: Partial<PickedFileFlowPortV1<Owner, typeof picked>> 
     select: async () => picked,
     claim: () => { if (slot) return false; slot = true; log.push("claim"); return true; },
     release: () => { slot = false; log.push("release"); },
-    track: () => ({ signal: abort.signal, finish: () => { log.push("finish"); } }),
+    track: () => ({ signal: abort.signal, progress: () => undefined, finish: () => { log.push("finish"); } }),
     route: async () => ({ kind: "routed", artifactRef: "ref", resolution: {} as never }),
     resolveOwner: async () => ({ id: "o" }),
     importInto: async () => 7,
@@ -83,6 +85,43 @@ describe("openPickedFileV1", () => {
     const h = harness({ route: async () => ({ kind: "refused", reason: "format-unresolved" }) });
     await openPickedFileV1(h.port);
     expect(h.outcomes).toEqual([{ kind: "refused", reason: "format-unresolved", name: "a.png" }]);
+  });
+});
+
+describe("durable picked-file commit", () => {
+  it("validates neutral outcomes independently", () => { expect(new Ajv().validate(commitFixture.schema, commitFixture.cases)).toBe(true); });
+  for (const row of commitFixture.cases) it(row.name, async () => {
+    let settle!: (value: boolean) => void;
+    const commit = vi.fn((_owner: Owner, _id: number, task: { signal: AbortSignal }) => {
+      expect(task.signal).toBe(h.abort.signal);
+      return new Promise<boolean>(resolve => { settle = resolve; });
+    });
+    const h = harness({ commit });
+    const pending = openPickedFileV1(h.port);
+    await vi.waitFor(() => expect(commit).toHaveBeenCalledTimes(1));
+    expect(h.outcomes).toEqual([]);
+    expect(h.slot()).toBe(true);
+    if (row.commit === "cancelled") h.abort.abort(new Error("cancelled"));
+    else settle(row.commit === "accepted");
+    await pending;
+    expect(h.outcomes).toEqual([{ kind: row.outcome, name: "a.png" }]);
+    expect(h.log.includes("destroy:7")).toBe(row.destroy);
+    expect(h.slot()).toBe(false);
+    if (row.commit === "cancelled") { settle(true); await Promise.resolve(); expect(h.outcomes).toEqual([{ kind: "cancelled", name: "a.png" }]); }
+  });
+  it("releases a created instance when commit rejects", async () => {
+    const h = harness({ commit: async () => { throw new Error("storage refused"); } });
+    await openPickedFileV1(h.port);
+    expect(h.log).toContain("destroy:7");
+    expect(h.outcomes).toEqual([{ kind: "failed", name: "a.png" }]);
+  });
+  it("does not commit or report opened when import returns after cancellation", async () => {
+    const commit = vi.fn(() => true);
+    const h = harness({ commit, importInto: async () => { h.abort.abort(); return 7; } });
+    await openPickedFileV1(h.port);
+    expect(commit).not.toHaveBeenCalled();
+    expect(h.log).toContain("destroy:7");
+    expect(h.outcomes).toEqual([{ kind: "cancelled", name: "a.png" }]);
   });
 });
 

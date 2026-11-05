@@ -4,6 +4,7 @@ import{withCompilerCapacityConsumptionV1}from"../../../🏗️build/🎟️capac
 import{withNativeBuildStageCapacityV1,readNativeBuildStageCapacityV1,type NativeBuildStageCapacityV1}from"./🎟️stage/🟦️.ts";
 import{admitNativeBuildPipelineV1,admitNativeBuildPlanV1,type NativeBuildPackageV1,type NativeBuildPassV1,type NativeBuildJobV1,type NativeBuildPipelineJobV1,type NativeBuildPipelineV1,type NativeBuildPlanV1,type NativeBuildGenerationKindV1,type NativeBuildGenerationV1}from"./📋️contract/🟦️.ts";
 import {CargoGraphOperationsV1} from "./📥️planning/🟦️.ts";
+import {cargoUnitPackageNameV1,requireCargoCompilerOutputPathsV1} from "../📏️paths/🟦️.ts";
 import {nativeBuildPrerequisiteOrderV1} from "./📋️prerequisites/🟦️.ts";
 import {CargoInputContinuationTransactionV1,withNestedInputOwnersRetiredV1} from "../📥️inputs/🤲️continuations/🟦️.ts";
 import type {CompletedCargoCompilationViewV1} from "../🧾️receipt/📦️retention/📥️snapshot/🟦️.ts";
@@ -166,8 +167,7 @@ export function announcedUnitIdentityV1(message: Readonly<{ package_id?: unknown
  * package id names its package after `#` (`…#name@version`), or by its directory when Cargo omits a name equal to it (`path+file:///…/name#version`). */
 export function unitGraphHistoryKeyV1(unit: CargoUnitGraphV1["units"][number], profile: string): string | null {
   if (unit.mode === "run-custom-build") return null;
-  const [location, fragment = ""] = unit.pkg_id.split("#"), name = fragment.includes("@") ? fragment.slice(0, fragment.lastIndexOf("@")) : location!.split("/").at(-1)!;
-  return unitKeyV1({ package: decodeURIComponent(name), crate: unit.target.name.replaceAll("-", "_"), target: unit.platform ?? "host", crateTypes: unit.target.crate_types }, profile);
+  return unitKeyV1({ package: cargoUnitPackageNameV1(unit.pkg_id), crate: unit.target.name.replaceAll("-", "_"), target: unit.platform ?? "host", crateTypes: unit.target.crate_types }, profile);
 }
 
 /** 📦️ One batch of a pass: the components it links, the output footprint predicted for their joint unit closure and whether every unit of it was measured. */
@@ -508,7 +508,9 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     let output: Awaited<typeof request>,primary:{error:unknown}|undefined;
     try { output = await request; check();graphOperationsOwner.check();checkResourceLeaseControl(inputs.control); } catch (error) { primary={error};throw error; } finally {try{await finishNativeBuildChildV1(request.child,terminal,[request],primary,[]);}finally{children.delete(request.child);}}
     writeFileSync(join(generation.logs, `${policy.unitGraphFile}-${pass.id}.json`), output.stdout);
-    return JSON.parse(output.stdout) as CargoUnitGraphV1;
+    const graph=JSON.parse(output.stdout) as CargoUnitGraphV1;
+    requireCargoCompilerOutputPathsV1(generation.build,graph.units.map(unit=>({packageName:cargoUnitPackageNameV1(unit.pkg_id),crateName:unit.target.name.replaceAll("-","_"),profile:pass.profile,platform:unit.platform})));
+    return graph;
   },inputs.control.signal)))]));
   for (const graph of unitGraphs.values()) graph.catch(() => undefined);
   const componentProvenance = (pass: NativeBuildPassV1, row: NativeBuildPackageV1): Promise<ComponentProvenanceV1> => (provenanceOf.get(pass.id) ?? Promise.reject(Error(`Pass ${pass.id} has no provenance`))).then((observed) => {

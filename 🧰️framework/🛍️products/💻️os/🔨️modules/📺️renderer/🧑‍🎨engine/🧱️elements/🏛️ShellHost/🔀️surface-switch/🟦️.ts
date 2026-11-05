@@ -88,7 +88,7 @@ export function sessionInstanceKeyV1(pluginId: string, instanceId: number): stri
   return `${pluginId}#${instanceId}`;
 }
 
-/** 🪦️ The set of instances a switch has SEALED — sealed means "this instance is being torn down; every
+/** 🪦️ The handle-scoped set of instances a switch has SEALED — sealed means "this instance is being torn down; every
  * effect, completion, refresh and action still addressed to it is stale". Sealing happens BEFORE the
  * close ladder runs, which is the whole point: the ladder's own first step (closing document sessions)
  * already revokes the guest actor, so a completion frame that arrives between that revocation and the
@@ -103,31 +103,29 @@ export function sessionInstanceKeyV1(pluginId: string, instanceId: number): stri
 export const SEALED_INSTANCE_LEDGER_SLOTS = 64;
 
 export type SealedInstanceLedgerV1 = {
-  readonly seal: (pluginId: string, instanceId: number) => void;
-  readonly unseal: (pluginId: string, instanceId: number) => void;
-  readonly sealed: (pluginId: string, instanceId: number) => boolean;
+  readonly seal: (owner: object, pluginId: string, instanceId: number) => void;
+  readonly unseal: (owner: object, pluginId: string, instanceId: number) => void;
+  readonly sealed: (owner: object | null, pluginId: string, instanceId: number) => boolean;
+  readonly forget: (owner: object) => void;
   readonly size: () => number;
 };
 
 export function createSealedInstanceLedgerV1(slots: number = SEALED_INSTANCE_LEDGER_SLOTS): SealedInstanceLedgerV1 {
-  const keys: string[] = [];
-  const live = new Set<string>();
+  const entries: { owner: object; key: string }[] = [];
+  const remove = (owner: object, key?: string): void => {
+    for (let index = entries.length - 1; index >= 0; index--) if (entries[index]!.owner === owner && (key === undefined || entries[index]!.key === key)) entries.splice(index, 1);
+  };
   return {
-    seal: (pluginId, instanceId) => {
+    seal: (owner, pluginId, instanceId) => {
       const key = sessionInstanceKeyV1(pluginId, instanceId);
-      if (live.has(key)) return;
-      live.add(key);
-      keys.push(key);
-      while (keys.length > slots) {
-        const dropped = keys.shift();
-        if (dropped !== undefined) live.delete(dropped);
-      }
+      if (entries.some(entry => entry.owner === owner && entry.key === key)) return;
+      entries.push({ owner, key });
+      while (entries.length > Math.max(0, slots)) entries.shift();
     },
-    unseal: (pluginId, instanceId) => {
-      live.delete(sessionInstanceKeyV1(pluginId, instanceId));
-    },
-    sealed: (pluginId, instanceId) => live.has(sessionInstanceKeyV1(pluginId, instanceId)),
-    size: () => live.size,
+    unseal: (owner, pluginId, instanceId) => remove(owner, sessionInstanceKeyV1(pluginId, instanceId)),
+    sealed: (owner, pluginId, instanceId) => entries.some(entry => entry.owner === owner && entry.key === sessionInstanceKeyV1(pluginId, instanceId)),
+    forget: owner => remove(owner),
+    size: () => entries.length,
   };
 }
 

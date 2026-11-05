@@ -11,7 +11,7 @@ pub mod owned_document_closure;
 pub mod composition_links;
 #[path = "🌳️graph/🤝️group/🦀️.rs"]
 pub mod composition_group;
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
+use semio_framework_value::{RetirementDemand,ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_os_spr::command::ArtifactMessageSource;
 use crate::owned_document_closure::{OWNED_DOCUMENT_MAXIMUM_MEMBERS, OwnedDocumentClosureSource};
@@ -181,6 +181,9 @@ impl OwnsAdmission {
 }
 
 impl CompositionGraph {
+    /// 🪹️ Empty cleanup metadata carries no ownership-admission authority allocation.
+    pub fn unallocated()->Self{Self{owns:Default::default(),owns_group:None,owns_retiring:None,links:Default::default(),owns_authority:None,owns_generation:0}}
+
     pub async fn new() -> Self {
         Self::default()
     }
@@ -526,6 +529,11 @@ pub struct TransactionCoordinator {
 pub type CompositionCoordinator = TransactionCoordinator;
 
 impl TransactionCoordinator {
+    /// 📏️ The ownership-admission authority is one separately funded shared unit allocation.
+    pub fn birth_demands()->RetirementDemand{RetirementDemand{capacity_bytes:semio_framework_value::retirement::allocation_return::shared_allocation_bytes::<()>(),depth:1,..Default::default()}}
+    /// 🪹️ Cleanup retains an empty graph without minting unused ownership authority.
+    pub fn unallocated()->Self{Self{graph:CompositionGraph::unallocated()}}
+
     pub async fn new() -> Self {
         Self::default()
     }

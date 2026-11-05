@@ -24,6 +24,10 @@ import { type RemoveBeam, parseRemoveBeam } from "./➖️remove-beam/🧬️sch
 import { type RemoveCase, parseRemoveCase } from "./➖️remove-case/🧬️schema/🟦️.ts";
 import { type InsertColumn, parseInsertColumn } from "./➗️insert-column/🧬️schema/🟦️.ts";
 import { type ChangeBeamEndZoneLengthM, parseChangeBeamEndZoneLengthM } from "./➡️change-beam-end-zone-length-m/🧬️schema/🟦️.ts";
+import { type ChangeStudDiameterM, parseChangeStudDiameterM } from "./➡️change-stud-diameter-m/🧬️schema/🟦️.ts";
+import { type ChangeStudFUPa, parseChangeStudFUPa } from "./➡️change-stud-fu-pa/🧬️schema/🟦️.ts";
+import { type ChangeStudHeightM, parseChangeStudHeightM } from "./➡️change-stud-height-m/🧬️schema/🟦️.ts";
+import { type ChangeStudXM, parseChangeStudXM } from "./➡️change-stud-xm/🧬️schema/🟦️.ts";
 import { type ChangeColumnActionForceN, parseChangeColumnActionForceN } from "./⬇️change-column-action-force-n/🧬️schema/🟦️.ts";
 import { type ChangeColumnIntroducedForceN, parseChangeColumnIntroducedForceN } from "./⬇️change-column-introduced-force-n/🧬️schema/🟦️.ts";
 import { type ChangeBeamSteelAreaM2, parseChangeBeamSteelAreaM2 } from "./⬛️change-beam-steel-area-m2/🧬️schema/🟦️.ts";
@@ -69,7 +73,9 @@ import { type ChangePlacementYaw, parseChangePlacementYaw } from "./📍️chang
 import { type ChangePlacementZ, parseChangePlacementZ } from "./📍️change-placement-z/🧬️schema/🟦️.ts";
 import { type ChangeSlabActionPointForceN, parseChangeSlabActionPointForceN } from "./📍️change-slab-action-point-force-n/🧬️schema/🟦️.ts";
 import { type InsertPlacement, parseInsertPlacement } from "./📍️insert-placement/🧬️schema/🟦️.ts";
+import { type InsertStud, parseInsertStud } from "./📍️insert-stud/🧬️schema/🟦️.ts";
 import { type RemovePlacement, parseRemovePlacement } from "./📍️remove-placement/🧬️schema/🟦️.ts";
+import { type RemoveStud, parseRemoveStud } from "./📍️remove-stud/🧬️schema/🟦️.ts";
 import { type ChangeSlabThicknessM, parseChangeSlabThicknessM } from "./📏change-slab-thickness-m/🧬️schema/🟦️.ts";
 import { type ChangeBeamBarSpacingM, parseChangeBeamBarSpacingM } from "./📏️change-beam-bar-spacing-m/🧬️schema/🟦️.ts";
 import { type ChangeBeamSpanM, parseChangeBeamSpanM } from "./📏️change-beam-span-m/🧬️schema/🟦️.ts";
@@ -251,7 +257,13 @@ export type En1994Mutation =
   | { ChangeCaseText: ChangeCaseText }
   | { ChangeCaseLabelEn: ChangeCaseLabelEn }
   | { ChangeCaseLabelDe: ChangeCaseLabelDe }
-  | { ChangeCaseEntryId: ChangeCaseEntryId };
+  | { ChangeCaseEntryId: ChangeCaseEntryId }
+  | { ChangeStudDiameterM: ChangeStudDiameterM }
+  | { ChangeStudFUPa: ChangeStudFUPa }
+  | { ChangeStudHeightM: ChangeStudHeightM }
+  | { ChangeStudXM: ChangeStudXM }
+  | { InsertStud: InsertStud }
+  | { RemoveStud: RemoveStud };
 
 export const parseEn1994Mutation: NormWireReader<En1994Mutation> = normWireExternal<En1994Mutation>({
   ChangeAnnex: parseChangeAnnex,
@@ -378,4 +390,10 @@ export const parseEn1994Mutation: NormWireReader<En1994Mutation> = normWireExter
   ChangeCaseLabelEn: parseChangeCaseLabelEn,
   ChangeCaseLabelDe: parseChangeCaseLabelDe,
   ChangeCaseEntryId: parseChangeCaseEntryId,
+  ChangeStudDiameterM: parseChangeStudDiameterM,
+  ChangeStudFUPa: parseChangeStudFUPa,
+  ChangeStudHeightM: parseChangeStudHeightM,
+  ChangeStudXM: parseChangeStudXM,
+  InsertStud: parseInsertStud,
+  RemoveStud: parseRemoveStud,
 });

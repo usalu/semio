@@ -446,10 +446,6 @@ fn the_choice_leaves_take_the_enum_token_a_choice_grip_writes() {
 }
 
 #[test]
-    use semio_framework_value::ToValue;
-    let before = base();
-    let cases = [
-    ];
-    for (path, number) in cases {
-    }
+fn the_catalogue_contains_every_native_mutation_kind() {
+    semio_s_mutation_vectors::assert_mutation_catalogue(crate::KINDS, &semio_framework_test_fixtures::fixture_path!("../../../../🔮️oracles/🔣️.json"));
 }

@@ -190,18 +190,9 @@ impl ArtifactEditor for CadPlayApp {
         semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, CadCommand::command_id, cad_retained_raw_bytes(tool_id), CAD_RETAINED_WORK_ITEMS, false, |request| CadRetainedCommandWork { tool_id, consumed: false })
     }
 
-    fn build_reserved_tool_job(request: semio_framework_plugin::ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ArtifactReservedToolJob>, Fault> {
-        if request.tool_id != "import-media" { return Ok(None); }
-        if !request.raw_wire.is_empty() || request.authoring_seed.is_empty() { return Err(Fault::from("Cad media requires exact decoded admission authority")); }
-        let semio_framework_plugin::ArtifactReservedToolInput::Media { port, media } = request.input else { return Err(Fault::from("Cad media requires its declared input owner")); };
-        if !matches!(port.as_str(), "geometry:in" | "artifact:in") { return Err(Fault::from("Cad media input port is not declared")); }
-        let operation = AppOperationContext { retained: request.retained, app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: 0, generation: 0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed };
-        let work = Box::new(CadMediaWork::new(port, media, Some(request.children)));
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: String::new(), payload: String::new() }), snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None, operation, completion: request.completion },
-            CadCommand::command_id, CAD_RETAINED_RAW_BYTES, CAD_RETAINED_WORK_ITEMS, work,
-        );
-        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(CadMediaJob(ArtifactRetainedCommandJob::new(payload)))))
+    fn build_reserved_tool_job(request:&mut Option<semio_framework_plugin::ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if body.is_none()&&!request.as_ref().is_some_and(|request|request.tool_id=="import-media"){return Ok(false)}
+        semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,CadMediaWork>(request,body,cx)
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {

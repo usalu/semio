@@ -7,13 +7,14 @@ pub struct OwnedDocumentMemberIngress {
     pub identity: ManuallyDrop<Option<(usize, ArtifactRef, store::OwnerRef)>>,
     pub request: ManuallyDrop<Option<store::MemberOpenRequest>>,
     pub identity_field: u8,
+    pub last_work:u64,
 }
 
 impl OwnedDocumentMemberIngress {
     /// 🪪️ Binds one closure ordinal and recursive owner to the request's sealed identity.
     #[expect(clippy::result_large_err, reason = "Rejected ingress returns its exact retained page and identity owners unchanged.")]
     pub fn try_new(ordinal: usize, reference: ArtifactRef, owner: store::OwnerRef, request: store::MemberOpenRequest) -> Result<Self, (Fault, Self)> {
-        let ingress = Self { identity: ManuallyDrop::new(Some((ordinal, reference, owner))), request: ManuallyDrop::new(Some(request)), identity_field: 0 };
+        let ingress = Self { identity: ManuallyDrop::new(Some((ordinal, reference, owner))), request: ManuallyDrop::new(Some(request)), identity_field: 0,last_work:0 };
         let (_, reference, owner) = ingress.identity.as_ref().expect("fresh member ingress retains identity");
         let request = ingress.request.as_ref().expect("fresh member ingress retains request");
         let valid = ordinal < store::OWNED_DOCUMENT_MAXIMUM_MEMBERS && request.admitted_expected().is_ok() && request.expected() == reference && request.owner() == Some(owner);
@@ -86,29 +87,33 @@ impl OwnedDocumentMemberIngress {
     }
 
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.last_work=0;
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         if let Some(request) = self.request.as_mut() {
             if request.terminal_is_empty() {
-                drop(self.request.take());
+                self.last_work=1;drop(self.request.take());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
             }
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = request.close_step(child)?;
+            let result=request.close_step(child);self.last_work=request.last_turn_work();let step=result?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child, step, request.terminal_is_empty(), "member ingress request")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(field) = self.identity_string_mut() {
             let bytes = field.capacity();
             drop(std::mem::take(field));
-            self.identity_field += 1;
+            self.last_work=1;self.identity_field += 1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: bytes, ..empty }));
         }
-        drop(self.identity.take());
+        self.last_work=1;drop(self.identity.take());
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }))
     }
+
+    /// 🧮️ Reports only actual request and identity close primitives from the latest call.
+    pub fn last_turn_work(&self)->u64{self.last_work}
 
     pub fn terminal_is_empty(&self) -> bool {
         self.identity.is_none() && self.request.is_none()

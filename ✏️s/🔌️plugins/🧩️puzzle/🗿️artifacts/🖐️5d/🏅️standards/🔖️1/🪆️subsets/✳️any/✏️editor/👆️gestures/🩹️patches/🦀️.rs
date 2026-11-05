@@ -134,7 +134,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         let original: Result<_, semio_framework_job::OriginalTurnFailure> = (|| {
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
-        let view_state = context.and_then(|context| context.view_state.as_ref());
+        let view_state = context.and_then(|context| context.view_state.as_deref());
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {
             Puzzle5dPatchPartStage::Selection => {

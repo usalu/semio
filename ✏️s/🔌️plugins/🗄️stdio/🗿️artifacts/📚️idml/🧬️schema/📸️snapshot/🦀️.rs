@@ -42,9 +42,9 @@ impl FromValue for IdmlSnapshot {
 }
 
 /// 📽️ A new unpublished post copies genuine owned fields through the existing bounded projection cursor.
-impl semio_framework_value::snapshot_projection::SnapshotProjection for IdmlSnapshot{
+impl semio_framework_value_snapshot_projection::snapshot_projection::SnapshotProjection for IdmlSnapshot{
  type Output=Self;
- type Projection=semio_framework_value::snapshot_projection::OwnedFieldProjection<Self>;
+ type Projection=semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
  fn projection_birth_demand()->semio_framework_value::RetirementDemand{Self::Projection::birth_demand()}
- fn begin_projection(grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Self::Projection,semio_framework_value::retained_clone::RetainedCloneProgress),ValueError>{Self::Projection::begin(grant)}
+ fn begin_projection(grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Self::Projection,semio_framework_value::retained_clone::RetainedCloneProgress),ValueError>{Self::Projection::begin(grant)}
 }

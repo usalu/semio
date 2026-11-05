@@ -246,31 +246,7 @@
     "moved": [],
     "modified": []
   },
-  "fatigueModels": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "supportCollisions": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "localFires": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "snowGuards": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "railDerailments": {
+  "dustExplosions": {
     "removed": [],
     "inserted": [],
     "moved": [],
@@ -295,5 +271,35 @@
         }
       }
     ]
+  },
+  "railDerailments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fatigueModels": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "supportCollisions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "localFires": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "snowGuards": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

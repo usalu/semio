@@ -6,7 +6,10 @@ use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedClone
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
 use std::mem::{ManuallyDrop,size_of};
 #[derive(Clone,Copy)]
-pub enum StagedBodyBinding<'a>{Action(&'a StagedFormBinding),Page(&'a StagedFormPageBinding)}
+pub enum StagedBodyBinding<'a>{Action(&'a StagedFormBinding),Source(&'a dyn StagedFormBindingSource),Page(&'a StagedFormPageBinding),PageSource(&'a dyn StagedFormPageBindingSource)}
+impl<'a> StagedBodyBinding<'a> {
+    pub fn action_source(self) -> Option<&'a dyn StagedFormBindingSource> { match self { Self::Action(binding) => Some(binding), Self::Source(binding) => Some(binding), Self::Page(_) | Self::PageSource(_) => None } }
+}
 pub struct StagedBodyControl<'a>{pub scalar:StagedScalarControl<'a>,pub required:bool,pub error:Option<&'a str>,pub binding:Option<StagedBodyBinding<'a>>}
 /// 🧭️ Every accessor indexes already-completed private metadata; source preparation owns all expensive queries.
 pub trait StagedBodySource{fn identity(&self)->usize;fn title(&self)->&str;fn status(&self)->&StagedFormStatus;fn controls(&self)->usize;fn control(&self,index:usize)->Result<StagedBodyControl<'_>,ValueError>;}
@@ -23,20 +26,38 @@ fn fits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_it
 fn paid(demand:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}
 pub fn staged_body_composition(source:&impl StagedBodySource)->Result<(),ValueError>{
     let caps=semio_framework::action_staging::STAGED_FORM_BODY_LIMITS;if source.controls()>caps.controls{return Err(resource());}let(mut content,mut pages)=(0usize,0usize);
-    for index in 0..source.controls(){if matches!(source.control(index)?.binding,Some(StagedBodyBinding::Page(_))){pages+=1;}else{content+=1;}if content>caps.content||pages>caps.pages{return Err(resource());}}Ok(())
+    for index in 0..source.controls(){if matches!(source.control(index)?.binding,Some(StagedBodyBinding::Page(_) | StagedBodyBinding::PageSource(_))){pages+=1;}else{content+=1;}if content>caps.content||pages>caps.pages{return Err(resource());}}Ok(())
 }
-fn control_resources(control:&StagedBodyControl<'_>)->Result<(),ValueError>{
-    if let StagedScalarKind::Choice{choices,..}=control.scalar.kind{let limit=UiText::default().capacity();if choices.len()>32||choices.iter().any(|choice|choice.key.len()>limit){return Err(resource());}if let Some(StagedBodyBinding::Action(binding))=control.binding{if binding.edits.len()>8{return Err(invalid());}for edit in &binding.edits{if let StagedFormBindingEdit::Choice{options,..}=edit{if options.len()>32{return Err(invalid());}if options.iter().any(|option|option.key.len()>limit){return Err(resource());}}}}}Ok(())
+fn control_resources(control: &StagedBodyControl<'_>) -> Result<(), ValueError> {
+    if let Some(binding) = control.binding.and_then(StagedBodyBinding::action_source) { validate_staged_binding_source(binding)?; }
+    if let StagedScalarKind::Choice { choices, .. } = control.scalar.kind {
+        if choices.len() > 32 { return Err(resource()); }
+        for index in 0..choices.len() {
+            if choices.choice(index).ok_or_else(invalid)?.key.len() > UiText::default().capacity() { return Err(resource()); }
+        }
+    }
+    Ok(())
 }
-fn control_binding(control:&StagedBodyControl<'_>,status:&StagedFormStatus)->bool{
-    match(control.scalar.kind,control.binding){
-        (StagedScalarKind::ReadOnly{..},None)=>true,
-        (StagedScalarKind::Button{page:true},Some(StagedBodyBinding::Page(binding)))=>binding.token==status.token,
-        (kind,Some(StagedBodyBinding::Action(binding)))=>{
-            if binding.token!=status.token||binding.edits.is_empty()||binding.edits.len()>8{return false;}
-            let mut text=0;let mut choice=None;for edit in &binding.edits{match edit{StagedFormBindingEdit::Text{..}=>text+=1,StagedFormBindingEdit::Choice{options,..}=>{if choice.is_some(){return false;}choice=Some(options);},_=>{}}}
-            match kind{StagedScalarKind::Text{..}=>text==1&&choice.is_none(),StagedScalarKind::Choice{choices,..}=>text==0&&choices.len()<=32&&choice.is_some_and(|options|options.len()==choices.len()&&options.iter().zip(choices).all(|(option,choice)|option.key.len()<=size_of::<UiText>()&&choice.key.len()<=size_of::<UiText>()&&option.key==choice.key)),StagedScalarKind::Button{page:false}=>text==0&&choice.is_none(),_=>false}
-        },_=>false,
+fn control_binding(control: &StagedBodyControl<'_>, status: &StagedFormStatus) -> bool {
+    if let (StagedScalarKind::ReadOnly { .. }, None) = (control.scalar.kind, control.binding) { return true; }
+    if let (StagedScalarKind::Button { page: true }, Some(StagedBodyBinding::Page(binding))) = (control.scalar.kind, control.binding) { return binding.token == status.token; }
+    if let (StagedScalarKind::Button { page: true }, Some(StagedBodyBinding::PageSource(binding))) = (control.scalar.kind, control.binding) { return binding.token() == &status.token && validate_staged_page_binding_source(binding).is_ok(); }
+    let Some(binding) = control.binding.and_then(StagedBodyBinding::action_source) else { return false };
+    if binding.token() != &status.token || validate_staged_binding_source(binding).is_err() { return false; }
+    let mut text = 0; let mut options = None;
+    for index in 0..binding.edits() {
+        match binding.edit(index) {
+            Ok(StagedBindingEditView::Text { .. }) => text += 1,
+            Ok(StagedBindingEditView::Choice { options: source, .. }) => { if options.is_some() { return false; } options = Some(source); },
+            Ok(_) => {},
+            Err(_) => return false,
+        }
+    }
+    match control.scalar.kind {
+        StagedScalarKind::Text { .. } => text == 1 && options.is_none(),
+        StagedScalarKind::Choice { choices, .. } => text == 0 && choices.len() <= 32 && options.is_some_and(|options| options.len() == choices.len() && (0..choices.len()).all(|index| match (options.option(index), choices.choice(index)) { (Some(option), Some(choice)) => option.key.len() <= UiText::default().capacity() && choice.key.len() <= UiText::default().capacity() && option.key == choice.key, _ => false })),
+        StagedScalarKind::Button { page: false } => text == 0 && options.is_none(),
+        _ => false,
     }
 }
 fn container(key:UiText,label:&str,role:ContainerRole,required:Option<bool>,error:Option<&str>)->Result<BuiltNode,ValueError>{
@@ -53,7 +74,7 @@ impl StagedBodyCursor{
             1=>{let step=self.payload.step(&StagedStatusPayload{status:source.status()},&mut self.args,grant)?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=2;}return Ok(step.progress());},
             2=>{let step=self.scalar.step(&self.status_spec(source),&mut self.args,&mut self.leaf,grant)?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=3;}return Ok(step.progress());},
             3=>{let progress=self.root.as_mut().ok_or_else(invalid)?.children.push_initialized(&mut self.leaf,native,grant)?;if self.leaf.is_none(){self.phase=9;}return Ok(progress);},
-            4=>{let control=source.control(self.index)?;control_resources(&control)?;if !control_binding(&control,source.status()){return Err(invalid());}if let Some(binding)=control.binding{let step=match binding{StagedBodyBinding::Action(value)=>self.payload.step(&StagedBindingPayload::Action(value),&mut self.args,grant),StagedBodyBinding::Page(value)=>self.payload.step(&StagedBindingPayload::Page(value),&mut self.args,grant)}?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=5;}return Ok(step.progress());}self.phase=5;},
+            4=>{let control=source.control(self.index)?;control_resources(&control)?;if !control_binding(&control,source.status()){return Err(invalid());}if let Some(binding)=control.binding{let step=match binding{StagedBodyBinding::Action(value)=>self.payload.step(&StagedBindingPayload::Action(value),&mut self.args,grant),StagedBodyBinding::Source(value)=>self.payload.step(&StagedBindingPayload::Action(value),&mut self.args,grant),StagedBodyBinding::Page(value)=>self.payload.step(&StagedBindingPayload::Page(value),&mut self.args,grant),StagedBodyBinding::PageSource(value)=>self.payload.step(&StagedBindingPayload::PageSource(value),&mut self.args,grant)}?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=5;}return Ok(step.progress());}self.phase=5;},
             5=>{let control=source.control(self.index)?;let step=self.scalar.step(&control.scalar,&mut self.args,&mut self.leaf,grant)?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=6;}return Ok(step.progress());},
             6=>{let control=source.control(self.index)?;if control.scalar.address==u64::MAX{return Err(invalid());}for prior in 0..self.index{if source.control(prior)?.scalar.address==control.scalar.address{return Err(invalid());}}let key=UiText::try_format(format_args!("stage.field.{}",control.scalar.address)).ok_or_else(resource)?;*self.field=Some(container(key,control.scalar.label,ContainerRole::Field,Some(control.required),control.error)?);self.phase=7;},
             7=>{let progress=self.field.as_mut().ok_or_else(invalid)?.children.push_initialized(&mut self.leaf,native,grant)?;if self.leaf.is_none(){self.phase=8;}return Ok(progress);},

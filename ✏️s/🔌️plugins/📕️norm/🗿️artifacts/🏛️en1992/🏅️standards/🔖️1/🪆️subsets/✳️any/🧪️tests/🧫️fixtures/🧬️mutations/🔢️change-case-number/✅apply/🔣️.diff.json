@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "title": null,
   "designWorkingLifeYears": null,
   "deltaCDev": null,
@@ -44,5 +43,6 @@
         }
       }
     ]
-  }
+  },
+  "reliabilityClass": null
 }

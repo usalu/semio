@@ -16,6 +16,15 @@ pub use mesh_scene_kit::{mesh_scene, mesh_scene_frame, MESH_SCENE_MAXIMUM_MARKER
 /// announces a boot example — the pane opens the app's genesis document instead of its curated one.
 pub const SET_ACTIVE_EXAMPLE_ACTION_ID: &str = semio_framework_plugin::app::CATALOGUE_EXAMPLE_ACTION_ID;
 
+/// 📚️ Parses one declared typed example and refuses unknown sources or a mismatched document schema.
+pub fn parse_example_snapshot<S:pack::snapshot::ArtifactDsl>(example_id:&str,declared_id:&str,source:&str,document_schema:&str,schema_of:fn(&S)->&str)->Result<S,semio_framework_plugin::Fault>{
+    if example_id!=declared_id{return Err(semio_framework_plugin::Fault::from(format!("unknown example: {example_id}")))}
+    let snapshot=S::parse_dsl(source).map_err(|error|semio_framework_plugin::Fault::from(format!("example {declared_id}: {error}")))?;
+    if schema_of(&snapshot)!=document_schema{return Err(semio_framework_plugin::Fault::from(format!("example {declared_id} requires schema {document_schema}")))}
+    if snapshot.print_dsl()!=source{return Err(semio_framework_plugin::Fault::from(format!("example {declared_id} is not canonical source")))}
+    Ok(snapshot)
+}
+
 /// 📚️ Reads the example id out of a shell `{action, args}` pair. The shells spell it `exampleId`;
 /// the palette, a context menu and a replayed shell command may spell it `id` or `value`, and an
 /// EMPTY id means "the app's own default document", which is exactly what `fallback` of `""` says.

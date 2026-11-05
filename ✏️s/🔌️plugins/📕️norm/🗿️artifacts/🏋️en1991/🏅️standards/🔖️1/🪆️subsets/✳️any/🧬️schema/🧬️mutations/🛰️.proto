@@ -276,6 +276,56 @@ message En1991Mutation {
     ChangeRotatingMachineFrequency change_rotating_machine_frequency = 272;
     InsertRotatingMachine insert_rotating_machine = 273;
     RemoveRotatingMachine remove_rotating_machine = 274;
+    ChangeDustExplosionDesignPressure change_dust_explosion_design_pressure = 275;
+    ChangeDustExplosionKst change_dust_explosion_kst = 276;
+    ChangeDustExplosionPMax change_dust_explosion_p_max = 277;
+    ChangeDustExplosionStaticOpeningPressure change_dust_explosion_static_opening_pressure = 278;
+    ChangeDustExplosionVentArea change_dust_explosion_vent_area = 279;
+    ChangeDustExplosionVolume change_dust_explosion_volume = 280;
+    ChangeFatigueModelAssumedAxleLoad change_fatigue_model_assumed_axle_load = 281;
+    ChangeFatigueModelAssumedUdl change_fatigue_model_assumed_udl = 282;
+    ChangeFatigueModelLane change_fatigue_model_lane = 283;
+    ChangeFatigueModelModel change_fatigue_model_model = 284;
+    ChangeFootbridgeAssumedServiceAxle change_footbridge_assumed_service_axle = 285;
+    ChangeLocalFireAssumedFlux change_local_fire_assumed_flux = 286;
+    ChangeLocalFireCeilingHeight change_local_fire_ceiling_height = 287;
+    ChangeLocalFireFireDiameter change_local_fire_fire_diameter = 288;
+    ChangeLocalFireHeatReleaseRate change_local_fire_heat_release_rate = 289;
+    ChangeLocalFireHorizontalDistance change_local_fire_horizontal_distance = 290;
+    ChangeRailDerailmentAssumedLineLoad change_rail_derailment_assumed_line_load = 291;
+    ChangeRailDerailmentLoadedLength change_rail_derailment_loaded_length = 292;
+    ChangeRailDerailmentOffset change_rail_derailment_offset = 293;
+    ChangeRailDerailmentSituation change_rail_derailment_situation = 294;
+    ChangeRailLoadGroupAssumedAxleLoad change_rail_load_group_assumed_axle_load = 295;
+    ChangeRailLoadGroupAssumedLateral change_rail_load_group_assumed_lateral = 296;
+    ChangeRailLoadGroupAssumedLongitudinal change_rail_load_group_assumed_longitudinal = 297;
+    ChangeRailLoadGroupAssumedUdl change_rail_load_group_assumed_udl = 298;
+    ChangeRailLoadGroupFactorLateral change_rail_load_group_factor_lateral = 299;
+    ChangeRailLoadGroupFactorLongitudinal change_rail_load_group_factor_longitudinal = 300;
+    ChangeRailLoadGroupFactorVertical change_rail_load_group_factor_vertical = 301;
+    ChangeRailLoadGroupLoadGroup change_rail_load_group_load_group = 302;
+    ChangeSnowGuardAssumedForce change_snow_guard_assumed_force = 303;
+    ChangeSnowGuardRoofId change_snow_guard_roof_id = 304;
+    ChangeSnowGuardSlopeLength change_snow_guard_slope_length = 305;
+    ChangeSupportCollisionAssumedForceX change_support_collision_assumed_force_x = 306;
+    ChangeSupportCollisionAssumedForceY change_support_collision_assumed_force_y = 307;
+    ChangeSupportCollisionHeight change_support_collision_height = 308;
+    ChangeSupportCollisionLocation change_support_collision_location = 309;
+    ChangeSupportCollisionPositionX change_support_collision_position_x = 310;
+    InsertDustExplosion insert_dust_explosion = 311;
+    InsertFatigueModel insert_fatigue_model = 312;
+    InsertLocalFire insert_local_fire = 313;
+    InsertRailDerailment insert_rail_derailment = 314;
+    InsertRailLoadGroup insert_rail_load_group = 315;
+    InsertSnowGuard insert_snow_guard = 316;
+    InsertSupportCollision insert_support_collision = 317;
+    RemoveDustExplosion remove_dust_explosion = 318;
+    RemoveFatigueModel remove_fatigue_model = 319;
+    RemoveLocalFire remove_local_fire = 320;
+    RemoveRailDerailment remove_rail_derailment = 321;
+    RemoveRailLoadGroup remove_rail_load_group = 322;
+    RemoveSnowGuard remove_snow_guard = 323;
+    RemoveSupportCollision remove_support_collision = 324;
   }
 }
 message ChangeAnnex {
@@ -1267,5 +1317,198 @@ message InsertRotatingMachine {
   RotatingMachine item = 2;
 }
 message RemoveRotatingMachine {
+  string id = 1;
+}
+message ChangeDustExplosionDesignPressure {
+  string id = 1;
+  double new_design_pressure = 2;
+}
+message ChangeDustExplosionKst {
+  string id = 1;
+  double new_kst = 2;
+}
+message ChangeDustExplosionPMax {
+  string id = 1;
+  double new_p_max = 2;
+}
+message ChangeDustExplosionStaticOpeningPressure {
+  string id = 1;
+  double new_static_opening_pressure = 2;
+}
+message ChangeDustExplosionVentArea {
+  string id = 1;
+  double new_vent_area = 2;
+}
+message ChangeDustExplosionVolume {
+  string id = 1;
+  double new_volume = 2;
+}
+message ChangeFatigueModelAssumedAxleLoad {
+  string id = 1;
+  double new_assumed_axle_load = 2;
+}
+message ChangeFatigueModelAssumedUdl {
+  string id = 1;
+  double new_assumed_udl = 2;
+}
+message ChangeFatigueModelLane {
+  string id = 1;
+  uint32 new_lane = 2;
+}
+message ChangeFatigueModelModel {
+  string id = 1;
+  string new_model = 2;
+}
+message ChangeFootbridgeAssumedServiceAxle {
+  string id = 1;
+  double new_assumed_service_axle = 2;
+}
+message ChangeLocalFireAssumedFlux {
+  string id = 1;
+  double new_assumed_flux = 2;
+}
+message ChangeLocalFireCeilingHeight {
+  string id = 1;
+  double new_ceiling_height = 2;
+}
+message ChangeLocalFireFireDiameter {
+  string id = 1;
+  double new_fire_diameter = 2;
+}
+message ChangeLocalFireHeatReleaseRate {
+  string id = 1;
+  double new_heat_release_rate = 2;
+}
+message ChangeLocalFireHorizontalDistance {
+  string id = 1;
+  double new_horizontal_distance = 2;
+}
+message ChangeRailDerailmentAssumedLineLoad {
+  string id = 1;
+  double new_assumed_line_load = 2;
+}
+message ChangeRailDerailmentLoadedLength {
+  string id = 1;
+  double new_loaded_length = 2;
+}
+message ChangeRailDerailmentOffset {
+  string id = 1;
+  double new_offset = 2;
+}
+message ChangeRailDerailmentSituation {
+  string id = 1;
+  string new_situation = 2;
+}
+message ChangeRailLoadGroupAssumedAxleLoad {
+  string id = 1;
+  double new_assumed_axle_load = 2;
+}
+message ChangeRailLoadGroupAssumedLateral {
+  string id = 1;
+  double new_assumed_lateral = 2;
+}
+message ChangeRailLoadGroupAssumedLongitudinal {
+  string id = 1;
+  double new_assumed_longitudinal = 2;
+}
+message ChangeRailLoadGroupAssumedUdl {
+  string id = 1;
+  double new_assumed_udl = 2;
+}
+message ChangeRailLoadGroupFactorLateral {
+  string id = 1;
+  double new_factor_lateral = 2;
+}
+message ChangeRailLoadGroupFactorLongitudinal {
+  string id = 1;
+  double new_factor_longitudinal = 2;
+}
+message ChangeRailLoadGroupFactorVertical {
+  string id = 1;
+  double new_factor_vertical = 2;
+}
+message ChangeRailLoadGroupLoadGroup {
+  string id = 1;
+  string new_load_group = 2;
+}
+message ChangeSnowGuardAssumedForce {
+  string id = 1;
+  double new_assumed_force = 2;
+}
+message ChangeSnowGuardRoofId {
+  string id = 1;
+  string new_roof_id = 2;
+}
+message ChangeSnowGuardSlopeLength {
+  string id = 1;
+  double new_slope_length = 2;
+}
+message ChangeSupportCollisionAssumedForceX {
+  string id = 1;
+  double new_assumed_force_x = 2;
+}
+message ChangeSupportCollisionAssumedForceY {
+  string id = 1;
+  double new_assumed_force_y = 2;
+}
+message ChangeSupportCollisionHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message ChangeSupportCollisionLocation {
+  string id = 1;
+  string new_location = 2;
+}
+message ChangeSupportCollisionPositionX {
+  string id = 1;
+  double new_position_x = 2;
+}
+message InsertDustExplosion {
+  uint64 index = 1;
+  DustExplosion item = 2;
+}
+message InsertFatigueModel {
+  uint64 index = 1;
+  FatigueModel item = 2;
+}
+message InsertLocalFire {
+  uint64 index = 1;
+  LocalFire item = 2;
+}
+message InsertRailDerailment {
+  uint64 index = 1;
+  RailDerailment item = 2;
+}
+message InsertRailLoadGroup {
+  uint64 index = 1;
+  RailLoadGroup item = 2;
+}
+message InsertSnowGuard {
+  uint64 index = 1;
+  SnowGuard item = 2;
+}
+message InsertSupportCollision {
+  uint64 index = 1;
+  SupportCollision item = 2;
+}
+message RemoveDustExplosion {
+  string id = 1;
+}
+message RemoveFatigueModel {
+  string id = 1;
+}
+message RemoveLocalFire {
+  string id = 1;
+}
+message RemoveRailDerailment {
+  string id = 1;
+}
+message RemoveRailLoadGroup {
+  string id = 1;
+}
+message RemoveSnowGuard {
+  string id = 1;
+}
+message RemoveSupportCollision {
   string id = 1;
 }

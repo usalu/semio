@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-pack-json-canonical-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -29,7 +29,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterApplyHost
     socketActorReadyRef, setBootstrapUiByDocument, setExecutionTargetUiByDocument, setPresencePeersByRuntimeKey,
     rebootstrapDiscardedSessionsRef, ensureBackboneWorker, readLocalDocumentRef, shellUri, sessionRouteRef,
     setSessionRoute, requestSessionRoute, panel, tutorialDrivenRef, postBrowserActorViewState, refreshUi,
-    updateSpacePanel, switchToPluginApp, applyHostEffects
+    updateSpacePanel, updateSpacePanelFrom, loadedPluginsRef, switchToPluginApp, applyHostEffects
   } = core;
   const applyShellUri = useCallback(
     async (uri: string, preservedViewState?: ViewModel): Promise<boolean> => {
@@ -104,7 +104,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterApplyHost
     if (!current || !hostPlugin || current.pluginId !== hostPlugin.handle.pluginId || current.app.id !== landingAppId) return;
     const seen = rehydratedLocalDocumentsRef.current.get(current.instanceId) ?? new Set<string>();
     rehydratedLocalDocumentsRef.current.set(current.instanceId, seen);
-    const pending = localCatalog.documents.filter((document) => !seen.has(`${document.documentId}@${document.admittedAtMs}`));
+    const pending = localCatalog.documents.filter((document) => document.surface === undefined && !seen.has(`${document.documentId}@${document.admittedAtMs}`));
     if (pending.length === 0) return;
     let cancelled = false;
     void (async () => {
@@ -146,5 +146,5 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterApplyHost
     }
     return session;
   }, [loadedPlugins, panel, session, hostMode]);
-  return { resolveSyncTargetSession, loadedPlugins, ensureBackboneWorker, identityRef, hubEnv, openDocumentSessionsRef, browserActorUiByRuntimeKeyRef, retireBrowserActorUi, shellActorIdRef, socketActorReadyRef, postBrowserActorViewState, retireDocumentAttachment, spaceDirectoryHistoriesRef, directoryScopedOwnersRef, setSpaceArtifactCreationCatalog, setSpaceArtifactCreationCatalogUi, documentAttachmentLane, bindDocumentBackbone, dispatch, backboneWorkerRef, closeDocumentRef, openDocumentRef, sessionRef, activeToolId, activeUtilityByWindowId, extraWindowInstances, session, cancelSpaceArtifactCreationsForRuntime, backgroundSpaceIndexSessionsRef, inferencePortOpeningRef, inferencePortOwnerRef, inferencePortAuthorityRef, inferencePortEpochRef, localDocumentOwnerRegistry, liveDialogRef, closeOwnedDialog, tutorialDrivenRef, rebootstrapDiscardedSessionsRef, setInferenceHistoryByRuntimeKey, setPresencePeersByRuntimeKey, setBootstrapUiByDocument, setExecutionTargetUiByDocument, scope, showTransientNoticeRef, syncBackboneUri, uiLocaleRef, hostApp, updateSpacePanel };
+  return { resolveSyncTargetSession, loadedPlugins, ensureBackboneWorker, identityRef, hubEnv, openDocumentSessionsRef, browserActorUiByRuntimeKeyRef, retireBrowserActorUi, shellActorIdRef, socketActorReadyRef, postBrowserActorViewState, retireDocumentAttachment, spaceDirectoryHistoriesRef, directoryScopedOwnersRef, setSpaceArtifactCreationCatalog, setSpaceArtifactCreationCatalogUi, documentAttachmentLane, bindDocumentBackbone, dispatch, backboneWorkerRef, closeDocumentRef, openDocumentRef, sessionRef, activeToolId, activeUtilityByWindowId, extraWindowInstances, session, cancelSpaceArtifactCreationsForRuntime, backgroundSpaceIndexSessionsRef, inferencePortOpeningRef, inferencePortOwnerRef, inferencePortAuthorityRef, inferencePortEpochRef, localDocumentOwnerRegistry, liveDialogRef, closeOwnedDialog, tutorialDrivenRef, rebootstrapDiscardedSessionsRef, setInferenceHistoryByRuntimeKey, setPresencePeersByRuntimeKey, setBootstrapUiByDocument, setExecutionTargetUiByDocument, scope, showTransientNoticeRef, syncBackboneUri, uiLocaleRef, hostApp, updateSpacePanel, updateSpacePanelFrom, loadedPluginsRef };
 }

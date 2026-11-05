@@ -1,0 +1,55 @@
+{
+  "token": {
+    "action": "insertItem",
+    "generation": "1",
+    "revision": "r1",
+    "window": "properties"
+  },
+  "draft": {
+    "path": "products",
+    "value": {
+      "count": "4"
+    }
+  },
+  "commitArgs": {
+    "path": "products",
+    "value": {
+      "count": 4
+    }
+  },
+  "cases": [
+    {
+      "ready": true,
+      "commitArgs": {
+        "value": {
+          "count": 4
+        }
+      },
+      "allowed": true
+    },
+    {
+      "ready": false,
+      "commitArgs": null,
+      "allowed": true
+    },
+    {
+      "ready": true,
+      "commitArgs": null,
+      "allowed": false
+    },
+    {
+      "ready": false,
+      "commitArgs": {
+        "value": {
+          "count": 4
+        }
+      },
+      "allowed": false
+    },
+    {
+      "ready": true,
+      "commitArgs": "4",
+      "allowed": false
+    }
+  ]
+}

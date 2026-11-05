@@ -82,6 +82,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn operation_progress_scope() -> UiDirtyScope {
         E::operation_progress_scope()
     }
+    fn host_event_demands(event:&HostEvent)->Option<semio_framework_value::RetirementDemand>{E::host_event_demands(event)}
     fn host_event(event: &HostEvent) -> Option<Self::Command> {
         E::host_event(event)
     }
@@ -91,8 +92,8 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         E::build_tool_job(request,output,cx)
     }
-    fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        E::build_reserved_tool_job(request)
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<Self>>,body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        E::build_reserved_tool_job(request,body,cx)
     }
     fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         E::build_media_export_job(request,body,cx)

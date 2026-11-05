@@ -1,0 +1,1 @@
+[{"schemaPath":[0],"value":{"kind":"a","x":""},"key":"item","children":[1,2,3],"variantSelector":0},{"schemaPath":[0,0],"value":"a","key":"kind"},{"schemaPath":[0,1],"value":"","key":"x"},{"schemaPath":[0,2],"value":"","key":"y"}]

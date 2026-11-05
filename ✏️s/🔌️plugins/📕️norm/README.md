@@ -48,7 +48,7 @@ There is one selection for all windows.
 - Click an entity in the 3D model, the outline or a group row of the checks window. Rectangle selection and multi-select work in the 3D model. Sub-parts (a face of a plate, a bolt row) can be picked.
 - Selecting a check row selects the entity it belongs to; the properties window scrolls to the checked field, and the diagrams switch to that entity. Without a selection the diagrams show the worst entity.
 - Hovering a check row highlights the entity and the other way round.
-- Known limit: the stored check selection and picks carry no timestamps; the windows show their union. Clearing a pick does not clear the stored check. The read-only viewer does not yet mirror picks.
+- An entity pick chooses its governing check. A check row or keyboard check step selects that exact check through the same interaction selection; a fresh entity pick replaces it. The read-only viewer shares this focus across the model, checks and diagrams. Known limit: clearing all picks can restore the last local check selection.
 
 ### Editing values
 
@@ -190,7 +190,7 @@ Alle Fenster teilen eine Auswahl.
 - Ein Objekt im 3D-Modell, in der Modellstruktur oder in einer Gruppenzeile der Nachweise anklicken. Rechteckauswahl und Mehrfachauswahl funktionieren im 3D-Modell. Teile (eine Fläche eines Blechs, eine Schraubenreihe) sind einzeln wählbar.
 - Die Wahl einer Nachweiszeile wählt das zugehörige Objekt; die Eigenschaften springen zum geprüften Feld, die Diagramme wechseln zu diesem Objekt. Ohne Auswahl zeigen die Diagramme das ungünstigste Objekt.
 - Das Überfahren einer Nachweiszeile hebt das Objekt hervor und umgekehrt.
-- Bekannte Einschränkung: Die gespeicherte Nachweisauswahl und Klicks im Modell tragen keine Zeitstempel; die Fenster zeigen ihre Vereinigung. Das Aufheben eines Klicks hebt den gespeicherten Nachweis nicht auf. Der lesende Betrachter spiegelt Klicks noch nicht.
+- Eine Objektauswahl wählt ihren maßgebenden Nachweis. Eine Nachweiszeile oder das Weiterschalten per Tastatur wählt genau diesen Nachweis über dieselbe Interaktionsauswahl; eine neue Objektauswahl ersetzt ihn. Der lesende Betrachter nutzt denselben Fokus für Modell, Nachweise und Diagramme. Bekannte Einschränkung: Das Aufheben aller Objektklicks kann die letzte lokale Nachweisauswahl wieder anzeigen.
 
 ### Werte bearbeiten
 

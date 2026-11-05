@@ -243,8 +243,8 @@ macro_rules! original_native_caller{
    let accepted=AtomicUsize::new(0usize);let mut original_allocation=|request:$allocation|{assert_eq!(request.owned_bytes,accepted.load(Ordering::Relaxed));accepted.store(request.next_owned_bytes,Ordering::Relaxed);Ok(())};let mut recipient=$recipient::new();
    let mut native=semio_framework_value::$control::new_forwarded(law["nativeMaximumBytes"].as_u64().unwrap()as usize,original_observer,&mut original_allocation);native.install_retirement_recipient(&mut recipient).unwrap();
    let mut sql=SqliteSnapshotControl::new(callback,limits);let mut owner=store::$owner::new(&mut native,grant);let result=operation(&mut sql,&mut owner);assert!(owner.progress().fits(grant));if let Err(error)=&result{assert_eq!(error.original_native_receipt(),owner.progress());}drop(owner);assert_eq!(native.owned_bytes(),accepted.load(Ordering::Relaxed));
-   let held=native.has_retirement_owner();let denied=serde_json::from_value::<semio_framework_value::RetainedCloneGrant>(law["deniedCloseGrant"].clone()).unwrap();assert_eq!(native.close_retirement_recipient(denied).unwrap().progress(),Default::default());assert_eq!(native.has_retirement_owner(),held);original_continuation(&mut native);
-   for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if !native.has_retirement_owner(){return result}assert!(native.close_retirement_recipient(close).unwrap().progress().fits(close));}
+   let held=native.has_retirement_owner();let denied=serde_json::from_value::<semio_framework_value::RetainedCloneGrant>(law["deniedCloseGrant"].clone()).unwrap();assert_eq!(native.close_retirement_recipient(denied).result.unwrap().progress(),Default::default());assert_eq!(native.has_retirement_owner(),held);original_continuation(&mut native);
+   for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if !native.has_retirement_owner(){return result}assert!(native.close_retirement_recipient(close).result.unwrap().progress().fits(close));}
    assert!(!native.has_retirement_owner(),"original native caller did not reach funded terminal");result
   }
  };

@@ -52,6 +52,7 @@ semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modu
 semio-framework-value-factory = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-store-ephemeral = { path = "../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-store-one-item-batch = { path = ".", features = ["test-support"] }
@@ -61,3 +62,8 @@ semio-framework-value-derive = { path = "../../../../../../../🔨️modules/�
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 semio-framework-value-persistent = { path = "../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+
+[[test]]
+name = "cold-projection-metadata"
+path = "../../../📬️paged-one-item/❄️cold-apply/🧪️tests/📊️metadata/🦀️.rs"
+required-features = ["test-support"]

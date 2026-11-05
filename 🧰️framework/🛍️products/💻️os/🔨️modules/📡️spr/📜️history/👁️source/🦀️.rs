@@ -26,7 +26,7 @@ impl OriginalHistorySource {
             *output = Some(Self { source: ManuallyDrop::new(Some(Arc::new(history.take().unwrap()))), closing: ManuallyDrop::new(None), binding: (native.ledger_identity(), native.retirement_recipient_identity()) });
             let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
             let allocation_refusal = native.record_constructed_allocation(progress.retained_capacity_bytes).err();
-            NativeConstructionStepResult { work: 0, result: if allocation_refusal.is_none() { Ok(true) } else { Err(OriginalReceivingPrimary { primary: None, quote_refusal: None, allocation_refusal, progress }) }, progress }
+            NativeConstructionStepResult { work: 1, result: if allocation_refusal.is_none() { Ok(true) } else { Err(OriginalReceivingPrimary { primary: None, quote_refusal: None, allocation_refusal, progress }) }, progress }
         })
     }
 
@@ -55,7 +55,7 @@ impl OriginalHistorySource {
         let demand = RetirementDemand { copy_bytes: 2 * size_of::<HistoryLog>() + size_of::<Option<Arc<HistoryLog>>>(), release_bytes: arc_bytes::<HistoryLog>(), depth: 1, ..Default::default() };
         native.receive_construction_step_typed(demand, |_, _| {
             match Arc::try_unwrap(self.source.take().unwrap()) {
-                Ok(history) => { *output = Some(history); NativeConstructionStepResult { work: 0, result: Ok(true), progress: RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() } } }
+                Ok(history) => { *output = Some(history); NativeConstructionStepResult { work: 1, result: Ok(true), progress: RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() } } }
                 Err(source) => { *self.source = Some(source); NativeConstructionStepResult { work: 0, result: Ok(false), progress: Default::default() } }
             }
         })
@@ -64,25 +64,29 @@ impl OriginalHistorySource {
     /// 📏️ Shared-source retirement starts with a heapless, separately quoted fixed owner move.
     pub fn next_close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.source.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<HistoryLog>>() + size_of::<SharedControlledRetirement<HistoryLog>>(), depth: 1, ..Default::default() }); }
-        self.closing.as_ref().map_or(Ok(Default::default()), |owner| owner.next_demand(body))
+        self.closing.as_ref().map_or(Ok(Default::default()), |owner| if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:2*size_of::<Option<SharedControlledRetirement<HistoryLog>>>(),depth:1,..Default::default()})}else{owner.next_demand(body)})
     }
 
     /// ♻️ Cancellation borrows the original close authority and waits for live fold aliases before releasing history.
-    pub fn close_original(&mut self, native: &mut dyn NativeDecodeCloseControl, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_original(&mut self, native: &mut dyn NativeDecodeCloseControl, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+        let mut work=0;
+        let result=(||{
         self.validate(native)?;
         let demand = self.next_close_demand(grant.maximum_copy_bytes)?;
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(source) = self.source.take() {
+            work=1;
             *self.closing = Some(SharedControlledRetirement::new(source));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
         if let Some(owner) = self.closing.as_mut() {
+            if owner.terminal_is_empty(){work=1;*self.closing=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
             native.charge(demand.capacity_bytes)?;
-            let step = owner.step(grant)?;
-            if owner.terminal_is_empty() { *self.closing = None; }
-            return Ok(RetainedCloneStep::Progress(step.progress()));
+            let result=owner.step(grant);work=owner.last_turn_work();
+            return result.map(|step|RetainedCloneStep::Progress(step.progress()));
         }
         Ok(RetainedCloneStep::Complete(Default::default()))
+        })();semio_framework_value::RetainedWorkOutcome{work,result}
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.source.is_none() && self.closing.is_none() }

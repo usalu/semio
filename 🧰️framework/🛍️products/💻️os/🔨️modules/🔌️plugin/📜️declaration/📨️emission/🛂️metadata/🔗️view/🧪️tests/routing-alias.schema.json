@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "bodyBytes",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.original.metadata-routing-alias.v1"
+    },
+    "bodyBytes": {
+      "type": "integer",
+      "minimum": 65536
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "grant",
+          "admitted",
+          "bodyCopies",
+          "originalRetained"
+        ],
+        "properties": {
+          "grant": {
+            "enum": [
+              "items-zero",
+              "copy-minus-one",
+              "depth-zero",
+              "cancelled",
+              "exact"
+            ]
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "bodyCopies": {
+            "const": 0
+          },
+          "originalRetained": {
+            "const": true
+          }
+        }
+      }
+    }
+  }
+}

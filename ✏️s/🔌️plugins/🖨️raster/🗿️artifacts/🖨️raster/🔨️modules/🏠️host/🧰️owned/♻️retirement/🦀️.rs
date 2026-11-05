@@ -2,6 +2,25 @@
 
 use super::*;
 
+/// 🎟️ Retained workers borrow an existing caller or return bounded raw receipts without creating source authority.
+pub trait RasterWork{
+    fn should_yield(&mut self)->bool;
+    fn is_cancelled(&self)->bool;
+    fn retained_grant(&self)->RetainedCloneGrant;
+    fn consume_retained(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>;
+    fn consume_fuel(&mut self,work:u64);
+    fn fuel_remaining(&self)->u64;
+}
+
+impl RasterWork for semio_framework_job::StepContext<'_>{
+    fn should_yield(&mut self)->bool{semio_framework_job::StepContext::should_yield(self)}
+    fn is_cancelled(&self)->bool{semio_framework_job::StepContext::is_cancelled(self)}
+    fn retained_grant(&self)->RetainedCloneGrant{semio_framework_job::StepContext::retained_grant(self)}
+    fn consume_retained(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{semio_framework_job::StepContext::consume_retained(self,progress)}
+    fn consume_fuel(&mut self,work:u64){semio_framework_job::StepContext::consume_fuel(self,work);}
+    fn fuel_remaining(&self)->u64{semio_framework_job::StepContext::fuel_remaining(self)}
+}
+
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct RasterSnapshotRetirementFactory;
 
@@ -47,6 +66,7 @@ pub enum RasterDisplaced {
     AssetEntry((String, RasterAssetChild)),
     ValueEntry((String, semio_framework_value::DslValue)),
     Value(semio_framework_value::DslValue),
+    Mutations(Vec<RasterMutation>),
 }
 
 /// 🗑️ One displaced owner and its admitted retirement frame; the owner stays in `pending` until a grant funds its frame.
@@ -83,7 +103,8 @@ impl RasterRetirementSlot {
         Ok(Default::default())
     }
 
-    pub fn close(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep> {
+        let mut work=0;let result=(||{
         let empty = RetainedCloneProgress::default();
         if self.is_empty() {
             return Ok(RetainedCloneStep::Complete(empty));
@@ -98,8 +119,9 @@ impl RasterRetirementSlot {
         if raster_short(grant, demand) {
             return Ok(RetainedCloneStep::Progress(empty));
         }
-        let step = if self.active.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant)? } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, grant)? };
+        let turn = if self.active.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, grant) };work=turn.work;let step=turn.result?;
         Ok(RetainedCloneStep::Progress(step.progress()))
+        })();semio_framework_value::RetainedWorkOutcome{result,work}
     }
 }
 
@@ -135,7 +157,7 @@ pub fn raster_child_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant }
 }
 
-pub fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>) -> bool {
+pub fn raster_reserve_unit(cx: &mut dyn RasterWork) -> bool {
     if cx.should_yield() || cx.fuel_remaining() == 0 {
         return false;
     }

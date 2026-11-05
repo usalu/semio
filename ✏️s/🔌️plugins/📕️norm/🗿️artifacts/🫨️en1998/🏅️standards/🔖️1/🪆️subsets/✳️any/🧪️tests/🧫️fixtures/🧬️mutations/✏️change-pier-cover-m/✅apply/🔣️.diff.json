@@ -49,13 +49,19 @@
     "moved": [],
     "modified": []
   },
-  "joints": {
+  "soilLayers": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "bearings": {
+  "diaphragms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "accelerograms": {
     "removed": [],
     "inserted": [],
     "moved": [],
@@ -82,19 +88,25 @@
       }
     ]
   },
-  "accelerograms": {
+  "bearings": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "diaphragms": {
+  "joints": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "soilLayers": {
+  "tieBeams": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "slopes": {
     "removed": [],
     "inserted": [],
     "moved": [],

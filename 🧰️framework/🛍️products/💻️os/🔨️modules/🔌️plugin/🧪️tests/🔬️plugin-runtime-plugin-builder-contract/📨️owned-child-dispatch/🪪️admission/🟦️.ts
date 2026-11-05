@@ -8,18 +8,25 @@ test("reserved emission admission retains exact slots before producer ownership"
  for(const row of law.cases){const slots:Array<number|null>=Array.from({length:law.slots},(_,i)=>i<row.occupied?i+128:null);const original=structuredClone(slots);const vacant=slots.indexOf(null);expect(vacant>=0).toBe(row.admitted);if(vacant>=0){const model=applyPatch({slots},[{op:"replace",path:`/slots/${vacant}`,value:vacant+192}],false,false).newDocument;expect(model.slots.filter(x=>x!==null).length).toBe(row.occupied+1);expect(model.slots.slice(0,row.occupied)).toEqual(original.slice(0,row.occupied));}}
  const source=pluginFamilyText();
  expect(source.includes("admit_reserved_emit_producer")).toBe(true);
- expect(source.includes("supplied_authority: FrameworkReservedCommitPermit")).toBe(true);
+ expect(source.includes("mut permit:FrameworkReservedCommitPermit")).toBe(true);
  for(const route of law.routes){const row=source.split("\n").find(line=>line.includes("framework_reserved_job!(")&&line.includes(`"${route.id}"`));expect(row).toBeDefined();expect(row).toContain(`lanes: [${route.lanes.join(", ")}]`);}
  const clipboardStart=source.indexOf("async fn dispatch_framework_reserved_action"),clipboard=source.slice(clipboardStart,clipboardStart+2500);
  expect(clipboard.indexOf("admit_reserved_emit_producer")).toBeLessThan(clipboard.indexOf("build_artifact_reserved_action_job"));
+ expect(clipboard).toContain("OriginalToolSourceBinding::borrow(cx)");
  const media=source.slice(source.indexOf("async fn dispatch_import_media"),source.indexOf("async fn dispatch_config_command_inner"));
- expect(media.indexOf("admit_reserved_emit_producer")).toBeLessThan(media.indexOf("build_artifact_reserved_media_job"));
+ expect(media.indexOf("pending_media_import_permit.take()")).toBeGreaterThan(0);
+ expect(media.indexOf("pending_media_import_permit.take()")).toBeLessThan(media.indexOf("build_artifact_reserved_media_job"));
+ expect(media).toContain("OriginalToolSourceBinding::borrow(cx)");
+ const builders=pluginSubtreeText("🧵️instance","🖼️render");
+ expect(builders.match(/\n\s*source_binding,/gu)?.length).toBe(2);
+ expect(builders).toContain("input: Some(ArtifactReservedToolInput::Action");
+ expect(builders).toContain("input: Some(ArtifactReservedToolInput::Media");
 });
 
 test("reserved completed refusal retains original permit and output before returning authority",()=>{
  for(const row of law.refusals){const owner={completedOriginal:row.completedOriginal,retained:false,cancelled:false};const expected=applyPatch(owner,[{op:"replace",path:"/retained",value:row.retained},{op:"replace",path:"/cancelled",value:row.cancelled}],false,false).newDocument;expect(expected.completedOriginal).toBe(row.completedOriginal);expect(expected.retained).toBe(row.retained);}
  const source=pluginFamilyText();
- expect(source).toMatch(/supplied_authority:\s*&FrameworkReservedCommitPermit/u);
+ expect(/mut permit:\s*FrameworkReservedCommitPermit/u.test(source)).toBe(true);
  expect(source.includes("producer_fault: Option<ArtifactBoundedToolFault>")).toBe(true);
  const commit=source.slice(source.indexOf("async fn commit_framework_clipboard_completion"),source.indexOf("async fn dispatch_reserved_original_producer"));
  const mounted=commit.indexOf("self.mount_original_reserved_owners(action,None,None,completion,meta,Some((permit.operation,permit.lease,permit.identity.take()");expect(mounted).toBeGreaterThan(0);expect(mounted).toBeLessThan(commit.indexOf("if let Some(fault)=permit.producer_fault"));expect(commit.indexOf("permit.producer_fault")).toBeLessThan(commit.indexOf("self.tools.finish_mounted_reserved_completion(id)"));

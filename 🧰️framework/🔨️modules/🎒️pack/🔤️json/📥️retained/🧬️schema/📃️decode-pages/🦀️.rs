@@ -76,6 +76,7 @@ pub struct OwnedSchemaDecodePages {
     pub(super) byte_count: usize,
     pub(super) maximum_bytes: usize,
     sealed: bool,
+    backing_close_work:u64,
 }
 
 impl OwnedSchemaDecodePages {
@@ -96,7 +97,7 @@ impl OwnedSchemaDecodePages {
         let mut slots = Vec::new();
         slots.try_reserve_exact(credits.maximum_pages).map_err(|_| OwnedSchemaDecodeAdmissionFault::Allocation)?;
         slots.resize_with(credits.maximum_pages, std::mem::MaybeUninit::uninit);
-        Ok(Self { slots: slots.into_boxed_slice(), page_count: 0, byte_count: 0, maximum_bytes: credits.maximum_bytes, sealed: false })
+        Ok(Self { slots: slots.into_boxed_slice(), page_count: 0, byte_count: 0, maximum_bytes: credits.maximum_bytes, sealed: false,backing_close_work:0 })
     }
 
     /// 🔎️ Validates one page extent before a producer constructs its fixed owner.
@@ -187,15 +188,18 @@ impl OwnedSchemaDecodePages {
 
     /// 📪️ Releases the original whole directory only after its admitted inline pages are retired.
     pub fn close_backing_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.backing_close_work=0;
         if self.page_count!=0 || self.byte_count!=0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"decode directory still retains inline pages")); }
         if self.slots.is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items==0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_depth==0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"decode directory requires supplied depth")); }
         let bytes=self.allocation_byte_demand();
         if grant.maximum_release_bytes<bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        drop(std::mem::replace(&mut self.slots,Box::new([])));
+        self.backing_close_work=1;drop(std::mem::replace(&mut self.slots,Box::new([])));
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items:1,released_bytes:bytes,..Default::default() }))
     }
+    /// 🧮️ Borrows the actual directory release work from the latest backing close call.
+    pub fn last_backing_close_work(&self)->u64{self.backing_close_work}
     pub fn terminal_is_empty(&self) -> bool {
         self.page_count == 0 && self.byte_count == 0 && self.slots.is_empty()
     }

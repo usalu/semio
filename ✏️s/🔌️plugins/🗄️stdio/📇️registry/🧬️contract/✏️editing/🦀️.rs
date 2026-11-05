@@ -72,17 +72,19 @@ macro_rules! bounded_native_editing_editor {
         tools: [$($tool:literal),+ $(,)?],
         payload_schema: $payload_schema:literal,
         reduce: |$command:ident, $snapshot:ident| $reduce:block
+        $(, host_tools: [$($host_tool:literal),+ $(,)?])?
         $(, work: $work:path)?
         $(, preparation_route: $preparation_route:path)?
         $(, checkpoint_resume: $checkpoint_resume:expr)?
         $(,)?) => {
         impl $crate::BoundedNativeEditingEditor for $editor {
-            const NATIVE_TOOL_IDS: &'static [&'static str] = &[$($tool),+];
+            const NATIVE_TOOL_IDS: &'static [&'static str] = &[$($tool),+ $(,$($host_tool),+)?];
             const NATIVE_PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
                 $(semio_framework_plugin::ArtifactToolPublicationContract {
                     tool_id: $tool,
                     lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact],
                 }),+
+                $(,$(semio_framework_plugin::ArtifactToolPublicationContract { tool_id: $host_tool, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] }),+)?
             ];
             const NATIVE_PAYLOAD_SCHEMA: &'static str = $payload_schema;
             $(const NATIVE_CHECKPOINT_RESUME: bool = $checkpoint_resume;)?

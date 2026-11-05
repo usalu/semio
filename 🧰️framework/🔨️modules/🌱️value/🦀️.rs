@@ -79,6 +79,7 @@ pub use refusal::{ValueError, ValueRefusalKind};
 
 //#region 🔁️Codec
 pub use semio_framework_value_intrinsic::{equal_f32,equal_f64,DslValue,DslValueSource,Number,JsonInteger,json_integer,edit_through_value,ControlledValueHasher,DecodedValue,IntrinsicRetirement,FromValue,ToValue,ValueEdit,ValueShape};
+pub use semio_framework_value_intrinsic::{controlled_sequence,path_index};
 pub use semio_framework_value_intrinsic::dsl_value;
 /// 🧬 `FromValue` signatures take the control and its progress record, so every `FromValue` derive output names them through the consumer's value root.
 pub use semio_framework_value_intrinsic::{NativeDecodeControl,NativeDecodeProgress};
@@ -91,3 +92,5 @@ pub use semio_framework_value_intrinsic::{NativeDecodeControl,NativeDecodeProgre
 #[path="📣️publication/🌳️root/🦀️.rs"]
 pub mod publication_root;
 pub use publication_root::{RetainedPublicationDecision,RetainedPublicationRoot};
+
+pub use semio_framework_value_original_slot::initialization;

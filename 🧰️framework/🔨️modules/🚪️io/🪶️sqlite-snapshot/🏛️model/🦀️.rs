@@ -143,9 +143,15 @@ impl std::ops::DerefMut for SqliteSnapshotLedgerSlot<'_> { fn deref_mut(&mut sel
 
 /// 🧾️ Cumulative physical and native admission shared by every stage of one transfer.
 #[derive(Default)]
-pub(crate) struct SqliteSnapshotLedger { pub(crate) reconstruction_bytes: usize, pub(crate) reconstruction_units: usize, pub(crate) reconstruction_scalar_bytes: usize, pub(crate) allocation_bytes: usize, pub(crate) physical_read_progress: Option<SqliteSnapshotProgress> }
+pub(crate) struct SqliteSnapshotLedger { pub(crate) performed_work:u64, pub(crate) reconstruction_bytes: usize, pub(crate) reconstruction_units: usize, pub(crate) reconstruction_scalar_bytes: usize, pub(crate) allocation_bytes: usize, pub(crate) physical_read_progress: Option<SqliteSnapshotProgress> }
 
 impl<'a> SqliteSnapshotControl<'a> {
+    /// 🧮️ Reports explicitly performed SQL producer actions independently of receipt items.
+    pub fn performed_work(&self)->u64{self.ledger.performed_work}
+    /// ✍️ Records a selected admitted producer action before its fallible effect.
+    pub fn record_performed_work(&mut self,units:u64)->std::result::Result<(),ValueError>{self.ledger.performed_work=self.ledger.performed_work.checked_add(units).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"SQLite producer work counter overflow"))?;Ok(())}
+
+
     pub fn new(callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits) -> Self { Self { required_allocation:false, forwarded_bytes:0, allocation:None, native_retirement:None, callback, limits, ledger: SqliteSnapshotLedgerSlot::Owned(SqliteSnapshotLedger::default()) } }
     /// 📩️ Requires an actual original allocation port for each new nonzero cold backing while this loan remains open.
     pub fn receiving_scope(&mut self)->SqliteSnapshotReceivingControl<'_,'a>{let previous=self.required_allocation;self.required_allocation=true;SqliteSnapshotReceivingControl{control:self,previous}}

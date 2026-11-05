@@ -21,6 +21,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-record-ownership = { path = "../../🧳️ownership/📦️packages/🦀️rust" }
 semio-framework-value-native-storage = { path="../../../../../🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path="../../../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { path="../../../../../🌱️value/📦️packages/🦀️rust" }
@@ -33,6 +34,8 @@ semio-framework-pack-json = { path="../../../../../🎒️pack/🔤️json/📦�
 semio-framework-io-control = { path="../../../../../🚪️io/⏱️control/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-value-native-owned = { path = "../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust", features = ["testkit"] }
 serde_json = "1.0.140"
 serde = { version="1.0.219",features=["derive"] }

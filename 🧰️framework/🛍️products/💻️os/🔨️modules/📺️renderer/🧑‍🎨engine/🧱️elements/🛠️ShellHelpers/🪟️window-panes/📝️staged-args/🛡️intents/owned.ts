@@ -26,7 +26,8 @@ function counter(value: unknown): value is string { return typeof value === "str
 function path(value: unknown): boolean { return Array.isArray(value) && value.length >= 1 && value.length <= 64 && value.every(part => typeof part === "string" && part.length > 0); }
 function label(value: unknown): boolean { return closed(value, ["en", "de"]) && typeof value.en === "string" && typeof value.de === "string"; }
 function status(value: unknown): value is StagedFormStatus {
-  if (!closed(value, ["token", "ready", "diagnostics", "diagnosticOffset", "diagnosticTotal"]) || !stagedFormToken(value.token) || typeof value.ready !== "boolean" || !Array.isArray(value.diagnostics) || value.diagnostics.length > 16 || !counter(value.diagnosticOffset) || !counter(value.diagnosticTotal)) return false;
+  if (!closed(value, ["token", "ready", "commitArgs", "diagnostics", "diagnosticOffset", "diagnosticTotal"]) || !stagedFormToken(value.token) || typeof value.ready !== "boolean" || !Array.isArray(value.diagnostics) || value.diagnostics.length > 16 || !counter(value.diagnosticOffset) || !counter(value.diagnosticTotal)) return false;
+  if (value.ready !== (value.commitArgs !== null) || value.commitArgs !== null && !data(value.commitArgs)) return false;
   if (BigInt(value.diagnosticOffset) + BigInt(value.diagnostics.length) > BigInt(value.diagnosticTotal)) return false;
   return value.diagnostics.every(item => closed(item, ["path", "code", "label"]) && Array.isArray(item.path) && item.path.length <= 64 && item.path.every(part => typeof part === "string" && part.length > 0) && typeof item.code === "string" && label(item.label));
 }
@@ -147,12 +148,13 @@ export class OwnedStagedControls {
       },
     };
   }
-  close(): void {
+  close(): void { this.session.close(); this.detach(); }
+  /** 🧹️ Releases one publication's reads while its captured action keeps the draft session. */
+  detach(): void {
     if (this.#closed && this.#live.size === 0) return;
     this.#closed = true;
     this.#status = undefined;
     this.#borrow = undefined;
-    this.session.close();
     let failure: { readonly error: unknown } | undefined;
     for (const read of this.#live) { try { this.source.unsubscribeNode(read); this.#live.delete(read); } catch (error) { failure ??= { error }; } }
     this.#notify();

@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "materials": null,
   "sections": null,
   "members": null,
@@ -15,10 +14,9 @@
           "memberId": null,
           "materialId": null,
           "kind": null,
-          "bolts": null,
-          "welds": null,
           "loadEccentricity": null,
-          "holeStagger": null
+          "holeStagger": null,
+          "forceMethod": "instantaneousCentre"
         }
       }
     ]
@@ -33,5 +31,6 @@
   "fatigueCategories": null,
   "patchLoads": null,
   "ringStiffeners": null,
-  "transverseStiffeners": null
+  "transverseStiffeners": null,
+  "reliabilityClass": null
 }

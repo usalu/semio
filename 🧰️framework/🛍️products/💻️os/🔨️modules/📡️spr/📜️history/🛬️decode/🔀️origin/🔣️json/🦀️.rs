@@ -16,7 +16,7 @@ impl<S:RetainedWireByteSource+?Sized> JsonReadSource for OriginalHistoryJsonRang
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum RetainedHistoryOriginJsonStep{Blocked,Progress,Ready,Fault,Closed}
 pub struct RetainedHistoryOriginJsonDecode{
- source:OriginalWireSourceIdentity,control_identity:(u64,Option<u64>),range:(usize,usize),allocation_limit:usize,#[doc(hidden)] pub grammar:ManuallyDrop<Option<JsonGrammarCursor<DslValue>>>,parsed:ManuallyDrop<Option<DslValue>>,
+ last_work:u64,source:OriginalWireSourceIdentity,control_identity:(u64,Option<u64>),range:(usize,usize),allocation_limit:usize,#[doc(hidden)] pub grammar:ManuallyDrop<Option<JsonGrammarCursor<DslValue>>>,parsed:ManuallyDrop<Option<DslValue>>,
  projection:ManuallyDrop<Option<RetainedHistoryOriginProjection>>,failure:ManuallyDrop<Option<JsonError>>,#[doc(hidden)] pub grammar_complete:bool,closing:bool,closed:bool,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,
 }
 impl RetainedHistoryOriginJsonDecode{
@@ -24,10 +24,11 @@ impl RetainedHistoryOriginJsonDecode{
   if range.0>range.1||range.1>source.original_source_identity().extent{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original origin JSON range is invalid"))}
   if g.maximum_items==0||g.maximum_depth<2{return Ok(None)}
   let view=OriginalHistoryJsonRange{source,range};let cursor=JsonSourceCursor::<_,DslValue>::new(&view,JsonMemberPolicy::Reject,limits)?;let(_,grammar)=cursor.into_grammar();
-  Ok(Some(Self{source:source.original_source_identity(),control_identity:(control.ledger_identity(),control.retirement_recipient_identity()),range,allocation_limit:limits.maximum_allocation_bytes,grammar:ManuallyDrop::new(Some(grammar)),parsed:ManuallyDrop::new(None),projection:ManuallyDrop::new(None),failure:ManuallyDrop::new(None),grammar_complete:false,closing:false,closed:false,receipt:Some((g,metadata()))}))
+  Ok(Some(Self{last_work:0,source:source.original_source_identity(),control_identity:(control.ledger_identity(),control.retirement_recipient_identity()),range,allocation_limit:limits.maximum_allocation_bytes,grammar:ManuallyDrop::new(Some(grammar)),parsed:ManuallyDrop::new(None),projection:ManuallyDrop::new(None),failure:ManuallyDrop::new(None),grammar_complete:false,closing:false,closed:false,receipt:Some((g,metadata()))}))
  }
  fn validate<S:RetainedWireByteSource+?Sized>(&self,source:&S,control:&dyn NativeDecodeCloseControl)->Result<(),ValueError>{if self.source!=source.original_source_identity()||self.control_identity!=(control.ledger_identity(),control.retirement_recipient_identity()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"origin JSON changed its original source or cumulative receiving limit"))}Ok(())}
  pub fn source_identity(&self)->OriginalWireSourceIdentity{self.source}
+ pub fn last_turn_work(&self)->u64{self.last_work}
  pub fn receipt(&self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt}
  pub fn take_receipt(&mut self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt.take()}
  fn publish(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.receipt=Some((g,p));if !p.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"origin JSON exceeded original parent authority").with_retained_progress(p))}Ok(())}
@@ -41,23 +42,23 @@ impl RetainedHistoryOriginJsonDecode{
   d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"origin JSON parent depth overflow"))?;Ok(d)
  }
  pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant)->Result<RetainedHistoryOriginJsonStep,ValueError>{
-  self.validate(source,control)?;if self.receipt.is_some()||self.closing||self.closed{return Ok(RetainedHistoryOriginJsonStep::Blocked)}
+  self.last_work=0;self.validate(source,control)?;if self.receipt.is_some()||self.closing||self.closed{return Ok(RetainedHistoryOriginJsonStep::Blocked)}
   if self.failure.is_some(){return Ok(RetainedHistoryOriginJsonStep::Fault)}
   if g.maximum_items==0||g.maximum_depth<2{return Ok(RetainedHistoryOriginJsonStep::Blocked)}
   let d=match self.demands(source,control,g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>{*self.failure=Some(error);self.publish(g,metadata())?;return Ok(RetainedHistoryOriginJsonStep::Fault)}};if !permits(g,d){return Ok(RetainedHistoryOriginJsonStep::Blocked)}
   let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};
   if !self.grammar_complete{
-   let view=OriginalHistoryJsonRange{source,range:self.range};let known_utf8=false;let grammar=self.grammar.as_mut().unwrap();let result=control.scoped_maximum(self.allocation_limit,|control|grammar.step_source(&view,1,control,child,known_utf8));let p=grammar.normal_step_progress();
+   let view=OriginalHistoryJsonRange{source,range:self.range};let known_utf8=false;let grammar=self.grammar.as_mut().unwrap();let mut work=0;let mut p=RetainedCloneProgress::default();let result=control.scoped_maximum(self.allocation_limit,|control|{let result=grammar.step_source(&view,1,control,child,known_utf8);work=grammar.last_turn_work();p=grammar.normal_step_progress();result});self.last_work=work;
    let status=match result{Ok(Some(value))=>{*self.parsed=Some(value);self.grammar_complete=true;RetainedHistoryOriginJsonStep::Progress},Ok(None)=>RetainedHistoryOriginJsonStep::Progress,Err(error)=>{*self.failure=Some(error);RetainedHistoryOriginJsonStep::Fault}};self.publish(g,p)?;return Ok(status)
   }
   if self.grammar.is_some(){return Ok(RetainedHistoryOriginJsonStep::Blocked)}
   if self.parsed.is_some(){
-   let Some(mut projection)=RetainedHistoryOriginProjection::admit_original(&mut self.parsed,child)?else{return Ok(RetainedHistoryOriginJsonStep::Blocked)};
-   let(issued,p)=projection.take_receipt().unwrap();if issued!=child{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"origin projection changed its original admission grant"))}*self.projection=Some(projection);self.publish(g,p)?;return Ok(RetainedHistoryOriginJsonStep::Progress)
+   self.last_work=1;let Some(mut projection)=RetainedHistoryOriginProjection::admit_original(&mut self.parsed,child)?else{self.last_work=0;return Ok(RetainedHistoryOriginJsonStep::Blocked)};
+   self.last_work=1;let(issued,p)=projection.take_receipt().unwrap();if issued!=child{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"origin projection changed its original admission grant"))}*self.projection=Some(projection);self.publish(g,p)?;return Ok(RetainedHistoryOriginJsonStep::Progress)
   }
   let Some(projection)=self.projection.as_mut()else{return Ok(RetainedHistoryOriginJsonStep::Blocked)};
   if projection.is_ready(){return Ok(RetainedHistoryOriginJsonStep::Ready)}
-  control.checkpoint()?;control.charge(d.capacity_bytes)?;let result=projection.step(child);let receipt=projection.take_receipt();let p=receipt.map_or_else(||result.as_ref().err().map_or(Default::default(),ValueError::retained_progress),|(_,p)|p);self.publish(g,p)?;
+  control.checkpoint()?;control.charge(d.capacity_bytes)?;let result=projection.step(child);self.last_work=projection.last_turn_work();let receipt=projection.take_receipt();let p=receipt.map_or_else(||result.as_ref().err().map_or(Default::default(),ValueError::retained_progress),|(_,p)|p);self.publish(g,p)?;
   result.map(|advanced|if self.projection.as_ref().is_some_and(RetainedHistoryOriginProjection::is_ready){RetainedHistoryOriginJsonStep::Ready}else if advanced{RetainedHistoryOriginJsonStep::Progress}else{RetainedHistoryOriginJsonStep::Blocked})
  }
  pub fn take_grammar_into(&mut self,recipient:&mut Option<JsonGrammarCursor<DslValue>>,g:RetainedCloneGrant)->Result<bool,ValueError>{if !self.grammar_is_receivable()||self.receipt.is_some()||recipient.is_some()||g.maximum_items==0||g.maximum_depth<2{return Ok(false)}*recipient=self.grammar.take();self.publish(g,metadata())?;Ok(true)}
@@ -69,14 +70,14 @@ impl RetainedHistoryOriginJsonDecode{
   let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};let projection=self.projection.as_mut().unwrap();let moved=projection.take_ready_into(recipient,child)?;if !moved{return Ok(false)}let(issued,p)=projection.take_receipt().unwrap();if issued!=child{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"origin ready transfer changed original grant"))}self.closing=true;self.publish(g,p)?;Ok(true)
  }
  pub fn cancel(&mut self){self.closing=true;if let Some(projection)=self.projection.as_mut(){projection.cancel()}}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedHistoryOriginJsonStep,ValueError>{
+ pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedHistoryOriginJsonStep,ValueError>{self.last_work=0;
   if self.receipt.is_some()||!self.closing||self.closed||self.grammar.is_some()||self.parsed.is_some()||self.failure.is_some(){return Ok(RetainedHistoryOriginJsonStep::Blocked)}
   if let Some(projection)=self.projection.as_mut(){
    if g.maximum_items==0||g.maximum_depth<2{return Ok(RetainedHistoryOriginJsonStep::Blocked)}
-   if projection.terminal_is_empty(){drop(self.projection.take());self.publish(g,metadata())?;return Ok(RetainedHistoryOriginJsonStep::Progress)}
-   let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};let closed=projection.close_step(child)?;if !closed{return Ok(RetainedHistoryOriginJsonStep::Blocked)}let(_,p)=projection.take_receipt().unwrap();self.publish(g,p)?;return Ok(RetainedHistoryOriginJsonStep::Progress)
+   if projection.terminal_is_empty(){self.last_work=1;drop(self.projection.take());self.publish(g,metadata())?;return Ok(RetainedHistoryOriginJsonStep::Progress)}
+   let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};let result=projection.close_step(child);self.last_work=projection.last_turn_work();let closed=result?;if !closed{return Ok(RetainedHistoryOriginJsonStep::Blocked)}let(_,p)=projection.take_receipt().unwrap();self.publish(g,p)?;return Ok(RetainedHistoryOriginJsonStep::Progress)
   }
-  if g.maximum_items==0||g.maximum_depth==0{return Ok(RetainedHistoryOriginJsonStep::Blocked)}self.closed=true;self.publish(g,metadata())?;Ok(RetainedHistoryOriginJsonStep::Closed)
+  if g.maximum_items==0||g.maximum_depth==0{return Ok(RetainedHistoryOriginJsonStep::Blocked)}self.last_work=1;self.closed=true;self.publish(g,metadata())?;Ok(RetainedHistoryOriginJsonStep::Closed)
  }
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.grammar.is_none()&&self.parsed.is_none()&&self.projection.is_none()&&self.failure.is_none()&&self.receipt.is_none()}
 }

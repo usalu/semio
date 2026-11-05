@@ -170,25 +170,9 @@ pub const RASTER_DIALECT: semio_framework_plugin::app::Dialect = semio_framework
 
 /// 🆔️ Stable identity of decoded image fields, independent of every carrier encoding.
 pub fn raster_image_content_id(prefix: &str, image: &SemioImageSnapshot) -> String {
-    let mut hash = framework_hash::Sha256::new();
-    let mut field = |bytes: &[u8]| {
-        hash.update(&(bytes.len() as u64).to_le_bytes());
-        hash.update(bytes);
-    };
-    field(image.schema.as_bytes());
-    field(&image.width.to_le_bytes());
-    field(&image.height.to_le_bytes());
-    field(&[image.colorspace as u8, image.bit_depth]);
-    field(&(image.frames.len() as u64).to_le_bytes());
-    for frame in &image.frames {
-        field(&frame.delay_ms.to_le_bytes());
-        field(&frame.rgba8);
-    }
-    field(&[u8::from(image.icc.is_some())]);
-    if let Some(icc) = &image.icc { field(icc); }
-    field(&(image.metadata.len() as u64).to_le_bytes());
-    for entry in &image.metadata { field(entry.key.as_bytes()); field(entry.value.as_bytes()); }
-    format!("{prefix}-{}", framework_hash::hex_lower(&hash.finalize()[..8]))
+    let mut hash = RasterImageContentHash::new();
+    while !hash.advance(image,32_768).expect("fixed image hash grant is valid").done {}
+    format!("{prefix}-{}", framework_hash::hex_lower(&hash.finish().expect("canonical image hash completed")))
 }
 
 /// 🔓️ Attaches decoded image content without reading or writing a physical representation.
@@ -201,7 +185,7 @@ pub fn raster_image(assets: &RasterOwnedMap<RasterAssetChild>, asset_id: &str) -
     Some(assets.get(asset_id)?.local_owner::<SemioImageSnapshot>()?.as_ref().clone())
 }
 
-pub fn create_raster_id(prefix: &str) -> String {
+fn next_raster_identity()->([u64;2],u64) {
     use std::hash::BuildHasher;
     use std::sync::{OnceLock,atomic::{AtomicU64,Ordering}};
     static NAMESPACE:OnceLock<[u64;2]>=OnceLock::new();
@@ -211,8 +195,25 @@ pub fn create_raster_id(prefix: &str) -> String {
         [state.hash_one(0_u8),state.hash_one(1_u8)]
     });
     let next=NEXT.try_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect("Raster identity sequence exhausted");
-    format!("{prefix}-{:016x}{:016x}{next:016x}",namespace[0],namespace[1])
+    (*namespace,next)
 }
+
+/// 📏️ One separator and three fixed sixteen-digit lowercase words follow the UTF-8 prefix.
+pub fn raster_id_bytes(prefix:&str)->Option<usize>{prefix.len().checked_add(49)}
+
+/// 🪪️ Writes a fresh identity only into the caller's already-funded empty backing.
+pub fn write_raster_id(prefix:&str,output:&mut String)->Result<(),&'static str>{
+    use std::fmt::Write;
+    let bytes=raster_id_bytes(prefix).ok_or("raster identity extent overflow")?;
+    if !output.is_empty()||output.capacity()<bytes{return Err("raster identity requires its exact preallocated empty output");}
+    let (namespace,next)=next_raster_identity();
+    write!(output,"{prefix}-{:016x}{:016x}{next:016x}",namespace[0],namespace[1]).map_err(|_|"raster identity fixed-width output refused")?;
+    Ok(())
+}
+
+pub fn create_raster_id(prefix:&str)->String{let mut output=String::with_capacity(raster_id_bytes(prefix).expect("raster identity prefix extent"));write_raster_id(prefix,&mut output).expect("raster identity exact allocated output");output}
+
+#[cfg(test)]#[path="🪪️identity/🧪️tests/🦀️.rs"]mod identity_tests;
 
 impl<V:semio_framework_dsl_record::BorrowedDslField> semio_framework_dsl_record::BorrowedDslField for RasterOwnedMap<V>{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Map(semio_framework_dsl_record::borrowed_field_shape::<V>);}
 

@@ -28,63 +28,51 @@ use semio_framework_job::StepContext;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::retained_clone::RetainedCloneClose;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::RetainedWorkOutcome;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
+#[cfg(test)]
+#[path="🧪️tests/♻️retirement/🦀️.rs"]
+mod original_work_close_tests;
 
 /// ♻️ Moves a work's remaining owners into one derived bundle and retires it through the controlled owner, one granted turn at a time.
 pub struct WorkClosing<T: RetireOwned + 'static> {
     staged: std::mem::ManuallyDrop<Option<T>>,
-    retirement: std::mem::ManuallyDrop<Option<ControlledRetirement<T>>>,
+    retirement: RetainedCloneClose,
 }
 
 impl<T: RetireOwned + 'static> Default for WorkClosing<T> {
     fn default() -> Self {
-        Self { staged: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
+        Self { staged: std::mem::ManuallyDrop::new(None), retirement: RetainedCloneClose::default() }
     }
 }
 
 impl<T: RetireOwned + 'static> WorkClosing<T> {
     /// 🧺️ Parks the work's remaining owners; the first granted turn births their controlled retirement.
     pub fn stage(&mut self, owners: T) {
-        debug_assert!(self.staged.is_none() && self.retirement.is_none(), "a work stages its remaining owners exactly once");
+        debug_assert!(self.staged.is_none() && self.retirement.is_empty(), "a work stages its remaining owners exactly once");
         *self.staged = Some(owners);
     }
 
     pub fn is_empty(&self) -> bool {
-        self.staged.is_none() && self.retirement.is_none()
+        self.staged.is_none() && self.retirement.is_empty()
     }
 
     /// 📏️ Quotes the single turn the next close step spends.
     pub fn demands(&self, copy: usize) -> Result<RetirementDemand, ValueError> {
-        if let Some(owner) = self.retirement.as_ref() {
-            return Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(copy)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? });
-        }
-        Ok(RetirementDemand { depth: usize::from(self.staged.is_some()), ..Default::default() })
+        self.retirement.next_owner_demands::<T>(self.staged.is_some(), &None, copy)
     }
 
     pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
         if self.is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
         let demand = self.demands(cx.retained_grant().maximum_copy_bytes)?;
         let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-            if let Some(owner) = self.retirement.as_mut() {
-                let result = owner.step(grant);
-                if result.is_ok() && owner.terminal_is_empty() { self.retirement.take(); }
-                return RetainedWorkOutcome { result, work: 1 };
-            }
-            let Some(value) = self.staged.take() else {
-                return RetainedWorkOutcome { result: Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "puzzle close lost its staged original owners")), work: 0 };
-            };
-            let result = match ControlledRetirement::new(value) {
-                Ok(owner) => {
-                    *self.retirement = Some(owner);
-                    Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-                }
-                Err((error, value)) => { *self.staged = Some(value); Err(error) }
-            };
-            RetainedWorkOutcome { result, work: 1 }
+            if self.retirement.is_empty(){
+                let turn=self.retirement.begin_granted(&mut self.staged,grant);
+                RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))),work:turn.work}
+            }else{self.retirement.step_granted(grant)}
         })?;
         Ok(if self.is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }

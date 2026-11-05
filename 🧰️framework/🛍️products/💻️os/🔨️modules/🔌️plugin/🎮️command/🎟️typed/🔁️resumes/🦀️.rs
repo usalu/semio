@@ -166,7 +166,7 @@ mod tests {
     const LAW: &str = include_str!("../🧪️tests/🧫️fixtures/🔁️task-resumes/🔣️.json");
 
     fn meta(actor: &str) -> ActionMeta {
-        ActionMeta { actor: actor.into(), instance_id: 7, view_state: None }
+        ActionMeta { expected_document_revision:None, actor: actor.into(), instance_id: 7, view_state: None }
     }
 
     fn step(text: &str) -> TaskResumeStep {

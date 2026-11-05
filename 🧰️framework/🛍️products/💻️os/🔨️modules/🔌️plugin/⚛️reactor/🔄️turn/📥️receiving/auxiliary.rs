@@ -1,5 +1,5 @@
 //! 🪟️ Original admitted bytes and the real window lease drive one private auxiliary controller render.
-use super::{ReceivingSource,staged::StagedRequestInput};
+use super::{ReceivingSource,retired,staged::StagedRequestInput};
 use semio_framework::action_staging::StagedFormRequest;
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_plugin_reactor_app::PluginApp;
@@ -9,14 +9,13 @@ use semio_framework_ui_runtime::ComponentTree;
 use semio_framework_value::{RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::RetainedCloneClose;
 use std::mem::{ManuallyDrop,size_of};
-fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 pub const STAGED_AUXILIARY_TRANSPORT_ADMITTED:bool=false;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum StagedAuxiliaryProgress{Pending,Transferred}
 pub struct StagedAuxiliaryInput{
     witness:ReceivingSource,input:ManuallyDrop<Option<StagedRequestInput>>,request:ManuallyDrop<Option<StagedFormRequest>>,retirement:RetainedCloneClose,
-    capture:StagedWindowContextCapture,lease:Option<StagedWindowContextLease>,instance:u32,body:&'static str,phase:u8,controller_started:bool,controller_closed:bool,closing:bool,closed:bool,failed:bool,
+    capture:StagedWindowContextCapture,lease:Option<StagedWindowContextLease>,instance:u32,body:[u8;semio_framework::MAX_SURFACE_BODY_KEY_BYTES],body_len:usize,phase:u8,controller_started:bool,controller_closed:bool,closing:bool,closed:bool,failed:bool,
 }
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"staging.auxiliary-owner")}
 fn demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<StagedAuxiliaryInput>()+2*size_of::<StagedFormRequest>(),depth:1,..Default::default()}}
@@ -27,17 +26,17 @@ fn metadata(cx:&mut StepContext<'_>,closing:bool)->Result<bool,OriginalTurnFailu
 }
 impl StagedAuxiliaryInput{
     /// 🎫️ Only the unissued actual Pack receiver can donate an input; ordinary requests confer no admission.
-    pub fn admit(donor:&mut Option<StagedRequestInput>,instance:u32,body:&'static str,cx:&mut StepContext<'_>)->Result<Option<Self>,OriginalTurnFailure>{
-        donor.as_ref().ok_or_else(invalid)?.validate_unissued(cx)?;if body.is_empty()||body.len()>semio_framework::MAX_SURFACE_BODY_KEY_BYTES{return Err(invalid().into());}if !metadata(cx,false)?{return Ok(None);}let witness=ReceivingSource::new(cx)?;
-        Ok(Some(Self{witness,input:ManuallyDrop::new(donor.take()),request:ManuallyDrop::new(None),retirement:Default::default(),capture:Default::default(),lease:None,instance,body,phase:0,controller_started:false,controller_closed:false,closing:false,closed:false,failed:false}))
+    pub fn admit(donor:&mut Option<StagedRequestInput>,instance:u32,body:&str,cx:&mut StepContext<'_>)->Result<Option<Self>,OriginalTurnFailure>{
+        donor.as_ref().ok_or_else(invalid)?.validate_unissued(cx)?;if body.is_empty()||body.len()>semio_framework::MAX_SURFACE_BODY_KEY_BYTES{return Err(invalid().into());}if !metadata(cx,false)?{return Ok(None);}let witness=ReceivingSource::new(cx)?;let mut body_bytes=[0;semio_framework::MAX_SURFACE_BODY_KEY_BYTES];body_bytes[..body.len()].copy_from_slice(body.as_bytes());
+        Ok(Some(Self{witness,input:ManuallyDrop::new(donor.take()),request:ManuallyDrop::new(None),retirement:Default::default(),capture:Default::default(),lease:None,instance,body:body_bytes,body_len:body.len(),phase:0,controller_started:false,controller_closed:false,closing:false,closed:false,failed:false}))
     }
     async fn advance<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,receive:&mut dyn FnMut(&mut Option<ComponentTree>,&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>,cx:&mut StepContext<'_>)->Result<StagedAuxiliaryProgress,OriginalTurnFailure>{
         if !metadata(cx,false)?{return Ok(StagedAuxiliaryProgress::Pending);}
         match self.phase{
             0=>{if let Some(request)=self.input.as_mut().ok_or_else(invalid)?.step(cx)?{*self.request=Some(request);self.phase=1;}},
             1=>{let request=self.request.as_ref().ok_or_else(invalid)?;if let Some(lease)=staged_context::capture(runtime,self.instance,&request.token.window,request.locale,&mut self.capture,cx).await?{self.lease=Some(lease);self.phase=2;}},
-            2=>{let lease=self.lease.as_mut().ok_or_else(invalid)?;let donor=&mut *self.request;let started=&mut self.controller_started;let body=self.body;let result=staged_context::with_context(runtime,lease,&mut |app,view,cx|{*started=true;app.receive_render_work_request(body,donor,view,cx)},cx).await?;if result.is_some(){if donor.is_some(){return Err(invalid().into());}self.phase=3;}},
-            3=>{let lease=self.lease.as_mut().ok_or_else(invalid)?;let body=self.body;let result=staged_context::with_context(runtime,lease,&mut |app,view,cx|{let Some(())=semio_framework_async::poll::resolve_ready(app.render(body,None,view,cx))?else{return Ok(None)};let source=app.original_render_tree_source(cx)?;if !receive(source,cx)?{return Ok(None);}if source.is_some(){return Err(invalid().into());}Ok(Some(()))},cx).await?;if result.is_some(){self.phase=4;}},
+            2=>{let lease=self.lease.as_mut().ok_or_else(invalid)?;let donor=&mut *self.request;let started=&mut self.controller_started;let body=std::str::from_utf8(&self.body[..self.body_len]).map_err(|_|invalid())?;let result=staged_context::with_context(runtime,lease,&mut |app,view,cx|{let request=donor.as_ref().ok_or_else(invalid)?;if !request.context_matches(view.window_id.as_deref(),view.locale)||!app.staged_action_matches(&request.token.action,body,view){return Err(invalid().into());}let result=app.receive_render_work_request(body,donor,view,cx);*started|=app.render_work_request_owned(cx);result},cx).await?;if result.is_some(){if donor.is_some(){return Err(invalid().into());}self.phase=3;}},
+            3=>{let lease=self.lease.as_mut().ok_or_else(invalid)?;let body=std::str::from_utf8(&self.body[..self.body_len]).map_err(|_|invalid())?;let result=staged_context::with_context(runtime,lease,&mut |app,view,cx|{let Some(())=semio_framework_async::poll::resolve_ready(app.render(body,None,view,cx))?else{return Ok(None)};let source=app.original_render_tree_source(cx)?;if !receive(source,cx)?{return Ok(None);}if source.is_some(){return Err(invalid().into());}Ok(Some(()))},cx).await?;if result.is_some(){self.phase=4;}},
             4=>return Ok(StagedAuxiliaryProgress::Transferred),
             _=>return Err(invalid().into()),
         }Ok(if self.phase==4{StagedAuxiliaryProgress::Transferred}else{StagedAuxiliaryProgress::Pending})

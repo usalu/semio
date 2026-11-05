@@ -6,6 +6,7 @@ use semio_s_plugin_norm_app_surface::{IdRemoval, InsertItemRule, NormEdit, NormE
 
 /// 📚 Every path an EN 1996 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field_arguments: &[],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "walls[].loadCases[].slabSpanM", kind: "change-slab-span", selectors: &[SelectorKey::Id("wallId"), SelectorKey::Id("id")], value: "newSlabSpanM" },

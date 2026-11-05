@@ -1,0 +1,1 @@
+{"schema":"host-event.fixed-observation.v1","maximumTextBytes":128,"maximumEvents":64,"windowId":"pane:é","windowUtf8":[112,97,110,101,58,195,169],"cases":["blur","captureLost","utilityChanged","frozen","baseMoved","retiring"],"utilityFrom":"select","utilityTo":"paint","overflowRefusedOnTake":true}

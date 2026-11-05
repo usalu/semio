@@ -1,0 +1,121 @@
+{
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "required": [
+        "id",
+        "artifact",
+        "attached",
+        "status",
+        "blocked",
+        "attachmentMismatch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "artifact": {
+          "type": "boolean"
+        },
+        "attached": {
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "missing",
+            "saved",
+            "pending",
+            "failed",
+            "unacknowledged"
+          ]
+        },
+        "blocked": {
+          "type": "boolean"
+        },
+        "attachmentMismatch": {
+          "enum": [
+            "none",
+            "app",
+            "instance"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "cases": [
+    {
+      "id": "unbound-artifact",
+      "artifact": true,
+      "attached": false,
+      "status": "missing",
+      "blocked": true,
+      "attachmentMismatch": "none"
+    },
+    {
+      "id": "documentless-tool",
+      "artifact": false,
+      "attached": false,
+      "status": "missing",
+      "blocked": false,
+      "attachmentMismatch": "none"
+    },
+    {
+      "id": "unknown-attached",
+      "artifact": true,
+      "attached": true,
+      "status": "missing",
+      "blocked": true,
+      "attachmentMismatch": "none"
+    },
+    {
+      "id": "saved-attached",
+      "artifact": true,
+      "attached": true,
+      "status": "saved",
+      "blocked": false,
+      "attachmentMismatch": "none"
+    },
+    {
+      "id": "pending-attached",
+      "artifact": true,
+      "attached": true,
+      "status": "pending",
+      "blocked": true,
+      "attachmentMismatch": "none"
+    },
+    {
+      "id": "failed-attached",
+      "artifact": false,
+      "attached": true,
+      "status": "failed",
+      "blocked": true,
+      "attachmentMismatch": "none"
+    },
+    {
+      "id": "not-acknowledged-with-zero-pending",
+      "artifact": true,
+      "attached": true,
+      "status": "unacknowledged",
+      "blocked": true,
+      "attachmentMismatch": "none"
+    },
+    {
+      "id": "different-app-is-not-attachment",
+      "artifact": true,
+      "attached": true,
+      "status": "saved",
+      "blocked": true,
+      "attachmentMismatch": "app"
+    },
+    {
+      "id": "different-instance-is-not-attachment",
+      "artifact": true,
+      "attached": true,
+      "status": "saved",
+      "blocked": true,
+      "attachmentMismatch": "instance"
+    }
+  ]
+}

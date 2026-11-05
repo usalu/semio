@@ -10,7 +10,7 @@ impl StagedPayloadSource for StagedStatusPayload<'_>{
     fn node(&self,path:&[usize])->Result<Node<'_>,ValueError>{
         let status=self.status;
         match path{
-            []=>{if !status.token.admitted()||status.diagnostics.len()>16||!StagedFormTextFormat::DecimalU64.admits(&status.diagnostic_offset)||!StagedFormTextFormat::DecimalU64.admits(&status.diagnostic_total){return Err(invalid());}Ok(node(None,Kind::Map(5)))},
+            []=>{if !status.admitted()||status.diagnostics.len()>16||!StagedFormTextFormat::DecimalU64.admits(&status.diagnostic_offset)||!StagedFormTextFormat::DecimalU64.admits(&status.diagnostic_total){return Err(invalid());}Ok(node(None,Kind::Map(6)))},
             [0]=>Ok(node(Some("token"),Kind::Map(4))),
             [0,index]=>{let(key,value)=match index{0=>("action",status.token.action.as_str()),1=>("generation",status.token.generation.as_str()),2=>("revision",status.token.revision.as_str()),3=>("window",status.token.window.as_str()),_=>return Err(invalid())};Ok(node(Some(key),Kind::Text(value)))},
             [1]=>Ok(node(Some("ready"),Kind::Bool(status.ready))),
@@ -21,7 +21,13 @@ impl StagedPayloadSource for StagedStatusPayload<'_>{
             [2,index,2,locale]=>{let label=&status.diagnostics.get(*index).ok_or_else(invalid)?.label;let(key,value)=match locale{0=>("en",label.en.as_str()),1=>("de",label.de.as_str()),_=>return Err(invalid())};Ok(node(Some(key),Kind::Text(value)))},
             [3]=>Ok(node(Some("diagnosticOffset"),Kind::Text(&status.diagnostic_offset))),
             [4]=>Ok(node(Some("diagnosticTotal"),Kind::Text(&status.diagnostic_total))),
+            [5]=>Ok(node(Some("commitArgs"),match status.commit_args.as_ref(){Some(value)=>super::payload::dsl_kind(value)?,None=>Kind::Null})),
+            [5,rest @ ..]=>super::payload::dsl_node(status.commit_args.as_ref().ok_or_else(invalid)?,rest),
             _=>Err(invalid()),
         }
     }
 }
+
+#[cfg(test)]
+#[path="status-source-tests.rs"]
+mod status_source_tests;

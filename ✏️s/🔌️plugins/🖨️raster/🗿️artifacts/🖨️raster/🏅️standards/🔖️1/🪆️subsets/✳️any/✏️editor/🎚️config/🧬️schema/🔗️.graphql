@@ -17,6 +17,9 @@ type RasterConfig {
   paintTarget: String! @state(class: CONFIG)
   maskValue: Int! @state(class: CONFIG)
   fillTolerance: Int! @state(class: CONFIG)
+  filterKind: String! @state(class: CONFIG)
+  filterAmount: Float! @state(class: CONFIG)
+  imageGrid: RasterImageGrid! @state(class: CONFIG)
   pixelSelection: RasterPixelSelection @state(class: CONFIG)
   compositeViewport: RasterConfigViewportSize @state(class: CONFIG)
   camera: RasterCamera! @state(class: CONFIG)
@@ -28,6 +31,14 @@ type RasterPixelSelection {
   width: Int! @state(class: CONFIG)
   height: Int! @state(class: CONFIG)
   spans: [RasterSelectionSpan!]! @state(class: CONFIG)
+}
+
+type RasterImageGrid {
+  x: Int! @state(class: CONFIG)
+  y: Int! @state(class: CONFIG)
+  width: Int! @state(class: CONFIG)
+  height: Int! @state(class: CONFIG)
+  bilinear: Boolean! @state(class: CONFIG)
 }
 
 type RasterSelectionSpan {

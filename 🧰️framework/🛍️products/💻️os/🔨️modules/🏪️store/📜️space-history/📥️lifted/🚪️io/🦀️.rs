@@ -1,13 +1,13 @@
 //! 📥️ Items of `serialization` that belong to `os-store-space-history` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🚪️io/🦀️.rs`.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_value::ValueError;
-use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
+use semio_framework_value::{ValueError,RetainedWorkOutcome};
+use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotFailure, native_snapshot_turn};
 /// 🪶️ A snapshot's handwritten relational model, independently interpretable through SQLite. The core hooks live here; the derived codec builder is `ArtifactSqliteSnapshotOperations` in the codec operations layer.
 pub trait ArtifactSqliteSnapshotHost: pack::snapshot::ArtifactSqliteSnapshot {
     /// 🫴️ Receives original SQL row ownership before any projection effect can refuse; the default runs the authored projection under the original owner, whose control carries the operation workspace recipient the codec installed.
-    fn to_sqlite_database_receiving(&self,control:&mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<semio_framework_io_sqlite_snapshot::SqliteDatabase,ValueError>{crate::sqlite_snapshot_workspace::project(self,control,owner)}
+    fn to_sqlite_database_receiving(&self,control:&mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<semio_framework_io_sqlite_snapshot::SqliteDatabase,NativeSnapshotFailure>{crate::sqlite_snapshot_workspace::project(self,control,owner)}
     /// 🪆️ Receives original semantic tree ownership before any reconstruction effect can refuse; the default runs the authored reconstruction under the original owner, whose control carries the operation workspace recipient the codec installed.
-    fn from_sqlite_database_receiving(database:&semio_framework_io_sqlite_snapshot::SqliteDatabase,control:&mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError> {crate::sqlite_snapshot_workspace::reconstruct(database,control,owner)}
+    fn from_sqlite_database_receiving(database:&semio_framework_io_sqlite_snapshot::SqliteDatabase,control:&mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->RetainedWorkOutcome<Self,NativeSnapshotFailure> {crate::sqlite_snapshot_workspace::reconstruct(database,control,owner)}
 
     /// ♻️ Retires a snapshot through its declared owner after an erased conversion.
     fn retire_sqlite_snapshot(self) {
@@ -15,18 +15,18 @@ pub trait ArtifactSqliteSnapshotHost: pack::snapshot::ArtifactSqliteSnapshot {
     }
 
     /// 🛬️ Materializes native snapshot fields under the caller's limits and cancellation control.
-    fn decode_sqlite_snapshot_native(_payload: &semio_framework_io_schema::IoPayload, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(_payload: &semio_framework_io_schema::IoPayload, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> RetainedWorkOutcome<Self,NativeSnapshotFailure> {native_snapshot_turn(|_|{
         native_owner.native().checkpoint()?;
         control.checkpoint(semio_framework_io_sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1)?;
-        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native decoding implementation"))
-    }
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native decoding implementation").into())
+    })}
 
     /// 🛫️ Emits native state through an owner-declared bounded and cancellable encoder.
-    fn encode_sqlite_snapshot_native(&self, _encoding: semio_framework_io_sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut NativeSnapshotEncodeOwner<'_, '_>) -> Result<semio_framework_io_schema::IoPayload, ValueError> {
+    fn encode_sqlite_snapshot_native(&self, _encoding: semio_framework_io_sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut NativeSnapshotEncodeOwner<'_, '_>) -> RetainedWorkOutcome<semio_framework_io_schema::IoPayload,NativeSnapshotFailure> {native_snapshot_turn(|_|{
         native_owner.native().checkpoint()?;
         control.checkpoint(semio_framework_io_sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
-        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native encoding implementation"))
-    }
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native encoding implementation").into())
+    })}
 
     /// 🚧️ Checks the owner's native encoding expansion before printing or packing any fields.
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_framework_io_sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), ValueError> {

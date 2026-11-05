@@ -17,6 +17,7 @@ pub fn default_true() -> bool {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct RasterViewportSize {
     pub width: f64,
     pub height: f64,
@@ -25,6 +26,7 @@ pub struct RasterViewportSize {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct RasterCamera {
     #[value(default)]
     pub x: f64,

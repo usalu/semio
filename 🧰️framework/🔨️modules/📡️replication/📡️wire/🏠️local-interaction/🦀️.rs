@@ -410,6 +410,11 @@ fn decode_revision_hex(value: semio_framework_value::DslValue) -> Result<[u8; 32
     let semio_framework_value::DslValue::String(text) = value else {
         return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a hex string, found {value:?}")));
     };
+    parse_revision_hex(&text)
+}
+
+/// 🔐️ Borrows the canonical full document revision without copying its original wire text.
+pub fn parse_revision_hex(text: &str) -> Result<[u8; 32], semio_framework_value::ValueError> {
     if text.len() != 64 || !text.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) {
         return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "invalid full revision"));
     }

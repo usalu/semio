@@ -44,6 +44,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         if source.receipt.is_some(){return source.advance_receipt(cx)}
         if !source.capture_metadata(metadata,cx)?{return Ok(None)}
         let meta=source.metadata()?;
+        meta.admit_document_revision(&self.stores.store.content_revision_now(),self.tools.live_runtime_instance_id)?;
         if self.tools.live_runtime_instance_id!=Some(meta.instance_id){return Err(plugin_sdk_fault("typed command does not belong to its original mounted app instance").into())}
         let admission=source.admission.as_ref().ok_or_else(||plugin_sdk_fault("typed source has no exact admitted wire"))?;
         self.media.require_complete_tool_operation_pipeline(admission)?;
@@ -56,8 +57,8 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         if source.operation.is_none(){
             let Some(operation_id)=self.media.admit_typed_operation_slot(&*self.pending,&*self.tools)else{return Ok(None)};
             let revision=self.stores.store.content_revision_now();let generation=semio_framework_job::Generation(self.stores.store.generation_now());let base_revision=semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap()));let operation=semio_framework_job::Operation::new(operation_id,base_revision,generation,operation_id.0);
-            let bytes=size_of::<semio_framework_job::Operation>()+size_of::<Option<u64>>();let mut done=None;
-            semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{source.operation=Some(operation);self.tools.typed_operation_reservations[operation_id.0 as usize%ARTIFACT_LIVE_OUTPUT_SLOTS]=Some(operation_id.0);semio_framework_value::RetainedWorkOutcome{result:Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;return Ok(None)
+            let bytes=size_of::<semio_framework_job::Operation>()+size_of::<Option<u64>>()+if source.host_event{size_of::<Option<u64>>()}else{0};let mut done=None;
+            semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{source.operation=Some(operation);if source.host_event{self.host_events.host_event_operations.insert(operation_id.0);}self.tools.typed_operation_reservations[operation_id.0 as usize%ARTIFACT_LIVE_OUTPUT_SLOTS]=Some(operation_id.0);semio_framework_value::RetainedWorkOutcome{result:Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;return Ok(None)
         }
         let operation=source.operation.unwrap();let id=operation.operation.0;
         if !self.tools.latest_wins_commands.can_insert(id)||self.tools.typed_operation_reservations[id as usize%ARTIFACT_LIVE_OUTPUT_SLOTS]!=Some(id){return Err(plugin_sdk_fault("typed pending source lost its original fixed registry reservation").into())}
@@ -66,7 +67,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         let body=source.original_body()?;let decoder=source.original_decoder()?;let binding=source.original_binding()?;
         let mut pending=None;
         if source.handoff(cx,&mut pending,&mut *self.tool_machines,tool_tag,|source|PendingLatestWinsCommand{
-            command:ManuallyDrop::new(source.command.take()),command_retirement:Default::default(),admission:source.admission.take(),meta:ManuallyDrop::new(source.metadata.take()),original_caller:ManuallyDrop::new(source.caller.take()),original_body:body,original_decoder:decoder,metadata_retirement:Default::default(),metadata_copy:ManuallyDrop::new(None),context_metadata:ManuallyDrop::new(None),context_view:ManuallyDrop::new(None),context_phase:0,operation,source_identity:binding,revision,lease:None,cancellation_retirement:None,key_copy:None,key:None,retired_key:None,lookup_started:false,accepted:ordinary,restarting:false,closing:false,receipt:None,fault:ManuallyDrop::new(None),fault_retirement:None,
+            command:ManuallyDrop::new(source.command.take()),command_retirement:Default::default(),admission:source.admission.take(),meta:ManuallyDrop::new(source.metadata.take()),original_caller:ManuallyDrop::new(source.caller.take()),original_body:body,original_decoder:decoder,metadata_retirement:Default::default(),context_metadata:ManuallyDrop::new(None),context_view:ManuallyDrop::new(None),context_phase:0,operation,source_identity:binding,revision,lease:None,cancellation_retirement:None,key_copy:None,key:None,retired_key:None,lookup_started:false,accepted:ordinary,restarting:false,closing:false,receipt:None,fault:ManuallyDrop::new(None),fault_retirement:None,
         })?{self.tools.latest_wins_commands.insert_admitted(id,pending.unwrap());self.tools.latest_wins_order.push(id).expect("original typed FIFO reservation");source.receipt=Some(receipt);}
         Ok(None)
     }
@@ -79,10 +80,10 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         self.as_render().refresh_cache().await?;
         let (snapshot, config, history) = self.history.command_cache_inputs();
         let canonical_base_revision = self.stores.store.content_revision();
-        let window_config_authority = self.stores.window_config_store.capture(meta.view_state.as_ref()).await?;
+        let window_config_authority = self.stores.window_config_store.capture(meta.view_state.as_deref()).await?;
         let targeted_window_transient_view = match A::retained_window_transient_target(command) {
             Some((window_id, expected_kind)) => {
-                let view = meta.view_state.as_ref().ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an exact ViewModel roster"))?;
+                let view = meta.view_state.as_deref().ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an exact ViewModel roster"))?;
                 let window = view.window_instances.iter().find(|window| window.id == window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an attached window instance"))?;
                 if window.window_kind_id != expected_kind {
                     return Err(plugin_sdk_fault("targeted window transient capture does not match the command owner's expected window kind"));
@@ -91,7 +92,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
             }
             None => None,
         };
-        let window_transient_authority = self.stores.window_transient_store.capture(targeted_window_transient_view.as_ref().or(meta.view_state.as_ref()))?;
+        let window_transient_authority = self.stores.window_transient_store.capture(targeted_window_transient_view.as_ref().or(meta.view_state.as_deref()))?;
         Ok(TypedCommandRoots {
             snapshot,
             config,
@@ -102,7 +103,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
             interaction_hover: self.interaction.interaction_hover.clone(),
             presence_peers: self.stores.presence_store.peers_root(),
             transient: self.stores.transient_store.current_root(),
-            peer_presence: std::sync::Arc::clone(&self.roster.peer_presence),
+            peer_presence: std::sync::Arc::clone(self.roster.peer_presence.as_ref().ok_or_else(||plugin_sdk_fault("peer presence root retired before command capture"))?),
             canonical_base_revision,
             base_revision: semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width"))),
             generation: semio_framework_job::Generation(self.stores.store.generation()),
@@ -132,7 +133,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         original_caller:&mut Option<semio_framework_job::OriginalCallerSourceLoan>,
         original_body:usize,
         original_decoder:(u64,u64),
-        context_view:&mut Option<semio_framework::ViewModel>,
+        context_view:&mut Option<std::sync::Arc<semio_framework::ViewModel>>,
         operation_id: semio_framework_job::OperationId,
         cancellation_lease: ToolCancellationLease,
      cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
@@ -200,7 +201,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
             )
             .with_source_issuers(&self.stores.draft_store, &self.stores.transient_store)
             .with_presence(presence_local, std::sync::Arc::clone(&presence_peers), self.stores.presence_store.peer_retirement_factory())
-            .with_original_tool_run(self.tool_runs.capture_original_view_for(meta.view_state.as_ref().and_then(|view|view.window_id.as_deref()),cx).map_err(FaultFrom::into_fault)?)
+            .with_original_tool_run(self.tool_runs.capture_original_view_for(meta.view_state.as_deref().and_then(|view|view.window_id.as_deref()),cx).map_err(FaultFrom::into_fault)?)
             .with_provisional(self.tool_machines.provisional_values(), self.tool_machines.provisional_generation())
             .with_gesture(gesture),
             artifact_owned_tool_birth_grant(),
@@ -279,7 +280,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
                 owned_child_result_pending: false,
                 captured_child_content: Some(std::sync::Arc::clone(&children)),
                 captured_child_content_generation: self.child_composition.child_content_generation,
-                result_page: None,
+                page_publication:semio_framework_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None,
                 diagnostics:None,
                 result_page_presented: false,
                 result_sequence: 0,
@@ -329,7 +330,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         }
         let (authority,source)=self.media.pending_media_import_permit.take().ok_or_else(||plugin_sdk_fault("media source requires its original pre-admitted import permit"))?;
         if (source.0,source.1)!=(cx.operation(),cx.generation()){*self.media.pending_media_import_permit=Some((authority,source));return Err(plugin_sdk_fault("media import requires its unchanged original caller"))}
-        let (job, completion) = match self.as_render().build_artifact_reserved_media_job(port, media, meta).await { Ok(producer) => producer, Err(fault) => { self.tools.finish_reserved_emit_producer(authority); return Err(fault); } };
+        let (job, completion) = match self.as_render().build_artifact_reserved_media_job(port, media, meta,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)).await { Ok(producer) => producer, Err(fault) => { self.tools.finish_reserved_emit_producer(authority); return Err(fault); } };
         let raw = Vec::new();
         self.dispatch_reserved_original_producer("import-media",&raw,1,job,completion,meta,Some(admission),authority, cx).await
     }

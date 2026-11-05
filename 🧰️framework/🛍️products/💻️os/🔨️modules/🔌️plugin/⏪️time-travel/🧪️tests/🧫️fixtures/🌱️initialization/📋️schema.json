@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "owners",
+    "layout"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "path",
+          "type",
+          "initial"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "ledger",
+              "storeState"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "initial": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "const": false
+                },
+                {
+                  "const": 0
+                },
+                {
+                  "enum": [
+                    "defaultSession",
+                    "emptyDocument",
+                    "emptyRetirementQueue",
+                    "emptyRetirement",
+                    "defaultNowUs",
+                    "labelOf"
+                  ]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "null"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "layout": {
+      "const": {
+        "none": "discriminant-only",
+        "arrays": "slotwise",
+        "wholeOwnerWrite": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

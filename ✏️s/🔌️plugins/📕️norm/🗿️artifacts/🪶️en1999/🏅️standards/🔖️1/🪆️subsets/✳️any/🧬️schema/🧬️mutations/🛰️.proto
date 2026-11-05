@@ -206,6 +206,7 @@ message En1999Mutation {
     ChangeTransverseSides change_transverse_sides = 202;
     InsertTransverseStiffener insert_transverse_stiffener = 203;
     RemoveTransverseStiffener remove_transverse_stiffener = 204;
+    ChangeReliabilityClass change_reliability_class = 205;
   }
 }
 message ChangeAnnex {
@@ -1072,4 +1073,7 @@ message InsertTransverseStiffener {
 }
 message RemoveTransverseStiffener {
   string id = 1;
+}
+message ChangeReliabilityClass {
+  string new_reliability_class = 1;
 }

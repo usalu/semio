@@ -1,0 +1,54 @@
+{
+  "cases": [
+    {
+      "id": "empty-object",
+      "wire": "{}",
+      "expected": {}
+    },
+    {
+      "id": "object",
+      "wire": "{\"message\":\"from upstream\",\"nested\":{\"enabled\":true}}",
+      "expected": {
+        "message": "from upstream",
+        "nested": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "id": "signed",
+      "wire": "-42",
+      "expected": {
+        "value": -42
+      }
+    },
+    {
+      "id": "decimal",
+      "wire": "1.25",
+      "expected": {
+        "value": 1.25
+      }
+    },
+    {
+      "id": "unicode",
+      "wire": "\"Grüße 🖨️\"",
+      "expected": {
+        "value": "Grüße 🖨️"
+      }
+    },
+    {
+      "id": "null",
+      "wire": "null",
+      "expected": {
+        "value": null
+      }
+    },
+    {
+      "id": "boolean",
+      "wire": "false",
+      "expected": {
+        "value": false
+      }
+    }
+  ]
+}

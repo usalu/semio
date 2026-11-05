@@ -251,6 +251,19 @@ impl<A:ArtifactApp> Drop for PendingChildGroupPublication<A>{
 }
 
 impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
+    /// 🧾️ Returns the same accepted receipt while its original Store still awaits delivery acknowledgement.
+    pub fn accepted_receipt(&self)->Option<store::os_store::one_item::LaneItemReceipt>{
+        match self{
+            Self::Artifact(publication)=>publication.accepted_receipt(),
+            Self::Config(publication)=>publication.accepted_receipt(),
+            Self::Draft(publication)=>publication.accepted_receipt(),
+            Self::Presence(publication)=>publication.accepted_receipt(),
+            Self::Transient(publication)=>publication.accepted_receipt(),
+            Self::WindowConfig(publication)=>publication.accepted_receipt(),
+            Self::WindowTransient(publication)=>publication.accepted_receipt(),
+        }
+    }
+
     pub fn acknowledge(&mut self) -> bool {
         match self {
             Self::Artifact(publication) => publication.acknowledge(),

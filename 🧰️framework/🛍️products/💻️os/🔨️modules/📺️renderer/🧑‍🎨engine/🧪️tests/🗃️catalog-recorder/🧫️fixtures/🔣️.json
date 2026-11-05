@@ -1,0 +1,69 @@
+{
+  "schema": {
+    "type": "array",
+    "minItems": 4,
+    "items": {
+      "type": "object",
+      "required": [
+        "status",
+        "expected"
+      ],
+      "properties": {
+        "status": {
+          "type": "object",
+          "required": [
+            "persisted",
+            "pendingMutations"
+          ],
+          "properties": {
+            "persisted": {
+              "type": "boolean"
+            },
+            "pendingMutations": {
+              "type": "integer"
+            },
+            "writeFailure": {
+              "type": "object"
+            }
+          }
+        },
+        "expected": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "statuses": [
+    {
+      "status": {
+        "persisted": true,
+        "pendingMutations": 0
+      },
+      "expected": true
+    },
+    {
+      "status": {
+        "persisted": true,
+        "pendingMutations": 1
+      },
+      "expected": false
+    },
+    {
+      "status": {
+        "persisted": false,
+        "pendingMutations": 0
+      },
+      "expected": false
+    },
+    {
+      "status": {
+        "persisted": true,
+        "pendingMutations": 0,
+        "writeFailure": {
+          "code": "folder-write-failed"
+        }
+      },
+      "expected": false
+    }
+  ]
+}

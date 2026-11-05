@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-owned = { workspace = true }
 semio-s-artifact-raster-raster-editor-commands-2 = { workspace = true }
 machine = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
@@ -35,6 +36,7 @@ semio-s-artifact-raster-raster-editor-session = { workspace = true }
 semio-s-artifact-raster-raster-examples = { workspace = true }
 semio-s-artifact-raster-raster-io = { workspace = true }
 semio-s-artifact-raster-raster-model = { workspace = true }
+semio-s-artifact-raster-raster-host = { workspace = true }
 semio-s-artifact-raster-raster-mutations = { workspace = true }
 semio-s-artifact-raster-raster-mutations-layer-properties = { workspace = true }
 semio-s-artifact-raster-raster-mutations-layers = { workspace = true }
@@ -42,5 +44,8 @@ semio-s-artifact-raster-raster-mutations-pixels = { workspace = true }
 semio-s-artifact-stdio-semio-image = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace = { workspace = true }
+serde_json = "1.0.140"
+image = { version = "0.25", default-features = false, features = ["png"] }
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

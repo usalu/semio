@@ -33,7 +33,7 @@ pub mod import_cad_file {
         let name_lower = payload.name.to_ascii_lowercase();
         let payload_value: DslValue = semio_framework_pack_json::from_json_str(&payload.payload, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| DslValue::String(payload.payload.clone()));
         if let Some(imported) = import_cad_object_by_extension(&name_lower, &payload_value) {
-            let pane = ctx.view_state.as_ref().and_then(|view| cad_pane_from_view(view).ok()).unwrap_or(CadPaneId::Shape);
+            let pane = ctx.view_state.as_deref().and_then(|view| cad_pane_from_view(view).ok()).unwrap_or(CadPaneId::Shape);
             let emit = cad_import_object_emit(doc, pane, "importCadFile", imported)?;
             if emit.child_preparations.is_empty() {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("cad.import-object-refused"), format!("importCadFile cannot place the object \"{}\": the addressed pane composes no model child or already holds its id", payload.name)));
@@ -61,7 +61,7 @@ pub mod save_selected {
     pub struct SaveSelected {}
 
     pub fn handle(_payload: &SaveSelected, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let pane = cad_pane_from_view(ctx.view_state.as_ref().ok_or_else(|| Fault::from("cad.window.invalid: selected export has no host view context"))?)?;
+        let pane = cad_pane_from_view(ctx.view_state.as_deref().ok_or_else(|| Fault::from("cad.window.invalid: selected export has no host view context"))?)?;
         let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, &ctx.window_transient), CadInteractionSnapshot::default());
         let export = export_spatial_json(&view, "selected", Some(pane))?;
         Ok(Emit::effect(cad_spatial_export_effect(&export, "cad.selected.spatial.dsl")))
@@ -104,7 +104,7 @@ pub mod save_current {
             Some("stl") => CAD_SOLID_EXPORT_DIALECT_STL,
             _ => CAD_SOLID_EXPORT_DIALECT_STEP,
         };
-        let pane = cad_pane_from_view(ctx.view_state.as_ref().ok_or_else(|| Fault::from("cad.window.invalid: current export has no host view context"))?)?;
+        let pane = cad_pane_from_view(ctx.view_state.as_deref().ok_or_else(|| Fault::from("cad.window.invalid: current export has no host view context"))?)?;
         let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, &ctx.window_transient), CadInteractionSnapshot::default());
         let export = export_solid_for_pane(&view, pane, format).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("cad.export.empty-pane"), "The current pane has no solid to export."))?;
         Ok(Emit::effect(cad_solid_export_effect(export)))

@@ -23,6 +23,7 @@ pub struct PersistentList<T:RetireOwned+Send+Sync+'static>{root:Option<SealedSha
 impl<T:RetireOwned+std::fmt::Debug+Send+Sync+'static> std::fmt::Debug for PersistentList<T>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_list().entries(self.iter()).finish()}}
 impl<T:RetireOwned+PartialEq+Send+Sync+'static> PartialEq for PersistentList<T>{fn eq(&self,other:&Self)->bool{self.len==other.len&&self.iter().eq(other.iter())}}
 impl<T:RetireOwned+Eq+Send+Sync+'static> Eq for PersistentList<T>{}
+impl<T:RetireOwned+Send+Sync+'static> std::ops::Index<usize> for PersistentList<T>{type Output=T;fn index(&self,index:usize)->&T{self.get(index).expect("persistent list index exceeds its cardinality")}}
 
 /// 🔗️ Cloning shares the immutable page root as one more alias; every live alias must be explicitly retired, exactly like `OrderedMap`.
 impl<T:RetireOwned+Send+Sync+'static> Clone for PersistentList<T>{fn clone(&self)->Self{Self{root:self.root.clone(),len:self.len,height:self.height}}}
@@ -54,7 +55,16 @@ impl<T:RetireOwned+Send+Sync+'static> PersistentList<T>{
   let roots=std::array::from_fn(|i|children[i].as_mut().and_then(|child|child.root.take()));let turn=SealedShared::admit(Page::Branch{children:roots,len,height},SharedIssuer::owned(),grant);let result=match turn.result{Ok((root,p))=>Ok((Self{root:Some(root),len,height},p)),Err((error,Page::Branch{children:roots,..}))=>{for(i,root)in roots.into_iter().enumerate(){if let Some(root)=root{let Some(child)=children[i].as_mut()else{return crate::RetainedWorkOutcome{result:Err((ValueError::invariant("original branch child wrapper"),children)),work:0}};child.root=Some(root);}}Err((error,children))},Err(_)=>return crate::RetainedWorkOutcome{result:Err((ValueError::invariant("immutable branch retains original declared page"),children)),work:turn.work}};crate::RetainedWorkOutcome{result,work:turn.work}
  }
  /// 👁️ Ranked reads borrow immutable original rows through a logarithmic fixed-fanout path.
- pub fn get(&self,mut index:usize)->Option<&T>{if index>=self.len{return None;}let mut page=self.root.as_ref()?.get();loop{match page{Page::Leaf{rows,..}=>return rows[index].as_ref().map(SealedShared::get),Page::Branch{children,..}=>{let(slot,relative)=child_rank(children,index,false)?;index=relative;page=children[slot].as_ref()?.get();}}}} /// 🧮️ Cardinality is fixed metadata, independent of page count and payload size.
+  pub fn get(&self,index:usize)->Option<&T>{self.get_with_work(index).0}
+  /// 🪪️ Root identity compares immutable ownership aliases without walking their rows.
+  pub fn same_root(&self,other:&Self)->bool{self.len==other.len&&self.height==other.height&&match(&self.root,&other.root){(Some(left),Some(right))=>left.identity()==right.identity(),(None,None)=>true,_=>false}}
+  /// 🧮️ Ranked reads report every inspected child and the final leaf projection through one canonical walk.
+  pub fn get_with_work(&self,mut index:usize)->(Option<&T>,u64){
+   let mut work=0;let row=(||{if index>=self.len{return None;}let mut page=self.root.as_ref()?.get();loop{match page{
+    Page::Leaf{rows,..}=>{work+=1;return rows[index].as_ref().map(SealedShared::get)},
+    Page::Branch{children,..}=>{let mut selected=None;for child in children{work+=1;let child=child.as_ref()?;let len=page_len(child.get());if index<len{selected=Some(child);break;}index=index.checked_sub(len)?;}page=selected?.get();}
+   }}})();(row,work)
+  }
  /// 🎟️ Ranked observation prices every bounded original branch inspection and final row projection.
  pub fn rank_observation_demand(&self,index:usize)->Result<RetirementDemand,ValueError>{
   if index>=self.len{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"rank is outside the original immutable list"));}
@@ -64,11 +74,7 @@ impl<T:RetireOwned+Send+Sync+'static> PersistentList<T>{
  /// 🧭️ A funded private page traversal lends the exact original row through its genuine root source.
  pub fn observe_rank(original:RetainedCloneRef<'_,Self>,index:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(RetainedCloneRef<'_,T>,RetainedCloneProgress)>>{let mut work=0;let result=(||{
   let d=original.get().rank_observation_demand(index)?;if !fits(d,grant){return Ok(None);}
-  let mut relative=index;let mut page=original.get().root.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"admitted original rank root is absent"))?.get();
-  let row=loop{match page{
-   Page::Leaf{rows,..}=>{work+=1;break rows[relative].as_ref().ok_or_else(||ValueError::invariant("admitted original rank row"))?.get()},
-   Page::Branch{children,..}=>{let mut selected=None;for child in children{work+=1;let Some(child)=child else{break};let len=page_len(child.get());if relative<len{selected=Some(child);break}relative=relative.checked_sub(len).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original ranked page extent underflow"))?;}page=selected.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original ranked page lost its child"))?.get();}
-  }};
+   let(row,observed)=original.get().get_with_work(index);work=observed;let row=row.ok_or_else(||ValueError::invariant("admitted original rank row"))?;
   let pointer=row as*const T;let row=original.project(index,|_|unsafe{&*pointer});work+=1;
   Ok(Some((row,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))
  })();crate::RetainedWorkOutcome{result,work}}
@@ -140,3 +146,7 @@ mod build_tests;
 #[cfg(test)]
 #[path="🎟️update/🧪️tests/🦀️.rs"]
 mod update_work_tests;
+
+#[cfg(test)]
+#[path="🔁️codec/🧪️tests/🦀️.rs"]
+mod codec_tests;

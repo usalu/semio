@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import Ajv from "ajv/dist/2020.js";
+import { v4 } from "uuid";
+const base = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🎟️registration/🧪️tests/";
+const law = JSON.parse(readFileSync(base + "🪪️identity.json", "utf8"));
+const schema = JSON.parse(readFileSync(base + "🪪️schema.json", "utf8"));
+assert.equal(new Ajv().validate(schema, law), true);
+const birth = controllerId => ({ documentId: v4(), controllerId });
+const first = birth(law.controllerId), second = birth(law.controllerId);
+const actual = { distinct: first.documentId !== second.documentId, sameController: first.controllerId === law.controllerId && second.controllerId === first.controllerId, firstLength: first.documentId.length, secondLength: second.documentId.length };
+assert.deepEqual(actual, law.expected);
+console.log("[DEBUG] AJV schema and independent uuid.v4 identity observation passed", actual);

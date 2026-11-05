@@ -7,6 +7,8 @@ use semio_framework_value_persistent::list::PagedList;
 pub struct PngDecodeInput{pub data:Vec<u8>,pub max_pixels:usize,pub max_bytes:usize,pub max_chunks:usize}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct PngDecodeProgress{pub phase:&'static str,pub bytes:usize,pub total_bytes:usize,pub pixels:usize,pub total_pixels:usize,pub work:u64,pub done:bool}
+#[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
+pub struct PngDecodedProperties{pub width:u32,pub height:u32,pub color_type:u8,pub bit_depth:u8}
 #[derive(Clone,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
 pub enum PngDecodeError{Invalid(&'static str),Incomplete,Cancelled}
 impl std::fmt::Display for PngDecodeError{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match self{Self::Invalid(v)=>f.write_str(v),Self::Incomplete=>f.write_str("PNG decode is incomplete"),Self::Cancelled=>f.write_str("PNG decode cancelled")}}}
@@ -40,13 +42,13 @@ pub struct PngDecodeJob{
  #[doc(hidden)] pub at:usize,chunks:usize,chunk:Option<Chunk>,header:Option<Ihdr>,palette:[[u8;3];256],palette_length:usize,alpha:[u8;256],alpha_length:usize,gray_trans:Option<u32>,rgb_trans:Option<(u32,u32,u32)>,had_palette:bool,had_transparency:bool,
  had_idat:bool,closed_idat:bool,ranges:PagedList<(usize,usize),65536>,z_length:usize,range:usize,range_at:usize,z_at:usize,z_header:[u8;2],z_header_length:usize,tail:[u8;4],tail_length:usize,inflater:Option<PngInflater>,pending:Option<u8>,#[doc(hidden)] pub output:RasterImage,allocation_at:u8,
  pass:usize,pass_width:usize,pass_height:usize,sx:u32,sy:u32,dx:u32,dy:u32,row:usize,column:usize,row_at:Option<usize>,row_bytes:usize,stride:usize,bpp:usize,filter:u8,
- current:Vec<u8>,previous:Vec<u8>,raw_bytes:usize,expected_bytes:usize,adler_a:u32,adler_b:u32,stream_done:bool,cancelled:bool,#[doc(hidden)] pub failed:Option<PngDecodeError>,
+ current:Vec<u8>,previous:Vec<u8>,raw_bytes:usize,expected_bytes:usize,adler_a:u32,adler_b:u32,stream_done:bool,cancelled:bool,#[doc(hidden)] pub failed:Option<PngDecodeError>,last_progress:RetainedCloneProgress,last_work:u64,partial_allocated:usize,
 }
 impl PngDecodeJob{
  pub fn new(input:PngDecodeInput)->Result<Self,(PngDecodeError,PngDecodeInput)>{
   if !(1..=16777216).contains(&input.max_pixels)||!(8..=67108864).contains(&input.max_bytes)||!(1..=65536).contains(&input.max_chunks)||input.data.len()<8||input.data.len()>input.max_bytes||input.data[..8]!=[137,80,78,71,13,10,26,10]{return Err((invalid("Invalid PNG input contract"),input));}
   let total_bytes=input.data.len();
-  Ok(Self{source:input.data,max_pixels:input.max_pixels,max_chunks:input.max_chunks,total_bytes,phase:"chunks",work:0,bytes:8,pixels:0,total_pixels:0,at:8,chunks:0,chunk:None,header:None,palette:[[0;3];256],palette_length:0,alpha:[0;256],alpha_length:0,gray_trans:None,rgb_trans:None,had_palette:false,had_transparency:false,had_idat:false,closed_idat:false,ranges:PagedList::empty(),z_length:0,range:0,range_at:0,z_at:0,z_header:[0;2],z_header_length:0,tail:[0;4],tail_length:0,inflater:None,pending:None,output:RasterImage::default(),allocation_at:0,pass:0,pass_width:0,pass_height:0,sx:0,sy:0,dx:1,dy:1,row:0,column:0,row_at:None,row_bytes:0,stride:0,bpp:0,filter:0,current:Vec::new(),previous:Vec::new(),raw_bytes:0,expected_bytes:0,adler_a:1,adler_b:0,stream_done:false,cancelled:false,failed:None})
+  Ok(Self{source:input.data,max_pixels:input.max_pixels,max_chunks:input.max_chunks,total_bytes,phase:"chunks",work:0,bytes:8,pixels:0,total_pixels:0,at:8,chunks:0,chunk:None,header:None,palette:[[0;3];256],palette_length:0,alpha:[0;256],alpha_length:0,gray_trans:None,rgb_trans:None,had_palette:false,had_transparency:false,had_idat:false,closed_idat:false,ranges:PagedList::empty(),z_length:0,range:0,range_at:0,z_at:0,z_header:[0;2],z_header_length:0,tail:[0;4],tail_length:0,inflater:None,pending:None,output:RasterImage::default(),allocation_at:0,pass:0,pass_width:0,pass_height:0,sx:0,sy:0,dx:1,dy:1,row:0,column:0,row_at:None,row_bytes:0,stride:0,bpp:0,filter:0,current:Vec::new(),previous:Vec::new(),raw_bytes:0,expected_bytes:0,adler_a:1,adler_b:0,stream_done:false,cancelled:false,failed:None,last_progress:Default::default(),last_work:0,partial_allocated:0})
  }
  fn parse_chunk(&mut self,c:Chunk)->Result<(),PngDecodeError>{
   let source=&self.source;let data=&source[c.start..c.end];
@@ -59,7 +61,7 @@ impl PngDecodeJob{
     if data.len()!=13{return Err(invalid("Invalid PNG header size"));}let width=be(data,0);let height=be(data,4);let depth=data[8];let color=data[9];let valid=match color{0=>matches!(depth,1|2|4|8|16),2|4|6=>matches!(depth,8|16),3=>matches!(depth,1|2|4|8),_=>false};
     if width==0||height==0||width>16384||height>16384||!valid||data[10]!=0||data[11]!=0||data[12]>1{return Err(invalid("Invalid PNG header"));}
     if width as usize*height as usize>self.max_pixels{return Err(invalid("PNG pixel limit exceeded"));}
-    let header=parse_ihdr(data).map_err(|_|invalid("Invalid PNG header"))?;self.total_pixels=crate::editing::validate_extent(header.width,header.height).map_err(|_|invalid("Invalid PNG dimensions"))?;
+    let header=parse_ihdr(data).map_err(|_|invalid("Invalid PNG header"))?;self.total_pixels=crate::validate_extent(header.width,header.height).map_err(|_|invalid("Invalid PNG dimensions"))?;
     if self.total_pixels>self.max_pixels{return Err(invalid("PNG pixel limit exceeded"));}self.header=Some(header);
    }
    b"PLTE"=>{
@@ -104,7 +106,7 @@ impl PngDecodeJob{
   let c=self.chunk.as_mut().unwrap();
   if c.at<c.end{c.crc=crc32_update(c.crc,&source[c.at..c.at+1]);c.at+=1;self.bytes=c.at;return Ok(0);}
   if c.crc^0xffffffff!=be(source,c.end){return Err(invalid("PNG CRC mismatch"));}
-  if c.kind==*b"IDAT"&&!self.ranges.has_reserved_slot(){let step=self.ranges.reserve_one_funded(grant).map_err(|_|invalid("PNG range allocation refused"))?;if step.copied_items==0&&!self.ranges.has_reserved_slot(){return Err(invalid("PNG range allocation refused"));}return Ok(step.retained_capacity_bytes);}
+  if c.kind==*b"IDAT"&&!self.ranges.has_reserved_slot(){let step=match self.ranges.reserve_one_funded(grant){Ok(step)=>step,Err(error)=>{self.partial_allocated=error.allocated_bytes;return Err(invalid("PNG range allocation refused"))}};if step.copied_items==0&&!self.ranges.has_reserved_slot(){return Err(invalid("PNG range allocation refused"));}return Ok(step.retained_capacity_bytes);}
   self.at=c.end+4;self.bytes=self.at;let c=self.chunk.take().unwrap();self.parse_chunk(c)?;Ok(0)
  }
  fn next_pass(&mut self){
@@ -152,7 +154,7 @@ impl PngDecodeJob{
    if self.z_at!=self.z_length||be(&self.tail,0)!=((self.adler_b<<16)|self.adler_a)||self.raw_bytes!=self.expected_bytes||self.pass_width!=0||self.pixels!=self.total_pixels{return Err(invalid("PNG stream size or Adler mismatch"));}
    self.phase="complete";return Ok(0);
   }
-  if self.inflater.as_ref().unwrap().next_retained_allocation_bytes().is_some(){return self.inflater.as_mut().unwrap().reserve_retained_history(maximum_capacity_bytes).map(|step|step.allocated_bytes).map_err(|_|invalid("PNG DEFLATE allocation refused"));}
+  if self.inflater.as_ref().unwrap().next_retained_allocation_bytes().is_some(){let before=self.inflater.as_ref().unwrap().retained_allocated_bytes();return match self.inflater.as_mut().unwrap().reserve_retained_history(maximum_capacity_bytes){Ok(step)=>Ok(step.allocated_bytes),Err(error)=>{self.partial_allocated=error.allocated_bytes.saturating_sub(before);Err(invalid("PNG DEFLATE allocation refused"))}};}
   if self.pending.is_none()&&self.z_at<self.z_length-4{let Some(b)=self.z_byte()else{return Ok(0);};self.pending=Some(b);}
   let result=self.inflater.as_mut().unwrap().advance(&mut self.pending,self.z_at==self.z_length-4).map_err(|_|invalid("Invalid PNG DEFLATE stream"))?;
   match result{
@@ -185,10 +187,13 @@ impl PngDecodeJob{
  }
  pub fn progress(&self)->PngDecodeProgress{PngDecodeProgress{phase:self.phase,bytes:self.bytes,total_bytes:self.total_bytes,pixels:self.pixels,total_pixels:self.total_pixels,work:self.work,done:self.phase=="complete"}}
  pub fn source(&self)->&[u8]{&self.source}
+ pub fn decoded_properties(&self)->Result<PngDecodedProperties,PngDecodeError>{self.result()?;let header=self.header.as_ref().ok_or(PngDecodeError::Incomplete)?;Ok(PngDecodedProperties{width:header.width,height:header.height,color_type:header.color_type,bit_depth:header.bit_depth})}
+ pub fn last_turn_progress(&self)->RetainedCloneProgress{self.last_progress}
+ pub fn last_turn_work(&self)->u64{self.last_work}
  pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<(PngDecodeProgress,RetainedCloneProgress),PngDecodeError>{
-  self.check()?;let mut receipt=RetainedCloneProgress::default();
+  self.last_progress=Default::default();self.last_work=0;self.check()?;let mut receipt=RetainedCloneProgress::default();
   for _ in 0..grant.maximum_items{if self.phase=="complete"{break;}let copy=self.next_copy_byte_demand()?;let capacity=self.next_capacity_byte_demand()?;if self.next_depth_demand()?>grant.maximum_depth||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}
-   let result=match self.phase{"chunks"=>self.chunk_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:grant.maximum_capacity_bytes-receipt.retained_capacity_bytes,maximum_release_bytes:0,maximum_depth:grant.maximum_depth}),"allocation"=>self.allocation_step(),"pixels"=>self.pixel_step().map(|_|0),_=>self.inflate_step(grant.maximum_capacity_bytes-receipt.retained_capacity_bytes)};let allocated=match result{Ok(value)=>value,Err(error)=>{self.failed=Some(error.clone());return Err(error);}};self.work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=allocated;
+   self.partial_allocated=0;let result=match self.phase{"chunks"=>self.chunk_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:grant.maximum_capacity_bytes-receipt.retained_capacity_bytes,maximum_release_bytes:0,maximum_depth:grant.maximum_depth}),"allocation"=>self.allocation_step(),"pixels"=>self.pixel_step().map(|_|0),_=>self.inflate_step(grant.maximum_capacity_bytes-receipt.retained_capacity_bytes)};let allocated=match result{Ok(value)=>value,Err(error)=>{self.last_work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=self.partial_allocated;self.last_progress=receipt;self.failed=Some(error.clone());return Err(error);}};self.work+=1;self.last_work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=allocated;self.last_progress=receipt;
   }
   Ok((self.progress(),receipt))
  }

@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {"name": "empty", "encoded": "", "bytes": []},
+    {"name": "one byte", "encoded": "Zg==", "bytes": [102]},
+    {"name": "two bytes", "encoded": "Zm8=", "bytes": [102,111]},
+    {"name": "binary image bytes", "encoded": "AAH+//8=", "bytes": [0,1,254,255,255]}
+  ],
+  "invalid": ["Zg", "Zh==", "Zm9=", "AA=A", "AA==AAAA", " AAA"],
+  "admission": [
+    {"maximumOutputBytes": 1, "valid": true},
+    {"maximumOutputBytes": 0, "valid": false},
+    {"maximumOutputBytes": -1, "valid": false},
+    {"maximumOutputBytes": 1.5, "valid": false}
+  ],
+  "large": {"pattern": "AAH+", "repeat": 22000, "decodedBytes": 66000},
+  "cancelAt": ["before", "validation", "decoding", "complete"],
+  "blank": [
+    {"width": 2, "height": 3, "target": "pixels", "value": 0},
+    {"width": 3, "height": 2, "target": "mask", "value": 255}
+  ],
+  "blankBoundary": {"width": 256, "height": 65, "bytes": 66560, "progress": [0, 32768, 65536, 66560]},
+  "browser": {
+    "width": 2, "height": 1,
+    "pixels": [0,1,254,255,255,64,8,255],
+    "foreground": "#ff4008",
+    "spans": [{"start": 1, "length": 1, "coverage": 255}]
+  }
+}

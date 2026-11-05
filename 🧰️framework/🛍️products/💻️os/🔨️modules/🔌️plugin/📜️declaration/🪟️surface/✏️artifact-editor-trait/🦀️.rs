@@ -44,7 +44,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
     type ConfigMutation: Clone + ::protocol::ColdMutation<Self::Config> + ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::replication::OpBinaryReceiving + 'static;
     type Draft: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type DraftMutation: Clone + ::protocol::ColdMutation<Self::Draft> + ::protocol::Mutation<Self::Draft> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
+    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
     type PresenceMutation: Clone + ::protocol::ColdMutation<Self::Presence> + ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Transient: semio_framework_value::retirement::RetireOwned + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type TransientMutation: Clone + ::protocol::ColdMutation<Self::Transient> + ::protocol::Mutation<Self::Transient> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
@@ -143,6 +143,8 @@ pub trait ArtifactEditor: Default + Send + 'static {
 
     /// 📨️ This editor's answer to a [`HostEvent`] — forwarded verbatim to `ArtifactApp::host_event` by
     /// `EditorApp<Self>`, where the contract lives.
+    /// 📏️ Quotes the boxed domain command and payload without constructing it; the runtime adds its own custody headers.
+    fn host_event_demands(_event:&HostEvent)->Option<semio_framework_value::RetirementDemand>{None}
     fn host_event(_event: &HostEvent) -> Option<Self::Command> {
         None
     }
@@ -158,15 +160,9 @@ pub trait ArtifactEditor: Default + Send + 'static {
 
     /// 📥️ Supplies the framework-owned bounded natural-file importer while leaving every other
     /// reserved route to the editor. Editors with a richer media route may override this method.
-    fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        let natural = matches!(&request.input, ArtifactReservedToolInput::Media { port, .. } if port == NATURAL_FILE_PORT) && Self::natural_file_codec().is_some();
-        if natural && !request.raw_wire.is_empty() {
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("media.natural-import-wire"), "natural-file import admits an owned intrinsic byte value, never a second wire payload"));
-        }
-        if !natural {
-            return Ok(None);
-        }
-        Ok(Some(ArtifactReservedToolJob::new(NaturalFileImportJob::<Self>::new(request)?)))
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if let Some(original)=request.as_ref(){let natural=matches!(&original.input,Some(ArtifactReservedToolInput::Media{port,..})if port==NATURAL_FILE_PORT)&&Self::natural_file_codec().is_some();if !natural||!original.raw_wire.is_empty(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"natural-file import requires its owned declared media and no wire").into())}}
+        semio_framework_plugin_decl_app::tool_contract::admit_reserved_work::<EditorApp<Self>,crate::natural_file_import::NaturalFileImportWork<Self>>(request,body,cx)
     }
 
     /// 🎞️ Author-owned resumable media-output producer for `EditorApp<Self>`.
@@ -482,6 +478,8 @@ pub trait ArtifactEditor: Default + Send + 'static {
     fn build_natural_file_decode_owner(bytes: Vec<u8>, _contract: semio_framework::ToolExecutionContract) -> Result<NaturalFileDecodeOwner<Self::Snapshot>, MediaError> {
         Ok(NaturalFileDecodeOwner::Synchronous(bytes))
     }
+    /// 🎟️ Admits a controlled natural decoder while the caller retains denied source and candidate slots.
+    fn admit_natural_file_decode_owner(_bytes:&mut Option<Vec<u8>>,_contract:semio_framework::ToolExecutionContract,_receiving:&mut Option<NaturalFileDecodeOwner<Self::Snapshot>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"natural-file format has no original controlled decoder").into())}
     async fn media_ports() -> Vec<MediaPortSpec> {
         match Self::io() {
             Some(io) => io.all_ports().await,

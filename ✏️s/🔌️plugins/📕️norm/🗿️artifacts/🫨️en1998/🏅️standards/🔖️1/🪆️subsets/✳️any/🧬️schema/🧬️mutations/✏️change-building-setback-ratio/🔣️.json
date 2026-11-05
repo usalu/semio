@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-building-setback-ratio",
   "semanticKind": "change-building-setback-ratio",
-  "displayName": "Change Largest set-back as share of the plan dimension below",
+  "displayName": "Change largest building setback as a share of the plan dimension below",
   "emoji": "✏️",
   "aggregateVariant": "ChangeBuildingSetbackRatio",
   "payloadSchema": "🧬️schema/🔣️.json",

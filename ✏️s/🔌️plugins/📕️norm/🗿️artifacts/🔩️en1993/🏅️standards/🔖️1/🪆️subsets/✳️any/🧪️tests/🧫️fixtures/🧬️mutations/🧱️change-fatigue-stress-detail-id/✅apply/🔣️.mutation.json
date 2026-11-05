@@ -1,3 +1,6 @@
 {
-  "ChangeFatigueStressDetailId": "fatigue-stress-1"
+  "ChangeFatigueStressDetailId": {
+    "id": "fatigue-stress-1",
+    "newDetailId": "fatigue-1-changed"
+  }
 }

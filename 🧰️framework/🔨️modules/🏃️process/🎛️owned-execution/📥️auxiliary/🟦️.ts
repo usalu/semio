@@ -11,5 +11,29 @@ export function readOwnedCommandAuxiliaryInputV1(value:unknown):OwnedCommandAuxi
 
 /** 🔌️ Receives the writable auxiliary descriptor without exposing a tool-specific stream type. */
 export interface OwnedAuxiliaryPipeV1{once(event:"error"|"close",listener:(error?:unknown)=>void):unknown;end(text:string,encoding:"utf8",callback:(error?:Error|null)=>void):unknown}
+/** 🧭️ The auxiliary writer boundary that refused publication. */
+export type OwnedAuxiliaryPublicationPhaseV1="pipe-missing"|"error-event"|"close-event"|"end-callback"|"end-call";
+/** 🧾️ Closed transport context independent of the original thrown value. */
+export type OwnedAuxiliaryPublicationContextV1=Readonly<{operation:"auxiliary-publication";descriptor:number;phase:OwnedAuxiliaryPublicationPhaseV1;code:string|null;syscall:string|null}>;
+
+/** 🔎️ Reads only own data without invoking a failure object accessor. */
+function failureData(value:unknown,key:string):string|null{
+ if(!value||(typeof value!=="object"&&typeof value!=="function")||types.isProxy(value))return null;
+ try{const field=Object.getOwnPropertyDescriptor(value,key);return field&&"value"in field&&typeof field.value==="string"?field.value:null;}catch{return null;}
+}
+
+/** 🚨️ Names the failed descriptor and writer phase while retaining its exact primary cause. */
+export class OwnedAuxiliaryPublicationFailureV1 extends Error{
+ readonly cause:unknown;
+ readonly context:OwnedAuxiliaryPublicationContextV1;
+ readonly code:string|null;
+ readonly syscall:string|null;
+ constructor(cause:unknown,phase:OwnedAuxiliaryPublicationPhaseV1){
+  const descriptor=schema.definitions.Policy.const.descriptor,code=failureData(cause,"code"),syscall=failureData(cause,"syscall"),detail=failureData(cause,"message")??(typeof cause==="string"?cause:null);
+  super(`Owned auxiliary publication failed: descriptor=${descriptor} phase=${phase} code=${code??"unknown"} syscall=${syscall??"unknown"}${detail?": "+detail.slice(0,512):""}`);
+  this.name="OwnedAuxiliaryPublicationFailureV1";this.cause=cause;this.context=Object.freeze({operation:"auxiliary-publication",descriptor,phase,code,syscall});this.code=code;this.syscall=syscall;
+ }
+}
+
 /** 📤️ Retains first publication failure independently from completion, including an explicit undefined primary. */
-export function publishOwnedAuxiliaryInputV1(pipe:OwnedAuxiliaryPipeV1|null|undefined,text:string,refuse:(error:unknown)=>void):Promise<void>{return new Promise<void>(accept=>{let settled=false,failed=false;const succeed=()=>{if(!settled){settled=true;accept();}},fail=(error:unknown)=>{if(!failed){failed=true;refuse(error);}succeed();};if(!pipe){fail(Error("Owned auxiliary pipe required"));return;}pipe.once("error",fail);pipe.once("close",()=>{if(!settled)fail(Error("Owned auxiliary pipe closed before publication"));});try{pipe.end(text,"utf8",error=>{if(error!==undefined&&error!==null)fail(error);else succeed();});}catch(error){fail(error);}});}
+export function publishOwnedAuxiliaryInputV1(pipe:OwnedAuxiliaryPipeV1|null|undefined,text:string,refuse:(error:unknown,phase:OwnedAuxiliaryPublicationPhaseV1)=>void):Promise<void>{return new Promise<void>(accept=>{let settled=false,failed=false;const succeed=()=>{if(!settled){settled=true;accept();}},fail=(error:unknown,phase:OwnedAuxiliaryPublicationPhaseV1)=>{if(!failed){failed=true;refuse(error,phase);}succeed();};if(!pipe){fail(Error("Owned auxiliary pipe required"),"pipe-missing");return;}pipe.once("error",error=>fail(error,"error-event"));pipe.once("close",()=>{if(!settled)fail(Error("Owned auxiliary pipe closed before publication"),"close-event");});try{pipe.end(text,"utf8",error=>{if(error!==undefined&&error!==null)fail(error,"end-callback");else succeed();});}catch(error){fail(error,"end-call");}});}

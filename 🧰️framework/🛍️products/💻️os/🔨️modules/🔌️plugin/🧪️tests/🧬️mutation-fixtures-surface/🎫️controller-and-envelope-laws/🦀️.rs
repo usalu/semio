@@ -47,7 +47,7 @@ async fn handle_action_invocation_accepts_the_real_canonical_surface_app_id() {
     use semio_framework::manifest::{ActionAddress, ActionInvocation};
     let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
-    let invocation = ActionInvocation {
+    let invocation = ActionInvocation { expected_document_revision:None,
         address: ActionAddress { plugin_id: "test".into(), app_id: real_id.clone(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-instance".into(), action_id: "increment".into() },
         arguments: Default::default(),
     };

@@ -1,0 +1,90 @@
+[
+  {
+    "label": "documentless-identity-abi-retry",
+    "cwd": ".",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-plugin-tests-12-2",
+      "--lib",
+      "documentless_app_identity_abi_returns_authoritative_null_without_revision_read"
+    ]
+  },
+  {
+    "label": "documentless-identity-abi",
+    "cwd": ".",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-plugin-tests-12-2",
+      "--lib",
+      "documentless_app_identity_abi_returns_authoritative_null_without_revision_read"
+    ]
+  },
+  {
+    "label": "reference-identity-retry3",
+    "cwd": ".",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-plugin-tests-12-2",
+      "--lib",
+      "plugin_builder_wires_app_factory_for_create_app"
+    ]
+  },
+  {
+    "label": "reference-identity-retry2",
+    "cwd": ".",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-plugin-tests-12-2",
+      "--lib",
+      "plugin_builder_wires_app_factory_for_create_app"
+    ]
+  },
+  {
+    "label": "reference-identity-retry",
+    "cwd": ".",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-plugin-tests-12-2",
+      "--lib",
+      "plugin_builder_wires_app_factory_for_create_app"
+    ]
+  },
+  {
+    "label": "reference-identity",
+    "cwd": ".",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-plugin-tests-12-2",
+      "--lib",
+      "plugin_builder_wires_app_factory_for_create_app"
+    ]
+  },
+  {
+    "label": "reference-childless-identity",
+    "cwd": ".",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-plugin-tests-11-2",
+      "--lib",
+      "a_childless_whole_document_archive_replaces_the_live_document"
+    ]
+  },
+  {
+    "label": "reference-import-identity",
+    "cwd": ".",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-plugin-tests-11-2",
+      "--lib",
+      "a_whole_document_media_import_is_a_stepped_archive_load_and_never_folds_inside_the_call"
+    ]
+  }
+]

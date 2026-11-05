@@ -1,6 +1,6 @@
 {
   "ChangeBucklingLengthSway": {
-    "id": "frame-action-1",
-    "newSway": "NodalMoment"
+    "id": "buckling-length-1",
+    "newSway": "Sway"
   }
 }

@@ -5,6 +5,8 @@ use semio_framework_os_kernel::NativeSnapshotEncodeOwner as Owner;
 use semio_framework_value::retirement::RetireOwned as RetireOwnedTrait;
 use semio_framework_value::{RetireOwned, ValueError, ValueRefusalKind};
 use std::mem::size_of;
+use semio_framework_dsl_record::receiving::{NativeSnapshotFailure,ReceivingWork,receiving_turn};
+use semio_framework_value::RetainedWorkOutcome;
 const NONE: usize = usize::MAX;
 #[derive(RetireOwned)]
 struct Node {
@@ -38,21 +40,21 @@ pub(super) struct Index {
 fn limit() -> ValueError {
     ValueError::literal(ValueRefusalKind::WorkLimit, "literal IFC Pack projection exceeds its bounded source admission")
 }
-fn work(owner: &mut Owner<'_, '_>, bytes: usize) -> Result<(), ValueError> {
+fn work(owner: &mut Owner<'_, '_>, bytes: usize, meter:&mut ReceivingWork) -> Result<(), NativeSnapshotFailure> {
     let g = owner.remaining_grant();
     if g.maximum_items == 0 || g.maximum_copy_bytes < bytes || g.maximum_depth == 0 {
-        return Err(limit());
+        return Err(limit().into());
     }
     owner.native().checkpoint()?;
     owner.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
-    owner.native().step()
+    meter.performed();owner.native().step().map_err(Into::into)
 }
-fn vector<T: RetireOwnedTrait>(count: usize, owner: &mut Owner<'_, '_>) -> Result<Vec<T>, ValueError> {
-    owner.receive::<Vec<T>, Vec<T>>(|slot, native, body| {
-        *slot = Some(Vec::new());
-        body.allocate_encode_vec_into(native, count, slot.as_mut().unwrap(), 1)?;
-        Ok(slot.take().unwrap())
-    })
+fn vector<T:RetireOwnedTrait>(count:usize,owner:&mut Owner<'_,'_>,meter:&mut ReceivingWork)->Result<Vec<T>,NativeSnapshotFailure>{
+ meter.take(owner.receive::<Vec<T>,Vec<T>,NativeSnapshotFailure>(|slot,native,body|receiving_turn(|meter|{
+  *slot=Some(Vec::new());let bytes=count.checked_mul(size_of::<T>()).ok_or_else(limit)?;
+  body.admit_frontier(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<Vec<T>>(),maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()})?;
+  native.checkpoint()?;meter.performed();body.allocate_encode_vec_into(native,count,slot.as_mut().unwrap(),1)?;Ok(slot.take().unwrap())
+ })))
 }
 fn children(value: &IfcValue) -> &[IfcValue] {
     match value {
@@ -60,17 +62,17 @@ fn children(value: &IfcValue) -> &[IfcValue] {
         _ => &[],
     }
 }
-fn measure(value: &IfcValue, depth: usize, nodes: &mut usize, edges: &mut usize, owner: &mut Owner<'_, '_>) -> Result<(), ValueError> {
-    work(owner, size_of::<IfcValue>())?;
+fn measure(value: &IfcValue, depth: usize, nodes: &mut usize, edges: &mut usize, owner: &mut Owner<'_, '_>, meter:&mut ReceivingWork) -> Result<(), NativeSnapshotFailure> {
+    work(owner, size_of::<IfcValue>(),meter)?;
     if depth > 64 {
-        return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "literal IFC Pack projection exceeds value depth admission"));
+        return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "literal IFC Pack projection exceeds value depth admission").into());
     }
     if let IfcValue::Binary(text) = value {
         super::owned_graph::binary_head(text)?;
         for chunk in text.as_bytes()[1..].chunks(4096) {
-            work(owner, chunk.len())?;
+            work(owner, chunk.len(),meter)?;
             if chunk.iter().any(|v| !v.is_ascii_digit() && !(b'A'..=b'F').contains(v)) {
-                return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "literal IFC Pack binary payload is not canonical"));
+                return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "literal IFC Pack binary payload is not canonical").into());
             }
         }
     }
@@ -78,84 +80,84 @@ fn measure(value: &IfcValue, depth: usize, nodes: &mut usize, edges: &mut usize,
     let c = children(value);
     *edges = edges.checked_add(c.len()).ok_or_else(limit)?;
     for child in c {
-        measure(child, depth + 1, nodes, edges, owner)?;
+        measure(child, depth + 1, nodes, edges, owner,meter)?;
     }
     Ok(())
 }
-fn add(value: &IfcValue, parent: usize, child: usize, group: usize, index: &mut Index, owner: &mut Owner<'_, '_>) -> Result<usize, ValueError> {
-    work(owner, size_of::<Node>())?;
+fn add(value: &IfcValue, parent: usize, child: usize, group: usize, index: &mut Index, owner: &mut Owner<'_, '_>, meter:&mut ReceivingWork) -> Result<usize, NativeSnapshotFailure> {
+    work(owner, size_of::<Node>(),meter)?;
     let at = index.nodes.len();
     let edge = index.edges.len();
     let c = children(value);
     index.nodes.push(Node { parent, child, group, edges: edge, length: c.len() });
     for _ in c {
-        work(owner, size_of::<usize>())?;
+        work(owner, size_of::<usize>(),meter)?;
         index.edges.push(0);
     }
     for (i, value) in c.iter().enumerate() {
-        let next = add(value, at, i, group, index, owner)?;
-        work(owner, size_of::<usize>())?;
+        let next = add(value, at, i, group, index, owner,meter)?;
+        work(owner, size_of::<usize>(),meter)?;
         index.edges[edge + i] = next;
     }
     Ok(at)
 }
-fn group(values: &[IfcValue], entity: usize, complex: usize, index: &mut Index, owner: &mut Owner<'_, '_>) -> Result<usize, ValueError> {
-    work(owner, size_of::<Group>())?;
+fn group(values: &[IfcValue], entity: usize, complex: usize, index: &mut Index, owner: &mut Owner<'_, '_>, meter:&mut ReceivingWork) -> Result<usize, NativeSnapshotFailure> {
+    work(owner, size_of::<Group>(),meter)?;
     let at = index.groups.len();
     index.groups.push(Group { entity, complex, start: index.roots.len(), length: values.len() });
     for (i, value) in values.iter().enumerate() {
-        let root = add(value, NONE, i, at, index, owner)?;
-        work(owner, size_of::<usize>())?;
+        let root = add(value, NONE, i, at, index, owner,meter)?;
+        work(owner, size_of::<usize>(),meter)?;
         index.roots.push(root);
     }
     Ok(at)
 }
 impl Index {
-    pub(super) fn build(&mut self, source: &IfcSnapshot, owner: &mut Owner<'_, '_>) -> Result<(), ValueError> {
+    pub(super) fn build(&mut self, source: &IfcSnapshot, owner: &mut Owner<'_, '_>) -> RetainedWorkOutcome<(), NativeSnapshotFailure> {receiving_turn(|meter|{
         if source.entities.len() > 1_000_000 {
-            return Err(limit());
+            return Err(limit().into());
         }
         let (mut nodes, mut edges, mut roots, mut groups) = (0usize, 0usize, 0usize, 3usize);
         for values in [&source.header.file_description, &source.header.file_name, &source.header.file_schema] {
             roots = roots.checked_add(values.len()).ok_or_else(limit)?;
             for value in values {
-                measure(value, 1, &mut nodes, &mut edges, owner)?;
+                measure(value, 1, &mut nodes, &mut edges, owner,meter)?;
             }
         }
         for entity in &source.entities {
-            work(owner, size_of::<super::IfcEntity>())?;
+            work(owner, size_of::<super::IfcEntity>(),meter)?;
             groups = groups.checked_add(1).and_then(|n| n.checked_add(entity.complex.len())).filter(|n| *n <= 2_000_000).ok_or_else(limit)?;
             roots = roots.checked_add(entity.args.len()).ok_or_else(limit)?;
             for value in &entity.args {
-                measure(value, 1, &mut nodes, &mut edges, owner)?;
+                measure(value, 1, &mut nodes, &mut edges, owner,meter)?;
             }
             for complex in &entity.complex {
-                work(owner, size_of::<super::IfcComplexType>())?;
+                work(owner, size_of::<super::IfcComplexType>(),meter)?;
                 roots = roots.checked_add(complex.args.len()).ok_or_else(limit)?;
                 for value in &complex.args {
-                    measure(value, 1, &mut nodes, &mut edges, owner)?;
+                    measure(value, 1, &mut nodes, &mut edges, owner,meter)?;
                 }
             }
         }
-        self.nodes = vector(nodes, owner)?;
-        self.edges = vector(edges, owner)?;
-        self.roots = vector(roots, owner)?;
-        self.groups = vector(groups, owner)?;
-        self.entities = vector(source.entities.len(), owner)?;
+        self.nodes = vector(nodes, owner,meter)?;
+        self.edges = vector(edges, owner,meter)?;
+        self.roots = vector(roots, owner,meter)?;
+        self.groups = vector(groups, owner,meter)?;
+        self.entities = vector(source.entities.len(), owner,meter)?;
         for (i, values) in [&source.header.file_description, &source.header.file_name, &source.header.file_schema].into_iter().enumerate() {
-            group(values, NONE, i, self, owner)?;
+            group(values, NONE, i, self, owner,meter)?;
         }
         for (i, entity) in source.entities.iter().enumerate() {
-            let g = group(&entity.args, i, NONE, self, owner)?;
+            let g = group(&entity.args, i, NONE, self, owner,meter)?;
             let complexes = self.groups.len();
-            work(owner, size_of::<Entity>())?;
+            work(owner, size_of::<Entity>(),meter)?;
             self.entities.push(Entity { group: g, complexes });
             for (j, complex) in entity.complex.iter().enumerate() {
-                group(&complex.args, i, j, self, owner)?;
+                group(&complex.args, i, j, self, owner,meter)?;
             }
         }
         Ok(())
-    }
+    })}
     pub(super) fn source<'a>(&'a self, source: &'a IfcSnapshot) -> Projection<'a> {
         Projection { index: self, source }
     }

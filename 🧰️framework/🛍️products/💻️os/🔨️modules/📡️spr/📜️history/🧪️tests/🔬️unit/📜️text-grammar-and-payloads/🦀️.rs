@@ -26,7 +26,7 @@ async fn ops_text_skips_comments_and_blank_lines() {
     let text = "doc doc-1 schema=s1\n\n# a comment\ntransition t-1 actor=alice hlc=1,2,3 dependencies=[] payload=\"AAEEb3AtYg==\"\n";
     let log = parse_ops_text(text).unwrap();
     assert_eq!(log.doc_id, "doc-1");
-    assert_eq!(log.transitions, vec![HistoryTransitionRecord { id: "t-1".to_string(), actor: "alice".into(), hlt: (1, 2, 3), dependencies: Vec::new(), observed: None, payload: hex("0001046f702d62") }]);
+    assert_eq!(log.transitions, vec![HistoryTransitionRecord { id: "t-1".to_string(), actor: "alice".into(), hlt: (1, 2, 3), dependencies: Vec::new(), observed: None, payload: semio_framework_value::paged::PagedBytes::<{isize::MAX as usize}>::try_from_slice(&hex("0001046f702d62")).unwrap() }]);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -43,7 +43,7 @@ async fn ops_text_round_trips_every_transition_field() {
     for edit in &mut log.edits {
         edit.meta = None;
     }
-    log.transitions.push(HistoryTransitionRecord { id: "transition-x".to_string(), actor: "bob".into(), hlt: (u64::MAX, 0, 7), dependencies: vec!["op-1".to_string(), "edit-1#0".to_string()], observed: None, payload: Vec::new() });
+    log.transitions.push(HistoryTransitionRecord { id: "transition-x".to_string(), actor: "bob".into(), hlt: (u64::MAX, 0, 7), dependencies: vec!["op-1".to_string(), "edit-1#0".to_string()], observed: None, payload: semio_framework_value::paged::PagedBytes::<{isize::MAX as usize}>::try_from_slice(&[]).unwrap() });
     let text = print_ops_text(&log).unwrap();
     assert_eq!(text.lines().filter(|line| line.starts_with("transition ")).count(), 3);
     assert_eq!(parse_ops_text(&text).unwrap(), log);
@@ -134,7 +134,7 @@ async fn transition_payload_matches_the_language_agnostic_fixture() {
         hlt: (hlt[0], hlt[1], hlt[2]),
         dependencies: record["dependencies"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_string()).collect(),
         observed: None,
-        payload: hex(record["payloadHex"].as_str().unwrap()),
+        payload: semio_framework_value::paged::PagedBytes::<{isize::MAX as usize}>::try_from_slice(&hex(record["payloadHex"].as_str().unwrap())).unwrap(),
     };
     let mut dict = DictBuilder::new();
     let payload = encode_transition(&transition, &mut dict).await.unwrap();

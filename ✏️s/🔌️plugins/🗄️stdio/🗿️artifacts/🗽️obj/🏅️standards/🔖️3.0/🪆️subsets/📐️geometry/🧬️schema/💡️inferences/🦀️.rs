@@ -74,3 +74,13 @@ mod tests;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use super::bounds::ObjBounds;
 //#endregion 🔁️Re-exports
+
+//#region 🔖️SceneGeometry
+/// 🧊️ What the mesh windows draw: vertex positions, fan-triangulated face indices and no point markers.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn scene_geometry(snapshot: &ObjSnapshot) -> (Vec<[f64; 3]>, Vec<u32>, Vec<[f64; 3]>) {
+    let positions = snapshot.vertices.iter().map(|vertex| [vertex.x, vertex.y, vertex.z]).collect();
+    let triangles = snapshot.faces.iter().flat_map(|face| (2..face.vertices.len()).flat_map(move |corner| [face.vertices[0].vertex, face.vertices[corner - 1].vertex, face.vertices[corner].vertex])).collect();
+    (positions, triangles, Vec::new())
+}
+//#endregion 🔖️SceneGeometry

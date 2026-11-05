@@ -23,7 +23,7 @@
           "de": "Das adressierte Element (Querschnitt), per Kennung."
         },
         "ref": {
-          "fabrication": "section"
+          "kind": "section"
         },
         "group": "target",
         "order": 10

@@ -14,6 +14,10 @@ impl<'operation,'decode> NativeRetirementDecodeControl<'operation,'decode>{
  pub fn owned_bytes(&self)->usize{self.original.owned_bytes}
  /// 🎟️ Admits one real cleanup birth against this original hop before reporting the original cancellation observer.
  pub fn charge(&mut self,bytes:usize)->Result<(),ValueError>{let spent=self.spent.checked_add(bytes).filter(|spent|*spent<=self.capacity).ok_or_else(||invalid(ValueRefusalKind::OwnershipLimit,"original retirement exceeds its paid hop capacity"))?;let next=self.original.owned_bytes.checked_add(bytes).filter(|next|*next<=self.original.maximum_bytes).ok_or_else(||invalid(ValueRefusalKind::OwnershipLimit,"original retirement exceeds its cumulative ownership ceiling"))?;if let allocation::Binding::Forwarded(port)=&mut self.original.allocation{port(super::NativeDecodeAllocation{bytes,owned_bytes:self.original.owned_bytes,next_owned_bytes:next,maximum_bytes:self.original.maximum_bytes})?;}(self.original.callback)(NativeDecodeProgress{completed:self.original.completed,total:self.original.total,owned_bytes:self.original.owned_bytes});self.spent=spent;self.original.owned_bytes=next;Ok(())}
+ /// 📨️ Forwards an accepted result through this same paid retirement ledger and its original observer.
+ pub fn with_encoding_receiver<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(crate::native_encoding::NativeEncodeProgress)->bool,&mut crate::native_encoding::NativeEncodeAllocationPort<'_>)->Result<T,E>)->Result<T,E>{
+  let before=self.original.owned_bytes;let scope=RetirementEncodingSpend{loan:self,before};scope.loan.original.with_encoding_receiver(operation)
+ }
  /// 👓️ Reports already-born ownership in this exact original recipient.
  pub fn has_retirement_owner(&self)->bool{self.original.has_retirement_owner()}
  /// 📏️ Quotes this original recipient once under the paid cleanup body span.
@@ -34,6 +38,8 @@ impl<'operation,'decode> NativeRetirementDecodeControl<'operation,'decode>{
  }
 
 }
+struct RetirementEncodingSpend<'loan,'operation,'decode>{loan:&'loan mut NativeRetirementDecodeControl<'operation,'decode>,before:usize}
+impl Drop for RetirementEncodingSpend<'_,'_,'_>{fn drop(&mut self){self.loan.spent+=self.loan.original.owned_bytes-self.before;}}
 impl Drop for NativeRetirementDecodeControl<'_, '_>{fn drop(&mut self){if !self.original.receiving{self.original.maximum_bytes=self.previous_maximum;}}}
 impl semio_framework_value_retirement::OriginalRetirementControl for NativeRetirementDecodeControl<'_, '_>{
  fn ledger_identity(&self)->u64{self.original.ledger_identity()}

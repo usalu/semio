@@ -53,6 +53,12 @@ aliases = ["stdio ifc 4"]
 ports = { react = 6249, wgpu = 6349 }
 
 [[package.metadata.semio.playground]]
+variant = "stdio-ifc-4x3"
+app = "s.stdio.ifc@4x3/*#editor"
+aliases = ["stdio ifc 4x3"]
+ports = { react = 6222, wgpu = 6322 }
+
+[[package.metadata.semio.playground]]
 variant = "stdio-bcf"
 app = "s.stdio.bcf@2.1/*#editor"
 aliases = ["stdio bcf"]

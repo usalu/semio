@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/apply-filter/schema.json",
   "title": "ApplyFilter",
-  "x-semio-inverse-rows": { "bounded": 3 },
+  "x-semio-inverse-rows": { "bounded": 4 },
   "description": "One image filter on a layer's pixels, stated as its intent: the layer, the filter, its amount and the selection it is clipped to. Every application runs the filter on the layer image through the shared pixel engine and files the filtered image as a new content-addressed asset; a filter that changes no pixel is `mutation.no-op`, a missing layer or image is `mutation.target-missing`, a locked layer, a layer without pixels or a selection past the image is `mutation.target-mismatch`.",
   "x-semio-invariant": [
     {

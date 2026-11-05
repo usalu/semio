@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-plugin-norm-app-surface-outliner"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm document outliner rows, rendering and governing check navigation"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-app-surface-foundation = { workspace = true }
+semio-s-plugin-norm-app-surface-live-core = { workspace = true }
+semio-s-plugin-norm-app-surface-interaction-topology = { workspace = true }
+
+[dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

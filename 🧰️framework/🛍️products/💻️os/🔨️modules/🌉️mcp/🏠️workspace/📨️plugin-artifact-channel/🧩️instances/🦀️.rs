@@ -82,8 +82,8 @@ impl PluginArtifactChannel {
         }];
         let deadline = std::time::Instant::now() + INSTANCE_OPEN_WALL_BUDGET;
         loop {
-            let events = std::mem::take(&mut owed);
-            match with_headless_identity(|identity| semio_framework_async::block_on(self.runtime.execute_turn(&mut guest, &events, headless_open_budget(), identity))) {
+            let mut events = std::mem::take(&mut owed);
+            match with_headless_identity(|identity| semio_framework_async::block_on(self.runtime.execute_turn(&mut guest, &mut events, headless_open_budget(), identity))) {
                 Ok(turn) => {
                     if let Some(receipt) = turn.lifecycle_receipt {
                         owed.push(semio_framework::kernel::Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt }));

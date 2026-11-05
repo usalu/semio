@@ -97,7 +97,7 @@ fn natural_obj_round_trips_edits_and_refuses_invalid_files() {
 #[test]
 fn the_scene_draws_the_files_own_triangles() {
     let snapshot = <ObjAnyEditor as ArtifactEditor>::decode_natural_file(include_bytes!("../🧫️fixtures/📂️natural/sample.obj")).expect("obj opens");
-    let (positions, triangles, markers) = crate::engine::scene_geometry(&snapshot);
+    let (positions, triangles, markers) = semio_s_artifact_stdio_obj_inferences::schema::inferences::scene_geometry(&snapshot);
     assert_eq!((positions, triangles, markers.len()), (vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], vec![0, 1, 2], 0));
     assert!(main::render(&snapshot).is_ok());
 }

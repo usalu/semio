@@ -1,5 +1,5 @@
 {
-  "annex": "任意\u0000annex",
+  "annex": "De",
   "site": {
     "sApR": 2.0,
     "aGr": -0.75,
@@ -7,15 +7,15 @@
     "enGroundType": "a",
     "enSpectrumType": "type1",
     "importanceClass": "ii",
-    "belowAlluviumVSMS": 0.0,
-    "alluviumVSMS": 0.0,
-    "alluviumThicknessM": 0.0,
-    "liquefiableLayer": false,
-    "softClayPi": 0.0,
-    "softClayThicknessM": 0.0,
-    "cUKpa": 0.0,
+    "vS30MS": 0.0,
     "nSpt": 0.0,
-    "vS30MS": 0.0
+    "cUKpa": 0.0,
+    "softClayThicknessM": 0.0,
+    "softClayPi": 0.0,
+    "liquefiableLayer": false,
+    "alluviumThicknessM": 0.0,
+    "alluviumVSMS": 0.0,
+    "belowAlluviumVSMS": 0.0
   },
   "buildings": [
     {
@@ -64,25 +64,25 @@
         {
           "id": "duplicate",
           "material": "rc",
-          "role": "",
+          "role": "column",
           "detailingCompatibleWithQ": false,
           "minDimensionM": -0.35,
           "rho": 0.012,
           "rhoPrime": -0.005,
           "omegaWd": 0.12,
           "steelSectionClass": 255,
-          "effectiveStiffnessBasis": "declared",
-          "effectiveStiffnessRatio": 1.0,
-          "wallPoissonRatio": 0.25,
-          "wallStartYM": 0.0,
-          "wallStartXM": 0.0,
-          "wallStoreyId": "",
-          "wallDirectionRad": 0.0,
-          "wallLengthM": 0.0,
-          "wallEffectiveHeightM": 0.0,
-          "wallThicknessM": 0.0,
+          "fastenerDiameterMm": 0.0,
           "timberThicknessMm": 0.0,
-          "fastenerDiameterMm": 0.0
+          "wallThicknessM": 0.0,
+          "wallEffectiveHeightM": 0.0,
+          "wallLengthM": 0.0,
+          "wallDirectionRad": 0.0,
+          "wallStoreyId": "",
+          "wallStartXM": 0.0,
+          "wallStartYM": 0.0,
+          "wallPoissonRatio": 0.25,
+          "effectiveStiffnessBasis": "declared",
+          "effectiveStiffnessRatio": 1.0
         }
       ],
       "planRegular": true,
@@ -122,20 +122,21 @@
       "bearingDRdM": -0.125,
       "permanentGkN": 1500000.75,
       "correlatedOccupancy": false,
-      "pierCrackedInertiaRatio": 1.0,
-      "verticalPeriodS": 0.0,
-      "deckEiNm2": 0.0,
-      "deckLengthM": 0.0,
-      "pierShearRdN": 0.0,
-      "pierMomentRdNm": 0.0,
-      "pierHeightM": 0.0,
       "variables": [
         {
           "id": "duplicate",
           "category": "b",
           "qkN": -1000.25
         }
-      ]
+      ],
+      "pierHeightM": 0.0,
+      "pierMomentRdNm": 0.0,
+      "pierShearRdN": 0.0,
+      "deckLengthM": 0.0,
+      "deckEiNm2": 0.0,
+      "importanceClass": 2.0,
+      "verticalPeriodS": 0.0,
+      "pierCrackedInertiaRatio": 1.0
     }
   ],
   "assessments": [
@@ -146,31 +147,31 @@
       "supportedBuildingId": "unresolved",
       "rKN": -5000.5,
       "gammaEl": 1.25,
+      "chordRotationDemandRad": 0.0,
+      "chordRotationYieldRad": 0.0,
+      "chordRotationUltimateRad": 0.0,
+      "sectionDepthM": 0.0,
+      "sectionWidthM": 0.0,
+      "effectiveDepthM": 0.0,
+      "shearSpanM": 0.0,
+      "axialForceN": 0.0,
+      "tensionSteelAreaM2": 0.0,
+      "compressionSteelAreaM2": 0.0,
+      "barDiameterMm": 0.0,
+      "steelYieldMpa": 0.0,
+      "concreteStrengthMpa": 0.0,
+      "stirrupLegAreaM2": 0.0,
+      "stirrupSpacingM": 0.0,
+      "stirrupYieldMpa": 0.0,
+      "coreWidthM": 0.0,
+      "coreDepthM": 0.0,
+      "restrainedBarCount": 0.0,
+      "restrainedBarSpacingM": 0.0,
+      "diagonalReinforcementRatio": 0.0,
+      "shearCrackingBeforeYield": 0.0,
       "shearForceDemandN": 0.0,
       "intermediateSteelAreaM2": 0.0,
-      "analysisMethod": "derived",
-      "shearCrackingBeforeYield": 0.0,
-      "diagonalReinforcementRatio": 0.0,
-      "restrainedBarSpacingM": 0.0,
-      "restrainedBarCount": 0.0,
-      "coreDepthM": 0.0,
-      "coreWidthM": 0.0,
-      "stirrupYieldMpa": 0.0,
-      "stirrupSpacingM": 0.0,
-      "stirrupLegAreaM2": 0.0,
-      "concreteStrengthMpa": 0.0,
-      "steelYieldMpa": 0.0,
-      "barDiameterMm": 0.0,
-      "compressionSteelAreaM2": 0.0,
-      "tensionSteelAreaM2": 0.0,
-      "axialForceN": 0.0,
-      "shearSpanM": 0.0,
-      "effectiveDepthM": 0.0,
-      "sectionWidthM": 0.0,
-      "sectionDepthM": 0.0,
-      "chordRotationUltimateRad": 0.0,
-      "chordRotationYieldRad": 0.0,
-      "chordRotationDemandRad": 0.0
+      "analysisMethod": "derived"
     }
   ],
   "silos": [
@@ -197,8 +198,8 @@
       "contentCategory": "b",
       "fillingRatio": 0.625,
       "vRdN": -50000.75,
-      "shellThicknessM": 0.0,
-      "shellStrengthMpa": 0.0
+      "shellStrengthMpa": 0.0,
+      "shellThicknessM": 0.0
     }
   ],
   "foundations": [
@@ -210,31 +211,31 @@
       "passiveResistanceN": -50000.75,
       "kFoundation": 100000.5,
       "kSoil": -500000.25,
-      "basePorePressurePa": 0.0,
-      "baseFrictionAngleDeg": 0.0,
-      "pileMomentRdNm": 0.0,
-      "pileLowerVsMS": 0.0,
-      "pileUpperVsMS": 0.0,
-      "pileInterfaceDepthM": 0.0,
-      "pileHeadFixed": 0.0,
-      "pileHeadShearN": 0.0,
-      "pileSubgradeModulusNM3": 0.0,
-      "pileModulusPa": 0.0,
-      "pileLengthM": 0.0,
-      "pileDiameterM": 0.0,
-      "soilFrictionAngleDeg": 0.0,
-      "bearingNMaxN": 0.0,
-      "bearingMomentNm": 0.0,
-      "bearingShearN": 0.0,
-      "bearingAxialN": 0.0,
-      "footingWidthM": 0.0,
-      "liqLayerThicknessM": 0.0,
-      "liqMagnitude": 0.0,
-      "liqUnitWeightNM3": 0.0,
-      "liqWaterDepthM": 0.0,
-      "liqDepthM": 0.0,
+      "liqN160": 0.0,
       "liqFinesPercent": 0.0,
-      "liqN160": 0.0
+      "liqDepthM": 0.0,
+      "liqWaterDepthM": 0.0,
+      "liqUnitWeightNM3": 0.0,
+      "liqMagnitude": 0.0,
+      "liqLayerThicknessM": 0.0,
+      "footingWidthM": 0.0,
+      "bearingAxialN": 0.0,
+      "bearingShearN": 0.0,
+      "bearingMomentNm": 0.0,
+      "bearingNMaxN": 0.0,
+      "soilFrictionAngleDeg": 0.0,
+      "pileDiameterM": 0.0,
+      "pileLengthM": 0.0,
+      "pileModulusPa": 0.0,
+      "pileSubgradeModulusNM3": 0.0,
+      "pileHeadShearN": 0.0,
+      "pileHeadFixed": 0.0,
+      "pileInterfaceDepthM": 0.0,
+      "pileUpperVsMS": 0.0,
+      "pileLowerVsMS": 0.0,
+      "pileMomentRdNm": 0.0,
+      "baseFrictionAngleDeg": 0.0,
+      "basePorePressurePa": 0.0
     }
   ],
   "retainingWalls": [
@@ -245,9 +246,9 @@
       "soilGamma": 18000.5,
       "r": -1.25,
       "hRdNPerM": 10000.75,
-      "permeabilityMS": 0.0,
+      "waterHeightM": 0.0,
       "saturatedGamma": 0.0,
-      "waterHeightM": 0.0
+      "permeabilityMS": 0.0
     }
   ],
   "towers": [
@@ -259,15 +260,15 @@
       "qNominal": -1.5,
       "permanentGkN": 3000000.75,
       "correlatedOccupancy": false,
-      "baseRotationalStiffnessNm": 0.0,
-      "eiNm2": 0.0,
       "variables": [
         {
           "id": "",
           "category": "b",
           "qkN": -10000.75
         }
-      ]
+      ],
+      "eiNm2": 0.0,
+      "baseRotationalStiffnessNm": 0.0
     }
   ],
   "soilLayers": [

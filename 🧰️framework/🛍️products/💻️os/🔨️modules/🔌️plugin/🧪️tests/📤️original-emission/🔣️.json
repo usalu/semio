@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "modes": [
+    {
+      "id": "genuine-original",
+      "identity": false,
+      "completion": false,
+      "original": true,
+      "cancelled": false,
+      "mode": "borrowed",
+      "followChildren": true,
+      "cancellationScope": "none"
+    },
+    {
+      "id": "cancelled-original",
+      "identity": false,
+      "completion": false,
+      "original": true,
+      "cancelled": true,
+      "mode": "borrowed",
+      "followChildren": false,
+      "cancellationScope": "token"
+    },
+    {
+      "id": "owned-tool",
+      "identity": false,
+      "completion": true,
+      "original": false,
+      "cancelled": false,
+      "mode": "owned",
+      "followChildren": true,
+      "cancellationScope": "none"
+    },
+    {
+      "id": "resumed-tool",
+      "identity": true,
+      "completion": false,
+      "original": false,
+      "cancelled": false,
+      "mode": "owned",
+      "followChildren": true,
+      "cancellationScope": "none"
+    },
+    {
+      "id": "missing-authority",
+      "identity": false,
+      "completion": false,
+      "original": false,
+      "cancelled": false,
+      "mode": "refuse",
+      "followChildren": false,
+      "cancellationScope": "none"
+    },
+    {
+      "id": "document-cancelled-original",
+      "identity": false,
+      "completion": false,
+      "original": true,
+      "cancelled": true,
+      "mode": "borrowed",
+      "followChildren": false,
+      "cancellationScope": "document"
+    },
+    {
+      "id": "instance-cancelled-original",
+      "identity": false,
+      "completion": false,
+      "original": true,
+      "cancelled": true,
+      "mode": "borrowed",
+      "followChildren": false,
+      "cancellationScope": "instance"
+    },
+    {
+      "id": "context-cancelled-original",
+      "identity": false,
+      "completion": false,
+      "original": true,
+      "cancelled": true,
+      "mode": "borrowed",
+      "followChildren": false,
+      "cancellationScope": "context"
+    }
+  ],
+  "borrowedMethod": "publish_original_emission_run",
+  "ownedMethod": "publish_mounted_typed_operation_run",
+  "predicate": "borrows_original_emission_authority",
+  "validator": "validate_original_emission_authoring",
+  "mutationValue": 73
+}

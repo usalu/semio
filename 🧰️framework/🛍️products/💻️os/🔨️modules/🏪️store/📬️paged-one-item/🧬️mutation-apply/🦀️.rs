@@ -1,5 +1,5 @@
 //! 🧬️ Genuine retained decision, central preflight, inverse and capability commit share one original issuer.
-use super::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
+use super::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory,capture_work};
 use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
 use semio_framework_value_snapshot_projection::snapshot_projection::SnapshotProjection;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
@@ -30,8 +30,9 @@ pub struct MutationApplyEdit<S:SnapshotProjection,M:RetainedMutation<S>>{
  issuer:Option<FactoryIssuerIdentity<M>>,
  refused:bool,
  closing:bool,
+ last_work:u64,
 }
-impl<S:SnapshotProjection,M:RetainedMutation<S>> Default for MutationApplyEdit<S,M>{fn default()->Self{Self{stage:Stage::Birth,semantics:ManuallyDrop::new(None),diff:ManuallyDrop::new(None),source:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),plan:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),inverse_close:None,messages:ManuallyDrop::new([None,None]),join:ManuallyDrop::new(None),retirement:Default::default(),issuer:None,refused:false,closing:false}}}
+impl<S:SnapshotProjection,M:RetainedMutation<S>> Default for MutationApplyEdit<S,M>{fn default()->Self{Self{stage:Stage::Birth,semantics:ManuallyDrop::new(None),diff:ManuallyDrop::new(None),source:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),plan:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),inverse_close:None,messages:ManuallyDrop::new([None,None]),join:ManuallyDrop::new(None),retirement:Default::default(),issuer:None,refused:false,closing:false,last_work:0}}}
 impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
  fn context(mutations:&dyn ArtifactOwnedValueRetirementFactory<M>)->RetainedMutationCloseContext<'_,M>{RetainedMutationCloseContext{mutations}}
  fn parent_copy()->usize{size_of::<Stage>()}
@@ -58,27 +59,30 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
   };demand.copy_bytes=demand.copy_bytes.checked_add(parent).ok_or_else(||fault("retained semantic header quote overflow"))?;demand.depth=demand.depth.checked_add(1).ok_or_else(||fault("retained semantic depth quote overflow"))?.max(2);Ok(demand)
  }
  fn advance(&mut self,before:RetainedCloneRef<'_,S>,mutation:RetainedCloneRef<'_,M>,post:PagedOneItemPost<'_,S>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<M>,ValueError>{
+  self.last_work=0;let observed_before=receiving.actual_work();
+  let result=(||{
   if self.closing||self.stage==Stage::Done{return Err(fault("retained mutation edit is closed"));}
   if grant.maximum_items==0||grant.maximum_copy_bytes<Self::parent_copy()||grant.maximum_depth<2{return Ok(PagedOneItemEditStep::Progress(Default::default()));}
   let demand=self.advance_demands(before,mutation,post.read(),body)?;if !semio_framework_os_spr::retained_mutation_demand_fits(demand,grant){return Ok(PagedOneItemEditStep::Progress(Default::default()));}
+  if !receiving.prepare_work(1)?{return Ok(PagedOneItemEditStep::Progress(Default::default()));}
   let g=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-Self::parent_copy(),maximum_depth:grant.maximum_depth-1,..grant};
   let previous=self.stage;
   let mut p=match self.stage{
-   Stage::Birth=>{let Some((o,p))=begin_retained_mutation::<S,M>(g)else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};*self.semantics=Some(o);self.stage=Stage::Decide;p}
-   Stage::Decide=>{let result=decide_retained_mutation(self.semantics.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("semantics is absent"))?,mutation,before,body,g)?;let p=result.progress();match result{RetainedMutationDecisionStep::Progress(_)=>{},RetainedMutationDecisionStep::Admitted(_,d,rows)=>{*self.admission=Some(RetainedCloneSource::admission_owned(d,()));self.messages[0]=Some(rows);self.stage=Stage::Source;},RetainedMutationDecisionStep::Refused(_,rows)=>{self.messages[0]=Some(rows);self.refused=true;self.stage=Stage::Join;}}p}
+   Stage::Birth=>{let Some((o,p))=begin_retained_mutation::<S,M>(g)else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};self.last_work=self.last_work.saturating_add(1);*self.semantics=Some(o);self.stage=Stage::Decide;p}
+   Stage::Decide=>{self.last_work=self.last_work.saturating_add(1);let result=decide_retained_mutation(self.semantics.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("semantics is absent"))?,mutation,before,body,g)?;let p=result.progress();match result{RetainedMutationDecisionStep::Progress(_)=>{},RetainedMutationDecisionStep::Admitted(_,d,rows)=>{*self.admission=Some(RetainedCloneSource::admission_owned(d,()));self.messages[0]=Some(rows);self.stage=Stage::Source;},RetainedMutationDecisionStep::Refused(_,rows)=>{self.messages[0]=Some(rows);self.refused=true;self.stage=Stage::Join;}}p}
    Stage::Source=>{
     let admission=self.admission.as_mut().ok_or_else(||fault("retained mutation diff admission is absent"))?;
-    if admission.phase()!="ready"{admission.advance(g).result?.progress()}else{let mut output=None;let step=admission.take_output(&mut output,g).result?;if let Some(source)=output{*self.source=Some(source);self.admission.take();self.stage=Stage::Plan;}step.progress()}
+    if admission.phase()!="ready"{capture_work(&mut self.last_work,admission.advance(g))?.progress()}else{let mut output=None;let step=capture_work(&mut self.last_work,admission.take_output(&mut output,g))?;if let Some(source)=output{*self.source=Some(source);self.admission.take();self.stage=Stage::Plan;}step.progress()}
    }
-   Stage::Plan=>{let Some((o,p))=begin_retained_diff::<S,M::Diff>(g)else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};*self.plan=Some(o);self.stage=Stage::Preflight;p}
-   Stage::Preflight=>{let result=preflight_retained_diff(self.plan.as_mut().unwrap(),self.source.as_ref().unwrap().try_borrow()?,before,post.original()?,body,g,receiving).map_err(|error|{let mut p=error.retained_progress();if p!=RetainedCloneProgress::default(){p.copied_bytes=p.copied_bytes.saturating_add(Self::parent_copy());}error.with_retained_progress(p)})?;let p=result.progress();match result{RetainedDiffPreflightStep::Progress(_)=>{},RetainedDiffPreflightStep::Admitted(_,rows)=>{self.messages[1]=Some(rows);self.stage=Stage::Inverse;},RetainedDiffPreflightStep::Refused(_,rows)=>{self.messages[1]=Some(rows);self.refused=true;self.stage=Stage::Join;}}p}
-   Stage::Inverse=>{let a=self.plan.as_ref().unwrap().inverse_admission(self.source.as_ref().unwrap().try_borrow()?,before)?;let result=inverse_retained_mutation(self.semantics.as_mut().unwrap(),mutation,&a,body,g)?;let p=result.progress();if let RetainedMutationInverseStep::Ready(_,rows)=result{*self.inverse=Some(rows);self.stage=Stage::Commit;}p}
-   Stage::Commit=>{let step=commit_retained_diff(self.plan.as_mut().unwrap(),self.source.as_ref().unwrap().try_borrow()?,before,post.mutable()?,g)?;let p=step.progress();if matches!(step,RetainedCloneStep::Complete(_)){self.stage=Stage::Join;}p}
+   Stage::Plan=>{let Some((o,p))=begin_retained_diff::<S,M::Diff>(g)else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};self.last_work=self.last_work.saturating_add(1);*self.plan=Some(o);self.stage=Stage::Preflight;p}
+   Stage::Preflight=>{self.last_work=self.last_work.saturating_add(1);let result=preflight_retained_diff(self.plan.as_mut().unwrap(),self.source.as_ref().unwrap().try_borrow()?,before,post.original()?,body,g,receiving).map_err(|error|{let mut p=error.retained_progress();if p!=RetainedCloneProgress::default(){p.copied_bytes=p.copied_bytes.saturating_add(Self::parent_copy());}error.with_retained_progress(p)})?;let p=result.progress();match result{RetainedDiffPreflightStep::Progress(_)=>{},RetainedDiffPreflightStep::Admitted(_,rows)=>{self.messages[1]=Some(rows);self.stage=Stage::Inverse;},RetainedDiffPreflightStep::Refused(_,rows)=>{self.messages[1]=Some(rows);self.refused=true;self.stage=Stage::Join;}}p}
+   Stage::Inverse=>{let a=self.plan.as_ref().unwrap().inverse_admission(self.source.as_ref().unwrap().try_borrow()?,before)?;self.last_work=self.last_work.saturating_add(1);let result=inverse_retained_mutation(self.semantics.as_mut().unwrap(),mutation,&a,body,g)?;let p=result.progress();if let RetainedMutationInverseStep::Ready(_,rows)=result{*self.inverse=Some(rows);self.stage=Stage::Commit;}p}
+   Stage::Commit=>{self.last_work=self.last_work.saturating_add(1);let step=commit_retained_diff(self.plan.as_mut().unwrap(),self.source.as_ref().unwrap().try_borrow()?,before,post.mutable()?,g)?;let p=step.progress();if matches!(step,RetainedCloneStep::Complete(_)){self.stage=Stage::Join;}p}
    Stage::Join=>{
-    if self.join.is_none(){let d=MutationMessageConcat::<2>::constructor_demand();if !semio_framework_os_spr::retained_mutation_demand_fits(d,g){return Ok(PagedOneItemEditStep::Progress(Default::default()));}let batches=std::array::from_fn(|i|self.messages[i].take().unwrap_or_default());match MutationMessageConcat::admit(batches,g){Ok((j,p))=>{*self.join=Some(j);p},Err((e,batches))=>{for(i,b)in batches.into_iter().enumerate(){self.messages[i]=Some(b);}return Err(e);}}}else{let step=self.join.as_mut().unwrap().advance(g)?;if matches!(step,RetainedCloneStep::Complete(_)){self.stage=Stage::Publish;}step.progress()}
+    if self.join.is_none(){let d=MutationMessageConcat::<2>::constructor_demand();if !semio_framework_os_spr::retained_mutation_demand_fits(d,g){return Ok(PagedOneItemEditStep::Progress(Default::default()));}let batches=std::array::from_fn(|i|self.messages[i].take().unwrap_or_default());self.last_work=self.last_work.saturating_add(1);match MutationMessageConcat::admit(batches,g){Ok((j,p))=>{*self.join=Some(j);p},Err((e,batches))=>{for(i,b)in batches.into_iter().enumerate(){self.messages[i]=Some(b);}return Err(e);}}}else{self.last_work=self.last_work.saturating_add(1);let step=self.join.as_mut().unwrap().advance(g)?;if matches!(step,RetainedCloneStep::Complete(_)){self.stage=Stage::Publish;}step.progress()}
    }
    Stage::Publish=>{
-    let Some((messages,p))=self.join.as_mut().unwrap().take(g)?else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};
+    let Some((messages,p))=self.join.as_mut().unwrap().take(g)?else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};self.last_work=self.last_work.saturating_add(1);
     self.stage=Stage::Done;
     let rows=if self.refused{None}else{Some(self.inverse.take().ok_or_else(||fault("retained admitted inverse is absent"))?)};
     let p=Self::progress(grant,p)?;
@@ -88,7 +92,13 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
   };
   if self.stage!=previous&&p==RetainedCloneProgress::default(){p.copied_items=1;}
   Ok(PagedOneItemEditStep::Progress(Self::progress(grant,p)?))
+ 
+  })();
+  let observed=receiving.actual_work().saturating_sub(observed_before);self.last_work=self.last_work.max(observed);let reported=self.last_work;
+  let work=semio_framework_os_store_one_item::original_one_item_turn_work(reported,observed,false)?;if work>observed{receiving.commit_work(work-observed)?;}self.last_work=work;result
  }
+ fn last_turn_work(&self)->u64{self.last_work}
+
  fn begin_close(&mut self){self.closing=true;if let Some(o)=self.semantics.as_mut(){o.begin_close();}if let Some(o)=self.plan.as_mut(){o.begin_close();}if let Some(o)=self.join.as_mut(){o.begin_close();}}
  fn close_demands(&self,mutations:&dyn ArtifactOwnedValueRetirementFactory<M>,body:usize)->Result<RetirementDemand,ValueError>{
   if self.issuer.is_some_and(|i|!i.matches(mutations)){return Err(fault("retained mutation edit original issuer changed"));}

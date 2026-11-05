@@ -1,0 +1,70 @@
+{
+  "schema": "semio.cold-projection-metadata.v1",
+  "cases": [
+    {
+      "id": "copy-zero",
+      "cloned": true,
+      "items": 1,
+      "copyBytes": 0,
+      "depth": 1,
+      "expected": {
+        "items": 0,
+        "copyBytes": 0,
+        "work": 0,
+        "terminal": false
+      }
+    },
+    {
+      "id": "funded-flag",
+      "cloned": true,
+      "items": 1,
+      "copyBytes": 1,
+      "depth": 1,
+      "expected": {
+        "items": 1,
+        "copyBytes": 1,
+        "work": 1,
+        "terminal": true
+      }
+    },
+    {
+      "id": "items-zero",
+      "cloned": true,
+      "items": 0,
+      "copyBytes": 1,
+      "depth": 1,
+      "expected": {
+        "items": 0,
+        "copyBytes": 0,
+        "work": 0,
+        "terminal": false
+      }
+    },
+    {
+      "id": "depth-zero",
+      "cloned": true,
+      "items": 1,
+      "copyBytes": 1,
+      "depth": 0,
+      "expected": {
+        "items": 0,
+        "copyBytes": 0,
+        "work": 0,
+        "terminal": false
+      }
+    },
+    {
+      "id": "terminal-probe",
+      "cloned": false,
+      "items": 0,
+      "copyBytes": 0,
+      "depth": 0,
+      "expected": {
+        "items": 0,
+        "copyBytes": 0,
+        "work": 0,
+        "terminal": true
+      }
+    }
+  ]
+}

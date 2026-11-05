@@ -133,7 +133,7 @@ pub fn activate_plugin_instance(
         capabilities: caps,
         quotas: descriptor.quotas.clone(),
     };
-    let turn = crate::plugin_artifact_channel::with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(&mut instance, &[open_event], budget, identity))).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` InstanceOpen turn faulted: {error}", entry.plugin_id)))?;
+    let turn = crate::plugin_artifact_channel::with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(&mut instance, &mut [open_event], budget, identity))).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` InstanceOpen turn faulted: {error}", entry.plugin_id)))?;
     let turn_status = format!("{:?}", turn.status);
     let outcome = PluginActivationOutcome { plugin_id: entry.plugin_id.clone(), app_id: app_ref.app_id.clone(), actor, turn_status, effects_emitted: turn.effects.len(), fuel_used: turn.fuel_used };
     Ok((instance, outcome))

@@ -85,8 +85,8 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
   const applyHostEffects = useCallback(
     async (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<typeof captureEffectOwner>) => {
       const effectOrigin = effectOwner.presentation;
-      if (effects.length === 0 && sealedInstancesRef.current.sealed(baseSession.pluginId, baseSession.instanceId)) return;
-      if (dropForSealedInstance(baseSession, "host effects", `${effects.length} effect(s)`)) return;
+      if (effects.length === 0 && sealedInstancesRef.current.sealed(effectOwner.plugin, baseSession.pluginId, baseSession.instanceId)) return;
+      if (dropForSealedInstance(effectOwner.plugin, baseSession, "host effects", `${effects.length} effect(s)`)) return;
       let nextViewState = baseSession.viewState;
       for (const effect of effects) {
         if (!isCurrentEffectOwner(effectOwner)) return;

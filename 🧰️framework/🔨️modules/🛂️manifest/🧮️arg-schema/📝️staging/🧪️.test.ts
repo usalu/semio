@@ -20,11 +20,11 @@ test('source-owned page destinations agree with independent closed schema and pr
  expect(STAGED_FORM_PAGE_SIZES as Readonly<Record<string,number>>).toEqual(pageCases.pageSizes);
  for(const page of pageCases.valid){
   expect(validate(page)).toBe(true);expect(stagedFormPage(page)).toBe(true);
-  const status={token:pageCases.token,ready:false,diagnostics:[],diagnosticOffset:'0',diagnosticTotal:'0'},args={template:'Pset_ActionRequest',target:'1'};
+  const status={token:pageCases.token,ready:false,commitArgs:null,diagnostics:[],diagnosticOffset:'0',diagnosticTotal:'0'},args={template:'Pset_ActionRequest',target:'1'};
   const result=applyStagedFormPageBinding(status,pageCases.token,{token:pageCases.token,page});expect(result).toEqual(page);expect(args).toEqual({template:'Pset_ActionRequest',target:'1'});
  }
  for(const page of pageCases.invalid){expect(validate(page)).toBe(false);expect(stagedFormPage(page)).toBe(false);}
- const page=pageCases.valid[0]!;const status={token:pageCases.token,ready:true,diagnostics:[],diagnosticOffset:'0',diagnosticTotal:'0'};
+ const page=pageCases.valid[0]!;const status={token:pageCases.token,ready:true,commitArgs:{},diagnostics:[],diagnosticOffset:'0',diagnosticTotal:'0'};
  expect(()=>applyStagedFormPageBinding(status,{...pageCases.token,generation:'2'},{token:pageCases.token,page})).toThrow('staging.stale');
  let reads=0;expect(stagedFormPage(Object.defineProperty({},'fieldOffset',{enumerable:true,get(){reads++;return '0';}}))).toBe(false);expect(reads).toBe(0);
 });
@@ -57,7 +57,7 @@ test('token admission keeps exact canonical u64 generations through schema bindi
  let calls=0;const query=new StagedFormQuery(async request=>{calls++;return {token:request.token,fields:[],diagnostics:[],ready:false};});
  for(const generation of tokenCases.valid){const candidate={...token,generation};expect(validate(candidate)).toBe(true);expect(stagedFormToken(candidate)).toBe(true);expect((await query.request({token:candidate,args:{},locale:'en'}))?.token).toEqual(candidate);}
  const before=calls;
- for(const generation of tokenCases.invalid){const candidate={...token,generation};expect(validate(candidate)).toBe(false);expect(stagedFormToken(candidate)).toBe(false);expect(()=>applyStagedFormBinding({x:''},{token:candidate,ready:false,diagnostics:[],diagnosticOffset:'0',diagnosticTotal:'0'},{token:candidate,layout:'preserve',edits:[{source:'text',path:['x']}]},'1')).toThrow();await expect(query.request({token:candidate,args:{},locale:'en'})).rejects.toThrow('staging.token');}
+ for(const generation of tokenCases.invalid){const candidate={...token,generation};expect(validate(candidate)).toBe(false);expect(stagedFormToken(candidate)).toBe(false);expect(()=>applyStagedFormBinding({x:''},{token:candidate,ready:false,commitArgs:null,diagnostics:[],diagnosticOffset:'0',diagnosticTotal:'0'},{token:candidate,layout:'preserve',edits:[{source:'text',path:['x']}]},'1')).toThrow();await expect(query.request({token:candidate,args:{},locale:'en'})).rejects.toThrow('staging.token');}
  expect(calls).toBe(before);let invoked=0;expect(stagedFormToken(Object.defineProperty({...token},'generation',{get(){invoked++;return '1';},enumerable:true}))).toBe(false);expect(invoked).toBe(0);query.cancel();
 });
 test('query delegates original receiving without invoking argument getters first',async()=>{
@@ -78,12 +78,12 @@ import {stagedFormStatus} from './🟦️.ts';
 import {applyStagedFormBinding,type StagedFormBinding} from './🟦️.ts';
 test('neutral resident binding outputs agree with the independent JSON Patch interface',async()=>{
  const library=await import('fast-json-patch');
- for(const row of bindingCases.cases){const binding={token,layout:'replace',edits:[row.edit]} as StagedFormBinding,input='input' in row?row.input:undefined,next=applyStagedFormBinding(cases.args,stagedFormStatus(response),binding,input),patch=row.kind==='remove'?{op:'remove' as const,path:'/'+row.path.join('/')}:{op:'add' as const,path:'/'+row.path.join('/'),value:row.value};expect(next).toEqual(library.applyPatch(structuredClone(cases.args),[patch],true,false,true).newDocument);}
- for(const row of bindingCases.invalid)expect(()=>applyStagedFormBinding(cases.args,stagedFormStatus(response),{token,layout:'replace',edits:[row.edit]} as StagedFormBinding,row.input)).toThrow();
+ for(const row of bindingCases.cases){const binding={token,layout:'replace',edits:[row.edit]} as StagedFormBinding,input='input' in row?row.input:undefined,next=applyStagedFormBinding(cases.args,stagedFormStatus({...response,ready:false}),binding,input),patch=row.kind==='remove'?{op:'remove' as const,path:'/'+row.path.join('/')}:{op:'add' as const,path:'/'+row.path.join('/'),value:row.value};expect(next).toEqual(library.applyPatch(structuredClone(cases.args),[patch],true,false,true).newDocument);}
+ for(const row of bindingCases.invalid)expect(()=>applyStagedFormBinding(cases.args,stagedFormStatus({...response,ready:false}),{token,layout:'replace',edits:[row.edit]} as StagedFormBinding,row.input)).toThrow();
 });
 
 test('resident bindings accept partial text and resolve exact authored choices without event paths',()=>{
- const status=stagedFormStatus(response),text:StagedFormBinding={token,layout:'preserve',edits:[{source:'text',path:['count']}]};
+ const status=stagedFormStatus({...response,ready:false}),text:StagedFormBinding={token,layout:'preserve',edits:[{source:'text',path:['count']}]};
  expect(applyStagedFormBinding(cases.args,status,text,'-').count).toBe('-');
  expect(()=>applyStagedFormBinding(cases.args,status,text,{path:['target'],value:'1'})).toThrow();
  const selected={kind:'typedValue',value:{name:'IFCINTEGER',items:[{kind:'integer',value:'9007199254740993'}]}};
@@ -98,7 +98,7 @@ test('resident bindings accept partial text and resolve exact authored choices w
 test('status pages expose original token and complete diagnostic addressing',()=>{
  const response={token:{action:'a',window:'w',generation:'1',revision:'source'},fields:[],ready:false,diagnostics:Array.from({length:19},(_,i)=>({path:['target'],code:String(i),label:{en:'Invalid',de:'Ungültig'}}))} as const;
  const status=stagedFormStatus(response,16);
- expect(status).toEqual({token:response.token,ready:false,diagnostics:response.diagnostics.slice(16),diagnosticOffset:'16',diagnosticTotal:'19'});
+ expect(status).toEqual({token:response.token,ready:false,commitArgs:null,diagnostics:response.diagnostics.slice(16),diagnosticOffset:'16',diagnosticTotal:'19'});
  const statusSchema={$schema:schema.$schema,$defs:schema.$defs,$ref:'#/$defs/Status'};const ajv=new Ajv({strict:false});expect(ajv.validate(statusSchema,status)).toBe(true);
  expect(ajv.validate(statusSchema,{...status,fields:[]})).toBe(false);
  expect(()=>stagedFormStatus(response,-1)).toThrow();

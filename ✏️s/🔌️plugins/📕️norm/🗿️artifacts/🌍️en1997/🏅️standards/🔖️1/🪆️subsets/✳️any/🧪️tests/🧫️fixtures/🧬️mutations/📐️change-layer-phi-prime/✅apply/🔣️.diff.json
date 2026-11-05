@@ -14,8 +14,8 @@
       {
         "id": "layer-sand",
         "patch": {
-          "oedometricModulus": null,
-          "phiPrimeDeg": 32.5
+          "phiPrimeDeg": 32.5,
+          "oedometricModulus": null
         }
       }
     ]

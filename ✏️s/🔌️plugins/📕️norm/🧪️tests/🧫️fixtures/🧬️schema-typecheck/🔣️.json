@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "facets": ["", "📸️snapshot", "🔺️diff", "🧬️mutations"],
+  "expectedArtifacts": 15,
+  "expectedRoots": 60,
+  "expectedDiagnostics": []
+}

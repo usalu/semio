@@ -105,3 +105,26 @@ fn a_viewport_pick_narrows_the_checks_list_to_the_picked_entities_and_selects_th
     let unowned = ChecksViewState { owners: vec!["sections".into()], ..ChecksViewState::default() };
     assert_eq!(plan_checks(&report, &unowned, Locale::En).iter().map(|group| group.rows.len()).sum::<usize>(), 3, "a pick without checks leaves the list whole");
 }
+
+#[test]
+fn interaction_picks_and_stored_checks_share_one_consistent_focus() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️cases.json")).expect("selection fixture");
+    let mut report = CheckReport::default();
+    for row in fixture["checks"].as_array().expect("checks") {
+        report.push(check(row["id"].as_str().unwrap(), row["entity"].as_str().unwrap(), row["path"].as_str().unwrap(), row["utilization"].as_f64().unwrap()));
+    }
+    for case in fixture["cases"].as_array().expect("cases") {
+        let picks: Vec<String> = case["picks"].as_array().unwrap().iter().map(|pick| address(pick[0].as_str().unwrap(), pick[1].as_str().unwrap())).collect();
+        let stored = case["stored"].as_u64().map(|value| value as u32);
+        let selection = if case["interaction"].as_bool().unwrap_or(false) { NormSelection::from_interaction(&report, stored, &picks) } else { NormSelection::resolve(&report, stored, &picks) };
+        let actual = serde_json::json!({"entities": selection.entities, "picked": selection.picked, "check": selection.check, "primary": selection.primary(&report), "paths": selection.paths});
+        let expected = serde_json::json!({"entities": case["entities"], "picked": case["picked"], "check": case["check"], "primary": case["primary"], "paths": case["paths"]});
+        assert_eq!(actual, expected, "{}", case["name"]);
+        let owners = selection.checks_owners(&report);
+        assert_eq!(serde_json::json!(owners), case["checkOwners"], "{}: checks filter", case["name"]);
+        let state = ChecksViewState { owners, ..ChecksViewState::default() };
+        if let Some(selected) = selection.check {
+            assert!(plan_checks(&report, &state, Locale::En).iter().any(|group| group.rows.contains(&selected)), "{}: selected check remains visible", case["name"]);
+        }
+    }
+}

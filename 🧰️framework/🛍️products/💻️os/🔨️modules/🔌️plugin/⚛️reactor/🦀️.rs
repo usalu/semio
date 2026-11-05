@@ -335,7 +335,7 @@ pub async fn restore_now<PA: semio_framework_plugin_reactor_app::PluginApp>(runt
         Ok::<(), semio_framework::Fault>(())
     })?;
     for restart in pack.task_restarts().await {
-        let meta = semio_framework_plugin_decl_emission::ActionMeta { actor: semio_framework_plugin_runtime_instances::inst_wire_frames::instance_actor(runtime, restart.instance).await?.into(), instance_id: restart.instance, view_state: None };
+        let meta = semio_framework_plugin_decl_emission::ActionMeta { expected_document_revision:None, actor: semio_framework_plugin_runtime_instances::inst_wire_frames::instance_actor(runtime, restart.instance).await?.into(), instance_id: restart.instance, view_state: None };
         let pending = PendingResume { instance: restart.instance, meta, outcome: TaskResumeOutcome::Command(restart.command.clone()) };
         TASK_RESUMES
             .with(|resumes| resumes.borrow_mut().push(pending))

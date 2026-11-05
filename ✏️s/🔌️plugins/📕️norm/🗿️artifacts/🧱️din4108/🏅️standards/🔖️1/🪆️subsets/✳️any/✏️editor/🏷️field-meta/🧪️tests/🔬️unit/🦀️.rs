@@ -51,18 +51,18 @@ fn field_meta_covers_every_editable_leaf_on_default_snapshot() {
 #[test]
 fn climate_and_usage_choices_are_human_localized() {
     let climate = din4108_field_meta("climateZone").expect("climate");
-    let c0 = &climate.choices.unwrap()[0];
+    let c0 = &climate.choices().unwrap()[0];
     assert_eq!(c0.label_en, "Summer climate region A");
     assert_eq!(c0.label_de, "Sommerklimaregion A");
     let usage = din4108_field_meta("usage").expect("usage");
-    let u0 = &usage.choices.unwrap()[0];
+    let u0 = &usage.choices().unwrap()[0];
     assert_eq!(u0.label_en, "Residential");
     assert_eq!(u0.label_de, "Wohngebäude");
     let heavy = din4108_field_meta("zones[0].heaviness").expect("heaviness");
-    let h0 = &heavy.choices.unwrap()[0];
+    let h0 = &heavy.choices().unwrap()[0];
     assert_eq!(h0.label_en, "Heavy construction");
     assert_eq!(h0.label_de, "Schwere Bauweise");
     let yes = din4108_field_meta("hasMechanicalVentilation").expect("bool");
-    assert_eq!(yes.choices.unwrap()[0].label_en, "Yes");
-    assert_eq!(yes.choices.unwrap()[0].label_de, "Ja");
+    assert_eq!(yes.choices().unwrap()[0].label_en, "Yes");
+    assert_eq!(yes.choices().unwrap()[0].label_de, "Ja");
 }

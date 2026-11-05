@@ -172,11 +172,16 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     let generation_before = authority.snapshot.generation();
     let revision = app.stores.store.content_revision_now();
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.stores.store.generation_now()), 17);
-    let lease = app.tools.tool_cancellations.begin(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).expect("cancellation lease");
+    semio_framework_plugin_testing_laws::artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app,caller.context).unwrap();
+    let key=ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation };
+    let mut lease=None;
+    for _ in 0..4096 {lease=app.tools.tool_cancellations.begin(&key,caller.context).unwrap();if lease.is_some(){break}}
+    let lease=lease.expect("original cancellation lease");
     let mutation = WindowConfigMutation::of::<ToyWorldWindowConfig>(window_id, ChangeTestConfigSelection { selected: Some("5".into()) }.into());
     let mut mounted = test_blank_mounted_operation::<ToyRunApp>();
+    mounted.source_identity=semio_framework_job::OriginalSourceBinding::borrow(caller.context);
     mounted.verb = "setWorldSelection".into();
-    mounted.meta = ActionMeta { actor: text(&fixture["actor"]).into(), instance_id: 7, view_state: Some(view) };
+    mounted.meta = ActionMeta { expected_document_revision:None, actor: text(&fixture["actor"]).into(), instance_id: 7, view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(view, semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())) };
     mounted.operation = operation;
     mounted.canonical_revision = revision;
     mounted.artifact_generation = operation.generation.0;
@@ -189,12 +194,11 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     let mut yielded_with_retained_receipt = 0;
     let mut page = None;
     for _ in 0..4096 {
-        app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, grant).unwrap_or_else(|fault| panic!("every unit of a window config publication resumes: {fault:?}"));
-        mounted.publication_ownership_progress.take();
+        publish_window_config_fixture_unit(&mut app,&mut mounted,grant,caller.context).unwrap_or_else(|fault| panic!("every unit of a window config publication resumes: {fault:?}"));
         if mounted.pending_window_config_receipt.is_some() {
             yielded_with_retained_receipt += 1;
         }
-        if let Some(found) = mounted.take_fixture_result_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation) {
+        if let Some(found) = semio_framework_plugin_testing_laws::artifact_app_laws::present_fixture_mounted_page(&mut mounted,grant,caller.context).unwrap() {
             page = Some(found);
             break;
         }
@@ -205,20 +209,19 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     assert!(mounted.pending_window_config_receipt.is_none() && mounted.published_window_config);
     assert!(mounted.window_config_authority.as_ref().is_some_and(|authority| authority.snapshot.generation() > generation_before), "the captured authority was refreshed to the published generation");
     assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).expect("exact ACK"));
-mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close);
+assert!(semio_framework_plugin_testing_laws::artifact_app_laws::retire_fixture_acknowledged_mounted_page(&mut mounted,mounted_policy.close,caller.context).unwrap());
     let mut terminal = false;
     for _ in 0..4096 {
-        app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, grant).unwrap_or_else(|fault| panic!("every unit after the window config ACK resumes: {fault:?}"));
-        mounted.publication_ownership_progress.take();
+        publish_window_config_fixture_unit(&mut app,&mut mounted,grant,caller.context).unwrap_or_else(|fault| panic!("every unit after the window config ACK resumes: {fault:?}"));
         if mounted.granted_retirement_ready() && mounted.granted_retirement_pending() {
             let _demand = mounted.granted_retirement_demands(grant.maximum_copy_bytes).expect("quoted granted retirement");
             let quoted = grant;
-            mounted.granted_retirement_step(quoted).expect("granted retirement of the acknowledged publication");
+            caller.context.with_retained_loan(quoted,|cx|{let before=cx.retained_progress();let step=mounted.granted_retirement_step(cx,quoted)?;let unposted=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_unposted(step.progress(),before,cx.retained_progress())?;cx.consume_retained(unposted)?;Ok::<_,semio_framework_job::OriginalTurnFailure>(())}).expect("granted retirement of the acknowledged publication");
         }
-        if let Some(mut page) = mounted.take_fixture_result_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation) {
+        if let Some(mut page) = semio_framework_plugin_testing_laws::artifact_app_laws::present_fixture_mounted_page(&mut mounted,grant,caller.context).unwrap() {
             terminal = page.lane == TypedOperationResultLane::Terminal;
             assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).expect("exact ACK"));
-mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close);
+assert!(semio_framework_plugin_testing_laws::artifact_app_laws::retire_fixture_acknowledged_mounted_page(&mut mounted,mounted_policy.close,caller.context).unwrap());
             break;
         }
     }
@@ -228,14 +231,14 @@ mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifac
             break;
         }
         if mounted.lease_retirement_ready() {
-            let _demand = mounted.lease_retirement_demands(&app.tools.tool_cancellations, grant.maximum_copy_bytes).expect("quoted cancellation lease retirement");
+            let _demand = mounted.lease_retirement_demands(&app.tools.tool_cancellations.handle(), grant.maximum_copy_bytes).expect("quoted cancellation lease retirement");
             let quoted = grant;
-            mounted.lease_retirement_step(&app.tools.tool_cancellations, quoted).expect("cancellation lease retirement");
+            caller.context.with_retained_loan(quoted,|cx|{let step=mounted.lease_retirement_step(&app.tools.tool_cancellations.handle(),quoted)?;cx.consume_retained(step.progress())?;Ok::<_,semio_framework_job::OriginalTurnFailure>(())}).expect("cancellation lease retirement");
             continue;
         }
         let _demand = mounted.retirement_demands(grant.maximum_copy_bytes).expect("quoted mounted retirement");
             let quoted = grant;
-        match mounted.retirement_step(quoted).expect("mounted retirement step") {
+        match mounted.retirement_step(caller.context).expect("mounted retirement step") {
             PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => assert!(progress.fits(quoted)),
             PluginLifecycleStep::AwaitingInput { reason } | PluginLifecycleStep::Blocked { reason } => panic!("the published window config operation retires: {reason}"),
         }
@@ -246,3 +249,17 @@ mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifac
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion 🎯️RetargetAndSettings
+
+/// 🪟️ Returns each publication receipt to the original window fixture caller once.
+fn publish_window_config_fixture_unit(app:&mut ToyApp,mounted:&mut semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<ToyRunApp>,grant:semio_framework_value::retained_clone::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+ cx.with_retained_loan(grant,|same|{
+  let before=same.retained_progress();
+  app.typed_ctx().publish_mounted_typed_operation_unit(mounted,grant,same)?;
+  if let Some((issued,progress))=mounted.publication_ownership_progress.take(){
+   assert!(progress.fits(issued)&&progress.fits(grant));
+   let unposted=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_unposted(progress,before,same.retained_progress())?;
+   same.consume_retained(unposted)?;
+  }
+  Ok(())
+ })
+}

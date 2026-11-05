@@ -1,0 +1,23 @@
+# Reserved Seed and Custody Checkpoint
+
+The framework request wrapper retains all thirteen request lanes and the original source binding. Its Work delegate continues after the actual optional input has moved into Work custody. Admission stores the concrete owner before posting its receipt.
+
+The mounted surface native law now checks four independent birth denials, accepts a zero release budget for birth, checks unchanged source pointers and Arc alias counts, and exercises completion after input donation plus cancellation before and after donation. Closure uses the same OriginalFixtureCaller with real retained loans. External snapshot/history aliases remain live during request retirement. The existing natural-file fixture now uses the new mutable hook and physically admitted decoder box.
+
+The seed helper captures the actual store clock after birth permission, ticks it using the existing wall-clock recipe, streams the original actor bytes through repository SHA-256 in granted pages, and writes the exact 31-byte content id into a funded String. It preserves the original namespace and the first eight digest bytes. No counter or synthetic clock was added. The previous synchronous seed call sites still need migration.
+
+`seed-oracle.ts` uses Node crypto as an independent oracle. Both vectors matched: ASCII actor `a8fb2c456b588351`, Unicode actor `a726d4b887f4d8b4`. Rust unit source covers the same clock-tail formatting and digest vectors. The neutral fixture records the exact recipe and refusal laws.
+
+Pinned Rustfmt parsed the seed source and the mounted request-custody/native-file test source with exit 0. These are parse-only results. No native test execution or typecheck is claimed. The light tool also printed an EROFS agent-session-cache warning; direct ticket scripts continue to execute through repo.
+
+The generic job now also captures the real decoder ledger and recipient inside `admit_original_construction`. Execution, cancellation, receiver reuse and closure check both that tuple and the original source binding. The binding remains in the concrete job after Request transfers into retirement. `begin_close` marks only; private Work receives close intent only after the guarded original call. A second genuine caller refusal law proves foreign close cannot mark private Work.
+
+Canonical wire now exposes original-return demands and handback after both immutable traversals close. It returns the same typed source through the existing actual Source authority, retains independent wire backing, and exposes nonmutating retirement demands. The independent Node JSON oracle matched the neutral original-return wire vector. A genuine SDK native law checks pointer-preserving handback and funded source/wire retirement; it is authored, unrun.
+
+`OriginalCompletionBirth` now binds the actual source/decoder under original construction, receives its private Arc through the existing native Arc recipient, and performs separate paid header handoff. A born Arc remains in its owned slot if a receipt refuses. Cancellation closes its unpublished empty cell under the same decoder and exact release demand. Native cancellation-stage laws are authored, unrun.
+
+`ReservedPreparation` is mounted in instance-jobs. PendingReserved has the new field and its complete thirty-one-field original initialization inventory. The preparation owns paged metadata, the original action wire/returned arguments, partial seed, native completion birth, full request, body and shared job. Close queries and effects select the same child; completed concrete bodies release before lower children. Final frame removal is separately quoted by `slot_close_demands` and `close_slot`. Native laws exercise byte-page metadata copying, partial wire cancellation, pointer-preserving argument donation and denied final frame removal. NativeSelection integrated the slot into actual source-scoped maintenance probes, preserving foreign callers.
+
+The Action input retains the actual immutable `SnapshotRead<InteractionState>` and exposes state through `get()`. The unused hover map lane was removed after all clipboard owners confirmed it has no semantic consumer. This avoids both a full selection-state clone and an unused hover-map clone.
+
+Runtime render reserved calls still use the previous by-value hook. The slot is not yet populated by production dispatch, and the runtime is not API coherent yet. The old history refresh also uses unrelated maintenance grants and materializes HistoryView; production prep needs an actual admitted current history owner rather than invoking that cold helper. Raster import still requires the original bounded PNG metadata/output owner. No broad completion claim is justified.

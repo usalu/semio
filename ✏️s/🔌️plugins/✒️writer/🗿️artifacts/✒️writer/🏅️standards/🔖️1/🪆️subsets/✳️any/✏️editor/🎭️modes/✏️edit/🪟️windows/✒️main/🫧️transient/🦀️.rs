@@ -126,6 +126,7 @@ impl semio_framework_plugin::WindowTransientOwner for WriterMainWindowTransientO
     type State = WriterMainWindowTransient;
     type Mutation = WriterMainWindowTransientMutation;
 
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::owners_factory_birth_demands::<Self::State,Self::Mutation,store::ArtifactEphemeralTaskPreparationFactory<Self::State,Self::Mutation>>()}
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         publication::owners()
     }

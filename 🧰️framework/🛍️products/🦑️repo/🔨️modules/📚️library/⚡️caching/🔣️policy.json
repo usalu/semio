@@ -645,7 +645,7 @@
     },
     "strictStorage": {
       "version": 1,
-      "directory": "rust/fixed",
+      "directory": ".cache/b/r",
       "capacityBytes": 103080263680,
       "filesystemBytes": 103079215104,
       "maximumWorkspaceBytes": 4294967296,

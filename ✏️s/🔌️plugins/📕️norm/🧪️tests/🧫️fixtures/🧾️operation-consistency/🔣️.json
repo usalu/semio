@@ -1,0 +1,23 @@
+{
+  "cases": [
+    {"artifact":"🔩️en1993","leaf":"🌉️change-bridge-consequence","tag":"ChangeBridgeConsequence","collection":"bridgeFatigue","field":"consequence","argument":"newConsequence"},
+    {"artifact":"🔩️en1993","leaf":"🔁️change-fatigue-consequence","tag":"ChangeFatigueConsequence","collection":"fatigueDetails","field":"consequence","argument":"newConsequence"},
+    {"artifact":"🔩️en1993","leaf":"📏️change-buckling-length-plane","tag":"ChangeBucklingLengthPlane","collection":"bucklingLengths","field":"plane","argument":"newPlane"},
+    {"artifact":"🔩️en1993","leaf":"📏️change-buckling-length-restraint-a","tag":"ChangeBucklingLengthRestraintA","collection":"bucklingLengths","field":"restraintA","argument":"newRestraintA"},
+    {"artifact":"🔩️en1993","leaf":"📏️change-buckling-length-restraint-b","tag":"ChangeBucklingLengthRestraintB","collection":"bucklingLengths","field":"restraintB","argument":"newRestraintB"},
+    {"artifact":"🔩️en1993","leaf":"📏️change-buckling-length-sway","tag":"ChangeBucklingLengthSway","collection":"bucklingLengths","field":"sway","argument":"newSway"},
+    {"artifact":"🔩️en1993","leaf":"📏️change-fatigue-stress-relief","tag":"ChangeFatigueStressRelief","collection":"fatigueStresses","field":"relief","argument":"newRelief"},
+    {"artifact":"🔩️en1993","leaf":"📏️change-forming-gain-forming","tag":"ChangeFormingGainForming","collection":"formingGains","field":"forming","argument":"newForming"},
+    {"artifact":"🔩️en1993","leaf":"📏️change-joint-plate-group-method","tag":"ChangeJointPlateGroupMethod","collection":"jointPlates","field":"groupMethod","argument":"newGroupMethod"},
+    {"artifact":"🔩️en1993","leaf":"🧱️change-buckling-length-member-id","tag":"ChangeBucklingLengthMemberId","collection":"bucklingLengths","field":"memberId","argument":"newMemberId"},
+    {"artifact":"🔩️en1993","leaf":"🧱️change-fastened-joint-member-id","tag":"ChangeFastenedJointMemberId","collection":"fastenedJoints","field":"memberId","argument":"newMemberId"},
+    {"artifact":"🔩️en1993","leaf":"🧱️change-fatigue-stress-detail-id","tag":"ChangeFatigueStressDetailId","collection":"fatigueStresses","field":"detailId","argument":"newDetailId"},
+    {"artifact":"🔩️en1993","leaf":"🧱️change-fatigue-stress-max-case-id","tag":"ChangeFatigueStressMaxCaseId","collection":"fatigueStresses","field":"maxCaseId","argument":"newMaxCaseId"},
+    {"artifact":"🔩️en1993","leaf":"🧱️change-fatigue-stress-min-case-id","tag":"ChangeFatigueStressMinCaseId","collection":"fatigueStresses","field":"minCaseId","argument":"newMinCaseId"},
+    {"artifact":"🔩️en1993","leaf":"🧱️change-forming-gain-member-id","tag":"ChangeFormingGainMemberId","collection":"formingGains","field":"memberId","argument":"newMemberId"},
+    {"artifact":"🔩️en1993","leaf":"🧱️change-material-ductility-material-id","tag":"ChangeMaterialDuctilityMaterialId","collection":"materialDuctility","field":"materialId","argument":"newMaterialId"},
+    {"artifact":"🔩️en1993","leaf":"🧱️change-panel-steel-grade","tag":"ChangePanelSteelGrade","collection":"platedPanels","field":"steelGrade","argument":"newSteelGrade"},
+    {"artifact":"🔩️en1993","leaf":"🧱️change-panel-steel-subgrade","tag":"ChangePanelSteelSubgrade","collection":"platedPanels","field":"steelSubgrade","argument":"newSteelSubgrade"},
+    {"artifact":"🏋️en1991","leaf":"🚶️change-footbridge-assumed-service-axle","tag":"ChangeFootbridgeAssumedServiceAxle","collection":"footbridges","field":"assumedServiceAxle","argument":"newAssumedServiceAxle"}
+  ]
+}

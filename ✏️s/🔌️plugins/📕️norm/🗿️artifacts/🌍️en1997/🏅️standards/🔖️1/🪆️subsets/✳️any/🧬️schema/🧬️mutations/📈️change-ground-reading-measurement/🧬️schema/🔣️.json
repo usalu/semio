@@ -64,7 +64,7 @@
         "widget": "stepper",
         "precision": 2,
         "step": 0.1,
-        "role": "measurement",
+        "role": "value",
         "group": "measurement",
         "order": 30
       }

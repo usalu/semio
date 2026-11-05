@@ -1,0 +1,77 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "rows"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 19,
+      "maxItems": 19,
+      "items": {
+        "type": "object",
+        "required": [
+          "subset",
+          "schema",
+          "formatKind",
+          "extension",
+          "mediaType",
+          "binary",
+          "nonempty"
+        ],
+        "properties": {
+          "subset": {
+            "type": "string",
+            "minLength": 1
+          },
+          "schema": {
+            "type": "string",
+            "pattern": "^stdio\\.semio(?:\\.[a-z]+)?$"
+          },
+          "formatKind": {
+            "type": "string"
+          },
+          "extension": {
+            "const": ".semio"
+          },
+          "mediaType": {
+            "const": "application/vnd.semio"
+          },
+          "binary": {
+            "const": true
+          },
+          "nonempty": {
+            "type": "object",
+            "required": [
+              "pointer",
+              "kind",
+              "minimum"
+            ],
+            "properties": {
+              "pointer": {
+                "type": "string",
+                "pattern": "^/"
+              },
+              "kind": {
+                "enum": [
+                  "array",
+                  "object"
+                ]
+              },
+              "minimum": {
+                "const": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -64,5 +64,75 @@
     "independent-serde-output"
   ],
   "headerConstructorCalls": 1,
-  "closedHeaderDropCalls": 0
+  "closedHeaderDropCalls": 0,
+  "recordShape": {
+    "declared": [
+      [
+        0,
+        true
+      ],
+      [
+        1,
+        false
+      ]
+    ],
+    "cases": [
+      {
+        "id": "required-only",
+        "value": {
+          "0": 7
+        },
+        "allowed": true,
+        "work": 2,
+        "probes": 2
+      },
+      {
+        "id": "both-fields",
+        "value": {
+          "0": 7,
+          "1": "original β"
+        },
+        "allowed": true,
+        "work": 2,
+        "probes": 2
+      },
+      {
+        "id": "missing-required",
+        "value": {
+          "1": "original β"
+        },
+        "allowed": false,
+        "work": 1,
+        "probes": 1
+      },
+      {
+        "id": "unknown-after-required",
+        "value": {
+          "0": 7,
+          "2": "unknown"
+        },
+        "allowed": false,
+        "work": 2,
+        "probes": 2
+      },
+      {
+        "id": "too-many-fields",
+        "value": {
+          "0": 7,
+          "1": "original β",
+          "2": "unknown"
+        },
+        "allowed": false,
+        "work": 1,
+        "probes": 1
+      },
+      {
+        "id": "empty",
+        "value": {},
+        "allowed": false,
+        "work": 1,
+        "probes": 1
+      }
+    ]
+  }
 }

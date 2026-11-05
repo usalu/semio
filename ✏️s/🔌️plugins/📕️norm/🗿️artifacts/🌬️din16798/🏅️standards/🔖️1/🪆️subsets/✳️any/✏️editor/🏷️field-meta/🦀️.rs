@@ -3,7 +3,7 @@
 use semio_s_plugin_norm_app_surface::{NormFieldChoice, FieldSpec, UnitId};
 
 /// 🏷️ B2 hook: exact path, else leaf segment / known suffixes.
-pub fn din16798_field_meta(path: &str) -> Option<FieldSpec> {
+fn describe_din16798_field(path: &str) -> Option<FieldSpec> {
     if let Some(meta) = exact(path) {
         return Some(meta);
     }
@@ -124,4 +124,16 @@ fn leaf_meta(leaf: &str) -> Option<FieldSpec> {
         "designAirflowM3H" => Some(FieldSpec::quantity("Design outdoor-air capacity", "Auslegungs-Außenluftkapazität", UnitId::CubicMetrePerHour)),
         _ => None,
     }
+}
+
+/// 🛡️ Descriptive field metadata admitted by the family's actual native setter vocabulary.
+pub fn din16798_field_meta(path: &str) -> Option<FieldSpec> {
+    semio_s_plugin_norm_app_surface::admit_list_meta(
+        semio_s_plugin_norm_app_surface::admit_field_meta(
+        describe_din16798_field(path),
+        semio_s_artifact_norm_din16798_mutations::EDIT_RULES.can_set_field(path),
+        ),
+        semio_s_artifact_norm_din16798_mutations::EDIT_RULES.can_insert_item(path),
+        semio_s_artifact_norm_din16798_mutations::EDIT_RULES.can_remove_item(path, ["zones", "ventSystems"]),
+    )
 }

@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }

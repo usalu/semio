@@ -314,6 +314,12 @@ pub fn render_component_scene_step(
             semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         5 => {
+            if scene.component_kind==SurfaceKind::Paint2d {
+                match semio_framework_os_renderer_wgpu_engine_board::paint2d::advance_paint2d_pixel_selection_into(scene,hosts.window_id,ctx.input){
+                    Err(_)=>return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault,
+                    _=>{}
+                }
+            }
             let progress = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::advance_raster_composite(scene);
             if cursor.observe_external_progress(progress.completed).is_err() {
                 return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
@@ -362,6 +368,15 @@ pub fn render_component_scene_step(
             if scene.component_kind == SurfaceKind::Paint2d {
                 ctx.draw.push_scissor(bounds);
                 semio_framework_os_renderer_wgpu_engine_graph::node_graph::paint_paint2d_overlays(ctx, scene, bounds);
+                if let Some((completed,total))=semio_framework_os_renderer_wgpu_engine_board::paint2d::paint2d_pixel_selection_progress(&scene.host_id){
+                    if ctx.draw.try_reserve_retained_items(128).is_err(){return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;}
+                    let width=(bounds.w-24.0).clamp(0.0,220.0);let x=bounds.x+12.0;let y=bounds.y+12.0;
+                    let fraction=if total==0{0.0}else{completed as f32/total as f32};
+                    ctx.draw.push_rounded([x,y,width,32.0],ctx.theme.panel,ctx.theme.border_radius);
+                    ctx.draw.push_loading_border([x,y,width,32.0],ctx.theme.accent,ctx.theme.border_radius,ctx.theme.stroke_hairline);
+                    ctx.draw.push_solid([x+4.0,y+27.0,(width-8.0).max(0.0)*fraction,2.0],ctx.theme.accent);
+                    draw_text(ctx,&format!("{:.0}% · ⎋",fraction*100.0),x+8.0,y+21.0,ctx.theme.font_size_small,ctx.theme.text);
+                }
                 ctx.draw.pop_scissor();
             }
             if cursor.advance_phase().is_err() {

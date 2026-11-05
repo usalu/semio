@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "maximumCopyBytes",
+    "maximumPhysicalBytes",
+    "maximumTurns",
+    "maximumMillis",
+    "cases",
+    "expectedSchemas",
+    "acknowledgement"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "maximumCopyBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumPhysicalBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumMillis": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "parentTouched",
+          "children",
+          "parentLabel",
+          "childLabel",
+          "childCounts",
+          "expectedOperations",
+          "expectedMemberEdits"
+        ],
+        "properties": {
+          "parentTouched": {
+            "type": "boolean"
+          },
+          "children": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "parentLabel": {
+            "type": "string"
+          },
+          "childLabel": {
+            "type": "string"
+          },
+          "childCounts": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "expectedOperations": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expectedMemberEdits": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "expectedSchemas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "acknowledgement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "preserveOwnedChildDuringProducerRetirement",
+        "chargeReceiptExactlyOnce"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "preserveOwnedChildDuringProducerRetirement": {
+          "const": true
+        },
+        "chargeReceiptExactlyOnce": {
+          "const": true
+        }
+      }
+    }
+  }
+}

@@ -390,11 +390,11 @@
     {
       "root": "repository",
       "path": "rust",
-      "kind": "container"
+      "kind": "undeclared"
     },
     {
-      "root": "repository",
-      "path": "rust/fixed",
+      "root": "native",
+      "path": "b/r",
       "kind": "area",
       "id": "rust"
     },

@@ -1,0 +1,313 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "2-header",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "header",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "2-validation",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "validation",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "2-transfer",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "transfer",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "2-denied",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": false,
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied",
+        "causes": []
+      }
+    },
+    {
+      "id": "2-terminal-probe",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "2-row-failure",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "row",
+          "units": 3,
+          "physicalItems": 0,
+          "fails": true,
+          "causes": [
+            "primary",
+            "quote",
+            "allocation"
+          ]
+        }
+      ],
+      "expected": {
+        "work": 3,
+        "physicalItems": 0,
+        "outcome": "failure",
+        "causes": [
+          "primary",
+          "quote",
+          "allocation"
+        ]
+      }
+    },
+    {
+      "id": "2-failed-prefix",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "header",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "row",
+          "units": 3,
+          "physicalItems": 0,
+          "fails": true,
+          "causes": [
+            "primary",
+            "quote",
+            "allocation"
+          ]
+        }
+      ],
+      "expected": {
+        "work": 4,
+        "physicalItems": 0,
+        "outcome": "failure",
+        "causes": [
+          "primary",
+          "quote",
+          "allocation"
+        ]
+      }
+    },
+    {
+      "id": "3-header",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "header",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-validation",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "validation",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-transfer",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "transfer",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-denied",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": false,
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-terminal-probe",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-row-failure",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "row",
+          "units": 3,
+          "physicalItems": 0,
+          "fails": true,
+          "causes": [
+            "primary",
+            "quote",
+            "allocation"
+          ]
+        }
+      ],
+      "expected": {
+        "work": 3,
+        "physicalItems": 0,
+        "outcome": "failure",
+        "causes": [
+          "primary",
+          "quote",
+          "allocation"
+        ]
+      }
+    },
+    {
+      "id": "3-failed-prefix",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "header",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "row",
+          "units": 3,
+          "physicalItems": 0,
+          "fails": true,
+          "causes": [
+            "primary",
+            "quote",
+            "allocation"
+          ]
+        }
+      ],
+      "expected": {
+        "work": 4,
+        "physicalItems": 0,
+        "outcome": "failure",
+        "causes": [
+          "primary",
+          "quote",
+          "allocation"
+        ]
+      }
+    }
+  ]
+}

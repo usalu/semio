@@ -67,6 +67,17 @@ impl<A: ArtifactApp> ArtifactToolCompletion<A> {
         test()
     }
 
+    /// 🎟️ Transfers the exact original download before the enclosing caller can refuse its receipt.
+    pub fn complete_download_original(&self,source:&mut Option<ArtifactDownloadOutput>,published:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
+        cx.original_source_parent()?;
+        if *published{if source.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original published download cannot overwrite its completion").into())}return Ok(true)}
+        let Some(download)=source.as_ref()else{return Ok(false)};let metadata=download.filename.len().checked_add(download.mime_type.len()).and_then(|n|n.checked_add(download.encoding.as_ref().map_or(0,String::len))).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original download metadata extent overflow"))?;
+        if metadata>semio_framework_plugin_decl_media::ARTIFACT_OUTPUT_METADATA_BYTES||download.mime_type.is_empty()||!download.chunks.is_sealed(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original download metadata or sealed output is invalid").into())}
+        let copied=std::mem::size_of::<ArtifactDownloadOutput>()+std::mem::size_of::<EphemeralEmit<A>>()+std::mem::size_of::<bool>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied{return Ok(false)}
+        let Ok(mut value)=self.inner.try_lock()else{return Ok(false)};if value.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original download completion receiver is occupied").into())}
+        *value=Some(ArtifactToolCompletionValue::Download(Ok(source.take().unwrap()),EphemeralEmit::default()));*published=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+    }
     pub fn complete_download(&self,download:Result<ArtifactDownloadOutput,Fault>,ephemeral:EphemeralEmit<A>)->Result<(),ArtifactDownloadCompletionRejection<A>>{
         let mut value=match self.inner.try_lock(){Ok(value)=>value,Err(_)=>return Err(ArtifactDownloadCompletionRejection{download,ephemeral,fault:Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.tool-completion-busy"),"tool completion authority is busy or poisoned")})};
         if value.is_some(){return Err(ArtifactDownloadCompletionRejection{download,ephemeral,fault:Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.duplicate-output"),"app-owned tool job attempted to complete more than once")})}
@@ -104,7 +115,7 @@ pub struct ArtifactOwnedToolJobContext<A: ArtifactApp> {
     presence_peers: Option<std::sync::Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>>,
     presence_peer_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Presence>>>,
     pub app_instance_id: u32,
-    pub view_state: Option<ViewModel>,
+    pub view_state: Option<std::sync::Arc<ViewModel>>,
     pub canonical_base_revision: [u8; 32],
     pub draft_generation: u64,
     pub transient_generation: u64,
@@ -171,10 +182,10 @@ pub fn artifact_owned_tool_job_context_identity_digest(
 }
 
 impl<A: ArtifactApp> ArtifactOwnedToolJobContext<A> {
-    pub fn new(app_instance_id: u32, view_state: Option<ViewModel>, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, snapshots: ArtifactOwnedToolJobSnapshots<A>) -> Self {
+    pub fn new(app_instance_id: u32, view_state: Option<std::sync::Arc<ViewModel>>, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, snapshots: ArtifactOwnedToolJobSnapshots<A>) -> Self {
         let ArtifactOwnedToolJobSnapshots { children, draft, transient, window_config, window_transient } = snapshots;
         let identity_digest =
-            artifact_owned_tool_job_context_identity_digest(app_instance_id, view_state.as_ref(), canonical_base_revision, draft_generation, transient_generation, children.identity_digest(), (window_config.as_ref(), window_transient.as_ref()));
+            artifact_owned_tool_job_context_identity_digest(app_instance_id, view_state.as_deref(), canonical_base_revision, draft_generation, transient_generation, children.identity_digest(), (window_config.as_ref(), window_transient.as_ref()));
         Self {
             app_instance_id,
             view_state,

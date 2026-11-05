@@ -31,6 +31,7 @@ pub fn grant(demand:semio_framework_value::RetirementDemand,items:usize)->semio_
     struct RetirementWindow;
 
     impl semio_framework_plugin_window_transient::window_transient::WindowTransientOwner for RetirementWindow {
+        fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin_window_transient::window_transient::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
         const WINDOW_KIND_ID: &'static str = "canvas";
         type State = semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
         type Mutation = semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;

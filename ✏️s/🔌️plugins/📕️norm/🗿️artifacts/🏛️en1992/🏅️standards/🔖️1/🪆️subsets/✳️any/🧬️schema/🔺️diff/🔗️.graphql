@@ -275,6 +275,10 @@ type En1992MembersPatch {
   bars: En1992MembersBarsRows
   tendonPoints: En1992MembersTendonPointsRows
   studRows: En1992MembersStudRowsRows
+  punchingBetaMethod: JSON
+  punchingMomentC1: JSON
+  punchingMomentC2: JSON
+  openings: En1992MembersOpeningsRows
 }
 type En1992MembersRemoved {
   id: String!
@@ -373,7 +377,7 @@ type En1992MembersTendonPointsRows {
 }
 type En1992PlacementsInserted {
   index: Int!
-  row: LoadCaseActions!
+  row: Placement!
 }
 type En1992PlacementsModified {
   id: String!
@@ -461,7 +465,7 @@ type En1992ReinforcementGradesRows {
 }
 type En1992MembersOpeningsInserted {
   index: Int!
-  row: LoadCaseActions!
+  row: Opening!
 }
 type En1992MembersOpeningsModified {
   id: String!

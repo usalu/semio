@@ -1,0 +1,551 @@
+{
+  "schema": "semio.framework.os.plugin.source-surfaces/v1",
+  "surfaces": [
+    {
+      "owner": "energy",
+      "editorApp": "s.energy.model@1/*#editor",
+      "viewerApp": "s.energy.model@1/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-media",
+      "editorApp": "s.stdio.avi@1.0/*#editor",
+      "viewerApp": "s.stdio.avi@1.0/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-bim",
+      "editorApp": "s.stdio.bcf@2.1/*#editor",
+      "viewerApp": "s.stdio.bcf@2.1/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-binary",
+      "editorApp": "s.stdio.binary@raw/*#editor",
+      "viewerApp": "s.stdio.binary@raw/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-image",
+      "editorApp": "s.stdio.bmp@v3/*#editor",
+      "viewerApp": "s.stdio.bmp@v3/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio",
+      "editorApp": "s.stdio.csv@rfc4180/*#editor",
+      "viewerApp": "s.stdio.csv@rfc4180/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-binary",
+      "editorApp": "s.stdio.deflate@rfc1950/*#editor",
+      "viewerApp": "s.stdio.deflate@rfc1950/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-office",
+      "editorApp": "s.stdio.docx@ecma-376/*#editor",
+      "viewerApp": "s.stdio.docx@ecma-376/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-office",
+      "editorApp": "s.stdio.docx@ecma-376/strict#editor",
+      "viewerApp": "s.stdio.docx@ecma-376/strict#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-office",
+      "editorApp": "s.stdio.docx@ecma-376/transitional#editor",
+      "viewerApp": "s.stdio.docx@ecma-376/transitional#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-cad",
+      "editorApp": "s.stdio.dwg@ac1018/*#editor",
+      "viewerApp": "s.stdio.dwg@ac1018/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-cad",
+      "editorApp": "s.stdio.dwg@ac1024/*#editor",
+      "viewerApp": "s.stdio.dwg@ac1024/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-cad",
+      "editorApp": "s.stdio.dxf@r12/*#editor",
+      "viewerApp": "s.stdio.dxf@r12/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-binary",
+      "editorApp": "s.stdio.epw@energyplus/*#editor",
+      "viewerApp": "s.stdio.epw@energyplus/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-image",
+      "editorApp": "s.stdio.gif@87a/*#editor",
+      "viewerApp": "s.stdio.gif@87a/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-image",
+      "editorApp": "s.stdio.gif@89a/*#editor",
+      "viewerApp": "s.stdio.gif@89a/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-mesh",
+      "editorApp": "s.stdio.gltf@2.0/*#editor",
+      "viewerApp": "s.stdio.gltf@2.0/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio",
+      "editorApp": "s.stdio.html@5/*#editor",
+      "viewerApp": "s.stdio.html@5/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-office",
+      "editorApp": "s.stdio.idml@8.0/*#editor",
+      "viewerApp": "s.stdio.idml@8.0/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-bim",
+      "editorApp": "s.stdio.ifc@2x3/*#editor",
+      "viewerApp": "s.stdio.ifc@2x3/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-bim",
+      "editorApp": "s.stdio.ifc@2x3/cobie#editor",
+      "viewerApp": "s.stdio.ifc@2x3/cobie#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-bim",
+      "editorApp": "s.stdio.ifc@2x3/cv20#editor",
+      "viewerApp": "s.stdio.ifc@2x3/cv20#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-bim",
+      "editorApp": "s.stdio.ifc@2x3/sav#editor",
+      "viewerApp": "s.stdio.ifc@2x3/sav#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-bim",
+      "editorApp": "s.stdio.ifc@4/*#editor",
+      "viewerApp": "s.stdio.ifc@4/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-bim",
+      "editorApp": "s.stdio.ifc@4x3/*#editor",
+      "viewerApp": "s.stdio.ifc@4x3/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-image",
+      "editorApp": "s.stdio.jpg@jfif-1.01/*#editor",
+      "viewerApp": "s.stdio.jpg@jfif-1.01/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-image",
+      "editorApp": "s.stdio.jpg@jfif-1.01/baseline#editor",
+      "viewerApp": "s.stdio.jpg@jfif-1.01/baseline#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio",
+      "editorApp": "s.stdio.json@rfc8259/*#editor",
+      "viewerApp": "s.stdio.json@rfc8259/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio",
+      "editorApp": "s.stdio.json@rfc8259/i-json#editor",
+      "viewerApp": "s.stdio.json@rfc8259/i-json#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-mesh",
+      "editorApp": "s.stdio.las@1.0/*#editor",
+      "viewerApp": "s.stdio.las@1.0/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio",
+      "editorApp": "s.stdio.md@commonmark/*#editor",
+      "viewerApp": "s.stdio.md@commonmark/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-media",
+      "editorApp": "s.stdio.mp3@mpeg1-layer3/*#editor",
+      "viewerApp": "s.stdio.mp3@mpeg1-layer3/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-media",
+      "editorApp": "s.stdio.mp4@isobmff/*#editor",
+      "viewerApp": "s.stdio.mp4@isobmff/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-mesh",
+      "editorApp": "s.stdio.obj@3.0/*#editor",
+      "viewerApp": "s.stdio.obj@3.0/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-pdf",
+      "editorApp": "s.stdio.pdf@1.4/*#editor",
+      "viewerApp": "s.stdio.pdf@1.4/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-pdf",
+      "editorApp": "s.stdio.pdf@1.4/a#editor",
+      "viewerApp": "s.stdio.pdf@1.4/a#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-pdf",
+      "editorApp": "s.stdio.pdf@1.4/x#editor",
+      "viewerApp": "s.stdio.pdf@1.4/x#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-pdf",
+      "editorApp": "s.stdio.pdf@1.7/*#editor",
+      "viewerApp": "s.stdio.pdf@1.7/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-pdf",
+      "editorApp": "s.stdio.pdf@1.7/a#editor",
+      "viewerApp": "s.stdio.pdf@1.7/a#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-pdf",
+      "editorApp": "s.stdio.pdf@1.7/e#editor",
+      "viewerApp": "s.stdio.pdf@1.7/e#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-pdf",
+      "editorApp": "s.stdio.pdf@1.7/h#editor",
+      "viewerApp": "s.stdio.pdf@1.7/h#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-pdf",
+      "editorApp": "s.stdio.pdf@1.7/ua#editor",
+      "viewerApp": "s.stdio.pdf@1.7/ua#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-pdf",
+      "editorApp": "s.stdio.pdf@1.7/vt#editor",
+      "viewerApp": "s.stdio.pdf@1.7/vt#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-pdf",
+      "editorApp": "s.stdio.pdf@1.7/x#editor",
+      "viewerApp": "s.stdio.pdf@1.7/x#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-mesh",
+      "editorApp": "s.stdio.ply@1.0/*#editor",
+      "viewerApp": "s.stdio.ply@1.0/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-image",
+      "editorApp": "s.stdio.png@1.2/*#editor",
+      "viewerApp": "s.stdio.png@1.2/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-office",
+      "editorApp": "s.stdio.pptx@ecma-376/*#editor",
+      "viewerApp": "s.stdio.pptx@ecma-376/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-office",
+      "editorApp": "s.stdio.pptx@ecma-376/strict#editor",
+      "viewerApp": "s.stdio.pptx@ecma-376/strict#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-office",
+      "editorApp": "s.stdio.pptx@ecma-376/transitional#editor",
+      "viewerApp": "s.stdio.pptx@ecma-376/transitional#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/*#editor",
+      "viewerApp": "s.stdio.semio@v1/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/animation#editor",
+      "viewerApp": "s.stdio.semio@v1/animation#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/audio#editor",
+      "viewerApp": "s.stdio.semio@v1/audio#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/brep#editor",
+      "viewerApp": "s.stdio.semio@v1/brep#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/cad#editor",
+      "viewerApp": "s.stdio.semio@v1/cad#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/document#editor",
+      "viewerApp": "s.stdio.semio@v1/document#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/drawing#editor",
+      "viewerApp": "s.stdio.semio@v1/drawing#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/flow#editor",
+      "viewerApp": "s.stdio.semio@v1/flow#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/graph#editor",
+      "viewerApp": "s.stdio.semio@v1/graph#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/image#editor",
+      "viewerApp": "s.stdio.semio@v1/image#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/kit#editor",
+      "viewerApp": "s.stdio.semio@v1/kit#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/mesh#editor",
+      "viewerApp": "s.stdio.semio@v1/mesh#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/model#editor",
+      "viewerApp": "s.stdio.semio@v1/model#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/object#editor",
+      "viewerApp": "s.stdio.semio@v1/object#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/presentation#editor",
+      "viewerApp": "s.stdio.semio@v1/presentation#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/table#editor",
+      "viewerApp": "s.stdio.semio@v1/table#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/text#editor",
+      "viewerApp": "s.stdio.semio@v1/text#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/value#editor",
+      "viewerApp": "s.stdio.semio@v1/value#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-semio",
+      "editorApp": "s.stdio.semio@v1/video#editor",
+      "viewerApp": "s.stdio.semio@v1/video#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-cad",
+      "editorApp": "s.stdio.step@ap214/*#editor",
+      "viewerApp": "s.stdio.step@ap214/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-cad",
+      "editorApp": "s.stdio.step@ap214/cc1#editor",
+      "viewerApp": "s.stdio.step@ap214/cc1#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-cad",
+      "editorApp": "s.stdio.step@ap214/cc2#editor",
+      "viewerApp": "s.stdio.step@ap214/cc2#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-cad",
+      "editorApp": "s.stdio.step@ap214/cc3#editor",
+      "viewerApp": "s.stdio.step@ap214/cc3#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-cad",
+      "editorApp": "s.stdio.step@ap214/cc4#editor",
+      "viewerApp": "s.stdio.step@ap214/cc4#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-cad",
+      "editorApp": "s.stdio.step@ap214/cc5#editor",
+      "viewerApp": "s.stdio.step@ap214/cc5#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-cad",
+      "editorApp": "s.stdio.step@ap214/cc6#editor",
+      "viewerApp": "s.stdio.step@ap214/cc6#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-mesh",
+      "editorApp": "s.stdio.stl@ascii/*#editor",
+      "viewerApp": "s.stdio.stl@ascii/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-image",
+      "editorApp": "s.stdio.svg@1.1/*#editor",
+      "viewerApp": "s.stdio.svg@1.1/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-image",
+      "editorApp": "s.stdio.svg@1.1/basic#editor",
+      "viewerApp": "s.stdio.svg@1.1/basic#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-image",
+      "editorApp": "s.stdio.svg@1.1/tiny#editor",
+      "viewerApp": "s.stdio.svg@1.1/tiny#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-image",
+      "editorApp": "s.stdio.tiff@6.0/*#editor",
+      "viewerApp": "s.stdio.tiff@6.0/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-image",
+      "editorApp": "s.stdio.tiff@6.0/baseline#editor",
+      "viewerApp": "s.stdio.tiff@6.0/baseline#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio",
+      "editorApp": "s.stdio.tsv@iana/*#editor",
+      "viewerApp": "s.stdio.tsv@iana/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio",
+      "editorApp": "s.stdio.txt@utf-8/*#editor",
+      "viewerApp": "s.stdio.txt@utf-8/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-media",
+      "editorApp": "s.stdio.wav@riff-pcm/*#editor",
+      "viewerApp": "s.stdio.wav@riff-pcm/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-office",
+      "editorApp": "s.stdio.xlsx@ecma-376/*#editor",
+      "viewerApp": "s.stdio.xlsx@ecma-376/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-office",
+      "editorApp": "s.stdio.xlsx@ecma-376/strict#editor",
+      "viewerApp": "s.stdio.xlsx@ecma-376/strict#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-office",
+      "editorApp": "s.stdio.xlsx@ecma-376/transitional#editor",
+      "viewerApp": "s.stdio.xlsx@ecma-376/transitional#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio",
+      "editorApp": "s.stdio.xml@1.0/*#editor",
+      "viewerApp": "s.stdio.xml@1.0/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio",
+      "editorApp": "s.stdio.xml@1.0/valid#editor",
+      "viewerApp": "s.stdio.xml@1.0/valid#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-binary",
+      "editorApp": "s.stdio.zip@2.0/*#editor",
+      "viewerApp": "s.stdio.zip@2.0/*#viewer",
+      "naturalFile": "declared"
+    },
+    {
+      "owner": "stdio-binary",
+      "editorApp": "s.stdio.zip@2.0/iso21320#editor",
+      "viewerApp": "s.stdio.zip@2.0/iso21320#viewer",
+      "naturalFile": "declared"
+    }
+  ]
+}

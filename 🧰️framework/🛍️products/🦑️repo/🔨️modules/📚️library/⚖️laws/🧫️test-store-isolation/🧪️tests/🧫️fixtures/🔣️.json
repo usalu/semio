@@ -9,7 +9,7 @@
     {"name": "checkout environment variable by element access", "source": "repositoryCacheBudgetV1(process.env[\"SEMIO_WORKSPACE_ROOT\"]!);", "findings": [{"line": 1, "rule": "checkout-store-call"}]},
     {"name": "checkout joined with a live lease directory", "source": "test(\"x\",async()=>{\n const live=join(process.cwd(),\".cache/b/l/m/data\");\n});", "findings": [{"line": 2, "rule": "checkout-store-path"}]},
     {"name": "checkout in a template naming the graph store", "source": "const path=`${process.cwd()}/.cache/b/g/m`;", "findings": [{"line": 1, "rule": "checkout-store-path"}]},
-    {"name": "checkout joined with the rust partition", "source": "const rust=path.join(process.cwd(),\".🧬semio/🦑️repo/⚡️cache/rust/fixed\");", "findings": [{"line": 1, "rule": "checkout-store-path"}]},
+    {"name": "checkout joined with the rust partition", "source": "const rust=path.join(process.cwd(),\".cache/b/r\");", "findings": [{"line": 1, "rule": "checkout-store-path"}]},
     {"name": "lease acquisition in the checkout's lease store", "source": "await acquireQueuedResourceLease({directory:join(process.cwd(),\".cache/b/l/m/data\"),resource:\"r\",mode:\"shared\"});", "findings": [{"line": 1, "rule": "checkout-store-call"}, {"line": 1, "rule": "checkout-store-path"}]},
     {"name": "private repository root", "source": "const repository=await privateRepositoryWorkspaceV1();\nawait withRepositoryCacheStoreV1(repository.root,\"products\",original,control,body);\nconst live=join(repository.root,\".cache/b/l/m/data\");", "findings": []},
     {"name": "checkout as the working directory of a child", "source": "await captureOwnedCommandV1(process.execPath,[\"test\",file],process.cwd(),{control});", "findings": []},

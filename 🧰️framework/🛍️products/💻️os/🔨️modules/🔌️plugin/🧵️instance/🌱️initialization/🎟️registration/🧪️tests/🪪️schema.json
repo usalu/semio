@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.framework.plugin.original-document-identity/v1",
+  "title": "Original Document Identity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "controllerId",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.framework.plugin.original-document-identity/v1"
+    },
+    "controllerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "distinct",
+        "sameController",
+        "firstLength",
+        "secondLength"
+      ],
+      "properties": {
+        "distinct": {
+          "const": true
+        },
+        "sameController": {
+          "const": true
+        },
+        "firstLength": {
+          "const": 36
+        },
+        "secondLength": {
+          "const": 36
+        }
+      }
+    }
+  }
+}

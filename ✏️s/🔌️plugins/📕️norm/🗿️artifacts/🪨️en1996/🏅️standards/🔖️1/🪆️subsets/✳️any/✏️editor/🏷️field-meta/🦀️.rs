@@ -265,6 +265,18 @@ const TABLE: &[(&str, FieldSpec)] = &[
 ];
 
 /// 🏷️ Exact / `[]`-wildcard / longest-prefix metadata for the EN 1996 masonry subject; the inputs of a design case (`cases[id=…].numbers[id=KEY].value`) take their unit, label, bounds and choices from the typed case-input vocabulary.
-pub fn en1996_field_meta(path: &str) -> Option<FieldSpec> {
+fn describe_en1996_field(path: &str) -> Option<FieldSpec> {
     case_input_field_meta(semio_s_artifact_norm_en1996_schema::checks::masonry::case_inputs::VOCABULARY, path).or_else(|| lookup_norm_field_meta(TABLE, path))
+}
+
+/// 🛡️ Descriptive field metadata admitted by the family's actual native setter vocabulary.
+pub fn en1996_field_meta(path: &str) -> Option<FieldSpec> {
+    semio_s_plugin_norm_app_surface::admit_list_meta(
+        semio_s_plugin_norm_app_surface::admit_field_meta(
+        describe_en1996_field(path),
+        semio_s_artifact_norm_en1996_mutations::EDIT_RULES.can_set_field(path),
+        ),
+        semio_s_artifact_norm_en1996_mutations::EDIT_RULES.can_insert_item(path),
+        semio_s_artifact_norm_en1996_mutations::EDIT_RULES.can_remove_item(path, semio_s_artifact_norm_en1996_mutations::ID_REMOVALS.iter().map(|rule| rule.path)),
+    )
 }

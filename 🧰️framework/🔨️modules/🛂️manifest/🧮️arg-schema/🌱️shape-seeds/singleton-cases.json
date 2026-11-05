@@ -1,0 +1,97 @@
+{
+  "cases": [
+    {
+      "id": "minimum-and-explicit-array-default-stay-separate",
+      "schema": {
+        "kind": "array",
+        "items": {
+          "kind": "number",
+          "min": 2.25,
+          "integer": true
+        },
+        "minItems": 2
+      },
+      "default": [
+        7
+      ],
+      "expectedSeed": [
+        7
+      ],
+      "singleton": [
+        3
+      ]
+    },
+    {
+      "id": "nested-required-item",
+      "schema": {
+        "kind": "array",
+        "items": {
+          "kind": "object",
+          "fields": [
+            {
+              "id": "/label",
+              "label": {
+                "native": {
+                  "en": "Label",
+                  "de": "Bezeichnung"
+                },
+                "reuse": {
+                  "en": "Label",
+                  "de": "Bezeichnung"
+                }
+              },
+              "schema": {
+                "kind": "string"
+              },
+              "required": true,
+              "default": "declared"
+            }
+          ]
+        }
+      },
+      "expectedSeed": [],
+      "singleton": [
+        {
+          "label": "declared"
+        }
+      ]
+    },
+    {
+      "id": "many-reference-is-one-enterable-reference",
+      "schema": {
+        "kind": "reference",
+        "kinds": [
+          "node"
+        ],
+        "domain": "vortex",
+        "granularity": "node",
+        "many": true,
+        "minItems": 1
+      },
+      "expectedSeed": [],
+      "singleton": [
+        ""
+      ]
+    },
+    {
+      "id": "single-reference-has-no-singleton",
+      "schema": {
+        "kind": "reference",
+        "kinds": [
+          "node"
+        ],
+        "many": false
+      },
+      "expectedSeed": "",
+      "singleton": null
+    },
+    {
+      "id": "scalar-has-no-singleton",
+      "schema": {
+        "kind": "boolean"
+      },
+      "expectedSeed": false,
+      "singleton": null
+    }
+  ]
+}

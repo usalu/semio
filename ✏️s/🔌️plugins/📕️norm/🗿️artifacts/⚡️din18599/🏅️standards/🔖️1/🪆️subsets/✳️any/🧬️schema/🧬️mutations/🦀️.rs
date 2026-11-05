@@ -14,7 +14,7 @@ use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 //#region 🔖️Leaves
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use crate::edit_rules::{resolve_edit, EDIT_RULES};
+pub use crate::edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};
 
 use semio_s_artifact_norm_din18599_mut_building::change_building_category;
 use semio_s_artifact_norm_din18599_mut_building::change_attachment;

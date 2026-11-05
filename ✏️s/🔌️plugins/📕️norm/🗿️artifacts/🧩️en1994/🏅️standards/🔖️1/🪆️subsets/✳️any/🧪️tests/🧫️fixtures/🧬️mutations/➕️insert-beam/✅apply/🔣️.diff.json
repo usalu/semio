@@ -41,6 +41,17 @@
           "barSpacingM": 0.15,
           "wkLimitM": 0.0003,
           "nCycles": 2000000.0,
+          "adjacentSpanM": 0.0,
+          "patchBearingLengthM": 0.1,
+          "bridgeLanes": 0,
+          "crackedLengthFraction": 0.15,
+          "studTransverseSpacingM": 0.0,
+          "studEdgeDistanceM": 0.0,
+          "transverseAsTopM2PerM": 0.0,
+          "endPlateWidthM": 0.0,
+          "endPlateHeightM": 0.0,
+          "endZoneLengthM": 0.0,
+          "reinforcementProduct": "hotRolled",
           "actions": [
             {
               "id": "G-steel",

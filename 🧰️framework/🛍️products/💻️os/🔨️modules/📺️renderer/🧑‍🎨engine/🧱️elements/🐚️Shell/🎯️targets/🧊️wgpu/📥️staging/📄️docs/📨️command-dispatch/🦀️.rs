@@ -22,7 +22,7 @@ impl DocumentState {
         };
         let window_kind_id = app.window_kinds.first().id.clone();
         let window_instance_id = view_state.window_id.clone().unwrap_or_else(|| window_kind_id.clone());
-        let invocation = semio_framework::manifest::ActionInvocation {
+        let invocation = semio_framework::manifest::ActionInvocation { expected_document_revision:None,
             address: semio_framework::manifest::ActionAddress {
                 plugin_id: program.plugin_id.clone(),
                 app_id: app.id.clone(),

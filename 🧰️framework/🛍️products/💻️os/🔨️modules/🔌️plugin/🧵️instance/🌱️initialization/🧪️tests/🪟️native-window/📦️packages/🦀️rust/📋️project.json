@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-native-identity-tests-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "events": [
+    {
+      "scope": "outer",
+      "completed": 0,
+      "cancelled": false
+    },
+    {
+      "scope": "inner",
+      "completed": 128,
+      "cancelled": false
+    },
+    {
+      "scope": "outer",
+      "completed": 256,
+      "cancelled": true
+    }
+  ],
+  "expected": {
+    "outer": [
+      0,
+      256
+    ],
+    "inner": [
+      128
+    ],
+    "verdicts": [
+      true,
+      true,
+      false
+    ],
+    "afterUnwind": "outer",
+    "authority": "unchanged"
+  }
+}

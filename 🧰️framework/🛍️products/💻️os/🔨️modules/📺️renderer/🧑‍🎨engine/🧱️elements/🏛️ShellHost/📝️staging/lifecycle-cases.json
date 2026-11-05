@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {
+      "id": "two-overlapping-opens",
+      "requests": [
+        "first",
+        "last"
+      ],
+      "queried": [
+        "last"
+      ]
+    },
+    {
+      "id": "burst-overlapping-opens",
+      "requests": [
+        "first",
+        "second",
+        "third",
+        "last"
+      ],
+      "queried": [
+        "last"
+      ]
+    }
+  ],
+  "closing": {
+    "id": "repeat-close-keeps-original-release",
+    "pending": true,
+    "closeCalls": 1
+  },
+  "cancel": {
+    "id": "cancel-while-replacement-waits",
+    "queried": [
+      "first"
+    ],
+    "results": [
+      "cancelled",
+      "cancelled",
+      "cancelled"
+    ]
+  },
+  "retirement": {
+    "id": "failed original release stays owned and a later close retries it",
+    "error": "original retirement pending",
+    "firstFinished": false,
+    "attempts": 2,
+    "result": "cancelled"
+  },
+  "openingRevision": {
+    "initial": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "current": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "generation": "1"
+  },
+  "committedRelease": {
+    "id": "committed action survives a later cleanup retry",
+    "firstFinished": false,
+    "result": "executed",
+    "closeCalls": 2
+  },
+  "lateLease": {
+    "result": "cancelled",
+    "firstAttempts": 1,
+    "finalAttempts": 2
+  }
+}

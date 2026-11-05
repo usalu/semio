@@ -81,7 +81,7 @@ fn generation2d_retained_reduce(
     match command {
         Generation2dCommand::NodeGraphViewport(payload) => {
             let context = context.ok_or_else(|| Fault::from("generation2d-main-window-context-required"))?;
-            let view = context.view_state.as_ref().ok_or_else(|| Fault::from("generation2d-main-window-view-required"))?;
+            let view = context.view_state.as_deref().ok_or_else(|| Fault::from("generation2d-main-window-view-required"))?;
             let base = flow_window::config::from_snapshot(context.window_config.as_ref());
             let mut next = base.clone();
             next.viewport = payload.viewport;
@@ -139,7 +139,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
             return Err(Fault::from("generation2d-session-command-work-repeated"));
         }
         self.consumed = true;
-        let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+        let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
         let servable = semio_s_artifact_procedural_2d_preview_eval::may_rearm(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
             let mut emit = owner.with_session(|session| generation2d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session))??;
@@ -343,7 +343,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
         let result = prepare_command(input.command, &doc, &cfg).ok_or_else(|| Fault::from("generation2d-generation-command-route-rejected"))?;
         let mut emit = result.emit;
         if result.publishes_preview {
-            let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+            let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
             let servable = semio_s_artifact_procedural_2d_preview_eval::may_rearm(&input.snapshot.host_snapshot);
             self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained))?;
         }

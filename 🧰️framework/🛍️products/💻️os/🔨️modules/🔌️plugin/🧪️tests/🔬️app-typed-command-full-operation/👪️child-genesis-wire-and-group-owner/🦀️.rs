@@ -3,6 +3,8 @@
     use semio_framework_plugin_decl_emission::ChildEmit;
 #[test]
     fn document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root() {
+        let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
+        let cx = original_scope.cx();
         let canonical_revision = [3; 32];
         let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(93), semio_framework_job::RevisionId(u64::from_be_bytes([3; 8])), semio_framework_job::Generation(0), 17);
         let mut presence = store::PresenceStore::<PublicationPresence, PublicationPresenceMutation>::new(PublicationPresence::default());
@@ -12,7 +14,7 @@
         let factory = TwoTurnPublicationPresencePreparationFactory;
         let mut publication = presence.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&factory), Some(root_factory.clone())).expect("two-turn presence publication admits");
         let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 64, maximum_release_bytes: 64, maximum_depth: 128 };
-        assert!(matches!(presence.advance_publish_one(&mut publication, grant), Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(_))));
+        assert!(matches!(advance_cancellation_presence(&mut presence, &mut publication, grant, cx), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(_)));
         assert!(std::ptr::eq(initial_root.get(), presence.local()));
         assert_eq!(presence.generation_now(), 0);
 

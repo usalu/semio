@@ -51,7 +51,7 @@ impl DrawingJobOutcomes {
     }
 
     /// ▶️ Lends the outcome the turn decided, paying one publication frontier for a fault.
-    pub fn lend<'a>(&'a mut self, turn: DrawingJobTurn, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    pub fn lend<'a>(&'a mut self, turn: DrawingJobTurn, cx: &mut StepContext<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
         match turn {
             DrawingJobTurn::Yield => JobOutcomeBorrow::admit_yield(cx),
             DrawingJobTurn::Complete => JobOutcomeBorrow::admit_complete(cx, None, None),
@@ -80,16 +80,14 @@ impl DrawingJobOutcomes {
         self.publication.retirement_demands()
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
         self.publication.close_step(grant)
     }
 
     /// 🔁️ Maps one paid publication close receipt onto the job close protocol; completion is the job's own terminal witness.
-    pub fn close_job_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
-        Ok(match self.publication.close_step(grant) {
-            Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-            Err(error) => return Err(error),
-        })
+    pub fn close_job_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<InteractiveJobCloseStep> {
+        let turn=self.publication.close_step(grant);
+        semio_framework_value::RetainedWorkOutcome{work:turn.work,result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})}
     }
 }
 

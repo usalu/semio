@@ -1,7 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC2",
-  "cases": [],
   "structureKind": "building",
   "steelFYPa": 460000000.0,
   "beams": [
@@ -222,6 +220,7 @@
   "fireRating": "r60",
   "insulationThicknessM": 0.025,
   "fatigueDetail": "studWelded",
+  "reliabilityClass": "RC2",
   "studs": [
     {
       "id": "beam-B1-stud-0",
@@ -543,5 +542,6 @@
       "heightM": 0.095,
       "fUPa": 450000000.0
     }
-  ]
+  ],
+  "cases": []
 }

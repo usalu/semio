@@ -1,12 +1,12 @@
 //! 🫴️ Literal IFC Pack ingress keeps the original source, receiving ledger and partial graph until funded closure.
 use super::{Frame, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA, owned_graph::GraphReceiving};
 use semio_framework_dsl_record::receiving::owned::{OwnedSlot, funds, metadata, receipt};
-use semio_framework_os_kernel::{ArtifactPackReceiving, NativeSnapshotDecodeOwner, OriginalArtifactPackReceiving, OriginalArtifactSnapshotReceiving, OriginalSnapshotRecordReceiving};
+use semio_framework_os_kernel::{ArtifactPackReceiving, NativeSnapshotDecodeOwner, OriginalArtifactPackReceiving, OriginalArtifactSnapshotReceiving, OriginalSnapshotRecordReceiving, NativeSnapshotFailure};
 use semio_framework_value::{
     RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetireOwned, RetirementDemand, ValueError, ValueRefusalKind,
     retirement::{RetireOwned as RetireOwnedTrait, RetirementCursor, RetirementStep},
 };
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeCloseControl, NativeDecodeControl};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeCloseControl, NativeDecodeControl, OriginalReceivingPrimary};
 use std::mem::size_of;
 fn invalid() -> ValueError {
     ValueError::literal(ValueRefusalKind::InvalidValue, "original IFC Pack receiving changed its source or original receiving owner")
@@ -108,39 +108,27 @@ impl OriginalArtifactSnapshotReceiving<IfcSnapshot> for IfcOriginalPackReceiving
             _ => Ok(Default::default()),
         }
     }
-    fn step(&mut self, source: &[u8], native: &mut NativeDecodeControl<'_>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
-        self.control(native)?;
-        let demand = self.demands(source, body)?;
-        if self.closing || self.closed || self.phase >= 3 || !funds(grant, demand) {
-            return Ok(Default::default());
-        }
-        native.checkpoint()?;
-        match self.phase {
-            0 => {
-                let Some((record, p)) = OriginalSnapshotRecordReceiving::admit(source, STDIO_IFC_DOCUMENT_SCHEMA, self.limits.clone(), native, grant)? else {
-                    return Ok(Default::default());
-                };
-                *self.record.value = Some(record);
-                self.phase = 1;
-                Ok(p)
-            }
-            1 => {
-                let record = self.record.value.as_mut().unwrap();
-                if record.is_ready() {
-                    let p = record.take_into(&mut self.graph.frame.value, grant)?;
-                    if self.graph.frame.value.is_some() {
-                        self.phase = 2;
-                    }
-                    Ok(p)
-                } else {
-                    record.step(source, native, body, grant).result.map_err(|e| {
-                        e.primary.or(e.quote_refusal).or(e.allocation_refusal).unwrap_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "original native construction refused"))
-                    })
+    fn step(&mut self, source: &[u8], native: &mut NativeDecodeControl<'_>, body: usize, grant: RetainedCloneGrant) -> RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary> {
+        if let Err(error)=self.control(native){return RetainedWorkOutcome{result:Err(error.into()),work:0}}
+        let demand=match self.demands(source,body){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
+        if self.closing||self.closed||self.phase>=3||!funds(grant,demand){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+        if self.phase==1&&!self.record.value.as_ref().unwrap().is_ready(){return self.record.value.as_mut().unwrap().step(source,native,body,grant)}
+        if self.phase==2{return self.graph.step(native,body,grant)}
+        let mut work=0;
+        let requested=grant;let turn=native.receive_construction_step(demand,|native,granted|{let grant=requested.restricted_by(granted);
+            let result=(||{
+                native.checkpoint()?;
+                if !native.prepare_work(1)?{return Ok(Default::default())}
+                native.commit_work(1)?;work=1;
+                match self.phase {
+                    0=>{let Some((record,p))=OriginalSnapshotRecordReceiving::admit(source,STDIO_IFC_DOCUMENT_SCHEMA,self.limits.clone(),native,grant)?else{return Ok(Default::default())};*self.record.value=Some(record);self.phase=1;Ok(p)},
+                    1=>{let p=self.record.value.as_mut().unwrap().take_into(&mut self.graph.frame.value,grant)?;if self.graph.frame.value.is_some(){self.phase=2}Ok(p)},
+                    _=>unreachable!(),
                 }
-            }
-            2 => self.graph.step(native, body, grant),
-            _ => Ok(Default::default()),
-        }
+            })();
+            RetainedWorkOutcome{result:result.map(RetainedCloneStep::Progress),work}
+        });
+        RetainedWorkOutcome{result:turn.result.map(|step|step.progress()).map_err(|failure|OriginalReceivingPrimary{primary:failure.primary,quote_refusal:failure.receipt_refusal,allocation_refusal:None,progress:failure.progress}),work:turn.work}
     }
     fn is_ready(&self) -> bool {
         !self.closing && !self.closed && self.phase == 2 && self.graph.is_ready()
@@ -167,43 +155,38 @@ impl OriginalArtifactSnapshotReceiving<IfcSnapshot> for IfcOriginalPackReceiving
         }
         Ok(metadata::<u8>())
     }
-    fn close_step(&mut self, native: &mut dyn NativeDecodeCloseControl, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        self.control(native)?;
-        let d = self.close_demands(grant.maximum_copy_bytes)?;
-        if !funds(grant, d) {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
-        }
-        native.charge(d.capacity_bytes)?;
-        self.retire_step(grant).result
+    fn close_step(&mut self, native: &mut dyn NativeDecodeCloseControl, grant: RetainedCloneGrant) -> RetainedWorkOutcome<RetainedCloneStep> {
+        let result=self.control(native).and_then(|()|self.close_demands(grant.maximum_copy_bytes));
+        let demand=match result{Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+        if !funds(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+        if let Err(error)=native.charge(demand.capacity_bytes){return RetainedWorkOutcome{result:Err(error),work:0}}
+        self.retire_step(grant)
     }
     fn terminal_is_empty(&self) -> bool {
         self.closed && self.graph.terminal_is_empty() && self.record.terminal_is_empty()
     }
 }
 impl ArtifactPackReceiving for IfcSnapshot {
-    fn receive_pack(source: &[u8], owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
-        owner.receive_nested::<IfcOriginalPackReceiving, Self>(|slot, original| {
-            let grant = original.remaining_grant();
-            let Some((rx, p)) = Self::admit_original_pack(source, store::mounted_pack_rt::PackLimits::default(), original.native(), grant)? else {
-                return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "original IFC Pack receiving birth exceeds caller grant"));
-            };
-            *slot = Some(rx);
-            original.record_progress(p)?;
-            original.drive_cursor(slot, |rx, native, grant| {
-                let result = if rx.is_ready() {
-                    let mut out = None;
-                    rx.take_into(&mut out, grant).map(|p| (out, p))
-                } else {
-                    rx.step(source, native, grant.maximum_copy_bytes.min(4096), grant).map(|p| (None, p))
-                };
-                match result {
-                    Ok((out, p)) => (Ok(out), p),
-                    Err(e) => {
-                        let p = e.retained_progress();
-                        (Err(e), p)
-                    }
-                }
-            })
+    fn receive_pack(source:&[u8],owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<Self,NativeSnapshotFailure>{
+        owner.receive_nested::<IfcOriginalPackReceiving,Self,NativeSnapshotFailure>(|slot,original|{
+            let mut work=0;
+            let result=(||{
+                let grant=original.remaining_grant();
+                if !funds(grant,Self::original_pack_birth_demand()){return Err(NativeSnapshotFailure::from(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original IFC Pack receiving birth exceeds caller grant")))}
+                work=1;
+                let Some((receiver,progress))=Self::admit_original_pack(source,store::mounted_pack_rt::PackLimits::default(),original.native(),grant)?else{return Err(NativeSnapshotFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"admitted original IFC receiver omitted its header")))};
+                *slot=Some(receiver);original.record_progress(progress)?;
+                let turn=original.drive_cursor::<IfcOriginalPackReceiving,Self,NativeSnapshotFailure>(slot,|receiver,native,grant|{
+                    if receiver.is_ready(){
+                        let demand=match receiver.take_demand(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
+                        if !funds(grant,demand){return RetainedWorkOutcome{result:Ok((None,Default::default())),work:0}}
+                        let mut output=None;let result=receiver.take_into(&mut output,grant).map(|progress|(output,progress)).map_err(Into::into);
+                        RetainedWorkOutcome{result,work:1}
+                    }else{let turn=receiver.step(source,native,grant.maximum_copy_bytes.min(4096),grant);RetainedWorkOutcome{result:turn.result.map(|progress|(None,progress)).map_err(Into::into),work:turn.work}}
+                });
+                work=work.checked_add(turn.work).expect("finite IFC receiving work fits");turn.result
+            })();
+            RetainedWorkOutcome{result,work}
         })
     }
 }

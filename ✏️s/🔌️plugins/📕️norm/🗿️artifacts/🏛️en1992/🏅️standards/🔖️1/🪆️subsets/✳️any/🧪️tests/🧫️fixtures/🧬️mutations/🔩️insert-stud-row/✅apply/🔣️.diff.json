@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "title": null,
   "designWorkingLifeYears": null,
   "deltaCDev": null,
@@ -37,9 +36,6 @@
           "punchingColumnDepth": null,
           "punchingColumnPosition": null,
           "punchingAsw": null,
-          "punchingBetaMethod": null,
-          "punchingMomentC1": null,
-          "punchingMomentC2": null,
           "prestressForce": null,
           "prestressArea": null,
           "prestressEccentricity": null,
@@ -81,6 +77,9 @@
             "moved": [],
             "modified": []
           },
+          "punchingBetaMethod": null,
+          "punchingMomentC1": null,
+          "punchingMomentC2": null,
           "openings": null
         }
       }
@@ -88,5 +87,11 @@
   },
   "anchors": null,
   "placements": null,
-  "cases": null
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "reliabilityClass": null
 }

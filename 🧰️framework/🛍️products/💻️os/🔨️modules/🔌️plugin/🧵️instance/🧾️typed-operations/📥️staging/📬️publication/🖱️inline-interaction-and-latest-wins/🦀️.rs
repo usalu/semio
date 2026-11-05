@@ -48,8 +48,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let Some(operation_id) = self.tools.latest_wins_order.items.front().copied() else { return Ok(()) };
         let mut pending = self.tools.latest_wins_commands.remove(operation_id).expect("exact pending keyed command");
         if pending.receipt.is_some(){self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Ok(());}
-        if pending.closing&&!pending.metadata_copy_is_empty(){let result=pending.close_metadata_copy(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
-        if pending.context_phase>0&&pending.context_phase<5{let result=pending.prepare_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
+        if pending.closing&&!pending.context_metadata_is_empty(){let result=pending.close_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
+        if pending.context_phase>0&&pending.context_phase<3{let result=pending.prepare_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
         if !pending.closing&&pending.lease.is_none(){
             let result=pending.admit_original_lease(&mut self.tools.tool_cancellations,cx);
             self.tools.latest_wins_commands.insert_admitted(operation_id,pending);
@@ -58,7 +58,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         if !pending.closing{
             let before=cx.retained_progress();
-            match self.stores.window_config_store.ensure_for_view(pending.metadata()?.view_state.as_ref(),cx){
+            match self.stores.window_config_store.ensure_for_view(pending.metadata()?.view_state.as_deref(),cx){
                 Ok(true) if cx.retained_progress()==before=>{},
                 Ok(_)=>{self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Ok(());},
                 Err(error)=>{self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Err(error.into());},
@@ -87,7 +87,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             }
         }
         if ready && !pending.closing {
-            if pending.context_phase<5{let result=pending.prepare_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
+            if pending.context_phase<3{let result=pending.prepare_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
             let command = pending.command.take().expect("accepted latest-wins command owner");
             let admission = pending.admission.take().expect("accepted latest-wins exact raw admission");
             let lease = pending.lease.take().expect("accepted latest-wins cancellation lease");
@@ -101,12 +101,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         if pending.closing && pending.command_owners_are_empty() {
             pending.validate_original(cx)?;
-            let message=b"latest-wins command admission cancelled or rejected before worker publication";
-            let page_bytes=semio_framework_plugin_job::TYPED_OPERATION_RESULT_PAGE_BYTES;
+
             let mut demand=MountedTypedCommandFullOperation::<A>::original_emission_birth_demands();
-            demand.capacity_bytes+=page_bytes;demand.copy_bytes+=message.len()+2*size_of::<TypedOperationResultPage>();
-            let mut output=None;
-            let admitted=semio_framework_job::admit_original_construction(cx,&mut output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:0,depth:demand.depth},|_|{let result=(||{
+            demand.copy_bytes+=2*size_of::<semio_framework_plugin_retained_command::typed_operation::pending_result_page::PublicationPagePlan>();
+            let mut admitted=false;
+            cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,demand,|_|{let result=(||{
             let mut mounted=Box::write(Box::<MountedTypedCommandFullOperation<A>>::new_uninit(),MountedTypedCommandFullOperation::<A>{
                 verb:String::new(),
                 meta: pending.meta.take().expect("cancelled admission retains original metadata"),
@@ -146,7 +145,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 owned_child_result_pending: false,
                 captured_child_content:None,
                 captured_child_content_generation: 0,
-                result_page: None,
+                page_publication:semio_framework_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None,
                 diagnostics: None,
                 result_page_presented: false,
                 result_sequence: 0,
@@ -169,11 +168,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 retained_close_fault: None, retained_close_fault_retirement:None,retained_close_fault_refusal:None,
                 stage: MountedTypedCommandFullOperationStage::Publishing,
             });
-            let mut bytes=Vec::with_capacity(page_bytes);bytes.extend_from_slice(message);
-            mounted.queue_page(TypedOperationResultPage::from_original(mounted.next_token(),TypedOperationResultLane::Fault,bytes,message.len())).expect("fixed original fault page fits empty mounted slot");
-            Ok((mounted,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
+            mounted.page_publication.plan=Some(semio_framework_plugin_retained_command::typed_operation::pending_result_page::PublicationPagePlan{token:mounted.next_token(),intent:semio_framework_plugin_retained_command::typed_operation::pending_result_page::PublicationPageIntent::Raw{lane:TypedOperationResultLane::Fault,reason:semio_framework_plugin_retained_command::typed_operation::pending_result_page::PublicationRawReason::AdmissionCancelled}});
+            self.tools.tool_operations.insert_admitted(operation_id,mounted);admitted=true;
+            Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;Ok(())})?;
             if !admitted{self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Ok(())}
-            self.tools.tool_operations.insert_admitted(operation_id,output.unwrap());
             self.tools.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
             assert_eq!(self.tools.latest_wins_order.pop(), Some(operation_id));
         } else {

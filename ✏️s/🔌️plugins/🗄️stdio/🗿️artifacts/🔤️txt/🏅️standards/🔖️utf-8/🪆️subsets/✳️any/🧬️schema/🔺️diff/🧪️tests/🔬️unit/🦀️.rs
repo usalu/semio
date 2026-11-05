@@ -1,3 +1,4 @@
+use protocol::command::{ColdMutationDiff, ColdDiffAlgebra};
 use crate::schema::snapshot::LineEnding;
 use crate::TxtSnapshot;
 use crate::standards::v_utf_8::subsets::any::schema::diff::*;

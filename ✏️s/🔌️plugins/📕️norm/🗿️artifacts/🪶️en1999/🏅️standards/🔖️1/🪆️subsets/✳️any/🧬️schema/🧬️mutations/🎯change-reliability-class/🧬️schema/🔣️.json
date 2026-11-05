@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newReliabilityClass"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeReliabilityClass"
+    },
     "newReliabilityClass": {
       "type": "string",
       "enum": [

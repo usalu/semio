@@ -42,6 +42,8 @@ pub use ply_diff_aggregate::*;
 #[path = "🧵️codec-and-demo-cases/🦀️.rs"]
 mod codec_and_demo_cases;
 pub(crate) use codec_and_demo_cases::*;
+#[cfg(any(test, feature = "testkit"))]
+pub use codec_and_demo_cases::demo_diff_cases;
 
 //#region 🧪️Tests
 #[cfg(test)]

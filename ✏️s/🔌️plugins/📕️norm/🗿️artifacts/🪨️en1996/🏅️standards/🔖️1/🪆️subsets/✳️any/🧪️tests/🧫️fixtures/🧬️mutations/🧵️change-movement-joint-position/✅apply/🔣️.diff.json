@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "masonryClass": null,
   "designSituation": null,
   "storeys": null,
@@ -22,6 +21,12 @@
     "moved": [],
     "modified": []
   },
+  "chases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "movementJoints": {
     "removed": [],
     "inserted": [],
@@ -36,10 +41,5 @@
       }
     ]
   },
-  "chases": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  }
+  "reliabilityClass": null
 }

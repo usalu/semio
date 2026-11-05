@@ -8,6 +8,6 @@ pub fn diff(payload: &crate::add_layer_asset::mutation::AddLayerAsset, base: &Ra
     if base.assets.contains_key(&payload.asset_id) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Asset \"{}\" is already attached.", payload.asset_id));
     }
-    protocol::MutationOutcome::new(diff_add_asset(&payload.asset_id, payload.asset.clone()))
+    protocol::MutationOutcome::new(diff_add_asset(&payload.asset_id, payload.asset.image().clone()))
 }
 //#endregion 🔖️Diff

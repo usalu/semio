@@ -45,13 +45,17 @@ impl PeerPresenceRootRetirement {
 
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(entry) = self.entry.as_ref() {
+            if entry.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:2*size_of::<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<PeerPresenceEntry>>>(),depth:1,..Default::default()})}
             return Ok({let mut demand=entry.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "peer entry retirement depth overflow"))?;demand});
         }
         if self.root.is_some() {
-            return Ok(RetirementDemand { copy_bytes: size_of::<PeerPresenceRoot>(), release_bytes: semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<PeerPresenceRoot>(), depth: 1, ..Default::default() });
+            return Ok(RetirementDemand { copy_bytes: 2*size_of::<Option<std::sync::Arc<PeerPresenceRoot>>>()+2*size_of::<Option<PeerPresenceRoot>>(), release_bytes: semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<PeerPresenceRoot>(), depth: 1, ..Default::default() });
         }
         if let Some(root) = self.owned.as_ref() {
-            return Ok(RetirementDemand { copy_bytes: if self.cursor < root.len { size_of::<std::sync::Arc<PeerPresenceEntry>>() } else { 0 }, depth: 1, ..Default::default() });
+            let copy=if self.cursor<root.len{
+                size_of::<usize>()+2*size_of::<Option<std::sync::Arc<PeerPresenceEntry>>>()+if root.entries[self.cursor].is_some(){2*size_of::<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<PeerPresenceEntry>>>()}else{0}
+            }else{2*size_of::<Option<PeerPresenceRoot>>()};
+            return Ok(RetirementDemand{copy_bytes:copy,depth:1,..Default::default()});
         }
         Ok(Default::default())
     }
@@ -63,10 +67,10 @@ impl PeerPresenceRootRetirement {
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(PluginLifecycleStep::Progress(empty)); }
         if let Some(entry) = self.entry.as_mut() {
+            if entry.terminal_is_empty(){self.entry.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
             let step = entry.step(child)?;
             let progress = step.progress();
-            if entry.terminal_is_empty() { drop(self.entry.take()); }
             return Ok(PluginLifecycleStep::Progress(progress));
         }
         if self.owned.is_none() {
@@ -79,23 +83,20 @@ impl PeerPresenceRootRetirement {
                 Ok(root) => *self.owned = Some(root),
                 Err(root) => { *self.root = Some(root); return Ok(PluginLifecycleStep::Progress(empty)); }
             }
-            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<PeerPresenceRoot>(), released_bytes: release, ..empty }));
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: release, ..empty }));
         }
         let root = self.owned.as_mut().expect("unique peer root remains inline");
         if self.cursor < root.len {
-            let copy = size_of::<std::sync::Arc<PeerPresenceEntry>>();
-            if grant.maximum_copy_bytes < copy { return Ok(PluginLifecycleStep::Progress(empty)); }
             let index = self.cursor;
             self.cursor += 1;
             if let Some(entry) = root.entries[index].take() {
                 *self.entry = Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::new(entry));
-                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..empty }));
+                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
             }
-            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes:demand.copy_bytes, ..empty }));
         }
-        root.len = 0;
         drop(self.owned.take());
-        Ok(PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
+        Ok(PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes:demand.copy_bytes, ..empty }))
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.owned.is_none() && self.entry.is_none() }
@@ -797,4 +798,50 @@ impl<A: ArtifactApp> Drop for PeerRosterPublication<A> {
     fn drop(&mut self) {
         debug_assert!(std::thread::panicking() || self.terminal_is_empty(), "incomplete peer roster publication reached Drop without bounded disposal");
     }
+}
+
+#[cfg(test)]
+#[global_allocator]
+static PEER_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+
+#[cfg(test)]
+mod peer_presence_metadata_currency {
+ use super::*;
+ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+
+ fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
+ fn paid(owner:&mut PeerPresenceRootRetirement)->RetainedCloneProgress{
+  let g=grant();let demand=owner.retirement_demands(g.maximum_copy_bytes).unwrap();
+  let(step,heap)=observe(||owner.close_step(g).unwrap());let progress=step.progress().unwrap_or_default();
+  assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+  assert!(progress.fits(g));assert_eq!(progress.copied_bytes,demand.copy_bytes);progress
+ }
+
+ #[test]
+ fn peer_presence_metadata_empty_owned_clear_requires_copy_funding(){
+  let mut owner=PeerPresenceRootRetirement::owned(PeerPresenceRoot::empty());
+  let(step,heap)=observe(||owner.close_step(RetainedCloneGrant{maximum_copy_bytes:0,..grant()}).unwrap());
+  assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.progress().unwrap_or_default(),Default::default());
+  assert!(owner.owned.is_some());assert!(owner.retirement_demands(grant().maximum_copy_bytes).unwrap().copy_bytes>0);
+  paid(&mut owner);assert!(owner.terminal_is_empty());
+ }
+
+ #[test]
+ fn peer_presence_metadata_sparse_entry_reports_its_cursor_and_option_writes(){
+  let mut root=PeerPresenceRoot::empty();root.len=1;let mut owner=PeerPresenceRootRetirement::owned(root);
+  let(step,heap)=observe(||owner.close_step(RetainedCloneGrant{maximum_copy_bytes:0,..grant()}).unwrap());
+  assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.progress().unwrap_or_default(),Default::default());assert_eq!(owner.cursor,0);
+  let progress=paid(&mut owner);assert!(progress.copied_bytes>=size_of::<usize>()+size_of::<Option<std::sync::Arc<PeerPresenceEntry>>>());assert_eq!(owner.cursor,1);
+  paid(&mut owner);assert!(owner.terminal_is_empty());
+ }
+
+ #[test]
+ fn peer_presence_metadata_terminal_child_cursor_clear_is_separately_funded(){
+  let mut source=PeerPresenceRoot::empty();source.insert("metadata-peer".into(),PeerPresence::default()).unwrap();let entry=source.entries[0].take().unwrap();source.len=0;
+  let mut child=semio_framework_value::retirement::arc_custody::SharedControlledRetirement::new(entry);
+  for _ in 0..4096{if child.terminal_is_empty(){break}let(step,heap)=observe(||child.step(grant()).unwrap());let p=step.progress();assert!(p.fits(grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));}
+  assert!(child.terminal_is_empty());let mut owner=PeerPresenceRootRetirement::owned(PeerPresenceRoot::empty());*owner.entry=Some(child);
+  let(step,heap)=observe(||owner.close_step(RetainedCloneGrant{maximum_copy_bytes:0,..grant()}).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.progress().unwrap_or_default(),Default::default());assert!(owner.entry.is_some());
+  paid(&mut owner);assert!(owner.entry.is_none());assert!(!owner.terminal_is_empty());paid(&mut owner);assert!(owner.terminal_is_empty());
+ }
 }

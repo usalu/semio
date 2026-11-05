@@ -1,6 +1,7 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
 pub use crate::selection::RasterPixelSelection;
+pub use crate::config::RasterImageGrid;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -20,6 +21,12 @@ pub struct RasterConfig {
     pub mask_value:u32,
     #[state(config)]
     pub fill_tolerance:u32,
+    #[state(config)]
+    pub filter_kind:String,
+    #[state(config)]
+    pub filter_amount:f64,
+    #[state(config)]
+    pub image_grid:RasterImageGrid,
     #[state(config)]
     pub pixel_selection:Option<RasterPixelSelection>,
     #[state(config)]

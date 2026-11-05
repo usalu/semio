@@ -4,7 +4,6 @@ use semio_framework_value::{
     ErasedSnapshotRetirement, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind,
     retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneSourceTake, RetainedCloneStep, StagedSourceAdmission, retained_clone_grant_admits},
 };
-use semio_framework_value_native_owned::OriginalReceivingPrimary;
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeControl, NativeDecodeRetirementRecipient, NativeReceive, NativeReceiver, owned::NativePersistentListReceiver};
 use semio_framework_value_persistent::list::persistent::PersistentList;
 use semio_s_fem_material::planar::{FemMaterial, FemMaterialValue};
@@ -24,10 +23,6 @@ fn receipt(d: RetirementDemand) -> RetainedCloneProgress {
     RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, retained_capacity_bytes: d.capacity_bytes, released_bytes: d.release_bytes }
 }
 
-fn primary(p: OriginalReceivingPrimary) -> ValueError {
-    let progress = p.progress;
-    p.primary.or(p.quote_refusal).or(p.allocation_refusal).unwrap_or_else(invalid).with_retained_progress(progress)
-}
 
 struct OriginalStepRecipient {
     grant: RetainedCloneGrant,
@@ -58,43 +53,29 @@ impl NativeDecodeConstructionRecipient for OriginalStepRecipient {
 
 impl Fem2dSnapshot {
     /// 🫴️ Receives an already admitted authoring owner inside the original snapshot wallet and retirement publication frame.
-    pub fn receive_authoring(value: &mut Option<Fem2dSnapshotValue>, owner: &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
-        owner.receive_nested::<Fem2dReceiving, Self>(|slot, original| {
-            validate_authoring(value.as_ref().ok_or_else(invalid)?, original)?;
-            let g = original.remaining_grant();
-            let d = Fem2dReceiving::capture_demand();
-            if !retained_clone_grant_admits(g, d) {
-                return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "original FEM snapshot wallet cannot capture its authoring owner"));
-            }
+    pub fn receive_authoring(value:&mut Option<Fem2dSnapshotValue>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{
+        owner.receive_nested::<Fem2dReceiving,Self,store::NativeSnapshotFailure>(|slot,original|store::native_snapshot_turn(|work|{
+            work.take(validate_authoring(value.as_ref().ok_or_else(invalid)?,original))?;
+            let g=original.remaining_grant();let d=Fem2dReceiving::capture_demand();
+            if !retained_clone_grant_admits(g,d){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original FEM snapshot wallet cannot capture its authoring owner").into())}
             original.native().checkpoint()?;
-            let input = value.take().ok_or_else(invalid)?;
-            let (rx, p) = match Fem2dReceiving::capture(input, g) {
-                Ok(value) => value,
-                Err((error, input)) => {
-                    *value = Some(input);
-                    return Err(error);
+            let input=value.take().ok_or_else(invalid)?;
+            let(rx,p)=match Fem2dReceiving::capture(input,g){Ok(value)=>value,Err((error,input))=>{*value=Some(input);return Err(error.into())}};
+            *slot=Some(rx);work.performed();original.record_progress(p)?;
+            work.take(original.drive_cursor(slot,|rx,native,g|{
+                if rx.ready(){
+                    let turn=rx.take(g);
+                    RetainedWorkOutcome{work:turn.work,result:turn.result.map(|out|out.map_or((None,Default::default()),|(value,p)|(Some(value),p))).map_err(store::NativeSnapshotFailure::from)}
+                }else{
+                    let mut recipient=OriginalStepRecipient{grant:g,progress:Default::default()};
+                    let mut work=0;
+                    let result=native.with_construction_recipient(&mut recipient,|native|{let turn=rx.advance(native,g.maximum_copy_bytes,g);work=turn.work;turn.result});
+                    RetainedWorkOutcome{work,result:result.map(|step|(None,step.progress()))}
                 }
-            };
-            *slot = Some(rx);
-            original.record_progress(p)?;
-            original.drive_cursor(slot, |rx, native, g| {
-                let result = if rx.ready() {
-                    rx.take(g).map(|out| out.map(|(value, p)| (Some(value), p)))
-                } else {
-                    let mut recipient = OriginalStepRecipient { grant: g, progress: Default::default() };
-                    native.with_construction_recipient(&mut recipient, |native| rx.advance(native, g.maximum_copy_bytes, g)).map(|step| Some((None, step.progress())))
-                };
-                match result {
-                    Ok(Some((value, p))) => (Ok(value), p),
-                    Ok(None) => (Ok(None), Default::default()),
-                    Err(error) => {
-                        let p = error.retained_progress();
-                        (Err(error), p)
-                    }
-                }
-            })
-        })
+            }))
+        }))
     }
+
 }
 
 impl Fem2dSnapshot {
@@ -153,51 +134,51 @@ impl semio_framework_value::FromValue for Fem2dSnapshot {
     }
 }
 
-fn validate_authoring(value: &Fem2dSnapshotValue, owner: &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> Result<(), ValueError> {
-    owner.receive_nested::<super::FemIdentityIndex, ()>(|slot, original| {
-        *slot = Some(super::FemIdentityIndex::receive(value, original)?);
+fn validate_authoring(value: &Fem2dSnapshotValue, owner: &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> RetainedWorkOutcome<(),store::NativeSnapshotFailure> {
+    owner.receive_nested::<super::FemIdentityIndex, (),store::NativeSnapshotFailure>(|slot, original| store::native_snapshot_turn(|meter|{
+        *slot = Some(meter.take(super::FemIdentityIndex::receive(value, original))?);
         let index = slot.as_ref().unwrap();
         for element in &value.elements {
-            semio_framework_dsl_record::receiving::work(original, size_of::<crate::standards::v1::subsets::any::schema::structure::FemElement>(), 1)?;
+            super::receive_record::action(original, size_of::<crate::standards::v1::subsets::any::schema::structure::FemElement>(), 1,meter)?;
             let (start, end, material, section) = match element {
                 crate::standards::v1::subsets::any::schema::structure::FemElement::Bar { start, end, material_id, section_id, .. }
                 | crate::standards::v1::subsets::any::schema::structure::FemElement::Beam { start, end, material_id, section_id, .. } => (start, end, material_id, section_id),
             };
-            index.lookup(value, super::FemIdentityKind::Node, start, original)?;
-            index.lookup(value, super::FemIdentityKind::Node, end, original)?;
-            index.lookup(value, super::FemIdentityKind::Material, material, original)?;
-            index.lookup(value, super::FemIdentityKind::Section, section, original)?;
+            meter.take(index.lookup(value, super::FemIdentityKind::Node, start, original))?;
+            meter.take(index.lookup(value, super::FemIdentityKind::Node, end, original))?;
+            meter.take(index.lookup(value, super::FemIdentityKind::Material, material, original))?;
+            meter.take(index.lookup(value, super::FemIdentityKind::Section, section, original))?;
         }
         for support in &value.supports {
-            semio_framework_dsl_record::receiving::work(original, size_of::<crate::standards::v1::subsets::any::schema::structure::FemSupport>(), 1)?;
-            index.lookup(value, super::FemIdentityKind::Node, &support.node_id, original)?;
+            super::receive_record::action(original, size_of::<crate::standards::v1::subsets::any::schema::structure::FemSupport>(), 1,meter)?;
+            meter.take(index.lookup(value, super::FemIdentityKind::Node, &support.node_id, original))?;
         }
         for case in &value.load_cases {
-            semio_framework_dsl_record::receiving::work(original, size_of::<crate::standards::v1::subsets::any::schema::structure::FemLoadCase>(), 1)?;
+            super::receive_record::action(original, size_of::<crate::standards::v1::subsets::any::schema::structure::FemLoadCase>(), 1,meter)?;
             for load in &case.loads {
                 use crate::standards::v1::subsets::any::schema::structure::FemLoad;
-                semio_framework_dsl_record::receiving::work(original, size_of::<FemLoad>(), 1)?;
+                super::receive_record::action(original, size_of::<FemLoad>(), 1,meter)?;
                 let finite = match load {
                     FemLoad::Nodal { node_id, value: force, .. } => {
-                        index.lookup(value, super::FemIdentityKind::Node, node_id, original)?;
+                        meter.take(index.lookup(value, super::FemIdentityKind::Node, node_id, original))?;
                         force.is_finite()
                     }
                     FemLoad::MemberUdl { element_id, wx, wy, .. } => {
-                        index.lookup(value, super::FemIdentityKind::Element, element_id, original)?;
+                        meter.take(index.lookup(value, super::FemIdentityKind::Element, element_id, original))?;
                         wx.is_finite() && wy.is_finite()
                     }
                     FemLoad::Area { region_id, pressure, .. } => {
-                        index.lookup(value, super::FemIdentityKind::Region, region_id, original)?;
+                        meter.take(index.lookup(value, super::FemIdentityKind::Region, region_id, original))?;
                         pressure.is_finite()
                     }
                 };
                 if !finite {
-                    return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "FEM load components must be finite binary64 values"));
+                    return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "FEM load components must be finite binary64 values").into());
                 }
             }
         }
         Ok(())
-    })
+    }))
 }
 /// 🧳️ Every partial list, source alias and untransferred snapshot stays in this owner until explicitly closed.
 pub struct Fem2dReceiving {
@@ -268,7 +249,8 @@ impl Fem2dReceiving {
         }
     }
     /// ⏱️ Advances one granted physical frontier using the unchanged original decoder and construction recipient.
-    pub fn advance(&mut self, control: &mut NativeDecodeControl<'_>, body: usize, g: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, control: &mut NativeDecodeControl<'_>, body: usize, g: RetainedCloneGrant) -> RetainedWorkOutcome<RetainedCloneStep, store::NativeSnapshotFailure> {
+        store::native_snapshot_turn(|work|{
         let d = self.demands(body)?;
         if !retained_clone_grant_admits(g, d) {
             return Ok(RetainedCloneStep::Progress(Default::default()));
@@ -278,13 +260,14 @@ impl Fem2dReceiving {
             0 => {
                 if self.admission.is_none() {
                     let value = self.pending.take().ok_or_else(invalid)?;
+                    work.performed();
                     *self.admission = Some(StagedSourceAdmission::owned(value));
                     receipt(d)
                 } else {
                     control.charge(d.capacity_bytes)?;
                     let admission = self.admission.as_mut().ok_or_else(invalid)?;
                     let turn = admission.advance(&mut self.source, g);
-                    let p = turn.result?.progress();
+                    let p = work.take(turn)?.progress();
                     if admission.terminal_is_empty() {
                         self.admission.take();
                     }
@@ -296,6 +279,7 @@ impl Fem2dReceiving {
             }
             1 => {
                 let rx = <Nodes as NativeReceive<Vec<FemNodeValue>>>::receiver();
+                work.performed();
                 let p = receipt(d);
                 *self.nodes_receiver = Some(rx);
                 self.phase = 2;
@@ -304,7 +288,7 @@ impl Fem2dReceiving {
             2 => {
                 let source = self.source.as_ref().ok_or_else(invalid)?.borrow().project(0, |s| &s.nodes);
                 let rx = self.nodes_receiver.as_mut().ok_or_else(invalid)?;
-                let p = rx.advance(source, control, body, g).result.map_err(primary)?.progress();
+                let p = work.take(rx.advance(source, control, body, g))?.progress();
                 if rx.output_ready() {
                     self.phase = 3;
                 }
@@ -312,7 +296,7 @@ impl Fem2dReceiving {
             }
             3 => {
                 let rx = self.nodes_receiver.as_mut().ok_or_else(invalid)?;
-                let (value, p) = rx.take(g).result?.ok_or_else(invalid)?;
+                let (value, p) = work.take(rx.take(g))?.ok_or_else(invalid)?;
                 *self.nodes = Some(value);
                 rx.begin_close();
                 self.phase = 4;
@@ -321,7 +305,7 @@ impl Fem2dReceiving {
             4 => {
                 control.charge(d.capacity_bytes)?;
                 let rx = self.nodes_receiver.as_mut().ok_or_else(invalid)?;
-                let p = rx.close_step(g).result?.progress();
+                let p = work.take(rx.close_step(g))?.progress();
                 if rx.terminal_is_empty() {
                     self.nodes_receiver.take();
                     self.phase = 5;
@@ -330,6 +314,7 @@ impl Fem2dReceiving {
             }
             5 => {
                 let rx = <Materials as NativeReceive<Vec<FemMaterialValue>>>::receiver();
+                work.performed();
                 let p = receipt(d);
                 *self.materials_receiver = Some(rx);
                 self.phase = 6;
@@ -338,7 +323,7 @@ impl Fem2dReceiving {
             6 => {
                 let source = self.source.as_ref().ok_or_else(invalid)?.borrow().project(3, |s| &s.materials);
                 let rx = self.materials_receiver.as_mut().ok_or_else(invalid)?;
-                let p = rx.advance(source, control, body, g).result.map_err(primary)?.progress();
+                let p = work.take(rx.advance(source, control, body, g))?.progress();
                 if rx.output_ready() {
                     self.phase = 7;
                 }
@@ -346,7 +331,7 @@ impl Fem2dReceiving {
             }
             7 => {
                 let rx = self.materials_receiver.as_mut().ok_or_else(invalid)?;
-                let (value, p) = rx.take(g).result?.ok_or_else(invalid)?;
+                let (value, p) = work.take(rx.take(g))?.ok_or_else(invalid)?;
                 *self.materials = Some(value);
                 rx.begin_close();
                 self.phase = 8;
@@ -355,7 +340,7 @@ impl Fem2dReceiving {
             8 => {
                 control.charge(d.capacity_bytes)?;
                 let rx = self.materials_receiver.as_mut().ok_or_else(invalid)?;
-                let p = rx.close_step(g).result?.progress();
+                let p = work.take(rx.close_step(g))?.progress();
                 if rx.terminal_is_empty() {
                     self.materials_receiver.take();
                     self.phase = 9;
@@ -366,7 +351,7 @@ impl Fem2dReceiving {
                 control.charge(d.capacity_bytes)?;
                 {
                     let turn = self.source.as_mut().ok_or_else(invalid)?.take_authority(g);
-                    turn.result?
+                    work.take(turn)?
                 }
             } {
                 RetainedCloneSourceTake::Pending(p) => p,
@@ -378,7 +363,7 @@ impl Fem2dReceiving {
                 }
             },
             10 => {
-                let row = self.nodes.as_ref().ok_or_else(invalid)?.get(self.validated);
+                work.performed();                let row = self.nodes.as_ref().ok_or_else(invalid)?.get(self.validated);
                 match row {
                     Some(row) => {
                         row.validate().map_err(|e| e.with_retained_progress(receipt(d)))?;
@@ -392,7 +377,7 @@ impl Fem2dReceiving {
                 receipt(d)
             }
             11 => {
-                let row = self.materials.as_ref().ok_or_else(invalid)?.get(self.validated);
+                work.performed();                let row = self.materials.as_ref().ok_or_else(invalid)?.get(self.validated);
                 match row {
                     Some(row) => {
                         row.validate().map_err(|e| e.with_retained_progress(receipt(d)))?;
@@ -406,7 +391,7 @@ impl Fem2dReceiving {
                 receipt(d)
             }
             12 => {
-                let value = self.pending.as_mut().ok_or_else(invalid)?;
+                work.performed();                let value = self.pending.as_mut().ok_or_else(invalid)?;
                 *self.output = Some(Fem2dSnapshot {
                     nodes: self.nodes.take().ok_or_else(invalid)?,
                     materials: self.materials.take().ok_or_else(invalid)?,
@@ -421,9 +406,10 @@ impl Fem2dReceiving {
                 self.phase = 13;
                 receipt(d)
             }
-            _ => return Err(invalid()),
+            _ => return Err(invalid().into()),
         };
         Ok(if self.ready() { RetainedCloneStep::Complete(p) } else { RetainedCloneStep::Progress(p) })
+        })
     }
     /// 📫️ A real snapshot becomes transferable only after both row receivers and their source aliases have closed.
     pub fn ready(&self) -> bool {
@@ -437,13 +423,15 @@ impl Fem2dReceiving {
         Ok(fixed(2 * size_of::<Option<Fem2dSnapshot>>()))
     }
     /// 📤️ Taking output leaves the original plain node/material inputs resident for funded retirement.
-    pub fn take(&mut self, g: RetainedCloneGrant) -> Result<Option<(Fem2dSnapshot, RetainedCloneProgress)>, ValueError> {
+    pub fn take(&mut self, g: RetainedCloneGrant) -> RetainedWorkOutcome<Option<(Fem2dSnapshot, RetainedCloneProgress)>> {
+        let mut work=0;let result=(||{
         let d = self.take_demand()?;
         if !retained_clone_grant_admits(g, d) {
             return Ok(None);
         }
-        self.phase = 14;
+        work=1;self.phase = 14;
         Ok(Some((self.output.take().ok_or_else(invalid)?, receipt(d))))
+        })();RetainedWorkOutcome{work,result}
     }
     /// 🛑️ Cancellation switches to closure without dropping source, row, page or output ownership.
     pub fn begin_close(&mut self) {

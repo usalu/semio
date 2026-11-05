@@ -1,3 +1,6 @@
 {
-  "ChangeMaterialDuctilityMaterialId": "material-ductility-1"
+  "ChangeMaterialDuctilityMaterialId": {
+    "id": "material-ductility-1",
+    "newMaterialId": "steel-s355-changed"
+  }
 }

@@ -1,3 +1,6 @@
 {
-  "ChangePanelSteelSubgrade": "fastened-joint-1"
+  "ChangePanelSteelSubgrade": {
+    "id": "plate",
+    "newSteelSubgrade": "probe"
+  }
 }

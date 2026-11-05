@@ -95,5 +95,10 @@
     "moved": [],
     "modified": []
   },
-  "trafficGroups": {"removed": [], "inserted": [], "moved": [], "modified": []}
+  "trafficGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

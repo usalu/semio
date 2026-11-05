@@ -4,6 +4,15 @@
 import { XMLValidator } from "fast-xml-parser";
 import { PNG } from "pngjs";
 import { unzlibSync, unzipSync } from "fflate";
+import { createHash } from "node:crypto";
+
+/** 🧿️ Fingerprints persisted content, preserving values while ignoring JSON ordering and ZIP container metadata. */
+export function persistedContent(bytes: Uint8Array, comparison: "bytes" | "json" | "zip-members"): string {
+  const compare = (a: string, b: string): number => a < b ? -1 : a > b ? 1 : 0;
+  const ordered = (value: unknown): unknown => Array.isArray(value) ? value.map(ordered) : value !== null && typeof value === "object" ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => compare(a, b)).map(([key, entry]) => [key, ordered(entry)])) : value;
+  const canonical = comparison === "json" ? JSON.stringify(ordered(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)))) : comparison === "zip-members" ? JSON.stringify(Object.entries(unzipSync(bytes)).sort(([a], [b]) => compare(a, b)).map(([name, content]) => [name, Buffer.from(content).toString("base64")])) : bytes;
+  return createHash("sha256").update(canonical).digest("hex");
+}
 
 /** ⚖️ One oracle verdict. */
 export type OracleVerdict = Readonly<{ ok: boolean; detail: string }>;

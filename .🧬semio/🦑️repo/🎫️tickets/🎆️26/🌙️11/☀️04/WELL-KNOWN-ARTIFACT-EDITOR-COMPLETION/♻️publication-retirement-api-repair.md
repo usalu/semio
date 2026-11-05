@@ -1,0 +1,9 @@
+# Publication Retirement Fixture API Repair
+
+Edited only plugin/🧪️tests/♻️publication-retirement-authority/🦀️.rs. Replaced private page presentation/producer retirement with financed public TestingLaws ports and threaded the existing original context through rejection drivers/callers. Added actual cancellation issuer/lease admission without cloned handles, captured OriginalSourceBinding from the same original caller, and supplied current emission bookkeeping fields. Manually installed pending publications are marked settled and retain an explicit emit owner so the modern publisher does not ask for a nonexistent completion owner.
+
+Publication and frontier helpers reconcile returned progress against already-posted same-context receipts; denied grant assertions remain intact. Registry refusal assertions inspect the actual PluginLifecycleFailure Fault primary, and its owning diagnostic is retired through an original paid owned/box cursor. The final live misaddressed mounted operation is handed to app registered-owner closure rather than clearing/dropping its emit and authority. The standalone close-fault test now uses an admitted original source scope.
+
+Nightly rustc parse-only check exited 0 after all changes. No semantic compilation or runtime test was launched; actual queue remains owned by root/other agents. Final handoff replaced the temporary local failure loop with shared TestingLaws retire_fixture_owned(&mut Some(failure), closeGrant, cx), and repeated parse-only verification exited 0. No duplicate owned-retirement helper remains in this leaf.
+
+Final shared helper API now retains caller-owned cursor state: the fixture holds pending Some(failure) and active None, calls four-argument retire_fixture_owned(pending, active, closeGrant, cx), and requires true plus both owners None before continuing. Nightly parse check again exited 0. This preserves normal refusal/pause custody instead of hiding a nonterminal cursor in a local helper.

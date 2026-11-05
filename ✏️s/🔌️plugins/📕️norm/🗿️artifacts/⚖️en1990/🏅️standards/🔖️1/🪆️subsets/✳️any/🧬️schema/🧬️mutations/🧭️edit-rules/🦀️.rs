@@ -6,6 +6,7 @@ use crate::En1990Mutation;
 
 /// 📚 Every path an EN1990 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field_arguments: &[],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "referencePeriodYears", kind: "change-reference-period-years", selectors: &[], value: "newReferencePeriodYears" },

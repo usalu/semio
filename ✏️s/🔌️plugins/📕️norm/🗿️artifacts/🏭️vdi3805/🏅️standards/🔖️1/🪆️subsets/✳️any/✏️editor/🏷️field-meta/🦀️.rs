@@ -173,7 +173,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
 ];
 
 /// 🏷️ Exact-path / `[]`-wildcard metadata for manufacturer-catalogue fields.
-pub fn vdi3805_field_meta(path: &str) -> Option<FieldSpec> {
+fn describe_vdi3805_field(path: &str) -> Option<FieldSpec> {
     if let Some(meta) = lookup_norm_field_meta(TABLE, path) {
         return Some(meta);
     }
@@ -206,4 +206,16 @@ pub fn vdi3805_field_meta(path: &str) -> Option<FieldSpec> {
         return Some(FieldSpec::new("Edition profile choice", "Ausgabenprofilwahl"));
     }
     None
+}
+
+/// 🛡️ Descriptive field metadata admitted by the family's actual native setter vocabulary.
+pub fn vdi3805_field_meta(path: &str) -> Option<FieldSpec> {
+    semio_s_plugin_norm_app_surface::admit_list_meta(
+        semio_s_plugin_norm_app_surface::admit_field_meta(
+        describe_vdi3805_field(path),
+        semio_s_artifact_norm_vdi3805_mutations::EDIT_RULES.can_set_field(path),
+        ),
+        semio_s_artifact_norm_vdi3805_mutations::EDIT_RULES.can_insert_item(path),
+        semio_s_artifact_norm_vdi3805_mutations::EDIT_RULES.can_remove_item(path, semio_s_artifact_norm_vdi3805_mutations::ID_REMOVALS.iter().map(|rule| rule.path)),
+    )
 }

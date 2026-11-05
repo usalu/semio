@@ -1,3 +1,6 @@
 {
-  "ChangePanelSteelGrade": "fastened-joint-1"
+  "ChangePanelSteelGrade": {
+    "id": "plate",
+    "newSteelGrade": "probe"
+  }
 }

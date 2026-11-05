@@ -104,6 +104,8 @@ pub struct ActionAddress {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct ActionInvocation {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub expected_document_revision: Option<String>,
     pub address: ActionAddress,
     pub arguments: BTreeMap<String, DslValue>,
 }

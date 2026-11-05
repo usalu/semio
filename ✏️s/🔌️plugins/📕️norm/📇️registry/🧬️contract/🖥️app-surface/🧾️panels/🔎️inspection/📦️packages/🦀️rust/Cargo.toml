@@ -16,6 +16,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-plugin-norm-app-surface-outliner = { workspace = true }
+semio-s-plugin-norm-app-surface-shell-hooks = { workspace = true }
+semio-s-plugin-norm-app-surface-interaction-topology = { workspace = true }
 pack = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }

@@ -74,10 +74,27 @@ export interface PickedFileFlowPortV1<TOwner, TPicked extends Readonly<{ name: s
   readonly route: (picked: TPicked, signal: AbortSignal) => Promise<PickedFileRouteV1>;
   readonly resolveOwner: (route: Extract<PickedFileRouteV1, { kind: "routed" }>) => Promise<TOwner | null>;
   readonly importInto: (owner: TOwner, picked: TPicked, task: PickedFileTaskV1) => Promise<number>;
-  readonly commit: (owner: TOwner, instanceId: number) => boolean;
+  readonly commit: (owner: TOwner, instanceId: number, task: PickedFileTaskV1) => boolean | Promise<boolean>;
   readonly destroy: (owner: TOwner, instanceId: number) => Promise<void>;
   readonly report: (message: string, error: unknown) => void;
   readonly notify: (outcome: PickedFileOutcomeV1) => void;
+}
+
+/** 💾️ Awaits admission before publishing opened; cancellation retires the caller even if storage is still settling. */
+async function commitPickedFileV1<TOwner, TPicked extends Readonly<{ name: string }>>(port: PickedFileFlowPortV1<TOwner, TPicked>, owner: TOwner, instanceId: number, task: PickedFileTaskV1): Promise<boolean> {
+  task.signal.throwIfAborted();
+  let abort!: () => void;
+  const cancelled = new Promise<never>((_resolve, reject) => {
+    abort = () => reject(task.signal.reason ?? new DOMException("The operation was aborted", "AbortError"));
+    task.signal.addEventListener("abort", abort, { once: true });
+  });
+  try {
+    const committed = await Promise.race([Promise.resolve().then(() => { task.signal.throwIfAborted(); return port.commit(owner, instanceId, task); }), cancelled]);
+    task.signal.throwIfAborted();
+    return committed;
+  } finally {
+    task.signal.removeEventListener("abort", abort);
+  }
 }
 
 /** 📂️ One Open file gesture, every failure visible and every created instance released: selection, routing, head read, owner resolution, import and the panel commit all run inside one guarded, cancellable task. */
@@ -94,13 +111,15 @@ export async function openPickedFileV1<TOwner, TPicked extends Readonly<{ name: 
   const task = port.track(picked.name);
   let created: { owner: TOwner; instanceId: number } | null = null;
   try {
+    task.signal.throwIfAborted();
     const route = await port.route(picked, task.signal);
     if (route.kind === "refused") return port.notify({ kind: "refused", reason: route.reason, name: picked.name });
     const owner = await port.resolveOwner(route);
     if (owner === null) return port.notify({ kind: "refused", reason: "owner-unavailable", name: picked.name });
+    task.signal.throwIfAborted();
     const instanceId = await port.importInto(owner, picked, task);
     created = { owner, instanceId };
-    if (!port.commit(owner, instanceId)) throw new Error("open-file.panel-unavailable");
+    if (!await commitPickedFileV1(port, owner, instanceId, task)) throw new Error("open-file.commit-unavailable");
     created = null;
     port.notify({ kind: "opened", name: picked.name });
   } catch (error) {

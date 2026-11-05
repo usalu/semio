@@ -8,7 +8,7 @@ pub type DrawingRebuiltLayerOwners = (DrawingNativeLayers, Option<DrawingLayerNo
 pub struct DrawingNativeCloneAuthority<T: RetainedClone> {
     pub cursor: T::Cursor,
     pub value: std::mem::ManuallyDrop<Option<T>>,
-    pub retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>>,
+    pub retirement: semio_framework_value::retained_clone::RetainedCloneClose,
     pub phase: u8,
     pub terminal: bool,
 }
@@ -18,40 +18,41 @@ impl<T: RetainedClone> DrawingNativeCloneAuthority<T> {
         Self {
             cursor: T::retained_clone_cursor(),
             value: std::mem::ManuallyDrop::new(None),
-            retirement: std::mem::ManuallyDrop::new(None),
+            retirement: Default::default(),
             phase: 0,
             terminal: false,
         }
     }
 
-    /// 🧬️ Clones from a sealed original source ref; every turn is funded by the job's retained wallet.
-    pub fn step(&mut self, source: RetainedCloneRef<'_, T>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
-        if self.terminal { return Ok(true); }
-        let grant = cx.retained_grant();
-        match self.phase {
-            0 => {
-                let step = self.cursor.advance(source, grant.maximum_copy_bytes, grant).map_err(|_| "drawing-store.layer-native-clone")?;
-                cx.consume_retained(step.progress()).map_err(|_| "drawing-store.layer-native-clone-grant")?;
-                cx.consume_fuel(step.progress().copied_items.max(1) as u64);
-                if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 1; }
+    /// 🧬️ Advances the sealed source under its actual next physical quote and preserves child work before failure.
+    pub fn step(&mut self,source:RetainedCloneRef<'_,T>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,&'static str>{
+        if self.terminal{return Ok(true);}
+        if cx.should_yield(){return Ok(false);}
+        let grant=cx.retained_grant();
+        match self.phase{
+            0=>{
+                let demand=self.cursor.advance_demands(source,grant.maximum_copy_bytes).map_err(|_|"drawing-store.layer-clone-demand")?;
+                if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(false);}
+                let turn=self.cursor.advance(source,grant.maximum_copy_bytes,grant);cx.consume_fuel(turn.work);
+                let step=turn.result.map_err(|_|"drawing-store.layer-native-clone")?;
+                cx.consume_retained(step.progress()).map_err(|_|"drawing-store.layer-native-clone-grant")?;
+                if matches!(step,RetainedCloneStep::Complete(_)){self.phase=1;}
             }
-            1 => {
-                let bytes = size_of::<T>();
-                if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes { return Ok(false); }
-                *self.value = self.cursor.take();
-                if self.value.is_none() { return Err("drawing-store.layer-clone-false-terminal"); }
-                self.cursor.begin_close();
-                self.phase = 2;
-                cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }).map_err(|_| "drawing-store.layer-clone-take-grant")?;
-                cx.consume_fuel(bytes.max(1) as u64);
+            1=>{
+                let demand=self.cursor.take_demand().map_err(|_|"drawing-store.layer-clone-take-demand")?;
+                if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(false);}
+                let turn=self.cursor.take(grant);cx.consume_fuel(turn.work);
+                let Some((value,progress))=turn.result.map_err(|_|"drawing-store.layer-clone-take")? else{return Ok(false);};
+                *self.value=Some(value);self.cursor.begin_close();self.phase=2;
+                cx.consume_retained(progress).map_err(|_|"drawing-store.layer-clone-take-grant")?;
             }
-            2 => {
-                let step = self.cursor.close_step(grant).map_err(|_| "drawing-store.layer-native-clone-close")?;
-                cx.consume_retained(step.progress()).map_err(|_| "drawing-store.layer-native-clone-close-grant")?;
-                cx.consume_fuel(step.progress().copied_items.max(1) as u64);
-                if matches!(step, RetainedCloneStep::Complete(_)) && self.cursor.terminal_is_empty() { self.terminal = true; }
+            2=>{
+                let turn=self.cursor.close_selected(grant.maximum_copy_bytes,grant);cx.consume_fuel(turn.work);
+                let step=turn.result.map_err(|_|"drawing-store.layer-native-clone-close")?;
+                cx.consume_retained(step.progress()).map_err(|_|"drawing-store.layer-native-clone-close-grant")?;
+                if matches!(step,RetainedCloneStep::Complete(_))&&self.cursor.terminal_is_empty(){self.terminal=true;}
             }
-            _ => return Err("drawing-store.layer-clone-phase"),
+            _=>return Err("drawing-store.layer-clone-phase")
         }
         Ok(self.terminal)
     }
@@ -61,23 +62,20 @@ impl<T: RetainedClone> DrawingNativeCloneAuthority<T> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.cursor.terminal_is_empty() && self.value.is_none() && self.retirement.is_none()
+        self.cursor.terminal_is_empty() && self.value.is_none() && self.retirement.is_empty()
     }
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::ValueError>{
-        if !self.cursor.terminal_is_empty(){self.cursor.begin_close();return self.cursor.close_step(grant);}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+        if !self.cursor.terminal_is_empty(){self.cursor.begin_close();return self.cursor.close_selected(grant.maximum_copy_bytes,grant);}
         if self.value.is_some(){
-            if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<T>(){return Ok(RetainedCloneStep::Progress(Default::default()));}
-            let value=self.value.take().unwrap();match semio_framework_value::retirement::controlled::ControlledRetirement::new(value){Ok(owner)=>*self.retirement=Some(owner),Err((error,value))=>{*self.value=Some(value);return Err(error);}}
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<T>(),..Default::default()}));
+            let turn=self.retirement.begin_granted(&mut self.value,grant);
+            return semio_framework_value::RetainedWorkOutcome{work:turn.work,result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default())))};
         }
-        if let Some(owner)=self.retirement.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.retirement.take();}return Ok(step);}
-        Ok(RetainedCloneStep::Complete(Default::default()))
+        self.retirement.step_granted(grant)
     }
     pub fn close_demands(&self,copy:usize)->Result<RetainedCloneGrant,semio_framework_value::ValueError>{
-        if !self.cursor.terminal_is_empty(){return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:self.cursor.next_close_copy_byte_demand()?,maximum_capacity_bytes:self.cursor.next_close_capacity_byte_demand(copy)?,maximum_release_bytes:self.cursor.next_close_release_byte_demand()?,maximum_depth:self.cursor.next_close_depth_demand()?});}
-        if self.value.is_some(){return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<T>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1});}
-        if let Some(owner)=self.retirement.as_ref(){return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:owner.next_copy_byte_demand()?,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy)?,maximum_release_bytes:owner.next_release_byte_demand()?,maximum_depth:owner.next_depth_demand()?});}
-        Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0})
+        let demand=if !self.cursor.terminal_is_empty(){self.cursor.close_demands(copy)?}
+            else{self.retirement.next_owner_demands::<T>(self.value.is_some(),&None,copy)?};
+        Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})
     }
 }
 

@@ -106,7 +106,7 @@ impl RasterDslValueBoundsAuthority {
         Some(value)
     }
 
-    pub fn step(&mut self, root: &semio_framework_value::DslValue, totals: &mut RasterOwnerTotals, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, root: &semio_framework_value::DslValue, totals: &mut RasterOwnerTotals, cx: &mut dyn RasterWork) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -191,7 +191,7 @@ impl RasterLayerBoundsAuthority {
         }
     }
 
-    pub fn step(&mut self, root: &RasterLayerNode, totals: &mut RasterOwnerTotals, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, root: &RasterLayerNode, totals: &mut RasterOwnerTotals, cx: &mut dyn RasterWork) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -321,7 +321,7 @@ impl RasterSnapshotBoundsAuthority {
         Self { totals: RasterOwnerTotals::new(), layer: None, asset_key: RasterMapKeyCursor::new(), phase: 0, index: 0, asset_field: 0, terminal: false }
     }
 
-    pub fn step(&mut self, source: &RasterSnapshot, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, source: &RasterSnapshot, cx: &mut dyn RasterWork) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -487,7 +487,11 @@ impl RasterLayerLocator {
         }
     }
 
-    pub fn step(&mut self, snapshot: &RasterSnapshot, target: &str, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, snapshot: &RasterSnapshot, target: &str, cx: &mut dyn RasterWork) -> Result<bool, &'static str> {
+        self.step_where(snapshot,|node|Self::node_id(node)==target,cx)
+    }
+
+    pub fn step_where(&mut self, snapshot: &RasterSnapshot, matches: impl Fn(&RasterLayerNode)->bool, cx: &mut dyn RasterWork) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -502,7 +506,7 @@ impl RasterLayerLocator {
                 return Ok(false);
             }
             self.frames[self.depth].phase = 1;
-            if Self::node_id(node) == target {
+            if matches(node) {
                 let mut indices = [0; RASTER_MAXIMUM_NESTED_DEPTH];
                 indices[0] = self.root;
                 if self.depth > 0 {

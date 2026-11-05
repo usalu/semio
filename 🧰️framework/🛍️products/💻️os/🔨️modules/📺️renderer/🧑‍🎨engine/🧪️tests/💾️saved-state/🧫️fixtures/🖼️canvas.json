@@ -1,0 +1,17 @@
+{
+  "acceptedTrace": [
+    "note",
+    "attachment-close",
+    "destroy",
+    "panel-remove"
+  ],
+  "acceptedTraceSchema": {
+    "type": "array",
+    "const": [
+      "note",
+      "attachment-close",
+      "destroy",
+      "panel-remove"
+    ]
+  }
+}

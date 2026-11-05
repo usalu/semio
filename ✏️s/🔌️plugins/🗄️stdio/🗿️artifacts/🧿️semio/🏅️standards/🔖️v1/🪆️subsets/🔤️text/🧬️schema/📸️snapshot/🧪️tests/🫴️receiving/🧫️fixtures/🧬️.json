@@ -1,0 +1,105 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "schema",
+    "snapshot",
+    "cancelAfterTurns",
+    "deniedAxes",
+    "expected"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "schema": {
+      "const": "stdio.semio.text"
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "runs"
+      ],
+      "properties": {
+        "schema": {
+          "const": "stdio.semio.text"
+        },
+        "runs": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "language",
+              "content",
+              "marks"
+            ],
+            "properties": {
+              "language": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "marks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "href"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "bold",
+                        "italic",
+                        "code",
+                        "link"
+                      ]
+                    },
+                    "href": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "cancelAfterTurns": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "expected": {
+      "const": {
+        "complete": "typed-output",
+        "cancelled": "paid-empty",
+        "denied": "unchanged",
+        "source": "same-pointer-length",
+        "stock": "same-original"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "cases": [
+    {
+      "cancelAt": "final-allocation-before-service-initialization",
+      "expected": {
+        "published": false,
+        "balanced": true
+      }
+    },
+    {
+      "cancelAt": "after-child-service-backing",
+      "expected": {
+        "published": false,
+        "balanced": true
+      }
+    },
+    {
+      "cancelAt": "after-tool-service-backing",
+      "expected": {
+        "published": false,
+        "balanced": true
+      }
+    },
+    {
+      "cancelAt": "during-large-absent-field",
+      "expected": {
+        "published": false,
+        "balanced": true
+      }
+    }
+  ]
+}

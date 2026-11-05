@@ -1,6 +1,8 @@
 //! 🚪️ Product-neutral I/O payloads and route vocabulary over semantic artifact identities.
 
 use semio_framework_diagnostic::Diagnostic;
+pub use semio_framework_io_control::{NativeSnapshotFailure,NativeSnapshotCause};
+#[path="⚠️refusal/🛬️receiving/🦀️.rs"]mod error_receiving;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_value::{FromValue as _,ToValue as _,ValueError,ValueRefusalKind};
 
@@ -76,9 +78,9 @@ impl IoFidelity {
 
 //#region 🔖️Result
 /// 🚫️ A failed io operation: routing, running a hop, or (de)serializing one payload.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct IoError {
-    pub cause: ValueError,
+    pub cause: NativeSnapshotFailure,
     pub diagnostics: Vec<Diagnostic>,
 }
 
@@ -102,34 +104,11 @@ impl IoError {
         })
     }
 
-    /// 🛬️ Constructs exact owned causes and source diagnostics without an unchecked codec.
-    pub fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
-        control.scoped_stage(|control| {
-            control.checkpoint()?;
-            let semio_framework_value::DslValue::Object(fields) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected IO error object")) };
-            if fields.len() != 2 { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "IO error requires exactly cause and diagnostics")) }
-            control.begin_stage(2)?;
-            let (mut cause, mut diagnostics) = (None, None);
-            for (key, value) in fields {
-                match key.as_str() {
-                    "cause" if cause.is_none() => cause = Some(value),
-                    "diagnostics" if diagnostics.is_none() => diagnostics = Some(value),
-                    _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue, "unknown or duplicate IO error field")),
-                }
-                control.step()?;
-            }
-            control.charge(size_of::<Self>())?;
-            let cause = ValueError::from_value_controlled(cause.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "missing IO error cause"))?, control)?;
-            let cause = semio_framework_value::DecodedValue::new(cause, drop);
-            let diagnostics = <Vec<Diagnostic> as semio_framework_value::FromValue>::from_value_controlled(diagnostics.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "missing IO error diagnostics"))?, control)?;
-            let output = semio_framework_value::DecodedValue::new(Self { cause: cause.take(), diagnostics }, |error| <Vec<Diagnostic> as semio_framework_value::FromValue>::retire_decoded(error.diagnostics));
-            control.checkpoint()?;
-            Ok(output.take())
-        })
-    }
-
     /// ❌️ Moves the complete owned Value refusal without text projection or allocation.
-    pub fn from_value_error(cause: ValueError) -> Self { Self { cause, diagnostics: Vec::new() } }
+    pub fn from_value_error(cause: ValueError) -> Self { Self { cause:cause.into(), diagnostics: Vec::new() } }
+
+    /// 🧳️ Moves every original native cause without projecting or cloning its ownership.
+    pub fn from_native_snapshot_failure(cause:NativeSnapshotFailure)->Self{Self{cause,diagnostics:Vec::new()}}
 
     /// 📍️ Retains an authored text source through charged, cancelable diagnostic ownership.
     pub fn from_text_error_controlled(error: semio_framework_diagnostic::TextError, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Self, ValueError> {
@@ -157,10 +136,12 @@ impl IoError {
                 scope: semio_framework_diagnostic::FaultScope::default(),
             });
             control.step()?;
-            Ok(Self { cause: ValueError::new(error.kind, message), diagnostics })
+            Ok(Self { cause: ValueError::new(error.kind, message).into(), diagnostics })
         })
     }
 }
+
+impl From<NativeSnapshotFailure> for IoError{fn from(cause:NativeSnapshotFailure)->Self{Self::from_native_snapshot_failure(cause)}}
 
 impl From<ValueError> for IoError {
     fn from(cause:ValueError)->Self{Self::from_value_error(cause)}

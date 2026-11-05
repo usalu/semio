@@ -139,7 +139,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
-        let view_state = context.and_then(|context| context.view_state.as_ref());
+        let view_state = context.and_then(|context| context.view_state.as_deref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
         let window_transient_snapshot = context.and_then(|context| context.window_transient.as_ref());
         if self.consumed { return Err(Fault::from("puzzle5d-window-work-repeated")); }
@@ -221,7 +221,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
-        let view_state = context.and_then(|context| context.view_state.as_ref());
+        let view_state = context.and_then(|context| context.view_state.as_deref());
         if self.consumed {
             return Err(Fault::from("puzzle5d-export-work-repeated"));
         }

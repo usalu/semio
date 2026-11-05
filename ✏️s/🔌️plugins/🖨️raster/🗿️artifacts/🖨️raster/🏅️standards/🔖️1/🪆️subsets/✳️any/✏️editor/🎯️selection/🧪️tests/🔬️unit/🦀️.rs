@@ -4,7 +4,7 @@ use semio_s_artifact_raster_raster_model::create_pixel_layer;
 #[semio_framework_async_macros::async_test]
 async fn completed_selection_checks_revision_extent_and_visibility_without_requiring_an_unlocked_layer(){
     let mut doc=semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot::default();doc.layers.push(create_pixel_layer("Paint",3,2));
-    let selection=RasterPixelSelection{layer_id:layer_node_id(&doc.layers[0]).into(),target:"pixels".into(),width:3,height:2,spans:vec![]};
+    let selection=RasterPixelSelection{layer_id:layer_node_id(&doc.layers[0]).into(),target:"pixels".into(),width:3,height:2,spans:Default::default()};
     assert!(selection.validate_current(&doc,None).is_ok());
     assert!(selection.validate_current(&doc,Some("stale")).is_err());
     if let semio_s_artifact_raster_raster_model::RasterLayerNode::Pixel{locked,..}=&mut doc.layers[0]{*locked=true;}

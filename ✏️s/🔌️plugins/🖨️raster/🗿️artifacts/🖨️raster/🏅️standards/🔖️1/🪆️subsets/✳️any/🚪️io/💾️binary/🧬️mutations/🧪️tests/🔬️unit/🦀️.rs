@@ -90,7 +90,8 @@ fn drive_raster_candidate(base: &RasterSnapshot, operation: &RasterMutation, ope
         let (post, _receipt) = apply.advance(base, operation, operation_id, generation, RASTER_TEST_FUEL, raster_test_wallet()).expect("retained Raster apply");
         if let Some(post) = post {
             assert!(apply.terminal_is_empty(), "a published candidate has retired every displaced owner");
-            return post;
+            if let Some(inverse)=post.inverse{retire_raster_value_cold(inverse);}
+            return post.snapshot;
         }
     }
     panic!("retained Raster apply did not reach a bounded terminal")

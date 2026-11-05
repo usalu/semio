@@ -74,30 +74,22 @@
   "selectionControls": {
     "width": 256,
     "height": 256,
-    "firstProgress": 0.5,
     "actions": [
       "Select all pixels",
       "Invert selection"
-    ],
-    "cancelActions": [
-      "Cancel",
-      "Deselect"
     ],
     "keyboardModifiers": [
       "ctrlKey",
       "metaKey"
     ]
   },
-  "combinationCancellation": {
-    "width": 1024,
-    "height": 64,
-    "actions": [
-      "Cancel",
-      "Deselect",
-      "Pan canvas",
-      "Switch utility"
-    ]
-  },
+  "selectionIntents": [
+    {"label":"Rectangle selection","method":"rectangle","mode":"replace","start":[20,20],"end":[30,30],"path":[[2,2],[12,12]]},
+    {"label":"Ellipse selection","method":"ellipse","mode":"add","start":[20,20],"end":[30,30],"path":[[2,2],[12,12]]},
+    {"label":"Lasso selection","method":"lasso","mode":"subtract","start":[20,20],"middle":[30,20],"end":[30,30],"path":[[2,2],[12,2],[12,12]]},
+    {"label":"Rectangle selection","method":"rectangle","mode":"intersect","start":[30,30],"end":[20,20],"path":[[12,12],[2,2]]}
+  ],
+  "selectionCancellation": ["pointercancel","Escape","Pan canvas","Switch utility"],
   "affineMaskTargets": [
     {
       "name": "linked shear",

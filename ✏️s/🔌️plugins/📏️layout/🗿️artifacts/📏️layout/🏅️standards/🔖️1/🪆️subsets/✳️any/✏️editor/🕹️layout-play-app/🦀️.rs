@@ -66,6 +66,10 @@ impl LayoutPlayApp {
     }
 }
 
+#[cfg(test)]
+#[path="🧪️host-event/🦀️.rs"]
+mod host_event_birth_tests;
+
 impl ArtifactEditor for LayoutPlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
@@ -114,6 +118,11 @@ impl ArtifactEditor for LayoutPlayApp {
     /// 📨️ Every host event ends the window's open transform-tool gesture with zero trace under the reason the tool
     /// records: a blur `blur`, a lost pointer capture `captureLost`, a utility switch or a closing window `retired`, an
     /// opened history edit `frozen` and a remote edit `baseMoved` — the window's typed `translateSelection{phase: "abort"}`.
+    fn host_event_demands(event: &semio_framework_plugin::HostEvent) -> Option<semio_framework_value::RetirementDemand> {
+        let bytes=match event{semio_framework_plugin::HostEvent::WindowBlurred{..}=>9,semio_framework_plugin::HostEvent::PointerCaptureLost{..}=>16,semio_framework_plugin::HostEvent::UtilityChanged{..}|semio_framework_plugin::HostEvent::Retiring{..}=>12,semio_framework_plugin::HostEvent::TimeTravelFrozen{..}=>11,semio_framework_plugin::HostEvent::BaseMoved{..}=>14};
+        let header=std::mem::size_of::<Self::Command>();Some(semio_framework_value::RetirementDemand{copy_bytes:header.saturating_mul(2).saturating_add(bytes),capacity_bytes:header.saturating_add(bytes),depth:1,..Default::default()})
+    }
+
     fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<Self::Command> {
         use semio_framework_plugin::HostEvent;
         use semio_framework_tool_machine::ToolAbortReason;
@@ -179,18 +188,19 @@ impl ArtifactEditor for LayoutPlayApp {
     /// 🎞️ `import-media` is the only reserved route layout owns: every inbound `fields:in` delivery is
     /// routed through this builder (`dispatch_import_media` → `build_artifact_reserved_media_job`);
     /// `copy`/`cut`/`paste` stay on the framework's own reserved factories.
-    fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+    fn build_reserved_tool_job(source:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if body.is_some(){return semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,LayoutImportJob>(source,body,cx)}
+        let request=source.as_ref().ok_or_else(||Fault::from("layout import requires its original request"))?;
         if request.tool_id.as_str() != LAYOUT_IMPORT_TOOL_ID {
-            return Ok(None);
+            return Ok(false);
         }
         if !request.raw_wire.is_empty() {
-            return Err(Fault::from("layout import-media admits a decoded media value, never a wire payload"));
+            return Err(Fault::from("layout import-media admits a decoded media value, never a wire payload").into());
         }
-        let ArtifactReservedToolInput::Media { port, media } = &request.input else {
-            return Err(Fault::from("layout import-media requires media input"));
+        let Some(ArtifactReservedToolInput::Media { .. }) = request.input.as_ref() else {
+            return Err(Fault::from("layout import-media requires media input").into());
         };
-        let (port, media) = (port.clone(), media.clone());
-        Ok(Some(ArtifactReservedToolJob::new(LayoutImportJob::new(request, port, media))))
+        semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,LayoutImportJob>(source,body,cx)
     }
 
     fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{

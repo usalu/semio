@@ -272,7 +272,7 @@ function createUiSurfaceProjection(scope: PluginHandleScope, admission: ReturnTy
       }
       return sections;
     };
-    const read = (async () => ({ windows: await project(request.windows), panels: await project(request.panels), ...(await projectSections()) }))();
+    const read = (async () => ({ windows: await project(request.windows), panels: await project(request.panels), forms:await project(request.forms), ...(await projectSections()) }))();
     const inflight = uiReadsByInstance.get(instanceId) ?? new Set<Promise<unknown>>();
     inflight.add(read); uiReadsByInstance.set(instanceId, inflight);
     try {

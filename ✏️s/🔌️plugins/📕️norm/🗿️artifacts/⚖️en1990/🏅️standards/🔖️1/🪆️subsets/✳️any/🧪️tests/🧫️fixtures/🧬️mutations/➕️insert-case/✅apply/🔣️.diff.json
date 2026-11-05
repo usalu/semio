@@ -23,7 +23,12 @@
     "moved": [],
     "modified": []
   },
-  "accidentals": null,
+  "accidentals": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "seismics": {
     "removed": [],
     "inserted": [],
@@ -42,7 +47,7 @@
     "moved": [],
     "modified": []
   },
-  "effects": null,
+  "effects": [],
   "fatigueSpectra": {
     "removed": [],
     "inserted": [],
@@ -90,6 +95,16 @@
     "moved": [],
     "modified": []
   },
-  "factorOverrides": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "trafficGroups": {"removed": [], "inserted": [], "moved": [], "modified": []}
+  "factorOverrides": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "trafficGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

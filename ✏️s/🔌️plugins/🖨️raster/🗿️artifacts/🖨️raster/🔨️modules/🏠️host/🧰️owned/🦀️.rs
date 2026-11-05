@@ -33,6 +33,30 @@ use snapshot_clone::*;
 mod mutation_candidate;
 pub use mutation_candidate::*;
 
+#[path = "🔲️pixel-source/🦀️.rs"]
+mod pixel_source;
+pub use pixel_source::*;
+
+#[path = "🖼️image-copy/🦀️.rs"]
+mod image_copy;
+pub use image_copy::*;
+
+#[path = "🔲️pixel-compute/🦀️.rs"]
+mod pixel_compute;
+use pixel_compute::*;
+
+#[path = "🔲️pixel-result/🦀️.rs"]
+mod pixel_result;
+use pixel_result::*;
+
+#[path = "🔲️pixel-publication/🦀️.rs"]
+mod pixel_publication;
+use pixel_publication::*;
+
+#[path = "🖼️asset-publication/🦀️.rs"]
+mod asset_publication;
+use asset_publication::*;
+
 
 
 

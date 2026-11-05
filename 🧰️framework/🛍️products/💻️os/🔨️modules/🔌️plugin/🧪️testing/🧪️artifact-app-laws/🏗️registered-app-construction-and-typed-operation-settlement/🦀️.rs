@@ -11,7 +11,7 @@ pub fn register_framework_reserved_action_factories<A: ArtifactApp>(bus: &semio_
 /// 🪪️ A local-actor `ActionMeta` for test dispatch (`instance_id: 1`).
 // 🚫️async: E1 pure constructor, called pervasively as `&meta("...")` — see R9.
 pub fn meta(actor: &str) -> ActionMeta {
-    ActionMeta { actor: actor.into(), instance_id: 1, view_state: None }
+    ActionMeta { expected_document_revision:None, actor: actor.into(), instance_id: 1, view_state: None }
 }
 
 // 🏛️ 👁️✏️ W3 dissolution (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET): the two-

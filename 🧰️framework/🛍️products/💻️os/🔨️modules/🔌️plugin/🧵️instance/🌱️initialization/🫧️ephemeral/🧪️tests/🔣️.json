@@ -1,1 +1,1 @@
-{"lanes":["presence","transient"],"initialState":{},"readyPhase":4,"cancelAfter":[0,1,2,4,8,16,64,128],"turn":{"items":1,"copyBytes":4096,"capacityBytes":4096,"releaseBytes":1048576,"depth":4096},"handoffPreservesPointer":true}
+{"lanes":["presence","transient"],"initialState":{},"readyPhase":10,"cancelAfter":[0,1,2,3,4,5,6,8,10,12,16,32,64,128],"turn":{"items":1,"copyBytes":4096,"capacityBytes":4096,"releaseBytes":1048576,"depth":4096},"handoffPreservesPointer":true,"sources":["original-fixed-presence","original-fixed-transient"],"terminalDisposerUsesOriginalRoot":true}

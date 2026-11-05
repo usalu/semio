@@ -54,7 +54,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
     /// 📥️ The original instance recipient observes all four native initializer catalogs without recreating any factory.
     pub fn admit_original_constructor_recipient(&self,constructor:&mut ConstructorState<A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if constructor.has_constructor_receipt(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native constructor recipient cannot replace an outstanding original receipt").into())}
-        if !constructor.constructor_recipient_admitted{let copy=std::mem::size_of::<[Option<(ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase,RetainedCloneGrant,RetainedCloneProgress)>;24]>()+std::mem::size_of::<bool>();let mut done=None;semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:0,release_bytes:0,depth:1},|_|{constructor.constructor_receipts.write([None;24]);constructor.constructor_recipient_admitted=true;semio_framework_value::RetainedWorkOutcome{result:Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})),work:1}})?;return Ok(false)}
+        if !constructor.constructor_recipient_admitted{let copy=std::mem::size_of::<[Option<(ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase,RetainedCloneGrant,RetainedCloneProgress)>;24]>()+std::mem::size_of::<bool>();let mut done=None;semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:0,release_bytes:0,depth:1},|_|{let result=unsafe{semio_framework_value::initialization::initialize_absent_array_at(constructor.constructor_receipts.as_mut_ptr(),0,copy-std::mem::size_of::<bool>())}.and_then(|complete|{if !complete{return Err(ValueError::invariant("fixed constructor recipient initialization remained partial"))}constructor.constructor_recipient_admitted=true;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))});semio_framework_value::RetainedWorkOutcome{result,work:1}})?;return Ok(false)}
         if constructor.constructor_lane>=4{return Ok(true)}let extra=std::mem::size_of::<usize>();let g=cx.retained_grant();if cx.should_yield()||g.maximum_copy_bytes<extra+std::mem::size_of::<bool>()||g.maximum_depth==0||g.maximum_items==0{return Ok(false)}let child=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-extra,..g};let mut p=match constructor.constructor_lane{0=>constructor.constructor_document.acknowledge_installed(&self.store,child)?,1=>constructor.constructor_config.acknowledge_installed(&self.config_store,child)?,2=>constructor.constructor_draft.acknowledge_installed(&self.draft_store,child)?,_=>constructor.constructor_interaction.acknowledge_installed(&self.interaction_store,child)?};if p.copied_items!=0{constructor.constructor_lane+=1;p.copied_bytes+=extra;cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64);}Ok(false)
     }
 
@@ -193,7 +193,8 @@ impl<A: ArtifactApp> PeerRoster<A> {
 
     pub fn validate_peer_roster_publication(&self, stores: &InstanceStores<A>, seq: u64, generation: u64, cancel: &semio_framework_job::CancelToken) -> Result<ValidatedPeerRosterCommit, Fault> {
         let slot = InstanceStores::<A>::peer_roster_slot(generation);
-        if self.peer_roster_reservations[slot] != Some((generation, seq))
+        if self.peer_presence.is_none()
+            || self.peer_roster_reservations[slot] != Some((generation, seq))
             || generation != self.peer_roster_processed_generation.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-generation"), "peer roster publication generation exhausted"))?
             || !self.peer_presence_retirements.can_insert(generation)
             || !self.presence_peer_retirements.can_insert(generation)
@@ -212,6 +213,7 @@ impl<A: ArtifactApp> PeerRoster<A> {
     #[expect(clippy::result_large_err, reason = "Refusal returns the original fixed-capacity input so its caller can retry or retire that exact owner without an extra allocation.")]
     #[expect(clippy::needless_pass_by_value, reason = "This non-Copy token conveys one-use admission authority and must be consumed by the commit, even though its identity fields are scalar.")]
     pub fn publish_peer_roster_candidate_admitted(&mut self, stores: &mut InstanceStores<A>, admission: ValidatedPeerRosterCommit, candidate: PeerRosterCandidate<A::Presence>) -> Result<(), PeerRosterCandidate<A::Presence>> {
+        if self.peer_presence.is_none(){return Err(candidate)}
         let PeerRosterCandidate { seq, generation: candidate_generation, cancel, own_color, now_ms, root, typed } = candidate;
         let ValidatedPeerRosterCommit { generation } = admission;
         let _ = now_ms;
@@ -219,12 +221,8 @@ impl<A: ArtifactApp> PeerRoster<A> {
             Ok(retirement) => retirement,
             Err(typed) => return Err(PeerRosterCandidate { seq, generation: candidate_generation, cancel, own_color, now_ms, root, typed }),
         };
-        let previous = std::mem::replace(&mut *self.peer_presence, root);
-        if previous.is_empty() {
-            drop(previous);
-        } else {
-            self.peer_presence_retirements.insert_admitted(generation, PeerPresenceRootRetirement::new(previous));
-        }
+        let previous = self.peer_presence.replace(root).expect("validated original peer root remains owned until commit");
+        self.peer_presence_retirements.insert_admitted(generation, PeerPresenceRootRetirement::new(previous));
         self.own_color = own_color;
         self.peer_presence_generation = generation;
         if let Some(retirement) = typed_retirement {

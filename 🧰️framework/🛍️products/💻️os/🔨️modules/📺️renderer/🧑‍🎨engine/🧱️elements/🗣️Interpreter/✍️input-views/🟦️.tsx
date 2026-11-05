@@ -360,8 +360,8 @@ export function SelectView({ record, context }: { readonly record: UiNodeRecord;
 
 export function ToggleView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "toggle" }>;
-  if (component.appearance === "checkbox") return <TreeCheckbox id={controlDomId(context, record)} checked={component.on} disabled={context.controls.disabled(record)} ariaLabel={record.accessibility.label ?? component.text} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
-  return <Toggle id={controlDomId(context, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} disabled={context.controls.disabled(record)} aria-label={record.accessibility.label ?? component.text} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
+  if (component.appearance === "checkbox") return <TreeCheckbox id={controlDomId(context, record)} checked={component.on} disabled={context.controls.disabled(record)} ariaLabel={record.accessibility.label ?? component.text ?? undefined} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
+  return <Toggle id={controlDomId(context, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} disabled={context.controls.disabled(record)} aria-label={record.accessibility.label ?? component.text ?? undefined} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
 }
 
 export function SliderView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {

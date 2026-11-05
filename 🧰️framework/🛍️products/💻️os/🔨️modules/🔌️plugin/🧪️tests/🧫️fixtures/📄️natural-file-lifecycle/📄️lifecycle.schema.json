@@ -1,0 +1,72 @@
+{
+  "type": "object",
+  "required": [
+    "schema",
+    "formats",
+    "capabilityGaps"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.framework.os.plugin.natural-file-lifecycle/v1"
+    },
+    "formats": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "appId",
+          "formatKind",
+          "extension",
+          "mediaType",
+          "binary"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "appId": {
+            "type": "string",
+            "pattern": "#editor$"
+          },
+          "formatKind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "extension": {
+            "type": "string",
+            "pattern": "^\\."
+          },
+          "mediaType": {
+            "type": "string",
+            "minLength": 1
+          },
+          "binary": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "capabilityGaps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "appId",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "appId": {
+            "type": "string",
+            "pattern": "#editor$"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

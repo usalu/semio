@@ -55,7 +55,7 @@ pub const SEMIO_MESH_DOCUMENT_SCHEMA: &str = "stdio.semio.mesh";
 /// meshes"); every other subset in this packet's lease uses the minimal-command pattern instead,
 /// reported per-subset in the packet report, because their own schemas expose no by-index "replace"
 /// mutation today (only insert/remove/whole-document `SetSnapshot`).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct SemioMeshSetVertexArgs {
     pub mesh_id: String,
     pub primitive_id: String,
@@ -63,29 +63,24 @@ pub struct SemioMeshSetVertexArgs {
     pub point: [f64; 3],
 }
 
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum SemioMeshEditCommand {
+    SetActiveExample { example_id: String },
     SetVertex(SemioMeshSetVertexArgs),
 }
 
 impl protocol::OpBinary for SemioMeshEditCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let SemioMeshEditCommand::SetVertex(args) = self;
-        let payload = serde_json::json!({ "meshId": args.mesh_id.as_str(), "primitiveId": args.primitive_id.as_str(), "vertexIndex": args.vertex_index, "point": args.point });
-        Ok(serde_json::to_vec(&payload).unwrap_or_default())
-    }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(semio_framework_pack_json::to_json_string(self).into_bytes()) }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let value: serde_json::Value = serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: error.to_string() })?;
-        let mesh_id = value.get("meshId").and_then(|v| v.as_str()).filter(|v| !v.is_empty()).ok_or_else(|| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "meshId is required".into() })?.to_owned();
-        let primitive_id = value.get("primitiveId").and_then(|v| v.as_str()).filter(|v| !v.is_empty()).ok_or_else(|| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "primitiveId is required".into() })?.to_owned();
-        let vertex_index = value.get("vertexIndex").and_then(|v| v.as_u64()).and_then(|v| usize::try_from(v).ok()).ok_or_else(|| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "vertexIndex is required".into() })?;
-        let point_value = value.get("point").and_then(|v| v.as_array()).filter(|v| v.len() == 3).ok_or_else(|| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "point must contain three finite numbers".into() })?;
-        let component = |index: usize| point_value[index].as_f64().filter(|v| v.is_finite()).ok_or_else(|| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "point must contain three finite numbers".into() });
-        let point = [component(0)?, component(1)?, component(2)?];
-        Ok(SemioMeshEditCommand::SetVertex(SemioMeshSetVertexArgs { mesh_id, primitive_id, vertex_index, point }))
+        let value=semio_framework_pack_json::parse_bytes(bytes,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|protocol::ProtocolError::Malformed{what:"SemioMeshEditCommand",offset:0,detail:error.to_string()})?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&value)).map_err(|error|protocol::ProtocolError::Malformed{what:"SemioMeshEditCommand",offset:0,detail:error.to_string()})
     }
 }
-semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(SemioMeshEditCommand, ["set-vertex"]);
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(SemioMeshEditCommand, ["set-vertex", "setActiveExample"]);
+
+fn semio_mesh_editor_example_snapshot(example_id:&str)->Result<SemioMeshSnapshot,Fault>{
+    semio_s_artifact_stdio_contract::parse_example_snapshot(example_id,semio_s_artifact_stdio_semio_mesh_examples::examples::cube::ID,semio_s_artifact_stdio_semio_mesh_examples::examples::cube::PRIMARY_TEXT,SEMIO_MESH_DOCUMENT_SCHEMA,|snapshot:&SemioMeshSnapshot|snapshot.schema.as_str())
+}
 
 fn vertex_index_arg() -> ActionArgDef {
     let mut argument = ActionArgDef::number("vertexIndex", LocalizedLabel::native("Vertex Index", "Vertexindex")).required();
@@ -238,7 +233,8 @@ impl ArtifactCommandWork<EditorApp<SemioMeshEditor>> for SemioMeshSetVertexWork 
     }
 }
 
-fn semio_mesh_set_vertex_work(_tool_id: &'static str) -> Box<dyn ArtifactCommandWork<EditorApp<SemioMeshEditor>>> {
+fn semio_mesh_set_vertex_work(tool_id: &'static str) -> Box<dyn ArtifactCommandWork<EditorApp<SemioMeshEditor>>> {
+    if tool_id==semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID{return editing::bounded_native_edit_work::<SemioMeshEditor>(tool_id)}
     Box::new(SemioMeshSetVertexWork::default())
 }
 //#endregion 🔖️Command
@@ -250,6 +246,8 @@ pub use semio_s_artifact_stdio_semio_mesh_io::editor::edit_rules;
 pub struct SemioMeshEditor;
 
 impl ArtifactEditor for SemioMeshEditor {
+    fn examples()->Vec<semio_framework_plugin::ExampleSource>{vec![semio_s_artifact_stdio_semio_mesh_examples::examples::cube::source()]}
+
     type Snapshot = SemioMeshSnapshot;
     type Mutation = SemioMeshMutation;
     type Config = NoConfig;
@@ -276,7 +274,7 @@ impl ArtifactEditor for SemioMeshEditor {
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
-        editing::snapshot_editing_command_id(command, |_| "set-vertex")
+        editing::snapshot_editing_command_id(command, |command|match command{SemioMeshEditCommand::SetVertex(_)=>"set-vertex",SemioMeshEditCommand::SetActiveExample{..}=>semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID})
     }
 
     fn reference_birth()->Option<fn()->Result<SemioMeshSnapshot,semio_framework_plugin::Fault>>{Some(||{
@@ -292,6 +290,7 @@ impl ArtifactEditor for SemioMeshEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        if let editing::SnapshotEditingCommand::Native(SemioMeshEditCommand::SetActiveExample{example_id})=command{return Ok(Emit{effects:vec![semio_s_artifact_stdio_contract::load_example_effect(&semio_mesh_editor_example_snapshot(example_id)?,SEMIO_MESH_DOCUMENT_SCHEMA)],..Default::default()})}
         let editing::SnapshotEditingCommand::Native(SemioMeshEditCommand::SetVertex(args)) = command else {
             let editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
@@ -315,6 +314,7 @@ impl ArtifactEditor for SemioMeshEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref();
         editing::snapshot_editing_command_from_action(action, args, |action, args| {
+            if action==semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID{return Ok(SemioMeshEditCommand::SetActiveExample{example_id:semio_s_artifact_stdio_contract::example_id_argument(args,"")})}
             if action != "set-vertex" {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioMeshEditor")));
             }
@@ -349,8 +349,10 @@ impl editing::SnapshotEditingEditor for SemioMeshEditor {
 semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
     editor: SemioMeshEditor,
     tools: ["set-vertex"],
-    payload_schema: "semio.stdio.semio-mesh-set-vertex-command.v1",
+    payload_schema: "stdio.semio.mesh.tool-command.v1",
     reduce: |command, snapshot| {
+        if let editing::SnapshotEditingCommand::Native(SemioMeshEditCommand::SetActiveExample{example_id})=command{return Ok(Emit{effects:vec![semio_s_artifact_stdio_contract::load_example_effect(&semio_mesh_editor_example_snapshot(example_id)?,SEMIO_MESH_DOCUMENT_SCHEMA)],..Default::default()})}
+
         let editing::SnapshotEditingCommand::Native(SemioMeshEditCommand::SetVertex(args)) = command else {
             return Err(Fault::from("stdio.semio.mesh.set-vertex.command-mismatch"));
         };
@@ -359,6 +361,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
             None => Emit::default(),
         })
     },
+    host_tools: ["setActiveExample"],
     work: semio_mesh_set_vertex_work,
     preparation_route: preparation::route,
 }
@@ -375,7 +378,12 @@ pub fn create_semio_mesh_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(main::definition())
         .window_kind_def(editing::snapshot_details_window_definition())
         .default_layout(edit::layout())
-        .action_with(set_vertex_action());
+        .action_with(set_vertex_action())
+        .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_semio_mesh_examples::examples::cube::ID,semio_s_artifact_stdio_semio_mesh_examples::examples::cube::label())],semio_s_artifact_stdio_semio_mesh_examples::examples::cube::ID))
+        .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
+        .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,semio_s_artifact_stdio_contract::set_active_example_description())
+        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,semio_framework_plugin::InteractiveJobClassification::Migrated);
     editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
@@ -385,3 +393,17 @@ pub fn create_semio_mesh_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[test]
+fn typed_example_selection_refuses_unknown_and_malformed_sources(){
+    for id in ["","unknown-example","demo"]{assert!(semio_mesh_editor_example_snapshot(id).is_err());}
+    for source in ["","not a semio document"]{assert!(semio_s_artifact_stdio_contract::parse_example_snapshot::<SemioMeshSnapshot>(semio_s_artifact_stdio_semio_mesh_examples::examples::cube::ID,semio_s_artifact_stdio_semio_mesh_examples::examples::cube::ID,source,SEMIO_MESH_DOCUMENT_SCHEMA,|snapshot|snapshot.schema.as_str()).is_err());}
+}
+
+#[cfg(test)]
+#[test]
+fn example_picker_declares_only_the_host_load_lane(){
+    let contract=<SemioMeshEditor as editing::BoundedNativeEditingEditor>::NATIVE_PUBLICATION_CONTRACTS.iter().find(|contract|contract.tool_id==semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID).unwrap();
+    assert_eq!(contract.lanes,&[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly]);
+}

@@ -48,9 +48,6 @@ pub const NORM_LIVE_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = 
     ArtifactToolPublicationContract { tool_id: "deleteEntities", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
-/// 🧾️ Every tool id of a live Eurocode editor: the five retained tools, then the six live tools, in `app_commands!` row order.
-pub const NORM_EDITOR_TOOL_IDS: &[&str] = &["setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy", "setFields", "previewRemedy", "clearPreview", "cancelEvaluation", "evaluateUnits", "viewportAct", "copyEntities", "duplicateEntities", "pasteEntities", "moveEntity", "deleteEntities"];
-
 /// 🚦️ The publication contracts of [`NORM_EDITOR_TOOL_IDS`], in the same order.
 pub const NORM_EDITOR_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setSelectedCheckIndex", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
@@ -107,10 +104,21 @@ pub trait NormRetainedEditor: semio_framework_plugin::ArtifactEditor<Config = No
     type Family: NormFamily<Document = Self::Snapshot, Mutation = Self::Mutation>;
     type ResultsWindowConfigOwner: WindowConfigOwner<State = semio_s_plugin_norm_results_config::schema::NormResultsWindowConfig, Mutation = semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation>;
 
+    /// 🪺️ The exact native edit vocabulary used by inspector form preparation.
+    fn inspector_rules() -> &'static NormEditRules;
+
+    /// 🧭️ The family resolver retains its typed semantic admission and special handlers.
+    fn inspector_resolve(document: &Self::Snapshot, edit: &NormEdit) -> Result<Vec<Self::Mutation>, String>;
+
     fn selected_check_window_mutation(command: &Self::Command) -> Option<semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation>;
 
     /// 🔗️ The view effects of a click on a check row (the selection of its owner entity, see [`live_check_focus_effects`]); none for apps without a viewport.
     fn check_focus_effects(_command: &Self::Command, _document: &Self::Snapshot) -> Vec<semio_framework_plugin::Effect> {
+        Vec::new()
+    }
+
+    /// 🎹️ Interaction effects of an ephemeral view command, resolved from its captured transient and interaction roots.
+    fn view_focus_effects(_command: &Self::Command, _document: &Self::Snapshot, _transient: &Self::Transient, _interaction: &protocol::InteractionState) -> Vec<semio_framework_plugin::Effect> {
         Vec::new()
     }
 
@@ -149,7 +157,7 @@ pub fn norm_retained_reduce<A: NormRetainedEditor>(
     snapshot: &A::Snapshot,
     config: &A::Config,
     history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
+    interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<A>>>,
     operation: &semio_framework_plugin::AppOperationContext,
@@ -159,7 +167,10 @@ pub fn norm_retained_reduce<A: NormRetainedEditor>(
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let window = context.and_then(|context| context.window_config.as_ref());
-    let emit = dispatch_norm_command::<A>(command, &doc, &ConfigView { snapshot: config, window }, context.and_then(|context| context.view_state.as_ref()))?;
+    let mut emit = dispatch_norm_command::<A>(command, &doc, &ConfigView { snapshot: config, window }, context.and_then(|context| context.view_state.as_deref()))?;
+    if let Some(context) = context {
+        emit.effects.extend(A::view_focus_effects(command, snapshot, context.transient.get(), interaction));
+    }
     Ok(emit)
 }
 
@@ -239,3 +250,7 @@ pub fn build_norm_tool_job<A: NormRetainedEditor>(request: &mut Option<semio_fra
     semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, A::command_id, NORM_RETAINED_RAW_BYTES, 1, true, |request| -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<A>>> { Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, norm_retained_reduce::<A>, norm_bounded_extent::<A>)) })
 }
 //#endregion 🔌️EditorOverrides
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod publication_tests;

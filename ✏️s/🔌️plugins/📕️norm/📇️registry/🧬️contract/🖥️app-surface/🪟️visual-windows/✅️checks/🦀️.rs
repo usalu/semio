@@ -345,12 +345,13 @@ pub fn check_detail_rows(id: &str, check: &CheckResult, locale: Locale, spec: &C
     } else {
         rows.push(tree_item_desc(format!("{id}.clause"), norm_ui_label(chrome("Clause", "Klausel", locale))?, Some(clause_text(&check.clause, locale)))?);
     }
-    rows.extend(remedy_chip_rows(id, check, locale, spec.controller_id)?);
+    rows.extend(remedy_chip_rows(id, check, locale, spec.controller_id.filter(|controller| !controller.ends_with("#viewer")))?);
     Ok(rows)
 }
 
 fn check_row(check: &CheckResult, index: usize, state: &ChecksViewState, locale: Locale, spec: &ChecksWindowSpec) -> UiAssemblyResult<BuiltNode> {
-    let id = format!("norm-checks-check-{index}");
+    let selection_only = spec.controller_id.is_some_and(|controller| controller.ends_with("#viewer")) && spec.interaction_domain.is_some();
+    let id = if selection_only { crate::check_address(&check.id).ok_or_else(|| row_error("ui.node.id"))? } else { format!("norm-checks-check-{index}") };
     let band = UtilisationBand::of(check.status, check.utilization);
     let mut builder = ui::tree_item(norm_ui_label(check_row_label(check, locale))?)
         .try_id(&id)
@@ -361,7 +362,9 @@ fn check_row(check: &CheckResult, index: usize, state: &ChecksViewState, locale:
         .dimmed(state.pending.is_some())
         .try_label(check_accessible_name(check, locale))
         .map_err(|_| row_error("ui.node.label"))?;
-    if let Some(controller_id) = spec.controller_id {
+    if selection_only {
+        builder = builder.granularity(ui_text(crate::viewport3d::picking::GRANULARITY_CHECK)?);
+    } else if let Some(controller_id) = spec.controller_id {
         let args = action_args_map(vec![("index", UiValue::Number(index as f64))])?;
         builder = builder.target(semio_framework_plugin::activation_target(norm_action(controller_id, "setSelectedCheckIndex", Some(args))?)?);
     }
@@ -380,7 +383,7 @@ fn group_row(group: &ChecksGroup, group_index: usize, state: &ChecksViewState, l
     let verdict = if group.counts[2] > 0 { '✗' } else if group.counts[1] > 0 { '⚠' } else { '✓' };
     let label = format!("{verdict} {} — {} {} · u {worst}", group.label, group.rows.len(), chrome("checks", "Nachweise", locale));
     let description = format!("✓{} ⚠{} ✗{} ∅{}", group.counts[0], group.counts[1], group.counts[2], group.counts[3]);
-    let selectable = spec.interaction_domain.is_some() && spec.controller_id.is_some() && state.grouping == ChecksGrouping::Entity;
+    let selectable = spec.interaction_domain.is_some() && spec.controller_id.is_some_and(|controller| !controller.ends_with("#viewer")) && state.grouping == ChecksGrouping::Entity;
     let id = match (&group.entity_id, selectable) {
         (Some(entity_id), true) => entity_id.clone(),
         _ => format!("norm-checks-group-{group_index}"),

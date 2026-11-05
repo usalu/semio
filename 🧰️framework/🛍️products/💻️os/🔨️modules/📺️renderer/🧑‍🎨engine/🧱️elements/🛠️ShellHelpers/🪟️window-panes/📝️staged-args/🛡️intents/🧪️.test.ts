@@ -8,7 +8,7 @@ import {STAGED_FORM_EVENT_ACTION,type StagedFormBinding,type StagedFormStatus} f
 function fixture(token=cases.token){
  const action={scope:'ifc',name:STAGED_FORM_EVENT_ACTION,version:1};
  const binding:StagedFormBinding={token,layout:'preserve',edits:[{source:'text',path:['count']}]};
- let view={surface:'form-left',revision:'publication-1'},status:StagedFormStatus={token,ready:true,diagnostics:[],diagnosticOffset:'0',diagnosticTotal:'0'};
+ let view={surface:'form-left',revision:'publication-1'},status:StagedFormStatus={token,ready:true,commitArgs:cases.args,diagnostics:[],diagnosticOffset:'0',diagnosticTotal:'0'};
  let control:StagedResidentControl<string>={node:'input-1',key:'count',trigger:'change',disabled:false,editable:true,input:'text',action,binding};
  const source:StagedControlSource<string,string>={view:()=>view,status:()=>status,read:(node,trigger)=>node===control.node&&trigger===control.trigger?control:undefined};
  const session=new StagedFormSession({token,locale:'en',controllerId:'ifc'},cases.args);
@@ -35,7 +35,7 @@ test('all rapid partial drafts stay visible through one resident layout and only
  const f=fixture();f.session.publish(f.source);
  for(let i=0;i<cases.drafts.length;i++){expect(f.session.handle(f.intent(BigInt(i+1),cases.drafts[i])).kind).toBe('staged');expect(f.session.display('input-1','change')).toBe(cases.drafts[i]);expect(f.session.canExecute()).toBe(false);expect(f.session.request()?.token.generation).toBe(String(BigInt(cases.token.generation)+BigInt(i+1)));}
  expect(f.session.publish(f.source)).toBe(false);expect(f.session.display('input-1','change')).toBe(cases.drafts.at(-1));
- const current=f.session.request()!;f.setStatus({...f.status,token:current.token});f.setControl({...f.control,binding:{...f.binding,token:current.token}});f.setView({...f.view,revision:'publication-current'});
+ const current=f.session.request()!;f.setStatus({...f.status,token:current.token,commitArgs:current.args});f.setControl({...f.control,binding:{...f.binding,token:current.token}});f.setView({...f.view,revision:'publication-current'});
  expect(f.session.publish(f.source)).toBe(true);expect(f.session.canExecute()).toBe(true);expect(f.session.executionArgs()).toBe(current.args);
  f.setStatus(f.status);expect(f.session.publish(f.source)).toBe(false);expect(f.session.canExecute()).toBe(false);expect(f.session.display('input-1','change')).toBeUndefined();
 });
@@ -73,4 +73,20 @@ test('publication replacement retires prior record and two windows have separate
 
 test('owner scalars are captured before later caller replacement',()=>{
  const f=fixture(),owner={token:{...cases.token},locale:'en' as 'en'|'de',controllerId:'ifc'},session=new StagedFormSession(owner,cases.args);owner.locale='de';owner.controllerId='other';owner.token.window='other';expect(session.request()?.locale).toBe('en');expect(session.request()?.token.window).toBe('detail-left');session.publish(f.source);expect(session.handle(f.intent()).kind).toBe('staged');
+});
+
+test('execution borrows only the exact current resident typed commit payload',()=>{
+ const f=fixture(),commitArgs={count:4,target:cases.args.target};
+ f.setStatus({...f.status,commitArgs});
+ expect(f.session.publish(f.source)).toBe(true);
+ expect(f.session.executionArgs()).toBe(commitArgs);
+ expect(f.session.executionArgs()).not.toBe(f.session.request()?.args);
+ f.setStatus({...f.status,ready:true,commitArgs:null});
+ expect(f.session.canExecute()).toBe(false);
+ f.setStatus({...f.status,ready:false,commitArgs});
+ expect(f.session.canExecute()).toBe(false);
+ f.setStatus({...f.status,commitArgs});
+ expect(f.session.publish(f.source)).toBe(true);
+ f.session.close();
+ expect(f.session.executionArgs()).toBeUndefined();
 });

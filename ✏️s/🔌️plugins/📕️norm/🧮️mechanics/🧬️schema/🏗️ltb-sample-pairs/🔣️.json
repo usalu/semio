@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.norm.mechanics.ltb-sample-pairs/v1",
+  "title": "Lateral Torsional Buckling Sample Pairs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "moment",
+    "lineLoad",
+    "pointLoads"
+  ],
+  "properties": {
+    "moment": {
+      "$ref": "#/definitions/samples"
+    },
+    "lineLoad": {
+      "$ref": "#/definitions/samples"
+    },
+    "pointLoads": {
+      "$ref": "#/definitions/samples"
+    }
+  },
+  "definitions": {
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "number"
+          }
+        ],
+        "additionalItems": false,
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  }
+}

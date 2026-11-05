@@ -6,6 +6,7 @@ use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 
 /// 📚 Every path a En1997 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field_arguments: &[],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "footings[].width", kind: "change-footing-width", selectors: &[SelectorKey::Id("id")], value: "newWidth" },

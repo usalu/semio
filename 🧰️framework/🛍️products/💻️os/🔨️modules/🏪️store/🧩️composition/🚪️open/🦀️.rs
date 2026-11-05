@@ -143,6 +143,7 @@ pub struct MemberOpenRequest {
     pub owner: ManuallyDrop<Option<OwnerRef>>,
     pub pages: ManuallyDrop<Option<OwnedSchemaDecodePages>>,
     closing_identity_field: u8,
+    last_close_work:u64,
     pub closing_actor: Option<String>,
     pub input_offset: usize,
     snapshot_bytes: u64,
@@ -184,6 +185,7 @@ impl MemberOpenRequest {
             owner: ManuallyDrop::new(owner),
             pages: ManuallyDrop::new(Some(pages)),
             closing_identity_field: 0,
+            last_close_work:0,
             closing_actor: None,
             input_offset: 0,
             snapshot_bytes: 0,
@@ -342,21 +344,23 @@ impl MemberOpenRequest {
     }
 
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+        self.last_close_work=0;
         let empty = RetainedCloneProgress::default();
         if self.detached { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         if grant.maximum_depth == 0 { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "member request requires admitted retirement depth")); }
+        if grant.maximum_release_bytes<self.next_release_byte_demand()?{return Ok(RetainedCloneStep::Progress(empty));}
         self.closing = true;
         if let Some(pages) = self.pages.as_mut() {
             if let Some(page) = pages.close_take_page() {
-                let _ = page;
+                self.last_close_work=1;let _ = page;
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
             }
             if !pages.terminal_is_empty() {
-                let step = pages.close_backing_step(grant)?;
+                let result=pages.close_backing_step(grant);self.last_close_work=pages.last_backing_close_work();let step=result?;
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
-            drop(self.pages.take());
+            self.last_close_work=1;drop(self.pages.take());
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
         if self.closing_identity_field == 0 {
@@ -364,13 +368,13 @@ impl MemberOpenRequest {
                 if grant.maximum_release_bytes<semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<String>(){return Ok(RetainedCloneStep::Progress(empty));}
                 let original=std::mem::take(&mut self.actor.0);
                 match original.close_original_lease(grant) {
-                    Ok((value,progress))=>{self.closing_actor=value;return Ok(RetainedCloneStep::Progress(progress));},
+                    Ok((value,progress))=>{self.last_close_work=1;self.closing_actor=value;return Ok(RetainedCloneStep::Progress(progress));},
                     Err((error,original))=>{self.actor.0=original;return Err(error);}
                 }
             }
             let released_bytes=self.closing_actor.as_ref().map_or(0,String::capacity);
             if released_bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
-            drop(self.closing_actor.take());self.closing_identity_field=1;
+            self.last_close_work=1;drop(self.closing_actor.take());self.closing_identity_field=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..empty}));
         }
         if self.closing_identity_field < 11 {
@@ -378,14 +382,17 @@ impl MemberOpenRequest {
             let released_bytes = field.as_ref().map_or(0, |field| field.capacity());
             if released_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
             if let Some(field) = field { drop(std::mem::take(field)); }
-            self.closing_identity_field += 1;
+            self.last_close_work=1;self.closing_identity_field += 1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..empty }));
         }
-        drop(self.expected.take());
+        self.last_close_work=1;drop(self.expected.take());
         drop(self.owner.take());
         self.detached = true;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
     }
+
+    /// 🧮️ Borrows actual page, lease and identity close primitives from the latest call.
+    pub fn last_turn_work(&self)->u64{self.last_close_work}
 
     pub fn terminal_is_empty(&self) -> bool {
         self.detached && !self.actor.0.has_owner() && self.closing_actor.is_none() && self.expected.is_none() && self.owner.is_none() && self.pages.is_none()
@@ -439,7 +446,7 @@ impl MemberOpenRequest {
 
 impl ErasedSnapshotRetirement for MemberOpenRequest {
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:MemberOpenRequest::next_copy_byte_demand(self)?,capacity_bytes:MemberOpenRequest::next_capacity_byte_demand(self,body)?,release_bytes:MemberOpenRequest::next_release_byte_demand(self)?,depth:MemberOpenRequest::next_depth_demand(self)?})}
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::ValueError> { MemberOpenRequest::close_step(self, grant) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::ValueError> { MemberOpenRequest::close_step(self, grant) })(); let work = self.last_turn_work(); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { MemberOpenRequest::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { MemberOpenRequest::next_copy_byte_demand(self) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { MemberOpenRequest::next_capacity_byte_demand(self, body) }

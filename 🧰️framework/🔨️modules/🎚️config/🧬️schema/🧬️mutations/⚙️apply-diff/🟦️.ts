@@ -50,7 +50,9 @@ export function inverseLocalCatalogDiff(diff: LocalCatalogDiff, base: LocalCatal
 function decodeLocalDocument(entry: unknown): LocalDocument | undefined {
   const candidate = entry as Partial<LocalDocument> | null;
   if (candidate === null || typeof candidate !== "object" || typeof candidate.documentId !== "string" || typeof candidate.schema !== "string" || typeof candidate.name !== "string" || (candidate.storage !== "folder" && candidate.storage !== "file") || typeof candidate.target !== "string" || typeof candidate.admittedAtMs !== "number") return undefined;
-  return { documentId: candidate.documentId, schema: candidate.schema, name: candidate.name, storage: candidate.storage, target: candidate.target, admittedAtMs: candidate.admittedAtMs };
+  const surface = candidate.surface;
+  if (surface !== undefined && (surface === null || typeof surface !== "object" || Array.isArray(surface) || Object.keys(surface).length !== 2 || typeof surface.pluginId !== "string" || surface.pluginId.length === 0 || (surface.pluginId.length > 1024 || Array.from(surface.pluginId).length > 256) || typeof surface.appId !== "string" || surface.appId.length === 0 || (surface.appId.length > 1024 || Array.from(surface.appId).length > 256))) return undefined;
+  return { documentId: candidate.documentId, schema: candidate.schema, name: candidate.name, storage: candidate.storage, target: candidate.target, admittedAtMs: candidate.admittedAtMs, ...(surface === undefined ? {} : { surface: { pluginId: surface.pluginId, appId: surface.appId } }) };
 }
 
 /** 🔎️ A catalog carried by a persisted archive's pack value, or `undefined` for anything else. */

@@ -11,6 +11,8 @@ pub struct RetainedCloneGrant {
     pub maximum_depth: usize,
 }
 impl RetainedCloneGrant {
+    /// 🧭️ Keeps only physical authority supplied by both the caller and its genuine source.
+    pub fn restricted_by(self,source:Self)->Self{Self{maximum_items:self.maximum_items.min(source.maximum_items),maximum_copy_bytes:self.maximum_copy_bytes.min(source.maximum_copy_bytes),maximum_capacity_bytes:self.maximum_capacity_bytes.min(source.maximum_capacity_bytes),maximum_release_bytes:self.maximum_release_bytes.min(source.maximum_release_bytes),maximum_depth:self.maximum_depth.min(source.maximum_depth)}}
     pub fn wire_fields(self)->[(&'static str,usize);5]{[("maximumItems",self.maximum_items),("maximumCopyBytes",self.maximum_copy_bytes),("maximumCapacityBytes",self.maximum_capacity_bytes),("maximumReleaseBytes",self.maximum_release_bytes),("maximumDepth",self.maximum_depth)]}
 }
 impl RetainedCloneGrant {

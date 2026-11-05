@@ -1,3 +1,4 @@
+use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 use crate::*;
 use semio_framework_value::DslValue;
 use super::shown_in;
@@ -22,8 +23,11 @@ const BENDING: ClauseRef = ClauseRef { family: "EN 1993-1-1", part: "6", section
 
 fn member_meta(path: &str) -> Option<FieldSpec> {
     match path {
+        path if path == "members" || path.starts_with("members[") && path.ends_with(']') => Some(FieldSpec { read_only: true, can_insert: path == "members", can_remove: true, ..FieldSpec::new("Members", "Bauteile") }),
         "members[].length" => Some(FieldSpec { range: Some(FieldRange::new(0.001, 0.5)), soft_range: Some(FieldRange::new(0.001, 0.1)), step: Some(0.001), help: Some(FieldLabel::new("Span between the supports", "Stützweite zwischen den Auflagern")), clause: Some(BENDING), ..FieldSpec::quantity("Length", "Länge", UnitId::Metre) }),
         "members[].kind" => Some(FieldSpec::choice("Kind", "Art", KINDS)),
+        "members[].count" => Some(FieldSpec { kind: FieldKind::Int, ..FieldSpec::new("Count", "Anzahl") }),
+        "members[].active" => Some(FieldSpec { kind: FieldKind::Bool, ..FieldSpec::new("Active", "Aktiv") }),
         "members[].force" => Some(FieldSpec { ndp: Some(NdpRef { id: None, symbol: "γ_M0", clause: BENDING, default: Some(100_000.0) }), ..FieldSpec::quantity("Force", "Kraft", UnitId::Newton) }),
         "members[].angle" => Some(FieldSpec { kind: FieldKind::Angle, ..FieldSpec::new("Angle", "Winkel") }),
         "members[].ratio" => Some(FieldSpec { kind: FieldKind::Percent, ..FieldSpec::new("Ratio", "Anteil") }),
@@ -83,7 +87,13 @@ fn open_everything() -> ViewModel {
 const BODY: &str = "norm.mock.inputs";
 
 fn render(locale: Locale, report: &CheckReport, options: &InspectorOptions) -> String {
-    let view = open_everything();
+    let mut view = open_everything();
+    if let Some(annex) = &options.annex_parameters {
+        let rows = semio_s_plugin_norm_compliance::annex_parameter_rows(&annex.prefix, annex.annex);
+        let id = format!("{}gamma-m1", annex.prefix);
+        let offset = rows.iter().position(|row| row.entry.id == id).expect("annex fixture parameter");
+        view.tree_windows.push(TreeWindowRequest { body_key: BODY.into(), node_key: inputs_section_id("annex-parameters"), open: Some(true), offset: offset.try_into().expect("annex row offset"), rows: 1 });
+    }
     project(render_inspector_value(&document(), report, locale, "norm.mock", Some(member_meta), &TreeWindows::for_body(&view, BODY), options).expect("inspector"))
 }
 
@@ -337,20 +347,23 @@ fn the_unit_picker_marks_the_chosen_system_and_writes_the_view_lane_in_live_edit
 
 #[test]
 fn a_multi_selection_shows_the_common_value_or_mixed_and_its_controls_raise_one_bulk_set() {
+    fn admitted_metadata(path: &str) -> Option<FieldSpec> {
+        admit_field_meta(None, !path.ends_with(".id"))
+    }
     let row = |id: &str, x: f64, kind: &str| DslValue::object(vec![("id".to_string(), DslValue::String(id.into())), ("xM".to_string(), DslValue::float(x)), ("kind".to_string(), DslValue::String(kind.into()))]);
     let tree = DslValue::object(vec![("beams".to_string(), DslValue::Array(vec![row("b1", 1.0, "steel"), row("b2", 2.0, "steel"), row("b3", 3.0, "timber")]))]);
     let both = ["b1".to_string(), "b2".to_string()];
-    let json = |locale| semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_bulk_inspector(&tree, "beams", &both, locale, "norm.mock", None, UnitSystem::Engineering).expect("bulk inspector"))).expect("projection");
+    let json = |locale| semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_bulk_inspector(&tree, "beams", &both, locale, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).expect("bulk inspector"))).expect("projection");
     let english = json(Locale::En);
     assert!(english.contains("2 selected") && english.contains("Mixed"), "xM differs between b1 and b2: {english}");
     assert!(english.contains("setFields") && english.contains("b1\\nb2") && english.contains("xM"), "a control writes every selected row: {english}");
     assert!(!english.contains("\"setField\""), "no single-row write remains: {english}");
     assert!(json(Locale::De).contains("2 ausgewählt") && json(Locale::De).contains("Gemischt"));
-    let same = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_bulk_inspector(&tree, "beams", &["b1".to_string(), "b2".to_string()], Locale::En, "norm.mock", None, UnitSystem::Engineering).expect("bulk"))).expect("projection");
+    let same = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_bulk_inspector(&tree, "beams", &["b1".to_string(), "b2".to_string()], Locale::En, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).expect("bulk"))).expect("projection");
     assert!(same.contains("steel"), "kind is the same in both rows: {same}");
     let mixed_kind = ["b2".to_string(), "b3".to_string()];
     assert_eq!(bulk_rows(&tree, "beams", &mixed_kind, false).iter().filter(|line| line.mixed).count(), 2);
-    assert!(render_selection_inspector(&tree, &["b1".to_string()], Locale::En, "norm.mock", None, UnitSystem::Engineering).unwrap().is_none(), "one row keeps the single-row inspector");
-    assert!(render_selection_inspector(&tree, &both, Locale::En, "norm.mock", None, UnitSystem::Engineering).unwrap().is_some());
-    assert!(render_bulk_inspector(&tree, "nope", &both, Locale::En, "norm.mock", None, UnitSystem::Engineering).is_err());
+    assert!(render_selection_inspector(&tree, &["b1".to_string()], Locale::En, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).unwrap().is_none(), "one row keeps the single-row inspector");
+    assert!(render_selection_inspector(&tree, &both, Locale::En, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).unwrap().is_some());
+    assert!(render_bulk_inspector(&tree, "nope", &both, Locale::En, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).is_err());
 }

@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "materials": {
     "removed": [],
     "inserted": [],
@@ -157,6 +156,7 @@
     "moved": [],
     "modified": []
   },
+  "reliabilityClass": null,
   "jointPlates": {
     "removed": [],
     "inserted": [],
@@ -169,14 +169,18 @@
     "moved": [],
     "modified": []
   },
-  "frameActions": {
+  "materialDuctility": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "frameMemberBases": null,
-  "fatigueStresses": null,
+  "formingGains": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "bucklingLengths": {
     "removed": [],
     "inserted": [],
@@ -198,7 +202,28 @@
       }
     ]
   },
-  "formingGains": null,
-  "materialDuctility": null,
-  "fastenedJoints": null
+  "fatigueStresses": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameActions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameMemberBases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fastenedJoints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

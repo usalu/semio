@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-dust-explosion-static-opening-pressure",
   "semanticKind": "change-dust-explosion-static-opening-pressure",
-  "displayName": "Change Dust Explosion Static Opening Pressure",
+  "displayName": "Change static opening pressure of the dust explosion vent",
   "emoji": "⚙",
   "aggregateVariant": "ChangeDustExplosionStaticOpeningPressure",
   "payloadSchema": "🧬️schema/🔣️.json",

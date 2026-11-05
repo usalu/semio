@@ -2,6 +2,97 @@
 
 use super::*;
 
+/// ⎋️ Exact admitted-operation authority scoped to the actor and mounted window.
+#[derive(Clone,Debug,PartialEq,Serialize,Deserialize,protocol::value::ToValue)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+#[value(crate="protocol::value",rename_all="camelCase")]
+pub struct Paint2dSelectionCancellation {
+    #[serde(deserialize_with="read_cancellation_scope")]
+    pub actor:String,
+    pub app_instance_id:u32,
+    #[serde(deserialize_with="read_cancellation_scope")]
+    pub window_id:String,
+    #[serde(deserialize_with="read_cancellation_identity")]
+    pub operation_id:String,
+    #[serde(deserialize_with="read_cancellation_identity")]
+    pub generation:String,
+}
+
+fn cancellation_identity(value:&str)->bool{value.len()==16&&value.bytes().all(|byte|byte.is_ascii_digit()||(b'a'..=b'f').contains(&byte))}
+fn read_cancellation_scope<'de,D:serde::Deserializer<'de>>(input:D)->Result<String,D::Error>{let value=String::deserialize(input)?;if value.is_empty(){Err(serde::de::Error::custom("empty cancellation scope"))}else{Ok(value)}}
+fn read_cancellation_identity<'de,D:serde::Deserializer<'de>>(input:D)->Result<String,D::Error>{let value=String::deserialize(input)?;if cancellation_identity(&value){Ok(value)}else{Err(serde::de::Error::custom("cancellation identity must be sixteen lowercase hexadecimal digits"))}}
+impl FromValue for Paint2dSelectionCancellation{
+    fn from_value(value:DslValue)->Result<Self,ValueError>{
+        let entries=value.into_object()?;editing_fields(&entries,&["actor","appInstanceId","windowId","operationId","generation"])?;
+        let authority=Self{actor:value_decode(&entries,"actor")?,app_instance_id:value_decode(&entries,"appInstanceId")?,window_id:value_decode(&entries,"windowId")?,operation_id:value_decode(&entries,"operationId")?,generation:value_decode(&entries,"generation")?};
+        if authority.actor.is_empty()||authority.window_id.is_empty()||!cancellation_identity(&authority.operation_id)||!cancellation_identity(&authority.generation){return Err(editing_error("invalid scoped cancellation authority"));}Ok(authority)
+    }
+}
+
+/// 📐️ A local crop/resize request carried without renderer-specific staging.
+#[derive(Clone,Debug,PartialEq,Serialize,Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct Paint2dImageGrid {
+    #[serde(deserialize_with="read_grid_coordinate")]
+    pub x:u32,
+    #[serde(deserialize_with="read_grid_coordinate")]
+    pub y:u32,
+    #[serde(deserialize_with="read_grid_extent")]
+    pub width:u32,
+    #[serde(deserialize_with="read_grid_extent")]
+    pub height:u32,
+    pub bilinear:bool,
+}
+
+/// 🎚️ Published local options shared by the native and React painting controls.
+#[derive(Clone,Debug,PartialEq,Serialize,Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct Paint2dEditingOptions {
+    #[serde(deserialize_with="read_filter_kind")]
+    pub filter_kind:String,
+    pub filter_amount:f64,
+    pub image_grid:Paint2dImageGrid,
+}
+
+fn filter_supported(value:&str)->bool{matches!(value,"invert"|"grayscale"|"brightness"|"contrast"|"saturation"|"gamma"|"threshold"|"posterize"|"blur"|"sharpen"|"clear"|"flipHorizontal"|"flipVertical")}
+fn read_filter_kind<'de,D:serde::Deserializer<'de>>(input:D)->Result<String,D::Error>{let value=String::deserialize(input)?;if filter_supported(&value){Ok(value)}else{Err(serde::de::Error::custom("unsupported paint filter"))}}
+fn read_grid_number<'de,D:serde::Deserializer<'de>>(input:D,min:u32,max:u32)->Result<u32,D::Error>{let value=u32::deserialize(input)?;if(min..=max).contains(&value){Ok(value)}else{Err(serde::de::Error::custom("image grid value exceeds its bounds"))}}
+fn read_grid_coordinate<'de,D:serde::Deserializer<'de>>(input:D)->Result<u32,D::Error>{read_grid_number(input,0,16384)}
+fn read_grid_extent<'de,D:serde::Deserializer<'de>>(input:D)->Result<u32,D::Error>{read_grid_number(input,1,16384)}
+fn editing_error(message:impl Into<String>)->ValueError{ValueError::new(protocol::value::ValueRefusalKind::InvalidValue,message)}
+fn editing_fields(entries:&[(String,DslValue)],fields:&[&str])->Result<(),ValueError>{
+    if let Some((field,_))=entries.iter().find(|(field,_)|!fields.contains(&field.as_str())){return Err(editing_error(format!("unknown field `{field}`")));}
+    for field in fields.iter().copied(){if entries.iter().filter(|(candidate,_)|candidate==field).count()>1{return Err(editing_error(format!("duplicate field `{field}`")));}}
+    Ok(())
+}
+
+impl ToValue for Paint2dImageGrid {
+    fn to_value(&self)->DslValue{
+        let mut entries=Vec::new();value_push(&mut entries,"x",&self.x);value_push(&mut entries,"y",&self.y);value_push(&mut entries,"width",&self.width);value_push(&mut entries,"height",&self.height);value_push(&mut entries,"bilinear",&self.bilinear);DslValue::Object(entries)
+    }
+}
+impl FromValue for Paint2dImageGrid {
+    fn from_value(value:DslValue)->Result<Self,ValueError>{
+        let entries=value.into_object()?;editing_fields(&entries,&["x","y","width","height","bilinear"])?;
+        let grid=Self{x:value_decode(&entries,"x")?,y:value_decode(&entries,"y")?,width:value_decode(&entries,"width")?,height:value_decode(&entries,"height")?,bilinear:value_decode(&entries,"bilinear")?};
+        if grid.x>16384||grid.y>16384||!(1..=16384).contains(&grid.width)||!(1..=16384).contains(&grid.height){return Err(editing_error("image grid value exceeds its bounds"));}
+        Ok(grid)
+    }
+}
+impl ToValue for Paint2dEditingOptions {
+    fn to_value(&self)->DslValue{
+        let mut entries=Vec::new();value_push(&mut entries,"filterKind",&self.filter_kind);value_push(&mut entries,"filterAmount",&self.filter_amount);value_push(&mut entries,"imageGrid",&self.image_grid);DslValue::Object(entries)
+    }
+}
+impl FromValue for Paint2dEditingOptions {
+    fn from_value(value:DslValue)->Result<Self,ValueError>{
+        let entries=value.into_object()?;editing_fields(&entries,&["filterKind","filterAmount","imageGrid"])?;
+        let options=Self{filter_kind:value_decode(&entries,"filterKind")?,filter_amount:value_decode(&entries,"filterAmount")?,image_grid:value_decode(&entries,"imageGrid")?};
+        if !filter_supported(&options.filter_kind)||!options.filter_amount.is_finite(){return Err(editing_error("invalid paint filter options"));}
+        Ok(options)
+    }
+}
+
 //#region 🔖️Paint2dScene
 /** 🖼️ Paint-2d scene: WASM `RasterSession` sync channels for the composite/navigator windows. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -24,6 +115,9 @@ pub struct Paint2dScene {
     pub mask_value:u32,
     /// 🪣️ The session colour tolerance (0..255) every host's bucket and wand floods with.
     pub fill_tolerance:u32,
+    pub editing_options:Paint2dEditingOptions,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub selection_cancellation:Option<Paint2dSelectionCancellation>,
     pub view_mode: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub composite_viewport_json: Option<String>,
@@ -152,6 +246,8 @@ impl ToValue for Paint2dScene {
         value_push(&mut entries,"paintTarget",&self.paint_target);
         value_push(&mut entries,"maskValue",&self.mask_value);
         value_push(&mut entries, "fillTolerance", &self.fill_tolerance);
+        value_push(&mut entries,"editingOptions",&self.editing_options);
+        value_push_option(&mut entries,"selectionCancellation",&self.selection_cancellation);
         value_push(&mut entries, "viewMode", &self.view_mode);
         value_push_option(&mut entries, "compositeViewportJson", &self.composite_viewport_json);
         value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
@@ -177,6 +273,8 @@ impl FromValue for Paint2dScene {
             paint_target:value_decode(&entries,"paintTarget")?,
             mask_value:value_decode(&entries,"maskValue")?,
             fill_tolerance: value_decode(&entries, "fillTolerance")?,
+            editing_options:value_decode(&entries,"editingOptions")?,
+            selection_cancellation:value_decode_option(&entries,"selectionCancellation")?,
             view_mode: value_decode(&entries, "viewMode")?,
             composite_viewport_json: value_decode_option(&entries, "compositeViewportJson")?,
             lanes: value_decode_default(&entries, "lanes", Vec::new)?,

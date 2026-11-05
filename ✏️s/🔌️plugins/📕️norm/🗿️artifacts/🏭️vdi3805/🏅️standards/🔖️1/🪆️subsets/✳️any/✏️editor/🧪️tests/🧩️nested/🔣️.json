@@ -1,0 +1,10 @@
+{
+  "path": "catalog.products[id=RAD-600].configuration.attributes.heatExponentN",
+  "productId": "RAD-600",
+  "value": 1.4,
+  "valueBefore": 1.3,
+  "checkId": "vdi3805.3.n.RAD-600",
+  "numeratorBefore": 13,
+  "numeratorAfter": 14,
+  "denominator": 15
+}

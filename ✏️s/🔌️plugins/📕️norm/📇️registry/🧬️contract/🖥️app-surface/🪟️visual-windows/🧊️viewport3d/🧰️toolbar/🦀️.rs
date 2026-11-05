@@ -224,12 +224,13 @@ pub const VIEWPORT_HELP_SECTION_ID: &str = "norm-viewport-help";
 /// ⌨️ The keyboard help overlay: a closed section listing every documented shortcut with its scope, its label in the shell language and its chord (`⌘⇧Z` style on macOS), generated from the one shortcut table so a new shortcut cannot be missing.
 pub fn render_shortcut_help(locale: Locale, mac: bool) -> UiAssemblyResult<BuiltNode> {
     use crate::accessibility::focus_order::{chord_text, shortcuts, Scope};
-    let mut rows = Vec::new();
-    for (n, shortcut) in shortcuts().into_iter().enumerate() {
-        let scope = match shortcut.scope { Scope::Global => chrome("Everywhere", "Überall", locale), Scope::Viewport => chrome("3D model", "3D-Modell", locale), Scope::Handle => chrome("Handle", "Griff", locale) };
-        rows.push(tree_item_desc(format!("norm-viewport.help.{n}"), norm_ui_label(text_of(&shortcut.label, locale))?, Some(format!("{} · {scope}", chord_text(shortcut.chord, mac))))?);
+    let all = shortcuts();
+    let mut groups = Vec::new();
+    for (scope, id, en, de) in [(Scope::Global, "global", "Everywhere", "Überall"), (Scope::Viewport, "viewport", "3D model", "3D-Modell"), (Scope::Handle, "handle", "Handle", "Griff")] {
+        let rows = all.iter().enumerate().filter(|(_, shortcut)| shortcut.scope == scope).map(|(n, shortcut)| tree_item_desc(format!("norm-viewport.help.{n}"), norm_ui_label(text_of(&shortcut.label, locale))?, Some(chord_text(shortcut.chord, mac))));
+        groups.push(tree_group(format!("{VIEWPORT_HELP_SECTION_ID}.{id}"), norm_ui_label(chrome(en, de, locale))?, true, ui_node_list(rows)?)?);
     }
-    PanelTreeBuilder::new(VIEWPORT_HELP_SECTION_ID)?.section(format!("{VIEWPORT_HELP_SECTION_ID}.list"), Some(norm_ui_label(chrome("Keyboard shortcuts", "Tastenkürzel", locale))?), false, ui_node_list(rows.into_iter().map(Ok))?)?.build()
+    PanelTreeBuilder::new(VIEWPORT_HELP_SECTION_ID)?.section(format!("{VIEWPORT_HELP_SECTION_ID}.list"), Some(norm_ui_label(chrome("Keyboard shortcuts", "Tastenkürzel", locale))?), false, ui_node_list(groups.into_iter().map(Ok))?)?.build()
 }
 
 /// 🎥️ The lowered viewport of a resolved view with the live lanes applied; while the view lane holds a check (a click or a stepping shortcut selected it) or the frame toggle (a double tap) the camera frames the selected entities in the configured preset direction instead of the whole scene.

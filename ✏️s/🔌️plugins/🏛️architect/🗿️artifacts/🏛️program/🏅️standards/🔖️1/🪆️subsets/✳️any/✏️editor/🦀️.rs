@@ -221,7 +221,7 @@ fn architect_window_reduce(
     context: Option<&ArtifactOwnedToolJobContext<EditorApp<ArchitectPlayApp>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, NoDraftMutation>, Fault> {
-    architect_window_emit(command, context.and_then(|context| context.view_state.as_ref()))?.ok_or_else(|| Fault::from("architect-window-command-route-mismatch"))
+    architect_window_emit(command, context.and_then(|context| context.view_state.as_deref()))?.ok_or_else(|| Fault::from("architect-window-command-route-mismatch"))
 }
 
 pub(crate) struct ArchitectWindowCommandJobFactory {
@@ -352,7 +352,7 @@ fn architect_exchange_reduce(
 ) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     match command {
-        ArchitectCommand::RunReport(payload) => run_report::handle_with_view(payload, &doc, context.and_then(|context| context.view_state.as_ref())),
+        ArchitectCommand::RunReport(payload) => run_report::handle_with_view(payload, &doc, context.and_then(|context| context.view_state.as_deref())),
         _ => command.dispatch(&doc, &ConfigView { snapshot: config, window: None }),
     }
 }

@@ -471,7 +471,7 @@ export async function mutateUndoRedo(page: Page, refusals: readonly string[], ke
 
 /** 🇩🇪️ Seats the shell locale through the Settings surface's own language control and reports what it reached. */
 export async function seatLocale(page: Page, wanted: string): Promise<string> {
-  if (wanted === "en") return "en(boot)";
+  if(wanted!=="en"&&wanted!=="de")throw new Error("locale seating requires en or de");
   if ((await click(page, '[id="os.openSettings"], [data-slot="navbar"] [id*="settings" i], button:has-text("Settings")')) === "absent") return `${wanted}:no-settings-control`;
   await page.waitForTimeout(3_000);
   const language = page.locator('[role="tab"], [role="button"], button').filter({ hasText: /language|sprache/iu }).first();
@@ -479,13 +479,13 @@ export async function seatLocale(page: Page, wanted: string): Promise<string> {
     await language.click({ force: true }).catch(() => undefined);
     await page.waitForTimeout(2_000);
   }
-  const control = page.locator('select, [role="combobox"]').filter({ hasText: /english|deutsch|german/iu }).first();
+  const control = page.locator('select, [role="combobox"]').filter({ hasText: /english|englisch|deutsch|german/iu }).first();
   if ((await control.count()) === 0) return `${wanted}:no-language-control`;
-  if ((await control.evaluate((element) => element.tagName.toLowerCase())) === "select") await control.selectOption(wanted).catch(() => undefined);
+  if ((await control.evaluate((element) => element.tagName.toLowerCase())) === "select") await control.selectOption(wanted);
   else {
-    await control.click({ force: true }).catch(() => undefined);
+    await control.click({ force: true });
     await page.waitForTimeout(800);
-    await page.locator('[role="option"]').filter({ hasText: /deutsch|german/iu }).first().click({ force: true }).catch(() => undefined);
+    await page.locator('[role="option"]').filter({ hasText: wanted==="en"?/english|englisch/iu:/deutsch|german/iu }).first().click({ force: true });
   }
   await page.waitForTimeout(6_000);
   await page.keyboard.press("Escape").catch(() => undefined);

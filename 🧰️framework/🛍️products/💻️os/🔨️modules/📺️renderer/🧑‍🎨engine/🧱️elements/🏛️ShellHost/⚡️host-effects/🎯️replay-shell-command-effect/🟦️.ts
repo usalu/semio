@@ -134,7 +134,7 @@ export async function applyReplayShellCommandEffect({ showTransientNoticeRef, ui
         showTransientNoticeRef.current(localCatalogNoticeTextV1("cancelled", uiLocaleRef.current, name), "warning", localCatalogNoticeCodeV1("cancelled"));
       } else if (!written) {
         showTransientNoticeRef.current(localCatalogNoticeTextV1("write-failed", uiLocaleRef.current, name), "warning", localCatalogNoticeCodeV1("write-failed"));
-      } else if (recordLocalCatalogRef.current(localCatalogAdmitMutationV1(admission)) === null) {
+      } else if ((await recordLocalCatalogRef.current(localCatalogAdmitMutationV1(admission))) === null) {
         showTransientNoticeRef.current(localCatalogNoticeTextV1("no-data-folder", uiLocaleRef.current, name), "warning", localCatalogNoticeCodeV1("no-data-folder"));
       } else {
         showTransientNoticeRef.current(localCatalogNoticeTextV1("kept", uiLocaleRef.current, name), "info", localCatalogNoticeCodeV1("kept"));
@@ -150,7 +150,7 @@ export async function applyReplayShellCommandEffect({ showTransientNoticeRef, ui
     const kept = documentId === null ? undefined : localCatalogRef.current.documents.find((document) => document.documentId === documentId);
     if (kept === undefined) {
       showTransientNoticeRef.current(localCatalogNoticeTextV1("document-unknown", uiLocaleRef.current), "warning", localCatalogNoticeCodeV1("document-unknown"));
-    } else if (recordLocalCatalogRef.current(retireLocalDocument(kept.documentId)) !== null) {
+    } else if ((await recordLocalCatalogRef.current(retireLocalDocument(kept.documentId))) !== null) {
       showTransientNoticeRef.current(localCatalogNoticeTextV1("retired", uiLocaleRef.current, kept.name || kept.documentId), "info", localCatalogNoticeCodeV1("retired"));
     }
   } else if (isShellOwnedCommandId(actionId)) {

@@ -18,3 +18,7 @@ pub mod plugin_builder_contract_tests_7;
 #[cfg(test)]
 #[path = "../../⚛️reactor/🧪️tests/⚛️reactor-driver/🦀️.rs"]
 pub(crate) mod reactor_driver;
+
+#[cfg(test)]
+#[path = "../../⚛️reactor/🏃️runtime/🔄️exchange/🔀️plugin-exchange/📦️document-archive-commands/🧪️tests/🪪️documentless/🦀️.rs"]
+mod documentless_identity_abi;

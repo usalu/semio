@@ -56,16 +56,15 @@ async fn command_from_action_rejects_unknown_actions() {
 async fn set_vertex_op_binary_round_trips() {
     let command = SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { vertex_id: "v1".into(), point: [1.5, -2.25, 4.0] });
     let bytes = protocol::OpBinary::encode_op(&command).expect("encode");
-    assert_eq!(bytes.len(), 30);
+    let independent:serde_json::Value=serde_json::from_slice(&bytes).expect("independent command JSON");
+    assert!(independent.is_object());
     let back = <SemioBrepEditCommand as protocol::OpBinary>::decode_op(&bytes).expect("decode");
     assert_eq!(back, command);
 }
 
 #[test]
-fn set_vertex_op_binary_rejects_a_maximum_length_prefix_without_overflow() {
-    let mut bytes = Vec::from(u32::MAX.to_le_bytes());
-    bytes.extend_from_slice(&[0; 24]);
-    assert!(<SemioBrepEditCommand as protocol::OpBinary>::decode_op(&bytes).is_err());
+fn set_vertex_op_binary_rejects_malformed_command_json() {
+    for bytes in [b"{".as_slice(),b"not a command".as_slice()]{assert!(<SemioBrepEditCommand as protocol::OpBinary>::decode_op(bytes).is_err());}
 }
 
 #[test]

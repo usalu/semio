@@ -412,7 +412,8 @@ ensure_user_cc() {
     fi
   fi
   if command -v cc >/dev/null 2>&1 && command -v c++ >/dev/null 2>&1; then
-    local cc_path cxx_path first="" line=""
+    local cc_path cxx_path first="" line="" driver_path
+    driver_path="$(printf '%q' "$pin_zig")"
     cc_path=$(command -v cc)
     cxx_path=$(command -v c++)
     case "$cc_path:$cxx_path" in
@@ -422,18 +423,10 @@ ensure_user_cc() {
       n=0
       while IFS= read -r line && [ "$n" -lt 40 ]; do first="$first$line"; n=$((n+1)); done < "$cxx_path"
       case "$first" in
-      '#!'*'-target'*)
-        local expected=""
-        case "$(uname -s):$(uname -m)" in
-        Linux:x86_64|Linux:amd64) expected=x86_64-linux-gnu ;;
-        Linux:aarch64|Linux:arm64) expected=aarch64-linux-gnu ;;
-        Darwin:x86_64|Darwin:amd64) expected=x86_64-macos ;;
-        Darwin:aarch64|Darwin:arm64) expected=aarch64-macos ;;
-        esac
-        if [ -z "$expected" ] || case "$first" in *"$expected"*) true ;; *) false ;; esac; then
-          return 0
-        fi
-        ;;
+      '#!'*"exec $driver_path cc"*'semio_zig_target()'*'#!'*"exec $driver_path c++"*'semio_zig_target()'*) return 0 ;;
+      '#!'*'/semio/zig/'*) ;;
+      '#!'*'/zig '*) ;;
+      '#!'*'-target'*) return 0 ;;
       '#!'*) ;;
       *) return 0 ;;
       esac
@@ -477,12 +470,38 @@ Darwin:x86_64|Darwin:amd64) target=x86_64-macos ;;
 Darwin:aarch64|Darwin:arm64) target=aarch64-macos ;;
 *) exec $(printf '%q' "$zig") $mode "\$@" ;;
 esac
-for arg in "\$@"; do
-  case "\$arg" in
-  -target|-target=*|--target|--target=*) exec $(printf '%q' "$zig") $mode "\$@" ;;
+semio_zig_target() {
+  case "\$1" in
+  *-unknown-linux-*|*-pc-linux-*|*-pc-windows-*)
+    architecture=\${1%%-*}
+    remainder=\${1#*-}
+    printf '%s-%s' "\$architecture" "\${remainder#*-}"
+    ;;
+  *-apple-darwin) printf '%s-macos' "\${1%%-*}" ;;
+  *) printf '%s' "\$1" ;;
+  esac
+}
+remaining=\$#
+options=1
+while [ "\$remaining" -gt 0 ]; do
+  argument=\$1
+  shift
+  remaining=\$((remaining-1))
+  if [ "\$options" -eq 0 ]; then set -- "\$@" "\$argument"; continue; fi
+  case "\$argument" in
+  -target|--target)
+    if [ "\$remaining" -eq 0 ]; then printf '%s\n' 'C compiler target requires a value' >&2; exit 2; fi
+    target=\$(semio_zig_target "\$1")
+    shift
+    remaining=\$((remaining-1))
+    ;;
+  -target=*|--target=*) target=\$(semio_zig_target "\${argument#*=}") ;;
+  --) options=0; set -- "\$@" "\$argument" ;;
+  *) set -- "\$@" "\$argument" ;;
   esac
 done
-exec $(printf '%q' "$zig") $mode -target "\$target" "\$@"
+if [ -n "\$target" ]; then exec $(printf '%q' "$zig") $mode -target "\$target" "\$@"; fi
+exec $(printf '%q' "$zig") $mode "\$@"
 EOF
     chmod 755 "$LOCAL_BIN/$name"
   done

@@ -48,7 +48,7 @@ pub(super) async fn arm_transaction_commit<PA: PluginApp>(
     command: protocol::AppCommand,
 ) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::TransactionCommit { seq, txn_id } = command else { unreachable!("arm_transaction_commit is dispatched only for its own command") };
-    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await?.into(), instance_id, view_state: None };
+    let meta = ActionMeta { expected_document_revision:None, actor: instance_actor(runtime, instance_id).await?.into(), instance_id, view_state: None };
     let outcome = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
         ::semio_framework_async::poll::resolve_ready(instance.app.transaction_commit(&txn_id, &meta, identity))

@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "title": null,
   "designWorkingLifeYears": null,
   "deltaCDev": null,
@@ -30,14 +29,9 @@
           "span": null,
           "support": null,
           "bucklingLength": null,
-          "stirrups": null,
-          "punching": null,
-          "prestress": null,
-          "fire": null,
           "useFem": null,
           "udl": null,
           "deflectionSensitive": null,
-          "tightness": null,
           "hdOverH": null,
           "liquidSigmaS": null,
           "liquidRhoPEff": null,
@@ -45,7 +39,9 @@
           "liquidSRMax": null,
           "bridgeSigmaC": null,
           "bridgeDeltaSigmaS": null,
-          "relativeHumidity": null
+          "relativeHumidity": null,
+          "bearingWidth": 0.8,
+          "tightness": null
         }
       }
     ]
@@ -57,5 +53,6 @@
     "inserted": [],
     "moved": [],
     "modified": []
-  }
+  },
+  "reliabilityClass": null
 }

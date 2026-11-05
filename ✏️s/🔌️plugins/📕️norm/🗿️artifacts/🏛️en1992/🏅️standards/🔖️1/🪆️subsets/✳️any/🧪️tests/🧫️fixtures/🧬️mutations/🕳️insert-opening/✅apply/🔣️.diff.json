@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "title": null,
   "designWorkingLifeYears": null,
   "deltaCDev": null,
@@ -37,9 +36,6 @@
           "punchingColumnDepth": null,
           "punchingColumnPosition": null,
           "punchingAsw": null,
-          "punchingBetaMethod": null,
-          "punchingMomentC1": null,
-          "punchingMomentC2": null,
           "prestressForce": null,
           "prestressArea": null,
           "prestressEccentricity": null,
@@ -63,6 +59,10 @@
           "sectionPoints": null,
           "bars": null,
           "tendonPoints": null,
+          "studRows": null,
+          "punchingBetaMethod": null,
+          "punchingMomentC1": null,
+          "punchingMomentC2": null,
           "openings": {
             "removed": [],
             "inserted": [
@@ -79,8 +79,7 @@
             ],
             "moved": [],
             "modified": []
-          },
-          "studRows": null
+          }
         }
       },
       {
@@ -107,9 +106,6 @@
           "punchingColumnDepth": null,
           "punchingColumnPosition": null,
           "punchingAsw": null,
-          "punchingBetaMethod": null,
-          "punchingMomentC1": null,
-          "punchingMomentC2": null,
           "prestressForce": null,
           "prestressArea": null,
           "prestressEccentricity": null,
@@ -134,6 +130,9 @@
           "bars": null,
           "tendonPoints": null,
           "studRows": null,
+          "punchingBetaMethod": null,
+          "punchingMomentC1": null,
+          "punchingMomentC2": null,
           "openings": {
             "removed": [],
             "inserted": [
@@ -157,5 +156,11 @@
   },
   "anchors": null,
   "placements": null,
-  "cases": null
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "reliabilityClass": null
 }

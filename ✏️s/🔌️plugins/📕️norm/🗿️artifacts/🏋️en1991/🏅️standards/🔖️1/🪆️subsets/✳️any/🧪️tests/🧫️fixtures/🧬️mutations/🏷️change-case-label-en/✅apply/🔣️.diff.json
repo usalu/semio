@@ -195,16 +195,94 @@
       }
     ]
   },
-  "helicopterLandings": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "tieRuns": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "constructionLoads": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "fallingLoads": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "executionImperfections": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "derailmentCases": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "craneHoists": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "footbridges": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "railDynamics": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "loadDispersals": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "bulkSolids": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "rotatingMachines": {"removed": [], "inserted": [], "moved": [], "modified": []}
+  "helicopterLandings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tieRuns": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "constructionLoads": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fallingLoads": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "executionImperfections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "derailmentCases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "craneHoists": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "footbridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "railDynamics": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "loadDispersals": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bulkSolids": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "rotatingMachines": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "dustExplosions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "railLoadGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "railDerailments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

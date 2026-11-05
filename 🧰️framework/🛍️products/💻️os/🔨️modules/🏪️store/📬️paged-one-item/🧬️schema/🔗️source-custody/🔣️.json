@@ -3,7 +3,7 @@
   "$id": "framework.os.paged-original-source-custody.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "base", "mutation", "copyBytes", "capacityBytes", "releaseBytes", "depth", "maximumTurns", "cancelAt", "cases", "expected"],
+  "required": ["schema", "base", "mutation", "copyBytes", "capacityBytes", "releaseBytes", "depth", "maximumTurns", "cancelAt", "coldRefusalIndex", "cases", "expected"],
   "properties": {
     "schema": {"const": "framework.os.paged-original-source-custody.v1"},
     "base": {"type": "object", "additionalProperties": false, "required": ["title", "nodes"], "properties": {"title": {"type": "string"}, "nodes": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "text"], "properties": {"id": {"type": "string"}, "text": {"type": "string"}}}}}},
@@ -14,7 +14,8 @@
     "depth": {"type": "integer", "minimum": 1},
     "maximumTurns": {"type": "integer", "minimum": 1},
     "cancelAt": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+    "coldRefusalIndex": {"type": "integer", "minimum": 1},
     "cases": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["name", "refuseEdit", "refuseIssuerOnce", "expectedMutationCalls", "expectedSnapshotCalls"], "properties": {"name": {"type": "string", "minLength": 1}, "refuseEdit": {"type": "boolean"}, "refuseIssuerOnce": {"type": "boolean"}, "expectedMutationCalls": {"type": "integer", "minimum": 1}, "expectedSnapshotCalls": {"type": "integer", "minimum": 0}}}},
-    "expected": {"const": {"genuineBeforeIdentity": true, "genuineMutationPayloadIdentity": true, "exactIssuerIdentity": true, "deniedGrantCallbacks": 0, "cancelledMutationCalls": 1, "failedSealMutationCalls": 1, "failedSealSnapshotCalls": 1, "returnedOwnersPreserved": true, "terminalDropBytes": 0}}
+    "expected": {"const": {"genuineBeforeIdentity": true, "genuineMutationPayloadIdentity": true, "exactIssuerIdentity": true, "deniedGrantCallbacks": 0, "deniedWork": 0, "cancelledWork": 0, "reportedWorkCoversNative": true, "coldRefused": true, "coldRefusalWork": 3, "cancelledMutationCalls": 1, "failedSealMutationCalls": 1, "failedSealSnapshotCalls": 1, "returnedOwnersPreserved": true, "terminalDropBytes": 0}}
   }
 }

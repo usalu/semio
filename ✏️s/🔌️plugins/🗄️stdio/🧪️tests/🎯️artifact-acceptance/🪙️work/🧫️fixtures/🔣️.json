@@ -1,0 +1,1075 @@
+{
+  "version": 1,
+  "phases": {
+    "docx": [
+      "measure-snapshot",
+      "measure-mutation",
+      "apply",
+      "measure-post",
+      "measure-inverse"
+    ],
+    "zip": [
+      "inspect-envelope",
+      "scan-row",
+      "apply",
+      "validate-post"
+    ],
+    "mesh": [
+      "scan-row",
+      "apply"
+    ],
+    "brep": [
+      "scan-row",
+      "apply"
+    ]
+  },
+  "cases": [
+    {
+      "id": "docx-measure-snapshot-ok",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-snapshot",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "measure-snapshot"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-measure-snapshot-failure",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-snapshot",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "measure-snapshot"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-measure-snapshot-denied",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-snapshot",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-measure-mutation-ok",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-mutation",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "measure-mutation"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-measure-mutation-failure",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-mutation",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "measure-mutation"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-measure-mutation-denied",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-mutation",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-apply-ok",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "apply"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-apply-failure",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "apply"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-apply-denied",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-measure-post-ok",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-post",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "measure-post"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-measure-post-failure",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-post",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "measure-post"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-measure-post-denied",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-post",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-measure-inverse-ok",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-inverse",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "measure-inverse"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-measure-inverse-failure",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-inverse",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "measure-inverse"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-measure-inverse-denied",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "measure-inverse",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "docx-reset-and-partial-failure",
+      "format": "docx",
+      "calls": [
+        {
+          "priorWork": 9,
+          "actions": [
+            {
+              "action": "measure-snapshot",
+              "admitted": true,
+              "fails": false
+            },
+            {
+              "action": "measure-mutation",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 2,
+            "attempted": [
+              "measure-snapshot",
+              "measure-mutation"
+            ],
+            "outcome": "failure"
+          }
+        },
+        {
+          "priorWork": 2,
+          "actions": [
+            {
+              "action": "measure-snapshot",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-inspect-envelope-ok",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "inspect-envelope",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "inspect-envelope"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-inspect-envelope-failure",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "inspect-envelope",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "inspect-envelope"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-inspect-envelope-denied",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "inspect-envelope",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-scan-row-ok",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "scan-row"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-scan-row-failure",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "scan-row"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-scan-row-denied",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-apply-ok",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "apply"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-apply-failure",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "apply"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-apply-denied",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-validate-post-ok",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "validate-post",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "validate-post"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-validate-post-failure",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "validate-post",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "validate-post"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-validate-post-denied",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "validate-post",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zip-reset-and-partial-failure",
+      "format": "zip",
+      "calls": [
+        {
+          "priorWork": 9,
+          "actions": [
+            {
+              "action": "inspect-envelope",
+              "admitted": true,
+              "fails": false
+            },
+            {
+              "action": "scan-row",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 2,
+            "attempted": [
+              "inspect-envelope",
+              "scan-row"
+            ],
+            "outcome": "failure"
+          }
+        },
+        {
+          "priorWork": 2,
+          "actions": [
+            {
+              "action": "inspect-envelope",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mesh-scan-row-ok",
+      "format": "mesh",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "scan-row"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mesh-scan-row-failure",
+      "format": "mesh",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "scan-row"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mesh-scan-row-denied",
+      "format": "mesh",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mesh-apply-ok",
+      "format": "mesh",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "apply"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mesh-apply-failure",
+      "format": "mesh",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "apply"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mesh-apply-denied",
+      "format": "mesh",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mesh-reset-and-partial-failure",
+      "format": "mesh",
+      "calls": [
+        {
+          "priorWork": 9,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": true,
+              "fails": false
+            },
+            {
+              "action": "apply",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 2,
+            "attempted": [
+              "scan-row",
+              "apply"
+            ],
+            "outcome": "failure"
+          }
+        },
+        {
+          "priorWork": 2,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "brep-scan-row-ok",
+      "format": "brep",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "scan-row"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "brep-scan-row-failure",
+      "format": "brep",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "scan-row"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "brep-scan-row-denied",
+      "format": "brep",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "brep-apply-ok",
+      "format": "brep",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": true,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "apply"
+            ],
+            "outcome": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "brep-apply-failure",
+      "format": "brep",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 1,
+            "attempted": [
+              "apply"
+            ],
+            "outcome": "failure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "brep-apply-denied",
+      "format": "brep",
+      "calls": [
+        {
+          "priorWork": 7,
+          "actions": [
+            {
+              "action": "apply",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    },
+    {
+      "id": "brep-reset-and-partial-failure",
+      "format": "brep",
+      "calls": [
+        {
+          "priorWork": 9,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": true,
+              "fails": false
+            },
+            {
+              "action": "apply",
+              "admitted": true,
+              "fails": true
+            }
+          ],
+          "expected": {
+            "work": 2,
+            "attempted": [
+              "scan-row",
+              "apply"
+            ],
+            "outcome": "failure"
+          }
+        },
+        {
+          "priorWork": 2,
+          "actions": [
+            {
+              "action": "scan-row",
+              "admitted": false,
+              "fails": false
+            }
+          ],
+          "expected": {
+            "work": 0,
+            "attempted": [],
+            "outcome": "denied"
+          }
+        }
+      ]
+    }
+  ]
+}

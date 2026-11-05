@@ -33,7 +33,7 @@ semio_s_plugin_norm_app_surface::norm_viewer_commands!(En1999Snapshot);
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(En1999ViewBoundedCommandJobFactory, En1999Viewer);
 
-semio_s_plugin_norm_app_surface::norm_viewer_surface!(En1999Viewer, En1999ViewCommand, report = |d: &En1999Snapshot| semio_s_artifact_norm_en1999_inferences::live::report(d), scene = |d: &En1999Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_en1999_scene::live_scene_of(d, r));
+semio_s_plugin_norm_app_surface::norm_viewer_surface!(En1999Viewer, En1999ViewCommand, variant = "en1999", report = |d: &En1999Snapshot| semio_s_artifact_norm_en1999_inferences::live::report(d), scene = |d: &En1999Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_en1999_scene::live_scene_of(d, r), diagrams = |d: &En1999Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("en1999", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_en1999_scene::diagrams(d, r, focus)).to_vec());
 //#endregion 🔖️Command
 
 //#region 🔖️Viewer
@@ -84,6 +84,10 @@ impl ArtifactViewer for En1999Viewer {
         tools: ["viewportAct"]
     }
 
+    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
+        Ok(semio_s_plugin_norm_app_surface::viewer_interaction_topology::<Self>(doc.snapshot))
+    }
+
     fn command_id(command: &Self::Command) -> &'static str {
         command.command_id()
     }
@@ -124,16 +128,10 @@ impl ArtifactViewer for En1999Viewer {
         cfg: &ConfigView<'_, Self::Config>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
-        _interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>,
         _cx: &mut semio_framework_plugin::StepContext<'_>,
     ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let lane = semio_s_plugin_norm_app_surface::LaneTransient::lane(transient.snapshot).view;
-        let rendered = match body_key {
-            viewport::BODY_VIEWPORT => viewport::render_lane(doc.snapshot, &lane, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
-            checks::BODY_CHECKS => checks::render_selected(doc.snapshot, semio_s_plugin_norm_app_surface::view_selected_check(&lane), &semio_framework_plugin::TreeWindows::for_body(view_state, checks::BODY_CHECKS), view_state.locale).map(semio_framework_plugin::built_to_component_tree),
-            _ => Self::render(body_key, doc, cfg, view_state),
-        };
-        rendered.map(Some).map_err(Into::into)
+        semio_s_plugin_norm_app_surface::render_norm_viewer::<Self>(body_key, doc, cfg, view_state, transient, interaction)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -151,6 +149,7 @@ impl ArtifactViewer for En1999Viewer {
 pub fn create_en1999_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(EN1999_DIALECT)
         .document(["semio", "norm", "en1999"])
+        .interaction(semio_s_plugin_norm_app_surface::viewer_interaction_definition("en1999"))
         .icon_id("check-circle")
         .mode_def(view::definition())
         .default_mode_id(semio_s_plugin_norm_app_surface::MODE_VIEW)

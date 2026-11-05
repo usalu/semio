@@ -167,7 +167,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-transform-scan", "Measuring nearby grips", "Nahe Griffe werden gemessen"))
             }
-            Puzzle5dTransformStage::Commit => Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(self.commit(snapshot, context.and_then(|context| context.view_state.as_ref())))),
+            Puzzle5dTransformStage::Commit => Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(self.commit(snapshot, context.and_then(|context| context.view_state.as_deref())))),
             Puzzle5dTransformStage::Complete => Err(Fault::from("puzzle5d-transform-complete-repolled")),
             Puzzle5dTransformStage::Closing => Err(Fault::from("puzzle5d-transform-closing")),
         }
@@ -683,7 +683,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction, hover: _hover, context, .. } = *input;
-        let view_state = context.and_then(|context| context.view_state.as_ref());
+        let view_state = context.and_then(|context| context.view_state.as_deref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {

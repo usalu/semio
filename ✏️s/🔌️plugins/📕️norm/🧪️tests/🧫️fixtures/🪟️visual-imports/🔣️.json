@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "artifacts": ["⚖️en1990", "🔩️en1993"],
+  "roles": {"✏️editor": "edit", "👁️viewer": "view"},
+  "sharedModules": [
+    "📇️registry/🧬️contract/🖥️app-surface/🪟️visual-windows/📈️diagrams2d/🪧marker-grips/🟦️.ts",
+    "📇️registry/🧬️contract/🖥️app-surface/🪟️visual-windows/📈️diagrams2d/🪟️window/🟦️.ts",
+    "📇️registry/🧬️contract/🖥️app-surface/🫧️live-lanes/🧬️schema/🟦️.ts"
+  ],
+  "expectedSceneImports": 3
+}

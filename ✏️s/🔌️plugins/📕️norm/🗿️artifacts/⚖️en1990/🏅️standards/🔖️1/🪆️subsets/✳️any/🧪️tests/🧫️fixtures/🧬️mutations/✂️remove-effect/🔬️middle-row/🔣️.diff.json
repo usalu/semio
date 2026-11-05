@@ -73,13 +73,28 @@
     "moved": [],
     "modified": []
   },
-  "placements": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "cases": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "factorOverrides": {"removed": [], "inserted": [], "moved": [], "modified": []},
-  "trafficGroups": {"removed": [], "inserted": [], "moved": [], "modified": []}
+  "factorOverrides": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "trafficGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC3",
   "materials": [
     {
       "id": "duplicate",
@@ -533,6 +532,7 @@
     }
   ],
   "foundationBlocks": [],
+  "reliabilityClass": "RC3",
   "frameActions": [],
   "frameMemberBases": [],
   "fatigueStresses": [],

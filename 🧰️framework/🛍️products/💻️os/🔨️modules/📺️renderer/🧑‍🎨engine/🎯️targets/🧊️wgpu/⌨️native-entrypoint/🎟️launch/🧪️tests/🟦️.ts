@@ -3,10 +3,18 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {KernelOriginalOperationIssuer,KernelOriginalResourcePool,OriginalOperationSource} from "@semio-tech/framework-actor/retained-turn";
 import {withScriptProcessEnvelope,createScriptProcessEnvelope} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {readNativeLaunchDeclarationV1,readNativeLaunchAdmissionV1,nativeLaunchDurationV1,nativeLaunchEnvironmentV1,NATIVE_LAUNCH_ADMISSION_ENV} from "../🟦️.ts";
+import {readNativeLaunchDeclarationV1,readNativeLaunchAdmissionV1,selectNativeLaunchDeclarationV1,nativeLaunchDurationV1,nativeLaunchEnvironmentV1,NATIVE_LAUNCH_ADMISSION_ENV} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import admissionSchema from "../📨️admission/🧬️schema/🔣️.json";
 import law from "../../../../../🧪️tests/🧫️fixtures/⌨️native-entrypoint/🎟️launch/🔣️.json";
+import eventLaw from "./frame-event.json";
+import selectionLaw from "./selection.json";
+test("the selected playground transfers only its declared owned launch policy before creating native sources",()=>{
+ const baseline=readNativeLaunchDeclarationV1(law.declaration),owned={...law.declaration,owner:selectionLaw.ownedOwner};let reads=0;const read=(path:string)=>{expect(path).toBe(selectionLaw.ownedPath);reads++;return JSON.stringify(owned)};for(const row of selectionLaw.cases){reads=0;const actual=selectNativeLaunchDeclarationV1(baseline,row.path??undefined,read);expect(actual.owner).toBe(row.owned?selectionLaw.ownedOwner:selectionLaw.baseOwner);expect(reads).toBe(row.owned?1:0);}for(const path of selectionLaw.refused){reads=0;expect(()=>selectNativeLaunchDeclarationV1(baseline,path,read)).toThrow();expect(reads).toBe(0);}
+});
+test("UI frame events require their own immutable original declaration and preserve the Script deadline",()=>{
+ const declaration=readNativeLaunchDeclarationV1(law.declaration),oracle=new Ajv({strict:true}).compile(schema);expect(declaration.frameEvent.fuel).toBe(eventLaw.fuel);expect(declaration.frameEvent.retirementReserve.fuel).toBe(eventLaw.retirementFuel);const missing={...law.declaration}as Partial<typeof law.declaration>;delete missing.frameEvent;expect(oracle(missing)).toBe(false);expect(()=>readNativeLaunchDeclarationV1(missing)).toThrow();const db=new Database(":memory:");try{for(const row of eventLaw.cases){const actual=db.query("SELECT CASE WHEN ? IS NOT NULL AND ?<=? THEN NULL ELSE CASE WHEN ? IS NULL THEN ?+? ELSE min(?+?,?) END END AS deadline").get(row.scriptDeadline,row.scriptDeadline,row.now,row.scriptDeadline,row.now,eventLaw.maximumElapsedMicroseconds,row.now,eventLaw.maximumElapsedMicroseconds,row.scriptDeadline)as{deadline:number|null};expect(actual.deadline).toBe(row.deadline);}}finally{db.close();}
+});
 test("finite compiler tasks require their own actual launch policy without renewing input or service authority",()=>{
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(law.declaration)).toBe(true);const declaration=readNativeLaunchDeclarationV1(law.declaration);const compiler=declaration.compilerTask;
  expect(compiler.fuel).toBe(120);expect(compiler.grant.maximumCapacityBytes).toBe(2097152);expect(compiler.grant.maximumCapacityBytes).not.toBe(declaration.hostIo.grant.maximumCapacityBytes);const missing={...law.declaration}as Partial<typeof law.declaration>;delete missing.compilerTask;expect(validate(missing)).toBe(false);expect(()=>readNativeLaunchDeclarationV1(missing)).toThrow();

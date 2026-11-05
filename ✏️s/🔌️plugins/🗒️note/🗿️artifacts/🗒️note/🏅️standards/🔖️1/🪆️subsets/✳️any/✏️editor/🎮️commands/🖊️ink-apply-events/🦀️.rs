@@ -461,7 +461,7 @@ pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _c
     let mut window_config_mutations = Vec::new();
     for event in &events {
         if let NoteCanvasEvent::SetCamera { camera } = event {
-            let view = ctx.view_state.as_ref().ok_or_else(|| Fault::from("note-composite-window-context-required"))?;
+            let view = ctx.view_state.as_deref().ok_or_else(|| Fault::from("note-composite-window-context-required"))?;
             window_config_mutations.push(crate::editor::note::window::addressed_config(view, crate::editor::note::window::NoteCompositeWindowConfig { camera: camera.clone() })?);
         }
     }

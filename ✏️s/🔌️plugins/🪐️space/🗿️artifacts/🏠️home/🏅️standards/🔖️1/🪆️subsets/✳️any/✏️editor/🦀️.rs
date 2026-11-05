@@ -151,7 +151,7 @@ fn home_retained_reduce(
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
-    let _identity = require_session_identity(context.and_then(|context| context.view_state.as_ref()))?;
+    let _identity = require_session_identity(context.and_then(|context| context.view_state.as_deref()))?;
     if home_retained_extent(command, snapshot, _interaction).is_none() {
         return Err(Fault::from("space-home-retained-route-mismatch"));
     }
@@ -228,7 +228,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.closing || cx.is_cancelled() { return Err(Fault::from("s.home.create-studio.effect-not-live")); }
         let HomeCommand::CreateStudio(payload) = input.command else { return Err(Fault::from("s.home.create-studio.effect-command-mismatch")) };
-        let session = require_session_identity(input.context.and_then(|context| context.view_state.as_ref()))?;
+        let session = require_session_identity(input.context.and_then(|context| context.view_state.as_deref()))?;
         if !self.validated {
             if self.extent(input.command, input.snapshot, input.interaction, input.context).is_none() { return Err(Fault::from("s.home.create-studio.effect-extent")); }
             self.validated = true;
@@ -360,7 +360,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        require_session_identity(input.context.and_then(|context| context.view_state.as_ref()))?;
+        require_session_identity(input.context.and_then(|context| context.view_state.as_deref()))?;
         self.advance(input.command, &ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone()))
     
         })();

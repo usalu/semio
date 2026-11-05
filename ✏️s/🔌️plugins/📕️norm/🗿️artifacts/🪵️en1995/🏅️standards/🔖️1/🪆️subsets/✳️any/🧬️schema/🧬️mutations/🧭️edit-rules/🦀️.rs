@@ -6,6 +6,7 @@ use crate::En1995Mutation;
 
 /// 📚 Every path an EN1995 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field_arguments: &[],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "connections[].diameterM", kind: "change-connection-diameter", selectors: &[SelectorKey::Id("connectionId")], value: "newValue" },

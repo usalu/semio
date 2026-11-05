@@ -18,7 +18,7 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamBridgeLanes wh
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-bridge-lanes", kind: "change-beam-bridge-lanes", record: "ChangedBeamBridgeLanes" };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change notional lanes loading the girder (0 = from the girder spacing)", "rechnerische Fahrstreifen am Träger (0 = aus dem Trägerabstand) ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change notional lanes loading the girder (0 = from the girder spacing)", "Rechnerische Fahrstreifen am Träger (0 = aus dem Trägerabstand) ändern")
     }
 }
 

@@ -63,3 +63,15 @@ mod number_facets_tests;
 //#endregion 🔖️ActionArgFacets
 //#endregion 🔖️Manifest
 // #endregion 🛂️Manifest
+
+#[cfg(test)]
+#[path = "🛬️receiving/🧪️tests/🦀️.rs"]
+mod native_receiving_tests;
+
+#[cfg(test)]
+#[global_allocator]
+static INPUT_RECEIVING_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+#[path="🌱️shape-seeds/🦀️.rs"]
+mod shape_seeds;
+pub use shape_seeds::*;

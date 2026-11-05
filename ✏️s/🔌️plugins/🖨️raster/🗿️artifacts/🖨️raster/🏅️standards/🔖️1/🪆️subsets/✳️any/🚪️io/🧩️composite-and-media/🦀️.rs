@@ -2,6 +2,13 @@
 
 use super::*;
 
+#[path="🧵️prepare/🦀️.rs"]
+mod retained_prepare;
+pub use retained_prepare::RasterStackPreparation as RasterStackPreparationWork;
+#[path="🧵️work/🦀️.rs"]
+mod retained_composite;
+pub use retained_composite::RasterCompositeWork;
+
 //#region 🔖️Composite
 
 fn stack_transform(value:&RasterTransform)->RasterStackTransform {

@@ -294,12 +294,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 match result{Ok(ready)=>!ready,Err(failure)=>{original_media_failure=Some(failure.into());true}}
             },
             Some(protocol::AppCommand::ConfigCommand{..})=>{
-                let meta=ActionMeta{actor:instance_actor(runtime,instance_id).await?.into(),instance_id,view_state:None};let command=owner.configuration_bytes_mut()?;
+                let meta=ActionMeta{ expected_document_revision:None,actor:instance_actor(runtime,instance_id).await?.into(),instance_id,view_state:None};let command=owner.configuration_bytes_mut()?;
                 let result=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;::semio_framework_async::poll::resolve_ready(instance.app.dispatch_config_command(command,&meta,identity,cx)).map_err(Into::into)}).await;
                 match result{Ok(result)=>original_configuration=result,Err(failure)=>original_media_failure=Some(failure.into())}original_configuration.is_none()
             },
             Some(protocol::AppCommand::PureCommand{command,head,..})=>{
-                let meta=ActionMeta{actor:instance_actor(runtime,instance_id).await?.into(),instance_id,view_state:None};
+                let meta=ActionMeta{ expected_document_revision:None,actor:instance_actor(runtime,instance_id).await?.into(),instance_id,view_state:None};
                 let result=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;if !instance.app.original_command_frame_pending()&&!::semio_framework_async::poll::resolve_ready(instance.app.hydrate_pure_head(head,cx))?{return Ok(None)}let result=::semio_framework_async::poll::resolve_ready(instance.app.handle_command_frame(command,&meta,identity,cx))?;Ok(result.map(|result|(result,::semio_framework_async::poll::resolve_ready(instance.app.take_last_emit_wire()).unwrap_or_default())))}).await;
                 match result{Ok(result)=>original_preview=result,Err(failure)=>original_media_failure=Some(failure.into())};original_preview.is_none()
             },

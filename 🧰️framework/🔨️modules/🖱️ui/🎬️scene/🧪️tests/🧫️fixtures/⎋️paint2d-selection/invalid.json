@@ -1,0 +1,18 @@
+{
+  "cases": [
+    {"name":"empty actor","field":"actor","value":""},
+    {"name":"empty window","field":"windowId","value":""},
+    {"name":"negative instance","field":"appInstanceId","value":-1},
+    {"name":"fractional instance","field":"appInstanceId","value":1.5},
+    {"name":"overflow instance","field":"appInstanceId","value":4294967296},
+    {"name":"short operation","field":"operationId","value":"000000000000001"},
+    {"name":"long operation","field":"operationId","value":"00000000000000001"},
+    {"name":"uppercase operation","field":"operationId","value":"002000000000000A"},
+    {"name":"nonhex generation","field":"generation","value":"fffffffffffffffg"},
+    {"name":"numeric operation","field":"operationId","value":1},
+    {"name":"null actor","field":"actor","value":null},
+    {"name":"unknown member","field":"extra","value":true}
+  ],
+  "missing": ["actor","appInstanceId","windowId","operationId","generation"],
+  "duplicate": ["actor","appInstanceId","windowId","operationId","generation"]
+}

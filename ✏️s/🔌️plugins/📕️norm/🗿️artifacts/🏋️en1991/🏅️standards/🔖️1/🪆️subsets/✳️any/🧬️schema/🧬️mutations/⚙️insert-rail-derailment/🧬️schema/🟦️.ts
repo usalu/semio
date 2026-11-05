@@ -2,11 +2,11 @@
  * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireInteger, normWireObject, normWireRange, normWireRequired, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
-import { type RailDerailment, parseRotatingMachine } from "../../../📸️snapshot/🟦️.ts";
+import { type RailDerailment, parseRailDerailment } from "../../../📸️snapshot/🟦️.ts";
 
 export interface InsertRailDerailment {
   index: number;
   item: RailDerailment;
 }
 
-export const parseInsertRailDerailment: NormWireReader<InsertRailDerailment> = normWireObject<InsertRailDerailment>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), item: normWireRequired(parseRotatingMachine) });
+export const parseInsertRailDerailment: NormWireReader<InsertRailDerailment> = normWireObject<InsertRailDerailment>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), item: normWireRequired(parseRailDerailment) });

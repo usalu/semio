@@ -14,3 +14,6 @@ pub mod render_interaction;
 pub mod render_reserved_jobs;
 #[path = "📥️staging/🧺️bundle/🦀️.rs"]
 pub mod render_bundle;
+
+#[path="📥️staging/📝️requests/🦀️.rs"]
+pub mod render_requests;

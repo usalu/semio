@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/staged-value-reference.schema.json",
+  "title": "Staged Value Reference Coordinates",
+  "description": "Closed lookup coordinates only. An active native issued owner supplies authority and custody; shape does not.",
+  "definitions": {
+    "U64": {
+      "type": "string",
+      "maxLength": 20,
+      "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4]|18446744073709551615)$"
+    },
+    "PositiveU64": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/U64"
+        },
+        {
+          "not": {
+            "const": "0"
+          }
+        }
+      ]
+    },
+    "Source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activation",
+        "instance",
+        "guestLifetime",
+        "operation",
+        "sourceGeneration",
+        "serial",
+        "controller",
+        "token"
+      ],
+      "properties": {
+        "activation": {
+          "$ref": "#/definitions/PositiveU64"
+        },
+        "instance": {
+          "type": "string",
+          "maxLength": 10,
+          "pattern": "^(0|[1-9][0-9]{0,8}|[1-3][0-9]{9}|4[0-1][0-9]{8}|42[0-8][0-9]{7}|429[0-3][0-9]{6}|4294[0-8][0-9]{5}|42949[0-5][0-9]{4}|429496[0-6][0-9]{3}|4294967[0-1][0-9]{2}|42949672[0-8][0-9]|429496729[0-5])$"
+        },
+        "guestLifetime": {
+          "$ref": "#/definitions/PositiveU64"
+        },
+        "operation": {
+          "$ref": "#/definitions/U64"
+        },
+        "sourceGeneration": {
+          "$ref": "#/definitions/U64"
+        },
+        "serial": {
+          "$ref": "#/definitions/PositiveU64"
+        },
+        "controller": {
+          "type": "string",
+          "minLength": 1
+        },
+        "token": {
+          "type": "object",
+          "required": [
+            "action",
+            "generation",
+            "revision",
+            "window"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "type": "string",
+              "minLength": 1
+            },
+            "generation": {
+              "type": "string",
+              "maxLength": 20,
+              "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4]|18446744073709551615)$"
+            },
+            "revision": {
+              "type": "string",
+              "minLength": 1
+            },
+            "window": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "slot",
+    "purpose"
+  ],
+  "properties": {
+    "source": {
+      "$ref": "#/definitions/Source"
+    },
+    "slot": {
+      "$ref": "#/definitions/U64"
+    },
+    "purpose": {
+      "enum": [
+        "draft",
+        "seed",
+        "variant",
+        "commit"
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "artifacts": ["⚖️en1990", "🏋️en1991", "🏛️en1992", "🔩️en1993", "🧩️en1994", "🪵️en1995", "🪨️en1996", "🌍️en1997", "🫨️en1998", "🪶️en1999", "🌬️din16798", "⚡️din18599", "🧱️din4108", "📇️iso16757", "🏭️vdi3805"],
+  "internallyTagged": ["⚖️en1990", "🌍️en1997", "🫨️en1998", "🪶️en1999", "⚡️din18599"],
+  "facets": ["🔣️.json", "📸️snapshot/🔣️.json", "🔺️diff/🔣️.json"],
+  "externalBranch": {
+    "type": "object",
+    "required": ["type", "additionalProperties", "required", "properties"],
+    "properties": {
+      "type": {"const": "object"},
+      "additionalProperties": {"const": false},
+      "required": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"type": "string"}},
+      "properties": {"type": "object", "minProperties": 1, "maxProperties": 1, "additionalProperties": {"type": "object", "required": ["$ref"], "properties": {"$ref": {"type": "string"}}}}
+    }
+  }
+}

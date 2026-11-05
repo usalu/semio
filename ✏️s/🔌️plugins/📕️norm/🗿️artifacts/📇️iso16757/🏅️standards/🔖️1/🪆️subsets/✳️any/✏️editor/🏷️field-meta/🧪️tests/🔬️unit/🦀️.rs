@@ -5,8 +5,8 @@ use super::*;
 #[test]
 fn top_level_paths_are_localized_en_and_de() {
     let catalogue = iso16757_field_meta("catalogue").expect("catalogue");
-    assert_eq!(catalogue.label_en, "Catalogue");
-    assert_eq!(catalogue.label_de, "Katalog");
+    assert_eq!(catalogue.label.en, "Catalogue");
+    assert_eq!(catalogue.label.de, "Katalog");
 }
 
 #[test]
@@ -14,17 +14,17 @@ fn list_wildcards_match_id_selectors() {
     let meta = iso16757_field_meta("catalogue.products[id=product-cv].variants[id=variant-50].geometryId").expect("wildcard");
     assert_eq!(meta.label.en, "Geometry id");
     let bounds = iso16757_field_meta("geometry.objects.geom-valve-50.spaces[id=installation].bounds.min").expect("bounds");
-    assert_eq!(bounds.unit, Some("m"));
-    assert_eq!(bounds.label_de, "Minimum");
+    assert_eq!(bounds.unit(), Some("m"));
+    assert_eq!(bounds.label.de, "Minimum");
 }
 
 #[test]
 fn choices_are_localized_not_raw_codes() {
     let exchange = iso16757_field_meta("exchangeProcess").expect("exchange");
-    let choices = exchange.choices.expect("choices");
+    let choices = exchange.choices().expect("choices");
     assert!(choices.iter().any(|c| c.value == "DetermineProduct" && c.label_de == "Produkt bestimmen"));
     let op = iso16757_field_meta("selection.constraints[0].operator").expect("operator");
-    let op_choices = op.choices.expect("op choices");
+    let op_choices = op.choices().expect("op choices");
     assert!(op_choices.iter().any(|c| c.value == "Equal" && c.label_de == "Gleich" && c.label_en == "Equal"));
 }
 
@@ -41,4 +41,15 @@ fn part_number_rule_source_has_explicit_meta() {
     let meta = iso16757_field_meta("partNumberRule.source").expect("source");
     assert_eq!(meta.label.en, "Part-number rule source");
     assert_eq!(meta.label.de, "Teilenummernregel-Quelltext");
+}
+
+#[test]
+fn list_admission_uses_native_insert_and_identity_remove_vocabulary() {
+    let products = iso16757_field_meta("catalogue.products").unwrap();
+    assert!(products.can_insert && products.can_remove);
+    assert!(iso16757_field_meta("catalogue.products[id=product-cv]").unwrap().can_remove);
+    let constraints = iso16757_field_meta("selection.constraints").unwrap();
+    assert!(constraints.can_insert && constraints.can_remove);
+    let variants = iso16757_field_meta("catalogue.products[id=product-cv].variants").unwrap();
+    assert!(!variants.can_insert && !variants.can_remove);
 }

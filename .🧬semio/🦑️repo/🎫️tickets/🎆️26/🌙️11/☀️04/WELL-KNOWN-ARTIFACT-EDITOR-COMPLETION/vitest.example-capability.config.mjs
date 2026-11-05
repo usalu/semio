@@ -1,0 +1,1 @@
+export default {test:{root:process.cwd(),include:["**/🧪️NavbarExampleSelect/🧪️tests/🟦️.tsx"],environment:"jsdom",setupFiles:["./🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧹️react-environment/🟦️.ts"],environmentOptions:{jsdom:{pretendToBeVisual:true}},maxWorkers:1,minWorkers:1,fileParallelism:false,testTimeout:10000}};

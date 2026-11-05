@@ -268,7 +268,7 @@ where
         let original_actor=actor.as_mut().unwrap().take_original().expect("observed untouched original captured actor");drop(actor.take());
         let source=ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority{preparation:Arc::clone(factory),retirement:Arc::clone(retirement)},std::mem::take(mutations),None,store_log.operation_wire);
         let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint_for_store(store_log.mint_witness(), operation, semio_framework_job::Generation(expected_generation), expected_revision, store_log.applied_edit_ids.len(), next_sequence_number, next_clock, original_actor, line, group, stamped_edit_id));
-        let publication=ArtifactStoreBatchPublication{original_registry:std::mem::ManuallyDrop::new(Some(store_owners.snapshot_read_leases.clone())),registry_retirement:None,caller_generation:None,original_origins:std::mem::ManuallyDrop::new(None),origins_retirement:Default::default(),operation,expected_generation,expected_revision,lane,footprint:ArtifactStoreOneItemFootprint{work_items:0,retained_bytes:0},source_census_completed:0,source_census_finished:false,admitted_items,authority:Some(authority),authority_retirement:None,source:Some(Box::new(source)),preparation:None,item_closing:false,stage:None,group_preparation:None,retained_checkpoint:Default::default(),receipt:None,attempts:0,published:false,cancel_requested:false,close_started:false,fault:None,refused_base:None,refused_authority:None,refused_issuers:[None,None],phase:ArtifactStoreOneItemPublicationPhase::Preparing,verb,transaction:std::mem::ManuallyDrop::new(transaction.take()),transaction_close:None,outbound,announce_from:0,announce_items:0,transaction_open:false,lane_insert:None,lane_close:None,lane_ready:lane==HistoryLane::Document};
+        let publication=ArtifactStoreBatchPublication{original_registry:std::mem::ManuallyDrop::new(Some(store_owners.snapshot_read_leases.clone())),registry_retirement:None,caller_generation:None,original_origins:std::mem::ManuallyDrop::new(None),origins_retirement:Default::default(),operation,expected_generation,expected_revision,lane,footprint:ArtifactStoreOneItemFootprint{work_items:0,retained_bytes:0},source_census_completed:0,source_census_finished:false,admitted_items,authority:Some(authority),authority_retirement:None,source:Some(Box::new(source)),preparation:None,item_closing:false,stage:None,group_preparation:None,retained_checkpoint:Default::default(),receipt:None,attempts:0,published:false,cancel_requested:false,close_started:false,fault:None,refused_base:None,refused_authority:None,refused_issuers:[None,None],phase:ArtifactStoreOneItemPublicationPhase::Preparing,verb,transaction:std::mem::ManuallyDrop::new(transaction.take()),transaction_close:None,outbound,announce_from:0,announce_items:0,transaction_open:false,turn_work:0,lane_insert:None,lane_close:None,lane_ready:lane==HistoryLane::Document};
         Ok(Some((publication,RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0})))
     }
 
@@ -495,6 +495,7 @@ operation,
             announce_from: 0,
             announce_items: 0,
             transaction_open: false,
+            turn_work:0,
         
             lane_insert:None,lane_close:None,lane_ready:false,
 })

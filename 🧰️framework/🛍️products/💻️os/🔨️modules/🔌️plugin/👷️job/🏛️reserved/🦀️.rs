@@ -669,6 +669,7 @@ impl QualifiedToolProof {
 #[derive(Clone,Copy)]
 pub enum QualifiedToolView<'a>{Bounded(&'a QualifiedBoundedFirstStepProof),FrameworkOwned(&'a ArtifactToolRegistration),AppOwned(&'a ArtifactToolRegistration)}
 impl QualifiedToolView<'_> {
+    pub fn schema_parts(&self)->(&str,&str){match self{Self::Bounded(proof)=>(proof.row.artifact_schema,".tool-command.v1"),Self::FrameworkOwned(row)|Self::AppOwned(row)=>(row.schema_id.as_str(),"")}}
     pub fn key(&self) -> semio_framework::ToolFactoryKey {
         match self {
             Self::Bounded(proof) => proof.key(),

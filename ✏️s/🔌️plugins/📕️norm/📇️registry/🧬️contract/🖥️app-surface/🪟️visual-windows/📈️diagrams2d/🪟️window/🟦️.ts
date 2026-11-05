@@ -1,7 +1,7 @@
 /** 🪟️ Diagrams window marker cells, TypeScript twin of the marker rows of `./🦀️.rs`: a marker bound to a field is a row with an inline editor cell that shows the bound value in the unit of the field, takes `350 cm` style text (Enter or leaving the cell commits, Escape restores the shown value) and is named by the marker and the unit for a screen reader.
  *
  * 🧫️ Replayed on `🧪️tests/🧫️fixtures/🎯️grip-keyboard/🔣️.json` (`markerCells`) by both implementations; the commit rule is `markerRowCommitV1`. */
-import type { Diagram2d, Marker } from "../../../../../🎬️structural-scene/🧬️schema/🟦️.ts";
+import type { Diagram2d, Marker } from "../../../../../../🎬️structural-scene/🧬️schema/🟦️.ts";
 import { valueAtV1 } from "../../../🕹️direct-manipulation/🛠️handle-drag-tool/🟦️.ts";
 import { markerGripV1, markerRestV1 } from "../🪧marker-grips/🟦️.ts";
 

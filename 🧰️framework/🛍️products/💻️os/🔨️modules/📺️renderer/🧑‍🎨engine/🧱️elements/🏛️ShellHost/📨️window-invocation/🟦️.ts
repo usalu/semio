@@ -33,11 +33,13 @@ export function windowActionInvocation(
   action: ActionDescriptor,
   extraInstances: readonly Pick<ExtraWindowInstance, "id" | "windowKindId">[] = [],
   requestedWindowId?: string,
+  expectedDocumentRevision?: string,
 ): ActionInvocation {
   const instances = sessionWindowInstances(session.app, extraInstances);
   const windowInstanceId = requestedWindowId ?? session.viewState.windowId ?? session.viewState.activeWindowKindId ?? instances[0]?.id ?? session.app.windowKinds[0]?.id ?? "";
   const windowKindId = instances.find((instance) => instance.id === windowInstanceId)?.windowKindId ?? session.app.windowKinds.find((kind) => kind.id === windowInstanceId)?.id ?? session.app.windowKinds[0]?.id ?? "";
   return {
+    ...(expectedDocumentRevision === undefined ? {} : { expectedDocumentRevision }),
     address: {
       pluginId: invocationPluginIdV1(session.pluginId),
       appId: session.app.id,
@@ -76,8 +78,8 @@ export function windowHostEventHandlersV1(controllerId: string, windowId: string
 }
 
 /** 🧩️ Serializes the exact action invocation used by the retained actor and ordinary plugin routes. */
-export function encodeWindowActionInvocation(session: ActiveSession, action: ActionDescriptor, extraInstances: readonly Pick<ExtraWindowInstance, "id" | "windowKindId">[] = [], requestedWindowId?: string): string {
-  return JSON.stringify(windowActionInvocation(session, action, extraInstances, requestedWindowId));
+export function encodeWindowActionInvocation(session: ActiveSession, action: ActionDescriptor, extraInstances: readonly Pick<ExtraWindowInstance, "id" | "windowKindId">[] = [], requestedWindowId?: string, expectedDocumentRevision?: string): string {
+  return JSON.stringify(windowActionInvocation(session, action, extraInstances, requestedWindowId, expectedDocumentRevision));
 }
 
 /** 🎛️ Builds an app-owned command wire without pretending host catalogue state is a window action. */

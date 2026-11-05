@@ -26,6 +26,10 @@ use semio_framework_plugin_window_transient::window_transient::{WindowTransientO
 #[path="🎟️caller/👷️work/🦀️.rs"]
 mod original_work_fixture;
 pub use original_work_fixture::OriginalWorkFixture;
+pub use original_work_fixture::receive_persistent_fixture;
+pub use original_work_fixture::receive_view_fixture;
+#[path="📨️host-event-observation/🦀️.rs"]
+pub mod host_event_observation;
 
 use semio_framework_value::DslValue;
 use protocol::{OpBinary, OpText};

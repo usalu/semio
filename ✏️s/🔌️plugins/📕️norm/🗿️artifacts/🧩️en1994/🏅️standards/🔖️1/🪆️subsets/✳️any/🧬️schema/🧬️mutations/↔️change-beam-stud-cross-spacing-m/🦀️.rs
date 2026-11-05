@@ -18,7 +18,7 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamStudCrossSpaci
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-stud-transverse-spacing-m", kind: "change-beam-stud-cross-spacing-m", record: "ChangedBeamStudTransverseSpacingM" };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change transverse centre-to-centre spacing of the stud rows (0 = not declared)", "Bolzenquerabstand der Bolzenreihen (0 = nicht angegeben) ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change transverse spacing between stud row centres (0 = not declared)", "Bolzenquerabstand der Bolzenreihen (0 = nicht angegeben) ändern")
     }
 }
 

@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC2",
   "title": "Liquid-retaining tank with FEM and anchor",
   "designWorkingLifeYears": 50.0,
   "deltaCDev": 0.01,
@@ -184,7 +183,6 @@
           "z": 0.2
         }
       ],
-      "openings": [],
       "studRows": [
         {
           "id": "r1",
@@ -250,7 +248,8 @@
           "spacingRadial": 0.15,
           "diameter": 0.01
         }
-      ]
+      ],
+      "openings": []
     }
   ],
   "anchors": [
@@ -306,5 +305,6 @@
       "yaw": 0.5
     }
   ],
-  "cases": []
+  "cases": [],
+  "reliabilityClass": "RC2"
 }

@@ -33,7 +33,12 @@
       }
     ]
   },
-  "placements": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "cases": {
     "removed": [],
     "inserted": [],

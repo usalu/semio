@@ -524,6 +524,12 @@
         }
       ]
     },
+    "FloodSelection": {
+      "type":"object",
+      "required":["image","x","y","tolerance"],
+      "description":"Four-neighbour seed-colour flood. Per-channel absolute distance must be within tolerance. Grants initialize or visit at most 32768 pixels. Only completed coverage is available; cancellation discards partial output.",
+      "properties":{"image":{"$ref":"#/$defs/Image"},"x":{"type":"integer","minimum":0},"y":{"type":"integer","minimum":0},"tolerance":{"$ref":"#/$defs/Byte"}}
+    },
     "SelectionRasterization": {
       "type": "object",
       "additionalProperties": false,

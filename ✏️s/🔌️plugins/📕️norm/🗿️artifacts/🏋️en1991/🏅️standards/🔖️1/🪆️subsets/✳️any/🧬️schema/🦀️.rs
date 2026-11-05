@@ -234,12 +234,6 @@ pub struct En1991Artifact {
     #[state(artifact)]
     pub rotating_machines: Vec<semio_s_artifact_norm_en1991_model::RotatingMachine>,
     #[state(artifact)]
-    pub dust_explosions: Vec<semio_s_artifact_norm_en1991_model::DustExplosion>,
-    #[state(artifact)]
-    pub rail_load_groups: Vec<semio_s_artifact_norm_en1991_model::RailLoadGroup>,
-    #[state(artifact)]
-    pub rail_derailments: Vec<semio_s_artifact_norm_en1991_model::RailDerailment>,
-    #[state(artifact)]
     pub fatigue_models: Vec<semio_s_artifact_norm_en1991_model::FatigueModel>,
     #[state(artifact)]
     pub support_collisions: Vec<semio_s_artifact_norm_en1991_model::SupportCollision>,
@@ -247,6 +241,12 @@ pub struct En1991Artifact {
     pub local_fires: Vec<semio_s_artifact_norm_en1991_model::LocalFire>,
     #[state(artifact)]
     pub snow_guards: Vec<semio_s_artifact_norm_en1991_model::SnowGuard>,
+    #[state(artifact)]
+    pub rail_derailments: Vec<semio_s_artifact_norm_en1991_model::RailDerailment>,
+    #[state(artifact)]
+    pub rail_load_groups: Vec<semio_s_artifact_norm_en1991_model::RailLoadGroup>,
+    #[state(artifact)]
+    pub dust_explosions: Vec<semio_s_artifact_norm_en1991_model::DustExplosion>,
 }
 //#endregion 🔖️Artifact
 

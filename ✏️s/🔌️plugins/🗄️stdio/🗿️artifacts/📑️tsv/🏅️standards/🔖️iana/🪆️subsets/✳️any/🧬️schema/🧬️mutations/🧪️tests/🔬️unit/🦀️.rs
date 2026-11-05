@@ -1,3 +1,4 @@
+use protocol::{ColdMutation, OpText, OpBinary, DiffText, DiffBinary};
 use crate::{standards::iana::subsets::any::schema::snapshot::LineEnding, standards::iana::subsets::any::schema::snapshot::TsvSnapshot};
 use crate::apply_mutation;
 use crate::standards::iana::subsets::any::schema::mutations::*;

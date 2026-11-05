@@ -1,4 +1,4 @@
-union En1991Mutation = ChangeAnnex | ChangeSnowZone | ChangeAltitude | ChangeEnSk | ChangeNorthGermanLowlandSnow | ChangeWindZone | ChangeEnVb | ChangeTerrainCategory | ChangeMixedTerrainUpwind | ChangeMixedTerrainDistance | ChangeOrographyFactor | ChangeCoastOrIsland | ChangeAirDensity | ChangeHeight | ChangeWidth | ChangeDepth | ChangeAssumedDeltaT | ChangeConstructionActivity | ChangeAssumedConstructionQk | ChangeStructureKind | ChangeBridgeLane | ChangeBridgeSpan | ChangeBridgeTandemX | ChangeBridgeCurveRadius | ChangeRailAlpha | ChangeAssumedRailLm71 | ChangeAssumedRailLm71Udl | ChangeAssumedRailSw0 | ChangeAssumedRailSw2 | ChangeCraneX | ChangeCraneRunwayLength | ChangeCraneWheelBase | ChangeSiloDiameter | ChangeSiloEccentricity | ChangeSiloHopperAngleDeg | ChangeBridgeLaneWidth | ChangeAssumedBridgeTandem | ChangeAssumedBridgeUdl | ChangeAssumedBridgeLm2 | ChangeAssumedBridgeFootway | ChangeStoreyCount | ChangeTMax | ChangeTMin | ChangeInitialTemperature | ChangeThermalElementType | ChangeThermalBridgeType | ChangeLinearTemperatureGradient | ChangeFireMode | ChangeFireLoadBasis | ChangeFireCurve | ChangeFireDuration | ChangeAssumedGasTemperature | ChangeAssumedHNet | ChangeFireCompartmentArea | ChangeFireCompartmentHeight | ChangeFireOpeningFactor | ChangeFireThermalInertia | ChangeFireOccupancy | ChangeFireLoadDensityQf | ChangeAssumedQfD | ChangeAssumedBridgeLm3 | ChangeAssumedBridgeLm4 | ChangeBridgeLoadGroup | ChangeCraneClaimed | ChangeCraneClass | ChangeHoistClass | ChangeHoistingSpeed | ChangeAssumedCraneWheel | ChangeAssumedCraneHorizontal | ChangeSiloClaimed | ChangeSiloKind | ChangeSiloBulkDensity | ChangeSiloHeight | ChangeSiloHydraulicRadius | ChangeSiloMu | ChangeSiloK | ChangeAssumedSiloPressure | ChangeAssumedSiloPatch | ChangeAssumedSiloWallFriction | ChangeFloorAssumedQk | ChangeSelfWeightAssumedGk | ChangeRoofAssumedSk | ChangeWindFaceAssumedWp | ChangeAccidentalAssumedForce | InsertFloor | RemoveFloor | InsertSelfWeightElement | RemoveSelfWeightElement | InsertRoof | RemoveRoof | InsertWindFace | RemoveWindFace | InsertAccidentalCase | RemoveAccidentalCase | ChangeRoofPitchDeg | ChangeRoofParapetHeight | ChangeRoofDriftObstructionHeight | ChangeFloorArea | ChangeSelfWeightThickness | ChangeWindFaceZ | ChangeWindFaceLoadedArea | ChangeLaneWidth | ChangeLaneOffset | ChangeLaneLm1Lane | InsertBridgeLane | RemoveBridgeLane | ChangeStageActivity | ChangeStageDurationDays | ChangeStageReturnYears | ChangeStageAssumedQk | InsertConstructionStage | RemoveConstructionStage | ChangeRoofSurfaceFace | ChangeRoofSurfaceShape | ChangeRoofSurfacePitchDeg | ChangeRoofSurfaceExtent | InsertRoofSurface | RemoveRoofSurface | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeFloorCategory | ChangeFloorAssumedQkConc | ChangeFloorAssumedPartitions | ChangeSelfWeightMaterial | ChangeRoofRoofType | ChangeRoofCE | ChangeRoofCT | ChangeRoofHasParapet | ChangeRoofMultiSpan | ChangeWindFaceZone | ChangeWindFaceCPe10 | ChangeWindFaceCPe1 | ChangeWindFaceCPi | ChangeWindFaceCS | ChangeWindFaceCD | ChangeSpecialVehicleDesignation | ChangeSpecialVehicleX | ChangeSpecialVehicleY | InsertSpecialVehicle | RemoveSpecialVehicle | ChangeWindBridgeDeckWidth | ChangeWindBridgeDeckDepth | ChangeWindBridgeParapetKind | ChangeWindBridgeParapetHeight | ChangeWindBridgeTrafficKind | ChangeWindBridgeGroundHeight | ChangeWindBridgeSpan | ChangeWindBridgeAssumedForce | InsertWindBridge | RemoveWindBridge | ChangeDynamicElementHeight | ChangeDynamicElementWidth | ChangeDynamicFirstFrequency | ChangeDynamicLogDecrement | ChangeDynamicMassPerLength | ChangeDynamicElementStrouhal | ChangeDynamicAssumedCscd | InsertDynamicElement | RemoveDynamicElement | ChangeImpactActionKind | ChangeImpactActionMass | ChangeImpactActionSpeed | ChangeImpactActionStiffness | ChangeImpactActionHeight | ChangeImpactActionX | ChangeImpactActionY | ChangeImpactActionAssumedForce | InsertImpactAction | RemoveImpactAction | ChangeInternalExplosionVolume | ChangeExplosionVentArea | ChangeExplosionVentPressure | ChangeExplosionAssumedPressure | InsertInternalExplosion | RemoveInternalExplosion | ChangeThermalSectionDeckType | ChangeThermalSectionSurfacing | ChangeThermalSectionLength | ChangeThermalSectionDepth | ChangeThermalSectionAlphaMicro | ChangeThermalAssumedRange | InsertThermalSection | RemoveThermalSection | ChangeAccidentalVehicleMass | ChangeAccidentalVehicleSpeed | ChangeAccidentalExplosionMass | ChangeAccidentalStandoff | ChangeAccidentalAssumedPressure | ChangeHelicopterMass | ChangeHelicopterX | ChangeHelicopterY | ChangeHelicopterHeight | ChangeHelicopterAssumedForce | InsertHelicopter | RemoveHelicopter | ChangeTieRunKind | ChangeTieRunSpacing | ChangeTieRunSpan | ChangeTieRunDeadLoad | ChangeTieRunImposedLoad | ChangeTieRunPsi | ChangeTieRunX | ChangeTieRunY | ChangeTieRunProvidedForce | InsertTieRun | RemoveTieRun | ChangeConstructionLoadStage | ChangeConstructionLoadKind | ChangeConstructionLoadMagnitude | InsertConstructionLoad | RemoveConstructionLoad | ChangeFallingMass | ChangeFallingDropHeight | ChangeFallingStoppingDistance | ChangeFallingX | ChangeFallingY | ChangeFallingAssumedForce | InsertFalling | RemoveFalling | ChangeImperfectionHeight | ChangeImperfectionTolerance | ChangeImperfectionVerticalLoad | ChangeImperfectionX | ChangeImperfectionY | ChangeImperfectionAssumedForce | InsertImperfection | RemoveImperfection | ChangeDerailmentDistance | ChangeDerailmentDesignForceX | ChangeDerailmentDesignForceY | ChangeDerailmentX | ChangeDerailmentY | ChangeDerailmentAssumedForce | InsertDerailment | RemoveDerailment | ChangeCraneHoistRatedLoad | ChangeCraneHoistReleaseFraction | ChangeCraneHoistReleaseDevice | InsertCraneHoist | RemoveCraneHoist | ChangeFootbridgeLoadedLength | ChangeFootbridgeDeckWidth | ChangeFootbridgeNaturalFrequency | InsertFootbridge | RemoveFootbridge | ChangeRailDynamicDeterminantLength | ChangeRailDynamicMaintenance | InsertRailDynamic | RemoveRailDynamic | ChangeLoadDispersalWheelLength | ChangeLoadDispersalWheelWidth | ChangeLoadDispersalPavingThickness | ChangeLoadDispersalSlabThickness | InsertLoadDispersal | RemoveLoadDispersal | ChangeBulkSolidInternalFriction | InsertBulkSolid | RemoveBulkSolid | ChangeRotatingMachineMass | ChangeRotatingMachineEccentricity | ChangeRotatingMachineFrequency | InsertRotatingMachine | RemoveRotatingMachine
+union En1991Mutation = ChangeAnnex | ChangeSnowZone | ChangeAltitude | ChangeEnSk | ChangeNorthGermanLowlandSnow | ChangeWindZone | ChangeEnVb | ChangeTerrainCategory | ChangeMixedTerrainUpwind | ChangeMixedTerrainDistance | ChangeOrographyFactor | ChangeCoastOrIsland | ChangeAirDensity | ChangeHeight | ChangeWidth | ChangeDepth | ChangeAssumedDeltaT | ChangeConstructionActivity | ChangeAssumedConstructionQk | ChangeStructureKind | ChangeBridgeLane | ChangeBridgeSpan | ChangeBridgeTandemX | ChangeBridgeCurveRadius | ChangeRailAlpha | ChangeAssumedRailLm71 | ChangeAssumedRailLm71Udl | ChangeAssumedRailSw0 | ChangeAssumedRailSw2 | ChangeCraneX | ChangeCraneRunwayLength | ChangeCraneWheelBase | ChangeSiloDiameter | ChangeSiloEccentricity | ChangeSiloHopperAngleDeg | ChangeBridgeLaneWidth | ChangeAssumedBridgeTandem | ChangeAssumedBridgeUdl | ChangeAssumedBridgeLm2 | ChangeAssumedBridgeFootway | ChangeStoreyCount | ChangeTMax | ChangeTMin | ChangeInitialTemperature | ChangeThermalElementType | ChangeThermalBridgeType | ChangeLinearTemperatureGradient | ChangeFireMode | ChangeFireLoadBasis | ChangeFireCurve | ChangeFireDuration | ChangeAssumedGasTemperature | ChangeAssumedHNet | ChangeFireCompartmentArea | ChangeFireCompartmentHeight | ChangeFireOpeningFactor | ChangeFireThermalInertia | ChangeFireOccupancy | ChangeFireLoadDensityQf | ChangeAssumedQfD | ChangeAssumedBridgeLm3 | ChangeAssumedBridgeLm4 | ChangeBridgeLoadGroup | ChangeCraneClaimed | ChangeCraneClass | ChangeHoistClass | ChangeHoistingSpeed | ChangeAssumedCraneWheel | ChangeAssumedCraneHorizontal | ChangeSiloClaimed | ChangeSiloKind | ChangeSiloBulkDensity | ChangeSiloHeight | ChangeSiloHydraulicRadius | ChangeSiloMu | ChangeSiloK | ChangeAssumedSiloPressure | ChangeAssumedSiloPatch | ChangeAssumedSiloWallFriction | ChangeFloorAssumedQk | ChangeSelfWeightAssumedGk | ChangeRoofAssumedSk | ChangeWindFaceAssumedWp | ChangeAccidentalAssumedForce | InsertFloor | RemoveFloor | InsertSelfWeightElement | RemoveSelfWeightElement | InsertRoof | RemoveRoof | InsertWindFace | RemoveWindFace | InsertAccidentalCase | RemoveAccidentalCase | ChangeRoofPitchDeg | ChangeRoofParapetHeight | ChangeRoofDriftObstructionHeight | ChangeFloorArea | ChangeSelfWeightThickness | ChangeWindFaceZ | ChangeWindFaceLoadedArea | ChangeLaneWidth | ChangeLaneOffset | ChangeLaneLm1Lane | InsertBridgeLane | RemoveBridgeLane | ChangeStageActivity | ChangeStageDurationDays | ChangeStageReturnYears | ChangeStageAssumedQk | InsertConstructionStage | RemoveConstructionStage | ChangeRoofSurfaceFace | ChangeRoofSurfaceShape | ChangeRoofSurfacePitchDeg | ChangeRoofSurfaceExtent | InsertRoofSurface | RemoveRoofSurface | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeFloorCategory | ChangeFloorAssumedQkConc | ChangeFloorAssumedPartitions | ChangeSelfWeightMaterial | ChangeRoofRoofType | ChangeRoofCE | ChangeRoofCT | ChangeRoofHasParapet | ChangeRoofMultiSpan | ChangeWindFaceZone | ChangeWindFaceCPe10 | ChangeWindFaceCPe1 | ChangeWindFaceCPi | ChangeWindFaceCS | ChangeWindFaceCD | ChangeSpecialVehicleDesignation | ChangeSpecialVehicleX | ChangeSpecialVehicleY | InsertSpecialVehicle | RemoveSpecialVehicle | ChangeWindBridgeDeckWidth | ChangeWindBridgeDeckDepth | ChangeWindBridgeParapetKind | ChangeWindBridgeParapetHeight | ChangeWindBridgeTrafficKind | ChangeWindBridgeGroundHeight | ChangeWindBridgeSpan | ChangeWindBridgeAssumedForce | InsertWindBridge | RemoveWindBridge | ChangeDynamicElementHeight | ChangeDynamicElementWidth | ChangeDynamicFirstFrequency | ChangeDynamicLogDecrement | ChangeDynamicMassPerLength | ChangeDynamicElementStrouhal | ChangeDynamicAssumedCscd | InsertDynamicElement | RemoveDynamicElement | ChangeImpactActionKind | ChangeImpactActionMass | ChangeImpactActionSpeed | ChangeImpactActionStiffness | ChangeImpactActionHeight | ChangeImpactActionX | ChangeImpactActionY | ChangeImpactActionAssumedForce | InsertImpactAction | RemoveImpactAction | ChangeInternalExplosionVolume | ChangeExplosionVentArea | ChangeExplosionVentPressure | ChangeExplosionAssumedPressure | InsertInternalExplosion | RemoveInternalExplosion | ChangeThermalSectionDeckType | ChangeThermalSectionSurfacing | ChangeThermalSectionLength | ChangeThermalSectionDepth | ChangeThermalSectionAlphaMicro | ChangeThermalAssumedRange | InsertThermalSection | RemoveThermalSection | ChangeAccidentalVehicleMass | ChangeAccidentalVehicleSpeed | ChangeAccidentalExplosionMass | ChangeAccidentalStandoff | ChangeAccidentalAssumedPressure | ChangeHelicopterMass | ChangeHelicopterX | ChangeHelicopterY | ChangeHelicopterHeight | ChangeHelicopterAssumedForce | InsertHelicopter | RemoveHelicopter | ChangeTieRunKind | ChangeTieRunSpacing | ChangeTieRunSpan | ChangeTieRunDeadLoad | ChangeTieRunImposedLoad | ChangeTieRunPsi | ChangeTieRunX | ChangeTieRunY | ChangeTieRunProvidedForce | InsertTieRun | RemoveTieRun | ChangeConstructionLoadStage | ChangeConstructionLoadKind | ChangeConstructionLoadMagnitude | InsertConstructionLoad | RemoveConstructionLoad | ChangeFallingMass | ChangeFallingDropHeight | ChangeFallingStoppingDistance | ChangeFallingX | ChangeFallingY | ChangeFallingAssumedForce | InsertFalling | RemoveFalling | ChangeImperfectionHeight | ChangeImperfectionTolerance | ChangeImperfectionVerticalLoad | ChangeImperfectionX | ChangeImperfectionY | ChangeImperfectionAssumedForce | InsertImperfection | RemoveImperfection | ChangeDerailmentDistance | ChangeDerailmentDesignForceX | ChangeDerailmentDesignForceY | ChangeDerailmentX | ChangeDerailmentY | ChangeDerailmentAssumedForce | InsertDerailment | RemoveDerailment | ChangeCraneHoistRatedLoad | ChangeCraneHoistReleaseFraction | ChangeCraneHoistReleaseDevice | InsertCraneHoist | RemoveCraneHoist | ChangeFootbridgeLoadedLength | ChangeFootbridgeDeckWidth | ChangeFootbridgeNaturalFrequency | InsertFootbridge | RemoveFootbridge | ChangeRailDynamicDeterminantLength | ChangeRailDynamicMaintenance | InsertRailDynamic | RemoveRailDynamic | ChangeLoadDispersalWheelLength | ChangeLoadDispersalWheelWidth | ChangeLoadDispersalPavingThickness | ChangeLoadDispersalSlabThickness | InsertLoadDispersal | RemoveLoadDispersal | ChangeBulkSolidInternalFriction | InsertBulkSolid | RemoveBulkSolid | ChangeRotatingMachineMass | ChangeRotatingMachineEccentricity | ChangeRotatingMachineFrequency | InsertRotatingMachine | RemoveRotatingMachine | ChangeDustExplosionDesignPressure | ChangeDustExplosionKst | ChangeDustExplosionPMax | ChangeDustExplosionStaticOpeningPressure | ChangeDustExplosionVentArea | ChangeDustExplosionVolume | ChangeFatigueModelAssumedAxleLoad | ChangeFatigueModelAssumedUdl | ChangeFatigueModelLane | ChangeFatigueModelModel | ChangeFootbridgeAssumedServiceAxle | ChangeLocalFireAssumedFlux | ChangeLocalFireCeilingHeight | ChangeLocalFireFireDiameter | ChangeLocalFireHeatReleaseRate | ChangeLocalFireHorizontalDistance | ChangeRailDerailmentAssumedLineLoad | ChangeRailDerailmentLoadedLength | ChangeRailDerailmentOffset | ChangeRailDerailmentSituation | ChangeRailLoadGroupAssumedAxleLoad | ChangeRailLoadGroupAssumedLateral | ChangeRailLoadGroupAssumedLongitudinal | ChangeRailLoadGroupAssumedUdl | ChangeRailLoadGroupFactorLateral | ChangeRailLoadGroupFactorLongitudinal | ChangeRailLoadGroupFactorVertical | ChangeRailLoadGroupLoadGroup | ChangeSnowGuardAssumedForce | ChangeSnowGuardRoofId | ChangeSnowGuardSlopeLength | ChangeSupportCollisionAssumedForceX | ChangeSupportCollisionAssumedForceY | ChangeSupportCollisionHeight | ChangeSupportCollisionLocation | ChangeSupportCollisionPositionX | InsertDustExplosion | InsertFatigueModel | InsertLocalFire | InsertRailDerailment | InsertRailLoadGroup | InsertSnowGuard | InsertSupportCollision | RemoveDustExplosion | RemoveFatigueModel | RemoveLocalFire | RemoveRailDerailment | RemoveRailLoadGroup | RemoveSnowGuard | RemoveSupportCollision
 type ChangeAnnex {
   newAnnex: AnnexChoice!
 }
@@ -988,5 +988,198 @@ type InsertRotatingMachine {
   item: RotatingMachine!
 }
 type RemoveRotatingMachine {
+  id: String!
+}
+type ChangeDustExplosionDesignPressure {
+  id: String!
+  newDesignPressure: Float!
+}
+type ChangeDustExplosionKst {
+  id: String!
+  newKst: Float!
+}
+type ChangeDustExplosionPMax {
+  id: String!
+  newPMax: Float!
+}
+type ChangeDustExplosionStaticOpeningPressure {
+  id: String!
+  newStaticOpeningPressure: Float!
+}
+type ChangeDustExplosionVentArea {
+  id: String!
+  newVentArea: Float!
+}
+type ChangeDustExplosionVolume {
+  id: String!
+  newVolume: Float!
+}
+type ChangeFatigueModelAssumedAxleLoad {
+  id: String!
+  newAssumedAxleLoad: Float!
+}
+type ChangeFatigueModelAssumedUdl {
+  id: String!
+  newAssumedUdl: Float!
+}
+type ChangeFatigueModelLane {
+  id: String!
+  newLane: Int!
+}
+type ChangeFatigueModelModel {
+  id: String!
+  newModel: String!
+}
+type ChangeFootbridgeAssumedServiceAxle {
+  id: String!
+  newAssumedServiceAxle: Float!
+}
+type ChangeLocalFireAssumedFlux {
+  id: String!
+  newAssumedFlux: Float!
+}
+type ChangeLocalFireCeilingHeight {
+  id: String!
+  newCeilingHeight: Float!
+}
+type ChangeLocalFireFireDiameter {
+  id: String!
+  newFireDiameter: Float!
+}
+type ChangeLocalFireHeatReleaseRate {
+  id: String!
+  newHeatReleaseRate: Float!
+}
+type ChangeLocalFireHorizontalDistance {
+  id: String!
+  newHorizontalDistance: Float!
+}
+type ChangeRailDerailmentAssumedLineLoad {
+  id: String!
+  newAssumedLineLoad: Float!
+}
+type ChangeRailDerailmentLoadedLength {
+  id: String!
+  newLoadedLength: Float!
+}
+type ChangeRailDerailmentOffset {
+  id: String!
+  newOffset: Float!
+}
+type ChangeRailDerailmentSituation {
+  id: String!
+  newSituation: String!
+}
+type ChangeRailLoadGroupAssumedAxleLoad {
+  id: String!
+  newAssumedAxleLoad: Float!
+}
+type ChangeRailLoadGroupAssumedLateral {
+  id: String!
+  newAssumedLateral: Float!
+}
+type ChangeRailLoadGroupAssumedLongitudinal {
+  id: String!
+  newAssumedLongitudinal: Float!
+}
+type ChangeRailLoadGroupAssumedUdl {
+  id: String!
+  newAssumedUdl: Float!
+}
+type ChangeRailLoadGroupFactorLateral {
+  id: String!
+  newFactorLateral: Float!
+}
+type ChangeRailLoadGroupFactorLongitudinal {
+  id: String!
+  newFactorLongitudinal: Float!
+}
+type ChangeRailLoadGroupFactorVertical {
+  id: String!
+  newFactorVertical: Float!
+}
+type ChangeRailLoadGroupLoadGroup {
+  id: String!
+  newLoadGroup: String!
+}
+type ChangeSnowGuardAssumedForce {
+  id: String!
+  newAssumedForce: Float!
+}
+type ChangeSnowGuardRoofId {
+  id: String!
+  newRoofId: String!
+}
+type ChangeSnowGuardSlopeLength {
+  id: String!
+  newSlopeLength: Float!
+}
+type ChangeSupportCollisionAssumedForceX {
+  id: String!
+  newAssumedForceX: Float!
+}
+type ChangeSupportCollisionAssumedForceY {
+  id: String!
+  newAssumedForceY: Float!
+}
+type ChangeSupportCollisionHeight {
+  id: String!
+  newHeight: Float!
+}
+type ChangeSupportCollisionLocation {
+  id: String!
+  newLocation: String!
+}
+type ChangeSupportCollisionPositionX {
+  id: String!
+  newPositionX: Float!
+}
+type InsertDustExplosion {
+  index: Int!
+  item: DustExplosion!
+}
+type InsertFatigueModel {
+  index: Int!
+  item: FatigueModel!
+}
+type InsertLocalFire {
+  index: Int!
+  item: LocalFire!
+}
+type InsertRailDerailment {
+  index: Int!
+  item: RailDerailment!
+}
+type InsertRailLoadGroup {
+  index: Int!
+  item: RailLoadGroup!
+}
+type InsertSnowGuard {
+  index: Int!
+  item: SnowGuard!
+}
+type InsertSupportCollision {
+  index: Int!
+  item: SupportCollision!
+}
+type RemoveDustExplosion {
+  id: String!
+}
+type RemoveFatigueModel {
+  id: String!
+}
+type RemoveLocalFire {
+  id: String!
+}
+type RemoveRailDerailment {
+  id: String!
+}
+type RemoveRailLoadGroup {
+  id: String!
+}
+type RemoveSnowGuard {
+  id: String!
+}
+type RemoveSupportCollision {
   id: String!
 }

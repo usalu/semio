@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": "RC3",
   "title": null,
   "designWorkingLifeYears": null,
   "deltaCDev": null,
@@ -16,5 +15,6 @@
     "inserted": [],
     "moved": [],
     "modified": []
-  }
+  },
+  "reliabilityClass": "RC3"
 }

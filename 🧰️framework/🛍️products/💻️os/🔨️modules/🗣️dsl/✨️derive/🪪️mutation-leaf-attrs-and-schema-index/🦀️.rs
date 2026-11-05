@@ -3,6 +3,9 @@
 use quote::quote;
 use super::{BTreeMap, Data, DeriveInput, Fields, HashSet, MUTATION_SCHEMA_INDEX_LOCATOR, MUTATION_SCHEMA_INDEX_SCHEMA, MutationLeafJson, MutationSourceAuthority, Path, PathBuf, TokenStream, emit_mutation_leaf_descriptor, fs, mutation_authority_locator, mutation_authority_no_follow, mutation_authority_relative, mutation_authority_workspace_root, mutation_source_authority, parse_macro_input, parse_mutation_leaf_descriptor};
 
+#[path = "🧮️inputs.rs"]
+mod input_compilation;
+
 //#region 🪪️MutationLeaf
 #[derive(Debug)]
 #[doc(hidden)] pub struct MutationLeafAttrs { pub(super) contract: syn::Path, pub(super) payload: Option<syn::Ident>, pub(super) input_schema: Option<syn::Path> }
@@ -112,6 +115,7 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
     let payload_schema_path = match mutation_leaf_payload_schema_path(&authority, &descriptor.payload_schema) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf payload schema failed: {error}")).to_compile_error().into() };
     let inverse_rows = match mutation_leaf_inverse_rows(&payload_schema_path) { Ok(rows) => rows, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf x-semio-inverse-rows failed: {error}")).to_compile_error().into() };
     let referenced_documents = match mutation_leaf_referenced_documents(&payload_schema_path).and_then(|paths| paths.iter().map(|path| mutation_leaf_include_path(path)).collect::<Result<Vec<_>, _>>()) { Ok(paths) => paths, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf referenced schema documents failed: {error}")).to_compile_error().into() };
+    let compiled_inputs = match input_compilation::compile(&payload_schema_path, &referenced_documents, &attrs.contract) { Ok(inputs) => inputs, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf input compilation failed: {error}")).to_compile_error().into() };
     let dependency_paths = [authority.taxonomy_path.clone(), authority.descriptor_path.clone(), payload_schema_path];
     let dependency_paths: Result<Vec<_>, _> = dependency_paths.iter().map(|path| mutation_leaf_include_path(path)).collect();
     let dependency_paths = match dependency_paths { Ok(paths) => paths, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
@@ -154,6 +158,7 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
             const PROVENANCE: #contract::MutationSourceProvenance = #contract::MutationSourceProvenance { workspace_token: [#(#workspace_token),*], mutation_root: #mutation_root, owner: #owner, source_path: #source_path, descriptor_path: #descriptor_path, taxonomy_path: #taxonomy_path };
             const PAYLOAD_SCHEMA: &'static str = ::core::include_str!(#payload_schema_dependency);
             const PAYLOAD_SCHEMA_DOCUMENTS: &'static [&'static str] = &[#(::core::include_str!(#referenced_documents)),*];
+            const COMPILED_INPUTS: Option<#contract::CompiledMutationInputDefinitions> = #compiled_inputs;
             #editable
             #instance_schema
             #withdraw_only

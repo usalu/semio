@@ -1,0 +1,1 @@
+{"maximumPoints":4096,"pointBytes":16,"maximumItemBytes":1048576,"cases":[{"points":4096,"admitted":true},{"points":4097,"admitted":false}],"wireAuthoringSeed":"string"}

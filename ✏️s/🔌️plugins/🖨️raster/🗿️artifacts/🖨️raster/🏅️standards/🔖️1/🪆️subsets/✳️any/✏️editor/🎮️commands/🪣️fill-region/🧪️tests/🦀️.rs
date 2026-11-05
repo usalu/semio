@@ -2,6 +2,12 @@
 //! colour, target, mask value and selection, its seed the clicked pixel; a click the layer cannot take leaves zero trace.
 
 use semio_s_artifact_raster_raster_editor::config::RasterConfig;
+use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+
+fn receive_persistent_fixture(value:semio_framework_value::DslValue,grant:semio_framework_value::RetainedCloneGrant)->semio_s_artifact_raster_raster_model::RasterSelectionSpans{
+ let mut caller=OriginalWorkFixture::new();let output=caller.receive_native(value,grant);caller.finish();output
+}
+use semio_framework_value::ToValue;
 use semio_s_artifact_raster_raster_mutations_pixels::fill_region::{FillRegion as FillRegionLeaf, RasterSeed};
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
@@ -61,9 +67,11 @@ fn a_mask_fill_fills_the_session_mask_value_as_its_grey_level() {
 #[test]
 fn the_session_selection_clips_only_fills_on_its_own_layer_and_target() {
     let document = document(false, true);
-    let selected = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 6, length: 3, coverage: 128 }] }), ..config("pixels") };
+    let selected = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: receive_persistent_fixture(vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 6, length: 3, coverage: 128 }].to_value(),OriginalWorkFixture::stock()) }), ..config("pixels") };
     let built = leaf(fill_region_leaf(&click("ink", 1.0, 0.0), &document, &selected).expect("the clipped fill fills"));
-    assert_eq!(built.selection, Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, RasterSelectionSpan { start: 6, length: 3, coverage: 128 }]));
+    assert_eq!(built.selection.as_ref().map(|selection|selection.iter().copied().collect::<Vec<_>>()), Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, RasterSelectionSpan { start: 6, length: 3, coverage: 128 }]));
+    assert!(std::ptr::eq(built.selection.as_ref().unwrap().get(0).unwrap(),selected.pixel_selection.as_ref().unwrap().spans.get(0).unwrap()));
+    let mut caller=OriginalWorkFixture::new();caller.retire_owned((built,selected),OriginalWorkFixture::stock());caller.finish();
     retire(document);
 }
 

@@ -193,7 +193,7 @@ fn gis3d_retained_reduce(
     operation: &AppOperationContext,
 ) -> Result<Emit<GisTerrainMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     if let Gis3dCommand::SetCamera(payload) = command {
-        let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("gis-terrain-window-context-required"))?;
+        let view = context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("gis-terrain-window-context-required"))?;
         return Ok(Emit { window_config_mutations: vec![terrain::config::addressed(view, terrain::config::GisTerrainWindowConfigMutation::SetCamera(terrain::config::SetCamera { camera_json: payload.camera_json.clone() }))?], ..Default::default() });
     }
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) })

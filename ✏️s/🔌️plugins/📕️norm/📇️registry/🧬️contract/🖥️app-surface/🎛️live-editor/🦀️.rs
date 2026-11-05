@@ -13,8 +13,7 @@ pub use semio_s_plugin_norm_app_surface_visual_chrome::*;
 /// 🧵️ Retained norm command output with empty application config and draft lanes.
 pub type NormRetainedCommandResult<M> = Result<Emit<M, NoConfigMutation, semio_framework_plugin::NoDraftMutation>, Fault>;
 
-#[path = "../🧰️entity-editing/🦀️.rs"]
-pub mod entity_editing;
+pub use semio_s_plugin_norm_app_surface_entity_editing as entity_editing;
 
 #[path = "../🫧️live-lanes/🎛️editor-wiring/🦀️.rs"]
 mod editor_wiring;
@@ -44,3 +43,15 @@ mod live_acceptance;
 #[cfg(any(test, feature = "compliance-testing"))]
 #[path = "../🧪️tests/⏱️latency-bench/🦀️.rs"]
 pub mod latency_bench;
+
+pub use semio_s_plugin_norm_inspector_forms::*;
+
+#[path = "../🪺️inspector-forms/plan.rs"]
+mod inspector_form_plan;
+pub use inspector_form_plan::*;
+
+#[cfg(any(test, feature = "compliance-testing"))]
+#[path = "../🪺️inspector-forms/🧪️tests/🧮️compiled/🦀️.rs"]
+mod compiled_input_oracle;
+#[cfg(any(test, feature = "compliance-testing"))]
+pub use compiled_input_oracle::*;

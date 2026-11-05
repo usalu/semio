@@ -110,9 +110,21 @@ pub use owned_map::*;
 mod layer_model;
 pub use layer_model::*;
 
+#[path="🎯️selection/🦀️.rs"]
+pub mod selection;
+pub use selection::{RasterSelectionSpan,RasterSelectionSpans,RasterSelectionSpansBuilder,RasterSpanPage,RASTER_SELECTION_PAGE_ROWS,RASTER_SELECTION_PAGE_BYTES};
+
 #[path = "🖼️asset-content-and-patch/🦀️.rs"]
 mod asset_content_and_patch;
 pub use asset_content_and_patch::*;
+
+#[path = "🔑️content-hash/🦀️.rs"]
+mod content_hash;
+pub use content_hash::*;
+
+#[path = "🖼️image-payload/🦀️.rs"]
+mod image_payload;
+pub use image_payload::*;
 
 //#region 🪢️TaxonomyMounts
 #[path = "💡️inferences/🦀️.rs"]

@@ -38,6 +38,16 @@ impl ArtifactEditor for SurfaceEditorFixture {
         }
     }
 
+    fn admit_natural_file_decode_owner(bytes:&mut Option<Vec<u8>>,contract:ToolExecutionContract,receiving:&mut Option<crate::app_contract::NaturalFileDecodeOwner<Self::Snapshot>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if receiving.is_some(){assert!(bytes.is_none());return Ok(true)}
+        let source=bytes.as_ref().expect("original natural source");let controlled=!source.is_empty()&&source.len()%4==0;
+        let capacity=if controlled{std::mem::size_of::<SurfaceNaturalDecodeCursor>()}else{0};let copied=std::mem::size_of::<crate::app_contract::NaturalFileDecodeOwner<Self::Snapshot>>()+capacity;let grant=cx.retained_grant();
+        if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied||grant.maximum_capacity_bytes<capacity{return Ok(false)}
+        if controlled{let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<SurfaceNaturalDecodeCursor>())}.cast::<SurfaceNaturalDecodeCursor>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"surface decoder allocation refused"))?;let owner=SurfaceNaturalDecodeCursor::new(bytes.take().unwrap(),contract.max_work_units_per_step as usize);unsafe{pointer.as_ptr().write(owner);*receiving=Some(crate::app_contract::NaturalFileDecodeOwner::Controlled(Box::from_raw(pointer.as_ptr())));}}
+        else{*receiving=Some(crate::app_contract::NaturalFileDecodeOwner::Synchronous(bytes.take().unwrap()));}
+        cx.consume_fuel(1);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copied,retained_capacity_bytes:capacity,..Default::default()})?;Ok(true)
+    }
+
     fn build_instance_operation_owner() -> Box<dyn crate::tool_contract::ArtifactInstanceOperationOwner> {
         media_owner_context::owner("editor-instance")
     }

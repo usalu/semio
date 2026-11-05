@@ -18,7 +18,7 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnIntroducedFo
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-introduced-force-n", kind: "change-column-introduced-force-n", record: "ChangedColumnIntroducedForceN" };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change force introduced into the concrete (0 = from the actions)", "in den Beton eingeleitete Kraft (0 = aus den Einwirkungen) ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change force introduced into the concrete (0 = from the actions)", "In den Beton eingeleitete Kraft (0 = aus den Einwirkungen) ändern")
     }
 }
 

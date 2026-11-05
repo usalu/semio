@@ -25,6 +25,7 @@ pub fn render_bulk_inspector(tree: &DslValue, collection: &str, ids: &[String], 
         let row_id = format!("norm-bulk.{collection}.{}", line.field);
         let current = if line.mixed { DslValue::Null } else { sample.clone() };
         let mut view = field_view(&path, sample, tree, locale, meta_fn, system);
+        view.read_only |= ids.iter().any(|id| resolve_field_meta(&format!("{collection}[id={id}].{}", line.field), meta_fn).is_none_or(|spec| spec.read_only));
         view.bulk = Some(BulkTarget { collection: collection.to_string(), ids: ids.to_vec(), field: line.field.clone() });
         let mut item = ui::tree_item(norm_ui_label(view.labelled())?).try_id(&row_id).map_err(|_| ui_error("ui.node.id"))?;
         item = item.description(ui_text(if line.mixed { mixed_label(german).to_string() } else { line.text.clone() })?);

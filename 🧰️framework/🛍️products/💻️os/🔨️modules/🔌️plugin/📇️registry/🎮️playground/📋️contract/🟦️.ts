@@ -29,6 +29,7 @@ export type PlaygroundEntry = {
   readonly devContribution?: string;
   readonly compositionConfigPath?: string;
   readonly nativeHost?: PlaygroundNativeHostV1;
+  readonly nativeLaunchPolicy?: string;
   readonly mcpHost?: PlaygroundNativeHostV1;
   /** 📦️ Repo-root-relative CDN output directory for `build-<variant>-react-release` instead of framework-os-dev `dist/build-…`. */
   readonly distDir?: string;

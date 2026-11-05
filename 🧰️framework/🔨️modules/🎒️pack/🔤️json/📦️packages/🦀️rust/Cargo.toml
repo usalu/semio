@@ -19,9 +19,10 @@ path = "../../🦀️.rs"
 
 [features]
 # 🪝️ Exposes the `testkit` hooks (aliases and forwarders of crate-private items) for the companion crate `semio-framework-pack-json-tests`.
-testkit = []
+testkit = ["semio-framework-pack-json-canonical/testkit"]
 
 [dependencies]
+semio-framework-pack-json-canonical = { path = "../../🛫️encode/📦️packages/🦀️rust" }
 semio-framework-pack-json-float = { path = "../../🎯️float-writer/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../🌱️value/🗂️ordered/📦️packages/🦀️rust" }
@@ -34,3 +35,7 @@ semio-framework-value-shared-issuance = { path = "../../../../🌱️value/♻�
 semio-framework-trace = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+
+[[test]]
+name = "borrowed-json-sink"
+path = "../../🎛️controlled-and-borrowed-bridge/🫗️sink/🧪️tests/🦀️.rs"

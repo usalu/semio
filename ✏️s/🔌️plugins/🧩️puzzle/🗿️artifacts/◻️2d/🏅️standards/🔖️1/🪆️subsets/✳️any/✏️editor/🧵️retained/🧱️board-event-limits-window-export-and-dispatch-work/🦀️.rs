@@ -71,7 +71,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
         if self.consumed {
             return Err(Fault::from("puzzle2d-window-work-repeated"));
         }
-        let view_state = context.and_then(|context| context.view_state.as_ref());
+        let view_state = context.and_then(|context| context.view_state.as_deref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
         let window_config = window::config_from_snapshot_or_document(window_config_snapshot, snapshot.value());
         let window_transient = window::transient_from_snapshot(context.and_then(|context| context.window_transient.as_ref()));

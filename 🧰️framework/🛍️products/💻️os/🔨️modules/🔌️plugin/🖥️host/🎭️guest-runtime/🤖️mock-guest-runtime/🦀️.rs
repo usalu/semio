@@ -314,7 +314,7 @@ impl GuestRuntime for MockGuestRuntime {
 
     /// 👶️ host-dedyn: identical body to before this packet — no suspension point, so this
     /// resolves on its very first poll, same contract `GuestRuntime`'s own doc comment names.
-    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], _budget: Budget, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &mut [Event], _budget: Budget, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         self.observed_turns.lock().expect("mock turn trace").push((inst.actor.0, events.to_vec(), _budget));
         self.observed_events.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.entry(inst.actor.0).or_default().extend_from_slice(events);
         let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;

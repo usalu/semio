@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumBytes",
+    "page",
+    "refusals",
+    "deniedAxes",
+    "receiptRefusal"
+  ],
+  "properties": {
+    "maximumBytes": {
+      "const": 4096
+    },
+    "page": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "empty",
+          "oversized",
+          "sealed",
+          "total-capacity"
+        ]
+      },
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true
+    },
+    "deniedAxes": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "depth"
+        ]
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true
+    },
+    "receiptRefusal": {
+      "const": "queue-owns-page-before-parent-receipt"
+    }
+  }
+}

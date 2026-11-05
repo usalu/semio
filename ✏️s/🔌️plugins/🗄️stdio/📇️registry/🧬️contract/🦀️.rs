@@ -40,7 +40,7 @@ pub mod editing {
         snapshot_edit_actions, snapshot_edit_actions_with, snapshot_edit_bounded_first_step_proofs, snapshot_edit_event_from_action, snapshot_edit_execution_contract, snapshot_edit_source_is_admitted, snapshot_edit_value_is_admitted,snapshot_edit_path_is_admitted,
         snapshot_editing_command_from_action, snapshot_editing_command_id, snapshot_from_edit_source, validate_snapshot_schema_for_dialect, validate_snapshot_value_against_schema, ArtifactPreparationFactory, BoundedNativeEditToolJobFactory,
         BoundedNativeEditingEditor, Carried, EditPlan, EditRules, EntityRule, InsertRule, ItemField, NativeEditPreparationRoute, RemoveRule, RetainedBytesCopy, RetainedTextCopy, RowKey, Selector, SnapshotEditError, SnapshotEditEvent,
-        SnapshotEditToolJobFactory, SnapshotEditingCommand, SnapshotEditingEditor, SnapshotEditingNativeCommand, INSERT_SNAPSHOT_VALUE_ACTION_ID, MOVE_SNAPSHOT_VALUE_ACTION_ID, REMOVE_SNAPSHOT_VALUE_ACTION_ID, RENAME_SNAPSHOT_KEY_ACTION_ID,
+        SnapshotEditToolJobFactory, SnapshotEditingCommand, SnapshotEditingEditor, SnapshotEditingNativeCommand, Transform, TRANSFORM_PATH, INSERT_SNAPSHOT_VALUE_ACTION_ID, MOVE_SNAPSHOT_VALUE_ACTION_ID, REMOVE_SNAPSHOT_VALUE_ACTION_ID, RENAME_SNAPSHOT_KEY_ACTION_ID,
         REPLACE_SNAPSHOT_SOURCE_ACTION_ID, SET_SNAPSHOT_VALUE_ACTION_ID, SNAPSHOT_EDIT_ACTION_IDS, SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES, SNAPSHOT_EDIT_MAXIMUM_VALUE_NODES,
     };
     pub use semio_s_artifact_stdio_contract_editing_details as details;

@@ -165,53 +165,7 @@ impl JsonBorrowedWriteCursor {
         if self.path.len() >= MAX_DEPTH as usize { return Err(ValueError::new(ValueRefusalKind::DepthLimit, "retained JSON writer exceeds depth limit")); }
         self.path.push(index); self.frames.push(JsonWriteFrame { state: 0, index: 0, position: 0 }); Ok(())
     }
-    pub(super) fn advance<S:JsonWriteSource+?Sized>(&mut self, source:&S, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {
-        let frame = *self.frames.last().expect("writer frontier is inhabited");
-        let node = source.node_at_path(&self.path)?;
-        match frame.state {
-            0 => {
-                match node {
-                    JsonWriteNode::Null => self.writer.raw("null", control)?,
-                    JsonWriteNode::Bool(value) => self.writer.raw(if value { "true" } else { "false" }, control)?,
-                    JsonWriteNode::Number(value) => self.writer.number(value, control)?,
-                    JsonWriteNode::String(_) => { self.writer.raw("\"", control)?; self.frames.last_mut().unwrap().state = 5; return Ok(()); }
-                    JsonWriteNode::NativeString(_) => {self.writer.raw("\"",control)?;self.frames.last_mut().unwrap().state=6;return Ok(());}
-                    JsonWriteNode::Array(_) => { self.writer.raw("[", control)?; self.frames.last_mut().unwrap().state = 1; return Ok(()); }
-                    JsonWriteNode::Object(_) => { self.writer.raw("{", control)?; self.frames.last_mut().unwrap().state = 2; return Ok(()); }
-                }
-                self.finish_node();
-            }
-            1 => {
-                let JsonWriteNode::Array(length)=node else{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"JSON array source changed"))};
-                if frame.index == length { self.writer.raw("]", control)?; self.finish_node(); }
-                else { if frame.index != 0 { self.writer.raw(",", control)?; } self.frames.last_mut().unwrap().index += 1; self.child(frame.index)?; }
-            }
-            2 => {
-                let JsonWriteNode::Object(length) = node else { return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"JSON object source changed")); };
-                if frame.index == length { self.writer.raw("}", control)?; self.finish_node(); }
-                else { if frame.index != 0 { self.writer.raw(",", control)?; } self.writer.raw("\"", control)?; let next = self.frames.last_mut().unwrap(); next.state = 3; next.position = 0; }
-            }
-            3 | 5 => {
-                let text = match node { JsonWriteNode::String(text) if frame.state == 5 => text, JsonWriteNode::Object(_) if frame.state == 3 => source.object_key_at_path(&self.path,frame.index)?, _ => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"JSON text source changed")) };
-                let remaining=text.get(frame.position..).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"JSON text source position changed"))?;
-                if let Some(character) = remaining.chars().next() { self.writer.character(character, control)?; self.frames.last_mut().unwrap().position += character.len_utf8(); }
-                else { self.writer.raw("\"", control)?; if frame.state == 5 { self.finish_node(); } else { self.writer.raw(":", control)?; self.frames.last_mut().unwrap().state = 4; } }
-            }
-            4 => { let next = self.frames.last_mut().unwrap(); next.state = 2; next.index += 1; self.child(frame.index)?; }
-            6 => {
-                let JsonWriteNode::NativeString(text)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text source changed"));};
-                if frame.index==text.text_chunk_count(){self.writer.raw("\"",control)?;self.finish_node();}
-                else {
-                    let body=text.text_chunk(frame.index).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text chunk absent"))?;
-                    let remaining=body.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text offset changed"))?;
-                    if let Some(character)=remaining.chars().next(){self.writer.character(character,control)?;self.frames.last_mut().unwrap().position+=character.len_utf8();}
-                    else {let next=self.frames.last_mut().unwrap();next.index+=1;next.position=0;}
-                }
-            }
-            _ => unreachable!(),
-        }
-        Ok(())
-    }
+    pub(super) fn advance<S:JsonWriteSource+?Sized>(&mut self, source:&S, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {advance_source(&mut self.frames,&mut self.path,&mut self.writer,source,control).map(|_|())}
 }
 
 /// 🌳️ Owns its semantic source and the canonical borrowed writer state.
@@ -250,13 +204,7 @@ impl<S:JsonWriteSource+semio_framework_value::retirement::RetireOwned+'static> s
 struct ControlledWriter { pub bytes: usize, pub output: Option<String> }
 
 impl ControlledWriter {
-    pub(super) fn character(&mut self, character: char, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {
-        match character {
-            '"' => self.raw("\\\"", control), '\\' => self.raw("\\\\", control), '\u{0008}' => self.raw("\\b", control), '\u{000c}' => self.raw("\\f", control), '\n' => self.raw("\\n", control), '\r' => self.raw("\\r", control), '\t' => self.raw("\\t", control),
-            character if (character as u32) < 0x20 => { use fmt::Write as _; let mut scalar = ScalarText::new(); write!(scalar, "\\u{:04x}", character as u32).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "controlled JSON escape overflow"))?; self.raw(scalar.text(), control) }
-            character => { let mut bytes = [0; 4]; self.raw(character.encode_utf8(&mut bytes), control) }
-        }
-    }
+    pub(super) fn character(&mut self, character: char, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {JsonWriteOutput::character(self,character,control)}
     pub(super) fn raw(&mut self, text: &str, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {
         self.bytes = self.bytes.checked_add(text.len()).filter(|bytes| *bytes<=isize::MAX as usize&&(self.output.is_none()||*bytes<=control.maximum_bytes())).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "controlled JSON output exceeds caller limit"))?;
         if self.output.as_ref().is_some_and(|output| self.bytes > output.capacity()) { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "controlled JSON output exceeds admitted allocation")); }
@@ -268,11 +216,7 @@ impl ControlledWriter {
         control.scoped_stage(|control| -> Result<(), ValueError> { control.begin_stage(text.len())?; for character in text.chars() { self.character(character, control)?; control.advance(character.len_utf8())?; } Ok(()) })?;
         self.raw("\"", control)
     }
-    pub(super) fn number(&mut self, number: semio_framework_value::Number, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {
-        use fmt::Write as _; control.checkpoint()?; let mut scalar = ScalarText::new();
-        match number { semio_framework_value::Number::UInt(value) => write!(scalar, "{value}"), semio_framework_value::Number::Int(value) => write!(scalar, "{value}"), semio_framework_value::Number::Float(value) => write_float_to(value, &mut scalar) }.map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "controlled JSON scalar overflow"))?;
-        self.raw(scalar.text(), control)?; control.checkpoint()
-    }
+    pub(super) fn number(&mut self, number: semio_framework_value::Number, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {JsonWriteOutput::number(self,number,control)}
     pub(super) fn value(&mut self, value: &DslValue, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {
         control.scoped_depth(MAX_DEPTH as usize + 1, |control| { control.checkpoint()?; match value {
             DslValue::Null => self.raw("null", control), DslValue::Bool(value) => self.raw(if *value { "true" } else { "false" }, control), DslValue::Number(value) => self.number(*value, control), DslValue::String(value) => self.string(value, control),
@@ -348,3 +292,74 @@ fn controlled_key_equal(left: &str, right: &str, control: &mut semio_framework_v
 
 pub(super) fn json_character(lexer:&mut Lexer<'_>)->Result<Option<char>,JsonError>{borrowed_read_source::json_character(lexer.input,&mut lexer.pos)}
 //#endregion 🔖️ToFromValueBridge
+
+trait JsonWriteOutput{
+ fn raw(&mut self,text:&str,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ValueError>;
+ fn character(&mut self,character:char,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ValueError>{
+        match character {
+            '"' => self.raw("\\\"", control), '\\' => self.raw("\\\\", control), '\u{0008}' => self.raw("\\b", control), '\u{000c}' => self.raw("\\f", control), '\n' => self.raw("\\n", control), '\r' => self.raw("\\r", control), '\t' => self.raw("\\t", control),
+            character if (character as u32) < 0x20 => { use fmt::Write as _; let mut scalar = ScalarText::new(); write!(scalar, "\\u{:04x}", character as u32).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "controlled JSON escape overflow"))?; self.raw(scalar.text(), control) }
+            character => { let mut bytes = [0; 4]; self.raw(character.encode_utf8(&mut bytes), control) }
+        }
+    }
+ fn number(&mut self,number:semio_framework_value::Number,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ValueError>{
+        use fmt::Write as _; control.checkpoint()?; let mut scalar = ScalarText::new();
+        match number { semio_framework_value::Number::UInt(value) => write!(scalar, "{value}"), semio_framework_value::Number::Int(value) => write!(scalar, "{value}"), semio_framework_value::Number::Float(value) => write_float_to(value, &mut scalar) }.map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "controlled JSON scalar overflow"))?;
+        self.raw(scalar.text(), control)?; control.checkpoint()
+    }
+}
+impl JsonWriteOutput for ControlledWriter{fn raw(&mut self,text:&str,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ValueError>{ControlledWriter::raw(self,text,control)}}
+
+fn finish_source_node(frames:&mut Vec<JsonWriteFrame>,path:&mut Vec<usize>)->usize{frames.pop();let mut bytes=size_of::<JsonWriteFrame>()+size_of::<usize>();if !frames.is_empty(){path.pop();bytes+=2*size_of::<usize>();}bytes}
+fn child_source_node(frames:&mut Vec<JsonWriteFrame>,path:&mut Vec<usize>,index:usize)->Result<usize,ValueError>{if path.len()>=MAX_DEPTH as usize||path.len()==path.capacity()||frames.len()==frames.capacity(){return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"JSON source exceeds its admitted traversal frontier"))}path.push(index);frames.push(JsonWriteFrame{state:0,index:0,position:0});Ok(2*size_of::<JsonWriteFrame>()+3*size_of::<usize>())}
+fn advance_source<S:JsonWriteSource+?Sized,W:JsonWriteOutput>(frames:&mut Vec<JsonWriteFrame>,path:&mut Vec<usize>,writer:&mut W,source:&S,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<usize,ValueError>{let mut copied=size_of::<JsonWriteFrame>();let result=(||->Result<(),ValueError>{
+        let frame = *frames.last().expect("writer frontier is inhabited");
+        let node = source.node_at_path(path.as_slice())?;
+        match frame.state {
+            0 => {
+                match node {
+                    JsonWriteNode::Null => writer.raw("null", control)?,
+                    JsonWriteNode::Bool(value) => writer.raw(if value { "true" } else { "false" }, control)?,
+                    JsonWriteNode::Number(value) => writer.number(value, control)?,
+                    JsonWriteNode::String(_) => { writer.raw("\"", control)?; frames.last_mut().unwrap().state = 5;copied+=size_of::<u8>(); return Ok(()); }
+                    JsonWriteNode::NativeString(_) => {writer.raw("\"",control)?;frames.last_mut().unwrap().state=6;copied+=size_of::<u8>();return Ok(());}
+                    JsonWriteNode::Array(_) => { writer.raw("[", control)?; frames.last_mut().unwrap().state = 1;copied+=size_of::<u8>(); return Ok(()); }
+                    JsonWriteNode::Object(_) => { writer.raw("{", control)?; frames.last_mut().unwrap().state = 2;copied+=size_of::<u8>(); return Ok(()); }
+                }
+                copied+=finish_source_node(frames,path);
+            }
+            1 => {
+                let JsonWriteNode::Array(length)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON array source changed"))};
+                if frame.index == length { writer.raw("]", control)?; copied+=finish_source_node(frames,path); }
+                else { if frame.index != 0 { writer.raw(",", control)?; } frames.last_mut().unwrap().index += 1;copied+=size_of::<usize>(); copied+=child_source_node(frames,path,frame.index)?; }
+            }
+            2 => {
+                let JsonWriteNode::Object(length) = node else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON object source changed")); };
+                if frame.index == length { writer.raw("}", control)?; copied+=finish_source_node(frames,path); }
+                else { if frame.index != 0 { writer.raw(",", control)?; } writer.raw("\"", control)?; let next = frames.last_mut().unwrap(); next.state = 3; next.position = 0;copied+=size_of::<u8>()+size_of::<usize>(); }
+            }
+            3 | 5 => {
+                let text = match node { JsonWriteNode::String(text) if frame.state == 5 => text, JsonWriteNode::Object(_) if frame.state == 3 => source.object_key_at_path(path.as_slice(),frame.index)?, _ => return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON text source changed")) };
+                let remaining=text.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON text source position changed"))?;
+                if let Some(character) = remaining.chars().next() { writer.character(character, control)?; frames.last_mut().unwrap().position += character.len_utf8();copied+=size_of::<usize>(); }
+                else { writer.raw("\"", control)?; if frame.state == 5 { copied+=finish_source_node(frames,path); } else { writer.raw(":", control)?; frames.last_mut().unwrap().state = 4;copied+=size_of::<u8>(); } }
+            }
+            4 => { let next = frames.last_mut().unwrap(); next.state = 2; next.index += 1;copied+=size_of::<u8>()+size_of::<usize>(); copied+=child_source_node(frames,path,frame.index)?; }
+            6 => {
+                let JsonWriteNode::NativeString(text)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text source changed"));};
+                if frame.index==text.text_chunk_count(){writer.raw("\"",control)?;copied+=finish_source_node(frames,path);}
+                else {
+                    let body=text.text_chunk(frame.index).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text chunk absent"))?;
+                    let remaining=body.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text offset changed"))?;
+                    if let Some(character)=remaining.chars().next(){writer.character(character,control)?;frames.last_mut().unwrap().position+=character.len_utf8();copied+=size_of::<usize>();}
+                    else {let next=frames.last_mut().unwrap();next.index+=1;next.position=0;copied+=2*size_of::<usize>();}
+                }
+            }
+            _ => unreachable!(),
+        }
+        Ok(())
+    })();result.map(|_|copied).map_err(|error|error.with_retained_progress(RetainedCloneProgress{copied_bytes:copied,..Default::default()}))}
+
+#[path="🫗️sink/🦀️.rs"]
+mod borrowed_sink;
+pub use borrowed_sink::{JsonBorrowedSinkCursor,JsonBorrowedSinkStep};

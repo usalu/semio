@@ -10,7 +10,8 @@
   "goal": "🎯repoclient",
   "sessions": [
     "70dea7e5-7264-491c-80db-7299f0cdbf6e",
-    "bf4246f0-ed3b-4d9e-8b9b-e602659be2d1"
+    "bf4246f0-ed3b-4d9e-8b9b-e602659be2d1",
+    "9bb394d7-5773-46ab-a72d-05ebd10c3c88"
   ],
   "interactions": [
     {
@@ -74,6 +75,30 @@
         },
         {
           "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏃️process🗃️🦀️cargo🗃️🚪️launcher💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-04 16:23:04",
+      "author": "",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Get all well-known artifact editors working end to end. Continue existing research folder WELL-KNOWN-ARTIFACT-EDITORS-END-TO-END; existing ticket metadata missing and ticket_reopen failed. Actual coordinator model GPT 6.1 Sol high; model registry lacks this id so omitted.",
+      "effort": "high"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-04 16:37:15",
+      "author": "ueli",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "39b6ae5d4aab567d4dafbc69cb0e1a9a09c9d377",
+      "summary": "Native dashboard run, daemon and preferences leave the build door before source admission. A missing install compiles the dashboard crate in-process instead of nesting repo run. The known-command cargo test passed: workspace:dev and workspace:build are dispatchable before the walk. Door tests passed 9 tests and 447 expects. See startup-route.md.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️03/INSTANT-DASHBOARD-CONTROL-PLANE/🎫️ticket.json"
         }
       ]
     }

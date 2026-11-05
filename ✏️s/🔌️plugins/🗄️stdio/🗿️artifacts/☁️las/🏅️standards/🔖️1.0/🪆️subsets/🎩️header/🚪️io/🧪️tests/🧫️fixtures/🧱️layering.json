@@ -1,0 +1,33 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "snapshotOwnsEditorUi",
+      "schemaOwnsEditorUi",
+      "editorUsesUpperEngine",
+      "geometryUsesUpperEngine",
+      "nativeFunctions"
+    ],
+    "properties": {
+      "snapshotOwnsEditorUi": {
+        "const": false
+      },
+      "schemaOwnsEditorUi": {
+        "const": true
+      },
+      "editorUsesUpperEngine": {
+        "const": false
+      },
+      "geometryUsesUpperEngine": {
+        "const": false
+      },
+      "nativeFunctions": {
+        "const": [
+          "decode_las",
+          "encode_las"
+        ]
+      }
+    },
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,35 @@
+import {expect,test} from "bun:test";
+import Ajv from "ajv";
+import {dirname,resolve} from "node:path";
+import fixture from "../🧫️fixtures/📚️examples.json";
+import schema from "../🧫️fixtures/📚️examples.schema.json";
+const root=resolve(import.meta.dir,"../../..");
+test("nineteen example bindings form a closed typed matrix",()=>{
+ const valid=new Ajv({strict:true}).compile(schema);
+ expect(valid(fixture),JSON.stringify(valid.errors)).toBe(true);
+ expect(new Set(fixture.rows.map(row=>row.subset)).size).toBe(19);
+ expect(new Set(fixture.rows.map(row=>row.schema)).size).toBe(19);
+ for(const row of fixture.rows)expect(fixture.unknownIds).not.toContain(row.id);
+});
+for(const row of fixture.rows)test(row.subset+" picker and selector use the same typed source without an empty fallback",async()=>{
+ const source=await Bun.file(resolve(root,row.source)).text();
+ expect(source).toContain("pub const ID: &str = "+JSON.stringify(row.id));
+ expect(source).toContain("LocalizedLabel::native(");
+ const manifest=await Bun.file(resolve(root,row.editorManifest)).text();
+ expect(manifest).toContain("name = "+JSON.stringify(row.editorPackage));
+ const lib=manifest.split("[lib]")[1]!.match(/path\s*=\s*"([^"]+)"/)![1]!;
+ const mounted=await Bun.file(resolve(dirname(resolve(root,row.editorManifest)),lib)).text();
+ expect(mounted).toContain(JSON.stringify(row.editorMount));
+ const editor=await Bun.file(resolve(root,row.editor)).text();
+ expect(editor).toContain("fn "+fixture.selectorTest.filter+"()");
+ expect(editor).toContain("fn examples()");
+ expect(editor).toContain(row.module+"::source()");
+ expect(editor).toContain("parse_example_snapshot");
+ expect(editor).toContain(row.module+"::ID");
+ expect(editor).toContain(row.module+"::PRIMARY_TEXT");
+ expect(editor).not.toContain("examples::demo::");
+ expect(editor).not.toMatch(/example_snapshot[^}]*unwrap_or_default/s);
+ expect(editor).toContain("example_snapshot(example_id)?");
+ expect(editor).toContain("semio_framework_pack_json::to_json_string(self)");
+ if(["mesh","brep"].includes(row.subset))expect(editor).toContain("host_tools: ["+JSON.stringify(fixture.pickerAction)+"]");
+});

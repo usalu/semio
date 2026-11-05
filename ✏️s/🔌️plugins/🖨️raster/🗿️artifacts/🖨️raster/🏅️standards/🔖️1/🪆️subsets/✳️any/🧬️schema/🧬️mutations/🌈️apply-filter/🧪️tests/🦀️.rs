@@ -2,7 +2,6 @@
 //! TypeScript twin runs on the shared pixel corpus); a filter's inverse restores the exact prior image; a filter edited in
 //! history re-derives its pixels — and its downstream — from its base; the store folds it like the leaf.
 
-use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
 use semio_s_artifact_raster_raster_diff::RasterDiff;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
@@ -34,7 +33,7 @@ fn walled() -> RasterMutation {
 /// ✂️ `filter` clipped to the selection runs `(start, length, coverage)`.
 fn clipped(filter: RasterMutation, spans: &[(u32, u32, u32)]) -> RasterMutation {
     let RasterMutation::ApplyFilter(filter) = filter else { unreachable!("an image filter") };
-    RasterMutation::ApplyFilter(ApplyFilter { selection: Some(spans.iter().map(|(start, length, coverage)| RasterSelectionSpan { start: *start, length: *length, coverage: *coverage }).collect()), ..filter })
+    RasterMutation::ApplyFilter(ApplyFilter { selection: Some(crate::selection_fixture(spans)), ..filter })
 }
 
 fn retire(snapshot: RasterSnapshot) {
@@ -97,7 +96,7 @@ fn quintet(before: &RasterSnapshot, mutation: &RasterMutation) -> [(&'static str
 }
 
 fn fixture_root() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations/🌈️apply-filter")
+    semio_framework_test_fixtures::repo_root!().join("✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🌈️apply-filter")
 }
 
 /// 🍃️ Regenerates the committed quintets from this leaf. Ignored by default: it WRITES into the source tree, which is
@@ -105,30 +104,29 @@ fn fixture_root() -> std::path::PathBuf {
 #[test]
 #[ignore]
 fn emit_committed_fixtures() {
-    for (case, before, mutation) in cases() {
+    crate::for_pixel_cases(cases(), |case, before, mutation| {
         for (file, value) in quintet(&before, &mutation) {
             let path = fixture_root().join(case).join(file);
             std::fs::create_dir_all(path.parent().expect("a fixture file has a parent")).expect("fixture directory");
             std::fs::write(&path, serde_json::to_string_pretty(&value).expect("fixture JSON") + "\n").expect("fixture write");
         }
-        retire(before);
-    }
+    });
 }
 
 /// 🧾️ Every committed quintet is exactly what this leaf computes from its committed before-document and mutation.
 #[test]
 fn the_committed_quintets_are_a_print_of_the_leaf() {
-    for (case, before, mutation) in cases() {
+    crate::for_pixel_cases(cases(), |case, before, mutation| {
         let committed_before: RasterSnapshot = semio_framework_pack_json::from_json_str(&std::fs::read_to_string(fixture_root().join(case).join("📸️snapshot/⬅️before/🔣️.json")).expect("the committed before exists"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed before decodes");
-        let committed_mutation: RasterMutation = semio_framework_pack_json::from_json_str(&std::fs::read_to_string(fixture_root().join(case).join("🦠️mutation/🔣️.json")).expect("the committed mutation exists"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed mutation decodes");
-        assert_eq!(committed_mutation, mutation, "{case}: the committed mutation is the table's");
+        let committed_mutation = crate::mutation_fixture(&std::fs::read_to_string(fixture_root().join(case).join("🦠️mutation/🔣️.json")).expect("the committed mutation exists"));
+        assert_eq!(&committed_mutation, mutation, "{case}: the committed mutation is the table's");
         for (file, value) in quintet(&committed_before, &committed_mutation) {
             let committed: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(fixture_root().join(case).join(file)).expect("the committed file exists")).expect("the committed file is JSON");
             assert_eq!(value, committed, "{case}/{file}");
         }
+        crate::retire_fixture(committed_mutation);
         retire(committed_before);
-        retire(before);
-    }
+    });
 }
 //#endregion 🧫️Cases
 
@@ -162,6 +160,7 @@ fn the_inverse_restores_the_exact_prior_image() {
     for undo in inverse_raster_mutation(&before, &filter).expect("valid retained mutation inverse fixture") {
         let next = apply_raster_mutation(&restored, &undo).expect("every undo step applies");
         retire(std::mem::replace(&mut restored, next));
+        crate::retire_fixture(undo);
     }
     assert_eq!(restored, before, "undoing the filter lands on the walled document with the filtered image released");
     for document in [before, filtered, restored] {
@@ -215,6 +214,7 @@ fn the_filter_labels_itself_in_english_and_german() {
 #[test]
 fn a_payload_outside_its_bounds_is_an_invariant_breach() {
     let document = walled_base();
+    crate::assert_selection_refused(&[(4, 2, 255), (5, 1, 255)]);
     for (field, filter) in [
         ("filter", apply_filter("paint", "emboss", 0.0)),
         ("amount", apply_filter("paint", "brightness", 1.5)),
@@ -222,13 +222,13 @@ fn a_payload_outside_its_bounds_is_an_invariant_breach() {
         ("amount", apply_filter("paint", "invert", 1.0)),
         ("amount", apply_filter("paint", "gamma", f64::NAN)),
         ("selection", clipped(apply_filter("paint", "flipVertical", 0.0), &[(0, 2, 255)])),
-        ("selection", clipped(apply_filter("paint", "invert", 0.0), &[(4, 2, 255), (5, 1, 255)])),
     ] {
         let outcome = filter.diff(&document);
         assert_eq!(outcome.diff(), &RasterDiff::default());
         let message = outcome.messages().first().expect("a breach raises");
         assert_eq!((message.level, message.code.0.as_str(), message.target.as_slice()), (semio_framework_diagnostic::Severity::Fatal, "mutation.invariant", [field.to_string()].as_slice()), "{filter:?}");
         assert!(filter.inverse(&document).expect("valid retained mutation inverse fixture").is_empty());
+        crate::retire_fixture(filter);
     }
     retire(document);
 }
@@ -260,10 +260,7 @@ fn the_case_table_names_every_scenario_of_the_leaf() {
     let table: serde_json::Value = serde_json::from_str(include_str!("🔣️.cases.json")).expect("the case table is JSON");
     let mut listed: Vec<&str> = table["cases"].as_array().expect("the case table lists cases").iter().map(|case| case.as_str().expect("a case is a directory name")).collect();
     let mut printed = Vec::new();
-    for (case, before, _mutation) in cases() {
-        printed.push(case);
-        retire(before);
-    }
+    crate::for_pixel_cases(cases(), |case, _, _| printed.push(case));
     listed.sort_unstable();
     printed.sort_unstable();
     assert_eq!(listed, printed);

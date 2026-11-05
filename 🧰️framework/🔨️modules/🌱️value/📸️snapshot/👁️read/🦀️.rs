@@ -10,12 +10,13 @@ pub use snapshot_read_registry_handle::SnapshotReadRegistryHandle;
 pub mod snapshot_read_registry_retirement;
 pub use snapshot_read_registry_retirement::{SnapshotReadRegistryAliasRetirement, snapshot_registry_alias_demands, snapshot_registry_alias_close_step};
 pub const SNAPSHOT_READ_LEASE_CAPACITY: usize = 1_024;
+const ORIGINAL_FREE_SLOTS:[u16;SNAPSHOT_READ_LEASE_CAPACITY]={let mut slots=[0;SNAPSHOT_READ_LEASE_CAPACITY];let mut index=0;while index<SNAPSHOT_READ_LEASE_CAPACITY{slots[index]=index as u16;index+=1}slots};
 /// 📏️ The largest physical release one snapshot registry close step performs: the registry frame or one backing page.
 pub const SNAPSHOT_READ_RELEASE_PAGE_BYTES: usize = 4096;
 /// 📄 Lease slots per backing page; one page of slots fits one release page on every target.
 pub const SNAPSHOT_READ_SLOT_PAGE: usize = 128;
-/// 📖️ Lease generation words per page: exactly one release page.
-pub const SNAPSHOT_READ_GENERATION_PAGE: usize = SNAPSHOT_READ_RELEASE_PAGE_BYTES / size_of::<std::sync::atomic::AtomicU64>();
+/// 📖️ Generation initialization leaves room for its pointer publication within the same four KiB copy grant.
+pub const SNAPSHOT_READ_GENERATION_PAGE: usize = SNAPSHOT_READ_RELEASE_PAGE_BYTES / (2*size_of::<std::sync::atomic::AtomicU64>());
 
 /// ⏱️ One bounded cursor action costs one work unit when it moved any currency; refusals and starved turns cost none.
 pub fn bounded_outcome(result: Result<RetainedCloneStep, ValueError>) -> RetainedWorkOutcome {
@@ -165,8 +166,7 @@ pub struct SnapshotReadLeaseRegistry {
 impl SnapshotReadLeaseRegistry {
     /// 🪴️ Begins original registry custody without allocating any resident backing page.
     fn vacant() -> Self {
-        let mut free = [0; SNAPSHOT_READ_LEASE_CAPACITY];
-        for (index, slot) in free.iter_mut().enumerate() { *slot = index as u16; }
+        let free=ORIGINAL_FREE_SLOTS;
         Self { state: SnapshotReadLeaseStateLock::new(SnapshotReadLeaseRegistryState {
             slots: SnapshotReadSlotPages { pages: std::array::from_fn(|_| None) },
             occupied: [0; SNAPSHOT_READ_LEASE_CAPACITY / 64], free, free_read: 0, free_len: SNAPSHOT_READ_LEASE_CAPACITY, next_generation: 0, cleanup_cursor: 0 }),
@@ -179,9 +179,9 @@ impl SnapshotReadLeaseRegistry {
     /// 🧮️ Quotes one exact absent lease-slot or generation page before original birth.
     fn birth_page_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         let state = self.state.try_lock().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "unpublished snapshot registry is busy"))?;
-        let capacity = if state.slots.pages.iter().any(Option::is_none) { size_of::<SnapshotReadSlotPage>() }
-            else if self.lease_generations.pages.iter().any(Option::is_none) { size_of::<SnapshotReadGenerationPage>() } else { 0 };
-        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: usize::from(capacity != 0), ..Default::default() })
+        let (capacity,copy) = if state.slots.pages.iter().any(Option::is_none) { (size_of::<SnapshotReadSlotPage>(),size_of::<Option<Box<SnapshotReadSlotPage>>>()) }
+            else if self.lease_generations.pages.iter().any(Option::is_none) { (size_of::<SnapshotReadGenerationPage>(),size_of::<SnapshotReadGenerationPage>()+size_of::<Option<Box<SnapshotReadGenerationPage>>>()) } else { (0,0) };
+        Ok(semio_framework_value::RetirementDemand { copy_bytes:copy, capacity_bytes: capacity, depth: usize::from(capacity != 0), ..Default::default() })
     }
 
     /// 🌿️ Installs only the page already paid by its original registry construction control.
@@ -190,7 +190,7 @@ impl SnapshotReadLeaseRegistry {
         if let Some(page) = state.slots.pages.iter_mut().find(|page| page.is_none()) {
             *page = Some(Box::new([const { std::mem::MaybeUninit::uninit() }; SNAPSHOT_READ_SLOT_PAGE]));
         } else if let Some(page) = self.lease_generations.pages.iter_mut().find(|page| page.is_none()) {
-            *page = Some(Box::new(std::array::from_fn(|_| std::sync::atomic::AtomicU64::new(0))));
+            *page = Some(Box::new([const{std::sync::atomic::AtomicU64::new(0)};SNAPSHOT_READ_GENERATION_PAGE]));
         }
         Ok(())
     }
@@ -200,10 +200,7 @@ impl SnapshotReadLeaseRegistry {
     pub fn try_lock_state(&self) -> std::sync::TryLockResult<SnapshotReadLeaseStateGuard<'_>> { self.state.try_lock() }
 
     pub fn new() -> Self {
-        let mut free = [0; SNAPSHOT_READ_LEASE_CAPACITY];
-        for (index, slot) in free.iter_mut().enumerate() {
-            *slot = index as u16;
-        }
+        let free=ORIGINAL_FREE_SLOTS;
         Self {
             state: SnapshotReadLeaseStateLock::new(SnapshotReadLeaseRegistryState {
                 slots: SnapshotReadSlotPages::new(),
@@ -922,3 +919,6 @@ pub use source_staging::SnapshotReadSourceStaging;
 #[path="🔗️source/🦀️.rs"]
 pub mod captured_snapshot_source;
 pub use captured_snapshot_source::CapturedSnapshotSource;
+
+#[path="👥️duplicate/🦀️.rs"]
+mod original_duplicate;

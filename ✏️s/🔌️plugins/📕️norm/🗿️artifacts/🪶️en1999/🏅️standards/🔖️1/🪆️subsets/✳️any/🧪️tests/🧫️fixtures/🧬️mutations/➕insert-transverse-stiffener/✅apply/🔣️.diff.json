@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": "RC2",
   "materials": null,
   "sections": null,
   "members": null,
@@ -32,5 +31,6 @@
     ],
     "moved": [],
     "modified": []
-  }
+  },
+  "reliabilityClass": "RC2"
 }

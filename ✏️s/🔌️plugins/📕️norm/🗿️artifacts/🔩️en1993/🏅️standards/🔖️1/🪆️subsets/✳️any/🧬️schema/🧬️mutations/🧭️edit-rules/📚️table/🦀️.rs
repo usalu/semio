@@ -4,6 +4,7 @@ use semio_s_plugin_norm_app_surface::{InsertItemRule, NormEditRules, RemoveItemR
 
 /// 📚 Every path an EN1993 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field_arguments: &[],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "annex", kind: "change-annex", selectors: &[], value: "newAnnex" },
@@ -17,7 +18,7 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "materials[].kind", kind: "change-material-kind", selectors: &[SelectorKey::Id("id")], value: "newKind" },
         SetFieldRule { path: "sections[].designation", kind: "change-section-designation", selectors: &[SelectorKey::Id("id")], value: "newDesignation" },
         SetFieldRule { path: "sections[].kind", kind: "change-section-kind", selectors: &[SelectorKey::Id("id")], value: "newKind" },
-        SetFieldRule { path: "sections[].fabrication", fabrication: "change-section-fabrication", selectors: &[SelectorKey::Id("id")], value: "newFabrication" },
+        SetFieldRule { path: "sections[].fabrication", kind: "change-section-fabrication", selectors: &[SelectorKey::Id("id")], value: "newFabrication" },
         SetFieldRule { path: "sections[].h", kind: "change-section-h", selectors: &[SelectorKey::Id("id")], value: "newH" },
         SetFieldRule { path: "sections[].b", kind: "change-section-b", selectors: &[SelectorKey::Id("id")], value: "newB" },
         SetFieldRule { path: "sections[].tw", kind: "change-section-tw", selectors: &[SelectorKey::Id("id")], value: "newTw" },
@@ -490,13 +491,13 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "frameMemberBases[].basis", kind: "change-frame-member-basis-basis", selectors: &[SelectorKey::Id("id")], value: "newBasis" },
         SetFieldRule { path: "frameActions[].kind", kind: "change-frame-action-kind", selectors: &[SelectorKey::Id("id")], value: "newKind" },
         SetFieldRule { path: "fastenedJoints[].kind", kind: "change-fastened-joint-kind", selectors: &[SelectorKey::Id("id")], value: "newKind" },
-        SetFieldRule { path: "formingGains[].forming", forming: "change-forming-gain-forming", selectors: &[SelectorKey::Id("id")], value: "newForming" },
-        SetFieldRule { path: "bucklingLengths[].restraintB", restraint_b: "change-buckling-length-restraint-b", selectors: &[SelectorKey::Id("id")], value: "newRestraintB" },
-        SetFieldRule { path: "bucklingLengths[].restraintA", restraint_a: "change-buckling-length-restraint-a", selectors: &[SelectorKey::Id("id")], value: "newRestraintA" },
-        SetFieldRule { path: "bucklingLengths[].sway", sway: "change-buckling-length-sway", selectors: &[SelectorKey::Id("id")], value: "newSway" },
-        SetFieldRule { path: "bucklingLengths[].plane", plane: "change-buckling-length-plane", selectors: &[SelectorKey::Id("id")], value: "newPlane" },
-        SetFieldRule { path: "fatigueStresses[].relief", relief: "change-fatigue-stress-relief", selectors: &[SelectorKey::Id("id")], value: "newRelief" },
-        SetFieldRule { path: "jointPlates[].groupMethod", group_method: "change-joint-plate-group-method", selectors: &[SelectorKey::Id("id")], value: "newGroupMethod" },
+        SetFieldRule { path: "formingGains[].forming", kind: "change-forming-gain-forming", selectors: &[SelectorKey::Id("id")], value: "newForming" },
+        SetFieldRule { path: "bucklingLengths[].restraintB", kind: "change-buckling-length-restraint-b", selectors: &[SelectorKey::Id("id")], value: "newRestraintB" },
+        SetFieldRule { path: "bucklingLengths[].restraintA", kind: "change-buckling-length-restraint-a", selectors: &[SelectorKey::Id("id")], value: "newRestraintA" },
+        SetFieldRule { path: "bucklingLengths[].sway", kind: "change-buckling-length-sway", selectors: &[SelectorKey::Id("id")], value: "newSway" },
+        SetFieldRule { path: "bucklingLengths[].plane", kind: "change-buckling-length-plane", selectors: &[SelectorKey::Id("id")], value: "newPlane" },
+        SetFieldRule { path: "fatigueStresses[].relief", kind: "change-fatigue-stress-relief", selectors: &[SelectorKey::Id("id")], value: "newRelief" },
+        SetFieldRule { path: "jointPlates[].groupMethod", kind: "change-joint-plate-group-method", selectors: &[SelectorKey::Id("id")], value: "newGroupMethod" },
         SetFieldRule { path: "members[].ltbRestraintSpacing", kind: "change-member-ltb-restraint-spacing", selectors: &[SelectorKey::Id("id")], value: "newLtbRestraintSpacing" },
         SetFieldRule { path: "members[].deflectionLimitRatio", kind: "change-member-deflection-limit-ratio", selectors: &[SelectorKey::Id("id")], value: "newDeflectionLimitRatio" },
         SetFieldRule { path: "members[].toughnessStressRatio", kind: "change-member-toughness-stress-ratio", selectors: &[SelectorKey::Id("id")], value: "newToughnessStressRatio" },

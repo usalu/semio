@@ -407,6 +407,4 @@ pub mod command_admission;
 #[path = "🛬️lifted/⏪️time-travel/🦀️.rs"]
 pub mod lifted_command;
 
-#[cfg(test)]
-#[path="../📜️declaration/📨️emission/🛂️metadata/📑️copy/🧪️tests/🦀️.rs"]
-mod original_metadata_copy;
+

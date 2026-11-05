@@ -5,9 +5,15 @@ import admissionSchema from "./📨️admission/🧬️schema/🔣️.json" with
 /** 🎟️ The native launcher owns independent currencies before any startup or host I/O job exists. */
 export type NativeLaunchGrantV1=Readonly<{maximumItems:number;maximumCopyBytes:number;maximumCapacityBytes:number;maximumReleaseBytes:number;maximumDepth:number}>;
 export type NativeLaunchOperationPolicyV1=Readonly<{fuel:number;maximumElapsedMicroseconds:number;grant:NativeLaunchGrantV1;retirementReserve:Readonly<{fuel:number;grant:NativeLaunchGrantV1}>}>;
-export type NativeLaunchDeclarationV1=Readonly<{version:1;owner:string;startup:NativeLaunchOperationPolicyV1;hostIo:NativeLaunchOperationPolicyV1;compilerTask:NativeLaunchOperationPolicyV1}>;
+export type NativeLaunchDeclarationV1=Readonly<{version:1;owner:string;startup:NativeLaunchOperationPolicyV1;hostIo:NativeLaunchOperationPolicyV1;compilerTask:NativeLaunchOperationPolicyV1;frameEvent:NativeLaunchOperationPolicyV1}>;
 export type NativeLaunchAdmissionV1=Readonly<{version:1;declaration:NativeLaunchDeclarationV1;scriptOwner:string;scriptDeadlineEpochMilliseconds:number|null}>;
 export const NATIVE_LAUNCH_ADMISSION_ENV="SEMIO_NATIVE_LAUNCH_ADMISSION";
+/** 🗂️ A playground may name its own complete original policy through a bounded repository-relative source path. */
+export function selectNativeLaunchDeclarationV1(baseline:NativeLaunchDeclarationV1,path:string|undefined,read:(path:string)=>string):NativeLaunchDeclarationV1{
+ if(path===undefined)return readNativeLaunchDeclarationV1(baseline);
+ if(!path||path.length>256||path.startsWith("/")||/[\\:\u0000-\u001f]/.test(path)||path.split("/").some(part=>!part||part==="."||part==="..")||!path.endsWith(".json"))throw Error("Owned native launch policy requires a portable repository path");
+ return readNativeLaunchDeclarationV1(JSON.parse(read(path)));
+}
 /** 📨️ The required original Script owner and nullable absolute deadline cross the native process boundary explicitly. */
 export function readNativeLaunchAdmissionV1(value:unknown):NativeLaunchAdmissionV1{
  if(validateJsonSchemaSubset(admissionSchema,value,admissionSchema,[schema]).length)throw Error("Complete native launch admission required");
@@ -17,7 +23,7 @@ export function readNativeLaunchAdmissionV1(value:unknown):NativeLaunchAdmission
 export function readNativeLaunchDeclarationV1(value:unknown):NativeLaunchDeclarationV1{
  if(validateJsonSchemaSubset(schema,value).length)throw Error("Complete native launch declaration required");
  const declaration=value as NativeLaunchDeclarationV1;
- for(const policy of [declaration.startup,declaration.hostIo,declaration.compilerTask]){
+ for(const policy of [declaration.startup,declaration.hostIo,declaration.compilerTask,declaration.frameEvent]){
   if(policy.retirementReserve.fuel>policy.fuel)throw Error("Native launch cleanup fuel exceeds original stock");
   for(const axis of Object.keys(policy.grant) as (keyof NativeLaunchGrantV1)[])if(policy.retirementReserve.grant[axis]>policy.grant[axis])throw Error("Native launch cleanup currency exceeds original stock");
  }
@@ -39,6 +45,7 @@ export function nativeLaunchEnvironmentV1(invocation:ScriptInvocation,environmen
  nativeLaunchDurationV1(original.startup,envelope.deadlineEpochMilliseconds,nowEpochMilliseconds);
  nativeLaunchDurationV1(original.hostIo,envelope.deadlineEpochMilliseconds,nowEpochMilliseconds);
  nativeLaunchDurationV1(original.compilerTask,envelope.deadlineEpochMilliseconds,nowEpochMilliseconds);
+ nativeLaunchDurationV1(original.frameEvent,envelope.deadlineEpochMilliseconds,nowEpochMilliseconds);
  const admission:NativeLaunchAdmissionV1={version:1,declaration:original,scriptOwner:envelope.policy.owner,scriptDeadlineEpochMilliseconds:envelope.deadlineEpochMilliseconds};
  return{...environment,[NATIVE_LAUNCH_ADMISSION_ENV]:JSON.stringify(readNativeLaunchAdmissionV1(admission))};
 }

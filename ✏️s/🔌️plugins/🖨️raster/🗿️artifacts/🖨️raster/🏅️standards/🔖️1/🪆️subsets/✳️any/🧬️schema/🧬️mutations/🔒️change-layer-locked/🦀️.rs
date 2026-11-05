@@ -10,6 +10,9 @@ use semio_s_artifact_raster_raster_model::{find_layer, layer_locked};
 pub struct ChangeLayerLocked {pub layer_id:String,pub expected:bool,pub locked:bool}
 pub fn validate(payload:&ChangeLayerLocked,base:&RasterSnapshot)->Result<(),protocol::OutcomeCode> {
     let layer=find_layer(&base.layers,&payload.layer_id).ok_or(protocol::OutcomeCode::TargetMissing)?;
+    validate_target(payload,layer)
+}
+pub fn validate_target(payload:&ChangeLayerLocked,layer:&semio_s_artifact_raster_raster_model::RasterLayerNode)->Result<(),protocol::OutcomeCode>{
     if layer_locked(layer)!=payload.expected {return Err(protocol::OutcomeCode::TargetMismatch);}Ok(())
 }
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerLocked where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_locked::ChangeLayerLocked> {

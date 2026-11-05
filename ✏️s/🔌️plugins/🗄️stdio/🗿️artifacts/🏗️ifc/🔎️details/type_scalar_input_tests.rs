@@ -76,6 +76,8 @@ fn original_scalar_type_guidance_admits_complete_exact_strings_and_signed_intege
             assert!(caller.work_turn(grant(), 1, |cx| guide.take(&mut output, cx)).unwrap());
             assert_eq!(output.as_ref().unwrap().controls(), row["required"].as_array().unwrap().len());
             assert_eq!(output.as_ref().unwrap().status().ready, complete);
+            assert_eq!(output.as_ref().unwrap().status().commit_args.is_some(), complete);
+            assert!(output.as_ref().unwrap().status().admitted());
             retire_guidance(&mut caller, &mut output);
             retire_guidance(&mut caller, &mut Some(guide));
             caller.finish();

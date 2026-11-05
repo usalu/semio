@@ -79,7 +79,7 @@ pub enum IdentityConfigMutation {
 //#region 🔖️LocalCatalog
 pub use super::admit_local_document::{
     admit_local_document, inverse_local_catalog_config_mutation,
-    inverse_local_catalog_config_mutation_steps, AdmitLocalDocument, LocalCatalog, LocalCatalogDiff, LocalDocument, LocalDocumentStorage, LOCAL_CATALOG_CONFIG_SCHEMA,
+    inverse_local_catalog_config_mutation_steps, AdmitLocalDocument, LocalCatalog, LocalCatalogDiff, LocalDocument, LocalDocumentSurface, LocalDocumentStorage, LOCAL_CATALOG_CONFIG_SCHEMA,
 };
 pub use super::retire_local_document::{retire_local_document, RetireLocalDocument};
 

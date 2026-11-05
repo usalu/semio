@@ -1,4 +1,5 @@
 {
-  "mutation": "changeReliabilityClass",
-  "newReliabilityClass": "RC3"
+  "ChangeReliabilityClass": {
+    "newReliabilityClass": "RC3"
+  }
 }

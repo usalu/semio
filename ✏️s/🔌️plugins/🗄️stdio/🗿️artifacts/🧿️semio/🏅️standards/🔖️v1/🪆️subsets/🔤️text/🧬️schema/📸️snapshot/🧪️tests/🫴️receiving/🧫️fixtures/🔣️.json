@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "schema": "stdio.semio.text",
+  "snapshot": {
+    "schema": "stdio.semio.text",
+    "runs": [
+      {
+        "language": "en",
+        "content": "Hello, 雪",
+        "marks": []
+      },
+      {
+        "language": "en",
+        "content": "world",
+        "marks": [
+          {
+            "kind": "bold",
+            "href": ""
+          }
+        ]
+      },
+      {
+        "language": "de",
+        "content": "semio.tech",
+        "marks": [
+          {
+            "kind": "link",
+            "href": "https://semio.tech"
+          },
+          {
+            "kind": "italic",
+            "href": ""
+          },
+          {
+            "kind": "code",
+            "href": ""
+          }
+        ]
+      }
+    ]
+  },
+  "cancelAfterTurns": [
+    0,
+    1,
+    32,
+    128,
+    512
+  ],
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "expected": {
+    "complete": "typed-output",
+    "cancelled": "paid-empty",
+    "denied": "unchanged",
+    "source": "same-pointer-length",
+    "stock": "same-original"
+  }
+}

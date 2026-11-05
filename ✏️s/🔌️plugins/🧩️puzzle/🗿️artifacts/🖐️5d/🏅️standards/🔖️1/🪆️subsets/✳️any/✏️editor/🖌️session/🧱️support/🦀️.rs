@@ -65,3 +65,8 @@ pub fn puzzle5d_selection_ids(interaction: &semio_framework::InteractionState) -
         _ => (HashSet::new(), HashSet::new()),
     }
 }
+
+/// 📤️ The outbox retains the original wire before its header-transfer receipt can be refused.
+pub fn puzzle5d_prepare_original_wire<'a>(raw:&mut Vec<u8>,outbox:&'a mut crate::puzzle_job::JobOutbox,cx:&mut StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+ let bytes=2*std::mem::size_of::<Vec<u8>>();let demand=semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};if cx.should_yield()||!cx.retained_work_can_enter(demand){return Ok(None)}let result=outbox.settle(crate::puzzle_job::JobTurn::Prepare(std::mem::take(raw)),cx);cx.consume_fuel(1);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;result.map_err(Into::into)
+}

@@ -3,6 +3,10 @@
 use super::*;
 
 //#region 🔖️Generation3dPlayApp
+#[cfg(test)]
+#[path="🧪️host-event/🦀️.rs"]
+mod host_event_birth_tests;
+
 impl ArtifactEditor for Generation3dPlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<ExampleSource> {
@@ -470,6 +474,11 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 📨️ Every host event ends the window's open gumball gesture with zero trace under the reason the tool records: a blur
     /// `blur`, a lost pointer capture `captureLost`, a utility switch or a closing window `retired`, an opened history edit
     /// `frozen` and a remote edit `baseMoved` — the typed `translateSelection{phase: "abort"}` of that window.
+    fn host_event_demands(event: &semio_framework_plugin::HostEvent) -> Option<semio_framework_value::RetirementDemand> {
+        let fixed=match event{semio_framework_plugin::HostEvent::WindowBlurred{..}=>9,semio_framework_plugin::HostEvent::PointerCaptureLost{..}=>16,semio_framework_plugin::HostEvent::UtilityChanged{..}|semio_framework_plugin::HostEvent::Retiring{..}=>12,semio_framework_plugin::HostEvent::TimeTravelFrozen{..}=>11,semio_framework_plugin::HostEvent::BaseMoved{..}=>14};let bytes=event.window_id().len().saturating_add(fixed);
+        let header=std::mem::size_of::<Self::Command>();Some(semio_framework_value::RetirementDemand{copy_bytes:header.saturating_mul(2).saturating_add(bytes),capacity_bytes:header.saturating_add(bytes),depth:1,..Default::default()})
+    }
+
     fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<Self::Command> {
         use semio_framework_plugin::HostEvent;
         use semio_framework_tool_machine::ToolAbortReason;

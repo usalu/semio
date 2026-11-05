@@ -87,28 +87,30 @@ pub fn placement_edits(rows: &[Placement], standing: &dyn Fn(&str) -> Option<Pla
         .collect()
 }
 
-/// 📦️ [`resolve_set_fields`] with the placement leaves routed through [`placement_edits`], all-or-nothing: the placement edits come first, then the plain leaves, resolved against the same document so the bundle stays one undo step.
-pub fn resolve_placed_fields<D, M, F>(document: &D, writes: &[FieldWrite], standing: &dyn Fn(&str) -> Option<Placement>, mut resolve: F) -> Result<Vec<M>, String>
-where
-    D: ToValue,
-    F: FnMut(&D, &NormEdit) -> Result<Vec<M>, String>,
-{
+/// 🗺️ Plans placement edits first, then scalar edits, without executing or committing mutations.
+pub fn plan_placed_fields<D: ToValue>(document: &D, writes: &[FieldWrite], standing: &dyn Fn(&str) -> Option<Placement>) -> Result<Vec<NormEdit>, String> {
     validate_writes(writes)?;
     let (placed_writes, plain): (Vec<FieldWrite>, Vec<FieldWrite>) = writes.iter().filter(|write| !is_view_write(write)).cloned().partition(is_placement_write);
-    let mut mutations = Vec::new();
-    for edit in placement_edits(&placements_of(document), standing, &placed_writes) {
-        mutations.extend(resolve(document, &edit)?);
-    }
-    if !plain.is_empty() {
-        mutations.extend(resolve_set_fields(document, &plain, &mut resolve)?);
-    }
-    Ok(mutations)
+    let mut edits = placement_edits(&placements_of(document), standing, &placed_writes);
+    edits.extend(plain.into_iter().map(|write| NormEdit::SetField { path: write.path, value: write.value }));
+    Ok(edits)
+}
+
+/// 📦️ Resolves a placement plan and its scalar edits against the same admitted typed projection.
+pub fn resolve_placed_fields<D, M, F>(document: &D, writes: &[FieldWrite], standing: &dyn Fn(&str) -> Option<Placement>, resolve: F) -> Result<Vec<M>, String>
+where
+    D: Clone + ToValue,
+    M: protocol::Mutation<D> + protocol::ColdMutation<D> + semio_framework_value::retirement::RetireOwned,
+    F: FnMut(&D, &NormEdit) -> Result<Vec<M>, String>,
+{
+    crate::edit_commands::resolve_field_edits(document, &plan_placed_fields(document, writes, standing)?, resolve)
 }
 
 /// 📤️ [`resolve_placed_fields`] as ONE emit: the release of a drag is one undo step, rows inserted and leaves set together.
 pub fn handle_placed_fields<D, M, F>(document: &D, writes: &[FieldWrite], standing: &dyn Fn(&str) -> Option<Placement>, resolve: F) -> Result<semio_framework_plugin::Emit<M, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault>
 where
-    D: ToValue,
+    D: Clone + ToValue,
+    M: protocol::Mutation<D> + protocol::ColdMutation<D> + semio_framework_value::retirement::RetireOwned,
     F: FnMut(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
     let mutations = resolve_placed_fields(document, writes, standing, resolve).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.edit-unresolved"), error))?;

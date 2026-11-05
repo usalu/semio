@@ -10,6 +10,11 @@ use semio_framework_plugin_decl_app::ArtifactApp;
 #[derive(RetireOwned)]
 pub struct ActionIngressSource{pub original_typing_ready:bool,pub original_typing_control_ready:bool,pub original_press_result:Option<bool>,pub original_tool_dispatch:Option<bool>,pub original_press_tag:Option<semio_framework_plugin_tool_run::tool_jobs_tool_machine::ScrubTag>,pub original_tool_tag:Option<semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag>,pub original_tool_tag_ready:bool,pub action:Option<String>,pub args:Option<DslValue>,pub prepared:Option<DslValue>,pub assembled:Option<DslValue>,pub fault:Option<Fault>}
 
+impl ActionIngressSource{
+ /// 🫴️ The caller-loaned source selects the same authoritative argument slot as its parser.
+ pub fn original_arguments_mut(&mut self)->&mut Option<DslValue>{if self.assembled.is_some(){&mut self.assembled}else if self.prepared.is_some(){&mut self.prepared}else{&mut self.args}}
+}
+
 /// ♻️ One exact receiving record holds the original source until its acknowledged paid close.
 pub struct ActionIngressRecord{pub source:std::mem::ManuallyDrop<Option<ActionIngressSource>>,pub retirement:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<ActionIngressSource>>>,pub caller:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,pub ready:bool}
 

@@ -199,9 +199,9 @@ async fn ingest_operations_is_idempotent() {
 async fn utility_registry_declares_utilities_scoped_to_the_composite_window() {
     let definition = create_raster_app();
     let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
-    assert_eq!(utility_ids, ["selectMarquee", "paintBrush", "paintEraser", "paintBucket"]);
+    assert_eq!(utility_ids, ["selectMarquee", "selectEllipse", "selectLasso", "paintBrush", "paintEraser", "paintBucket"]);
     let selects: Vec<&str> = definition.utilities.iter().filter(|utility| utility.category == Some(UtilityCategory::Selection)).map(|utility| utility.id.as_str()).collect();
-    assert_eq!(selects, ["selectMarquee"]);
+    assert_eq!(selects, ["selectMarquee", "selectEllipse", "selectLasso"]);
     let composite = definition.window_kinds.iter().find(|window| window.id == semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_WINDOW_COMPOSITE).expect("composite window");
     assert_eq!(composite.utilities.len(), definition.utilities.len(), "every utility is scoped to the composite window kind");
     assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));

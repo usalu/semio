@@ -1,70 +1,37 @@
-//! 🥞️ Flattening preserves rendered pixels, world placement and complete inverse history.
-use semio_s_artifact_raster_raster_model::RasterLayerNode;
-use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-use semio_framework_pixels::png_encoding::PngEncodeJob;
-use semio_framework_test_fixtures::fixture_text;
-use semio_s_artifact_raster_raster_model::RasterImageAsset;
-use semio_s_artifact_raster_raster_editor::commands::flatten_layers::*;
-use protocol::{ColdMutation, Mutation};
+//! 🥞️ Original flattening preserves exact rendered pixels, placement, spare assets and inverse history.
+use semio_s_artifact_raster_raster_model::{RasterLayerNode,SemioImageSnapshot,snapshot::RasterSnapshot};
+use semio_s_artifact_raster_raster_editor::{RasterCommand,commands::flatten_layers::FlattenLayers};
+use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use protocol::{ColdMutation,Mutation};
+#[path="🎟️testkit/🦀️.rs"]mod funded;
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn retire(document:RasterSnapshot){semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);}
 #[test]
-fn flatten_preserves_the_composite_and_restores_every_original_layer() {
-    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎮️commands/🥞️flatten-layers/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-    for capacity in fixture["assetCapacities"].as_array().unwrap() {
-    let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
-    document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    for (key,value) in fixture["images"].as_object().unwrap() {
-        let image=semio_framework_pixels::RasterImage {width:value["width"].as_u64().unwrap() as u32,height:value["height"].as_u64().unwrap() as u32,pixels:value["pixels"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect()};
-        let asset=RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&image).unwrap()};
-        document.assets.insert(key.clone(),semio_s_artifact_raster_raster_io::mint_raster_asset_child(key,&asset)).unwrap();
-    }
-    let asset=semio_s_artifact_raster_raster_io::raster_asset(&document.assets,"blue").unwrap();
-    for index in document.assets.len()..capacity.as_u64().unwrap() as usize {let key=format!("spare-{index}");document.assets.insert(key.clone(),semio_s_artifact_raster_raster_io::mint_raster_asset_child(&key,&asset)).unwrap();}
-    let before=document.clone();
-    let mut preparation=prepare(&FlattenLayers {name:"Flattened Image".into()},&document).unwrap();
-    while !preparation.advance(&document,1).unwrap() {}
-    let mut job=preparation.into_job().unwrap();while !semio_s_artifact_raster_raster_io::advance_stack(&mut job,1).unwrap().done {}
-    let composite=job.into_result().unwrap();
-    assert_eq!(serde_json::to_value(&composite.image.pixels).unwrap(),fixture["expected"]["pixels"]);
-    let origin=composite.origin;
-    let mut encoder=PngEncodeJob::new(composite.image).unwrap();while !encoder.advance().unwrap().done {}
-    let emit=publish(encoder.into_result().unwrap(),origin,"Flattened Image",&document).unwrap();
-    let mut inverses=Vec::new();
-    for mutation in &emit.artifact_mutations {
-        inverses.push(mutation.inverse(&document).expect("valid retained mutation inverse fixture"));
-        let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,mutation).unwrap();assert!(messages.is_empty());
-        retire(std::mem::replace(&mut document,next));
-    }
-    assert_eq!(document.layers.len(),1);assert_eq!(document.assets.len(),before.assets.len()-fixture["images"].as_object().unwrap().len()+1);
-    for (key,asset) in &before.assets {if key.starts_with("spare-") {assert_eq!(document.assets.get(key),Some(asset));}}
-    let RasterLayerNode::Pixel {image_key:Some(key),transform,name,..}=&document.layers[0] else {panic!("flattened pixels")};
-    assert_eq!(name,"Flattened Image");assert_eq!((transform.x,transform.y),(-3.0,4.5));
-    let asset=semio_s_artifact_raster_raster_io::raster_asset(&document.assets,key).unwrap();
-    assert_eq!(serde_json::to_value(semio_framework_pixels::decode_png(&asset.data).unwrap().pixels).unwrap(),fixture["expected"]["pixels"]);
-    for inverse in inverses.into_iter().rev().flatten() {
-        let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,&inverse).unwrap();assert!(messages.is_empty());
-        retire(std::mem::replace(&mut document,next));inverse.retire_cold();
-    }
-    assert_eq!(document,before);
-    for mutation in emit.artifact_mutations {mutation.retire_cold();}
-    retire(document);retire(before);
+fn flatten_preserves_the_composite_and_restores_every_original_layer(){
+    let fixture=fixture();
+    for capacity in fixture["assetCapacities"].as_array().unwrap(){
+        let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
+        document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        for(key,value)in fixture["images"].as_object().unwrap(){let image=semio_s_artifact_raster_raster_model::semio_image_from_rgba8(value["width"].as_u64().unwrap() as u32,value["height"].as_u64().unwrap() as u32,serde_json::from_value(value["pixels"].clone()).unwrap());document.assets.insert(key.clone(),semio_s_artifact_raster_raster_model::mint_raster_image_child(key,&image)).unwrap();}
+        let image=document.assets.get("blue").unwrap().local_owner::<SemioImageSnapshot>().unwrap();
+        for index in document.assets.len()..capacity.as_u64().unwrap() as usize{let key=format!("spare-{index}");document.assets.insert(key.clone(),semio_s_artifact_raster_raster_model::mint_raster_image_child(&key,&image)).unwrap();}
+        let before=document.clone();let command=RasterCommand::FlattenLayers(FlattenLayers{name:"Flattened Image".into()});let emit=funded::bake::<false>(&command,&document,None).unwrap().unwrap();let mut caller=OriginalWorkFixture::new();let mut inverses=Vec::new();
+        for mutation in &emit.artifact_mutations{inverses.push(mutation.inverse(&document).unwrap());let(next,messages)=semio_framework_os_kernel::apply_mutation(&document,mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));assert!(document.assets.len()<=64);}
+        assert_eq!(document.layers.len(),1);assert_eq!(document.assets.len(),before.assets.len()-fixture["images"].as_object().unwrap().len()+1);
+        for(key,asset)in &before.assets{if key.starts_with("spare-"){assert_eq!(document.assets.get(key),Some(asset));}}
+        let RasterLayerNode::Pixel{image_key:Some(key),transform,name,..}=&document.layers[0]else{panic!("flattened pixels")};assert_eq!(name,"Flattened Image");assert_eq!((transform.x,transform.y),(-3.0,4.5));assert!(key.starts_with("image-"));
+        let image=document.assets.get(key).unwrap().local_owner::<SemioImageSnapshot>().unwrap();assert_eq!(serde_json::to_value(&image.frames[0].rgba8).unwrap(),fixture["expected"]["pixels"]);
+        for inverse in inverses.into_iter().rev().flatten(){let(next,messages)=semio_framework_os_kernel::apply_mutation(&document,&inverse).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));caller.retire_owned(inverse,funded::loan());}
+        assert_eq!(document,before);caller.retire_owned(emit,funded::loan());caller.finish();retire(document);retire(before);
     }
 }
 #[test]
-fn flatten_preparation_is_cancellable_and_validates_the_name() {
-    let document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
-    for name in ["".to_owned(),"   ".into(),"x".repeat(121)] {assert!(prepare(&FlattenLayers {name},&document).is_err());}
-    let mut work=LayerBakeWork::<false> {preparing:Some(prepare(&FlattenLayers {name:"Image".into()},&document).unwrap()),..Default::default()};
-    work.begin_close();assert!(!work.terminal_is_empty());
-    assert!(matches!(semio_framework_job::close_with_self_funded_context(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:0,maximum_release_bytes:262144,maximum_depth:1}, |cx| work.close_step(cx)).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Complete {..}));assert!(work.terminal_is_empty());
-    assert!(document.layers.is_empty());assert!(document.assets.is_empty());retire(document);
+fn flatten_preparation_is_cancellable_and_validates_the_name(){
+    let fixture=fixture();let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    for name in ["".to_owned(),"   ".into(),"x".repeat(121)]{let command=RasterCommand::FlattenLayers(FlattenLayers{name});assert!(funded::bake::<false>(&command,&document,None).is_err());}
+    let before=document.clone();let command=RasterCommand::FlattenLayers(FlattenLayers{name:"Image".into()});for cut in [0,1,2,8]{assert!(funded::bake::<false>(&command,&document,Some(cut)).unwrap().is_none());assert_eq!(document,before);}retire(document);retire(before);
 }
-fn retire(document:RasterSnapshot) {semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);}
-
 #[test]
-fn flatten_refuses_a_protected_descendant_without_changing_the_document() {
-    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
-    let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let before=semio_framework_pack_json::to_json_string(&document);
-    assert!(prepare(&FlattenLayers {name:"Flattened".into()},&document).is_err());assert_eq!(semio_framework_pack_json::to_json_string(&document),before);
-    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
+fn flatten_refuses_a_protected_descendant_without_changing_the_document(){
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let before=document.clone();let command=RasterCommand::FlattenLayers(FlattenLayers{name:"Flattened".into()});let error=funded::bake::<false>(&command,&document,None).unwrap_err();assert!(error.contains("locked"));assert_eq!(document,before);retire(document);retire(before);
 }

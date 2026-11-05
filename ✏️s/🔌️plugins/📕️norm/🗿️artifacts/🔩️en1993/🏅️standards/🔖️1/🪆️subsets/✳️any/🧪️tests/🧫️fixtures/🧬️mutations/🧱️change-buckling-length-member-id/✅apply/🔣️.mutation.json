@@ -1,3 +1,6 @@
 {
-  "ChangeBucklingLengthMemberId": "buckling-length-1"
+  "ChangeBucklingLengthMemberId": {
+    "id": "buckling-length-1",
+    "newMemberId": "member-1-changed"
+  }
 }

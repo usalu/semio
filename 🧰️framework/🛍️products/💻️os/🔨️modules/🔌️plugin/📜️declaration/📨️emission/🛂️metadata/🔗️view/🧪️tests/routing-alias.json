@@ -1,0 +1,36 @@
+{
+  "schema": "semio.original.metadata-routing-alias.v1",
+  "bodyBytes": 131077,
+  "cases": [
+    {
+      "grant": "items-zero",
+      "admitted": false,
+      "bodyCopies": 0,
+      "originalRetained": true
+    },
+    {
+      "grant": "copy-minus-one",
+      "admitted": false,
+      "bodyCopies": 0,
+      "originalRetained": true
+    },
+    {
+      "grant": "depth-zero",
+      "admitted": false,
+      "bodyCopies": 0,
+      "originalRetained": true
+    },
+    {
+      "grant": "cancelled",
+      "admitted": false,
+      "bodyCopies": 0,
+      "originalRetained": true
+    },
+    {
+      "grant": "exact",
+      "admitted": true,
+      "bodyCopies": 0,
+      "originalRetained": true
+    }
+  ]
+}

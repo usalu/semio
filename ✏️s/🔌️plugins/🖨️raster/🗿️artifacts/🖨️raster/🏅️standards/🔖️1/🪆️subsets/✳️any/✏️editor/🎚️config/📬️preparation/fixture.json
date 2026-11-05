@@ -1,0 +1,1 @@
+{"width":256,"height":256,"spans":65536,"pageRows":256,"validation":"cachedConstructionProof","maximumValidationWork":258,"coverage":128,"cancelAfterPages":3,"malformed":{"overlapAt":4096,"coverageAt":8192,"coverage":256},"targetChange":{"from":"pixels","to":"mask","inverseRows":2}}

@@ -146,7 +146,7 @@ fn gis_map_view_reduce(
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<GisMapViewer>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::GisMapMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    camera_emit(command, context.and_then(|context| context.view_state.as_ref()))
+    camera_emit(command, context.and_then(|context| context.view_state.as_deref()))
 }
 
 pub struct GisMapViewCommandJobFactory {

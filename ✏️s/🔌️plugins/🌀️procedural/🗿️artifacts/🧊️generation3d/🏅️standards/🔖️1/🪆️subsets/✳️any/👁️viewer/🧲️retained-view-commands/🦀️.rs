@@ -201,7 +201,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
             Generation3dViewPresenceMutation::from(semio_s_artifact_procedural_3d_viewer_presence::SetShowMode { value: next.show_mode.clone() }),
         ];
         if next.active_example_id != input.config.active_example_id || next.tolerance().to_bits() != input.config.tolerance().to_bits() {
-            let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+            let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
             let viewed = Generation3dViewedDocument::resolve(input.snapshot, &next);
             let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
             viewed.retire();

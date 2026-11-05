@@ -218,7 +218,7 @@ async fn a_dispatched_page_publishes_one_transient_item_and_no_history_row() {
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<HomeApp>, _>(async { semio_framework_plugin::App { definition: create_home_app().await, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
     let view = home_view("u1", semio_framework_ui_locale::Locale::En);
-    let meta = semio_framework_plugin::ActionMeta { actor: "local".into(), instance_id: 1, view_state: Some(view.clone()) };
+    let meta = semio_framework_plugin::ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: 1, view_state: Some(view.clone()) };
     let page_json = semio_framework_pack_json::to_json_string(&{
         let events = [
             semio_framework_pack_json::json!({ "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-e2e", "body": {"kind": "space.created", "spaceId": "sp-e2e", "name": "Transient Fixture", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"}, "recordedAtMs": 1000 }),

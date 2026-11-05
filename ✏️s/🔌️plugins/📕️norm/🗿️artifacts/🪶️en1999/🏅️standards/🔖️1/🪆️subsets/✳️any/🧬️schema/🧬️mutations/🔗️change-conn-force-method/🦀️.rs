@@ -19,7 +19,7 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnForceMethod wh
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "conn-force-method",
-        force_method: "change-conn-force-method",
+        kind: "change-conn-force-method",
         record: "ChangedConnForceMethod",
     };
 

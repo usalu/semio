@@ -223,6 +223,7 @@ pub fn prepare_set_run_text(snapshot: &DocxSnapshot, address: &DocxXmlAddress, t
 
 #[derive(Default)]
 pub(super) struct DocxXmlEdit {
+    last_work: u64,
     closing: bool,
     reserve: Option<usize>,
 }
@@ -246,11 +247,17 @@ impl PagedOneItemEdit<DocxSnapshot, DocxMutation> for DocxXmlEdit {
         Ok(RetirementDemand::default())
     }
 
-    fn advance(&mut self, _before: RetainedCloneRef<'_, DocxSnapshot>, mutation: RetainedCloneRef<'_, DocxMutation>, post: PagedOneItemPost<'_, DocxSnapshot>, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<DocxMutation>, ValueError> {
+    fn advance(&mut self, _before: RetainedCloneRef<'_, DocxSnapshot>, mutation: RetainedCloneRef<'_, DocxMutation>, post: PagedOneItemPost<'_, DocxSnapshot>, _body: usize, grant: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<DocxMutation>, ValueError> {
+        self.last_work=0;
+        if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
+        if !receiving.prepare_work(if self.reserve.is_none(){2}else{3})?{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
+        let result=(||{
         let mutation = mutation.get();
         let post = post.mutable()?;
         let Some(reserve) = self.reserve else {
+            self.last_work+=1;
             measure_snapshot(post).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
+            self.last_work+=1;
             let reserve = measure_mutation(mutation).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?.saturating_add(TURN_BYTES);
             self.reserve = Some(reserve);
             return Ok(PagedOneItemEditStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
@@ -258,17 +265,25 @@ impl PagedOneItemEdit<DocxSnapshot, DocxMutation> for DocxXmlEdit {
         if grant.maximum_copy_bytes < TURN_BYTES || grant.maximum_capacity_bytes < reserve || grant.maximum_release_bytes < TURN_BYTES {
             return Ok(PagedOneItemEditStep::Progress(RetainedCloneProgress::default()));
         }
+        self.last_work+=1;
         let prepared = apply_addressed_xml_mutation_in_place(post, mutation)?;
         if !prepared.changed {
             return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("{PREFIX}.no-op")));
         }
+        self.last_work+=1;
         measure_snapshot(post).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
+        self.last_work+=1;
         let retained = measure_mutation(&prepared.inverse).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
         if retained > grant.maximum_capacity_bytes {
             return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "stdio-docx-base-set-page.inverse-exceeds-capacity-grant"));
         }
         Ok(PagedOneItemEditStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: TURN_BYTES, retained_capacity_bytes: retained, released_bytes: 0 }, prepared.inverse))
+        })();
+        receiving.commit_work(self.last_work)?;
+        result
     }
+
+    fn last_turn_work(&self)->u64{self.last_work}
 
     fn begin_close(&mut self) {
         self.closing = true;
@@ -286,4 +301,29 @@ impl PagedOneItemEdit<DocxSnapshot, DocxMutation> for DocxXmlEdit {
     fn terminal_is_empty(&self) -> bool {
         self.closing
     }
+}
+
+#[cfg(test)]
+mod native_work_tests{
+ use super::*;
+ use semio_framework_os_store_one_item::testkit::{PagedEditFixture,OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
+ use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::{construction::build_minimal_docx,snapshot::{DocxDocument,DocxBlock}};
+ use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_top_level_run_at;
+ fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:16_777_216,maximum_release_bytes:16_777_216,maximum_depth:4096}}
+ #[test]
+ fn native_xml_edit_uses_one_persistent_original_caller_and_pays_reserve_apply_and_denial_work(){
+  let source=build_minimal_docx(DocxDocument{body:vec![DocxBlock::paragraph("before")],styles:Vec::new()});
+  let target=docx_top_level_run_at(&source,0,0).unwrap();
+  let mutation=DocxMutation::SetRunText(set_run_text::SetRunText{address:target.address,text:"after".into()});
+  let before=semio_framework_value::testing::admit_owned_source(source.clone(),()).0;let mutation=semio_framework_value::testing::admit_owned_source(mutation,()).0;
+  let caller=OriginalJobFixtureCaller::admit(OperationId(44794),Generation(8),RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:16_777_216,maximum_capacity_bytes:16_777_216,maximum_release_bytes:16_777_216,maximum_depth:4096},||Some(1),u64::MAX,1<<20);
+  let mut fixture=PagedEditFixture::new(caller,OriginalJobDecodeOwner::empty(),before,mutation,source,DocxXmlEdit::default());
+  let reserve=fixture.advance(grant()).unwrap();assert_eq!(reserve.work,2);assert!(matches!(reserve.edit,Ok(PagedOneItemEditStep::Progress(_))));
+  let starved=fixture.advance_with_work(grant(),0).unwrap();assert_eq!(starved.work,0);assert_eq!(starved.progress,Default::default());
+  let applied=fixture.advance(grant()).unwrap();assert_eq!(applied.work,3);
+  let inverse=match applied.edit.unwrap(){PagedOneItemEditStep::Complete(_,inverse)=>inverse,_=>panic!("real addressed XML edit completes")};
+  assert_eq!(docx_top_level_run_at(fixture.post().unwrap(),0,0).unwrap().text,"after");
+  let reset=fixture.advance(RetainedCloneGrant{maximum_items:0,..grant()}).unwrap();assert_eq!(reset.work,0);assert_eq!(reset.progress,Default::default());
+  let mut inverse=Some(inverse);let mut active=None;assert!(fixture.retire_owned(&mut inverse,&mut active,grant(),1_000_000).unwrap());assert!(inverse.is_none()&&active.is_none());assert!(fixture.close(grant(),1_000_000).unwrap());
+ }
 }

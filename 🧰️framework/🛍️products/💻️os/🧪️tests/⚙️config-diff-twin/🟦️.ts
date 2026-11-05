@@ -4,6 +4,9 @@
  * mutations' diffs sum (`absorb`, replayed last to first) to the negative diff read off the base and restore `⬅️before`. A
  * seeded random history of admissions, replacements and retirements holds the same laws row by row and undoes to its start. */
 import { readFileSync } from "node:fs";
+import Ajv from "ajv";
+import { encodePackValue, decodePackValue } from "@semio-tech/framework/packs";
+import { encodeDocumentArchiveBytes, decodeDocumentArchiveBytes } from "@semio-tech/framework/wire-contracts";
 import { describe, expect, it } from "vitest";
 import {
   admitLocalDocument,
@@ -197,6 +200,33 @@ describe("config diff twin", () => {
         expect(state, `seed ${seed}`).toEqual(before);
       }
       expect(state).toBeNull();
+    }
+  });
+});
+
+describe("local document selected surface", () => {
+  const law = JSON.parse(readFileSync(new URL("../../🎚️config/🧪️tests/🧫️fixtures/🪟️surface/🔣️.json", import.meta.url), "utf8")) as { cases: { name: string; before: LocalCatalog; mutation: LocalCatalogConfigMutation; after: LocalCatalog }[]; invalidSurfaces: unknown[] };
+  const schema = JSON.parse(readFileSync(new URL("../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const validate = new Ajv({ strict: false }).compile({ $defs: schema.$defs, $ref: "#/$defs/LocalCatalog" });
+  for (const row of law.cases) {
+    it(row.name, () => {
+      expect(validate(row.before)).toBe(true);
+      expect(validate(row.after)).toBe(true);
+      const diff = diffLocalCatalogConfigMutation(row.mutation, row.before);
+      const after = applyLocalCatalogDiff(row.before, diff);
+      expect(after).toEqual(row.after);
+      expect(decodeLocalCatalogDiff(JSON.parse(JSON.stringify(diff)))).toEqual(diff);
+      expect(decodeLocalCatalogValue(JSON.parse(JSON.stringify(after)))).toEqual(row.after);
+      const archive = encodeDocumentArchiveBytes({ parent_pack: Array.from(encodePackValue(after)), parent_spr: [], members: [] });
+      expect(decodeLocalCatalogValue(decodePackValue(Uint8Array.from(decodeDocumentArchiveBytes(archive).parent_pack)))).toEqual(row.after);
+      expect(catalogInverseSum(row.mutation, row.before).restored).toEqual(row.before);
+    });
+  }
+  it("refuses malformed selected coordinates rather than silently removing them", () => {
+    for (const surface of law.invalidSurfaces) {
+      const invalid = { documents: [{ ...law.cases[0]!.after.documents[0]!, surface }] };
+      expect(validate(invalid)).toBe(false);
+      expect(decodeLocalCatalogValue(invalid)).toBeUndefined();
     }
   });
 });

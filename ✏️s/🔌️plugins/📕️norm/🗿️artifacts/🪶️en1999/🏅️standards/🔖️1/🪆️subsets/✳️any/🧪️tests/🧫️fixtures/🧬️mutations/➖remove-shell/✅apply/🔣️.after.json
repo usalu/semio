@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC2",
   "materials": [
     {
       "id": "mat-6082",
@@ -275,6 +274,7 @@
       ]
     }
   ],
+  "shells": [],
   "placements": [
     {
       "id": "purlin-1",
@@ -329,5 +329,5 @@
   "patchLoads": [],
   "ringStiffeners": [],
   "transverseStiffeners": [],
-  "shells": []
+  "reliabilityClass": "RC2"
 }

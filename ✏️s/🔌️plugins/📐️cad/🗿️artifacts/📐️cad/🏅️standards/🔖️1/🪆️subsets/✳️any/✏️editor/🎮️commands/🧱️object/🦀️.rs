@@ -19,7 +19,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🪟️ The pane a document-mutating object gesture lands in: the addressed window instance when the
 /// host supplied one, otherwise the shape pane (the layout's first quadrant).
 fn target_pane(ctx: &CadDispatchCtx) -> CadPaneId {
-    ctx.view_state.as_ref().and_then(|view| cad_pane_from_view(view).ok()).unwrap_or(CadPaneId::Shape)
+    ctx.view_state.as_deref().and_then(|view| cad_pane_from_view(view).ok()).unwrap_or(CadPaneId::Shape)
 }
 
 /// 🧭️ An inspector origin DELTA (`origin.x` … with `delta`, no absolute `value`) is a drag of the addressed objects along

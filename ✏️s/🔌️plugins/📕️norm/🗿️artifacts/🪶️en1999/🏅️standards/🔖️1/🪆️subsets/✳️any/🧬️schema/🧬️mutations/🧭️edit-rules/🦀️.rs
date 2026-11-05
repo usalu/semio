@@ -1,11 +1,15 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the En1999 editor: which value-tree path raises which concrete kind.
 
-use semio_s_plugin_norm_app_surface::{IdRemoval, InsertItemRule, NormEdit, NormEditRules, SelectorKey, SetFieldRule};
+use semio_s_plugin_norm_app_surface::{IdRemoval, InsertItemRule, NormEdit, NormEditRules, SelectorKey, SetFieldArgument, SetFieldArgumentSource, SetFieldRule};
 use crate::En1999Mutation;
 use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 
 /// 📚 Every path a En1999 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field_arguments: &[
+        SetFieldArgument { path: "members[].bucklingLengthZ", kind: "change-member-buckling-length", argument: "axis", source: SetFieldArgumentSource::Text("z") },
+        SetFieldArgument { path: "connections[].bolts.rows", kind: "change-bolt-count", argument: "newBoltsPerRow", source: SetFieldArgumentSource::Sibling("boltsPerRow") },
+    ],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "materials[].designation", kind: "change-material-designation", selectors: &[SelectorKey::Id("materialId")], value: "newDesignation" },
@@ -56,7 +60,7 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "connections[].memberId", kind: "change-conn-member-id", selectors: &[SelectorKey::Id("connectionId")], value: "newMemberId" },
         SetFieldRule { path: "connections[].materialId", kind: "change-conn-material-id", selectors: &[SelectorKey::Id("connectionId")], value: "newMaterialId" },
         SetFieldRule { path: "connections[].kind", kind: "change-conn-kind", selectors: &[SelectorKey::Id("connectionId")], value: "newKind" },
-        SetFieldRule { path: "connections[].forceMethod", force_method: "change-conn-force-method", selectors: &[SelectorKey::Id("connectionId")], value: "newForceMethod" },
+        SetFieldRule { path: "connections[].forceMethod", kind: "change-conn-force-method", selectors: &[SelectorKey::Id("connectionId")], value: "newForceMethod" },
         SetFieldRule { path: "connections[].bolts.material", kind: "change-conn-bolts-material", selectors: &[SelectorKey::Id("connectionId")], value: "newBoltsMaterial" },
         SetFieldRule { path: "connections[].bolts.diameter", kind: "change-conn-bolts-diameter", selectors: &[SelectorKey::Id("connectionId")], value: "newBoltsDiameter" },
         SetFieldRule { path: "connections[].bolts.edgeDistance", kind: "change-conn-bolts-edge-distance", selectors: &[SelectorKey::Id("connectionId")], value: "newBoltsEdgeDistance" },
@@ -234,3 +238,7 @@ pub fn resolve_edit(document: &En1999Snapshot, edit: &NormEdit) -> Result<Vec<En
 pub fn resolve(document: &En1999Snapshot, edit: &NormEdit) -> Result<Vec<En1999Mutation>, String> {
     resolve_edit(document, edit)
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod payload_tests;

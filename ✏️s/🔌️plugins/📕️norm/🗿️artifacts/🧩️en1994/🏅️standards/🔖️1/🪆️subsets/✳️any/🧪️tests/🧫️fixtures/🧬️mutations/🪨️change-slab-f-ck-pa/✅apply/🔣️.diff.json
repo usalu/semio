@@ -1,7 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": "RC2",
-  "cases": {"removed": [], "inserted": [], "moved": [], "modified": []},
   "structureKind": null,
   "steelFYPa": null,
   "beams": null,
@@ -40,5 +38,12 @@
   "studs": null,
   "fireRating": null,
   "insulationThicknessM": null,
-  "fatigueDetail": null
+  "fatigueDetail": null,
+  "reliabilityClass": "RC2",
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

@@ -194,9 +194,6 @@ enum Puzzle2dImportStage {
 /// port, whose payload IS this exact 2d manifest shape (see
 /// `🧱️block/🗿️artifacts/◻️2d/…/💡️inferences/🦀️.rs`'s `puzzle2d_manifest_fragment`).
 pub struct Puzzle2dImportJob {
-    pub port: String,
-    media_json: Option<String>,
-    pub snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
     pub fragment: Option<Value>,
     pub catalogs: crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs,
     compatibility: Vec<crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCompatibility>,
@@ -206,11 +203,11 @@ pub struct Puzzle2dImportJob {
     decoded_items: usize,
     pub progress: u64,
     catalog_changed: bool,
-    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
     pending_completion_rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
     completed: bool,
     outbox: crate::puzzle_job::JobOutbox,
     closing: bool,
+    staged: bool,
     pub owners: crate::puzzle_job::WorkClosing<Puzzle2dImportOwners>,
 }
 
@@ -218,28 +215,16 @@ pub struct Puzzle2dImportJob {
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
 struct Puzzle2dImportOwners {
-    pub port: String,
-    media_json: Option<String>,
-    pub snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
     pub fragment: Option<Value>,
     pub catalogs: crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs,
     compatibility: Vec<crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCompatibility>,
     pub mutations: Vec<Puzzle2dMutation>,
-    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
     pending_completion_rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
 }
 
-impl Puzzle2dImportJob {
-    pub fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>, port: String, media: Media) -> Self {
-        let media_json = match media.payload {
-            MediaPayload::Structured { json, .. } => Some(json),
-            MediaPayload::Intrinsic { value, .. } => Some(semio_framework_pack_json::to_json_string(&value)),
-            MediaPayload::Binary { .. } => None,
-        };
+impl Default for Puzzle2dImportJob {
+    fn default() -> Self {
         Self {
-            port,
-            media_json,
-            snapshot: Some(request.snapshot),
             fragment: None,
             catalogs: crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs::default(),
             compatibility: Vec::new(),
@@ -249,15 +234,18 @@ impl Puzzle2dImportJob {
             decoded_items: 0,
             progress: 0,
             catalog_changed: false,
-            completion: Some(request.completion),
             pending_completion_rejection: None,
             completed: false,
             outbox: Default::default(),
             closing: false,
+            staged: false,
             owners: Default::default(),
         }
     }
 
+}
+
+impl Puzzle2dImportJob {
     pub fn checkpoint(&self) -> crate::puzzle_job::JobTurn {
         puzzle2d_import_checkpoint(self.stage as u8, self.cursor, self.decoded_items, self.progress)
     }
@@ -266,8 +254,8 @@ impl Puzzle2dImportJob {
         self.fragment.as_ref().and_then(|fragment| fragment.get(key)).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[])
     }
 
-    pub fn meta(&self, key: &str) -> Option<&Value> {
-        self.snapshot.as_ref().and_then(|snapshot| snapshot.value().get("meta")).and_then(|meta| meta.get(key)).filter(|value| !value.is_null())
+    pub fn meta<'a>(&self,request:&'a ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>,key:&str)->Option<&'a Value>{
+        request.snapshot.value().get("meta").and_then(|meta|meta.get(key)).filter(|value|!value.is_null())
     }
 
     fn push_mutation(&mut self, mutation: Puzzle2dMutation) -> Result<(), &'static str> {
@@ -278,12 +266,16 @@ impl Puzzle2dImportJob {
         Ok(())
     }
 
-    pub fn decode(&mut self) -> Option<crate::puzzle_job::JobTurn> {
-        if self.port != PUZZLE2D_IMPORT_PORT {
+    pub fn decode(&mut self,request:&ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>)->Option<crate::puzzle_job::JobTurn>{
+        let Some(ArtifactReservedToolInput::Media{port,media})=request.input.as_ref()else{return Some(puzzle2d_job_fault("puzzle2d import lost its original media owner"))};
+        if port != PUZZLE2D_IMPORT_PORT {
             return Some(puzzle2d_job_fault("puzzle2d import only implements kit:in"));
         }
-        let Some(media_json) = self.media_json.as_ref() else {
-            return Some(puzzle2d_job_fault("puzzle2d kit:in requires a structured payload"));
+        let encoded;
+        let media_json=match &media.payload{
+            MediaPayload::Structured{json,..}=>json.as_str(),
+            MediaPayload::Intrinsic{value,..}=>{encoded=semio_framework_pack_json::to_json_string(value);encoded.as_str()},
+            MediaPayload::Binary{..}=>return Some(puzzle2d_job_fault("puzzle2d kit:in requires a structured payload")),
         };
         let Ok(fragment) = semio_framework_pack_json::parse(media_json,semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             return Some(puzzle2d_job_fault("puzzle2d kit:in payload is not valid json"));
@@ -303,8 +295,8 @@ impl Puzzle2dImportJob {
         if PUZZLE2D_IMPORT_COLLECTIONS.iter().any(|key| fragment.get(*key).and_then(Value::as_array).is_some_and(|rows| rows.len() > PUZZLE2D_IMPORT_SEMANTIC_ITEMS)) {
             return Some(puzzle2d_job_fault("puzzle2d kit:in collection exceeds its fixed descriptor cap"));
         }
-        let existing_catalogs = self.meta("kindCatalogs").cloned();
-        let existing_compatibility = self.meta("kindCompatibility").and_then(|value| value.as_array().cloned()).unwrap_or_default();
+        let existing_catalogs = self.meta(request,"kindCatalogs").cloned();
+        let existing_compatibility = self.meta(request,"kindCompatibility").and_then(|value| value.as_array().cloned()).unwrap_or_default();
         let fragment_items = PUZZLE2D_IMPORT_COLLECTIONS.iter().try_fold(0usize, |total, key| total.checked_add(fragment.get(*key).and_then(Value::as_array).map_or(0, Vec::len)));
         let catalog_items = existing_catalogs.as_ref().map(|catalogs| ["nodes", "handles", "edges", "wires"].into_iter().map(|slice| catalogs.get(slice).and_then(Value::as_array).map_or(0, Vec::len)).sum::<usize>()).unwrap_or_default();
         self.decoded_items = match fragment_items.and_then(|items| items.checked_add(catalog_items)).and_then(|items| items.checked_add(existing_compatibility.len())) {
@@ -331,7 +323,7 @@ impl Puzzle2dImportJob {
 }
 
 impl Puzzle2dImportJob {
-    pub fn turn(&mut self, cx: &mut StepContext<'_>) -> crate::puzzle_job::JobTurn {
+    pub fn turn(&mut self, request:&ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>, cx: &mut StepContext<'_>) -> crate::puzzle_job::JobTurn {
         if self.closing || cx.is_cancelled() {
             return crate::puzzle_job::JobTurn::Cancelled;
         }
@@ -341,7 +333,7 @@ impl Puzzle2dImportJob {
         match self.stage {
             Puzzle2dImportStage::Decode => {
                 cx.set_stage("puzzle2d-import-decode");
-                if let Some(outcome) = self.decode() {
+                if let Some(outcome) = self.decode(request) {
                     return outcome;
                 }
                 self.stage = Puzzle2dImportStage::HandleKinds;
@@ -455,9 +447,7 @@ impl Puzzle2dImportJob {
                 cx.set_stage("puzzle2d-import-publish");
                 if !self.completed {
                     let mutations = std::mem::take(&mut self.mutations);
-                    let Some(completion) = self.completion.as_ref() else {
-                        return puzzle2d_job_fault("puzzle2d import lost its completion authority");
-                    };
+                    let completion=&request.completion;
                     if !completion.has_mounted_consumer() {
                         return puzzle2d_job_fault("puzzle2d import completion consumer is absent");
                     }
@@ -479,7 +469,7 @@ impl Puzzle2dImportJob {
 
 impl Puzzle2dImportJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step_value<'a>(&'a mut self, request:&ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
             crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
@@ -488,115 +478,69 @@ impl Puzzle2dImportJob {
             }
             crate::puzzle_job::OutboxPhase::Idle => {}
         }
-        let turn = if cx.fuel_exhausted() || cx.deadline_exceeded() { crate::puzzle_job::JobTurn::Yield } else { self.turn(cx) };
+        let turn = if cx.fuel_exhausted() || cx.deadline_exceeded() { crate::puzzle_job::JobTurn::Yield } else { self.turn(request,cx) };
         self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
-impl InteractiveJob for Puzzle2dImportJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
+impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dImportJob {
+    fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>,cx:&mut StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.outbox.borrow_outcome(descriptor)
     }
 
-    fn begin_close(&mut self) {
-        if std::mem::replace(&mut self.closing, true) {
-            return;
+    fn begin_close(&mut self){self.closing=true;}
+    fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if !self.staged{return Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Puzzle2dImportOwners>()+std::mem::size_of::<Option<Puzzle2dImportOwners>>()+std::mem::size_of::<bool>(),depth:1,..Default::default()})}
+        crate::puzzle_job::job_close_demands(&self.outbox,&self.owners,body)
+    }
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        self.closing=true;
+        if !self.staged{
+            let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+            return semio_framework_job::close_original_retained_step(cx,demand,|_|{
+                self.owners.stage(Puzzle2dImportOwners{fragment:self.fragment.take(),catalogs:std::mem::take(&mut self.catalogs),compatibility:std::mem::take(&mut self.compatibility),mutations:std::mem::take(&mut self.mutations),pending_completion_rejection:self.pending_completion_rejection.take()});self.staged=true;
+                semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}
+            })
         }
-        self.owners.stage(Puzzle2dImportOwners {
-            port: std::mem::take(&mut self.port),
-            media_json: self.media_json.take(),
-            snapshot: self.snapshot.take(),
-            fragment: self.fragment.take(),
-            catalogs: std::mem::take(&mut self.catalogs),
-            compatibility: std::mem::take(&mut self.compatibility),
-            mutations: std::mem::take(&mut self.mutations),
-            completion: self.completion.take(),
-            pending_completion_rejection: self.pending_completion_rejection.take(),
-        });
-    }
-
-    fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
-        semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
-            self.begin_close();
-            crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, cx)
-        })
-    }
-
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.copy_bytes)
-    }
-
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, maximum_copy_bytes)?.capacity_bytes)
-    }
-
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.release_bytes)
-    }
-
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.depth)
+        semio_framework_job::close_original_nested_step(cx,|cx,_|crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx))
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.outbox.terminal_is_empty() && self.owners.is_empty()
+        self.closing && self.staged && self.outbox.terminal_is_empty() && self.owners.is_empty()
     }
 }
 
-impl ArtifactReservedJob for Puzzle2dImportJob {}
 
 /// 📋️ One-step reserved copy/cut/paste job — the framework route is an empty stub unless the app owns
 /// this producer, so puzzle2d owning it is what makes `mod+c`/`mod+x`/`mod+v` and the context-menu
 /// clipboard rows do anything at all. Every arm answers in one step: a cut is copy-plus-delete as ONE
 /// artifact edit, and a paste is one insert whose clones the app re-selects.
-pub struct Puzzle2dClipboardJob {
-    pub tool_id: String,
-    pub labels: Option<&'static crate::editor::puzzle2d::terminology::Puzzle2dLabels>,
-    pub snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
-    pub raw_wire: Vec<u8>,
-    pub args: Option<semio_framework_value::DslValue>,
-    pub interaction: Option<semio_framework::InteractionState>,
-    pub hover: Option<semio_framework_plugin::app::InteractionHoverState>,
-    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
-    rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
-    outbox: crate::puzzle_job::JobOutbox,
-    closing: bool,
-    pub owners: crate::puzzle_job::WorkClosing<Puzzle2dClipboardOwners>,
+pub struct Puzzle2dClipboardJob{
+    rejection:Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
+    fault:Option<Vec<u8>>,
+    outbox:crate::puzzle_job::JobOutbox,
+    closing:bool,
+    staged:bool,
+    completed:bool,
+    owners:crate::puzzle_job::WorkClosing<Puzzle2dClipboardOwners>,
 }
-
-/// ♻️ The owners one `Puzzle2dClipboardJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
-struct Puzzle2dClipboardOwners {
-    pub args: Option<semio_framework_value::DslValue>,
-    pub interaction: Option<semio_framework::InteractionState>,
-    pub hover: Option<semio_framework_plugin::app::InteractionHoverState>,
-    pub tool_id: String,
-    pub snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
-    pub raw_wire: Vec<u8>,
-    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
-    rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
+struct Puzzle2dClipboardOwners{rejection:Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,fault:Option<Vec<u8>>}
+impl Default for Puzzle2dClipboardJob{
+    fn default()->Self{Self{rejection:None,fault:None,outbox:Default::default(),closing:false,staged:false,completed:false,owners:Default::default()}}
 }
-
-impl Puzzle2dClipboardJob {
-    pub fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>) -> Self {
-        let ArtifactReservedToolInput::Action { args, interaction, hover } = request.input else { unreachable!("clipboard routes carry action input") };
-        let labels = request.ui_axes.map(|(locale, terminology)| puzzle2d_labels(&semio_framework_plugin::ViewModel::new(locale, terminology)));
-        Self { tool_id: request.tool_id, labels, snapshot: Some(request.snapshot), raw_wire: request.raw_wire, args, interaction: Some(interaction), hover: Some(hover), completion: Some(request.completion), rejection: None, outbox: Default::default(), closing: false, owners: Default::default() }
-    }
-
-    pub fn emit(&mut self) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, NoDraftMutation>, Fault> {
-        let (Some(interaction), Some(hover)) = (self.interaction.as_ref(), self.hover.as_ref()) else {
-            return Ok(Emit::default());
+impl Puzzle2dClipboardJob{
+    pub fn emit(request:&ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, NoDraftMutation>, Fault> {
+        let Some(ArtifactReservedToolInput::Action{args,interaction})=request.input.as_ref()else{return Ok(Emit::default())};
+        let args=args.as_ref();let owned=request.snapshot.as_ref();let snapshot=owned.value();let state=interaction.get();
+        let selected=match state.selection.get(crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN).filter(|selection|!selection.ids.is_empty()){
+            Some(selection)=>puzzle2d_selected_node_ids(snapshot,&selection.ids),
+            None=>puzzle2d_selected_node_ids(snapshot,state.selection.values().flat_map(|selection|selection.ids.iter())),
         };
-        let args = self.args.as_ref();
-        let Some(owned) = self.snapshot.clone() else { return Ok(Emit::default()) };
-        let snapshot = owned.value();
-        let marks = Puzzle2dInteractionSnapshot::from_state(&interaction, &hover);
-        let selected = puzzle2d_selected_node_ids(snapshot, marks.selected_ids());
-        Ok(match self.tool_id.as_str() {
+        Ok(match request.tool_id.as_str() {
             "copy" => match puzzle2d_copy_fragment_from(snapshot, &selected) {
                 Ok(fragment) => Emit { effects: vec![Effect::ClipboardWrite { fragment }], ui_scope: UiDirtyScope::None, ..Default::default() },
                 Err(_) => Emit::default(),
@@ -604,10 +548,10 @@ impl Puzzle2dClipboardJob {
             "cut" => {
                 let Ok(fragment) = puzzle2d_copy_fragment_from(snapshot, &selected) else { return Ok(Emit::default()) };
                 if puzzle2d_selection_is_locked(snapshot, &selected) {
-                    let labels = self.labels.ok_or_else(|| Fault::from("puzzle2d clipboard notification requires the caller's explicit presentation axes"))?;
+                    let labels=request.ui_axes.map(|(locale,terminology)|crate::editor::puzzle2d::terminology::puzzle2d_labels_for_axes(locale,terminology)).ok_or_else(||Fault::from("puzzle2d clipboard notification requires the caller's explicit presentation axes"))?;
                     return Ok(Emit { effects: vec![Effect::Notify { message: labels.cut_locked.as_str().to_string() }], ui_scope: UiDirtyScope::None, ..Default::default() });
                 }
-                let mutations = puzzle2d_cut_operations_from(&owned, &selected);
+                let mutations = puzzle2d_cut_operations_from(owned, &selected);
                 let clear = puzzle2d_clear_selection_write(snapshot, &selected).into_iter().collect();
                 Emit { artifact_mutations: mutations, effects: vec![Effect::ClipboardWrite { fragment }], interaction_writes: clear, ..Default::default() }
             }
@@ -616,7 +560,7 @@ impl Puzzle2dClipboardJob {
                     return Ok(Emit::default());
                 };
                 let placement = PastePlacement::default();
-                match puzzle2d_paste_operations_on(&owned, &fragment, &placement) {
+                match puzzle2d_paste_operations_on(owned, &fragment, &placement) {
                     Ok((mutations, pasted)) => Emit { artifact_mutations: mutations, interaction_writes: vec![puzzle2d_selection_write(snapshot, &pasted)], ..Default::default() },
                     Err(_) => Emit::default(),
                 }
@@ -624,84 +568,60 @@ impl Puzzle2dClipboardJob {
             _ => Emit::default(),
         })
     }
-}
-
-impl Puzzle2dClipboardJob {
-    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        match self.outbox.phase(cx)? {
-            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
-            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
-                self.outbox.retire_step(cx)?;
-                return Ok(None);
-            }
-            crate::puzzle_job::OutboxPhase::Idle => {}
+    fn turn(&mut self,request:&mut ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>,cx:&mut StepContext<'_>)->Result<crate::puzzle_job::JobTurn,semio_framework_job::OriginalTurnFailure>{
+        use crate::puzzle_job::JobTurn;
+        use semio_framework_value::{RetainedCloneProgress,RetirementDemand};
+        if self.closing||cx.is_cancelled(){return Ok(JobTurn::Cancelled)}
+        if cx.should_yield(){return Ok(JobTurn::Yield)}
+        if self.fault.is_some(){
+            let bytes=2*std::mem::size_of::<Vec<u8>>();if !cx.retained_work_can_enter(RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}){return Ok(JobTurn::Yield)}
+            let source=self.fault.take().unwrap();cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(JobTurn::Fault(source))
         }
-        let turn = self.turn(cx);
-        self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
-    }
-}
-
-impl InteractiveJob for Puzzle2dClipboardJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
-
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
-        self.outbox.borrow_outcome(descriptor)
-    }
-
-    fn begin_close(&mut self) {
-        if std::mem::replace(&mut self.closing, true) {
-            return;
+        if self.rejection.is_some(){
+            let text=b"puzzle2d-clipboard-completion-rejected";
+            let bytes=text.len()+2*std::mem::size_of::<Vec<u8>>();
+            semio_framework_job::admit_original_construction(cx,&mut self.fault,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:text.len(),release_bytes:0,depth:1},|_|{
+                let source=text.to_vec();let capacity=source.capacity();semio_framework_value::RetainedWorkOutcome{result:Ok((source,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:capacity,..Default::default()})),work:1}
+            })?;
+            return Ok(JobTurn::Yield)
         }
-        self.owners.stage(Puzzle2dClipboardOwners { args: self.args.take(), interaction: self.interaction.take(), hover: self.hover.take(), tool_id: std::mem::take(&mut self.tool_id), snapshot: self.snapshot.take(), raw_wire: std::mem::take(&mut self.raw_wire), completion: self.completion.take(), rejection: self.rejection.take() });
+        if !request.raw_wire.is_empty(){
+            let bytes=2*std::mem::size_of::<Vec<u8>>();if !cx.retained_work_can_enter(RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}){return Ok(JobTurn::Yield)}
+            let source=std::mem::take(&mut request.raw_wire);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(JobTurn::Prepare(source))
+        }
+        if self.completed{return Ok(JobTurn::Complete)}
+        let emit=Self::emit(request);cx.consume_fuel(1);
+        if let Err(rejected)=request.completion.complete(emit,EphemeralEmit::default()){self.rejection=Some(rejected);return Ok(JobTurn::Yield)}
+        self.completed=true;Ok(JobTurn::Complete)
     }
-
-    fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
-        semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
-            self.begin_close();
-            crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, cx)
-        })
-    }
-
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.copy_bytes)
-    }
-
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, maximum_copy_bytes)?.capacity_bytes)
-    }
-
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.release_bytes)
-    }
-
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.depth)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.outbox.terminal_is_empty() && self.owners.is_empty()
+    fn step_value<'a>(&'a mut self,request:&mut ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>,cx:&mut StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+        match self.outbox.phase(cx)?{
+            crate::puzzle_job::OutboxPhase::Building=>return self.outbox.advance(cx).map_err(Into::into),
+            crate::puzzle_job::OutboxPhase::Delivered|crate::puzzle_job::OutboxPhase::Retiring=>{self.outbox.retire_step(cx)?;return Ok(None)}
+            crate::puzzle_job::OutboxPhase::Idle=>{}
+        }
+        let turn=self.turn(request,cx)?;self.outbox.settle(turn,cx).map_err(Into::into)
     }
 }
-
-impl Puzzle2dClipboardJob {
-    pub fn turn(&mut self, cx: &StepContext<'_>) -> crate::puzzle_job::JobTurn {
-        if self.closing || cx.is_cancelled() {
-            return crate::puzzle_job::JobTurn::Cancelled;
-        }
-        if !self.raw_wire.is_empty() {
-            return crate::puzzle_job::JobTurn::Prepare(std::mem::take(&mut self.raw_wire));
-        }
-        let emit = self.emit();
-        let Some(completion) = self.completion.as_ref() else { return crate::puzzle_job::JobTurn::Fault(b"puzzle2d-clipboard-completion-owner".to_vec()) };
-        if let Err(rejected) = completion.complete(emit, EphemeralEmit::default()) {
-            self.rejection = Some(rejected);
-            return crate::puzzle_job::JobTurn::Fault(b"puzzle2d-clipboard-completion-rejected".to_vec());
-        }
-        crate::puzzle_job::JobTurn::Complete
+impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dClipboardJob{
+    fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>,cx:&mut StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError>{self.outbox.borrow_outcome(descriptor)}
+    fn begin_close(&mut self){self.closing=true;}
+    fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if !self.staged{return Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Puzzle2dClipboardOwners>()+std::mem::size_of::<Option<Puzzle2dClipboardOwners>>()+std::mem::size_of::<bool>(),depth:1,..Default::default()})}
+        crate::puzzle_job::job_close_demands(&self.outbox,&self.owners,body)
     }
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        self.closing=true;if !self.staged{
+            let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+            return semio_framework_job::close_original_retained_step(cx,demand,|_|{
+                self.owners.stage(Puzzle2dClipboardOwners{rejection:self.rejection.take(),fault:self.fault.take()});self.staged=true;
+                semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}
+            })
+        }
+        semio_framework_job::close_original_nested_step(cx,|cx,_|crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx))
+    }
+    fn terminal_is_empty(&self)->bool{self.closing&&self.staged&&self.outbox.terminal_is_empty()&&self.owners.is_empty()}
 }
-
-impl ArtifactReservedJob for Puzzle2dClipboardJob {}
 //#endregion 🧵️ReservedJobs
 //#endregion 🔖️PlayApp

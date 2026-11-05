@@ -96,7 +96,7 @@ impl EquationRetainedCommandWork {
                 Emit::mutations(edit_equation::equation_graph_edit_leaves(&source.graph, &graph).into_iter().chain(edit_equation::equation_point_edit_leaves(&source.geometry.points, &std::mem::take(&mut self.points))).collect())
             }
             EquationCommand::NodeGraphViewport(payload) => {
-                let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("equation-graph-window-context-required"))?;
+                let view = context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("equation-graph-window-context-required"))?;
                 let mut emit = Emit::default();
                 emit.window_config_mutations.push(graph_window::config::addressed(view, EquationGraphWindowConfigMutation::SetCamera(graph_window::config::SetCamera {
                     camera: EquationCamera { x: payload.viewport.x, y: payload.viewport.y, zoom: payload.viewport.zoom },

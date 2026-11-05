@@ -54,5 +54,10 @@
   "expectedSchemas": [
     "count.set-count",
     "label.set-label"
-  ]
+  ],
+  "acknowledgement": {
+    "maximumItems": 1,
+    "preserveOwnedChildDuringProducerRetirement": true,
+    "chargeReceiptExactlyOnce": true
+  }
 }

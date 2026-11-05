@@ -22,6 +22,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-plugin-reactor-receiving-source = { path = "../../📥️receiving/🎟️source/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-staged-forms = { path = "../../📥️receiving/📝️forms/📦️packages/🦀️rust" }
 semio-framework-ui-contract-validation = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
 
 semio-framework-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }

@@ -346,6 +346,12 @@ mod remedy_latency {
 semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory!(En1992BoundedCommandJobFactory, En1992PlayApp);
 
 impl semio_s_plugin_norm_app_surface::NormRetainedEditor for En1992PlayApp {
+    fn inspector_rules() -> &'static semio_s_plugin_norm_app_surface::NormEditRules { &semio_s_artifact_norm_en1992_mutations::EDIT_RULES }
+
+    fn inspector_resolve(document: &Self::Snapshot, edit: &semio_s_plugin_norm_app_surface::NormEdit) -> Result<Vec<Self::Mutation>, String> {
+        semio_s_artifact_norm_en1992_mutations::resolve_edit(document, edit)
+    }
+
     type Family = En1992Family;
 
     type ResultsWindowConfigOwner = checks::ChecksWindowConfigOwner;
@@ -365,6 +371,10 @@ impl semio_s_plugin_norm_app_surface::NormRetainedEditor for En1992PlayApp {
             En1992Command::SetSelectedCheckIndex(payload) => semio_s_plugin_norm_app_surface::live_check_focus_effects::<Self>(document, payload.index, checks::INTERACTION_DOMAIN),
             _ => Vec::new(),
         }
+    }
+
+    fn view_focus_effects(command: &Self::Command, document: &Self::Snapshot, transient: &Self::Transient, interaction: &protocol::InteractionState) -> Vec<semio_framework_plugin::Effect> {
+        semio_s_plugin_norm_app_surface::live_view_focus_effects::<Self>(command, document, transient, interaction, checks::INTERACTION_DOMAIN)
     }
 
     fn dispatch_retained(command: &En1992Command, doc: &ArtifactView<'_, En1992Snapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1992Mutation, NoConfigMutation, NoDraftMutation>, Fault> {

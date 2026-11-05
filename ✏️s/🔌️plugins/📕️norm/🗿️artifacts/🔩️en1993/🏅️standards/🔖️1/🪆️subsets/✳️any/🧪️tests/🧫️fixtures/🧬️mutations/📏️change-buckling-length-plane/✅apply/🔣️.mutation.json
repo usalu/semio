@@ -1,6 +1,6 @@
 {
   "ChangeBucklingLengthPlane": {
-    "id": "frame-action-1",
-    "newPlane": "NodalMoment"
+    "id": "buckling-length-1",
+    "newPlane": "MinorAxis"
   }
 }

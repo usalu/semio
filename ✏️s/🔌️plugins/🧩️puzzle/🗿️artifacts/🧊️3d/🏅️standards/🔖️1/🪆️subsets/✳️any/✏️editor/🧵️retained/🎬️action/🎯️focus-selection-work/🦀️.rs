@@ -82,7 +82,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction, hover: _hover, context, .. } = *input;
-        let view_state = context.and_then(|context| context.view_state.as_ref());
+        let view_state = context.and_then(|context| context.view_state.as_deref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
         match self.stage {
             Puzzle3dFocusSelectionStage::Selection => {

@@ -4,10 +4,11 @@ use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_editor::commands::merge_down::*;
 use protocol::{ColdMutation, Mutation};
-use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_raster_raster_model::find_layer;
-use semio_framework_pixels::{RasterImage,png_encoding::PngEncodeJob};
-fn fixture()->serde_json::Value {serde_json::from_str(fixture_text!("../../../../🎮️commands/🫳️merge-down/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+use semio_framework_pixels::RasterImage;
+use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+#[path="../../🥞️flatten-layers/🧪️tests/🎟️testkit/🦀️.rs"]mod funded;
+fn fixture()->serde_json::Value {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn document(layers:&serde_json::Value,fixture:&serde_json::Value)->RasterSnapshot {
     let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
     document.layers=semio_framework_pack_json::from_json_str(&layers.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -19,7 +20,7 @@ fn document(layers:&serde_json::Value,fixture:&serde_json::Value)->RasterSnapsho
     document
 }
 fn composite(document:&RasterSnapshot)->semio_framework_pixels::compositing::layers::RasterStackResult {
-    let mut job=semio_s_artifact_raster_raster_io::raster_composite_job(document).unwrap();while !semio_s_artifact_raster_raster_io::advance_stack(&mut job,1).unwrap().done {}job.into_result().unwrap()
+    funded::composite(document)
 }
 fn retire(document:RasterSnapshot) {semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);}
 #[test]
@@ -32,11 +33,9 @@ fn merge_preserves_pixels_parent_siblings_shared_assets_and_exact_inverse() {
         let command=MergeDown {layer_id:row["layerId"].as_str().unwrap().into()};
         let (parent,index,layers)=semio_s_artifact_raster_raster_editor::merge_down_plan(&document,&command.layer_id).unwrap();
         assert_eq!(serde_json::to_value(parent).unwrap(),row["parentId"]);assert_eq!(index,row["index"].as_u64().unwrap() as usize);assert_eq!(layers.len(),2);
-        let mut preparation=prepare(&command,&document).unwrap();while !preparation.advance(&document,1).unwrap() {}
-        let mut job=preparation.into_job().unwrap();while !semio_s_artifact_raster_raster_io::advance_stack(&mut job,1).unwrap().done {}let result=job.into_result().unwrap();
-        assert_eq!(serde_json::to_value(&result.image.pixels).unwrap(),row.get("expectedPixels").unwrap_or(&fixture["expected"]["pixels"]).clone());assert_eq!(result.origin,[fixture["expected"]["origin"][0].as_f64().unwrap(),fixture["expected"]["origin"][1].as_f64().unwrap()]);
-        let mut encoder=PngEncodeJob::new(result.image).unwrap();while !encoder.advance().unwrap().done {}
-        let emit=publish(encoder.into_result().unwrap(),result.origin,&command,&document).unwrap();let mut inverses=Vec::new();
+        let retained=semio_s_artifact_raster_raster_editor::RasterCommand::MergeDown(command);let emit=funded::bake::<true>(&retained,&document,None).unwrap().unwrap();let mut inverses=Vec::new();let mut caller=OriginalWorkFixture::new();
+        let image=emit.artifact_mutations.iter().find_map(|mutation|if let RasterMutation::AddLayerAsset(add)=mutation{Some(add.asset.image())}else{None}).unwrap();assert_eq!(serde_json::to_value(&image.frames[0].rgba8).unwrap(),row.get("expectedPixels").unwrap_or(&fixture["expected"]["pixels"]).clone());
+        let layer=emit.artifact_mutations.iter().find_map(|mutation|if let RasterMutation::CreateLayer(create)=mutation{Some(create.layer.as_ref())}else{None}).unwrap();let RasterLayerNode::Pixel{transform,..}=layer else{panic!("merged pixel layer")};assert_eq!([transform.x-f64::from(image.width)/2.0,transform.y-f64::from(image.height)/2.0],[fixture["expected"]["origin"][0].as_f64().unwrap(),fixture["expected"]["origin"][1].as_f64().unwrap()]);
         for mutation in &emit.artifact_mutations {
             inverses.push(mutation.inverse(&document).expect("valid retained mutation inverse fixture"));let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));
         }
@@ -44,8 +43,8 @@ fn merge_preserves_pixels_parent_siblings_shared_assets_and_exact_inverse() {
         for key in row.get("removedAssets").unwrap_or(&fixture["expected"]["removedAssets"]).as_array().unwrap() {assert!(!document.assets.contains_key(key.as_str().unwrap()));}
         assert_eq!(document.assets.len(),before.assets.len()-row.get("removedAssets").unwrap_or(&fixture["expected"]["removedAssets"]).as_array().unwrap().len()+1);let after=composite(&document);assert_eq!(after.origin,rendered.origin);assert_eq!(after.image,rendered.image);
         assert!(find_layer(&document.layers,"lower").is_none());assert!(matches!(find_layer(&document.layers,"upper"),Some(RasterLayerNode::Pixel {..})));assert!(find_layer(&document.layers,"outside").is_some());
-        for inverse in inverses.into_iter().rev().flatten() {let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,&inverse).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));inverse.retire_cold();}
-        assert_eq!(document,before);for mutation in emit.artifact_mutations {mutation.retire_cold();}retire(document);retire(before);
+        for inverse in inverses.into_iter().rev().flatten() {let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,&inverse).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));caller.retire_owned(inverse,funded::loan());}
+        assert_eq!(document,before);caller.retire_owned(emit,funded::loan());caller.finish();retire(document);retire(before);
     }
 }
 #[test]
@@ -57,9 +56,9 @@ fn unsupported_merge_and_cancel_leave_the_document_intact() {
             let node=layers.as_array_mut().unwrap().iter_mut().find(|node|node["id"].as_str()==Some(invalid["target"].as_str().unwrap_or("upper"))).unwrap().as_object_mut().unwrap();
             node.extend(patch.clone());if node["kind"]=="adjustment" {for field in ["width","height","imageKey","mask"] {node.remove(field);}}
         }
-        let document=document(&layers,&fixture);assert!(semio_s_artifact_raster_raster_editor::merge_down_plan(&document,invalid["id"].as_str().unwrap()).is_err());retire(document);
+        let document=document(&layers,&fixture);let before=document.clone();assert!(semio_s_artifact_raster_raster_editor::merge_down_plan(&document,invalid["id"].as_str().unwrap()).is_err());let command=semio_s_artifact_raster_raster_editor::RasterCommand::MergeDown(MergeDown{layer_id:invalid["id"].as_str().unwrap().into()});assert!(funded::bake::<true>(&command,&document,None).is_err());assert_eq!(document,before);retire(document);retire(before);
     }
-    let document=document(&fixture["cases"][0]["layers"],&fixture);let before=document.clone();let mut preparation=prepare(&MergeDown {layer_id:"upper".into()},&document).unwrap();preparation.cancel();assert!(preparation.advance(&document,1).is_err());assert_eq!(document,before);retire(document);retire(before);
+    let document=document(&fixture["cases"][0]["layers"],&fixture);let before=document.clone();let command=semio_s_artifact_raster_raster_editor::RasterCommand::MergeDown(MergeDown{layer_id:"upper".into()});for cut in [0,1,2,8]{assert!(funded::bake::<true>(&command,&document,Some(cut)).unwrap().is_none());assert_eq!(document,before);}retire(document);retire(before);
 }
 
 fn fill_assets(document:&mut RasterSnapshot,capacity:usize) {
@@ -94,6 +93,6 @@ fn merge_refuses_ancestor_and_descendant_protection() {
     for row in fixture["protected"].as_array().unwrap() {
         let document=document(&row["layers"],&fixture);
         let Err(error)=semio_s_artifact_raster_raster_editor::merge_down_plan(&document,row["layerId"].as_str().unwrap()) else {panic!("protected merge admitted")};
-        assert!(error.message.contains("raster-layer-locked"));retire(document);
+        assert!(error.message.contains("raster-layer-locked"));let command=semio_s_artifact_raster_raster_editor::RasterCommand::MergeDown(MergeDown{layer_id:row["layerId"].as_str().unwrap().into()});let actual=funded::bake::<true>(&command,&document,None).unwrap_err();assert!(actual.contains("raster-layer-locked"));retire(document);
     }
 }

@@ -1,8 +1,8 @@
 {
   "assets": {
     "entries": {
-      "pixels-paint-01ea8a91d34c90b8": null,
-      "pixels-paint-c8c9f872e5a27102": {
+      "image-e99486b5afaab5a1": null,
+      "image-a928190fbff65fb1": {
         "schema": "stdio.semio.image",
         "width": 6,
         "height": 4,
@@ -133,7 +133,7 @@
           "opacity": null,
           "pixelContent": {
             "height": 4,
-            "imageKey": "pixels-paint-c8c9f872e5a27102",
+            "imageKey": "image-a928190fbff65fb1",
             "width": 6
           },
           "transformX": null,

@@ -1,0 +1,67 @@
+{
+  "schema": {
+    "type": "array",
+    "minItems": 4,
+    "items": {
+      "type": "object",
+      "required": [
+        "name",
+        "identity",
+        "otherPlugin",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "identity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "otherPlugin": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expected": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "same document",
+      "identity": "doc-a",
+      "otherPlugin": null,
+      "expected": true
+    },
+    {
+      "name": "wrong document",
+      "identity": "doc-b",
+      "otherPlugin": null,
+      "expected": false
+    },
+    {
+      "name": "no document",
+      "identity": null,
+      "otherPlugin": null,
+      "expected": false
+    },
+    {
+      "name": "another plugin same instance number",
+      "identity": "doc-a",
+      "otherPlugin": "other",
+      "expected": true
+    },
+    {
+      "name": "same plugin reused instance",
+      "identity": "doc-a",
+      "otherPlugin": "stdio",
+      "expected": false
+    }
+  ]
+}

@@ -323,6 +323,7 @@ fn wit_event_to_kernel(event: semio_framework_plugin_abi::wasip2::exports::semio
         W::QuotaChanged(payload) => Event::QuotaChanged { quotas: decode_wire_quotas(&payload.quotas) },
         W::UiIntent(payload) => Event::UiIntent { instance: semio_framework::kernel::PluginInstanceId(payload.instance.to_string()), intent: payload.intent },
         W::SurfaceVisible(payload) => Event::SurfaceVisible { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), body_key: payload.body_key, view_state: payload.view_state },
+        W::StagedFormRequested(payload) => Event::StagedFormRequested { instance: payload.instance, surface: payload.surface, body_key: payload.body_key, request: payload.request },
         W::SurfaceHidden(payload) => Event::SurfaceHidden { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface) },
         W::SurfaceResized(payload) => Event::SurfaceResized { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), width: payload.width, height: payload.height },
         W::PatchAck(payload) => Event::PatchAck { receipt: wit_patch_receipt_to_kernel(payload.receipt), surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), revision: payload.revision },

@@ -2,53 +2,28 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/editor/mask-from-selection.json",
   "title": "Create Layer Mask From Selection",
-  "description": "Creates an undoable image-backed mask using ordered non-overlapping [offset,length,coverage] spans in the selected layer image coordinates. Existing mask changes during preparation conflict; source pixels are preserved.",
+  "description": "Creates an undoable image-backed mask from the completed authoritative pixel selection. The retained operation binds the source image, intrinsic extent, selection, and existing mask before bounded raw image creation.",
   "type": "object",
   "additionalProperties": false,
+  "x-semio-execution": {"shape":"resumable","maximumRawBytes":139264,"maximumOutputBytes":268541952,"publicationLane":"artifact"},
   "required": [
     "layerId",
-    "expectedImageKey",
-    "selection"
+    "expectedImageKey"
   ],
   "properties": {
     "layerId": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "maxLength": 4096,
+      "x-semio-maximumUtf8Bytes": 4096
     },
     "expectedImageKey": {
       "type": [
         "string",
         "null"
-      ]
-    },
-    "selection": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "start",
-          "length",
-          "coverage"
-        ],
-        "properties": {
-          "start": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 16777215
-          },
-          "length": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 16777216
-          },
-          "coverage": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 255
-          }
-        }
-      }
+      ],
+      "maxLength": 4096,
+      "x-semio-maximumUtf8Bytes": 4096
     }
   }
 }

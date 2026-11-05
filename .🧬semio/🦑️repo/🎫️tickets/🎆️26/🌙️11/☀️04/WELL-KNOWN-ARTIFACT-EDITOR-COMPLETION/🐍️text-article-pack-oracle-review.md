@@ -1,0 +1,11 @@
+# Text Article Pack Oracle Review
+
+Read-only framing/spec review before native canonical evidence. No Pack bytes or Python code generated or changed.
+
+The Text oracle's parse_pack/pack_bytes delegate to the independent shared Semio record_document Python implementation. It loads Text's committed record-spec JSON, whose envelope is already stdio.semio.text and whose schema hash is f24e33463f7c6bbef4de7f011a236d745d7dce8940c8998612f2dbd4314e818a. The graph has Snapshot schema0/runs1; Run language0/content1/marks2; Mark kind0/href1 with bold0/italic1/code2/link3. Current Rust DslRecord types have the same declared field sequence and vocabulary. No concrete field-layout difference was found. Native exported spec/hash equality remains execution-gated.
+
+The committed old Pack contains an obsolete outer token and obsolete embedded schema value. Updating embedded Snapshot.schema changes actual record content: deterministic text/symbol interning, compressed document frames, CRC32C, manifest lengths/spans and BLAKE3 content hash can all change. Therefore repairing only outer prefix or a literal schema substring is invalid. Full current native encoding of the preserved384-run/344-mark typed article must author the complete replacement; the independent Python encoder must then agree byte-for-byte. The schema graph hash need not change merely because the document's schema string value changes, since the graph describes field structure rather than value.
+
+Python's Pack token is already derived from the current record-spec envelope, while its DSL_PREAMBLE is still old. The eventual minimum known oracle correction includes that DSL constant. Any additional record/container differences should be grounded in the first actual native mismatch, not guessed or masked by loosening validators.
+
+The shared independent implementation uses Python standard struct/json and system zlib for raw inflate. CRC32C, BLAKE3, deterministic fixed-Huffman deflate and record/container encoding are independently implemented from their format documents, with zlib as the external inflate reference. It does not invoke Rust codec functions. This is a second implementation for the Semio-native grammar; it must retain meaningful exact pair identity and all article counts. No new third-party dependency is proposed.

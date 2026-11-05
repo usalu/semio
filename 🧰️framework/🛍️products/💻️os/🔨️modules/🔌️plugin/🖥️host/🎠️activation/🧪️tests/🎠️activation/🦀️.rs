@@ -80,8 +80,8 @@ async fn artifact_kind_app_ids_reach_the_guest_as_the_declared_activation_event(
     assert_eq!(activation_event_for_app_id("home"), None, "a bare landing app id declares no activation event");
     assert_eq!(activation_event_for_app_id("s.beta.sheet@1/*"), None, "a coordinate without a role suffix is not a surface id");
     assert!(activation_turn_event("home").is_none());
-    let event = activation_turn_event("s.beta.sheet@1/*#editor").expect("a surface app id produces one Activate event");
-    match semio_framework_plugin_host_wit::conversion::kernel_event_to_wit(&event, 7).await {
+    let mut event = activation_turn_event("s.beta.sheet@1/*#editor").expect("a surface app id produces one Activate event");
+    match semio_framework_plugin_host_wit::conversion::kernel_event_to_wit(&mut event, 7).await.unwrap() {
         semio_framework_plugin_host_wit::wit_events::Event::Activate(activate) => {
             assert_eq!(activate.instance, 7);
             match activate.reason {

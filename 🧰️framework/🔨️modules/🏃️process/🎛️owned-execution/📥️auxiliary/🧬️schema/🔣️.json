@@ -73,6 +73,49 @@
           "const": 20000
         }
       }
+    },
+    "PublicationPhase": {
+      "enum": [
+        "pipe-missing",
+        "error-event",
+        "close-event",
+        "end-callback",
+        "end-call"
+      ]
+    },
+    "PublicationFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "descriptor",
+        "phase",
+        "code",
+        "syscall"
+      ],
+      "properties": {
+        "operation": {
+          "const": "auxiliary-publication"
+        },
+        "descriptor": {
+          "const": 3
+        },
+        "phase": {
+          "$ref": "#/definitions/PublicationPhase"
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "syscall": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     }
   }
 }

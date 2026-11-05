@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {"artifact": "⚖️en1990", "patch": "En1990TestSeriesPatch", "value": {}, "valid": true},
+    {"artifact": "⚖️en1990", "patch": "En1990TestSeriesPatch", "value": {"theoryVariation": 0.15}, "valid": true},
+    {"artifact": "⚖️en1990", "patch": "En1990ReliabilityAnalysisPatch", "value": {"memberId": "m1"}, "valid": true},
+    {"artifact": "🔩️en1993", "patch": "En1993BucklingLengthPatch", "value": {"plane": "MinorAxis"}, "valid": true},
+    {"artifact": "🔩️en1993", "patch": "En1993BucklingLengthPatch", "value": {"plane": "NodalMoment"}, "valid": false},
+    {"artifact": "🔩️en1993", "patch": "En1993BridgeFatiguePatch", "value": {"consequence": "High"}, "valid": true},
+    {"artifact": "🔩️en1993", "patch": "En1993BridgeFatiguePatch", "value": {"consequence": "DamageTolerant"}, "valid": false}
+  ]
+}

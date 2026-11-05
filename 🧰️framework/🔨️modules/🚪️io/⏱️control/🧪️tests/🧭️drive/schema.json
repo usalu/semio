@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.native.snapshot-cursor-drive.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "admitted",
+          "steps",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "work",
+                "items",
+                "result",
+                "errors"
+              ],
+              "properties": {
+                "work": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "result": {
+                  "enum": [
+                    "pending",
+                    "ready",
+                    "failed"
+                  ]
+                },
+                "errors": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "primary",
+                      "quote",
+                      "allocation"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "producerWork",
+              "items",
+              "calls",
+              "errors",
+              "cursorRetained"
+            ],
+            "properties": {
+              "producerWork": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "calls": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "errors": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "primary",
+                    "quote",
+                    "allocation"
+                  ]
+                }
+              },
+              "cursorRetained": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

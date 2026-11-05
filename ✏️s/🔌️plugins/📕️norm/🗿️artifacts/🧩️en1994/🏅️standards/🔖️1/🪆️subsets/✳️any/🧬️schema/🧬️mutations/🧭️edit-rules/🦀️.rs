@@ -17,6 +17,7 @@ pub const OWNED_ROWS: &[OwnedRows] = &[OwnedRows { owner: "beams", rows: "studs"
 
 /// 📚 Every path a En1994 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field_arguments: &[],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "beams[].transverseAsM2PerM", kind: "change-beam-transverse-as", selectors: &[SelectorKey::Id("id")], value: "newTransverseAsM2PerM" },

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "owners": [
+    {
+      "entry": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+      "maximumBytes": 262144
+    },
+    {
+      "entry": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🦀️.rs",
+      "maximumBytes": 262144
+    }
+  ]
+}

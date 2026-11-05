@@ -1,0 +1,2380 @@
+{
+  "schemaVersion": 1,
+  "families": 15,
+  "rules": [
+    {
+      "family": "⚖️en1990",
+      "path": "accidentals",
+      "kind": "insert-accidental",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣insert-accidental/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "bridgeSls",
+      "kind": "insert-bridge-sls",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️insert-bridge-sls/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "cases",
+      "kind": "insert-case",
+      "selectors": [],
+      "index": "index",
+      "item": "case",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "effects",
+      "kind": "insert-effect",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎insert-effect/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "factorOverrides",
+      "kind": "insert-factor-override",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️insert-factor-override/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "fatigueSpectra",
+      "kind": "insert-fatigue-spectrum",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️insert-fatigue-spectrum/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "members",
+      "kind": "insert-member",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩insert-member/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "permanents",
+      "kind": "insert-permanent",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-permanent/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "placements",
+      "kind": "insert-placement",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-placement/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "reliabilityAnalyses",
+      "kind": "insert-reliability-analysis",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️insert-reliability-analysis/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "seismics",
+      "kind": "insert-seismic",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌋insert-seismic/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "testSeries",
+      "kind": "insert-test-series",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️insert-test-series/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "trafficGroups",
+      "kind": "insert-traffic-group",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️insert-traffic-group/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚖️en1990",
+      "path": "variables",
+      "kind": "insert-variable",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥insert-variable/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "anchors",
+      "kind": "insert-anchor",
+      "selectors": [],
+      "index": "index",
+      "item": "anchor",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-anchor/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "anchors[].tests",
+      "kind": "insert-anchor-test",
+      "selectors": [
+        "anchorId"
+      ],
+      "index": "index",
+      "item": "anchorTest",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-anchor-test/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "cases",
+      "kind": "insert-case",
+      "selectors": [],
+      "index": "index",
+      "item": "case",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "characteristicBases",
+      "kind": "insert-characteristic-basis",
+      "selectors": [],
+      "index": "index",
+      "item": "characteristicBasis",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-characteristic-basis/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "embeddedWalls",
+      "kind": "insert-embedded-wall",
+      "selectors": [],
+      "index": "index",
+      "item": "embeddedWall",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-embedded-wall/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "footings",
+      "kind": "insert-footing",
+      "selectors": [],
+      "index": "index",
+      "item": "footing",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-footing/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "footings[].loadCases",
+      "kind": "insert-load-case",
+      "selectors": [
+        "footingId"
+      ],
+      "index": "index",
+      "item": "loadCase",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-load-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "investigations",
+      "kind": "insert-ground-investigation",
+      "selectors": [],
+      "index": "index",
+      "item": "investigation",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-ground-investigation/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "investigations[].readings",
+      "kind": "insert-ground-investigation-reading",
+      "selectors": [
+        "investigationId"
+      ],
+      "index": "index",
+      "item": "investigationReading",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-ground-investigation-reading/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "labTests",
+      "kind": "insert-lab-test",
+      "selectors": [],
+      "index": "index",
+      "item": "labTest",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-lab-test/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "labTests[].points",
+      "kind": "insert-lab-point",
+      "selectors": [
+        "labTestId"
+      ],
+      "index": "index",
+      "item": "labPoint",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-lab-point/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "layers",
+      "kind": "insert-layer",
+      "selectors": [],
+      "index": "index",
+      "item": "layer",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-layer/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "layerWaters",
+      "kind": "insert-layer-water",
+      "selectors": [],
+      "index": "index",
+      "item": "layerWater",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-layer-water/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "pileGroups",
+      "kind": "insert-pile-group",
+      "selectors": [],
+      "index": "index",
+      "item": "pileGroup",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-pile-group/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "piles",
+      "kind": "insert-pile",
+      "selectors": [],
+      "index": "index",
+      "item": "pile",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥insert-pile/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "piles[].testProfiles",
+      "kind": "insert-test-profile",
+      "selectors": [
+        "pileId"
+      ],
+      "index": "index",
+      "item": "testProfile",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-test-profile/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "placements",
+      "kind": "insert-placement",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-placement/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "retainingWalls",
+      "kind": "insert-retaining-wall",
+      "selectors": [],
+      "index": "index",
+      "item": "retainingWall",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-retaining-wall/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "slopes",
+      "kind": "insert-slope",
+      "selectors": [],
+      "index": "index",
+      "item": "slope",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-slope/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌍️en1997",
+      "path": "upliftCases",
+      "kind": "insert-uplift-case",
+      "selectors": [],
+      "index": "index",
+      "item": "upliftCase",
+      "source": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-uplift-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌬️din16798",
+      "path": "ventSystems",
+      "kind": "insert-vent-system",
+      "selectors": [],
+      "index": "index",
+      "item": "vent",
+      "source": "🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕️insert-vent-system/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🌬️din16798",
+      "path": "zones",
+      "kind": "insert-zone",
+      "selectors": [],
+      "index": "index",
+      "item": "zone",
+      "source": "🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-zone/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "accidentalCases",
+      "kind": "insert-accidental-case",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-accidental-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "bridgeLanes",
+      "kind": "insert-bridge-lane",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️insert-bridge-lane/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "bulkSolids",
+      "kind": "insert-bulk-solid",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌾️insert-bulk-solid/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "cases",
+      "kind": "insert-case",
+      "selectors": [],
+      "index": "index",
+      "item": "case",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "constructionLoads",
+      "kind": "insert-construction-load",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️insert-construction-load/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "constructionStages",
+      "kind": "insert-construction-stage",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️insert-construction-stage/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "craneHoists",
+      "kind": "insert-crane-hoist",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️insert-crane-hoist/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "derailmentCases",
+      "kind": "insert-derailment",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚆️insert-derailment/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "dustExplosions",
+      "kind": "insert-dust-explosion",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️insert-dust-explosion/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "dynamicElements",
+      "kind": "insert-dynamic-element",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️insert-dynamic-element/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "executionImperfections",
+      "kind": "insert-imperfection",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️insert-imperfection/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "fallingLoads",
+      "kind": "insert-falling",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️insert-falling/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "fatigueModels",
+      "kind": "insert-fatigue-model",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️insert-fatigue-model/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "floors",
+      "kind": "insert-floor",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-floor/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "footbridges",
+      "kind": "insert-footbridge",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚶️insert-footbridge/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "helicopterLandings",
+      "kind": "insert-helicopter",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚁️insert-helicopter/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "impactActions",
+      "kind": "insert-impact-action",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥️insert-impact-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "internalExplosions",
+      "kind": "insert-internal-explosion",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨️insert-internal-explosion/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "loadDispersals",
+      "kind": "insert-load-dispersal",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️insert-load-dispersal/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "localFires",
+      "kind": "insert-local-fire",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️insert-local-fire/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "placements",
+      "kind": "insert-placement",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-placement/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "railDerailments",
+      "kind": "insert-rail-derailment",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️insert-rail-derailment/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "railDynamics",
+      "kind": "insert-rail-dynamic",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️insert-rail-dynamic/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "railLoadGroups",
+      "kind": "insert-rail-load-group",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️insert-rail-load-group/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "roofs",
+      "kind": "insert-roof",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-roof/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "roofSurfaces",
+      "kind": "insert-roof-surface",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️insert-roof-surface/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "rotatingMachines",
+      "kind": "insert-rotating-machine",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️insert-rotating-machine/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "selfWeightElements",
+      "kind": "insert-self-weight-element",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-self-weight-element/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "snowGuards",
+      "kind": "insert-snow-guard",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️insert-snow-guard/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "specialVehicles",
+      "kind": "insert-special-vehicle",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚛️insert-special-vehicle/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "supportCollisions",
+      "kind": "insert-support-collision",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️insert-support-collision/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "thermalSections",
+      "kind": "insert-thermal-section",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️insert-thermal-section/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "tieRuns",
+      "kind": "insert-tie-run",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️insert-tie-run/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "windBridges",
+      "kind": "insert-wind-bridge",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️insert-wind-bridge/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏋️en1991",
+      "path": "windFaces",
+      "kind": "insert-wind-face",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-wind-face/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "anchors",
+      "kind": "insert-anchor",
+      "selectors": [],
+      "index": "index",
+      "item": "anchor",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓️insert-anchor/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "anchors[].actions",
+      "kind": "insert-anchor-action",
+      "selectors": [
+        "anchorId"
+      ],
+      "index": "index",
+      "item": "anchorAction",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️insert-anchor-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "cases",
+      "kind": "insert-case",
+      "selectors": [],
+      "index": "index",
+      "item": "case",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "concreteGrades",
+      "kind": "insert-concrete-grade",
+      "selectors": [],
+      "index": "index",
+      "item": "concreteGrade",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️insert-concrete-grade/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "members",
+      "kind": "insert-member",
+      "selectors": [],
+      "index": "index",
+      "item": "member",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "members[].actions",
+      "kind": "insert-action",
+      "selectors": [
+        "memberId"
+      ],
+      "index": "index",
+      "item": "action",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️insert-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "members[].bars",
+      "kind": "insert-bar-point",
+      "selectors": [
+        "memberId"
+      ],
+      "index": "index",
+      "item": "barPoint",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-bar-point/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "members[].longitudinal",
+      "kind": "insert-bar-layer",
+      "selectors": [
+        "memberId"
+      ],
+      "index": "index",
+      "item": "barLayer",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️insert-bar-layer/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "members[].openings",
+      "kind": "insert-opening",
+      "selectors": [
+        "memberId"
+      ],
+      "index": "index",
+      "item": "opening",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️insert-opening/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "members[].sectionPoints",
+      "kind": "insert-section-point",
+      "selectors": [
+        "memberId"
+      ],
+      "index": "index",
+      "item": "sectionPoint",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️insert-section-point/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "members[].studRows",
+      "kind": "insert-stud-row",
+      "selectors": [
+        "memberId"
+      ],
+      "index": "index",
+      "item": "studRow",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️insert-stud-row/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "members[].tendonPoints",
+      "kind": "insert-tendon-point",
+      "selectors": [
+        "memberId"
+      ],
+      "index": "index",
+      "item": "tendonPoint",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧬️insert-tendon-point/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "placements",
+      "kind": "insert-placement",
+      "selectors": [],
+      "index": "index",
+      "item": "placement",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-placement/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "prestressSteels",
+      "kind": "insert-prestress-steel",
+      "selectors": [],
+      "index": "index",
+      "item": "prestressSteel",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️insert-prestress-steel/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏛️en1992",
+      "path": "reinforcementGrades",
+      "kind": "insert-reinforcement-grade",
+      "selectors": [],
+      "index": "index",
+      "item": "reinforcementGrade",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️insert-reinforcement-grade/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🏭️vdi3805",
+      "path": "catalog.products",
+      "kind": "add-product",
+      "selectors": [],
+      "index": "index",
+      "item": "product",
+      "source": "🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️add-product/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "📇️iso16757",
+      "path": "catalogue.productClasses",
+      "kind": "introduce-product-class",
+      "selectors": [],
+      "index": "index",
+      "item": "productClass",
+      "source": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️introduce-product-class/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "📇️iso16757",
+      "path": "catalogue.productGroups",
+      "kind": "introduce-product-group",
+      "selectors": [],
+      "index": "index",
+      "item": "productGroup",
+      "source": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️introduce-product-group/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "📇️iso16757",
+      "path": "catalogue.productIndexes",
+      "kind": "introduce-product-index",
+      "selectors": [],
+      "index": "index",
+      "item": "productIndex",
+      "source": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎introduce-product-index/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "📇️iso16757",
+      "path": "catalogue.products",
+      "kind": "introduce-product",
+      "selectors": [],
+      "index": "index",
+      "item": "product",
+      "source": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️introduce-product/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "📇️iso16757",
+      "path": "catalogue.productSeries",
+      "kind": "introduce-product-series",
+      "selectors": [],
+      "index": "index",
+      "item": "productSeries",
+      "source": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚introduce-product-series/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "📇️iso16757",
+      "path": "catalogue.propertyDefinitions",
+      "kind": "introduce-property-definition",
+      "selectors": [],
+      "index": "index",
+      "item": "propertyDefinition",
+      "source": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️introduce-property-definition/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "📇️iso16757",
+      "path": "dictionary.subjects",
+      "kind": "introduce-subject",
+      "selectors": [],
+      "index": "index",
+      "item": "subject",
+      "source": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️introduce-subject/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "📇️iso16757",
+      "path": "selection.constraints",
+      "kind": "add-selection-constraint",
+      "selectors": [],
+      "index": "index",
+      "item": "constraint",
+      "source": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️add-selection-constraint/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "bridgeFatigue",
+      "kind": "insert-bridge-fatigue",
+      "selectors": [],
+      "index": "index",
+      "item": "bridgeFatigueItem",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-bridge-fatigue/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "bucklingLengths",
+      "kind": "insert-buckling-length",
+      "selectors": [],
+      "index": "index",
+      "item": "bucklingLength",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-buckling-length/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "builtUpMembers",
+      "kind": "insert-built-up-member",
+      "selectors": [],
+      "index": "index",
+      "item": "builtUpMember",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-built-up-member/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "coldFormedMembers",
+      "kind": "insert-cold-formed-member",
+      "selectors": [],
+      "index": "index",
+      "item": "coldFormedMember",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-cold-formed-member/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "coldFormedMembers[].actions",
+      "kind": "insert-cf-action",
+      "selectors": [
+        "id"
+      ],
+      "index": "index",
+      "item": "element",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-cf-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "craneRunways",
+      "kind": "insert-crane-runway",
+      "selectors": [],
+      "index": "index",
+      "item": "craneRunway",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-crane-runway/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "craneRunways[].actions",
+      "kind": "insert-crane-action",
+      "selectors": [
+        "id"
+      ],
+      "index": "index",
+      "item": "element",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-crane-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "fastenedJoints",
+      "kind": "insert-fastened-joint",
+      "selectors": [],
+      "index": "index",
+      "item": "fastenedJoint",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fastened-joint/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "fatigueDetails",
+      "kind": "insert-fatigue-detail",
+      "selectors": [],
+      "index": "index",
+      "item": "fatigueDetail",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fatigue-detail/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "fatigueDetails[].spectrum",
+      "kind": "insert-fatigue-band",
+      "selectors": [
+        "id"
+      ],
+      "index": "index",
+      "item": "element",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fatigue-band/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "fatigueStresses",
+      "kind": "insert-fatigue-stress",
+      "selectors": [],
+      "index": "index",
+      "item": "fatigueStress",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fatigue-stress/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "fireExposures",
+      "kind": "insert-fire-exposure",
+      "selectors": [],
+      "index": "index",
+      "item": "fireExposure",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fire-exposure/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "formingGains",
+      "kind": "insert-forming-gain",
+      "selectors": [],
+      "index": "index",
+      "item": "formingGain",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-forming-gain/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "foundationBlocks",
+      "kind": "insert-foundation-block",
+      "selectors": [],
+      "index": "index",
+      "item": "foundationBlock",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-foundation-block/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "frameActions",
+      "kind": "insert-frame-action",
+      "selectors": [],
+      "index": "index",
+      "item": "frameAction",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-frame-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "frameBars",
+      "kind": "insert-frame-bar",
+      "selectors": [],
+      "index": "index",
+      "item": "frameBar",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-frame-bar/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "frameMemberBases",
+      "kind": "insert-frame-member-basis",
+      "selectors": [],
+      "index": "index",
+      "item": "frameMemberBasis",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-frame-member-basis/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "frameNodes",
+      "kind": "insert-frame-node",
+      "selectors": [],
+      "index": "index",
+      "item": "frameNode",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-frame-node/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "hollowJoints",
+      "kind": "insert-hollow-joint",
+      "selectors": [],
+      "index": "index",
+      "item": "hollowJoint",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-hollow-joint/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "jointPlates",
+      "kind": "insert-joint-plate",
+      "selectors": [],
+      "index": "index",
+      "item": "jointPlate",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-joint-plate/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "jointRows",
+      "kind": "insert-joint-row",
+      "selectors": [],
+      "index": "index",
+      "item": "jointRow",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-joint-row/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "joints",
+      "kind": "insert-joint",
+      "selectors": [],
+      "index": "index",
+      "item": "joint",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-joint/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "joints[].actions",
+      "kind": "insert-joint-action",
+      "selectors": [
+        "id"
+      ],
+      "index": "index",
+      "item": "element",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-joint-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "loadCases",
+      "kind": "insert-load-case",
+      "selectors": [],
+      "index": "index",
+      "item": "loadCase",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-load-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "materialDuctility",
+      "kind": "insert-material-ductility",
+      "selectors": [],
+      "index": "index",
+      "item": "materialDuctility",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-material-ductility/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "materials",
+      "kind": "insert-material",
+      "selectors": [],
+      "index": "index",
+      "item": "material",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-material/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "memberActions",
+      "kind": "insert-member-action",
+      "selectors": [],
+      "index": "index",
+      "item": "memberAction",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "members",
+      "kind": "insert-member",
+      "selectors": [],
+      "index": "index",
+      "item": "member",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "parametricSections",
+      "kind": "insert-parametric-section",
+      "selectors": [],
+      "index": "index",
+      "item": "parametricSection",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-parametric-section/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "piles",
+      "kind": "insert-pile",
+      "selectors": [],
+      "index": "index",
+      "item": "pile",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-pile/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "piles[].actions",
+      "kind": "insert-pile-action",
+      "selectors": [
+        "id"
+      ],
+      "index": "index",
+      "item": "element",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-pile-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "placements",
+      "kind": "insert-placement",
+      "selectors": [],
+      "index": "index",
+      "item": "placement",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-placement/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "platedPanels",
+      "kind": "insert-plated-panel",
+      "selectors": [],
+      "index": "index",
+      "item": "platedPanel",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-plated-panel/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "platedPanels[].actions",
+      "kind": "insert-plated-action",
+      "selectors": [
+        "id"
+      ],
+      "index": "index",
+      "item": "element",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-plated-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "restraints",
+      "kind": "insert-restraint",
+      "selectors": [],
+      "index": "index",
+      "item": "restraint",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-restraint/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "sections",
+      "kind": "insert-section",
+      "selectors": [],
+      "index": "index",
+      "item": "section",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-section/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "siloShells",
+      "kind": "insert-silo-shell",
+      "selectors": [],
+      "index": "index",
+      "item": "siloShell",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-silo-shell/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "storeys",
+      "kind": "insert-storey",
+      "selectors": [],
+      "index": "index",
+      "item": "storey",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-storey/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "tensionComponents",
+      "kind": "insert-tension-component",
+      "selectors": [],
+      "index": "index",
+      "item": "tensionComponent",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tension-component/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "tensionComponents[].actions",
+      "kind": "insert-tension-action",
+      "selectors": [
+        "id"
+      ],
+      "index": "index",
+      "item": "element",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tension-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "towerLegs",
+      "kind": "insert-tower-leg",
+      "selectors": [],
+      "index": "index",
+      "item": "towerLeg",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tower-leg/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "towerLegs[].actions",
+      "kind": "insert-tower-action",
+      "selectors": [
+        "id"
+      ],
+      "index": "index",
+      "item": "element",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tower-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🔩️en1993",
+      "path": "weldGroups",
+      "kind": "insert-weld-group",
+      "selectors": [],
+      "index": "index",
+      "item": "weldGroup",
+      "source": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
+      "schema": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-weld-group/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧩️en1994",
+      "path": "beams",
+      "kind": "insert-beam",
+      "selectors": [],
+      "index": "index",
+      "item": "beam",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-beam/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧩️en1994",
+      "path": "beams[].actions",
+      "kind": "insert-beam-action",
+      "selectors": [
+        "beamId"
+      ],
+      "index": "index",
+      "item": "action",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️insert-beam-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧩️en1994",
+      "path": "cases",
+      "kind": "insert-case",
+      "selectors": [],
+      "index": "index",
+      "item": "case",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧩️en1994",
+      "path": "columns",
+      "kind": "insert-column",
+      "selectors": [],
+      "index": "index",
+      "item": "column",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➗️insert-column/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧩️en1994",
+      "path": "columns[].actions",
+      "kind": "insert-column-action",
+      "selectors": [
+        "columnId"
+      ],
+      "index": "index",
+      "item": "action",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️insert-column-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧩️en1994",
+      "path": "placements",
+      "kind": "insert-placement",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-placement/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧩️en1994",
+      "path": "slabs",
+      "kind": "insert-slab",
+      "selectors": [],
+      "index": "index",
+      "item": "slab",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-slab/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧩️en1994",
+      "path": "slabs[].actions",
+      "kind": "insert-slab-action",
+      "selectors": [
+        "slabId"
+      ],
+      "index": "index",
+      "item": "action",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️insert-slab-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧩️en1994",
+      "path": "studs",
+      "kind": "insert-stud",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-stud/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧱️din4108",
+      "path": "elements",
+      "kind": "insert-element",
+      "selectors": [],
+      "index": "index",
+      "item": "element",
+      "source": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️insert-element/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧱️din4108",
+      "path": "elements[].layers",
+      "kind": "insert-layer",
+      "selectors": [
+        "elementId"
+      ],
+      "index": "index",
+      "item": "layer",
+      "source": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-layer/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧱️din4108",
+      "path": "thermalBridges",
+      "kind": "insert-thermal-bridge",
+      "selectors": [],
+      "index": "index",
+      "item": "bridge",
+      "source": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️insert-thermal-bridge/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧱️din4108",
+      "path": "zones",
+      "kind": "insert-zone",
+      "selectors": [],
+      "index": "index",
+      "item": "zone",
+      "source": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-zone/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🧱️din4108",
+      "path": "zones[].windows",
+      "kind": "insert-zone-window",
+      "selectors": [
+        "zoneId"
+      ],
+      "index": "index",
+      "item": "window",
+      "source": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟insert-zone-window/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "cases",
+      "kind": "insert-case",
+      "selectors": [],
+      "index": "index",
+      "item": "case",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "chases",
+      "kind": "insert-chase",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️insert-chase/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "movementJoints",
+      "kind": "insert-movement-joint",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️insert-movement-joint/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "placements",
+      "kind": "insert-placement",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-placement/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "walls",
+      "kind": "insert-wall",
+      "selectors": [],
+      "index": "index",
+      "item": "wall",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-wall/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "walls[].bars",
+      "kind": "insert-bar",
+      "selectors": [
+        "wallId"
+      ],
+      "index": "index",
+      "item": "bar",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-bar/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "walls[].confined",
+      "kind": "insert-confined",
+      "selectors": [
+        "wallId"
+      ],
+      "index": "index",
+      "item": "confined",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-confined/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "walls[].flanges",
+      "kind": "insert-flange",
+      "selectors": [
+        "wallId"
+      ],
+      "index": "index",
+      "item": "flange",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-flange/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "walls[].lintels",
+      "kind": "insert-lintel",
+      "selectors": [
+        "wallId"
+      ],
+      "index": "index",
+      "item": "lintel",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-lintel/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "walls[].loadCases",
+      "kind": "insert-load-case",
+      "selectors": [
+        "wallId"
+      ],
+      "index": "index",
+      "item": "loadCase",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-load-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "walls[].loadCases[].concentrated",
+      "kind": "insert-concentrated",
+      "selectors": [
+        "wallId",
+        "loadCaseId"
+      ],
+      "index": "index",
+      "item": "load",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-concentrated/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "walls[].openings",
+      "kind": "insert-opening",
+      "selectors": [
+        "wallId"
+      ],
+      "index": "index",
+      "item": "opening",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-opening/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "walls[].piers",
+      "kind": "insert-pier",
+      "selectors": [
+        "wallId"
+      ],
+      "index": "index",
+      "item": "pier",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-pier/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "walls[].prestress",
+      "kind": "insert-prestress",
+      "selectors": [
+        "wallId"
+      ],
+      "index": "index",
+      "item": "prestress",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-prestress/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪨️en1996",
+      "path": "walls[].ties",
+      "kind": "insert-tie",
+      "selectors": [
+        "wallId"
+      ],
+      "index": "index",
+      "item": "tie",
+      "source": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tie/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "bracings",
+      "kind": "insert-bracing",
+      "selectors": [],
+      "index": "index",
+      "item": "bracing",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-bracing/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "cases",
+      "kind": "insert-case",
+      "selectors": [],
+      "index": "index",
+      "item": "case",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-case/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "connections",
+      "kind": "insert-connection",
+      "selectors": [],
+      "index": "index",
+      "item": "connection",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-connection/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "connections[].actions",
+      "kind": "insert-connection-action",
+      "selectors": [
+        "connectionId"
+      ],
+      "index": "index",
+      "item": "action",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-connection-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "cutouts",
+      "kind": "insert-cutout",
+      "selectors": [],
+      "index": "index",
+      "item": "cutout",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-cutout/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "decks",
+      "kind": "insert-deck",
+      "selectors": [],
+      "index": "index",
+      "item": "deck",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-deck/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "diaphragms",
+      "kind": "insert-diaphragm",
+      "selectors": [],
+      "index": "index",
+      "item": "diaphragm",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-diaphragm/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "fasteners",
+      "kind": "insert-fastener",
+      "selectors": [],
+      "index": "index",
+      "item": "fastener",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fastener/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "fasteners[].positions",
+      "kind": "insert-fastener-position",
+      "selectors": [
+        "fastenerId"
+      ],
+      "index": "index",
+      "item": "position",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fastener-position/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "floors",
+      "kind": "insert-floor",
+      "selectors": [],
+      "index": "index",
+      "item": "floor",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-floor/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "members",
+      "kind": "insert-member",
+      "selectors": [],
+      "index": "index",
+      "item": "member",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "members[].actions",
+      "kind": "insert-member-action",
+      "selectors": [
+        "memberId"
+      ],
+      "index": "index",
+      "item": "action",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "panels",
+      "kind": "insert-panel",
+      "selectors": [],
+      "index": "index",
+      "item": "panel",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-panel/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "panels[].layers",
+      "kind": "insert-panel-layer",
+      "selectors": [
+        "panelId"
+      ],
+      "index": "index",
+      "item": "layer",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-panel-layer/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "placements",
+      "kind": "insert-placement",
+      "selectors": [],
+      "index": "index",
+      "item": "placement",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-placement/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "tapers",
+      "kind": "insert-taper",
+      "selectors": [],
+      "index": "index",
+      "item": "taper",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-taper/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪵️en1995",
+      "path": "trusses",
+      "kind": "insert-truss",
+      "selectors": [],
+      "index": "index",
+      "item": "truss",
+      "source": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-truss/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "coldFormed",
+      "kind": "insert-cold-formed-sheet",
+      "selectors": [],
+      "index": "index",
+      "item": "coldFormedSheet",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-cold-formed-sheet/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "coldFormed[].actions",
+      "kind": "insert-sheet-action",
+      "selectors": [
+        "coldFormedId"
+      ],
+      "index": "index",
+      "item": "action",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-sheet-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "connections",
+      "kind": "insert-connection",
+      "selectors": [],
+      "index": "index",
+      "item": "connection",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-connection/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "connections[].actions",
+      "kind": "insert-connection-action",
+      "selectors": [
+        "connectionId"
+      ],
+      "index": "index",
+      "item": "action",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-connection-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "fatigueCategories",
+      "kind": "insert-fatigue-category",
+      "selectors": [],
+      "index": "index",
+      "item": "fatigueCategory",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-fatigue-category/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "fatigueDetails",
+      "kind": "insert-fatigue-detail",
+      "selectors": [],
+      "index": "index",
+      "item": "fatigueDetail",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-fatigue-detail/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "fireScenarios",
+      "kind": "insert-fire-scenario",
+      "selectors": [],
+      "index": "index",
+      "item": "fireScenario",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-fire-scenario/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "materials",
+      "kind": "insert-material",
+      "selectors": [],
+      "index": "index",
+      "item": "material",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-material/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "members",
+      "kind": "insert-member",
+      "selectors": [],
+      "index": "index",
+      "item": "member",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-member/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "members[].actions",
+      "kind": "insert-member-action",
+      "selectors": [
+        "memberId"
+      ],
+      "index": "index",
+      "item": "action",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-member-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "outlineVertices",
+      "kind": "insert-outline-vertex",
+      "selectors": [],
+      "index": "index",
+      "item": "outlineVertex",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-outline-vertex/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "patchLoads",
+      "kind": "insert-patch-load",
+      "selectors": [],
+      "index": "index",
+      "item": "patchLoad",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-patch-load/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "placements",
+      "kind": "insert-placement",
+      "selectors": [],
+      "index": "index",
+      "item": "placement",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-placement/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "ringStiffeners",
+      "kind": "insert-ring-stiffener",
+      "selectors": [],
+      "index": "index",
+      "item": "ringStiffener",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-ring-stiffener/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "sections",
+      "kind": "insert-section",
+      "selectors": [],
+      "index": "index",
+      "item": "section",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-section/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "sections[].elements",
+      "kind": "insert-section-element",
+      "selectors": [
+        "sectionId"
+      ],
+      "index": "index",
+      "item": "element",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-section-element/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "shells",
+      "kind": "insert-shell",
+      "selectors": [],
+      "index": "index",
+      "item": "shell",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-shell/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "shells[].actions",
+      "kind": "insert-shell-action",
+      "selectors": [
+        "shellId"
+      ],
+      "index": "index",
+      "item": "action",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-shell-action/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "transverseStiffeners",
+      "kind": "insert-transverse-stiffener",
+      "selectors": [],
+      "index": "index",
+      "item": "transverseStiffener",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-transverse-stiffener/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "weldRuns",
+      "kind": "insert-weld-run",
+      "selectors": [],
+      "index": "index",
+      "item": "weldRun",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-weld-run/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "accelerograms",
+      "kind": "insert-accelerogram",
+      "selectors": [],
+      "index": "index",
+      "item": "accelerogram",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-accelerogram/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "assessments",
+      "kind": "insert-assessment",
+      "selectors": [],
+      "index": "index",
+      "item": "assessment",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧insert-assessment/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "bearings",
+      "kind": "insert-bearing",
+      "selectors": [],
+      "index": "index",
+      "item": "bearing",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-bearing/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "bridges",
+      "kind": "insert-bridge",
+      "selectors": [],
+      "index": "index",
+      "item": "bridge",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉insert-bridge/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "bridges[].variables",
+      "kind": "insert-bridge-variable",
+      "selectors": [
+        "bridgeId"
+      ],
+      "index": "index",
+      "item": "variable",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-bridge-variable/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "buildings",
+      "kind": "insert-building",
+      "selectors": [],
+      "index": "index",
+      "item": "building",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-building/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "buildings[].members",
+      "kind": "insert-member",
+      "selectors": [
+        "buildingId"
+      ],
+      "index": "index",
+      "item": "member",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "buildings[].storeys",
+      "kind": "insert-storey",
+      "selectors": [
+        "buildingId"
+      ],
+      "index": "index",
+      "item": "storey",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-storey/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "buildings[].storeys[].variables",
+      "kind": "insert-storey-variable",
+      "selectors": [
+        "buildingId",
+        "storeyId"
+      ],
+      "index": "index",
+      "item": "variable",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-storey-variable/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "buildings[].systems",
+      "kind": "insert-system",
+      "selectors": [
+        "buildingId"
+      ],
+      "index": "index",
+      "item": "system",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-system/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "diaphragms",
+      "kind": "insert-diaphragm",
+      "selectors": [],
+      "index": "index",
+      "item": "diaphragm",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-diaphragm/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "foundations",
+      "kind": "insert-foundation",
+      "selectors": [],
+      "index": "index",
+      "item": "foundation",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨insert-foundation/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "joints",
+      "kind": "insert-joint",
+      "selectors": [],
+      "index": "index",
+      "item": "joint",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-joint/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "piers",
+      "kind": "insert-pier",
+      "selectors": [],
+      "index": "index",
+      "item": "pier",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-pier/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "placements",
+      "kind": "insert-placement",
+      "selectors": [],
+      "index": "index",
+      "item": "item",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-placement/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "retainingWalls",
+      "kind": "insert-retaining-wall",
+      "selectors": [],
+      "index": "index",
+      "item": "wall",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️insert-retaining-wall/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "silos",
+      "kind": "insert-silo",
+      "selectors": [],
+      "index": "index",
+      "item": "silo",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙insert-silo/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "slopes",
+      "kind": "insert-seismic-slope",
+      "selectors": [],
+      "index": "index",
+      "item": "seismicSlope",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-seismic-slope/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "soilLayers",
+      "kind": "insert-soil-layer",
+      "selectors": [],
+      "index": "index",
+      "item": "layer",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-soil-layer/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "tanks",
+      "kind": "insert-tank",
+      "selectors": [],
+      "index": "index",
+      "item": "tank",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️insert-tank/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "tieBeams",
+      "kind": "insert-tie-beam",
+      "selectors": [],
+      "index": "index",
+      "item": "tieBeam",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tie-beam/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "towers",
+      "kind": "insert-tower",
+      "selectors": [],
+      "index": "index",
+      "item": "tower",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼insert-tower/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "towers[].variables",
+      "kind": "insert-tower-variable",
+      "selectors": [
+        "towerId"
+      ],
+      "index": "index",
+      "item": "variable",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tower-variable/🧬️schema/🔣️.json"
+    }
+  ]
+}

@@ -12,12 +12,19 @@ use semio_s_artifact_raster_raster_model::RasterCamera;
 pub use crate::selection::RasterPixelSelection;
 use protocol::Mutation;
 
+#[path="📬️preparation/🦀️.rs"]
+pub mod preparation;
+
+#[path="🌱️initialization/🦀️.rs"]
+pub mod initialization;
+
 //#region 🔖️Config
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(id = "raster.config")]
 #[artifact(extension = "rastercfg")]
 #[dsl(layout = "lines")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct RasterConfig {
     /// 🖌️ Brush diameter (px) — was `RasterPlayRuntime::brush_size`.
     pub brush_size: f64,
@@ -31,6 +38,10 @@ pub struct RasterConfig {
     pub mask_value: u32,
     /// 🪣️ The bucket's colour tolerance (0..255): how far a pixel may differ from the clicked pixel and still flood.
     pub fill_tolerance: u32,
+    pub filter_kind: String,
+    pub filter_amount: f64,
+    #[dsl(block)]
+    pub image_grid: RasterImageGrid,
     #[dsl(block)]
     pub pixel_selection:Option<RasterPixelSelection>,
     /// 🔭️ Navigator's last-known composite-window viewport size — was
@@ -85,9 +96,16 @@ impl pack::snapshot::ArtifactPack for RasterConfig {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RasterConfig {
+    fn native_pack_source(&self)->Option<store::os_store::serialization::OriginalSnapshotPackView<'_>>{Some(store::os_store::serialization::OriginalSnapshotPackView{source:self,spec:<Self as semio_framework_dsl_record::BorrowedDslRecord>::RECORD,envelope:<Self as pack::snapshot::ArtifactDsl>::envelope_id()})}
     fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
+}
+
+impl store::OriginalArtifactPackReceiving for RasterConfig{
+    type Receiving=store::OriginalSnapshotRecordReceiving<Self>;
+    fn original_pack_birth_demand()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self::Receiving>(),depth:1,..Default::default()}}
+    fn admit_original_pack(source:&[u8],limits:protocol::PackLimits,native:&semio_framework_value::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self::Receiving,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{Self::Receiving::admit(source,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),limits,native,grant)}
 }
 
 //#endregion 🔖️ArtifactCodec
@@ -96,7 +114,7 @@ pub type RasterConfigViewportSize = semio_s_artifact_raster_raster_model::Raster
 
 impl Default for RasterConfig {
     fn default() -> Self {
-        Self { brush_size: 24.0, brush_opacity: 1.0, brush_color: "#2878dc".into(), brush_hardness: 1.0, paint_target:"pixels".into(),mask_value:255,fill_tolerance:24,pixel_selection:None,composite_viewport: None, camera: RasterCamera::default() }
+        Self { brush_size: 24.0, brush_opacity: 1.0, brush_color: "#2878dc".into(), brush_hardness: 1.0, paint_target:"pixels".into(),mask_value:255,fill_tolerance:24,filter_kind:"invert".into(),filter_amount:0.0,image_grid:RasterImageGrid::default(),pixel_selection:None,composite_viewport: None, camera: RasterCamera::default() }
     }
 }
 
@@ -147,6 +165,12 @@ pub struct RasterConfigDiff {
     #[value(skip_serializing_if = "Option::is_none")]
     pub fill_tolerance: Option<u32>,
     #[value(skip_serializing_if = "Option::is_none")]
+    pub filter_kind: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub filter_amount: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub image_grid: Option<RasterImageGrid>,
+    #[value(skip_serializing_if = "Option::is_none")]
     pub pixel_selection: Option<RasterPixelSelectionSet>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub composite_viewport: Option<RasterViewportSet>,
@@ -172,6 +196,9 @@ impl protocol::ColdMutationDiff<RasterConfig> for RasterConfigDiff {
         take!(paint_target);
         take!(mask_value);
         take!(fill_tolerance);
+        take!(filter_kind);
+        take!(filter_amount);
+        take!(image_grid);
         take!(pixel_selection);
         take!(composite_viewport);
         take!(camera);
@@ -187,6 +214,9 @@ impl protocol::ColdMutationDiff<RasterConfig> for RasterConfigDiff {
             paint_target: self.paint_target.clone().unwrap_or_else(|| base.paint_target.clone()),
             mask_value: self.mask_value.unwrap_or(base.mask_value),
             fill_tolerance: self.fill_tolerance.unwrap_or(base.fill_tolerance),
+            filter_kind: self.filter_kind.clone().unwrap_or_else(|| base.filter_kind.clone()),
+            filter_amount: self.filter_amount.unwrap_or(base.filter_amount),
+            image_grid: self.image_grid.clone().unwrap_or_else(|| base.image_grid.clone()),
             pixel_selection: self.pixel_selection.as_ref().map_or_else(|| base.pixel_selection.clone(), |set| set.value.clone()),
             composite_viewport: self.composite_viewport.as_ref().map_or_else(|| base.composite_viewport.clone(), |set| set.value.clone()),
             camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
@@ -211,6 +241,9 @@ impl protocol::ColdDiffAlgebra<RasterConfig> for RasterConfigDiff {
             paint_target: self.paint_target.as_ref().map(|_| base.paint_target.clone()),
             mask_value: self.mask_value.map(|_| base.mask_value),
             fill_tolerance: self.fill_tolerance.map(|_| base.fill_tolerance),
+            filter_kind: self.filter_kind.as_ref().map(|_| base.filter_kind.clone()),
+            filter_amount: self.filter_amount.map(|_| base.filter_amount),
+            image_grid: self.image_grid.as_ref().map(|_| base.image_grid.clone()),
             pixel_selection: self.pixel_selection.as_ref().map(|_| RasterPixelSelectionSet { value: base.pixel_selection.clone() }),
             composite_viewport: self.composite_viewport.as_ref().map(|_| RasterViewportSet { value: base.composite_viewport.clone() }),
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
@@ -224,6 +257,7 @@ impl protocol::ColdDiffAlgebra<RasterConfig> for RasterConfigDiff {
 /// writes); each variant's diff carries only the fields it changes and its inverse is the absolute setter of the base values.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub enum RasterConfigMutation {
     #[dsl(key = "brush-size")]
     SetBrushSize(SetBrushSizeEdit),
@@ -245,11 +279,62 @@ pub enum RasterConfigMutation {
     SetCamera(SetCameraEdit),
     #[dsl(key = "fill-tolerance")]
     SetFillTolerance(SetFillToleranceEdit),
+    #[dsl(key = "filter-options")]
+    SetFilterOptions(SetFilterOptionsEdit),
+    #[dsl(key = "image-grid")]
+    SetImageGrid(RasterImageGrid),
+}
+
+/// 📐️ Intrinsic dimensions, crop origin and sampling staged for the next image-grid edit.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_schema::ArtifactSchema)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[artifact_schema(id = "s.raster.raster.imagegrid")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
+pub struct RasterImageGrid {
+    #[state(config)]
+    pub x: u32,
+    #[state(config)]
+    pub y: u32,
+    #[state(config)]
+    pub width: u32,
+    #[state(config)]
+    pub height: u32,
+    #[state(config)]
+    pub bilinear: bool,
+}
+
+impl Default for RasterImageGrid {
+    fn default() -> Self { Self { x: 0, y: 0, width: 512, height: 512, bilinear: false } }
+}
+
+impl RasterImageGrid {
+    pub fn valid(&self) -> bool { self.x <= 16_384 && self.y <= 16_384 && (1..=16_384).contains(&self.width) && (1..=16_384).contains(&self.height) }
+}
+
+/// 🌈️ Session filter choice and amount, changed atomically when choosing another filter.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
+pub struct SetFilterOptionsEdit {
+    pub filter: String,
+    pub amount: f64,
+}
+
+/// 🧯️ Session filter settings obey the same vocabulary and amount constraints as document filter edits.
+pub fn valid_filter_options(filter: &str, amount: f64) -> bool {
+    semio_s_artifact_raster_raster_mutations_pixels::apply_filter::invariant(&semio_s_artifact_raster_raster_mutations_pixels::apply_filter::ApplyFilter { layer_id: String::new(), filter: filter.into(), amount, selection: None }).is_ok()
+}
+
+/// 🎚️ The authoritative amount range of a known filter; an inner absence means no amount.
+pub fn filter_range(filter: &str) -> Option<Option<(f64, f64)>> {
+    semio_s_artifact_raster_raster_mutations_pixels::apply_filter::RASTER_FILTERS.iter().find(|(kind, _)| *kind == filter).map(|(_, range)| *range)
 }
 
 /// 📦️ `SetBrushSize` payload record, wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct SetBrushSizeEdit {
     pub value: f64,
 }
@@ -257,6 +342,7 @@ pub struct SetBrushSizeEdit {
 /// 📦️ `SetBrushOpacity` payload record, wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct SetBrushOpacityEdit {
     pub value: f64,
 }
@@ -264,6 +350,7 @@ pub struct SetBrushOpacityEdit {
 /// 📦️ `SetBrushColor` payload record, wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct SetBrushColorEdit {
     pub value: String,
 }
@@ -271,6 +358,7 @@ pub struct SetBrushColorEdit {
 /// 📦️ `SetBrushHardness` payload record, wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct SetBrushHardnessEdit {
     pub value: f64,
 }
@@ -278,6 +366,7 @@ pub struct SetBrushHardnessEdit {
 /// 📦️ `SetPaintTarget` payload record, wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct SetPaintTargetEdit {
     pub value: String,
 }
@@ -285,6 +374,7 @@ pub struct SetPaintTargetEdit {
 /// 📦️ `SetMaskValue` payload record, wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct SetMaskValueEdit {
     pub value: u32,
 }
@@ -292,6 +382,7 @@ pub struct SetMaskValueEdit {
 /// 📦️ `SetPixelSelection` payload record, wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct SetPixelSelectionEdit {
     #[dsl(block)]
     pub selection: Option<RasterPixelSelection>,
@@ -300,6 +391,7 @@ pub struct SetPixelSelectionEdit {
 /// 📦️ `SetCompositeViewport` payload record, wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct SetCompositeViewportEdit {
     #[dsl(block)]
     pub viewport: Option<RasterConfigViewportSize>,
@@ -308,6 +400,7 @@ pub struct SetCompositeViewportEdit {
 /// 📦️ `SetCamera` payload record, wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct SetCameraEdit {
     #[dsl(block)]
     pub camera: RasterCamera,
@@ -316,6 +409,7 @@ pub struct SetCameraEdit {
 /// 📦️ `SetFillTolerance` payload record, wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct SetFillToleranceEdit {
     pub value: u32,
 }
@@ -541,6 +635,28 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             composition: protocol::MutationComposition::Atomic,
             required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
         },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌈️filter-options",
+            semantic_kind: "set-filter-options", display_name: "Set Filter Options", emoji: "🌈️", aggregate_variant: "SetFilterOptions",
+            payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📐️image-grid",
+            semantic_kind: "set-image-grid", display_name: "Set Image Grid", emoji: "📐️", aggregate_variant: "SetImageGrid",
+            payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -555,6 +671,8 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             Self::SetMaskValue(_)=> &Self::DESCRIPTORS[7],
             Self::SetPixelSelection(_)=> &Self::DESCRIPTORS[8],
             Self::SetFillTolerance(_) => &Self::DESCRIPTORS[9],
+            Self::SetFilterOptions(_) => &Self::DESCRIPTORS[10],
+            Self::SetImageGrid(_) => &Self::DESCRIPTORS[11],
         }
     }
 
@@ -614,6 +732,15 @@ impl protocol::ColdMutation<RasterConfig> for RasterConfigMutation {
                     diff.fill_tolerance = Some(*value);
                 }
             }
+            RasterConfigMutation::SetFilterOptions(SetFilterOptionsEdit { filter, amount }) => {
+                if valid_filter_options(filter, *amount) {
+                    if base.filter_kind != *filter { diff.filter_kind = Some(filter.clone()); }
+                    if base.filter_amount != *amount { diff.filter_amount = Some(*amount); }
+                }
+            }
+            RasterConfigMutation::SetImageGrid(grid) => {
+                if grid.valid() && base.image_grid != *grid { diff.image_grid = Some(grid.clone()); }
+            }
             RasterConfigMutation::SetCompositeViewport(SetCompositeViewportEdit { viewport }) => {
                 if base.composite_viewport != *viewport {
                     diff.composite_viewport = Some(RasterViewportSet { value: viewport.clone() });
@@ -637,6 +764,8 @@ impl protocol::ColdMutation<RasterConfig> for RasterConfigMutation {
             RasterConfigMutation::SetPixelSelection(_) => vec![RasterConfigMutation::SetPixelSelection(SetPixelSelectionEdit { selection: base.pixel_selection.clone() })],
             RasterConfigMutation::SetMaskValue(_) => vec![RasterConfigMutation::SetMaskValue(SetMaskValueEdit { value: base.mask_value })],
             RasterConfigMutation::SetFillTolerance(_) => vec![RasterConfigMutation::SetFillTolerance(SetFillToleranceEdit { value: base.fill_tolerance })],
+            RasterConfigMutation::SetFilterOptions(_) => vec![RasterConfigMutation::SetFilterOptions(SetFilterOptionsEdit { filter: base.filter_kind.clone(), amount: base.filter_amount })],
+            RasterConfigMutation::SetImageGrid(_) => vec![RasterConfigMutation::SetImageGrid(base.image_grid.clone())],
             RasterConfigMutation::SetCompositeViewport(_) => vec![RasterConfigMutation::SetCompositeViewport(SetCompositeViewportEdit { viewport: base.composite_viewport.clone() })],
             RasterConfigMutation::SetCamera(_) => vec![RasterConfigMutation::SetCamera(SetCameraEdit { camera: base.camera.clone() })],
         })

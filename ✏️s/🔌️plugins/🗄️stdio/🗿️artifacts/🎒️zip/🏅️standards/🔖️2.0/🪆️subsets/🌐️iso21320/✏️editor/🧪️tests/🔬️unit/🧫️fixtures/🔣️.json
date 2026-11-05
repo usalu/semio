@@ -1,0 +1,26 @@
+{
+  "schema": "semio.stdio.zip.iso21320.native-file/v1",
+  "owner": "s.stdio.zip@2.0/iso21320#editor",
+  "artifactSchema": "stdio.zip",
+  "codec": {
+    "formatKind": "s.stdio.zip@2.0",
+    "extension": ".zip",
+    "mediaType": "application/zip",
+    "binary": true
+  },
+  "sample": "🧪️tests/🧫️fixtures/🏷️rename-entry-applied/➡️after.zip",
+  "members": [
+    {
+      "name": "new.txt",
+      "bytes": [
+        72,
+        101,
+        108,
+        108,
+        111
+      ]
+    }
+  ],
+  "invalidSample": "✏️editor/🧪️tests/🔬️unit/🧫️fixtures/⛔️bzip2.zip",
+  "invalidMethod": 12
+}

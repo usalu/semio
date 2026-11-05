@@ -37,7 +37,7 @@ fn reduce(
     context: Option<&ArtifactOwnedToolJobContext<Owner>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let view = context.and_then(|context| context.view_state.as_ref());
+    let view = context.and_then(|context| context.view_state.as_deref());
     match command {
         TrinityRewritingCommand::SetViewport { surface_id, viewport } => crate::editor::rewriting::commands::set_viewport::set_viewport(surface_id, viewport, view),
         TrinityRewritingCommand::SetLodMode { value } => crate::editor::rewriting::commands::set_lod_mode::set_lod_mode(value, view),

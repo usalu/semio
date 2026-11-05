@@ -237,7 +237,7 @@ pub(super) fn settle_turn_work<PA: semio_framework_plugin_reactor_app::PluginApp
     let command_ingress_pending = COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
     let lifecycle_work = runtime.guest_lifetimes.borrow().has_work();
     let ui_retirement_work = close_late_ui_retirement()?;
-    let extension_invocation_pending=RETAINED_EXTENSION_INVOCATIONS.with(|owners|owners.borrow().iter().any(Option::is_some))||original_receiving::response_pending()||original_receiving::intent_pending();
+    let extension_invocation_pending=RETAINED_EXTENSION_INVOCATIONS.with(|owners|owners.borrow().iter().any(Option::is_some))||original_receiving::response_pending()||original_receiving::intent_pending()||original_receiving::forms::pending();
     let more_work = events_pending || more_work || extension_invocation_pending || close_cleanup_work || typed_operation_runnable || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work || ui_retirement_work || document_load_work;
     LAST_MORE_WORK_SOURCES.set(TurnMoreWorkSources {
         executor_deadline: executor_deadline_work,

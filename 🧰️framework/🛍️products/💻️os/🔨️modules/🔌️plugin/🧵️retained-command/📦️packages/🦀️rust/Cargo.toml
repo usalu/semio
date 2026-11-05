@@ -25,6 +25,9 @@ path = "../../🦀️.rs"
 artifact-app-testing = ["semio-framework-job/testkit"]
 
 [dependencies]
+semio-framework-plugin-result-page = { path = "../../🔄️full-operation/📃️/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-pack-json-source-sink = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/🛫️encode/🫳️borrowed/📦️packages/🦀️rust" }
 replication = { package = "semio-framework-replication", path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
@@ -59,7 +62,13 @@ semio-framework-actor = { workspace = true }
 semio-framework-os-store-engine-replay = { path = "../../../../🏪️store/🕰️history/🏁️replay/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
 semio-framework-trace = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+
+
+[[test]]
+name = "mounted-ui-copy"
+path = "../../🔄️full-operation/📃️mounted/🖼️ui/🧪️tests/🦀️.rs"

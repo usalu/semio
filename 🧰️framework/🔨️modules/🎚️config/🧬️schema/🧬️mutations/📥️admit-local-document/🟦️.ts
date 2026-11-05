@@ -17,7 +17,7 @@ export const LOCAL_CATALOG_CONFIG_SCHEMA = "os.config.local-catalog";
 //#region 🔖️Mutation
 /** 🔺️ Replaces or inserts the entry for the payload's id, keeping the catalog ordered by id. */
 export function diff(payload: AdmitLocalDocument, base: LocalCatalog): LocalCatalogDiff {
-  const admitted: LocalDocument = { documentId: payload.documentId, schema: payload.schema, name: payload.name, storage: payload.storage, target: payload.target, admittedAtMs: payload.admittedAtMs };
+  const admitted: LocalDocument = { documentId: payload.documentId, schema: payload.schema, name: payload.name, storage: payload.storage, target: payload.target, admittedAtMs: payload.admittedAtMs, ...(payload.surface === undefined ? {} : { surface: { pluginId: payload.surface.pluginId, appId: payload.surface.appId } }) };
   if (base.documents.some((entry) => sameDocument(entry, admitted))) return {};
   return { documents: [{ key: admitted.documentId, value: admitted }] };
 }
@@ -29,6 +29,6 @@ export function inverse(payload: AdmitLocalDocument, base: LocalCatalog): LocalC
 }
 
 function sameDocument(left: LocalDocument, right: LocalDocument): boolean {
-  return left.documentId === right.documentId && left.schema === right.schema && left.name === right.name && left.storage === right.storage && left.target === right.target && left.admittedAtMs === right.admittedAtMs;
+  return left.documentId === right.documentId && left.schema === right.schema && left.name === right.name && left.storage === right.storage && left.target === right.target && left.admittedAtMs === right.admittedAtMs && left.surface?.pluginId === right.surface?.pluginId && left.surface?.appId === right.surface?.appId;
 }
 //#endregion 🔖️Mutation

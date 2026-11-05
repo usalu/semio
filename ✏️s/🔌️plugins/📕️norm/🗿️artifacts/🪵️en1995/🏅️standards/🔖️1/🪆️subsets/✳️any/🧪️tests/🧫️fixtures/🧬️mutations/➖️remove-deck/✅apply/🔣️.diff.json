@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "members": {
     "removed": [],
     "inserted": [],
@@ -84,5 +83,6 @@
     "inserted": [],
     "moved": [],
     "modified": []
-  }
+  },
+  "reliabilityClass": null
 }

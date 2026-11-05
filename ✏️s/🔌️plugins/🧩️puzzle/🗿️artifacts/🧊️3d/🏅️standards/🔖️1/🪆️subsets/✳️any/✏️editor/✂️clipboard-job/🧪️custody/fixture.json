@@ -1,0 +1,76 @@
+{
+  "schema": "reserved.original-request-custody.v1",
+  "domain": "puzzle3d",
+  "tools": [
+    "copy",
+    "cut",
+    "paste"
+  ],
+  "denialPreservesRequest": true,
+  "denialPreservesInputAddress": true,
+  "requestRemainsUntilPrivateClose": true,
+  "borrows": [
+    "snapshot",
+    "config",
+    "history",
+    "completion"
+  ],
+  "mediaCloneCount": 0,
+  "freshDecoderCount": 0,
+  "closeUsesActualChildWork": true,
+  "unknownTool": "unregistered-reserved-route",
+  "unknownPreservesRequest": true,
+  "selectionCases": [
+    {
+      "domains": {
+        "vortex": {
+          "granularity": "object",
+          "ids": [
+            "a",
+            "b"
+          ]
+        },
+        "other": {
+          "granularity": "other",
+          "ids": [
+            "ignored"
+          ]
+        }
+      },
+      "expected": {
+        "granularity": "object",
+        "selected": [
+          "a",
+          "b"
+        ]
+      }
+    },
+    {
+      "domains": {
+        "vortex": {
+          "granularity": "",
+          "ids": []
+        },
+        "other": {
+          "granularity": "",
+          "ids": [
+            "fallback"
+          ]
+        }
+      },
+      "expected": {
+        "granularity": "object",
+        "selected": [
+          "fallback"
+        ]
+      }
+    },
+    {
+      "domains": {},
+      "expected": {
+        "granularity": "",
+        "selected": []
+      }
+    }
+  ]
+}

@@ -670,91 +670,22 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-soil-layer/schema.json"
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ChangePlacementX"
-      ],
-      "properties": {
-        "ChangePlacementX": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-placement-x/schema.json"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-placement-x/schema.json"
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ChangePlacementY"
-      ],
-      "properties": {
-        "ChangePlacementY": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-placement-y/schema.json"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-placement-y/schema.json"
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ChangePlacementZ"
-      ],
-      "properties": {
-        "ChangePlacementZ": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-placement-z/schema.json"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-placement-z/schema.json"
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ChangePlacementYaw",
-        "ChangeTieBeamDisplacementLimit",
-        "ChangeTieBeamRelativeDisplacement",
-        "ChangeTieBeamSteelDesignStrength",
-        "ChangeTieBeamSteelArea",
-        "ChangeTieBeamDepth",
-        "ChangeTieBeamWidth",
-        "ChangeTieBeamSpan",
-        "ChangeSeismicSlopeCircleRadius",
-        "ChangeSeismicSlopeCircleCentreZ",
-        "ChangeSeismicSlopeCircleCentreX",
-        "ChangeSeismicSlopeTopographicFactor",
-        "ChangeSeismicSlopeCohesion",
-        "ChangeSeismicSlopeFrictionAngle",
-        "ChangeSeismicSlopeAngle",
-        "ChangeSeismicSlopeHeight"
-      ],
-      "properties": {
-        "ChangePlacementYaw": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-placement-yaw/schema.json"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-placement-yaw/schema.json"
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "InsertPlacement"
-      ],
-      "properties": {
-        "InsertPlacement": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-placement/schema.json"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-placement/schema.json"
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "RemovePlacement"
-      ],
-      "properties": {
-        "RemovePlacement": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-placement/schema.json"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-placement/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-ot-base-xm/schema.json"
@@ -989,6 +920,51 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-foundation-base-pore-pressure-pa/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-seismic-slope-angle/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-seismic-slope-circle-centre-x/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-seismic-slope-circle-centre-z/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-seismic-slope-circle-radius/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-seismic-slope-cohesion/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-seismic-slope-friction-angle/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-seismic-slope-height/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-seismic-slope-topographic-factor/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tie-beam-depth/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tie-beam-displacement-limit/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tie-beam-relative-displacement/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tie-beam-span/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tie-beam-steel-area/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tie-beam-steel-design-strength/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tie-beam-width/schema.json"
     }
   ]
 }

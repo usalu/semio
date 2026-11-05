@@ -22,22 +22,22 @@ pub fn debug_runtime_line(line: impl std::fmt::Display) {
     }
 }
 #[doc(hidden)]
-pub fn addressed_action_view(view: &ViewModel, address: &semio_framework::manifest::ActionAddress) -> Result<ViewModel, Fault> {
-    let projected = view.for_window_instance(&address.window_instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown action window instance {}", address.window_instance_id)))?;
-    if projected.active_window_kind_id.as_deref() != Some(address.window_kind_id.as_str()) {
+pub fn addressed_action_view<'a>(view: &'a ViewModel, address: &semio_framework::manifest::ActionAddress) -> Result<&'a ViewModel, Fault> {
+    if view.window_id.as_deref()!=Some(address.window_instance_id.as_str())||!view.window_instances.iter().any(|window|window.id==address.window_instance_id&&window.window_kind_id==address.window_kind_id){return Err(plugin_internal_fault("addressed action requires its actual admitted window view"));}
+    if view.active_window_kind_id.as_deref() != Some(address.window_kind_id.as_str()) {
         return Err(plugin_internal_fault(format!("action window instance {} has a different kind than {}", address.window_instance_id, address.window_kind_id)));
     }
-    Ok(projected)
+    Ok(view)
 }
 /// 🎯️ Window projection for a catalog action, or the unprojected view for a framework-reserved verb.
 /// Retained actor ingress (`AppCommand::Command`) uses this rule so undo/redo
 /// reach `dispatch_framework_reserved_action` when the chrome addresses a window that does not
 /// declare the verb (or is absent from `window_instances`).
 #[doc(hidden)]
-pub fn admit_addressed_action_view(view: &ViewModel, address: &semio_framework::manifest::ActionAddress) -> Result<ViewModel, Fault> {
+pub fn admit_addressed_action_view<'a>(view: &'a ViewModel, address: &semio_framework::manifest::ActionAddress) -> Result<&'a ViewModel, Fault> {
     match addressed_action_view(view, address) {
         Ok(projected) => Ok(projected),
-        Err(_) if semio_framework_plugin_job::reserved_jobs::is_framework_reserved_action_id(&address.action_id) => Ok(view.clone()),
+        Err(_) if semio_framework_plugin_job::reserved_jobs::is_framework_reserved_action_id(&address.action_id) => Ok(view),
         Err(fault) => Err(fault),
     }
 }

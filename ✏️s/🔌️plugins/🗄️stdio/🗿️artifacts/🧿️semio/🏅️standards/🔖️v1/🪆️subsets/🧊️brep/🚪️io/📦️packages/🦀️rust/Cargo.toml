@@ -50,6 +50,8 @@ serde_json = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-3d-brep-boolean.workspace = true
 semio-framework-3d-brep-sweep.workspace = true
 semio-framework-3d-brep-offset.workspace = true

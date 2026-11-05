@@ -1,0 +1,216 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "demand",
+    "cases",
+    "retirement",
+    "metadataTransitions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "demand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "const": 1
+        },
+        "copy": {
+          "const": 1
+        },
+        "capacity": {
+          "const": 1
+        },
+        "release": {
+          "const": 1
+        },
+        "depth": {
+          "const": 1
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "entries",
+          "aliases",
+          "denied",
+          "partial",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "entries": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "aliases": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "denied": {
+            "enum": [
+              "none",
+              "items",
+              "copy",
+              "capacity",
+              "release",
+              "depth"
+            ]
+          },
+          "partial": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "rootPresent",
+              "retirementPresent",
+              "allocated",
+              "released",
+              "staticBorrow",
+              "aliasAllowed"
+            ],
+            "properties": {
+              "rootPresent": {
+                "type": "boolean"
+              },
+              "retirementPresent": {
+                "type": "boolean"
+              },
+              "staticBorrow": {
+                "type": "boolean"
+              },
+              "aliasAllowed": {
+                "type": "boolean"
+              },
+              "allocated": {
+                "const": 0
+              },
+              "released": {
+                "const": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "retirement": {
+      "const": {
+        "rootBytes": 536,
+        "frameBytes": 32,
+        "stages": [
+          "retained",
+          "frame-funded",
+          "root-released",
+          "complete"
+        ],
+        "expected": {
+          "allocated": 32,
+          "released": 568
+        }
+      }
+    },
+    "metadataTransitions": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "copyAdmitted",
+          "initial",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "owned-empty-clear",
+              "sparse-cursor-advance",
+              "terminal-entry-remove"
+            ]
+          },
+          "copyAdmitted": {
+            "type": "boolean"
+          },
+          "initial": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "owned",
+              "cursor",
+              "entry"
+            ],
+            "properties": {
+              "owned": {
+                "type": "boolean"
+              },
+              "cursor": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "entry": {
+                "type": "boolean"
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "owned",
+              "cursor",
+              "entry",
+              "progress",
+              "copiedMetadata"
+            ],
+            "properties": {
+              "owned": {
+                "type": "boolean"
+              },
+              "cursor": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "entry": {
+                "type": "boolean"
+              },
+              "progress": {
+                "type": "boolean"
+              },
+              "copiedMetadata": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

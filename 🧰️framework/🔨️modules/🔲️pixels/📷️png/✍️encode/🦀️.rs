@@ -1,6 +1,9 @@
 //! 📷️ Incremental lossless PNG encoding for cancellable image edits.
-use crate::{editing::{validate_image, PixelEditError, PixelProgress}, RasterImage};
+use crate::{validate_image, PixelEditError, PixelProgress, RasterImage};
 use std::hash::Hasher;
+#[path="🎟️work/🦀️.rs"]
+mod original_work;
+pub use original_work::PngEncodeWork;
 
 /// 🔐️ First-party immutable raster custody supports owned pixels and actual shared read leases.
 pub trait PngRasterSource:semio_framework_value::retirement::RetireOwned {fn raster(&self)->&RasterImage;}

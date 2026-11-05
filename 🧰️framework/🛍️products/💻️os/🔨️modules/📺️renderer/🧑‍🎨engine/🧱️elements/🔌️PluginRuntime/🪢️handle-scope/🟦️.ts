@@ -53,6 +53,7 @@ export type PluginHandleScope = Readonly<{
   turnOutcomes: ReturnType<typeof createTurnOutcomeBroadcast<TurnOutcome>>;
   state: { disposing: boolean; disposal: Promise<void> | null; eventSeq: number; requestActor: Promise<string> | null; extensionRequestSeq: bigint };
   actorIdByInstance: Map<number, string>;
+  appIdByInstance: Map<number,string>;
   closingInstances: Set<number>;
   openingInstances: Map<number, Promise<number>>;
   retiringInstances: Map<number, Promise<void>>;
@@ -71,6 +72,7 @@ export type PluginHandleScope = Readonly<{
 export function createPluginHandleScope(pluginId: string, manifest: KernelPluginWasmHandle["manifest"], registry: ActivationRegistry): PluginHandleScope {
   const shardClient = getShardClient();
   const actorIdByInstance = new Map<number, string>();
+  const appIdByInstance = new Map<number,string>();
   const closingInstances = new Set<number>();
   const openingInstances = new Map<number, Promise<number>>();
   const retiringInstances = new Map<number, Promise<void>>();
@@ -98,6 +100,7 @@ export function createPluginHandleScope(pluginId: string, manifest: KernelPlugin
     turnOutcomes,
     state,
     actorIdByInstance,
+    appIdByInstance,
     closingInstances,
     openingInstances,
     retiringInstances,
@@ -115,7 +118,7 @@ export function createPluginHandleScope(pluginId: string, manifest: KernelPlugin
 /** 🗂️ Phase 3 of {@link loadPluginModule}: the instance table — resolving an instance id to its actor, releasing every
  * per-instance map when it goes, and submitting a turn on its behalf. */
 export function createInstanceTable(scope: PluginHandleScope) {
-  const { pluginId, registry, state, actorIdByInstance, closingInstances, documentBindings, documentBindingGenerations, lifecycleByInstance, uiOwnerByInstance, uiRetirementByInstance, uiSurfaceByInstance, uiIntakesByInstance, uiReadsByInstance } = scope;
+  const { pluginId, registry, state, actorIdByInstance, appIdByInstance, closingInstances, documentBindings, documentBindingGenerations, lifecycleByInstance, uiOwnerByInstance, uiRetirementByInstance, uiSurfaceByInstance, uiIntakesByInstance, uiReadsByInstance } = scope;
   const requireActorId = (instanceId: number): string => {
     const actorId = actorIdByInstance.get(instanceId);
     if (state.disposing) throw new Error("plugin-handle.closed");
@@ -128,6 +131,7 @@ export function createInstanceTable(scope: PluginHandleScope) {
     documentBindings.delete(instanceId);
     documentBindingGenerations.delete(instanceId);
     actorIdByInstance.delete(instanceId);
+    appIdByInstance.delete(instanceId);
     lifecycleByInstance.delete(instanceId);
     uiOwnerByInstance.delete(instanceId);
     uiRetirementByInstance.delete(instanceId);

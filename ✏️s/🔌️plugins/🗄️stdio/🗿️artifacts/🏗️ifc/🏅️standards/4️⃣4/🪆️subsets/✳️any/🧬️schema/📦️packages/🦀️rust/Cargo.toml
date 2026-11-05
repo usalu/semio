@@ -37,6 +37,8 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 
 [dev-dependencies]
+semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
@@ -44,3 +46,6 @@ semio-framework-async-macros = { workspace = true }
 
 [dependencies.semio-s-artifact-stdio-ifc-declarations]
 path = "../../../../../../../📚️catalog/📦️packages/🦀️rust"
+[[test]]
+name = "original_ifc_native_receiving"
+path = "../../../🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🧪️tests/🫴️receiving/🦀️.rs"

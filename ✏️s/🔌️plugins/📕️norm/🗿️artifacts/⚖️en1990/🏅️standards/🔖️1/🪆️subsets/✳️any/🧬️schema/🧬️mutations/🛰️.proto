@@ -73,66 +73,69 @@ message En1990Mutation {
     ChangeReliabilityActionMean change_reliability_action_mean = 69;
     ChangeReliabilityActionSd change_reliability_action_sd = 70;
     ChangeTestQuantity change_test_quantity = 71;
-    ChangeTestDistribution change_test_distribution = 72;
-    ChangeTestSampleSize change_test_sample_size = 73;
-    ChangeTestMean change_test_mean = 74;
-    ChangeTestStdDev change_test_std_dev = 75;
-    ChangeTestVariationKnown change_test_variation_known = 76;
-    ChangeTestConversionFactor change_test_conversion_factor = 77;
-    ChangeTestRequired change_test_required = 78;
-    ChangePlacementX change_placement_x = 79;
-    ChangePlacementY change_placement_y = 80;
-    ChangePlacementZ change_placement_z = 81;
-    ChangePlacementYaw change_placement_yaw = 82;
-    ChangeStructureKind change_structure_kind = 83;
-    InsertBridgeSls insert_bridge_sls = 84;
-    RemoveBridgeSls remove_bridge_sls = 85;
-    InsertFatigueSpectrum insert_fatigue_spectrum = 86;
-    RemoveFatigueSpectrum remove_fatigue_spectrum = 87;
-    InsertReliabilityAnalysis insert_reliability_analysis = 88;
-    RemoveReliabilityAnalysis remove_reliability_analysis = 89;
-    InsertTestSeries insert_test_series = 90;
-    RemoveTestSeries remove_test_series = 91;
-    InsertPlacement insert_placement = 92;
-    RemovePlacement remove_placement = 93;
-    InsertCase insert_case = 94;
-    RemoveCase remove_case = 95;
-    ChangeCaseNumber change_case_number = 96;
-    ChangeCaseText change_case_text = 97;
-    ChangeCaseLabelEn change_case_label_en = 98;
-    ChangeCaseLabelDe change_case_label_de = 99;
-    ChangeCaseEntryId change_case_entry_id = 100;
-    ChangeMemberFrameHeight change_member_frame_height = 101;
-    ChangeMemberFrameDrift change_member_frame_drift = 102;
-    ChangeMemberStoreyHeight change_member_storey_height = 103;
-    ChangeMemberStoreyDrift change_member_storey_drift = 104;
-    ChangeBridgeTrackGauge change_bridge_track_gauge = 105;
-    ChangeBridgeLineSpeed change_bridge_line_speed = 106;
-    ChangeBridgeBallastDepth change_bridge_ballast_depth = 107;
-    ChangeBridgeDeckMass change_bridge_deck_mass = 108;
-    ChangeBridgeNaturalFrequency change_bridge_natural_frequency = 109;
-    ChangeBridgeEndRotation change_bridge_end_rotation = 110;
-    ChangeBridgeBasicWindSpeed change_bridge_basic_wind_speed = 111;
-    ChangeMemberMaterialStrengthK change_member_material_strength_k = 112;
-    ChangeMemberMaterialConvFactor change_member_material_conv_factor = 113;
-    ChangeMemberMatPartialFactor change_member_mat_partial_factor = 114;
-    ChangeMemberMatDesignStrength change_member_mat_design_strength = 115;
-    ChangeMemberNominalDimension change_member_nominal_dimension = 116;
-    ChangeMemberDimensionTolerance change_member_dimension_tolerance = 117;
-    ChangeMemberDesignDimension change_member_design_dimension = 118;
-    ChangeMemberMemberAlphaCr change_member_member_alpha_cr = 119;
-    ChangeMemberSecondOrderAnalysis change_member_second_order_analysis = 120;
-    ChangeBridgeDampingRatio change_bridge_damping_ratio = 121;
-    ChangeFactorOverrideFactor change_factor_override_factor = 122;
-    ChangeFactorOverrideTarget change_factor_override_target = 123;
-    ChangeFactorOverrideValue change_factor_override_value = 124;
-    ChangeFactorOverrideJustif change_factor_override_justif = 125;
-    InsertFactorOverride insert_factor_override = 126;
-    RemoveFactorOverride remove_factor_override = 127;
-    ChangeTrafficGroupGroup change_traffic_group_group = 128;
-    ChangeTrafficGroupVariableId change_traffic_group_variable_id = 129;
-    InsertTrafficGroup insert_traffic_group = 130;
-    RemoveTrafficGroup remove_traffic_group = 131;
+    ChangeTestPairs change_test_pairs = 72;
+    ChangeTestDistribution change_test_distribution = 73;
+    ChangeTestSampleSize change_test_sample_size = 74;
+    ChangeTestMean change_test_mean = 75;
+    ChangeTestStdDev change_test_std_dev = 76;
+    ChangeTestVariationKnown change_test_variation_known = 77;
+    ChangeTestConversionFactor change_test_conversion_factor = 78;
+    ChangeTestRequired change_test_required = 79;
+    ChangeTestTheoryVariation change_test_theory_variation = 80;
+    ChangePlacementX change_placement_x = 81;
+    ChangePlacementY change_placement_y = 82;
+    ChangePlacementZ change_placement_z = 83;
+    ChangePlacementYaw change_placement_yaw = 84;
+    ChangeStructureKind change_structure_kind = 85;
+    InsertBridgeSls insert_bridge_sls = 86;
+    RemoveBridgeSls remove_bridge_sls = 87;
+    InsertFatigueSpectrum insert_fatigue_spectrum = 88;
+    RemoveFatigueSpectrum remove_fatigue_spectrum = 89;
+    InsertReliabilityAnalysis insert_reliability_analysis = 90;
+    RemoveReliabilityAnalysis remove_reliability_analysis = 91;
+    InsertTestSeries insert_test_series = 92;
+    RemoveTestSeries remove_test_series = 93;
+    InsertPlacement insert_placement = 94;
+    RemovePlacement remove_placement = 95;
+    InsertCase insert_case = 96;
+    RemoveCase remove_case = 97;
+    ChangeCaseNumber change_case_number = 98;
+    ChangeCaseText change_case_text = 99;
+    ChangeCaseLabelEn change_case_label_en = 100;
+    ChangeCaseLabelDe change_case_label_de = 101;
+    ChangeCaseEntryId change_case_entry_id = 102;
+    ChangeMemberFrameHeight change_member_frame_height = 103;
+    ChangeMemberFrameDrift change_member_frame_drift = 104;
+    ChangeMemberStoreyHeight change_member_storey_height = 105;
+    ChangeMemberStoreyDrift change_member_storey_drift = 106;
+    ChangeBridgeTrackGauge change_bridge_track_gauge = 107;
+    ChangeBridgeLineSpeed change_bridge_line_speed = 108;
+    ChangeBridgeBallastDepth change_bridge_ballast_depth = 109;
+    ChangeBridgeDeckMass change_bridge_deck_mass = 110;
+    ChangeBridgeNaturalFrequency change_bridge_natural_frequency = 111;
+    ChangeBridgeEndRotation change_bridge_end_rotation = 112;
+    ChangeBridgeBasicWindSpeed change_bridge_basic_wind_speed = 113;
+    ChangeMemberMaterialStrengthK change_member_material_strength_k = 114;
+    ChangeMemberMaterialConvFactor change_member_material_conv_factor = 115;
+    ChangeMemberMatPartialFactor change_member_mat_partial_factor = 116;
+    ChangeMemberMatDesignStrength change_member_mat_design_strength = 117;
+    ChangeMemberNominalDimension change_member_nominal_dimension = 118;
+    ChangeMemberDimensionTolerance change_member_dimension_tolerance = 119;
+    ChangeMemberDesignDimension change_member_design_dimension = 120;
+    ChangeMemberMemberAlphaCr change_member_member_alpha_cr = 121;
+    ChangeMemberSecondOrderAnalysis change_member_second_order_analysis = 122;
+    ChangeBridgeDampingRatio change_bridge_damping_ratio = 123;
+    ChangeFactorOverrideFactor change_factor_override_factor = 124;
+    ChangeFactorOverrideTarget change_factor_override_target = 125;
+    ChangeFactorOverrideValue change_factor_override_value = 126;
+    ChangeFactorOverrideJustif change_factor_override_justif = 127;
+    InsertFactorOverride insert_factor_override = 128;
+    RemoveFactorOverride remove_factor_override = 129;
+    ChangeTrafficGroupGroup change_traffic_group_group = 130;
+    ChangeTrafficGroupVariableId change_traffic_group_variable_id = 131;
+    ChangeReliabilityMemberId change_reliability_member_id = 132;
+    InsertTrafficGroup insert_traffic_group = 133;
+    RemoveTrafficGroup remove_traffic_group = 134;
   }
 }
 message ChangeAnnex {
@@ -402,6 +405,10 @@ message ChangeTestQuantity {
   string id = 1;
   string new_quantity = 2;
 }
+message ChangeTestPairs {
+  string id = 1;
+  string new_pairs = 2;
+}
 message ChangeTestDistribution {
   string id = 1;
   TestDistribution new_distribution = 2;
@@ -429,6 +436,10 @@ message ChangeTestConversionFactor {
 message ChangeTestRequired {
   string id = 1;
   double new_required = 2;
+}
+message ChangeTestTheoryVariation {
+  string id = 1;
+  double new_theory_variation = 2;
 }
 message ChangePlacementX {
   string id = 1;
@@ -627,6 +638,10 @@ message ChangeTrafficGroupGroup {
 message ChangeTrafficGroupVariableId {
   string id = 1;
   string new_variable_id = 2;
+}
+message ChangeReliabilityMemberId {
+  string id = 1;
+  string new_member_id = 2;
 }
 message InsertTrafficGroup {
   optional uint64 index = 1;

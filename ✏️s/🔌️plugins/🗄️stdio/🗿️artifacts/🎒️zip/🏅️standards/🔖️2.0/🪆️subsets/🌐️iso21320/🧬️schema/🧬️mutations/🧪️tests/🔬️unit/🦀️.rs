@@ -1,3 +1,4 @@
+use protocol::command::ColdMutation;
 use crate::schema::diff;
 use crate::schema::snapshot::ZipEntry;
 use crate::ZipSnapshot;

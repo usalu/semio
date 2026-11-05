@@ -1,0 +1,33 @@
+{
+  "schema": "host-event.command-birth.v1",
+  "windowId": "composite:é",
+  "headerCopies": 2,
+  "boxedHeaders": 1,
+  "depth": 1,
+  "cases": [
+    {
+      "kind": "blur",
+      "bodyBytes": null
+    },
+    {
+      "kind": "captureLost",
+      "bodyBytes": null
+    },
+    {
+      "kind": "utilityChanged",
+      "bodyBytes": null
+    },
+    {
+      "kind": "frozen",
+      "bodyBytes": null
+    },
+    {
+      "kind": "baseMoved",
+      "bodyBytes": null
+    },
+    {
+      "kind": "retiring",
+      "bodyBytes": 7
+    }
+  ]
+}

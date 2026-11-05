@@ -23,15 +23,7 @@
 
 use std::fmt;
 
-#[path = "🛫️encode/🔤️text/🦀️.rs"]
-mod native_text;
-pub use native_text::{ArtifactCanonicalJsonText, ArtifactCanonicalJsonTextCursor, ArtifactCanonicalJsonTextStep, canonical_escape, canonical_escaped_byte};
-#[path = "🛫️encode/🔣️scalar/🦀️.rs"]
-mod native_scalar;
-pub use native_scalar::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonScalarBytes};
-#[path = "🛫️encode/🧭️tree/🦀️.rs"]
-mod native_tree;
-pub use native_tree::{ArtifactCanonicalDecimalI64, ArtifactCanonicalDecimalU64, ArtifactCanonicalHexWordArray, ArtifactCanonicalHexWordF32, ArtifactCanonicalHexWordList, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonTreeWireCursor, ArtifactCanonicalJsonTreeWireStep};
+pub use semio_framework_pack_json_canonical::{ArtifactCanonicalJsonText, ArtifactCanonicalJsonTextCursor, ArtifactCanonicalJsonTextStep, canonical_escape, canonical_escaped_byte, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonScalarBytes, ArtifactCanonicalDecimalI64, ArtifactCanonicalDecimalU64, ArtifactCanonicalHexWordArray, ArtifactCanonicalHexWordF32, ArtifactCanonicalHexWordList, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonTreeWireCursor, ArtifactCanonicalJsonTreeWireStep};
 
 #[cfg(test)]
 #[global_allocator]
@@ -174,6 +166,7 @@ macro_rules! json_object_internal {
 #[cfg(feature = "testkit")]
 #[doc(hidden)]
 pub mod testkit {
-    pub use super::native_tree::testkit as tree;
+    pub use semio_framework_pack_json_canonical::testkit::tree;
     pub type JsonLexeme = super::JsonLexeme;
 }
+

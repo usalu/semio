@@ -17,3 +17,19 @@ pub use binding::*;
 #[path="output.rs"]
 mod output;
 pub use output::*;
+
+#[path = "binding-source.rs"]
+mod binding_source;
+pub use binding_source::*;
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+#[cfg(test)]
+#[path="page-source-tests.rs"]
+mod page_source_tests;
+
+#[path="page-source.rs"]
+mod page_source;
+pub use page_source::*;

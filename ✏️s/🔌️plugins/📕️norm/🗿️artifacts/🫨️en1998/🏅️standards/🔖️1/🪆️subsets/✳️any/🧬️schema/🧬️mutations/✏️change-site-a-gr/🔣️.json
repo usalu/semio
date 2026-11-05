@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-site-a-gr",
   "semanticKind": "change-site-a-gr",
-  "displayName": "Change a gr",
+  "displayName": "Change reference ground acceleration",
   "emoji": "✏️",
   "aggregateVariant": "ChangeSiteAGr",
   "payloadSchema": "🧬️schema/🔣️.json",

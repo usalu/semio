@@ -1,0 +1,18 @@
+{
+  "InsertBracing": {
+    "index": 0,
+    "bracing": {
+      "id": "bracing-1",
+      "kind": "plan-bracing",
+      "memberId": "beam-B1",
+      "stabilisedCount": 4,
+      "spacingM": 0.8,
+      "lengthM": 6.0,
+      "braceWidthM": 0.06,
+      "braceDepthM": 0.12,
+      "compressionForceN": 20000.0,
+      "resistanceN": 2000.0,
+      "stiffnessNPerM": 500000.0
+    }
+  }
+}

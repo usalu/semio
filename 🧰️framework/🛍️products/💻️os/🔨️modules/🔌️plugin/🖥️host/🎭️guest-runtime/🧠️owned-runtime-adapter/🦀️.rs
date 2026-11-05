@@ -45,7 +45,7 @@ impl GuestRuntime for OwnedRuntime {
         Ok(GuestInstance { actor, state: GuestInstanceState::Owned(self.instantiate_actor(owned_compiled(compiled)?)?) })
     }
 
-    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &mut [Event], budget: Budget, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         self.execute_actor_turn(owned_instance_mut(inst)?, events, budget, identity)
     }
 

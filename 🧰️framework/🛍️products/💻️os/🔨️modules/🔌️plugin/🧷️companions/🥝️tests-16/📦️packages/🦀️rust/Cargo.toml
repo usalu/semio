@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 [dependencies]
 
 [dev-dependencies]
+semio-framework-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
 semio-framework-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-plugin-builder = { path = "../../../../🏗️builder/📦️packages/🦀️rust" }
 semio-framework-plugin-composition-publication = { path = "../../../../🧩️composition/📬️publication/📦️packages/🦀️rust", features = ["artifact-app-testing"] }

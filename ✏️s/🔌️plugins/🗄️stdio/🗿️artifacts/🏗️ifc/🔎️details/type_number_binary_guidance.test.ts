@@ -18,7 +18,7 @@ for(const row of law.cases)test('actual numeric control path and editable raw ca
  expect(exact(result.response.fields.map(field=>{const current=at(request.args,field.path);return{kind:field.kind,format:field.kind==='text'?field.format:null,value:field.kind==='text'?current??'':current&&typeof current==='object'?(current as {kind?:string}).kind??null:null};}))).toBe(exact(row.fields));
  if(row.input!==null)for(const [index,field] of result.response.fields.entries()){
   const supplied=field.kind==='choice'?row.input.kind:at(request.args,field.path);expect(typeof supplied).toBe('string');
-  expect(exact(applyStagedFormBinding(request.args,stagedFormStatus(result.response),result.bindings[index]!,supplied as string))).toBe(args);
+  expect(exact(applyStagedFormBinding(request.args,stagedFormStatus({...result.response,ready:false}),result.bindings[index]!,supplied as string))).toBe(args);
  }
  expect(exact(request.args)).toBe(args);expect(exact(source)).toBe(before);
 });

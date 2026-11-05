@@ -31,10 +31,11 @@ pub struct ArtifactCanonicalEditAuthorityCursor<M:Send+Sync+'static>{
  right_offset:usize,
  verifying:bool,
  result:Option<bool>,
+ last_work:u64,
 }
 impl<M:Send+Sync+'static> ArtifactCanonicalEditAuthorityCursor<M>{
  pub fn constructor_demand()->RetirementDemand{copy(size_of::<Self>())}
- pub fn admit(authority:RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>,edit:RetainedOwnedProjection<Edit<M>>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>,RetainedOwnedProjection<Edit<M>>)>{let demand=Self::constructor_demand();if !admitted(demand,grant){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"semantic authority requires both original alias transfers"),authority,edit));}Ok((Self{authority:Some(authority),edit:Some(edit),scalar:true,field:0,left_chunk:0,left_offset:0,right_chunk:0,right_offset:0,verifying:true,result:None},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
+ pub fn admit(authority:RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>,edit:RetainedOwnedProjection<Edit<M>>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>,RetainedOwnedProjection<Edit<M>>)>{let demand=Self::constructor_demand();if !admitted(demand,grant){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"semantic authority requires both original alias transfers"),authority,edit));}Ok((Self{authority:Some(authority),edit:Some(edit),scalar:true,field:0,left_chunk:0,left_offset:0,right_chunk:0,right_offset:0,verifying:true,result:None,last_work:0},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
  pub fn next_demand(&self)->Result<RetirementDemand,ValueError>{
   if self.verifying{return Ok(copy(if self.scalar{size_of::<HybridLogicalTimestamp>()*2+size_of::<usize>()*5+size_of::<i32>()*2}else{2}));}
   if let Some(owner)=self.edit.as_ref(){return if owner.terminal_is_empty(){Ok(copy(size_of::<RetainedOwnedProjection<Edit<M>>>() ))}else{projection_demand(owner)};}
@@ -44,17 +45,23 @@ impl<M:Send+Sync+'static> ArtifactCanonicalEditAuthorityCursor<M>{
  pub fn begin_close(&mut self){self.verifying=false;self.result=None;}
  pub fn terminal_is_empty(&self)->bool{self.edit.is_none()&&self.authority.is_none()}
  pub fn decision(&self)->Option<bool>{if self.terminal_is_empty(){self.result}else{None}}
+ /// 🧮️ Includes actual comparison and alias-close work from the most recent call.
+ pub fn last_turn_work(&self)->u64{self.last_work}
+ /// ⛽️ Bounds the comparison window and four optional field transitions before caller reservation.
+ pub fn next_work_demand(&self)->u64{if self.terminal_is_empty(){0}else if self.verifying&&!self.scalar{256}else{1}}
  fn pair<'a>(field:usize,authority:&'a dyn ArtifactCanonicalEditAuthority,edit:&'a Edit<M>)->Result<(Option<Text<'a>>,Option<Text<'a>>),ValueError>{let meta=edit.mutation_meta.first().ok_or_else(||refusal("semantic authority lost original metadata"))?;Ok(match field{0=>(Some(authority.actor()),edit.actor.as_ref().map(|value|value as Text<'_>)),1=>(authority.line(),edit.line.as_ref().map(|value|value as Text<'_>)),2=>(Some(authority.actor()),meta.author_id.as_ref().map(|value|&value.0 as Text<'_>)),3=>(authority.group(),meta.group_id.as_ref().map(|value|value as Text<'_>)),_=>return Err(refusal("semantic authority native field is absent"))})}
  pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+  self.last_work=0;
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}let demand=self.next_demand()?;if !admitted(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
+  self.last_work=1;
   if self.verifying{
    let authority=self.authority.as_ref().unwrap().borrow()?;let edit=self.edit.as_ref().unwrap().borrow()?;let authority=authority.get();let edit=edit.get();
    if self.scalar{self.scalar=false;let valid=!edit.id.is_empty()&&edit.id.len()<=128&&edit.sequence_number==authority.sequence_number()&&edit.forwards.len()==1&&edit.mutation_meta.len()==1&&edit.mutation_meta[0].timestamp==authority.clock();if !valid{self.verifying=false;self.result=Some(false);}}
    else{
-    let budget=(grant.maximum_copy_bytes/2).max(1);let mut compared=0usize;
+    let budget=(grant.maximum_copy_bytes/2).clamp(1,128);let mut compared=0usize;self.last_work=0;
     while self.verifying&&compared<budget{
      if self.field==4{self.verifying=false;self.result=Some(true);break;}
-     let(left,right)=Self::pair(self.field,authority,edit)?;
+     self.last_work+=1;let(left,right)=Self::pair(self.field,authority,edit)?;
      match(left,right){
       (None,None)=>self.field+=1,
       (None,Some(_))|(Some(_),None)=>{self.verifying=false;self.result=Some(false);}
@@ -63,7 +70,7 @@ impl<M:Send+Sync+'static> ArtifactCanonicalEditAuthorityCursor<M>{
        else{
         loop{
          if compared==budget{break;}
-         let a=ArtifactCanonicalJsonText::Native(left).next_byte(&mut self.left_chunk,&mut self.left_offset).map_err(refusal)?;let b=ArtifactCanonicalJsonText::Native(right).next_byte(&mut self.right_chunk,&mut self.right_offset).map_err(refusal)?;compared+=1;
+         self.last_work+=1;let a=ArtifactCanonicalJsonText::Native(left).next_byte(&mut self.left_chunk,&mut self.left_offset).map_err(refusal)?;let b=ArtifactCanonicalJsonText::Native(right).next_byte(&mut self.right_chunk,&mut self.right_offset).map_err(refusal)?;compared+=1;
          if a!=b{self.verifying=false;self.result=Some(false);break;}
          if a.is_none(){self.field+=1;self.left_chunk=0;self.left_offset=0;self.right_chunk=0;self.right_offset=0;break;}
         }
@@ -73,8 +80,8 @@ impl<M:Send+Sync+'static> ArtifactCanonicalEditAuthorityCursor<M>{
     }
     progress.copied_bytes=demand.copy_bytes.max(compared*2);
    }
-  }else if let Some(owner)=self.edit.as_mut(){if owner.terminal_is_empty(){self.edit=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;progress=owner.close_step(child).result?.progress();}}
-  else if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){self.authority=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;progress=owner.close_step(child).result?.progress();}}
+  }else if let Some(owner)=self.edit.as_mut(){if owner.terminal_is_empty(){self.edit=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;let turn=owner.close_step(child);self.last_work=turn.work;progress=turn.result?.progress();}}
+  else if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){self.authority=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;let turn=owner.close_step(child);self.last_work=turn.work;progress=turn.result?.progress();}}
   Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
  }
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.begin_close();self.advance(grant)}

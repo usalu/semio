@@ -290,7 +290,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
 ];
 
 /// 🏷️ Exact / `[]` / `*` template lookup for the ISO 16757 catalogue subject.
-pub fn iso16757_field_meta(path: &str) -> Option<FieldSpec> {
+fn describe_iso16757_field(path: &str) -> Option<FieldSpec> {
     if let Some(rest) = path.strip_prefix("catalogue.compositions.") {
         let templated = if let Some((_key, tail)) = rest.split_once('.') {
             format!("catalogue.compositions.*.{tail}")
@@ -335,3 +335,15 @@ pub fn iso16757_field_meta(path: &str) -> Option<FieldSpec> {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+/// 🛡️ Descriptive field metadata admitted by the family's actual native setter vocabulary.
+pub fn iso16757_field_meta(path: &str) -> Option<FieldSpec> {
+    semio_s_plugin_norm_app_surface::admit_list_meta(
+        semio_s_plugin_norm_app_surface::admit_field_meta(
+        describe_iso16757_field(path),
+        semio_s_artifact_norm_iso16757_mutations::EDIT_RULES.can_set_field(path),
+        ),
+        semio_s_artifact_norm_iso16757_mutations::EDIT_RULES.can_insert_item(path),
+        semio_s_artifact_norm_iso16757_mutations::EDIT_RULES.can_remove_item(path, semio_s_artifact_norm_iso16757_mutations::ID_REMOVALS.iter().map(|rule| rule.path)),
+    )
+}

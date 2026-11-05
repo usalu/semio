@@ -76,6 +76,7 @@ import { type ChangeRingShellId, parseChangeRingShellId } from "./⭕️change-r
 import { type ChangeRingThickness, parseChangeRingThickness } from "./⭕️change-ring-thickness/🧬️schema/🟦️.ts";
 import { type ChangeRingX, parseChangeRingX } from "./⭕️change-ring-x/🧬️schema/🟦️.ts";
 import { type ChangeAnnex, parseChangeAnnex } from "./🌍️change-annex/🧬️schema/🟦️.ts";
+import { type ChangeReliabilityClass, parseChangeReliabilityClass } from "./🎯change-reliability-class/🧬️schema/🟦️.ts";
 import { type ChangeCategoryDetailCategory, parseChangeCategoryDetailCategory } from "./🎯️change-category-detail-category/🧬️schema/🟦️.ts";
 import { type ChangeCategoryDetailType, parseChangeCategoryDetailType } from "./🎯️change-category-detail-type/🧬️schema/🟦️.ts";
 import { type ChangeCategoryElementId, parseChangeCategoryElementId } from "./🎯️change-category-element-id/🧬️schema/🟦️.ts";
@@ -411,7 +412,8 @@ export type En1999Mutation =
   | ChangeConnHoleStagger
   | ChangeTransverseSides
   | InsertTransverseStiffener
-  | RemoveTransverseStiffener;
+  | RemoveTransverseStiffener
+  | ChangeReliabilityClass;
 
 export const parseEn1999Mutation: NormWireReader<En1999Mutation> = normWireTagged<En1999Mutation, "mutation">("mutation", {
   changeAnnex: parseChangeAnnex,
@@ -618,4 +620,5 @@ export const parseEn1999Mutation: NormWireReader<En1999Mutation> = normWireTagge
   changeTransverseSides: parseChangeTransverseSides,
   insertTransverseStiffener: parseInsertTransverseStiffener,
   removeTransverseStiffener: parseRemoveTransverseStiffener,
+  changeReliabilityClass: parseChangeReliabilityClass,
 });

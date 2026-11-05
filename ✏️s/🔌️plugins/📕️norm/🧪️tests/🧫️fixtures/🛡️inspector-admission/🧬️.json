@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "locales",
+    "families",
+    "fields"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "readOnly"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "en",
+              "de"
+            ]
+          },
+          "readOnly": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "families": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "provider",
+          "function",
+          "mutations"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1
+          },
+          "function": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mutations": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "value",
+          "editable",
+          "text"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "editable": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "en",
+              "de"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "minLength": 1
+              },
+              "de": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

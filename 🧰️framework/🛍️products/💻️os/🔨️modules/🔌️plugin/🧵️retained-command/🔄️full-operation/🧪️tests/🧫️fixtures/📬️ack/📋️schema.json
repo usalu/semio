@@ -1,0 +1,274 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "evidence",
+    "initial",
+    "advance",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1
+    },
+    "initial": {
+      "type": "object",
+      "required": [
+        "stage",
+        "token",
+        "lane",
+        "presented",
+        "payloadOctets"
+      ],
+      "properties": {
+        "stage": {
+          "const": "awaitingAck"
+        },
+        "token": {
+          "type": "object",
+          "required": [
+            "operation",
+            "receiver",
+            "sequence",
+            "generation",
+            "attempt"
+          ],
+          "properties": {
+            "operation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "receiver": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "generation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "attempt": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "additionalProperties": false
+        },
+        "lane": {
+          "const": "per-case"
+        },
+        "presented": {
+          "const": true
+        },
+        "payloadOctets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "advance": {
+      "type": "object",
+      "required": [
+        "funding",
+        "denial",
+        "limit",
+        "forbiddenFixtureHelpers"
+      ],
+      "properties": {
+        "funding": {
+          "const": "actual-original-context"
+        },
+        "denial": {
+          "const": "zero-only-named-currency-keep-other-authored-bounds"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "forbiddenFixtureHelpers": {
+          "const": [
+            "close_fixture_original_page"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 13,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "lane",
+          "ackToken",
+          "deniedCurrency",
+          "expected",
+          "sourceMatches",
+          "initialToken"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "lane": {
+            "enum": [
+              "progress",
+              "artifact",
+              "terminal"
+            ]
+          },
+          "ackToken": {
+            "type": "object",
+            "required": [
+              "operation",
+              "receiver",
+              "sequence",
+              "generation",
+              "attempt"
+            ],
+            "properties": {
+              "operation": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "receiver": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "generation": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "attempt": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            "additionalProperties": false
+          },
+          "deniedCurrency": {
+            "enum": [
+              "none",
+              "items",
+              "copyBytes",
+              "releaseBytes",
+              "depth"
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "ackAccepted",
+              "stageAfterAck",
+              "originalRetainedAfterAck",
+              "presentedAfterAck",
+              "originalRetainedAfterAdvance",
+              "presentedAfterAdvance",
+              "samePageAfterAdvance",
+              "queueNextAllowed",
+              "operationMustReachTerminal",
+              "advanceRefused"
+            ],
+            "properties": {
+              "ackAccepted": {
+                "type": "boolean"
+              },
+              "stageAfterAck": {
+                "enum": [
+                  "awaitingAck",
+                  "publishing",
+                  "retiring"
+                ]
+              },
+              "originalRetainedAfterAck": {
+                "type": "boolean"
+              },
+              "presentedAfterAck": {
+                "type": "boolean"
+              },
+              "originalRetainedAfterAdvance": {
+                "type": "boolean"
+              },
+              "presentedAfterAdvance": {
+                "type": "boolean"
+              },
+              "samePageAfterAdvance": {
+                "type": "boolean"
+              },
+              "queueNextAllowed": {
+                "type": "boolean"
+              },
+              "operationMustReachTerminal": {
+                "type": "boolean"
+              },
+              "advanceRefused": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "sourceMatches": {
+            "type": "boolean"
+          },
+          "initialToken": {
+            "type": "object",
+            "required": [
+              "operation",
+              "receiver",
+              "sequence",
+              "generation",
+              "attempt"
+            ],
+            "properties": {
+              "operation": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "receiver": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "generation": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "attempt": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

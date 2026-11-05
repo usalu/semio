@@ -14,6 +14,26 @@ pub struct MutationSourceProvenance {
     pub taxonomy_path: &'static str,
 }
 
+/// 🏗️ A declared input source refusal is a compile fact, never a request to compile schemas during interaction.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CompiledMutationInputError {
+    pub code: &'static str,
+    pub pointer: &'static str,
+    pub detail: &'static str,
+}
+
+/// 🧬️ Immutable input declarations compiled from this exact leaf and its exact schema document bytes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CompiledMutationInputDefinitions {
+    pub provenance: MutationSourceProvenance,
+    pub semantic_kind: &'static str,
+    pub schema_sha256: [u8; 32],
+    pub document_sha256: &'static [[u8; 32]],
+    pub framework_document_sha256: &'static [[u8; 32]],
+    pub definitions_json: Result<&'static str, CompiledMutationInputError>,
+    pub seed_definitions_json: Result<&'static str, CompiledMutationInputError>,
+}
+
 /// 🏘️ One explicitly registered physical domain-operation owner and its unchanged semantic identity.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MutationDomainOperation {
@@ -210,6 +230,9 @@ pub trait MutationLeaf {
     /// framework module) tree holds — embedded by `#[derive(dsl::MutationLeaf)]` and published at runtime, so every input resolves
     /// whatever facet or artifact of the plugin it lives in (design §16.3).
     const PAYLOAD_SCHEMA_DOCUMENTS: &'static [&'static str] = &[];
+
+    /// 🪺️ Static constructor declarations emitted by the canonical source compiler, independent of history editability.
+    const COMPILED_INPUTS: Option<CompiledMutationInputDefinitions> = None;
     /// 📥️ [`Self::PAYLOAD_SCHEMA`] when this operation is user-editable, else `None`. A leaf whose type wraps its payload
     /// in one variant of an enum (`#[mutation_leaf(payload = Apply)]`) is editable only in that variant; its other
     /// variants (an internal inverse such as `Restore`) are not.

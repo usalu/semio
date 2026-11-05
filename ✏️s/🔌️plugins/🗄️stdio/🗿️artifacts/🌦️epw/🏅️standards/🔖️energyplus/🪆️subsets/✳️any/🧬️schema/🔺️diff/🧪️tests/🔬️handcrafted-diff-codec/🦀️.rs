@@ -1,3 +1,4 @@
+use protocol::{DiffText, DiffBinary};
 use crate::{standards::energyplus::subsets::any::schema::snapshot::EpwLocation, standards::energyplus::subsets::any::schema::snapshot::EpwRecord, standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot};
 use crate::standards::energyplus::subsets::any::schema::diff::*;
 

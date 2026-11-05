@@ -1,0 +1,25 @@
+{
+  "acknowledgedSchema": {
+    "type": "object",
+    "required": ["persisted", "pendingMutations"],
+    "properties": { "persisted": { "const": true }, "pendingMutations": { "const": 0 } },
+    "not": { "required": ["writeFailure"] }
+  },
+  "statuses": [
+    { "name": "missing status", "status": null, "acknowledged": false },
+    { "name": "acknowledged write", "status": { "persisted": true, "pendingMutations": 0 }, "acknowledged": true },
+    { "name": "pending write", "status": { "persisted": true, "pendingMutations": 1 }, "acknowledged": false },
+    { "name": "unpersisted write", "status": { "persisted": false, "pendingMutations": 0 }, "acknowledged": false },
+    { "name": "failed write", "status": { "persisted": true, "pendingMutations": 0, "writeFailure": { "code": "folder-write-failed" } }, "acknowledged": false }
+  ],
+  "retirement": [
+    { "during": "flush", "expected": "stay", "confirmations": 0 },
+    { "during": "confirm", "expected": "stay", "confirmations": 1 }
+  ],
+  "close": [
+    { "name": "acknowledged after flush", "outcome": "flushed", "after": "saved", "expected": "close", "confirmations": 0 },
+    { "name": "status lost during flush", "outcome": "flushed", "after": "unknown", "expected": "stay", "confirmations": 1 },
+    { "name": "still pending after flush", "outcome": "flushed", "after": "unsaved", "expected": "stay", "confirmations": 1 },
+    { "name": "keep cancels the close", "outcome": "cancelled", "after": "unsaved", "expected": "stay", "confirmations": 0 }
+  ]
+}

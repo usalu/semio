@@ -18,7 +18,7 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeTestPairs where Op
         verb: "change",
         entity: "test-pairs",
         kind: "change-test-pairs",
-        record: "ChangedTestTest pairs r_e:r_t (D.7.2)",
+        record: "ChangedTestPairs",
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

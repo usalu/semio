@@ -1,0 +1,238 @@
+{
+  "schema": {
+    "type": "array",
+    "minItems": 6,
+    "items": {
+      "type": "object",
+      "required": [
+        "name",
+        "trigger",
+        "attached",
+        "decision",
+        "expected",
+        "sourcePredicted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "attached": {
+          "type": "boolean"
+        },
+        "decision": {
+          "enum": [
+            "keep",
+            "persist",
+            "discard"
+          ]
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourcePredicted": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "cases": [
+    {
+      "name": "Unbound edited palette editor Keep retains final window",
+      "trigger": "canvas-final-window",
+      "attached": false,
+      "decision": "keep",
+      "expected": [
+        "guard",
+        "keep"
+      ],
+      "sourcePredicted": [
+        "note",
+        "destroy",
+        "panel-remove"
+      ]
+    },
+    {
+      "name": "Unbound edited palette editor saves its captured owner despite focus moving",
+      "trigger": "canvas-final-window",
+      "attached": false,
+      "decision": "persist",
+      "expected": [
+        "identity",
+        "archive",
+        "write",
+        "attach",
+        "catalog-readback",
+        "guard-accepted",
+        "drain",
+        "destroy",
+        "panel-remove"
+      ],
+      "sourcePredicted": [
+        "note",
+        "destroy",
+        "panel-remove"
+      ]
+    },
+    {
+      "name": "Unbound write failure can keep editor",
+      "trigger": "canvas-final-window",
+      "attached": false,
+      "decision": "keep",
+      "expected": [
+        "write-failed",
+        "confirm",
+        "keep"
+      ],
+      "sourcePredicted": [
+        "note",
+        "destroy",
+        "panel-remove"
+      ]
+    },
+    {
+      "name": "Reload with multiple editors Keep is admitted before any destruction",
+      "trigger": "plugin-reload",
+      "attached": true,
+      "decision": "keep",
+      "expected": [
+        "collect",
+        "guard-all",
+        "keep",
+        "release-candidate"
+      ],
+      "sourcePredicted": [
+        "load-candidate",
+        "destroy-active",
+        "destroy-spawned",
+        "dispose-old"
+      ]
+    },
+    {
+      "name": "Uninstall refuses after unbound editor Keep",
+      "trigger": "plugin-uninstall",
+      "attached": false,
+      "decision": "keep",
+      "expected": [
+        "collect",
+        "guard",
+        "keep"
+      ],
+      "sourcePredicted": [
+        "destroy-spawned",
+        "remove-plugin",
+        "dispose"
+      ]
+    },
+    {
+      "name": "Ordinary app switch Keep retains predecessor",
+      "trigger": "app-switch-without-document-source",
+      "attached": false,
+      "decision": "keep",
+      "expected": [
+        "guard",
+        "keep"
+      ],
+      "sourcePredicted": [
+        "quiesce",
+        "seal",
+        "create-successor",
+        "publish-successor",
+        "close-attachments",
+        "drain",
+        "destroy-predecessor"
+      ]
+    },
+    {
+      "name": "Accepted unbound discard targets only captured owner",
+      "trigger": "canvas-final-window",
+      "attached": false,
+      "decision": "discard",
+      "expected": [
+        "guard",
+        "discard",
+        "ownership-check",
+        "drain",
+        "destroy-captured",
+        "panel-remove-captured"
+      ],
+      "sourcePredicted": [
+        "note",
+        "destroy",
+        "panel-remove"
+      ]
+    },
+    {
+      "name": "Explicit null native identity means no document",
+      "trigger": "runtime-identity-null",
+      "attached": false,
+      "decision": "discard",
+      "expected": [
+        "identity-null",
+        "retire-nondocument"
+      ],
+      "sourcePredicted": [
+        "destroy"
+      ]
+    },
+    {
+      "name": "Identity read failure is not no-document proof",
+      "trigger": "runtime-identity-rejects",
+      "attached": false,
+      "decision": "keep",
+      "expected": [
+        "identity-failed",
+        "confirm",
+        "keep"
+      ],
+      "sourcePredicted": [
+        "destroy"
+      ]
+    },
+    {
+      "name": "Zero history can still hold meaningful genesis",
+      "trigger": "document-id-present-zero-history",
+      "attached": false,
+      "decision": "persist",
+      "expected": [
+        "identity",
+        "archive",
+        "write",
+        "attach",
+        "catalog-readback",
+        "guard-accepted",
+        "destroy"
+      ],
+      "sourcePredicted": [
+        "destroy"
+      ]
+    },
+    {
+      "name": "Focus moves while captured owner persists",
+      "trigger": "persist-original-owner-after-focus-change",
+      "attached": false,
+      "decision": "persist",
+      "expected": [
+        "capture-owner-a",
+        "focus-b",
+        "write-a",
+        "attach-a",
+        "catalog-readback-a",
+        "destroy-a",
+        "retain-b"
+      ],
+      "sourcePredicted": [
+        "destroy-a"
+      ]
+    }
+  ]
+}

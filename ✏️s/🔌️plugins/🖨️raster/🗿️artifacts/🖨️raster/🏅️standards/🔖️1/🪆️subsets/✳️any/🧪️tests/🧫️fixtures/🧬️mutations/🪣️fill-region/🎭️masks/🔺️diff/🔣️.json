@@ -1,7 +1,7 @@
 {
   "assets": {
     "entries": {
-      "mask-paint-a95bed9ba57cbe52": {
+      "image-abc19a73d8f9ccfc": {
         "schema": "stdio.semio.image",
         "width": 6,
         "height": 4,
@@ -132,7 +132,7 @@
             "mask": {
               "enabled": true,
               "height": null,
-              "imageKey": "mask-paint-a95bed9ba57cbe52",
+              "imageKey": "image-abc19a73d8f9ccfc",
               "invert": false,
               "linked": true,
               "transform": {

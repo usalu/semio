@@ -13,6 +13,7 @@ import { type ActiveSession, type SpaceProgramEntry } from "../../../🐚️Shel
 import type { ViewModel } from "../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import { applyFrameworkLayoutSeed } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { buildSpacePanelState, panelJsonFromState, parsePanelState, studioPanelFocusingSpawned, type SpacePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { captureProgramRetirementOwnersV1, sameProgramRetirementOwnersV1, type ProgramRetirementRequestV1, type ProgramRetirementLeaseV1 } from "../../🚪️program-retirement/🟦️.ts";
 import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import { seededActiveWindowId } from "../../🎚️shell-model/🟦️.tsx";
 import { encodeWindowActionInvocation } from "../../📨️window-invocation/🟦️.ts";
@@ -22,15 +23,27 @@ import type { useDocumentServicesState } from "../🔶️document-services/🟦�
 import type { useUpdateSpacePanelState } from "../🔸️update-space-panel/🟦️.ts";
 
 /** 🟡 Builds switchToPluginApp, syncSpawnedPluginDocument, ensureSpawnedPlugin of useSpawnedSession. */
-export function useSwitchPluginAppState({ hostMode, hostApp, setSurfaceSwitchBusy, sessionSwitchGateRef, session, loadedPlugins, sessionWorkRef, sealedInstancesRef, loadedPluginsRef, sessionRef, openDocumentSessionsRef, openDocumentRef, closeDocumentRef, documentAttachmentLanesRef, retireSessionInstance, dispatch, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, landingAppId, rememberOpenSpaceId, openInstanceIdRef, refreshUi, showTransientNoticeRef, documentServices, documentServiceInventoryRef, backboneWorkerRef }: Pick<ReturnType<typeof useDocumentServicesState>, "hostMode" | "hostApp" | "setSurfaceSwitchBusy" | "sessionSwitchGateRef" | "session" | "loadedPlugins" | "sessionWorkRef" | "sealedInstancesRef" | "loadedPluginsRef" | "sessionRef" | "openDocumentSessionsRef" | "openDocumentRef" | "closeDocumentRef" | "documentAttachmentLanesRef" | "dispatch" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "extraWindowInstancesRef" | "extraWindowCounterRef" | "landingAppId" | "rememberOpenSpaceId" | "openInstanceIdRef" | "refreshUi" | "showTransientNoticeRef" | "documentServices" | "documentServiceInventoryRef" | "backboneWorkerRef"> & Pick<ReturnType<typeof useUpdateSpacePanelState>, "retireSessionInstance">) {
+export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetirementRef, hostMode, hostApp, setSurfaceSwitchBusy, sessionSwitchGateRef, session, loadedPlugins, sessionWorkRef, sealedInstancesRef, loadedPluginsRef, sessionRef, openDocumentSessionsRef, openDocumentRef, closeDocumentRef, documentAttachmentLanesRef, retireSessionInstance, dispatch, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, landingAppId, rememberOpenSpaceId, openInstanceIdRef, refreshUi, showTransientNoticeRef, documentServices, documentServiceInventoryRef, backboneWorkerRef }: Pick<ReturnType<typeof useDocumentServicesState>, "hostMode" | "hostApp" | "setSurfaceSwitchBusy" | "sessionSwitchGateRef" | "session" | "loadedPlugins" | "sessionWorkRef" | "sealedInstancesRef" | "loadedPluginsRef" | "sessionRef" | "openDocumentSessionsRef" | "openDocumentRef" | "closeDocumentRef" | "documentAttachmentLanesRef" | "dispatch" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "extraWindowInstancesRef" | "extraWindowCounterRef" | "landingAppId" | "rememberOpenSpaceId" | "openInstanceIdRef" | "refreshUi" | "showTransientNoticeRef" | "documentServices" | "documentServiceInventoryRef" | "backboneWorkerRef"> & Pick<ReturnType<typeof useUpdateSpacePanelState>, "retireSessionInstance"> & { readonly pluginOpInFlightRef: { current: ReadonlySet<string> }; readonly admitProgramRetirementRef: { current: ProgramRetirementRequestV1 } }) {
   const switchToPluginApp = useCallback(
     async (pluginId: string, appId: string, viewState?: ViewModel, documentSource?: ActiveSession): Promise<ActiveSession | null> => {
       const defaultViewState = (app: AppDefinition): ViewModel => ({ activeModeId: app.defaultModeId ?? app.modes[0]?.id, ...(hostMode ? { panelJson: panelJsonFromState(buildSpacePanelState([], requiredHostPanelLeafId(hostApp))) } : {}) });
       setSurfaceSwitchBusy(true);
+      let retirement: ProgramRetirementLeaseV1 | null = null;
+      const predecessor = sessionRef.current;
+      const predecessorHandle = loadedPluginsRef.current.find(entry => entry.handle.pluginId === predecessor?.pluginId)?.handle;
       try {
+        if (documentSource === undefined && predecessor !== null && (predecessor.pluginId !== pluginId || predecessor.app.id !== appId)) {
+          const owners = captureProgramRetirementOwnersV1(loadedPluginsRef.current, predecessor);
+          const current = (): boolean => {
+            const host = sessionRef.current;
+            return host?.pluginId === predecessor.pluginId && host.app.id === predecessor.app.id && host.instanceId === predecessor.instanceId && sameProgramRetirementOwnersV1(owners, captureProgramRetirementOwnersV1(loadedPluginsRef.current, host));
+          };
+          retirement = await admitProgramRetirementRef.current(owners, current);
+          if (retirement === null || !retirement.current()) return null;
+        }
         const outcome = await sessionSwitchGateRef.current.run(
           {
-            session,
+            session: predecessor,
             resolveApp: (targetPluginId, targetAppId) => loadedPlugins.find((entry) => entry.handle.pluginId === targetPluginId)?.manifest.apps.find((candidate) => candidate.id === targetAppId) ?? null,
             appId: (app) => app.id,
             quiesce: async (retiring) => {
@@ -38,10 +51,12 @@ export function useSwitchPluginAppState({ hostMode, hostApp, setSurfaceSwitchBus
               if (!quiet.settled) console.warn(`surface-switch draining ${retiring.pluginId}#${retiring.instanceId} ${sessionWorkRef.current.outstanding(retiring.pluginId, retiring.instanceId)}`);
               return quiet;
             },
-            seal: (retiring) => sealedInstancesRef.current.seal(retiring.pluginId, retiring.instanceId),
-            unseal: (kept) => sealedInstancesRef.current.unseal(kept.pluginId, kept.instanceId),
+            seal: (retiring) => { if (!predecessorHandle) throw new Error("program-retirement.owner-unavailable"); sealedInstancesRef.current.seal(predecessorHandle, retiring.pluginId, retiring.instanceId); },
+            unseal: (kept) => { if (predecessorHandle) sealedInstancesRef.current.unseal(predecessorHandle, kept.pluginId, kept.instanceId); },
             createInstance: async (targetPluginId, app) => {
+              if (retirement !== null && !retirement.current()) throw new Error("program-retirement.owner-stale");
               const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === targetPluginId)?.handle;
+              if (pluginOpInFlightRef.current.has(targetPluginId)) throw new Error("program-retirement.program-busy");
               if (!handle) throw new Error(`switchToPluginApp: ${targetPluginId} is no longer loaded`);
               if (documentSource === undefined) return handle.createApp(app.id);
               const current = () => sessionRef.current?.pluginId === documentSource.pluginId && sessionRef.current?.instanceId === documentSource.instanceId;
@@ -73,7 +88,7 @@ export function useSwitchPluginAppState({ hostMode, hostApp, setSurfaceSwitchBus
                 },
               });
             },
-            retire: retireSessionInstance,
+            retire: async retired => { if (retirement === null) return retireSessionInstance(retired as ActiveSession); if (!await retirement.retire()) throw new Error("program-retirement.owner-stale"); },
             defaultViewState,
             publish: (next) => dispatch({ type: "SET_SESSION", value: { ...next,documentInitialized: documentSource !== undefined } }),
             seedLayout: (app) => {
@@ -99,6 +114,7 @@ export function useSwitchPluginAppState({ hostMode, hostApp, setSurfaceSwitchBus
         }
         return outcome.session === null || documentSource === undefined ? outcome.session : { ...outcome.session,documentInitialized: true };
       } finally {
+        retirement?.release();
         setSurfaceSwitchBusy(false);
       }
     },
@@ -118,22 +134,25 @@ export function useSwitchPluginAppState({ hostMode, hostApp, setSurfaceSwitchBus
     async (program: SpaceProgramEntry, isCurrent: () => boolean, label?: string, osInstanceId?: string, artifactJson?: string, sourceViewState?: ViewModel): Promise<SpacePanelState | null> => {
       if (!isCurrent()) return null;
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
-      if (!pluginEntry || !session) return null;
+      const host = sessionRef.current;
+      if (!pluginEntry || !host) return null;
+      const held = (): boolean => isCurrent() && !pluginOpInFlightRef.current.has(program.pluginId) && loadedPluginsRef.current.some(entry => entry.handle === pluginEntry.handle) && sessionRef.current?.pluginId === host.pluginId && sessionRef.current.app.id === host.app.id && sessionRef.current.instanceId === host.instanceId;
+      if (!held()) return null;
       const app = pluginEntry.manifest.apps.find((candidate) => candidate.id === program.appId);
-      const currentPanel = parsePanelState(sourceViewState ?? session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
+      const currentPanel = parsePanelState(sourceViewState ?? host.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
       const existing = osInstanceId ? currentPanel.spawnedApps.find((entry) => entry.id === osInstanceId) : currentPanel.spawnedApps.find((entry) => entry.appId === program.appId && entry.pluginId === program.pluginId);
       if (existing) {
         if (artifactJson && app) {
-          await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, artifactJson, sourceViewState ?? session.viewState);
+          await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, artifactJson, sourceViewState ?? host.viewState);
         }
-        return isCurrent() ? studioPanelFocusingSpawned(currentPanel, existing) : null;
+        return held() ? studioPanelFocusingSpawned(currentPanel, existing) : null;
       }
-      const instanceId = await createAdmittedShellInstanceV1(isCurrent, () => pluginEntry.handle.createApp(program.appId), (id) => pluginEntry.handle.destroyApp(id));
+      const instanceId = await createAdmittedShellInstanceV1(held, () => pluginEntry.handle.createApp(program.appId), (id) => pluginEntry.handle.destroyApp(id));
       if (instanceId === null) return null;
       if (artifactJson && app) {
-        await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, artifactJson, sourceViewState ?? session.viewState);
+        await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, artifactJson, sourceViewState ?? host.viewState);
       }
-      if (!isCurrent()) {
+      if (!held()) {
         await pluginEntry.handle.destroyApp(instanceId);
         return null;
       }

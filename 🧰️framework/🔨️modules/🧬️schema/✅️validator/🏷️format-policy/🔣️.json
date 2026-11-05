@@ -10,6 +10,7 @@
   ],
   "annotation": [
     "base64",
+    "catalogue-id",
     "double",
     "float",
     "int32",

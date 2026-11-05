@@ -14,7 +14,7 @@ use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 //#region 🔖️Leaves
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use crate::edit_rules::{resolve_edit, EDIT_RULES};
+pub use crate::edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};
 
 use semio_s_artifact_norm_en1997_mut_design::change_annex;
 use semio_s_artifact_norm_en1997_mut_design::change_geotechnical_category;

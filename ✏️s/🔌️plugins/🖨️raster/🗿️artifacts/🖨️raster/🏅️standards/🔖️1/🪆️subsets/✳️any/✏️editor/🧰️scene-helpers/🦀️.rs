@@ -97,6 +97,7 @@ fn assets_json_from_document(document: &RasterSnapshot) -> String {
 /// 🎞️ The composite and navigator read the same document, session style and framework selection.
 pub fn raster_scene(document: &RasterSnapshot, runtime: &RasterConfig, active_utility: &str, view_mode: &str, selected_ids: &[String], hovered_id: Option<&str>) -> semio_framework_plugin::Paint2dScene {
     semio_framework_plugin::Paint2dScene {
+        selection_cancellation:None,
         document_sync_json: document_sync_json(document),
         assets_json: assets_json_from_document(document),
         camera_json: semio_framework_pack_json::to_json_string(&runtime.camera),
@@ -110,6 +111,7 @@ pub fn raster_scene(document: &RasterSnapshot, runtime: &RasterConfig, active_ut
         paint_target:runtime.paint_target.clone(),
         mask_value:runtime.mask_value,
         fill_tolerance:runtime.fill_tolerance,
+        editing_options:semio_framework_plugin::Paint2dEditingOptions {filter_kind:runtime.filter_kind.clone(),filter_amount:runtime.filter_amount,image_grid:semio_framework_plugin::Paint2dImageGrid {x:runtime.image_grid.x,y:runtime.image_grid.y,width:runtime.image_grid.width,height:runtime.image_grid.height,bilinear:runtime.image_grid.bilinear}},
         pixel_selection_json:runtime.pixel_selection.as_ref().map(semio_framework_pack_json::to_json_string),
         view_mode: view_mode.into(),
         composite_viewport_json: runtime.composite_viewport.as_ref().map(semio_framework_pack_json::to_json_string),

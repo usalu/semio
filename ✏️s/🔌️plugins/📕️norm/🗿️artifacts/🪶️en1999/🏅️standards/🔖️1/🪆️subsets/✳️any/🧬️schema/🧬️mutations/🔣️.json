@@ -614,6 +614,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-transverse-stiffener/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-reliability-class/schema.json"
     }
   ]
 }

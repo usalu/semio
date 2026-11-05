@@ -242,6 +242,7 @@ async fn a_childless_whole_document_archive_replaces_the_live_document() {
     let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     assert_eq!(app.snapshot().expect("initial projection").label, "initial");
+    let original_document_id = app.stores.store.envelope().id.clone();
     let archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 42, label: "example".into(), slot: Vec::new() })).await;
     PluginApp::begin_document_archive_load(&mut app, 91, archive).expect("whole-document archive admission");
     let status = Box::pin(drive_single_document_archive(&mut app, 91, &mut cx)).await;
@@ -250,6 +251,7 @@ async fn a_childless_whole_document_archive_replaces_the_live_document() {
     let loaded = app.snapshot().expect("replaced projection");
     assert_eq!(loaded.count, 42, "the live document was not replaced by the archive's snapshot");
     assert_eq!(loaded.label, "example");
+    assert_eq!(app.stores.store.envelope().id, original_document_id, "whole-document import preserves the live authored identity");
     close_member_admission_app(&mut app, &mut cx);
 
     let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");

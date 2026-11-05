@@ -208,6 +208,7 @@ message En1997Mutation {
     ChangeCharacteristicBasisLayerId change_characteristic_basis_layer_id = 204;
     ChangeCharacteristicBasisParameter change_characteristic_basis_parameter = 205;
     ChangeCharacteristicBasisBasis change_characteristic_basis_basis = 206;
+    ChangeLayerCptNkt change_layer_cpt_nkt = 207;
   }
 }
 message ChangeAnnex {
@@ -1032,4 +1033,8 @@ message ChangeCharacteristicBasisParameter {
 message ChangeCharacteristicBasisBasis {
   string id = 1;
   string new_basis = 2;
+}
+message ChangeLayerCptNkt {
+  string id = 1;
+  double new_cpt_nkt = 2;
 }

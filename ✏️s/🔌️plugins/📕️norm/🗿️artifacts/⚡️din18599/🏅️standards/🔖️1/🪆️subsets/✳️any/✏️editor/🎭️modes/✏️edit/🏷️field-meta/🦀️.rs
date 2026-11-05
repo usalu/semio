@@ -134,10 +134,22 @@ const TABLE: &[(&str, FieldSpec)] = &[
 ];
 
 /// 🏷️ Exact-path / wildcard metadata for the din18599 document editor.
-pub fn field_meta(path: &str) -> Option<FieldSpec> {
+fn describe_din18599_field(path: &str) -> Option<FieldSpec> {
     lookup_norm_field_meta(TABLE, path)
 }
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️field-meta-coverage/🦀️.rs"]
 mod field_meta_coverage;
+
+/// 🛡️ Descriptive field metadata admitted by the family's actual native setter vocabulary.
+pub fn field_meta(path: &str) -> Option<FieldSpec> {
+    semio_s_plugin_norm_app_surface::admit_list_meta(
+        semio_s_plugin_norm_app_surface::admit_field_meta(
+        describe_din18599_field(path),
+        semio_s_artifact_norm_din18599_mutations::EDIT_RULES.can_set_field(path),
+        ),
+        semio_s_artifact_norm_din18599_mutations::EDIT_RULES.can_insert_item(path),
+        semio_s_artifact_norm_din18599_mutations::EDIT_RULES.can_remove_item(path, semio_s_artifact_norm_din18599_mutations::ID_REMOVALS.iter().map(|rule| rule.path)),
+    )
+}

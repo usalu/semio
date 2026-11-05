@@ -1,6 +1,5 @@
 {
   "annex": "En",
-  "reliabilityClass": "RC2",
   "materials": [
     {
       "id": "mat-s460",
@@ -629,6 +628,7 @@
   "placements": [],
   "jointPlates": [],
   "foundationBlocks": [],
+  "reliabilityClass": "RC2",
   "frameActions": [],
   "frameMemberBases": [],
   "fatigueStresses": [],

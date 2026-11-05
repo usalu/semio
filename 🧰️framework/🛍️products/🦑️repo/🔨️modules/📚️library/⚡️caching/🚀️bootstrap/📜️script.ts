@@ -42,6 +42,7 @@ import {checkResourceLeaseControl,leaseInvocationChainV1,type ResourceLeaseContr
 import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { resolveNxBuildMode } from "./🎚️mode/🟦️.ts";
+import {buildBackendProcessEnvironmentV1} from "../../🏗️build/🔌️backends/🟦️.ts";
 import { nxCacheEnvironmentV1 } from "./💾️budget/🟦️.ts";
 import {withNxToolingUseV1,nxToolingUseStorageV1} from "./🛠️tools/📥️use/🟦️.ts";
 
@@ -256,6 +257,7 @@ export function nxBuildEnvironmentV1(root:string,environment:NodeJS.ProcessEnv):
 
 /** 🧮️ Lets each watched build finish its graph while the daemon retains source watching. */
 export function nxChildEnvironment(environment: NodeJS.ProcessEnv, args: readonly string[], watching: boolean): NodeJS.ProcessEnv {
+  environment=buildBackendProcessEnvironmentV1("nx",environment);
   if (args[0] === "watch") return { ...environment, NX_DAEMON: "true" };
   return { ...environment, NX_DAEMON: watching || environment.NX_FILE_CHANGES !== undefined ? "false" : environment.NX_DAEMON ?? "true" };
 }
@@ -448,6 +450,7 @@ export class NxScript extends Script {
     const projection=createRequire(import.meta.url)("../../🟨️.mjs"),admitProjection=()=>{check();if(projection.nxBuildDependencyImplementationChangesV1().length)throw dependencyReadmissionV1();check();};admitProjection();
     const implementationIdentity=projection.nxBuildDependencyImplementationV1();
     const env = await nxCacheEnvironmentV1(this.root,pinnedNxRuntimeEnvironment(nxToolingEnvironmentV1(nxBuildEnvironmentV1(this.root,devToolingEnv({ ...invocation.env, SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode,CARGO_NET_OFFLINE:String(readNativeCallerAuthorityV1(this.invocation.capabilities).network.offline), NX_ISOLATE_PLUGINS: process.env.NX_ISOLATE_PLUGINS ?? "false", NODE_PATH: tooling.modulePath, SEMIO_NX_TOOLING_ROOT: dirname(tooling.modulePath), SEMIO_NX_IMPLEMENTATION_IDENTITY: implementationIdentity, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY, NX_SOCKET_DIR: invocation.env.NX_SOCKET_DIR || process.env.NX_SOCKET_DIR, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined })),toolingIdentity), tooling.bun));
+    Object.assign(env,buildBackendProcessEnvironmentV1("nx",env));
     if(bind){const namespace=await bind(toolingIdentity,env.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity);hold.release=namespace.release;Object.assign(env,namespace.environment);}
     if(env.NX_DAEMON===undefined&&!invocation.watch&&invocation.args[0]!=="watch"){const admission=await import("../🕸️graph/🏁️startup/🚏️admission/🟦️.ts").then(owner=>owner.nxDaemonAdmissionV1(this.root,env,actualPhase.signal)).catch(()=>({enabled:false,reason:"refused"}));env.NX_DAEMON=admission.enabled?"true":"false";if(profileBootstrap)console.log(`[nx] Daemon ${admission.enabled?"enabled":"off"} (${admission.reason})`);}
     const{projectOwnedNxProcessEnvelopeV1}=await import("../../🏗️build/🔧️tools/🧶️nx/📨️envelope/🟦️.ts"),carried=projectOwnedNxProcessEnvelopeV1(this.root,this.invocation,invocation.args);env[SCRIPT_PROCESS_INVOCATION_ENV]=scriptProcessEnvironment(carried,env)[SCRIPT_PROCESS_INVOCATION_ENV];

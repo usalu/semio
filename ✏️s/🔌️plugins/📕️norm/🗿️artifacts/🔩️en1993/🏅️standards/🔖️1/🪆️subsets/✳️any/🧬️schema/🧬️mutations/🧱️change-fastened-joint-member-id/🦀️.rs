@@ -19,7 +19,7 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFastenedJointMembe
         verb: "change",
         entity: "fastened-joint-member-id",
         kind: "change-fastened-joint-member-id",
-        record: "ChangedFastenedJointsFatigue memberId",
+        record: "ChangedFastenedJointMemberId",
     };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

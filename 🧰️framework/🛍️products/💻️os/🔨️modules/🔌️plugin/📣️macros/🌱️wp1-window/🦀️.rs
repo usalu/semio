@@ -205,6 +205,8 @@ macro_rules! window_transient_registry {
                 type State = $state;
                 type Mutation = $mutation;
 
+                fn owners_birth_demands()->$crate::__value::RetirementDemand{$crate::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+
                 fn build_owners() -> $crate::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
                     let state = std::sync::Arc::new($crate::__value::OwnedValueRetirementFactory::<Self::State>::default());
                     let mutation = std::sync::Arc::new($crate::__value::OwnedValueRetirementFactory::<Self::Mutation>::default());

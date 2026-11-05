@@ -125,6 +125,7 @@ import { type InsertMovementJoint, parseInsertMovementJoint } from "./🧵️ins
 import { type RemoveMovementJoint, parseRemoveMovementJoint } from "./🧵️remove-movement-joint/🧬️schema/🟦️.ts";
 import { type ChangeBracingSystem, parseChangeBracingSystem } from "./🧷️change-bracing-system/🧬️schema/🟦️.ts";
 import { type ChangeDiaphragmStiffness, parseChangeDiaphragmStiffness } from "./🧷️change-diaphragm-stiffness/🧬️schema/🟦️.ts";
+import { type ChangeWallWebSpacingM, parseChangeWallWebSpacingM } from "./🧷️change-wall-web-spacing-m/🧬️schema/🟦️.ts";
 import { type ChangeChaseDepth, parseChangeChaseDepth } from "./🪚️change-chase-depth/🧬️schema/🟦️.ts";
 import { type ChangeChaseKind, parseChangeChaseKind } from "./🪚️change-chase-kind/🧬️schema/🟦️.ts";
 import { type ChangeChaseLength, parseChangeChaseLength } from "./🪚️change-chase-length/🧬️schema/🟦️.ts";
@@ -287,7 +288,8 @@ export type En1996Mutation =
   | { ChangeMovementJointWall: ChangeMovementJointWall }
   | { ChangeMovementJointPosition: ChangeMovementJointPosition }
   | { InsertMovementJoint: InsertMovementJoint }
-  | { RemoveMovementJoint: RemoveMovementJoint };
+  | { RemoveMovementJoint: RemoveMovementJoint }
+  | { ChangeWallWebSpacingM: ChangeWallWebSpacingM };
 
 export const parseEn1996Mutation: NormWireReader<En1996Mutation> = normWireExternal<En1996Mutation>({
   ChangeConcentratedBearingLength: parseChangeConcentratedBearingLength,
@@ -432,4 +434,5 @@ export const parseEn1996Mutation: NormWireReader<En1996Mutation> = normWireExter
   ChangeMovementJointPosition: parseChangeMovementJointPosition,
   InsertMovementJoint: parseInsertMovementJoint,
   RemoveMovementJoint: parseRemoveMovementJoint,
+  ChangeWallWebSpacingM: parseChangeWallWebSpacingM,
 });

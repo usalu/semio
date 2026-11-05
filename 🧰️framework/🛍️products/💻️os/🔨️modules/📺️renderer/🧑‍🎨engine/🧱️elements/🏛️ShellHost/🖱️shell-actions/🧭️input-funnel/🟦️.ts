@@ -164,7 +164,7 @@ export async function runShellInput({ clipboardFragmentRef, primaryPluginId, dis
   }
   const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
   if (!plugin) return refuse("dispatch-failed", `no loaded program for "${targetSession.pluginId}"`);
-  if (dropForSealedInstance(targetSession, "action", action.action)) return refuse("instance-sealed", `${targetSession.pluginId}#${targetSession.instanceId}`);
+  if (dropForSealedInstance(plugin, targetSession, "action", action.action)) return refuse("instance-sealed", `${targetSession.pluginId}#${targetSession.instanceId}`);
   const actionOwner = captureEffectOwner(targetSession, actionOrigin, entry.provenance.inputSeq);
   if (!isCurrentEffectOwner(actionOwner)) {
     return refuse("owner-mismatch", "effect owner is not current");
@@ -204,7 +204,47 @@ export async function runShellInput({ clipboardFragmentRef, primaryPluginId, dis
     if (propagateFailure) throw error;
     return outcome;
   }
-  const directOutcome = await dispatchDirectBrowserActorAction({ dispatchDirectBrowserActorCommand, uiTerminologyRef, directBrowserActor, targetSession, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, applied, refusalReasonForError, core, refuse, propagateFailure });
+  const execute = async (action: ShellInputActionV1, expectedDocumentRevision?: string, stagedSignal?: AbortSignal) => {
+    if (stagedSignal?.aborted) throw stagedSignal.reason??new Error("staging.cancelled");
+    const stagedLifecycle=stagedSignal?{started:(operation:import("@semio-tech/framework").ActionOperationControlV1)=>{lifecycle?.started(operation);if(stagedSignal.aborted)void operation.cancel();else stagedSignal.addEventListener("abort",()=>{void operation.cancel();},{once:true});}}:lifecycle;
+    if (!isCurrentEffectOwner(actionOwner) || !isCurrentDialogOrigin(actionOrigin) || uiLocaleRef.current !== uiLocale) return refuse("owner-mismatch", "staged action scope retired");
+  const directOutcome = await dispatchDirectBrowserActorAction({ dispatchDirectBrowserActorCommand, uiTerminologyRef, directBrowserActor, targetSession, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision, applied, refusalReasonForError, core, refuse, propagateFailure: expectedDocumentRevision === undefined ? propagateFailure : true });
   if (directOutcome !== undefined) return directOutcome;
-  return await dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwner, applyHistoryPatch, applyLeftoverInteractionView, historyStore, lastDispatchedExampleIdRef, exampleOptionsRef, defaults, dispatch, refreshHistorySnapshot, applyHostEffects, observeLocalInteraction, awaitOperationSettle, uiTerminologyRef, uiLocale, dropForSealedInstance, dropForRetiredInstance, targetSession, plugin, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, entry, actionOwner, lifecycle, onAction, actionOrigin, hostWindowId, core, applied, refuse, refusalReasonForError, propagateFailure });
+  return await dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwner, applyHistoryPatch, applyLeftoverInteractionView, historyStore, lastDispatchedExampleIdRef, exampleOptionsRef, defaults, dispatch, refreshHistorySnapshot, applyHostEffects, observeLocalInteraction, awaitOperationSettle, uiTerminologyRef, uiLocale, dropForSealedInstance, dropForRetiredInstance, targetSession, plugin, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision, entry, actionOwner, lifecycle: stagedLifecycle, onAction, actionOrigin, hostWindowId, core, applied, refuse, refusalReasonForError, propagateFailure: expectedDocumentRevision === undefined ? propagateFailure : true });
+  };
+  const windowKindId=dispatchViewState.windowInstances?.find(instance=>instance.id===dispatchWindowId)?.windowKindId;
+  const windowKind=targetSession.app.windowKinds.find(kind=>kind.id===windowKindId);
+  const staged=windowKind?resolveWindowActions(targetSession.app,windowKind).find(declaration=>declaration.id===action.action)?.staging:undefined;
+  if (!staged) return execute(action);
+  if (!dispatchWindowId || uiLocale!=="en"&&uiLocale!=="de") return refuse("view-state-unresolved","staging requires an explicit window and language");
+  const sourceOwner=core.localSourceOwnerRef.current;
+  if (!sourceOwner?.active || sourceOwner.identity.pluginId!==targetSession.pluginId || sourceOwner.identity.appId!==targetSession.app.id || sourceOwner.identity.sessionInstanceId!==targetSession.instanceId) return refuse("owner-mismatch","staged source document is not owned");
+  const revisionSource=core.localSourceRevisions.acquire(sourceOwner,plugin);
+  if (!revisionSource) return refuse("owner-mismatch","staged source revision is not owned");
+  if (!revisionSource.read(sourceOwner,plugin)) await observeLocalInteraction({plugin,instanceId:targetSession.instanceId});
+  const originalRevision=revisionSource.read(sourceOwner,plugin);
+  if (!originalRevision) return refuse("catching-up","staged document revision is pending");
+  const key="framework.staging."+dispatchWindowId,surface=String(targetSession.instanceId)+":"+key;
+  let committed: InputOutcomeV1|undefined;
+  const result=await core.stagedActions.open({
+    owner:{token:{action:action.action,window:dispatchWindowId,generation:"0",revision:originalRevision.documentRevision},locale:uiLocale,controllerId:action.controllerId},
+    surface,
+    current:()=>sourceOwner.active&&isCurrentEffectOwner(actionOwner)&&isCurrentDialogOrigin(actionOrigin)&&uiLocaleRef.current===uiLocale,
+    revision:()=>revisionSource.read(sourceOwner,plugin)?.documentRevision??null,
+    subscribe:listener=>revisionSource.subscribe(listener),
+    query:async(request,signal)=>{
+      const response=await plugin.refreshUi(targetSession.instanceId,{viewState:dispatchViewState,forms:[{key,bodyKey:staged.bodyKey,contextWindowId:dispatchWindowId,stagedRequest:request}]},{signal});
+      const target=response.forms?.find(target=>target.key===key);
+      if (!target) throw new Error("staging.surface-unpublished");
+      const lease=plugin.acquireOwnedUiSurface(targetSession.instanceId,target);
+      if (signal.aborted) { await lease.close(); throw new Error("staging.cancelled"); }
+      return lease;
+    },
+    execute:async(args,revision,signal)=>{
+      const outcome=await execute({...action,args},revision,signal);
+      if (outcome.kind!=="applied") throw new Error(outcome.detail??outcome.reason);
+      committed=outcome;
+    },
+  },typeof action.args==="object"&&action.args!==null&&!Array.isArray(action.args)?action.args as import("@semio-tech/framework/manifest/staging").StagedArgs:{});
+  return result==="executed"&&committed?committed:refuse("not-applied","staged action cancelled",true,undefined,"discard");
 }

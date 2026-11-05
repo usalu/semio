@@ -8,19 +8,46 @@ pub trait NativeSqliteReceivingFrame:semio_framework_value::retirement::RetireOw
 }
 macro_rules! original_sqlite_receiving{
  ($trait:ident,$owner:ident,$direction:ident,$progress:path,$phase:ident)=>{
- /// 🪶️ Loans one concrete SQLite receiving boundary from its original generic owner.
+ /// 🪶️ Loans concrete SQL receiving with original work, body and refusal custody.
  pub trait $trait{
-  fn receive_sqlite_snapshot<F:NativeSqliteReceivingFrame,O:semio_framework_value::retirement::RetireOwned>(&mut self,control:&mut crate::SqliteSnapshotControl<'_>,construct:impl FnOnce()->F,operation:impl FnOnce(&mut F,&mut crate::artifact::receiving::Port<'_,'_,'_,NativeSnapshotBodyWallet>)->Result<(),ValueError>,publish:impl FnOnce(&mut F)->Result<O,ValueError>)->Result<O,ValueError>;
+  fn receive_sqlite_snapshot<F:NativeSqliteReceivingFrame,O:semio_framework_value::retirement::RetireOwned>(&mut self,control:&mut crate::SqliteSnapshotControl<'_>,construct:impl FnOnce()->F,operation:impl FnOnce(&mut F,&mut crate::artifact::receiving::Port<'_,'_,'_,NativeSnapshotBodyWallet>)->Result<(),ValueError>,publish:impl FnOnce(&mut F)->Result<O,ValueError>)->semio_framework_value::RetainedWorkOutcome<O,semio_framework_io_control::NativeSnapshotFailure>;
  }
  impl $trait for $owner<'_,'_>{
-  /// 📩️ Adopts one complete domain frame through the original SQL and native receiving boundaries.
-  fn receive_sqlite_snapshot<F:NativeSqliteReceivingFrame,O:semio_framework_value::retirement::RetireOwned>(&mut self,control:&mut crate::SqliteSnapshotControl<'_>,construct:impl FnOnce()->F,operation:impl FnOnce(&mut F,&mut crate::artifact::receiving::Port<'_,'_,'_,NativeSnapshotBodyWallet>)->Result<(),ValueError>,publish:impl FnOnce(&mut F)->Result<O,ValueError>)->Result<O,ValueError>{
-   let result=(||{self.native().checkpoint()?;let before=self.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original SQLite receiving extent overflow"))?;let settlement=crate::artifact::receiving::ReceivingSettlement::new(control,before,crate::SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
-    let result=self.scoped_native(maximum,&mut observer,|owner|owner.receive::<F,O>(|slot,native,body|{
-     let owned=settlement.with_control(|control|{let mut port=crate::artifact::receiving::Port{control,native:crate::artifact::receiving::Direction::$direction(native),body};port.work(1,std::mem::size_of::<F>())?;*slot=Some(construct());let frame=slot.as_mut().unwrap();port.work(1,std::mem::size_of::<O>())?;let status=operation(frame,&mut port);*frame.receiving_status()=Some(status);Ok::<_,ValueError>(port.owned())})?;
-     settlement.finish_body(owned)?;let frame=slot.as_mut().unwrap();if frame.receiving_status().as_ref().is_some_and(Result::is_ok){native.checkpoint()?;}frame.receiving_status().take().unwrap()?;publish(frame)
-    }));match result{Ok(output)=>Ok(output),Err(error)=>Err(settlement.refused(self.native().owned_bytes(),error))}
-   })();result.map_err(|error|error.with_retained_progress(self.progress()))
+  fn receive_sqlite_snapshot<F:NativeSqliteReceivingFrame,O:semio_framework_value::retirement::RetireOwned>(&mut self,control:&mut crate::SqliteSnapshotControl<'_>,construct:impl FnOnce()->F,operation:impl FnOnce(&mut F,&mut crate::artifact::receiving::Port<'_,'_,'_,NativeSnapshotBodyWallet>)->Result<(),ValueError>,publish:impl FnOnce(&mut F)->Result<O,ValueError>)->semio_framework_value::RetainedWorkOutcome<O,semio_framework_io_control::NativeSnapshotFailure>{
+   use semio_framework_io_control::{NativeSnapshotFailure,native_snapshot_turn};
+   native_snapshot_turn(|work|{
+    self.native().checkpoint()?;let before=self.native().owned_bytes();
+    let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original SQLite receiving extent overflow"))?;
+    let settlement=crate::artifact::receiving::ReceivingSettlement::new(control,before,crate::SqliteSnapshotPhase::$phase);
+    let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
+    let turn=self.scoped_native(maximum,&mut observer,|owner|owner.receive::<F,O,NativeSnapshotFailure>(|slot,native,body|{
+     let before_work=settlement.with_control(|control|control.performed_work());
+     let result=(||{
+      let owned=settlement.with_control(|control|{
+       let mut port=crate::artifact::receiving::Port{control,native:crate::artifact::receiving::Direction::$direction(native),body};
+       port.work(1,std::mem::size_of::<F>())?;*slot=Some(construct());
+       let frame=slot.as_mut().unwrap();let status=operation(frame,&mut port);*frame.receiving_status()=Some(status);
+       Ok::<_,ValueError>(port.owned())
+      })?;
+      let status=slot.as_mut().unwrap().receiving_status().take().unwrap();
+      let settled=settlement.finish_body(owned);
+      match(status,settled){
+       (Err(primary),Err(receipt))=>return Err(NativeSnapshotFailure::from(primary).with_settlement_refusal(receipt).expect("original SQL body has its empty settlement slot")),
+       (Err(primary),Ok(()))=>return Err(primary.into()),
+       (Ok(()),Err(receipt))=>return Err(NativeSnapshotFailure::from(receipt)),
+       (Ok(()),Ok(()))=>{}
+      }
+      native.checkpoint()?;
+      settlement.with_control(|control|{
+       let mut port=crate::artifact::receiving::Port{control,native:crate::artifact::receiving::Direction::$direction(native),body};
+       port.work(1,std::mem::size_of::<O>())?;publish(slot.as_mut().unwrap())
+      }).map_err(Into::into)
+     })();
+     semio_framework_value::RetainedWorkOutcome{result,work:settlement.with_control(|control|control.performed_work()).checked_sub(before_work).expect("original SQL producer work is monotone")}
+    }));
+    let turn=semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|error|settlement.refused_failure(self.native().owned_bytes(),error)),work:turn.work};
+    work.take(turn)
+   })
   }
  }
  };
@@ -28,6 +55,7 @@ macro_rules! original_sqlite_receiving{
 original_sqlite_receiving!(SqliteSnapshotDecodeReceiving,NativeSnapshotDecodeOwner,Decode,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,ProjectSnapshot);
 original_sqlite_receiving!(SqliteSnapshotEncodeReceiving,NativeSnapshotEncodeOwner,Encode,semio_framework_value::native_encoding::NativeEncodeProgress,ReconstructSnapshot);
 impl crate::artifact::receiving::ReceivingWallet for NativeSnapshotBodyWallet{
+
  fn admit_frontier(&self,demand:RetainedCloneGrant)->Result<(),ValueError>{NativeSnapshotBodyWallet::admit_frontier(self,demand)}
  fn record_progress(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{NativeSnapshotBodyWallet::record_progress(self,progress)}
  fn allocate_vec_into<T>(&mut self,native:&mut NativeDecodeControl<'_>,count:usize,output:&mut Vec<T>,depth:usize)->Result<(),ValueError>{NativeSnapshotBodyWallet::allocate_vec_into(self,native,count,output,depth)}

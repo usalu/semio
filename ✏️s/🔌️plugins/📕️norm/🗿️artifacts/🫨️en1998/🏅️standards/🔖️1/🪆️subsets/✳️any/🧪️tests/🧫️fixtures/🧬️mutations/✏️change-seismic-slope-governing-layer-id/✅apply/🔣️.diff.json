@@ -86,25 +86,7 @@
     "moved": [],
     "modified": []
   },
-  "joints": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "bearings": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "piers": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "accelerograms": {
+  "soilLayers": {
     "removed": [],
     "inserted": [],
     "moved": [],
@@ -116,13 +98,25 @@
     "moved": [],
     "modified": []
   },
-  "soilLayers": {
+  "accelerograms": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "placements": {
+  "piers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bearings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "joints": {
     "removed": [],
     "inserted": [],
     "moved": [],
@@ -169,5 +163,11 @@
         }
       }
     ]
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

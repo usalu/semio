@@ -226,7 +226,8 @@
         "patch": {
           "loadedLength": null,
           "deckWidth": null,
-          "naturalFrequency": null
+          "naturalFrequency": null,
+          "assumedServiceAxle": 1.5
         }
       }
     ]
@@ -250,6 +251,24 @@
     "modified": []
   },
   "rotatingMachines": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "dustExplosions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "railLoadGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "railDerailments": {
     "removed": [],
     "inserted": [],
     "moved": [],

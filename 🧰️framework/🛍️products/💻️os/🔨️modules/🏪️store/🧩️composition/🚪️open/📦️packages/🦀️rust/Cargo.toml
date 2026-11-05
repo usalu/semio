@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job-native-decode = { path = "../../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-owned-schema-decode = { path = "../../../../📦️codec/🧬️owned-schema/📦️packages/🦀️rust" }
 semio-framework-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
@@ -36,6 +37,7 @@ semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }

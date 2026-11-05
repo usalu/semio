@@ -173,7 +173,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context, .. } = *input;
-        let view_state = context.and_then(|context| context.view_state.as_ref());
+        let view_state = context.and_then(|context| context.view_state.as_deref());
         if self.before.is_none() {
             let projection = puzzle5d_editor_projection(snapshot);
             let strings = |rows: Option<&Vec<Value>>, key: &str| -> Vec<String> {
@@ -447,7 +447,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot: _snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
-        let view_state = context.and_then(|context| context.view_state.as_ref());
+        let view_state = context.and_then(|context| context.view_state.as_deref());
         match self.stage {
             Puzzle5dRegisterBrushMeshStage::Positions => {
                 let page = Self::array(command, "positions");

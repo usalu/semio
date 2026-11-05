@@ -1,4 +1,6 @@
 //! 📬️ Fixed actor result framing preserves original recipient, operation and generation.
+#[path="📦️backing/🦀️.rs"]
+pub mod backing;
 use semio_framework_diagnostic::{Fault,FaultCode,FaultOrigin};
 use semio_framework_value_derive::{ToValue,FromValue};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneSource,RetainedOwnedProjection,StagedSourceAdmission},retirement::controlled::ControlledRetirement};

@@ -69,7 +69,7 @@ pub fn build_job<C:crate::standards::v1::subsets::any::schema::composition::Jack
     }
     semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request, output, cx, TrinityJackPlayApp::<C>::command_id, RAW_BYTES, 1, true, Default::default(), |request, _identity| {
         let work = (|| -> Result<_, Fault> {
-        let view = request.context.view_state.as_ref().ok_or_else(|| Fault::from("Jack query execution requires an exact attached-window roster"))?;
+        let view = request.context.view_state.as_deref().ok_or_else(|| Fault::from("Jack query execution requires an exact attached-window roster"))?;
         let editor_window_id = view.window_id.as_deref().ok_or_else(|| Fault::from("Jack query execution requires its originating editor window"))?;
         let editor_kind = view.window_instances.iter().find(|window| window.id == editor_window_id).map(|window| window.window_kind_id.as_str());
         if editor_kind != Some(crate::editor::jack::TRINITY_JACK_PLAY_WINDOW_EDITOR) {

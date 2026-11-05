@@ -860,7 +860,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
                 if self.replay_target.is_some() || self.tool_id != "run" {
                     return Err(sequence_fault("sequence.resume.invalid", "sequence-run-replay-overrun"));
                 }
-                let view = context.view_state.as_ref().ok_or_else(|| sequence_fault("sequence.window.unavailable", "sequence-script-window-view-required"))?;
+                let view = context.view_state.as_deref().ok_or_else(|| sequence_fault("sequence.window.unavailable", "sequence-script-window-view-required"))?;
                 let transient = SequenceScriptWindowTransient { last_run_json: json };
                 self.completed = true;
                 Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {

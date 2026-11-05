@@ -23,7 +23,8 @@
   "devDependencies": {
     "@semio-tech/framework-os": "workspace:*",
     "@semio-tech/repo-test": "workspace:*",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@semio-tech/process": "workspace:*"
   },
   "author": {
     "name": "Ueli Saluz",

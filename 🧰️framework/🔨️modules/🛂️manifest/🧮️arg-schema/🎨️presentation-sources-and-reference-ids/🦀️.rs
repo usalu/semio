@@ -9,7 +9,7 @@ use super::*;
 /// `ActionArgDef::control()` (e.g. a bounded `Number` still renders `Slider` without this, but a
 /// single-bound one needs it to opt in).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgPresentation {
@@ -27,7 +27,7 @@ pub enum ArgPresentation {
 
 /// 🧲️ Where a number's snap points come from beyond its static `snaps`: every multiple of its `step`, a window
 /// config value named `key` (the grid spacing a tool snaps to), or the document value at JSON `pointer`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum SnapSource {
@@ -40,7 +40,7 @@ pub enum SnapSource {
 /// the document the editor previews — an RFC 6901 template whose `{field}` segments take the edited payload's top-level
 /// member: an object's key, or, on an array, the record whose own `field` equals it (`/hostSnapshot/widgets/{id}/params`).
 /// TypeScript twin: `OptionSource`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum OptionSource {
@@ -48,7 +48,7 @@ pub enum OptionSource {
 }
 
 /// 📈️ How a slider or dial maps its travel onto the value range.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum NumberScale {
@@ -58,7 +58,7 @@ pub enum NumberScale {
 
 /// 📘️ The JSON type of a reference's ids: text ids (the default, left off the wire) or integer ids. A selection id is
 /// always text, so an integer reference stages the integer its selected text spells ([`ReferenceIdType::id_value`]).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ReferenceIdType {

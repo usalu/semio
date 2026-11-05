@@ -171,6 +171,7 @@ import { type ChangeWallWallFrictionDeg, parseChangeWallWallFrictionDeg } from "
 import { type ChangeWallWallMovement, parseChangeWallWallMovement } from "./🗄️change-wall-wall-movement/🧬️schema/🟦️.ts";
 import { type ChangeLayerCohesionEffective, parseChangeLayerCohesionEffective } from "./🥞️change-layer-cohesion-effective/🧬️schema/🟦️.ts";
 import { type ChangeLayerCohesionUndrained, parseChangeLayerCohesionUndrained } from "./🥞️change-layer-cohesion-undrained/🧬️schema/🟦️.ts";
+import { type ChangeLayerCptNkt, parseChangeLayerCptNkt } from "./🥞️change-layer-cpt-nkt/🧬️schema/🟦️.ts";
 import { type ChangeLayerCptQc, parseChangeLayerCptQc } from "./🥞️change-layer-cpt-qc/🧬️schema/🟦️.ts";
 import { type ChangeLayerDepthBottom, parseChangeLayerDepthBottom } from "./🥞️change-layer-depth-bottom/🧬️schema/🟦️.ts";
 import { type ChangeLayerDepthTop, parseChangeLayerDepthTop } from "./🥞️change-layer-depth-top/🧬️schema/🟦️.ts";
@@ -415,7 +416,8 @@ export type En1997Mutation =
   | ChangeGroundReadingMeasurement
   | ChangeCharacteristicBasisLayerId
   | ChangeCharacteristicBasisParameter
-  | ChangeCharacteristicBasisBasis;
+  | ChangeCharacteristicBasisBasis
+  | ChangeLayerCptNkt;
 
 export const parseEn1997Mutation: NormWireReader<En1997Mutation> = normWireTagged<En1997Mutation, "mutation">("mutation", {
   changeAnnex: parseChangeAnnex,
@@ -624,4 +626,5 @@ export const parseEn1997Mutation: NormWireReader<En1997Mutation> = normWireTagge
   changeCharacteristicBasisLayerId: parseChangeCharacteristicBasisLayerId,
   changeCharacteristicBasisParameter: parseChangeCharacteristicBasisParameter,
   changeCharacteristicBasisBasis: parseChangeCharacteristicBasisBasis,
+  changeLayerCptNkt: parseChangeLayerCptNkt,
 });

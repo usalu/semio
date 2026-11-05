@@ -23,18 +23,42 @@ import type { ShellCoreAfterIdentityAndDocumentPorts } from "../../🔒️identi
 import type { Dispatch, RefObject, SetStateAction } from "../../../⚛️react-port/🟦️.ts";
 
 /** 🗃️ Applies a local catalog document event. */
-export function handleLocalCatalogEventMessage({ localCatalogClientInstanceIdRef, setLocalCatalog, message }: Pick<ShellCoreAfterIdentityAndDocumentPorts, "localCatalogClientInstanceIdRef" | "setLocalCatalog"> & {
+export function handleLocalCatalogEventMessage({ localCatalogClientInstanceIdRef, localCatalogRef, localDocumentOwnersRef, setLocalCatalog, message }: Pick<ShellCoreAfterIdentityAndDocumentPorts, "localCatalogClientInstanceIdRef" | "localCatalogRef" | "localDocumentOwnersRef" | "setLocalCatalog"> & {
   readonly message: Extract<BackboneWorkerResponse, Readonly<{ kind: "event" }>>;
 }) {
   if (localCatalogClientInstanceIdRef.current !== message.clientInstanceId) return;
   const catalogEvent = message.event;
+  const waiter = localDocumentOwnersRef.current.get(message.clientInstanceId);
   if (catalogEvent.kind === "documentArchiveReplaced") {
-    const decoded = decodeLocalCatalogArchiveV1(new Uint8Array(catalogEvent.archive));
-    if (decoded !== undefined) setLocalCatalog(decoded);
+    const archive = new Uint8Array(catalogEvent.archive);
+    const decoded = decodeLocalCatalogArchiveV1(archive);
+    if (decoded !== undefined) {
+      localCatalogRef.current = decoded;
+      setLocalCatalog(decoded);
+      waiter?.archive?.(archive);
+    }
   } else if (catalogEvent.kind === "remoteMutations") {
-    setLocalCatalog((current) => foldLocalCatalogEnvelopesV1(current, catalogEvent.envelopes));
+    const next = foldLocalCatalogEnvelopesV1(localCatalogRef.current, catalogEvent.envelopes);
+    localCatalogRef.current = next;
+    setLocalCatalog(next);
+  } else if (catalogEvent.kind === "status") {
+    waiter?.status?.(catalogEvent.persisted && catalogEvent.pendingMutations === 0 && catalogEvent.writeFailure === undefined);
   }
   return;
+}
+
+/** 📬️ Observes readback without consuming events belonging to the current active session. */
+export function routeLocalDocumentObserverV1({ localDocumentOwnersRef, openDocumentSessionsRef, message }: Pick<ShellCoreAfterIdentityAndDocumentPorts, "localDocumentOwnersRef" | "openDocumentSessionsRef"> & {
+  readonly message: BackboneWorkerResponse;
+}): boolean {
+  if (message.kind !== "event") return false;
+  const owner = localDocumentOwnersRef.current.get(message.clientInstanceId);
+  if (owner === undefined) return false;
+  if (message.event.kind === "status") owner.status?.(message.event.persisted && message.event.pendingMutations === 0 && message.event.writeFailure === undefined);
+  else if (message.event.kind === "documentArchiveReplaced") owner.archive?.(new Uint8Array(message.event.archive));
+  const runtimeKey = message.scope === undefined ? message.documentId : scopeRuntimeKey(message);
+  const attached = runtimeKey === null ? undefined : openDocumentSessionsRef.current.get(runtimeKey);
+  return attached?.clientInstanceId !== message.clientInstanceId;
 }
 
 /** 🪪️ Applies an identity document event. */
@@ -75,7 +99,7 @@ export function handleDocumentEventMessage({ openDocumentSessionsRef, dispatch, 
   if (event.kind === "status") {
     const status = event;
     (window as unknown as { semioWgpuHubProjection?: { publishDocumentStatus: (documentKey: string, remote: typeof status.remote | null) => boolean } }).semioWgpuHubProjection?.publishDocumentStatus(runtimeKey, status.remote);
-    dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: runtimeKey, status: { persisted: event.persisted, pendingMutations: event.pendingMutations, remote: event.remote } });
+    dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: runtimeKey, status: { persisted: event.persisted, pendingMutations: event.pendingMutations, remote: event.remote, ...(event.writeFailure === undefined ? {} : { writeFailure: event.writeFailure }) } });
   } else if (event.kind === "presence") {
     const peers = entry.scope === undefined ? [] : scopedPresencePeersV1(message, entry.scope, entry.session.app.dialect ? canonicalSurfaceId(entry.session.app.dialect, entry.session.app.role) : null);
     setPresencePeersByRuntimeKey((current) => {

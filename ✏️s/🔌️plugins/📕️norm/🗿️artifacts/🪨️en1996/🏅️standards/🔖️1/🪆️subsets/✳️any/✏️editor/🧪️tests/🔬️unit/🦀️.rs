@@ -278,3 +278,9 @@ fn the_full_showcase_populates_every_collection_and_is_in_the_palette() {
     assert!(d.walls.iter().any(|w| w.load_cases.iter().any(|c| !c.concentrated.is_empty()) && w.load_cases.iter().any(|c| matches!(c.design_situation, semio_s_artifact_norm_en1996_model::LoadCaseSituation::Seismic))));
     assert!(En1996PlayApp::examples().iter().any(|e| e.id() == "full-showcase"));
 }
+
+#[test]
+fn compiled_input_metadata_matches_all_native_schema_rows() {
+    let findings = semio_s_plugin_norm_app_surface::norm_compiled_input_findings::<En1996PlayApp>();
+    assert!(findings.is_empty(), "{}", findings.join("\n"));
+}

@@ -207,34 +207,69 @@ pub struct ToolMachineRuntime<P, M:RetireOwned+Send+'static, C = NoConfig, CM = 
     pub now_ms: Option<u64>,
 }
 
-impl<P, M:RetireOwned+Send+'static, C, CM> Default for ToolMachineRuntime<P, M, C, CM> {
-    fn default() -> Self {
-        Self {
-            presses: ScrubLedger::default(),
-            gestures: GestureLedger::default(),
-            gesture_operations:std::array::from_fn(|_|None),
-            gesture_retirement:None,
-            gesture_ended: false,
-            typing: TypingLedger::default(),
-            overlay: None,
-            overlay_generation: 0,
-            provisional_generation: 0,
-            config_overlay: None,
-            config_overlay_generation: 0,
-            pending_overlay_aliases: None,
-            overlay_alias_retirement: None,
-            pending_config_aliases: None,
-            config_alias_retirement: None,
-            refold_owed: false,
-            refold_request:0,
-            window_overlays: BTreeMap::new(),
-            ingress: None,
-            operations: Vec::new(),
-            tick: 0,
-            #[cfg(any(test, feature = "artifact-app-testing"))]
-            now_ms: None,
-        }
-    }
+impl<P,M:RetireOwned+Send+'static,C,CM> Default for ToolMachineRuntime<P,M,C,CM>{fn default()->Self{Self{presses:ScrubLedger::default(),gestures:GestureLedger::default(),gesture_operations:std::array::from_fn(|_|None),gesture_retirement:None,gesture_ended:false,typing:TypingLedger::default(),overlay:None,overlay_generation:0,provisional_generation:0,config_overlay:None,config_overlay_generation:0,pending_overlay_aliases:None,overlay_alias_retirement:None,pending_config_aliases:None,config_alias_retirement:None,refold_owed:false,refold_request:0,window_overlays:BTreeMap::new(),ingress:None,operations:Vec::new(),tick:0,#[cfg(any(test,feature="artifact-app-testing"))]now_ms:None}}}
+
+
+impl<P:'static,M:RetireOwned+Send+'static,C:'static,CM:'static> ToolMachineRuntime<P,M,C,CM>{
+    /// 📋️ The final-address inventory includes enabled test-clock metadata.
+    pub const INITIAL_FIELDS:usize=21+(if cfg!(any(test,feature="artifact-app-testing")){1}else{0});
+    /// 📏️ Quotes one full live field or a bounded piece of a static absent field or array.
+    pub fn initial_field_demands(field_index:usize,byte:usize,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{fn field<S,T>(_:fn(&S)->&T)->usize{std::mem::size_of::<T>()}Ok(match field_index{
+  0=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.presses),depth:1,..Default::default()},
+  1=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.gestures),depth:1,..Default::default()},
+  2=>{let extent=field::<Self,_>(|owner|&owner.gesture_operations);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  3=>{let extent=field::<Self,_>(|owner|&owner.gesture_retirement);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  4=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.gesture_ended),depth:1,..Default::default()},
+  5=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.typing),depth:1,..Default::default()},
+  6=>{let extent=field::<Self,_>(|owner|&owner.overlay);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  7=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.overlay_generation),depth:1,..Default::default()},
+  8=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.provisional_generation),depth:1,..Default::default()},
+  9=>{let extent=field::<Self,_>(|owner|&owner.config_overlay);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  10=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.config_overlay_generation),depth:1,..Default::default()},
+  11=>{let extent=field::<Self,_>(|owner|&owner.pending_overlay_aliases);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  12=>{let extent=field::<Self,_>(|owner|&owner.overlay_alias_retirement);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  13=>{let extent=field::<Self,_>(|owner|&owner.pending_config_aliases);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  14=>{let extent=field::<Self,_>(|owner|&owner.config_alias_retirement);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  15=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.refold_owed),depth:1,..Default::default()},
+  16=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.refold_request),depth:1,..Default::default()},
+  17=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.window_overlays),depth:1,..Default::default()},
+  18=>{let extent=field::<Self,_>(|owner|&owner.ingress);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  19=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.operations),depth:1,..Default::default()},
+  20=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.tick),depth:1,..Default::default()},
+  #[cfg(any(test,feature="artifact-app-testing"))]
+  21=>{let extent=field::<Self,_>(|owner|&owner.now_ms);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  _=>return Err(semio_framework_value::ValueError::invariant("tool machine initial cursor exceeds its inventory")),
+ })}
+    /// 🖋️ Initializes one admitted field extent at its final address without a large temporary.
+    /// # Safety
+    /// The target is exclusive caller-funded storage and its retained field/byte cursor advances only after success.
+    pub unsafe fn initialize_field_at(target:*mut Self,field_index:usize,byte:usize,count:usize)->Result<bool,semio_framework_value::ValueError>{fn field<S,T>(_:fn(&S)->&T)->usize{std::mem::size_of::<T>()}match field_index{
+  0=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.presses){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).presses).write(ScrubLedger::default());}Ok(true)},
+  1=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.gestures){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).gestures).write(GestureLedger::default());}Ok(true)},
+  2=>unsafe{semio_framework_value::initialization::initialize_absent_array_at(std::ptr::addr_of_mut!((*target).gesture_operations),byte,count)},
+  3=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).gesture_retirement),byte,count)},
+  4=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.gesture_ended){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).gesture_ended).write(false);}Ok(true)},
+  5=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.typing){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).typing).write(TypingLedger::default());}Ok(true)},
+  6=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).overlay),byte,count)},
+  7=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.overlay_generation){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).overlay_generation).write(0);}Ok(true)},
+  8=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.provisional_generation){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).provisional_generation).write(0);}Ok(true)},
+  9=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).config_overlay),byte,count)},
+  10=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.config_overlay_generation){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).config_overlay_generation).write(0);}Ok(true)},
+  11=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).pending_overlay_aliases),byte,count)},
+  12=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).overlay_alias_retirement),byte,count)},
+  13=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).pending_config_aliases),byte,count)},
+  14=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).config_alias_retirement),byte,count)},
+  15=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.refold_owed){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).refold_owed).write(false);}Ok(true)},
+  16=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.refold_request){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).refold_request).write(0);}Ok(true)},
+  17=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.window_overlays){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).window_overlays).write(BTreeMap::new());}Ok(true)},
+  18=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).ingress),byte,count)},
+  19=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.operations){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).operations).write(Vec::new());}Ok(true)},
+  20=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.tick){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).tick).write(0);}Ok(true)},
+  #[cfg(any(test,feature="artifact-app-testing"))]
+  21=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).now_ms),byte,count)},
+  _=>Err(semio_framework_value::ValueError::invariant("tool machine initial cursor exceeds its inventory")),
+ }}
+
 }
 
 impl<P, M: RetireOwned + protocol::StoreMutationFor<P>, C, CM: Mutation<C> + ColdMutation<C> + Clone + 'static> ToolMachineRuntime<P, M, C, CM> {

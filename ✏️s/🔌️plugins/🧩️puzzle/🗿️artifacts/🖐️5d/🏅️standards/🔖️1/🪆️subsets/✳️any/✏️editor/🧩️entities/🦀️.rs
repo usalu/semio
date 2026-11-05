@@ -408,18 +408,23 @@ pub fn puzzle5d_record_from_projection<T: FromValue>(value: Value) -> Result<T, 
 }
 
 pub fn puzzle5d_paste_placement(args: &Value) -> Result<PastePlacement, semio_framework_value::ValueError> {
-    let refusal = || semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "puzzle5d paste placement is malformed");
-    let anchor = match args.get("anchor").map(|value| value.as_str().ok_or_else(refusal)).transpose()?.unwrap_or("original") {
+    puzzle5d_paste_placement_fields(args.get("anchor").map(Value::as_str),args.get("position").filter(|value|!value.is_null()).map(|value|{let values=value.as_array()?;if values.len()!=3{return None}Some([values[0].as_f64()?,values[1].as_f64()?,values[2].as_f64()?])}))
+}
+
+/// 📌️ Reserved paste borrows the original native arguments instead of cloning the complete argument tree.
+pub fn puzzle5d_paste_placement_from_dsl(args:&semio_framework_value::DslValue)->Result<PastePlacement,semio_framework_value::ValueError>{
+    puzzle5d_paste_placement_fields(args.get("anchor").map(semio_framework_value::DslValue::as_str),args.get("position").filter(|value|!value.is_null()).map(|value|{let values=value.as_array()?;if values.len()!=3{return None}Some([values[0].as_f64()?,values[1].as_f64()?,values[2].as_f64()?])}))
+}
+
+fn puzzle5d_paste_placement_fields(anchor:Option<Option<&str>>,position:Option<Option<[f64;3]>>)->Result<PastePlacement,semio_framework_value::ValueError>{
+    let refusal=||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"puzzle5d paste placement is malformed");
+    let anchor = match anchor.map(|value|value.ok_or_else(refusal)).transpose()?.unwrap_or("original") {
         "original" => PasteAnchor::Original, "middle" => PasteAnchor::Middle, "centroid" => PasteAnchor::Centroid,
         "bottomLeft" => PasteAnchor::BottomLeft, "bottomRight" => PasteAnchor::BottomRight,
         "topLeft" => PasteAnchor::TopLeft, "topRight" => PasteAnchor::TopRight,
         _ => return Err(refusal()),
     };
-    let position = args.get("position").filter(|value| !value.is_null()).map(|value| {
-        let values = value.as_array().ok_or_else(refusal)?;
-        if values.len() != 3 { return Err(refusal()); }
-        Ok([values[0].as_f64().ok_or_else(refusal)?, values[1].as_f64().ok_or_else(refusal)?, values[2].as_f64().ok_or_else(refusal)?])
-    }).transpose()?;
+    let position=position.map(|value|value.ok_or_else(refusal)).transpose()?;
     Ok(PastePlacement { anchor, position })
 }
 

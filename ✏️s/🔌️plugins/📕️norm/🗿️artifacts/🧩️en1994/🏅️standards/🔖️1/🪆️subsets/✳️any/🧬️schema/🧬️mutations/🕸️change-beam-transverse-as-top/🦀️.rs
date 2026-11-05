@@ -18,7 +18,7 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamTransverseAsTo
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-transverse-as-top", kind: "change-beam-transverse-as-top", record: "ChangedBeamTransverseAsTop" };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change top layer transverse reinforcement of the deck slab per metre of girder", "obere Querbewehrung je Meter Brücke ändern")
+        semio_framework_ui_locale::LocalizedLabel::native("Change top layer transverse reinforcement of the deck slab per metre of girder", "Obere Querbewehrung je Meter Brücke ändern")
     }
 }
 

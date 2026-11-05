@@ -96,7 +96,7 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
         }
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
-        let view_state = input.context.and_then(|context| context.view_state.as_ref());
+        let view_state = input.context.and_then(|context| context.view_state.as_deref());
         let pointer = input.command.brush_pointer();
         if pointer.is_some() || matches!(input.command, BitmapEditorCommand::PaintStroke { .. }) {
             let detached = semio_framework_plugin::app::GestureSlot::detached();

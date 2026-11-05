@@ -22,7 +22,7 @@ pub use replay_retirement::{ArtifactReplayRetirementFactory, ReplayRetirement, r
 mod prepared;
 pub use prepared::{ArtifactReplayPrepared,retirement as prepared_retirement};
 
-pub use semio_framework_replication_mutation::{ColdMutation, Mutation, MutationOutcome, MutationLeafDescriptor, MutationMessage, MUTATION_MESSAGE_ENTRY_BYTES};
+pub use semio_framework_replication_mutation::{ColdMutation, Mutation, MutationOutcome, MutationLeafDescriptor, MutationMessage, MUTATION_MESSAGE_ENTRY_BYTES, CompiledMutationInputDefinitions, CompiledMutationInputError};
 pub use semio_framework_mutation_diff::{ApplyCapability, MutationDiff, DiffAlgebra, MutationApplyResult};
 pub use semio_framework_value as value;
 #[path="../../🔗️concat/🦀️.rs"] mod message_concat;

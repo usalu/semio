@@ -14,7 +14,7 @@ use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use crate::edit_rules::{resolve_edit, EDIT_RULES};
+pub use crate::edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};
 
 //#region 🔖️Mutations
 use semio_s_artifact_norm_en1995_mut_members::change_annex;

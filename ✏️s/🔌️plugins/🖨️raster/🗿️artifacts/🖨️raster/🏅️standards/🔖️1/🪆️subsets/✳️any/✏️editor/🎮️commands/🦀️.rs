@@ -41,14 +41,22 @@ pub mod commands {
     pub mod set_composite_viewport;
     #[path = "🌊️set-fill-tolerance/🦀️.rs"]
     pub mod set_fill_tolerance;
+    #[path = "🌈️set-filter-kind/🦀️.rs"]
+    pub mod set_filter_kind;
+    #[path = "🎚️set-filter-amount/🦀️.rs"]
+    pub mod set_filter_amount;
+    #[path = "📐️set-image-grid/🦀️.rs"]
+    pub mod set_image_grid;
     #[path = "🎭️set-mask-value/🦀️.rs"]
     pub mod set_mask_value;
-    #[path = "🎯️set-pixel-selection/🦀️.rs"]
-    pub mod set_pixel_selection;
+    #[path = "🎯️select-pixels/🦀️.rs"]
+    pub mod select_pixels;
     #[path = "🔄️transform-image/🦀️.rs"]
     pub mod transform_image;
     #[path = "🧰️work-app/🦀️.rs"]
     pub mod work_app;
+    #[path="🖼️pixel-edit/🦀️.rs"]
+    pub mod pixel_edit;
     pub use semio_s_artifact_raster_raster_editor_commands_2::commands::{add_layer, camera, delete_layer, drop_layer_kind, duplicate_layer, export_png, move_layer, patch_layer, patch_layers, set_active_example, set_brush_hardness, set_brush_size, set_layer_visible, set_paint_target, toggle_layer_visible};
 }
 //#endregion 🪢️TaxonomyMounts
@@ -85,7 +93,6 @@ semio_framework_plugin::app_commands! {
         "setBrushHardness" as "brush-hardness" => set_brush_hardness::SetBrushHardness,
         "setPaintTarget" as "paint-target" => set_paint_target::SetPaintTarget,
         "setMaskValue" as "mask-value" => set_mask_value::SetMaskValue,
-        "setPixelSelection" as "pixel-selection" => set_pixel_selection::SetPixelSelection,
         "exportPng" as "export-png" => export_png::ExportPng,
         "paintStroke" as "paint-stroke" => paint_stroke::PaintStroke,
         "fillRegion" as "fill-region" => fill_region::FillRegion,
@@ -93,12 +100,19 @@ semio_framework_plugin::app_commands! {
         "applyFilter" as "apply-filter" => apply_filter::ApplyFilter,
         "transformImage" as "transform-image" => transform_image::TransformImage,
         "fillSelection" as "fill-selection" => fill_selection::FillSelection,
+        "setFilterKind" as "filter-kind" => set_filter_kind::SetFilterKind,
+        "setFilterAmount" as "filter-amount" => set_filter_amount::SetFilterAmount,
+        "setImageGrid" as "image-grid" => set_image_grid::SetImageGrid,
+        "selectPixels" as "select-pixels" => select_pixels::SelectPixels,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use crate::commands::{set_active_example, export_png, set_paint_target, set_mask_value, set_fill_tolerance, set_pixel_selection};
+use crate::commands::{set_active_example, export_png, set_paint_target, set_mask_value, set_fill_tolerance};
+use crate::commands::{set_filter_kind, set_filter_amount};
+use crate::commands::set_image_grid;
+use crate::commands::select_pixels;
 use crate::commands::{mask_from_selection, flatten_layers, merge_down, paint_stroke, fill_region, apply_filter, transform_image, fill_selection};
 use crate::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
 use crate::commands::{set_brush_opacity, set_brush_size, set_brush_color, set_brush_hardness};

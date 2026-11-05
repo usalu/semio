@@ -23,7 +23,7 @@
           "de": "Das adressierte Element (Rahmeneinwirkung), per Kennung."
         },
         "ref": {
-          "forming": "forming-gain"
+          "kind": "forming-gain"
         },
         "group": "target",
         "order": 10

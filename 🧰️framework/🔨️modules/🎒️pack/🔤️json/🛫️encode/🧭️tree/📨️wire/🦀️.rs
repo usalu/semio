@@ -22,7 +22,25 @@ impl<T:Tree+RetireOwned> ArtifactCanonicalJsonTreeWireCursor<T>{
  pub fn measured_byte_length(&self)->usize{self.length}
  pub fn phase(&self)->&'static str{if self.closing{"closing"}else{match self.phase{0..=3=>"measure",4=>"allocate",5=>"initialize",6..=8=>"encode",9=>"sourceClose",10=>"handoff",_=>"complete"}}}
  pub fn begin_close(&mut self){self.closing=true;if let Some(tree)=self.tree.as_mut(){tree.begin_close()}}
+ /// 📫️ Quotes handback of the actual typed root after both immutable traversal aliases have closed.
+ pub fn original_return_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  if self.closing||self.phase!=9||self.tree.is_some()||self.projection.is_some(){return Err(refuses("canonical wire original return requires its completed immutable traversals"))}
+  self.source.as_ref().ok_or_else(||refuses("canonical wire original return has no source"))?.next_take_demand(body)
+ }
+ /// 🫴️ Returns the original typed owner without a clone while retaining the independently funded wire.
+ pub fn return_original(&mut self,receiving:&mut Option<T>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+  use semio_framework_value::retained_clone::RetainedCloneSourceTake;
+  use semio_framework_value::{RetainedCloneStep,RetainedWorkOutcome};
+  self.last_turn_work=0;
+  if receiving.is_some(){return RetainedWorkOutcome{result:Err(refuses("canonical wire original return receiver is occupied")),work:0}}
+  let demand=match self.original_return_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+  if !permits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  let turn=self.source.as_mut().unwrap().take_authority(grant);self.last_turn_work=turn.work;
+  RetainedWorkOutcome{result:turn.result.map(|step|match step{RetainedCloneSourceTake::Pending(progress)=>RetainedCloneStep::Progress(progress),RetainedCloneSourceTake::Ready(original,progress)=>{*receiving=Some(original);assert!(self.source.as_ref().unwrap().terminal_is_empty());self.source.take();self.phase=10;RetainedCloneStep::Complete(progress)}}),work:turn.work}
+ }
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.original_close.is_none()&&self.admission.is_none()&&self.source.is_none()&&self.projection.is_none()&&self.tree.is_none()&&self.wire.capacity()==0}
+ /// ♻️ Quotes paid closure without changing the current encoding intent or original custody.
+ pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(admission)=self.admission.as_ref(){return admission.next_return_demand()}
   if let Some(tree)=self.tree.as_ref(){return if tree.terminal_is_empty(){Ok(header())}else{tree.next_demand()}}

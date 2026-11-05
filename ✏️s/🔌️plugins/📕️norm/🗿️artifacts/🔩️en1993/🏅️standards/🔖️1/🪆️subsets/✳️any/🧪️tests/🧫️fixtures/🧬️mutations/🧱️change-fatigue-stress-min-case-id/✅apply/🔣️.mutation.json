@@ -1,3 +1,6 @@
 {
-  "ChangeFatigueStressMinCaseId": "fatigue-stress-1"
+  "ChangeFatigueStressMinCaseId": {
+    "id": "fatigue-stress-1",
+    "newMinCaseId": "lm-min-changed"
+  }
 }

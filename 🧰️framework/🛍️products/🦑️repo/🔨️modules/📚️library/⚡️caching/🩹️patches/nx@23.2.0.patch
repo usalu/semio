@@ -2018,7 +2018,7 @@ diff --git a/dist/src/utils/cache-directory.js b/dist/src/utils/cache-directory.
 +++ b/dist/src/utils/cache-directory.js
 @@ -27,2 +27,7 @@
  function cacheDirectory(root, cacheDirectory) {
-+    if (cacheDirectory === '.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/nx/artifacts') {
++    if (cacheDirectory === '.cache/b/r/m/nx/artifacts') {
 +        const declared = absolutePath(root, cacheDirectory);
 +        const owned = (0, path_1.dirname)((0, path_1.dirname)(declared));
 +        if (process.env.SEMIO_NX_FIXED_STORAGE !== owned || process.env.NX_CACHE_DIRECTORY !== declared) throw Error('Original bounded Nx namespace required');

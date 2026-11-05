@@ -68,23 +68,31 @@ impl store::ArtifactNativeSnapshot for Fem2dSnapshot {
  fn encode_native_snapshot(&self,encoding:store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
 }
 
-impl store::ArtifactPackReceiving for Fem2dSnapshot{
- /// 🎁️ The original pack parser, field graph, authoring rows and persistent output share the caller's receiving and retirement frames.
- fn receive_pack(bytes:&[u8],owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,semio_framework_value::ValueError>{
-  use semio_framework_value::{ValueError,ValueRefusalKind};
+impl store::ArtifactPackReceiving for Fem2dSnapshot {
+ /// 🎁️ Retains original Pack parsing, authoring and persistent output in the caller's funded frames.
+ fn receive_pack(bytes:&[u8],owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{
+  use semio_framework_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind};
   use semio_framework_dsl_record::{BorrowedDslRecord,RecordValue};
   use pack::record::RetainedRecordReceiving;
-  owner.receive_nested::<RecordValue,Self>(|slot,original|{
-   let body=store::semio_format::unwrap_binary_controlled(bytes,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1,original.native())?;
-   *slot=Some(original.receive_nested::<RetainedRecordReceiving,RecordValue>(|cursor,original|{
+  owner.receive_nested::<RecordValue,Self,store::NativeSnapshotFailure>(|slot,original|store::native_snapshot_turn(|work|{
+   let native=original.native();let before=native.actual_work();
+   let result=store::semio_format::unwrap_binary_controlled(bytes,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1,native);
+   let body=work.take(RetainedWorkOutcome{work:native.actual_work().saturating_sub(before),result})?;
+   *slot=Some(work.take(original.receive_nested::<RetainedRecordReceiving,RecordValue,store::NativeSnapshotFailure>(|cursor,original|store::native_snapshot_turn(|work|{
     let grant=original.remaining_grant();
-    let Some((receiving,progress))=RetainedRecordReceiving::admit_document(body,(0,body.len()),<Fem2dSnapshotValue as BorrowedDslRecord>::RECORD,protocol::PackLimits::default(),grant).result? else{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original FEM pack grant cannot admit its receiving parser"));};
+    let Some((receiving,progress))=work.take(RetainedRecordReceiving::admit_document(body,(0,body.len()),<Fem2dSnapshotValue as BorrowedDslRecord>::RECORD,protocol::PackLimits::default(),grant))? else{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original FEM pack grant cannot admit its receiving parser").into())};
     *cursor=Some(receiving);original.record_progress(progress)?;
-    original.drive_cursor(cursor,|cursor,native,grant|{
-     if cursor.is_ready(){let mut out=None;match cursor.take_into(&mut out,grant).result{Ok(p)=>(Ok(out),p),Err(e)=>{let p=e.retained_progress();(Err(e),p)}}}else{match cursor.step(body,native,grant).result{Ok(p)=>(Ok(None),p),Err(e)=>{let p=e.retained_progress();(Err(e.primary.or(e.quote_refusal).or(e.allocation_refusal).unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native construction refused"))),p)}}}
-    })
-   })?);
-   Self::receive_exchange_record(slot.as_ref().unwrap(),original)
-  })
+    work.take(original.drive_cursor(cursor,|cursor,native,grant|{
+     if cursor.is_ready(){
+      let mut out=None;let turn=cursor.take_into(&mut out,grant);
+      RetainedWorkOutcome{work:turn.work,result:turn.result.map(|p|(out,p)).map_err(store::NativeSnapshotFailure::from)}
+     }else{
+      let turn=cursor.step(body,native,grant);
+      RetainedWorkOutcome{work:turn.work,result:turn.result.map(|p|(None,p)).map_err(store::NativeSnapshotFailure::from)}
+     }
+    }))
+   })))?);
+   work.take(Self::receive_exchange_record(slot.as_ref().unwrap(),original))
+  }))
  }
 }

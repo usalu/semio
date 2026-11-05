@@ -1,0 +1,534 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "source",
+      "priorWork": 7,
+      "gate": "source",
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied"
+      },
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "state",
+      "priorWork": 7,
+      "gate": "state",
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied"
+      },
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "receipt",
+      "priorWork": 7,
+      "gate": "receipt",
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied"
+      },
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "items",
+      "priorWork": 7,
+      "gate": "items",
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied"
+      },
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "copy",
+      "priorWork": 7,
+      "gate": "copy",
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied"
+      },
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "capacity",
+      "priorWork": 7,
+      "gate": "capacity",
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied"
+      },
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "release",
+      "priorWork": 7,
+      "gate": "release",
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied"
+      },
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "depth",
+      "priorWork": 7,
+      "gate": "depth",
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied"
+      },
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "ready",
+      "priorWork": 7,
+      "gate": "ready",
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "probe"
+      },
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "closed",
+      "priorWork": 7,
+      "gate": "closed",
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "probe"
+      },
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "semantic-false",
+      "priorWork": 7,
+      "gate": "admitted",
+      "actions": [
+        {
+          "kind": "semantic",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "ok"
+      },
+      "callbackEntered": true,
+      "receiptPosted": true,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "semantic-true",
+      "priorWork": 7,
+      "gate": "admitted",
+      "actions": [
+        {
+          "kind": "semantic",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": true
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "failure"
+      },
+      "callbackEntered": true,
+      "receiptPosted": true,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "retirement-false",
+      "priorWork": 7,
+      "gate": "admitted",
+      "actions": [
+        {
+          "kind": "retirement",
+          "units": 3,
+          "physicalItems": 0,
+          "fails": false
+        }
+      ],
+      "expected": {
+        "work": 3,
+        "physicalItems": 0,
+        "outcome": "ok"
+      },
+      "callbackEntered": true,
+      "receiptPosted": true,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "retirement-true",
+      "priorWork": 7,
+      "gate": "admitted",
+      "actions": [
+        {
+          "kind": "retirement",
+          "units": 3,
+          "physicalItems": 0,
+          "fails": true
+        }
+      ],
+      "expected": {
+        "work": 3,
+        "physicalItems": 0,
+        "outcome": "failure"
+      },
+      "callbackEntered": true,
+      "receiptPosted": true,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "admission-false",
+      "priorWork": 7,
+      "gate": "admitted",
+      "actions": [
+        {
+          "kind": "admission",
+          "units": 3,
+          "physicalItems": 0,
+          "fails": false
+        }
+      ],
+      "expected": {
+        "work": 3,
+        "physicalItems": 0,
+        "outcome": "ok"
+      },
+      "callbackEntered": true,
+      "receiptPosted": true,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "admission-true",
+      "priorWork": 7,
+      "gate": "admitted",
+      "actions": [
+        {
+          "kind": "admission",
+          "units": 3,
+          "physicalItems": 0,
+          "fails": true
+        }
+      ],
+      "expected": {
+        "work": 3,
+        "physicalItems": 0,
+        "outcome": "failure"
+      },
+      "callbackEntered": true,
+      "receiptPosted": true,
+      "priorPhysicalItems": 9
+    },
+    {
+      "id": "scoped-refusal-before-parser",
+      "priorWork": 7,
+      "gate": "admitted",
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9,
+      "actions": [
+        {
+          "kind": "semantic",
+          "units": 1,
+          "physicalItems": 1,
+          "fails": false
+        }
+      ],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied"
+      }
+    },
+    {
+      "id": "performed-child-without-physical-receipt",
+      "priorWork": 7,
+      "gate": "admitted",
+      "callbackEntered": true,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9,
+      "actions": [
+        {
+          "kind": "retirement",
+          "units": 3,
+          "physicalItems": 0,
+          "fails": false
+        }
+      ],
+      "expected": {
+        "work": 3,
+        "physicalItems": 0,
+        "outcome": "ok"
+      }
+    },
+    {
+      "id": "fold-ready-probe",
+      "priorWork": 7,
+      "gate": "ready",
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9,
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "probe"
+      }
+    },
+    {
+      "id": "fold-birth-post-effect-refusal",
+      "priorWork": 7,
+      "gate": "admitted",
+      "callbackEntered": true,
+      "receiptPosted": true,
+      "priorPhysicalItems": 9,
+      "actions": [
+        {
+          "kind": "semantic",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": true
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "failure"
+      }
+    },
+    {
+      "id": "fold-output-handoff",
+      "priorWork": 7,
+      "gate": "admitted",
+      "callbackEntered": true,
+      "receiptPosted": true,
+      "priorPhysicalItems": 9,
+      "actions": [
+        {
+          "kind": "semantic",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "ok"
+      }
+    },
+    {
+      "id": "fold-direct-future-poll",
+      "priorWork": 7,
+      "gate": "admitted",
+      "callbackEntered": true,
+      "receiptPosted": true,
+      "priorPhysicalItems": 9,
+      "actions": [
+        {
+          "kind": "semantic",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "ok"
+      }
+    },
+    {
+      "id": "fold-delegated-retirement",
+      "priorWork": 7,
+      "gate": "admitted",
+      "callbackEntered": true,
+      "receiptPosted": true,
+      "priorPhysicalItems": 9,
+      "actions": [
+        {
+          "kind": "retirement",
+          "units": 3,
+          "physicalItems": 0,
+          "fails": false
+        }
+      ],
+      "expected": {
+        "work": 3,
+        "physicalItems": 0,
+        "outcome": "ok"
+      }
+    },
+    {
+      "id": "fold-denied-cleanup",
+      "priorWork": 7,
+      "gate": "items",
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9,
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied"
+      }
+    },
+    {
+      "id": "fold-terminal-cleanup-probe",
+      "priorWork": 7,
+      "gate": "closed",
+      "callbackEntered": false,
+      "receiptPosted": false,
+      "priorPhysicalItems": 9,
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "probe"
+      }
+    }
+  ],
+  "foldTransitions": [
+    {
+      "id": "separate-teardown-and-handoff",
+      "initialOwner": "result",
+      "actions": [
+        {
+          "turn": 1,
+          "kind": "teardown",
+          "units": 1,
+          "afterOwner": "result"
+        },
+        {
+          "turn": 2,
+          "kind": "handoff",
+          "units": 1,
+          "afterOwner": "caller"
+        }
+      ],
+      "expected": [
+        {
+          "turn": 1,
+          "work": 1,
+          "owner": "result"
+        },
+        {
+          "turn": 2,
+          "work": 1,
+          "owner": "caller"
+        }
+      ]
+    },
+    {
+      "id": "cancel-after-teardown-retains-output",
+      "initialOwner": "result",
+      "actions": [
+        {
+          "turn": 1,
+          "kind": "teardown",
+          "units": 1,
+          "afterOwner": "result"
+        },
+        {
+          "turn": 2,
+          "kind": "cancel",
+          "units": 0,
+          "afterOwner": "result"
+        },
+        {
+          "turn": 3,
+          "kind": "capture-retirement",
+          "units": 1,
+          "afterOwner": "retirement"
+        },
+        {
+          "turn": 4,
+          "kind": "paid-child",
+          "units": 3,
+          "afterOwner": "retirement"
+        },
+        {
+          "turn": 5,
+          "kind": "terminal-clear",
+          "units": 1,
+          "afterOwner": "none"
+        }
+      ],
+      "expected": [
+        {
+          "turn": 1,
+          "work": 1,
+          "owner": "result"
+        },
+        {
+          "turn": 2,
+          "work": 0,
+          "owner": "result"
+        },
+        {
+          "turn": 3,
+          "work": 1,
+          "owner": "retirement"
+        },
+        {
+          "turn": 4,
+          "work": 3,
+          "owner": "retirement"
+        },
+        {
+          "turn": 5,
+          "work": 1,
+          "owner": "none"
+        }
+      ]
+    }
+  ]
+}

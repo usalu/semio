@@ -2,7 +2,7 @@
 //!
 //! 🪜️ The retained-field rung of one hosted app's close ladder: every owned field the app retains
 //! beyond its stores is released through exact per-axis quotes and an unchanged caller grant.
-use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep, plugin_retirement_fault};
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry, PluginLifecycleStep, plugin_retirement_fault};
 use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, PeerRoster};
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
@@ -370,6 +370,45 @@ pub enum CloseRung {
 
 const CANCELLATION_SLOT_SPAN: usize = TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS;
 
+/// 📏️ Quotes the registry owner at `cursor`, or one hand-off when it only awaits removal.
+pub fn registry_demands<T: ClosingOwner>(registry: &ArtifactFixedRegistry<T>, cursor: usize, body: usize) -> Result<RetirementDemand, ValueError> {
+    let Some((_, id)) = registry.next_id_from(cursor) else { return Ok(RetirementDemand::default()) };
+    let Some(owner) = registry.get(id) else { return Ok(handoff_demand()) };
+    if owner.closing_terminal_is_empty() { return Ok(handoff_demand()); }
+    owner.closing_demands(body)
+}
+
+/// 🎟️ Advances the registry owner at `cursor` by one granted turn and removes it at its terminal-empty witness; answers the removed id.
+pub fn registry_step<T: ClosingOwner>(registry: &mut ArtifactFixedRegistry<T>, cursor: &mut usize, cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<(PluginLifecycleStep, Option<u64>),PluginLifecycleFailure> {
+    let idle = RetainedCloneProgress::default();
+    let Some((index, id)) = registry.next_id_from(*cursor) else { return Ok((PluginLifecycleStep::Complete(idle), None)) };
+    let owner = registry.get_mut(id).ok_or_else(|| plugin_sdk_fault("closing registry owner changed during one fixed step"))?;
+    let progress = if owner.closing_terminal_is_empty() {
+        idle
+    } else {
+        match owner.closing_step(cx,grant)? {
+            PluginLifecycleStep::Progress(progress) => {
+                if !owner.closing_terminal_is_empty() {
+                    *cursor = index;
+                    return Ok((PluginLifecycleStep::Progress(progress), None));
+                }
+                progress
+            }
+            PluginLifecycleStep::Complete(progress) => {
+                if !owner.closing_terminal_is_empty() { return Err(plugin_sdk_fault("closing registry owner reported Complete without its exact terminal-empty witness").into()); }
+                progress
+            }
+            blocked => {
+                *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                return Ok((blocked, None));
+            }
+        }
+    };
+    drop(registry.remove(id));
+    *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+    Ok((PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }), Some(id)))
+}
+
 /// 🧺️ One owner of a fixed registry that the close ladder drains in place: its next turn quote, its granted turn and its terminal witness.
 #[doc(hidden)]
 pub trait ClosingOwner {
@@ -455,27 +494,35 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         Ok(RetainedCloneStep::Progress(handoff()))
     }
 
-    pub fn detach_peer_presence_step(&mut self) -> Result<RetainedCloneStep, Fault> {
-        let generation = if self.roster.peer_presence.is_empty() {
-            None
-        } else {
-            let generation = self.roster.peer_presence_generation.checked_add(1).ok_or_else(|| plugin_sdk_fault("peer-presence close generation exhausted before exact ownership transfer"))?;
-            if !self.roster.peer_presence_retirements.can_insert(generation) { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
-            Some(generation)
-        };
-        let previous = std::mem::replace(&mut *self.roster.peer_presence, PeerPresenceRoot::empty_shared());
-        if let Some(generation) = generation {
-            self.roster.peer_presence_retirements.insert_admitted(generation, PeerPresenceRootRetirement::new(previous));
-            self.roster.peer_presence_generation = generation;
-        } else {
-            drop(previous);
-        }
-        self.close.close_peer_presence_detached = true;
-        Ok(RetainedCloneStep::Progress(handoff()))
+    /// ♻️ Retains the exact final presence root until its independently paid retirement finishes.
+    pub fn detach_peer_presence_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
+        let demand=peer_presence_detach_demand(&*self.roster,grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if let Some(owner)=self.roster.peer_presence_close.as_mut(){
+            if !owner.terminal_is_empty(){
+                let step=owner.close_step(grant).map_err(plugin_retirement_fault)?;
+                return Ok(RetainedCloneStep::Progress(step.progress().unwrap_or_default()))
+            }
+            self.roster.peer_presence_close.take();
+            self.close.close_peer_presence_detached=true;
+        }else if let Some(root)=self.roster.peer_presence.take(){
+            *self.roster.peer_presence_close=Some(PeerPresenceRootRetirement::new(root));
+        }else{self.close.close_peer_presence_detached=true;}
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
     }
 }
 
+fn peer_presence_detach_demand<A:ArtifactApp>(roster:&PeerRoster<A>,body:usize)->Result<RetirementDemand,ValueError>{
+    if let Some(owner)=roster.peer_presence_close.as_ref(){
+        return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<PeerPresenceRootRetirement>>()+size_of::<bool>(),depth:1,..Default::default()})}else{owner.retirement_demands(body)}
+    }
+    Ok(RetirementDemand{copy_bytes:if roster.peer_presence.is_some(){2*size_of::<Option<PeerPresenceRootRetirement>>()+2*size_of::<Option<std::sync::Arc<PeerPresenceRoot>>>()}else{size_of::<bool>()},depth:1,..Default::default()})
+}
+
 impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+    /// 📐️ The final presence close quotes its actual owner instead of an empty replacement root.
+    pub fn detach_peer_presence_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{peer_presence_detach_demand(self.roster,body)}
+
     /// 🩺️ The ladder frontier a stalled close is parked on, named for deadline reports.
     pub fn close_rung_name(&self) -> String {
         format!("{:?}", self.close_rung())

@@ -1,0 +1,1 @@
+{"mutation":"i32","foreignMutation":"u32","captureAliases":2,"cancelAfterCapture":true,"authority":"sameRegisteredFactory","maximumCopyBytes":32768,"maximumAllocationBytes":1048576}

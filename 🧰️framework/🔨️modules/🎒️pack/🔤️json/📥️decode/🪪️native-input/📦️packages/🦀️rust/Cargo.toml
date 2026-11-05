@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-pack-json-native-input"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original JSON receiving into immutable native owners with exact paid source retirement."
+
+[package.metadata.semio]
+role = "framework"
+id = "pack-json-native-input"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 65536
+maxSourceFiles = 8
+maxActiveLines = 1500
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }

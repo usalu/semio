@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "variant": "strict",
+      "schema": "stdio.docx",
+      "formatKind": "s.stdio.docx@ecma-376",
+      "extension": ".docx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "binary": true,
+      "mainNamespace": "http://purl.oclc.org/ooxml/wordprocessingml/main",
+      "relationshipBase": "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "paragraphs": {
+        "en": "A document on this device.",
+        "de": "Ein Dokument auf diesem Gerät."
+      }
+    },
+    {
+      "variant": "transitional",
+      "schema": "stdio.docx",
+      "formatKind": "s.stdio.docx@ecma-376",
+      "extension": ".docx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "binary": true,
+      "mainNamespace": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+      "relationshipBase": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "paragraphs": {
+        "en": "A shared authored paragraph.",
+        "de": "Ein gemeinsam verfasster Absatz."
+      }
+    }
+  ]
+}

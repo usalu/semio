@@ -1,3 +1,4 @@
+use protocol::{DiffText, DiffBinary};
 use crate::LasSnapshot;
 use crate::standards::v1_0::subsets::any::schema::diff::*;
 

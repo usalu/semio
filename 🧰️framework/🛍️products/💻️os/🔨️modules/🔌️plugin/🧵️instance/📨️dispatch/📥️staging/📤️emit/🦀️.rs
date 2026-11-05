@@ -238,7 +238,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         if !window_config_mutations.is_empty() {
             let authority = self
                 .stores.window_config_store
-                .capture(meta.view_state.as_ref())
+                .capture(meta.view_state.as_deref())
                 .await?
                 .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.window-context"), "window config emission requires one exact registered ViewModel window authority"))?;
             for mutation in window_config_mutations {

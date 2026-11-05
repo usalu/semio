@@ -529,7 +529,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
             return Ok(ArtifactCommandWorkStep::Progress { stage: "sequence-config-prepare", preview: b"{\"en\":\"Preparing Sequence setting\",\"de\":\"Sequenzeinstellung wird vorbereitet\"}" });
         }
         let context = context.ok_or_else(|| sequence_fault("sequence.window.unavailable", "sequence-window-context-required"))?;
-        let view = context.view_state.as_ref().ok_or_else(|| sequence_fault("sequence.window.unavailable", "sequence-window-view-required"))?;
+        let view = context.view_state.as_deref().ok_or_else(|| sequence_fault("sequence.window.unavailable", "sequence-window-view-required"))?;
         let base = main::config::from_snapshot(context.window_config.as_ref());
         let mut config = base.clone();
         self.completed = true;

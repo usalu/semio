@@ -82,3 +82,27 @@ pub use super::bounds::PlyBounds;
 
 //#region 🪢️TaxonomyMounts
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🔖️SceneGeometry
+/// 🧊️ What the mesh windows draw: the `vertex` element's x, y, z columns and the fan-triangulated `vertex_indices` lists of the `face` element;
+/// a file without faces is drawn as its vertex points.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn scene_geometry(snapshot: &crate::PlySnapshot) -> (Vec<[f64; 3]>, Vec<u32>, Vec<[f64; 3]>) {
+    let number = |value: &crate::schema::snapshot::PlyValue| match value { crate::schema::snapshot::PlyValue::Float(float) => Some(f64::from(*float)), crate::schema::snapshot::PlyValue::Double(double) => Some(*double), crate::schema::snapshot::PlyValue::Char(v) => Some(f64::from(*v)), crate::schema::snapshot::PlyValue::UChar(v) => Some(f64::from(*v)), crate::schema::snapshot::PlyValue::Short(v) => Some(f64::from(*v)), crate::schema::snapshot::PlyValue::UShort(v) => Some(f64::from(*v)), crate::schema::snapshot::PlyValue::Int(v) => Some(f64::from(*v)), crate::schema::snapshot::PlyValue::UInt(v) => Some(f64::from(*v)), crate::schema::snapshot::PlyValue::List(_) => None };
+    let Some(vertex) = snapshot.elements.iter().find(|element| element.name == "vertex") else { return (Vec::new(), Vec::new(), Vec::new()) };
+    let column = |name: &str| vertex.properties.iter().position(|property| property.name() == name);
+    let (Some(x), Some(y), Some(z)) = (column("x"), column("y"), column("z")) else { return (Vec::new(), Vec::new(), Vec::new()) };
+    let positions: Vec<[f64; 3]> = vertex.rows.iter().map(|row| [x, y, z].map(|column| row.values.get(column).and_then(number).unwrap_or(0.0))).collect();
+    let mut triangles = Vec::new();
+    if let Some(face) = snapshot.elements.iter().find(|element| element.name == "face") {
+        if let Some(list) = face.properties.iter().position(|property| matches!(property.name(), "vertex_indices" | "vertex_index")) {
+            for row in &face.rows {
+                let Some(crate::schema::snapshot::PlyValue::List(items)) = row.values.get(list) else { continue };
+                let indices: Vec<u32> = items.iter().filter_map(number).map(|value| value as u32).collect();
+                (2..indices.len()).for_each(|corner| triangles.extend([indices[0], indices[corner - 1], indices[corner]]));
+            }
+        }
+    }
+    if triangles.is_empty() { (Vec::new(), Vec::new(), positions) } else { (positions, triangles, Vec::new()) }
+}
+//#endregion 🔖️SceneGeometry

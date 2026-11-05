@@ -67,14 +67,15 @@ fn refused(messages: &[String]) -> bool {
 }
 
 /// 🌉️ One mutation through the central applier: the next snapshot and the raised `<Level>:<code>` messages.
-fn apply<S, M>(base: &S, mutation: &M) -> Result<(S, Vec<String>), String>
+fn apply<S: Clone, M>(base: &S, mutation: &M) -> Result<(S, Vec<String>), String>
 where
-    M: Mutation<S>,
+    M: Mutation<S> + ColdMutation<S>,
 {
-    let raised = mutation.diff(base);
-    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = apply_diff_cold(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-    Ok((applied, messages))
+    let (diff, messages) = mutation.diff(base).into_parts();
+    let messages = messages.iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = apply_diff_cold(&diff, base);
+    <M::ReferenceDiff as semio_framework_os_kernel::MutationDiff<S>>::retire_cold(diff);
+    Ok((applied.map_err(|error| format!("{error:?}"))?, messages))
 }
 
 /// 🎯️ The mutation addressing a target no document holds, or `None` when its payload addresses nothing.
@@ -121,8 +122,8 @@ fn binary_breaches<M: OpBinary + PartialEq + Debug>(bundle: &Path, mutation: &M)
 fn vector_breaches<S, M>(bundle: &Path, mutation: &M, reached: &mut BTreeSet<String>) -> Vec<String>
 where
     S: Clone + PartialEq + Debug + FromValue,
-    M: Mutation<S>,
-    M::Diff: ToValue,
+    M: Mutation<S> + ColdMutation<S>,
+    M::ReferenceDiff: ToValue,
 {
     let name = bundle.display();
     let step = |document: &S, operation: &M| apply(document, operation).unwrap_or_else(|error| panic!("{name}: {error}"));
@@ -144,7 +145,10 @@ where
     let diff = bundle.join(DIFF);
     if diff.is_file() {
         let raised = mutation.diff(&before);
-        if json(&semio_framework_pack_json::to_json_string(raised.diff())) != json(&read(&diff)) {
+        let matches = json(&semio_framework_pack_json::to_json_string(raised.diff())) == json(&read(&diff));
+        let (owned, _) = raised.into_parts();
+        <M::ReferenceDiff as semio_framework_os_kernel::MutationDiff<S>>::retire_cold(owned);
+        if !matches {
             breaches.push(format!("{name}: the produced diff is not the committed diff"));
         }
     } else if status != "rejected" {
@@ -175,8 +179,8 @@ where
 pub async fn assert_committed_vectors<S, M>(root: &Path, prepare: fn())
 where
     S: Clone + PartialEq + Debug + FromValue,
-    M: Mutation<S> + SemanticMutation<S> + OpBinary + PartialEq + Debug + FromValue + ToValue,
-    M::Diff: ToValue,
+    M: Mutation<S> + ColdMutation<S> + SemanticMutation<S> + OpBinary + PartialEq + Debug + FromValue + ToValue,
+    M::ReferenceDiff: ToValue + semio_framework_os_kernel::ColdDiffAlgebra<S>,
 {
     prepare();
     assert!(root.is_dir(), "the fixture mirror {} must exist", root.display());
@@ -241,3 +245,7 @@ mod tests {
         assert!(ROLES.iter().all(|name| name.starts_with("🔣️.") && name.ends_with(".json")));
     }
 }
+
+#[path="🔮️catalogue/🦀️.rs"]
+mod catalogue;
+pub use catalogue::*;

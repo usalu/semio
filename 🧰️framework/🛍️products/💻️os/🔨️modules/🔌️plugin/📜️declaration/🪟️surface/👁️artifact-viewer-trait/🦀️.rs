@@ -96,7 +96,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     type Mutation: ::semio_framework_os_kernel::StoreMutationFor<Self::Snapshot> + Clone + ::protocol::ColdMutation<Self::Snapshot> + protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type ConfigMutation: Clone + ::protocol::ColdMutation<Self::Config> + ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::replication::OpBinaryReceiving + 'static;
-    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
+    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
     type PresenceMutation: Clone + ::protocol::ColdMutation<Self::Presence> + ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Transient: semio_framework_value::retirement::RetireOwned + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type TransientMutation: Clone + ::protocol::ColdMutation<Self::Transient> + ::protocol::Mutation<Self::Transient> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
@@ -180,6 +180,8 @@ pub trait ArtifactViewer: Default + Send + 'static {
 
     /// 📨️ This viewer's answer to a [`HostEvent`] — forwarded verbatim to `ArtifactApp::host_event` by
     /// `ViewerApp<Self>`, where the contract lives.
+    /// 📏️ Quotes the boxed domain command and payload without constructing it; the runtime adds its own custody headers.
+    fn host_event_demands(_event:&HostEvent)->Option<semio_framework_value::RetirementDemand>{None}
     fn host_event(_event: &HostEvent) -> Option<Self::Command> {
         None
     }
@@ -194,8 +196,8 @@ pub trait ArtifactViewer: Default + Send + 'static {
     }
 
     /// 🧭️ Builds a persistent producer/import job for one explicitly registered viewer route.
-    fn build_reserved_tool_job(_request: ArtifactReservedToolJobRequest<ViewerApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        Ok(None)
+    fn build_reserved_tool_job(_request:&mut Option<ArtifactReservedToolJobRequest<ViewerApp<Self>>>,_body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered reserved viewer route lacks its original producer").into())
     }
 
     /// 🎞️ Builds an owned resumable producer for an explicitly registered viewer media-output port.

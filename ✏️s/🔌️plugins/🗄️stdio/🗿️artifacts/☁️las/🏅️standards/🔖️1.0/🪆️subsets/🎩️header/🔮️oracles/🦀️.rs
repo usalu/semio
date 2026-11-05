@@ -215,13 +215,19 @@ fn spec_of(kind: &str, params: Json) -> Json {
 //#endregion 🔖️JsonReaders
 
 //#region 🔖️VlrJson
-fn vlr_to_json(vlr: &las::raw::Vlr) -> Json {
+fn vlr_json(vlr: &las::raw::Vlr, data: Json) -> Json {
     Json::Object(vec![
         ("userId".to_string(), Json::String(read_fixed_str(&vlr.user_id))),
         ("recordId".to_string(), Json::Number(vlr.record_id as f64)),
         ("description".to_string(), Json::String(read_fixed_str(&vlr.description))),
-        ("data".to_string(), Json::String(String::from_utf8_lossy(&vlr.data).to_string())),
+        ("data".to_string(), data),
     ])
+}
+fn vlr_to_json(vlr: &las::raw::Vlr) -> Json {
+    vlr_json(vlr, Json::String(String::from_utf8_lossy(&vlr.data).to_string()))
+}
+fn vlr_to_wire(vlr: &las::raw::Vlr) -> Json {
+    vlr_json(vlr, bytes_json(&vlr.data))
 }
 fn vlr_of_wire(value: &Json) -> Option<las::raw::Vlr> {
     let data = bytes_of(value, "data")?;

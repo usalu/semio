@@ -1,0 +1,224 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "foldTransitions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "priorWork",
+          "gate",
+          "actions",
+          "expected",
+          "callbackEntered",
+          "receiptPosted",
+          "priorPhysicalItems"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "priorWork": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "gate": {
+            "enum": [
+              "source",
+              "state",
+              "receipt",
+              "items",
+              "copy",
+              "capacity",
+              "release",
+              "depth",
+              "ready",
+              "closed",
+              "admitted"
+            ]
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "units",
+                "physicalItems",
+                "fails"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "semantic",
+                    "retirement",
+                    "admission"
+                  ]
+                },
+                "units": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "physicalItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "fails": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "work",
+              "physicalItems",
+              "outcome"
+            ],
+            "properties": {
+              "work": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "physicalItems": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "outcome": {
+                "enum": [
+                  "probe",
+                  "denied",
+                  "failure",
+                  "ok"
+                ]
+              }
+            }
+          },
+          "callbackEntered": {
+            "type": "boolean"
+          },
+          "receiptPosted": {
+            "type": "boolean"
+          },
+          "priorPhysicalItems": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "foldTransitions": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "initialOwner",
+          "actions",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "initialOwner": {
+            "enum": [
+              "result",
+              "caller",
+              "retirement",
+              "none"
+            ]
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "turn",
+                "kind",
+                "units",
+                "afterOwner"
+              ],
+              "properties": {
+                "turn": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "kind": {
+                  "enum": [
+                    "teardown",
+                    "handoff",
+                    "cancel",
+                    "capture-retirement",
+                    "paid-child",
+                    "terminal-clear"
+                  ]
+                },
+                "units": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "afterOwner": {
+                  "enum": [
+                    "result",
+                    "caller",
+                    "retirement",
+                    "none"
+                  ]
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "turn",
+                "work",
+                "owner"
+              ],
+              "properties": {
+                "turn": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "work": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "owner": {
+                  "enum": [
+                    "result",
+                    "caller",
+                    "retirement",
+                    "none"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

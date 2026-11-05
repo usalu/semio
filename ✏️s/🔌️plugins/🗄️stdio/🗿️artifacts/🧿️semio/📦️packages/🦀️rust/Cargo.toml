@@ -91,6 +91,25 @@ semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
 
+semio-s-artifact-stdio-semio-audio-model = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-animation-schema = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-brep-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-document-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-drawing-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-value-model = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-text-model = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-mesh-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-cad-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-video-model = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-image-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-presentation-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-graph-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-flow-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-object-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-model-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-kit-snapshot = { path = "../../🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-table-model = { path = "../../🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+
 [package.metadata.semio.composition]
 manifest = "../../🧩️composition/🔣️.json"
 
@@ -109,3 +128,7 @@ path = "../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/�
 [[test]]
 name = "record_spec_law"
 path = "../../🧪️tests/🗺️record-spec/🦀️.rs"
+
+[[test]]
+name = "natural_file_sdk"
+path = "../../🧪️tests/📄️natural/🦀️.rs"

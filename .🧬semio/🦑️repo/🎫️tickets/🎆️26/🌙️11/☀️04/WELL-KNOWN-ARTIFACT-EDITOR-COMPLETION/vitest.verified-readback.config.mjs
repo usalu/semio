@@ -1,0 +1,1 @@
+export default {test:{include:["**/🧑‍🎨engine/🧪️tests/🗃️catalog-acknowledgment/*.ts","**/🧑‍🎨engine/🧪️tests/🗃️catalog-recorder/🟦️.tsx"],environment:"jsdom",maxWorkers:1,minWorkers:1,fileParallelism:false,testTimeout:5000}};

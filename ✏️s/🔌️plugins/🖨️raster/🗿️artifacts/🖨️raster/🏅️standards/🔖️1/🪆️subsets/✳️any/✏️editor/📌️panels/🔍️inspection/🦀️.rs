@@ -24,6 +24,9 @@ use semio_framework_ui_contract as ui;
 pub const RASTER_PLAY_BODY_PROPERTIES: &str = "raster.play.properties";
 const ROOT: &str = "raster-inspector";
 
+#[path = "🌈️operations/🦀️.rs"]
+mod operations;
+
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label: LocalizedLabel::native("Inspection", "Inspektion"), group: PanelGroup::Details, body_key: Some(RASTER_PLAY_BODY_PROPERTIES.into()), children: Vec::new() }
 }
@@ -142,6 +145,7 @@ pub fn render(document: &RasterDocument, runtime: &RasterConfig, selected_ids: &
         }
     }
     if selected.len()==1 {
+        rows.extend(operations::render(document, runtime, selected[0], labels)?);
         let id=layer_node_id(selected[0]);
         let duplicate=crate::duplicate_layer_plan(document,id).is_ok();
         let delete=layer_protection(&document.layers,id).is_some_and(|policy|policy.structural);

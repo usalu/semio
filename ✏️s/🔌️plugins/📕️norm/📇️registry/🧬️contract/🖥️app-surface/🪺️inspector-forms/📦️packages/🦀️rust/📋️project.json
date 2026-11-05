@@ -1,0 +1,9 @@
+{
+  "name": "semio-s-plugin-norm-inspector-forms",
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🧫️mutation-inputs/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/🌱️shape-seeds/singleton-cases.json"
+    ]
+  }
+}

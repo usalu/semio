@@ -223,6 +223,12 @@ message En1991Artifact {
   repeated LocalFire local_fires = 110;
   // @state artifact
   repeated SnowGuard snow_guards = 111;
+  // @state artifact
+  repeated RailDerailment rail_derailments = 112;
+  // @state artifact
+  repeated RailLoadGroup rail_load_groups = 113;
+  // @state artifact
+  repeated DustExplosion dust_explosions = 114;
 }
 message FloorArea {
   string id = 1;
@@ -449,6 +455,7 @@ message Footbridge {
   double loaded_length = 2;
   double deck_width = 3;
   double natural_frequency = 4;
+  double assumed_service_axle = 5;
 }
 message RailDynamic {
   string id = 1;
@@ -500,4 +507,31 @@ message SnowGuard {
   string roof_id = 2;
   double slope_length = 3;
   double assumed_force = 4;
+}
+message RailDerailment {
+  string id = 1;
+  string situation = 2;
+  double assumed_line_load = 3;
+  double loaded_length = 4;
+  double offset = 5;
+}
+message RailLoadGroup {
+  string id = 1;
+  string load_group = 2;
+  double factor_vertical = 3;
+  double factor_longitudinal = 4;
+  double factor_lateral = 5;
+  double assumed_axle_load = 6;
+  double assumed_udl = 7;
+  double assumed_longitudinal = 8;
+  double assumed_lateral = 9;
+}
+message DustExplosion {
+  string id = 1;
+  double kst = 2;
+  double p_max = 3;
+  double volume = 4;
+  double vent_area = 5;
+  double static_opening_pressure = 6;
+  double design_pressure = 7;
 }

@@ -177,7 +177,7 @@ describe("framework renderer hosts", () => {
         disconnect() {}
       },
     );
-    const node:UiComponentSceneNode={type:"componentScene",surfaceId:"raster.play.viewport",controllerId:"raster-play",componentKind:"paint-2d",paint2d:{documentSyncJson:JSON.stringify(fixture.document),assetsJson:JSON.stringify(fixture.assets),cameraJson:JSON.stringify(fixture.camera),selectionJson:"[]",activeUtility:"selectMarquee",brushSize:24,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,viewMode:"composite"}};
+    const node:UiComponentSceneNode={type:"componentScene",surfaceId:"raster.play.viewport",controllerId:"raster-play",componentKind:"paint-2d",paint2d:{documentSyncJson:JSON.stringify(fixture.document),assetsJson:JSON.stringify(fixture.assets),cameraJson:JSON.stringify(fixture.camera),selectionJson:"[]",activeUtility:"selectMarquee",brushSize:24,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,editingOptions:{filterKind:"brightness" as const,filterAmount:0,imageGrid:{x:0,y:0,width:512,height:512,bilinear:true}},viewMode:"composite"}};
     const view=render(createElement(Paint2dHost,{node,onAction:noopAction}));
     try {
       await waitFor(() => expect(setCanvasThemeJson).toHaveBeenCalled());
@@ -270,7 +270,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,editingOptions:{filterKind:"brightness" as const,filterAmount:0,imageGrid:{x:0,y:0,width:512,height:512,bilinear:true}},
             viewMode: "composite",
           },
         },
@@ -356,7 +356,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,editingOptions:{filterKind:"brightness" as const,filterAmount:0,imageGrid:{x:0,y:0,width:512,height:512,bilinear:true}},
             viewMode: "composite",
           },
         },
@@ -393,7 +393,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,editingOptions:{filterKind:"brightness" as const,filterAmount:0,imageGrid:{x:0,y:0,width:512,height:512,bilinear:true}},
             viewMode: "composite",
           },
         },
@@ -422,7 +422,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,editingOptions:{filterKind:"brightness" as const,filterAmount:0,imageGrid:{x:0,y:0,width:512,height:512,bilinear:true}},
             viewMode: "navigator",
             compositeViewportJson: '{"width":640,"height":480}',
           },

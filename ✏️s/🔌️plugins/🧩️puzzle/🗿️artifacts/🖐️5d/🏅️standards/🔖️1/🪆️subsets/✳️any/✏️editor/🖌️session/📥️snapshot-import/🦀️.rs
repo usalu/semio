@@ -54,10 +54,8 @@ enum Puzzle5dImportStage {
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
 struct Puzzle5dImportOwners {
-    pub raw: Vec<u8>,
-    pub port: String,
+    input:Option<semio_framework_plugin::ArtifactReservedToolInput>,
     media_json: Option<String>,
-    pub snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,
     pub fragment: Option<Value>,
     pub catalogs: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCatalogs,
     pub compatibility: Vec<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility>,
@@ -66,20 +64,18 @@ struct Puzzle5dImportOwners {
     compatibility_index: Vec<((String, String), usize)>,
     mutation_pages: [Vec<Puzzle5dMutation>; PUZZLE5D_IMPORT_MUTATION_PAGES],
     current_part: Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogPartKind>,
-    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
     pub pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
 }
 
 pub struct Puzzle5dImportJob {
-    pub raw: Vec<u8>,
     pub raw_cursor: usize,
     pub raw_page: [u8; PUZZLE5D_RESERVED_PAGE_BYTES],
     pub raw_page_len: usize,
     pub progress: u64,
     pub stage: Puzzle5dImportStage,
-    pub port: String,
+    input:Option<semio_framework_plugin::ArtifactReservedToolInput>,
+    input_captured:bool,
     media_json: Option<String>,
-    pub snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,
     pub fragment: Option<Value>,
     pub catalogs: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCatalogs,
     had_catalogs: bool,
@@ -93,11 +89,11 @@ pub struct Puzzle5dImportJob {
     pub nested_cursor: usize,
     pub decoded_items: usize,
     current_part: Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogPartKind>,
-    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
     pub pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
     pub completed: bool,
     pub outbox: crate::puzzle_job::JobOutbox,
     pub closing: bool,
+    close_staged:bool,
     pub owners: crate::puzzle_job::WorkClosing<Puzzle5dImportOwners>,
 }
 
@@ -124,23 +120,17 @@ fn puzzle5d_decode_import_fragment(media_json: &str) -> Result<Value, String> {
     parse(media_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
-impl Puzzle5dImportJob {
-    pub fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, port: String, media: Media) -> Self {
-        let media_json = match media.payload {
-            semio_framework_plugin::MediaPayload::Structured { json, .. } => Some(json),
-            semio_framework_plugin::MediaPayload::Intrinsic { value, .. } => Some(semio_framework_pack_json::to_json_string(&value)),
-            semio_framework_plugin::MediaPayload::Binary { .. } => None,
-        };
+impl Default for Puzzle5dImportJob {
+    fn default()->Self{
         Self {
-            raw: request.raw_wire,
             raw_cursor: 0,
             raw_page: [0; PUZZLE5D_RESERVED_PAGE_BYTES],
             raw_page_len: 0,
             progress: 0,
             stage: Puzzle5dImportStage::Envelope,
-            port,
-            media_json,
-            snapshot: Some(request.snapshot),
+            input:None,
+            input_captured:false,
+            media_json:None,
             fragment: None,
             catalogs: Default::default(),
             had_catalogs: false,
@@ -154,14 +144,17 @@ impl Puzzle5dImportJob {
             nested_cursor: 0,
             decoded_items: 0,
             current_part: None,
-            completion: Some(request.completion),
             pending_completion_rejection: None,
             completed: false,
             outbox: Default::default(),
             closing: false,
+            close_staged:false,
             owners: Default::default(),
         }
     }
+}
+
+impl Puzzle5dImportJob {
 
     pub fn checkpoint(&self) -> crate::puzzle_job::JobTurn {
         puzzle5d_import_checkpoint(self.stage as u8, self.cursor, self.nested_cursor, self.decoded_items, self.progress)
@@ -171,12 +164,12 @@ impl Puzzle5dImportJob {
         self.fragment.as_ref().and_then(|value| value.get(key)).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[])
     }
 
-    fn snapshot_rows(&self, parent: &str, key: &str) -> Vec<Value> {
-        self.snapshot.as_ref().map(|snapshot| puzzle5d_editor_projection(snapshot)).and_then(|projection| projection.get(parent).and_then(|value| value.get(key)).and_then(Value::as_array).cloned()).unwrap_or_default()
+    fn snapshot_rows(&self,snapshot:&Puzzle5dPlaySnapshot,parent: &str, key: &str) -> Vec<Value> {
+        let projection=puzzle5d_editor_projection(snapshot);projection.get(parent).and_then(|value|value.get(key)).and_then(Value::as_array).cloned().unwrap_or_default()
     }
 
-    fn snapshot_kind_compatibility_rows(&self) -> Vec<Value> {
-        self.snapshot.as_ref().map(|snapshot| puzzle5d_editor_projection(snapshot)).and_then(|projection| projection.get("kindCompatibility").and_then(Value::as_array).cloned()).unwrap_or_default()
+    fn snapshot_kind_compatibility_rows(&self,snapshot:&Puzzle5dPlaySnapshot) -> Vec<Value> {
+        let projection=puzzle5d_editor_projection(snapshot);projection.get("kindCompatibility").and_then(Value::as_array).cloned().unwrap_or_default()
     }
 
     fn push_mutation(&mut self, mutation: Puzzle5dMutation) -> Result<(), &'static str> {
@@ -197,7 +190,8 @@ impl Puzzle5dImportJob {
 }
 
 impl Puzzle5dImportJob {
-    pub fn turn(&mut self, cx: &mut StepContext<'_>) -> crate::puzzle_job::JobTurn {
+    pub fn turn(&mut self,request:&ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx: &mut StepContext<'_>) -> crate::puzzle_job::JobTurn {
+        let snapshot=request.snapshot.as_ref();
         if self.closing || cx.is_cancelled() {
             return crate::puzzle_job::JobTurn::Cancelled;
         }
@@ -206,64 +200,64 @@ impl Puzzle5dImportJob {
         }
         match self.stage {
             Puzzle5dImportStage::Envelope => {
-                if let Some(outcome) = puzzle5d_step_envelope(&self.raw, &mut self.raw_cursor, &mut self.raw_page, &mut self.raw_page_len, &mut self.progress, cx) {
+                if let Some(outcome) = puzzle5d_step_envelope(&request.raw_wire, &mut self.raw_cursor, &mut self.raw_page, &mut self.raw_page_len, &mut self.progress, cx) {
                     return outcome;
                 }
                 self.stage = Puzzle5dImportStage::Decode;
             }
-            Puzzle5dImportStage::Decode => { if let Some(outcome) = self.turn_decode() { return outcome; } }
+            Puzzle5dImportStage::Decode => { if let Some(outcome) = self.turn_decode(snapshot) { return outcome; } }
             Puzzle5dImportStage::CensusParts => { if let Some(outcome) = self.turn_census_parts() { return outcome; } }
             Puzzle5dImportStage::ReserveCatalogParts => {
-                let capacity = self.snapshot_rows("kindCatalogs", "parts").len().saturating_add(self.rows("objectKinds").len());
+                let capacity = self.snapshot_rows(snapshot,"kindCatalogs", "parts").len().saturating_add(self.rows("objectKinds").len());
                 if capacity > PUZZLE5D_IMPORT_SEMANTIC_ITEMS || self.catalogs.parts.try_reserve_exact(capacity).is_err() {
                     return puzzle5d_job_fault("puzzle5d kit:in part catalog reserve rejected");
                 }
                 self.stage = Puzzle5dImportStage::ReserveCatalogGrips;
             }
             Puzzle5dImportStage::ReserveCatalogGrips => {
-                let capacity = self.snapshot_rows("kindCatalogs", "grips").len().saturating_add(self.rows("vortexKinds").len());
+                let capacity = self.snapshot_rows(snapshot,"kindCatalogs", "grips").len().saturating_add(self.rows("vortexKinds").len());
                 if capacity > PUZZLE5D_IMPORT_SEMANTIC_ITEMS || self.catalogs.grips.try_reserve_exact(capacity).is_err() {
                     return puzzle5d_job_fault("puzzle5d kit:in grip catalog reserve rejected");
                 }
                 self.stage = Puzzle5dImportStage::ReserveCatalogFasteners;
             }
             Puzzle5dImportStage::ReserveCatalogFasteners => {
-                let capacity = self.snapshot_rows("kindCatalogs", "fasteners").len();
+                let capacity = self.snapshot_rows(snapshot,"kindCatalogs", "fasteners").len();
                 if capacity > PUZZLE5D_IMPORT_SEMANTIC_ITEMS || self.catalogs.fasteners.try_reserve_exact(capacity).is_err() {
                     return puzzle5d_job_fault("puzzle5d kit:in fastener catalog reserve rejected");
                 }
                 self.stage = Puzzle5dImportStage::ReserveCatalogRopes;
             }
             Puzzle5dImportStage::ReserveCatalogRopes => {
-                let capacity = self.snapshot_rows("kindCatalogs", "ropes").len();
+                let capacity = self.snapshot_rows(snapshot,"kindCatalogs", "ropes").len();
                 if capacity > PUZZLE5D_IMPORT_SEMANTIC_ITEMS || self.catalogs.ropes.try_reserve_exact(capacity).is_err() {
                     return puzzle5d_job_fault("puzzle5d kit:in rope catalog reserve rejected");
                 }
                 self.stage = Puzzle5dImportStage::ReserveCompatibility;
             }
             Puzzle5dImportStage::ReserveCompatibility => {
-                let capacity = self.snapshot_kind_compatibility_rows().len().saturating_add(self.rows("kindCompatibility").len());
+                let capacity = self.snapshot_kind_compatibility_rows(snapshot).len().saturating_add(self.rows("kindCompatibility").len());
                 if capacity > PUZZLE5D_IMPORT_SEMANTIC_ITEMS || self.compatibility.try_reserve_exact(capacity).is_err() {
                     return puzzle5d_job_fault("puzzle5d kit:in compatibility reserve rejected");
                 }
                 self.stage = Puzzle5dImportStage::ReservePartIndex;
             }
             Puzzle5dImportStage::ReservePartIndex => {
-                let capacity = self.snapshot_rows("kindCatalogs", "parts").len().saturating_add(self.rows("objectKinds").len());
+                let capacity = self.snapshot_rows(snapshot,"kindCatalogs", "parts").len().saturating_add(self.rows("objectKinds").len());
                 if capacity > PUZZLE5D_IMPORT_SEMANTIC_ITEMS || self.part_index.try_reserve_exact(capacity).is_err() {
                     return puzzle5d_job_fault("puzzle5d kit:in part index reserve rejected");
                 }
                 self.stage = Puzzle5dImportStage::ReserveGripIndex;
             }
             Puzzle5dImportStage::ReserveGripIndex => {
-                let capacity = self.snapshot_rows("kindCatalogs", "grips").len().saturating_add(self.rows("vortexKinds").len());
+                let capacity = self.snapshot_rows(snapshot,"kindCatalogs", "grips").len().saturating_add(self.rows("vortexKinds").len());
                 if capacity > PUZZLE5D_IMPORT_SEMANTIC_ITEMS || self.grip_index.try_reserve_exact(capacity).is_err() {
                     return puzzle5d_job_fault("puzzle5d kit:in grip index reserve rejected");
                 }
                 self.stage = Puzzle5dImportStage::ReserveCompatibilityIndex;
             }
             Puzzle5dImportStage::ReserveCompatibilityIndex => {
-                let capacity = self.snapshot_kind_compatibility_rows().len().saturating_add(self.rows("kindCompatibility").len());
+                let capacity = self.snapshot_kind_compatibility_rows(snapshot).len().saturating_add(self.rows("kindCompatibility").len());
                 if capacity > PUZZLE5D_IMPORT_SEMANTIC_ITEMS || self.compatibility_index.try_reserve_exact(capacity).is_err() {
                     return puzzle5d_job_fault("puzzle5d kit:in compatibility index reserve rejected");
                 }
@@ -272,7 +266,7 @@ impl Puzzle5dImportJob {
             }
             Puzzle5dImportStage::ReserveMutations => { if let Some(outcome) = self.turn_reserve_mutations() { return outcome; } }
             Puzzle5dImportStage::LoadCatalogParts => {
-                if let Some(row) = self.snapshot_rows("kindCatalogs", "parts").get(self.cursor) {
+                if let Some(row) = self.snapshot_rows(snapshot,"kindCatalogs", "parts").get(self.cursor) {
                     let parsed = match <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogPartKind as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(error.to_string()),
@@ -285,7 +279,7 @@ impl Puzzle5dImportJob {
                 }
             }
             Puzzle5dImportStage::LoadCatalogGrips => {
-                if let Some(row) = self.snapshot_rows("kindCatalogs", "grips").get(self.cursor) {
+                if let Some(row) = self.snapshot_rows(snapshot,"kindCatalogs", "grips").get(self.cursor) {
                     let parsed = match <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogGripKind as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(error.to_string()),
@@ -298,7 +292,7 @@ impl Puzzle5dImportJob {
                 }
             }
             Puzzle5dImportStage::LoadCatalogFasteners => {
-                if let Some(row) = self.snapshot_rows("kindCatalogs", "fasteners").get(self.cursor) {
+                if let Some(row) = self.snapshot_rows(snapshot,"kindCatalogs", "fasteners").get(self.cursor) {
                     let parsed = match <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogFastenerKind as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(error.to_string()),
@@ -311,7 +305,7 @@ impl Puzzle5dImportJob {
                 }
             }
             Puzzle5dImportStage::LoadCatalogRopes => {
-                if let Some(row) = self.snapshot_rows("kindCatalogs", "ropes").get(self.cursor) {
+                if let Some(row) = self.snapshot_rows(snapshot,"kindCatalogs", "ropes").get(self.cursor) {
                     let parsed = match <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogRopeKind as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(error.to_string()),
@@ -324,7 +318,7 @@ impl Puzzle5dImportJob {
                 }
             }
             Puzzle5dImportStage::LoadCompatibility => {
-                let rows = self.snapshot_kind_compatibility_rows();
+                let rows = self.snapshot_kind_compatibility_rows(snapshot);
                 if let Some(row) = rows.get(self.cursor) {
                     let parsed = match <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
@@ -404,7 +398,7 @@ impl Puzzle5dImportJob {
                 }
                 self.stage = Puzzle5dImportStage::Complete;
             }
-            Puzzle5dImportStage::Complete => return self.turn_complete(),
+            Puzzle5dImportStage::Complete => return self.turn_complete(request),
         }
         self.progress = self.progress.saturating_add(1);
         cx.consume_fuel(1);
@@ -412,22 +406,27 @@ impl Puzzle5dImportJob {
     }
 
     /// 🧱️ Decodes one record of the imported snapshot.
-    fn turn_decode(&mut self) -> Option<crate::puzzle_job::JobTurn> {
-        if self.port != "kit:in" {
+    fn turn_decode(&mut self,snapshot:&Puzzle5dPlaySnapshot) -> Option<crate::puzzle_job::JobTurn> {
+        let Some(semio_framework_plugin::ArtifactReservedToolInput::Media{port,media})=self.input.as_ref()else{return Some(puzzle5d_job_fault("puzzle5d import requires its original media owner"))};
+        if port != "kit:in" {
             return Some(puzzle5d_job_fault("puzzle5d import only implements kit:in"));
         }
-        let Some(media_json) = self.media_json.as_ref() else {
-            return Some(puzzle5d_job_fault("puzzle5d kit:in requires a structured payload"));
+        if self.media_json.is_none(){if let semio_framework_plugin::MediaPayload::Intrinsic{value,..}=&media.payload{self.media_json=Some(semio_framework_pack_json::to_json_string(value));}}
+        let media_json=match &media.payload{
+            semio_framework_plugin::MediaPayload::Structured{json,..}=>json.as_str(),
+            semio_framework_plugin::MediaPayload::Intrinsic{..}=>self.media_json.as_deref().unwrap(),
+            semio_framework_plugin::MediaPayload::Binary{..}=>return Some(puzzle5d_job_fault("puzzle5d kit:in requires a structured payload")),
         };
         let fragment = match puzzle5d_decode_import_fragment(media_json) {
             Ok(fragment) => fragment,
             Err(error) => return Some(puzzle5d_job_fault(error)),
         };
+        self.fragment=Some(fragment);let fragment=self.fragment.as_ref().unwrap();
         let fragment_items = ["objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"].into_iter().try_fold(0usize, |total, key| total.checked_add(fragment.get(key).and_then(Value::as_array).map_or(0, Vec::len)));
         let snapshot_items = ["parts", "grips", "fasteners", "ropes"]
             .into_iter()
-            .try_fold(0usize, |total, key| total.checked_add(self.snapshot_rows("kindCatalogs", key).len()))
-            .and_then(|total| total.checked_add(self.snapshot_kind_compatibility_rows().len()));
+            .try_fold(0usize, |total, key| total.checked_add(self.snapshot_rows(snapshot,"kindCatalogs", key).len()))
+            .and_then(|total| total.checked_add(self.snapshot_kind_compatibility_rows(snapshot).len()));
         self.decoded_items = match fragment_items.and_then(|fragment_items| snapshot_items.and_then(|snapshot_items| fragment_items.checked_add(snapshot_items))) {
             Some(items) if items <= PUZZLE5D_IMPORT_DECODED_ITEMS => items,
             _ => return Some(puzzle5d_job_fault("puzzle5d kit:in decoded item limit exceeded")),
@@ -450,9 +449,8 @@ impl Puzzle5dImportJob {
         if ["cableKinds", "attractionKinds"].into_iter().any(|key| fragment.get(key).and_then(Value::as_array).is_some_and(|rows| !rows.is_empty())) {
             return Some(puzzle5d_job_fault("puzzle5d kit:in cannot silently discard unmapped cable or attraction kinds"));
         }
-        self.had_catalogs = self.snapshot.as_ref().is_some_and(|snapshot| snapshot.typed().kind_catalogs.is_some());
+        self.had_catalogs = snapshot.typed().kind_catalogs.is_some();
         self.catalog_changed = !self.had_catalogs;
-        self.fragment = Some(fragment);
         self.stage = Puzzle5dImportStage::CensusParts;
         self.cursor = 0;
         None
@@ -655,9 +653,9 @@ impl Puzzle5dImportJob {
     }
 
     /// 🔨️ Completes the import and publishes the result.
-    fn turn_complete(&mut self) -> crate::puzzle_job::JobTurn {
-        if !self.raw.is_empty() {
-            return crate::puzzle_job::JobTurn::Prepare(std::mem::take(&mut self.raw));
+    fn turn_complete(&mut self,request:&ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>) -> crate::puzzle_job::JobTurn {
+        if !request.raw_wire.is_empty() {
+            return crate::puzzle_job::JobTurn::Yield;
         }
         if !self.completed {
             let mut mutation_pages = std::mem::take(&mut self.mutation_pages);
@@ -665,7 +663,7 @@ impl Puzzle5dImportJob {
             for page in mutation_pages.iter_mut().skip(1) {
                 mutations.append(page);
             }
-            let Some(completion) = self.completion.as_ref() else { return puzzle5d_job_fault("puzzle5d import lost its completion authority") };
+            let completion=&request.completion;
             if let Err(rejected) = completion.complete(Ok(Emit::mutations(mutations)), EphemeralEmit::default()) {
                 let message = rejected.fault.message.clone();
                 self.pending_completion_rejection = Some(rejected);
@@ -679,7 +677,7 @@ impl Puzzle5dImportJob {
 
 impl Puzzle5dImportJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step_value<'a>(&'a mut self,request:&mut ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
             crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
@@ -688,65 +686,27 @@ impl Puzzle5dImportJob {
             }
             crate::puzzle_job::OutboxPhase::Idle => {}
         }
-        let turn = if cx.fuel_exhausted() || cx.deadline_exceeded() { crate::puzzle_job::JobTurn::Yield } else { self.turn(cx) };
+        if !self.input_captured{let bytes=2*std::mem::size_of::<Option<semio_framework_plugin::ArtifactReservedToolInput>>();let d=semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};if cx.should_yield()||!cx.retained_work_can_enter(d){return Ok(None)}self.input=request.input.take();self.input_captured=true;cx.consume_fuel(1);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;return Ok(None)}
+        if self.stage==Puzzle5dImportStage::Complete&&!request.raw_wire.is_empty(){return crate::editor::puzzle5d::session::support::puzzle5d_prepare_original_wire(&mut request.raw_wire,&mut self.outbox,cx)}
+        let turn = if cx.fuel_exhausted() || cx.deadline_exceeded() { crate::puzzle_job::JobTurn::Yield } else { self.turn(request,cx) };
         self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
-impl InteractiveJob for Puzzle5dImportJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
+impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dImportJob {
+    fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.outbox.borrow_outcome(descriptor)
     }
 
-    fn begin_close(&mut self) {
-        if std::mem::replace(&mut self.closing, true) {
-            return;
-        }
-        self.owners.stage(Puzzle5dImportOwners {
-            raw: std::mem::take(&mut self.raw),
-            port: std::mem::take(&mut self.port),
-            media_json: self.media_json.take(),
-            snapshot: self.snapshot.take(),
-            fragment: self.fragment.take(),
-            catalogs: std::mem::take(&mut self.catalogs),
-            compatibility: std::mem::take(&mut self.compatibility),
-            part_index: std::mem::take(&mut self.part_index),
-            grip_index: std::mem::take(&mut self.grip_index),
-            compatibility_index: std::mem::take(&mut self.compatibility_index),
-            mutation_pages: std::mem::take(&mut self.mutation_pages),
-            current_part: self.current_part.take(),
-            completion: self.completion.take(),
-            pending_completion_rejection: self.pending_completion_rejection.take(),
-        });
+    fn begin_close(&mut self){self.closing=true}
+    fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if !self.close_staged{return Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Puzzle5dImportOwners>(),depth:1,..Default::default()})}crate::puzzle_job::job_close_demands(&self.outbox,&self.owners,body)
     }
-
-    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
-        self.begin_close();
-        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, cx)
-    }) }
-
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.copy_bytes)
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        self.closing=true;if !self.close_staged{let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;return semio_framework_job::close_original_retained_step(cx,demand,|_|{self.owners.stage(Puzzle5dImportOwners{input:self.input.take(),media_json:self.media_json.take(),fragment:self.fragment.take(),catalogs:std::mem::take(&mut self.catalogs),compatibility:std::mem::take(&mut self.compatibility),part_index:std::mem::take(&mut self.part_index),grip_index:std::mem::take(&mut self.grip_index),compatibility_index:std::mem::take(&mut self.compatibility_index),mutation_pages:std::mem::take(&mut self.mutation_pages),current_part:self.current_part.take(),pending_completion_rejection:self.pending_completion_rejection.take()});self.close_staged=true;semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})}crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx)
     }
-
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, maximum_copy_bytes)?.capacity_bytes)
-    }
-
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.release_bytes)
-    }
-
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.depth)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.outbox.terminal_is_empty() && self.owners.is_empty()
-    }
+    fn terminal_is_empty(&self)->bool{self.closing&&self.close_staged&&self.outbox.terminal_is_empty()&&self.owners.is_empty()}
 }
-
-impl ArtifactReservedJob for Puzzle5dImportJob {}
 //#endregion 🧵️ReservedJobs

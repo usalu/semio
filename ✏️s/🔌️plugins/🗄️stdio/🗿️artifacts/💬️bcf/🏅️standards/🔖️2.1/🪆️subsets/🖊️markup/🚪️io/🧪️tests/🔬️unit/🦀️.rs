@@ -297,13 +297,13 @@ async fn absorb_law() {
     let d3 = BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid: "t3".into(), title: Some("Renamed t3".into()), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None }).diff(&mid2);
 
     let mut left = d1.diff().clone();
-    MutationDiff::absorb(&mut left, d2.diff().clone());
-    MutationDiff::absorb(&mut left, d3.diff().clone());
+    protocol::command::ColdMutationDiff::absorb(&mut left, d2.diff().clone());
+    protocol::command::ColdMutationDiff::absorb(&mut left, d3.diff().clone());
 
     let mut d2_d3 = d2.diff().clone();
-    MutationDiff::absorb(&mut d2_d3, d3.diff().clone());
+    protocol::command::ColdMutationDiff::absorb(&mut d2_d3, d3.diff().clone());
     let mut right = d1.diff().clone();
-    MutationDiff::absorb(&mut right, d2_d3);
+    protocol::command::ColdMutationDiff::absorb(&mut right, d2_d3);
 
     assert_eq!(protocol::apply_diff_cold(&left, &base).expect("left must apply to base"), protocol::apply_diff_cold(&right, &base).expect("right must apply to base"), "absorb must be associative");
 }
@@ -313,7 +313,7 @@ fn assert_absorb_matches_sequential(base: &BcfSnapshot, d1: protocol::MutationOu
     let mid = protocol::apply_diff_cold(d1.diff(), base).expect("d1 must apply to base");
     let sequential = protocol::apply_diff_cold(d2.diff(), &mid).expect("d2 must apply to mid");
     let mut absorbed = d1.diff().clone();
-    MutationDiff::absorb(&mut absorbed, d2.diff().clone());
+    protocol::command::ColdMutationDiff::absorb(&mut absorbed, d2.diff().clone());
     assert_eq!(protocol::apply_diff_cold(&absorbed, base).expect("absorbed diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
     absorbed
 }

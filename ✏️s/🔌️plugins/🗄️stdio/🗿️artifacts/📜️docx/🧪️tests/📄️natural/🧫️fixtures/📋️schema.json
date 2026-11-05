@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "rows"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "schema",
+          "formatKind",
+          "extension",
+          "mediaType",
+          "binary",
+          "mainNamespace",
+          "relationshipBase",
+          "paragraphs"
+        ],
+        "properties": {
+          "variant": {
+            "enum": [
+              "strict",
+              "transitional"
+            ]
+          },
+          "schema": {
+            "const": "stdio.docx"
+          },
+          "formatKind": {
+            "const": "s.stdio.docx@ecma-376"
+          },
+          "extension": {
+            "const": ".docx"
+          },
+          "mediaType": {
+            "const": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          },
+          "binary": {
+            "const": true
+          },
+          "mainNamespace": {
+            "type": "string",
+            "minLength": 1
+          },
+          "relationshipBase": {
+            "type": "string",
+            "minLength": 1
+          },
+          "paragraphs": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "en",
+              "de"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "minLength": 1
+              },
+              "de": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

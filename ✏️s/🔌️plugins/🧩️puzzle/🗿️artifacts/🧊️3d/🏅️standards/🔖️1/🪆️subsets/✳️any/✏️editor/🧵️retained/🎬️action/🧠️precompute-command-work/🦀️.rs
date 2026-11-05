@@ -127,7 +127,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: hover, context, .. } = *input;
-        let view_state = context.and_then(|context| context.view_state.as_ref());
+        let view_state = context.and_then(|context| context.view_state.as_deref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
         let window_transient_snapshot = context.and_then(|context| context.window_transient.as_ref());
         if self.processed_units >= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS {

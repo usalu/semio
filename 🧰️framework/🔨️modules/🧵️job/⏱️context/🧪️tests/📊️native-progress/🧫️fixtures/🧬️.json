@@ -1,0 +1,60 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "events",
+    "expected"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "events": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scope",
+          "completed",
+          "cancelled"
+        ],
+        "properties": {
+          "scope": {
+            "enum": [
+              "outer",
+              "inner"
+            ]
+          },
+          "completed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cancelled": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "expected": {
+      "const": {
+        "outer": [
+          0,
+          256
+        ],
+        "inner": [
+          128
+        ],
+        "verdicts": [
+          true,
+          true,
+          false
+        ],
+        "afterUnwind": "outer",
+        "authority": "unchanged"
+      }
+    }
+  }
+}

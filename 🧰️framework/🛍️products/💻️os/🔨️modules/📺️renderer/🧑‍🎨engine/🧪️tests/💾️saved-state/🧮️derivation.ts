@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import Ajv from "ajv";
+import fixture from "./🧫️fixtures/🔣️.json";
 import type { ArtifactSyncStatus } from "@semio-tech/framework/backbone";
 import { awaitSavedV1, deriveSavedStateV1, guardDocumentCloseV1, saveFailureTextV1, SAVE_FAILURE_LABELS_V1, type SavedStateV1 } from "../../🧱️elements/🛠️ShellHelpers/💾️saved-state/🟦️.ts";
 import { computeSyncPillState, syncPillText } from "../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
@@ -44,7 +46,7 @@ describe("guardDocumentCloseV1", () => {
   const unsaved: SavedStateV1 = { kind: "unsaved", pending: 1, failure: null };
   const port = (saved: () => SavedStateV1, flush: "flushed" | "failed" | "cancelled", confirm: boolean) => {
     const log: string[] = [];
-    return { log, port: { saved, signal: new AbortController().signal, flush: async () => { log.push("flush"); return flush; }, confirmDiscard: async () => { log.push("confirm"); return confirm; } } };
+    return { log, port: { saved, isCurrent: () => true, signal: new AbortController().signal, flush: async () => { log.push("flush"); return flush; }, confirmDiscard: async () => { log.push("confirm"); return confirm; } } };
   };
 
   it("closes a saved document without flushing or asking", async () => {
@@ -61,8 +63,8 @@ describe("guardDocumentCloseV1", () => {
     expect(log).toEqual(["flush"]);
   });
 
-  it("prompts after a failed or cancelled flush and honours the answer", async () => {
-    for (const outcome of ["failed", "cancelled"] as const) {
+  it("prompts after a failed flush and honours the answer", async () => {
+    for (const outcome of ["failed"] as const) {
       const keep = port(() => unsaved, outcome, false);
       expect(await guardDocumentCloseV1(keep.port)).toBe("stay");
       expect(keep.log).toEqual(["flush", "confirm"]);
@@ -92,9 +94,55 @@ describe("awaitSavedV1", () => {
 });
 
 describe("guard and await hardening", () => {
+  it("agrees with the language-neutral acknowledgment contract and independent schema validator", () => {
+    const acknowledged = new Ajv().compile(fixture.acknowledgedSchema);
+    for (const row of fixture.statuses) {
+      expect(acknowledged(row.status), row.name).toBe(row.acknowledged);
+      expect(deriveSavedStateV1(row.status === null ? null : status(row.status)).kind === "saved", row.name).toBe(row.acknowledged);
+    }
+  });
+
+  it("closes only after positive acknowledgment and keeps a cancelled close without another prompt", async () => {
+    for (const row of fixture.close) {
+      let state: SavedStateV1 = { kind: "unsaved", pending: 1, failure: null };
+      let confirmations = 0;
+      const result = await guardDocumentCloseV1({
+        saved: () => state,
+        isCurrent: () => true,
+        signal: new AbortController().signal,
+        flush: async () => {
+          state = row.after === "unsaved" ? state : { kind: row.after as "saved" | "unknown" };
+          return row.outcome as "flushed" | "cancelled";
+        },
+        confirmDiscard: async () => { confirmations += 1; return false; },
+      });
+      expect(result, row.name).toBe(row.expected);
+      expect(confirmations, row.name).toBe(row.confirmations);
+    }
+  });
+
+  it("does not acknowledge missing status while waiting for an admitted edit", async () => {
+    expect(await awaitSavedV1({ saved: () => ({ kind: "unknown" }), signal: new AbortController().signal, timeoutMs: 0 })).toBe("failed");
+  });
+
+  it("does not close a replacement document after an old flush or discard response", async () => {
+    for (const row of fixture.retirement) {
+      let current = true, confirmations = 0;
+      const result = await guardDocumentCloseV1({
+        saved: () => ({ kind: "unsaved", pending: 1, failure: null }),
+        isCurrent: () => current,
+        signal: new AbortController().signal,
+        flush: async () => { if (row.during === "flush") current = false; return "failed"; },
+        confirmDiscard: async () => { confirmations += 1; current = false; return true; },
+      });
+      expect(result, row.during).toBe(row.expected);
+      expect(confirmations, row.during).toBe(row.confirmations);
+    }
+  });
+
   it("treats a rejecting flush as a failed flush and asks before closing", async () => {
     const log: string[] = [];
-    const decision = await guardDocumentCloseV1({ saved: () => ({ kind: "unsaved", pending: 1, failure: null }), signal: new AbortController().signal, flush: async () => { throw new Error("worker gone"); }, confirmDiscard: async () => { log.push("confirm"); return false; } });
+    const decision = await guardDocumentCloseV1({ saved: () => ({ kind: "unsaved", pending: 1, failure: null }), isCurrent: () => true, signal: new AbortController().signal, flush: async () => { throw new Error("worker gone"); }, confirmDiscard: async () => { log.push("confirm"); return false; } });
     expect(decision).toBe("stay");
     expect(log).toEqual(["confirm"]);
   });

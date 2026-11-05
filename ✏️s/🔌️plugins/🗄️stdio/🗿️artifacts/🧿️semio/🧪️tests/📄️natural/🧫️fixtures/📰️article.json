@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "preamble": "semio stdio.semio.text.dsl v1",
+  "schema": "stdio.semio.text",
+  "runs": 384,
+  "marks": 344,
+  "dsl": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧪️tests/🧫️fixtures/🔤️mutate-semio-text/🏚️zukunft-bau-entwerfen-mit-bestand/🗣️.dsl.semio",
+  "pack": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧪️tests/🧫️fixtures/🔤️mutate-semio-text/🎒️.pack.semio"
+}

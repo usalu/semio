@@ -6,7 +6,7 @@ use super::*;
 //#region 🔖️Manifest
 //#region 🔖️Surface
 /// 👁️✏️ Whether a surface may change the artifact it is bound to.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 pub enum AppRole {
     Viewer,
     Editor,

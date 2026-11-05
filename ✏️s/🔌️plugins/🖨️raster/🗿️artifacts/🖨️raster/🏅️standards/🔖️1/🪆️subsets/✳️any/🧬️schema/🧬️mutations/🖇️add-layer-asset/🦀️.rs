@@ -12,7 +12,7 @@
 pub mod mutation {
     use semio_s_artifact_raster_raster_diff::RasterDiff;
 
-    use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+    use semio_s_artifact_raster_raster_model::RasterImagePayload;
     use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
     //#region 🔖️AddLayerAsset
@@ -22,7 +22,7 @@ pub mod mutation {
     #[value(rename_all = "camelCase")]
     pub struct AddLayerAsset {
         pub asset_id: String,
-        pub asset: SemioImageSnapshot,
+        pub asset: RasterImagePayload,
     }
 
     impl<Op> protocol::MutationKind<RasterSnapshot, Op> for AddLayerAsset where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> {

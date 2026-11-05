@@ -1,0 +1,252 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "subset": "*",
+      "schema": "stdio.semio",
+      "formatKind": "stdio.semio@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/subset",
+        "kind": "object",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "animation",
+      "schema": "stdio.semio.animation",
+      "formatKind": "stdio.semio.animation@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/timelines",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "audio",
+      "schema": "stdio.semio.audio",
+      "formatKind": "stdio.semio.audio@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/channels",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "brep",
+      "schema": "stdio.semio.brep",
+      "formatKind": "stdio.semio.brep@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/vertices",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "cad",
+      "schema": "stdio.semio.cad",
+      "formatKind": "stdio.semio.cad@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/entities",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "document",
+      "schema": "stdio.semio.document",
+      "formatKind": "stdio.semio.document@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/blocks",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "drawing",
+      "schema": "stdio.semio.drawing",
+      "formatKind": "stdio.semio.drawing@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/layers",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "flow",
+      "schema": "stdio.semio.flow",
+      "formatKind": "stdio.semio.flow@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/nodes",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "graph",
+      "schema": "stdio.semio.graph",
+      "formatKind": "stdio.semio.graph@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/nodes",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "image",
+      "schema": "stdio.semio.image",
+      "formatKind": "stdio.semio.image@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/frames",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "kit",
+      "schema": "stdio.semio.kit",
+      "formatKind": "stdio.semio.kit@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/types",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "mesh",
+      "schema": "stdio.semio.mesh",
+      "formatKind": "stdio.semio.mesh@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/meshes",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "model",
+      "schema": "stdio.semio.model",
+      "formatKind": "stdio.semio.model@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/elements",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "object",
+      "schema": "stdio.semio.object",
+      "formatKind": "stdio.semio.object@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/mesh",
+        "kind": "object",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "presentation",
+      "schema": "stdio.semio.presentation",
+      "formatKind": "stdio.semio.presentation@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/slides",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "table",
+      "schema": "stdio.semio.table",
+      "formatKind": "stdio.semio.table@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/rows",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "text",
+      "schema": "stdio.semio.text",
+      "formatKind": "stdio.semio.text@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/runs",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "value",
+      "schema": "stdio.semio.value",
+      "formatKind": "stdio.semio.value@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/nodes",
+        "kind": "array",
+        "minimum": 1
+      }
+    },
+    {
+      "subset": "video",
+      "schema": "stdio.semio.video",
+      "formatKind": "stdio.semio.video@v1",
+      "extension": ".semio",
+      "mediaType": "application/vnd.semio",
+      "binary": true,
+      "nonempty": {
+        "pointer": "/streams",
+        "kind": "array",
+        "minimum": 1
+      }
+    }
+  ]
+}

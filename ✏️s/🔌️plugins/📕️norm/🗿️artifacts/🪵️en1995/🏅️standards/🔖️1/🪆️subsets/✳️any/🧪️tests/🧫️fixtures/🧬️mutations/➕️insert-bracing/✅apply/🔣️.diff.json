@@ -1,6 +1,5 @@
 {
   "annex": null,
-  "reliabilityClass": null,
   "members": {
     "removed": [],
     "inserted": [],
@@ -84,12 +83,18 @@
     "moved": [],
     "modified": []
   },
-  "decks": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "decks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "ulsEquation": null,
   "cases": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
-  }
+  },
+  "reliabilityClass": null
 }

@@ -1,0 +1,13 @@
+# Composer Source and Native View Port
+
+2026-11-05. The forms gate refused instance-app before compilation at composer-api18870B with18033B remaining. The exact bounded collector found17files262981B,837B over the unchanged262144B limit.
+
+Root imported the exact repeatedly qualified job/identity/decoder types and shortened obsolete historical and duplicated API documentation while preserving ownership invariants. Composer source is now16515B, saving2355B. All method delegation bodies, source constructors, runtime branches and cleanup order are preserved. Four cfg collector variants now report17files260626B and1518B byte headroom; minimum active-line headroom825. No source limits or test layouts changed. Actual native gate admission/compilation remains required.
+
+The separate SDK error was ActionMeta's unsupported generic RetainedClone derive over Arc<ViewModel>. During inspection, concurrent work removed that derive and the obsolete copy module and adopted explicit native view-root/routing-alias ports in command, typing and event routes. Root did not author or overwrite that production repair. Its bounded caller scan found no remaining OriginalActionMetaCopy references or generic ActionMeta cloning requirement.
+
+Root strengthened the existing original_view native law with a73-byte allocation AND release positive control under the crate's actual global HeapWitness, so zero-allocation alias assertions cannot pass with a disabled observer. Native gate6746 terminated before this test in codec-registry: four E0609 errors in history pair87/127, whose consumer expects RetainedWorkOutcome while current History producer returns Result. No native view law success is claimed.
+
+Root owned StagedFormScript invocation8532 is terminal0:219tests/1131assertions across20files passed, including permanently registered host, commit and reference suites. The direct script attempt failed before tests because it lacked an original ScriptInvocation; the supported project-scoped uncached repo exec route supplied the genuine parent. No invocation environment was forged and no global graph refresh was used for this JavaScript suite.
+
+Current History producer has no complete per-call work reporter and discards some delegated retirement work. The native worker owns canonical producer/driver work propagation; root owns codec/member/archive consumers and receiving work-budget binding; the low worker owns bounded direct native test adaptations. Fake constant/header work and receipt-based inference are excluded. Actual NormSnapshot physical regression remains blocked before its body on this dependency frontier.

@@ -3,7 +3,7 @@
 //#region 🧭️AcceptanceLaws
 /// 🔁️ A history verb as `actor`, admitted and settled, answering the fault code of a refusal (`None`: applied).
 async fn history_verb_refusal(app: &mut ToyApp, actor: &str, action: &str, mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<String> {
-    let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(actor) };
+    let meta = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
     let settled = match app.handle_action(action, None, &meta, identity).await {
         Ok(admitted) => semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await,
         Err(fault) => Err(fault),
@@ -141,7 +141,7 @@ async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse(
     assert_eq!(pure.stores.store.snapshot().expect("the pure head"), head, "the pure document is the source head");
     assert!(pure.stores.store.envelope().vcs.edits.is_empty() && pure.time_travel.history_unavailable(), "no history was folded or kept");
     assert_eq!(history_verb_refusal(&mut pure, &actor, "undo", mounted_policy, &mut identity).await.as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE));
-    let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(&actor) };
+    let meta = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(&actor) };
     let begin = pure.handle_action("historyEditBegin", Some(&DslValue::object([("mutationId".to_string(), DslValue::String("any".into()))])), &meta, &mut identity).await;
     assert_eq!(begin.err().map(code).as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE), "a history edit needs the history");
     assert_eq!(pure.history_snapshot().await.err().map(code).as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE), "so does the history query");

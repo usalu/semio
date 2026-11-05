@@ -1,14 +1,14 @@
-//! 🧵️ Original source and control remain bound while independent cumulative wallets fund parsing and physical closure.
+//! 🧵️ Original JSON source and control share bounded parse and retirement wallets.
 use super::{JsonError,JsonReadLimits,JsonReadSource,JsonParsedValue,JsonSourceCursor,JsonMemberPolicy,normal_remaining};
 use semio_framework_value::{ValueError, ValueRefusalKind, ErasedSnapshotRetirement, retirement::RetireOwned, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::ManuallyDrop;
 
-/// 🛂️ Caller-authored total parse and cleanup authority accompanies the complete source limits.
+/// 🛂️ Original parse and retirement limits.
 #[derive(Clone,Copy,Debug)]
 pub struct JsonReadPolicy{pub limits:JsonReadLimits,pub normal:RetainedCloneGrant,pub retirement:RetainedCloneGrant}
 
-/// 🪪️ One retained operation conserves its original source, control, receipts and partial candidate.
+/// 🪪️ One source, control and partial candidate retain exact receipts.
 pub struct JsonReadOperation<'operation,'callback,S:JsonReadSource+Copy,V:JsonParsedValue>{
     #[doc(hidden)] pub source:S,cursor:ManuallyDrop<Option<JsonSourceCursor<S,V>>>,#[doc(hidden)] pub closing:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     #[doc(hidden)] pub value:ManuallyDrop<Option<V>>,fault:ManuallyDrop<Option<JsonError>>,
@@ -28,7 +28,7 @@ fn admit<T:RetireOwned>(original:&mut Option<T>,closing:&mut Option<Box<dyn Eras
     }
 }
 impl<'operation,'callback,S:JsonReadSource+Copy,V:JsonParsedValue> JsonReadOperation<'operation,'callback,S,V>{
-    /// 🎟️ Binds the complete caller policy and original control without scanning or allocating.
+    /// 🎟️ Binds the original policy and control without allocation.
     pub fn new(source:S,members:JsonMemberPolicy,policy:JsonReadPolicy,control:&'operation mut NativeDecodeControl<'callback>)->Result<Self,ValueError>{
         let cursor=JsonSourceCursor::new(source,members,policy.limits)?;
         Ok(Self{source,cursor:ManuallyDrop::new(Some(cursor)),closing:ManuallyDrop::new(None),value:ManuallyDrop::new(None),fault:ManuallyDrop::new(None),control,policy,normal:Default::default(),retirement:Default::default(),normal_step:Default::default(),retirement_step:Default::default(),position:0,close_started:false})
@@ -39,11 +39,11 @@ impl<'operation,'callback,S:JsonReadSource+Copy,V:JsonParsedValue> JsonReadOpera
     pub fn retirement_receipt(&self)->RetainedCloneProgress{self.retirement}
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step}
     pub fn retirement_step_progress(&self)->RetainedCloneProgress{self.retirement_step}
-    /// 🪟️ Borrows the original admitted result without moving its storage or cleanup authority.
+    /// 🪟️ Borrows the result under original cleanup authority.
     pub fn value(&self)->Option<&V>{self.value.as_ref()}
-    /// 🚨️ Borrows the original diagnostic and duplicate-name backing until physical cleanup admission.
+    /// 🚨️ Borrows the diagnostic and duplicate-name backing.
     pub fn error(&self)->Option<&JsonError>{self.fault.as_ref()}
-    /// ⏱️ Intersects one caller turn with the unchanged remaining total parse allowance.
+    /// ⏱️ Caps this turn by the remaining parse allowance.
     pub fn step(&mut self,turn:RetainedCloneGrant)->Result<Option<&V>,&JsonError>{
         self.normal_step=Default::default();
         if self.close_started{return Err(&CLOSED_REFUSAL);}
@@ -60,7 +60,7 @@ impl<'operation,'callback,S:JsonReadSource+Copy,V:JsonParsedValue> JsonReadOpera
         }
         match self.fault.as_ref(){Some(error)=>Err(error),None=>Ok(self.value.as_ref())}
     }
-    /// ♻️ Debits actual cleanup receipts while retaining original ownership on every refusal.
+    /// ♻️ Posts cleanup receipts; refusals retain their owners.
     pub fn close_step(&mut self,turn:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         self.retirement_step=Default::default();
         let admitted=intersect(normal_remaining(self.policy.retirement,self.retirement)?,turn);

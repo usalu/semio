@@ -1,4 +1,5 @@
 use super::*;
+use crate::RetainedHistoryOpMetaFault;
 use crate::test_retirement::{NativeWorkWallet,native_turn};
 use semio_framework_value::{ErasedSnapshotRetirement, admit_owned_retirement, owned_retirement_birth_bytes};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeAllocation, native_decoding::NativeDecodeAllocationPort, native_decoding::NativeDecodeRetirementRecipient};
@@ -10,6 +11,37 @@ fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace
 fn receipt(owner:&mut RetainedHistoryTransitionDecode,g:RetainedCloneGrant,born:usize,released:usize){let(issued,p)=owner.take_receipt().unwrap();assert_eq!(issued,g);assert!(p.fits(g));assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));}
 use crate::test_retirement::close_original;
 fn hex(value:&str)->Vec<u8>{value.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
+
+#[test]
+fn original_transition_actor_refusal_retains_native_cause_and_stops_before_a_second_birth(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let native_law:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/native-work.json")).unwrap();
+ let mut wallet=NativeWorkWallet::new(native_law["workUnits"].as_u64().unwrap(),native_law["turnWork"].as_u64().unwrap());
+ let limits:HistoryReadLimits=serde_json::from_value(law["limits"].clone()).unwrap();
+ let n=|key:&str|law["grant"][key].as_u64().unwrap()as usize;
+ let grant=RetainedCloneGrant{maximum_items:n("items"),maximum_copy_bytes:n("copyBytes"),maximum_capacity_bytes:n("capacityBytes"),maximum_release_bytes:n("releaseBytes"),maximum_depth:n("depth")};
+ let bytes=hex(law["transitions"][0]["wireHex"].as_str().unwrap());let pages=[bytes.as_slice()];
+ let source=OriginalPages{pages:&pages,page_bytes:bytes.len(),identity:OriginalWireSourceIdentity{range_start:0,address:bytes.as_ptr()as usize,extent:bytes.len(),authority:Some((43,7))}};
+ let deny=std::sync::atomic::AtomicBool::new(false);
+ let mut allocate=|_:NativeDecodeAllocation|if deny.load(std::sync::atomic::Ordering::SeqCst){Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture refuses original actor allocation"))}else{Ok(())};
+ let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;
+ let mut retirement=NativeDecodeRetirementRecipient::new();
+ let mut control=NativeDecodeControl::new_forwarded(law["control"]["maximumAllocationBytes"].as_u64().unwrap()as usize,&mut callback,&mut allocate);
+ control.install_retirement_recipient(&mut retirement).unwrap();
+ let mut dictionary=RetainedSourceDictionary::new(&source);
+ let mut owner=RetainedHistoryTransitionDecode::admit(&source,(0,bytes.len()),limits,&control,grant).unwrap().unwrap();owner.take_receipt();
+ for _ in 0..100000{if owner.phase==4{break}let step=native_turn(&mut control,&mut wallet,|control|owner.step(&source,&dictionary,control,grant)).unwrap();assert_ne!(step,RetainedHistoryTransitionStep::Fault);owner.take_receipt();}
+ assert_eq!(owner.phase,4);let before=control.owned_bytes();deny.store(true,std::sync::atomic::Ordering::SeqCst);
+ let step=native_turn(&mut control,&mut wallet,|control|owner.step(&source,&dictionary,control,grant)).unwrap();
+ assert_eq!(step,RetainedHistoryTransitionStep::Fault);assert!(matches!(owner.fault(),Some(RetainedHistoryOpMetaFault::Native(_))));assert_eq!(control.owned_bytes(),before);
+ let(issued,progress)=owner.take_receipt().unwrap();assert_eq!(issued,grant);assert!(progress.fits(grant));
+ let(step,born,released)=observe(||native_turn(&mut control,&mut wallet,|control|owner.step(&source,&dictionary,control,grant)).unwrap());
+ assert_eq!(step,RetainedHistoryTransitionStep::Fault);assert_eq!(owner.last_turn_work(),0);assert_eq!((born,released),(0,0));assert!(owner.receipt().is_none());
+ deny.store(false,std::sync::atomic::Ordering::SeqCst);let mut native_fault=None;assert!(owner.take_fault_into(&mut native_fault,grant).unwrap());owner.take_receipt();close_original(native_fault.take().unwrap(),&mut control,grant);
+ for _ in 0..100000{if owner.terminal_is_empty(){break}if owner.partial_is_receivable(){let mut partial=None;assert!(owner.take_partial_into(&mut partial,grant).unwrap());owner.take_receipt();close_original(partial.take().unwrap(),&mut control,grant);}else{owner.close_step(&source,&mut control,grant).unwrap();owner.take_receipt();}}
+ assert!(owner.terminal_is_empty());dictionary.cancel();dictionary.close_step(&source,grant).unwrap();dictionary.take_receipt();assert!(dictionary.terminal_is_empty());drop(control);assert!(retirement.terminal_is_empty());
+}
+
 #[test]
 fn original_history_transition_native_pages_preserve_all_fields_same_ledger_and_paid_partial_custody(){
  let native_law:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/native-work.json")).unwrap();let mut native_work=NativeWorkWallet::new(native_law["workUnits"].as_u64().unwrap(),native_law["turnWork"].as_u64().unwrap());

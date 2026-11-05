@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 1,
+  "document": {
+    "partNumberRule": {
+      "kind": "script",
+      "functionId": "partno",
+      "source": "dn * 10 + 50"
+    },
+    "partNumberRules": {
+      "source": "plural"
+    },
+    "catalog": {
+      "products": [
+        {
+          "id": "P1",
+          "configuration": {
+            "id": "C1",
+            "attributes": {
+              "kind": "radiator",
+              "heatExponentN": 1.3,
+              "standardOutputW": 1000
+            },
+            "geometryRef": "G1",
+            "accessories": [
+              {
+                "id": "A1",
+                "quantity": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "bundle": {
+    "document": {
+      "configuration": {
+        "a": 1.0,
+        "b": 2.0,
+        "count": 1
+      }
+    },
+    "writes": [
+      {
+        "path": "configuration.a",
+        "pointer": "/configuration/a",
+        "value": 3.0
+      },
+      {
+        "path": "configuration.b",
+        "pointer": "/configuration/b",
+        "value": 4.0
+      }
+    ],
+    "expected": {
+      "configuration": {
+        "a": 3.0,
+        "b": 4.0,
+        "count": 1
+      }
+    }
+  },
+  "access": {
+    "editable": [
+      "partNumberRule.source",
+      "catalog.products[id=P1].configuration.attributes.heatExponentN",
+      "catalog.products[0].configuration.geometryRef"
+    ],
+    "readonly": [
+      "catalog.products[id=P1].id",
+      "partNumberRules.source",
+      "catalog.products[id=P1",
+      ""
+    ]
+  },
+  "cases": [
+    {
+      "name": "ISO script source uses its typed rule mutation",
+      "rules": "parent",
+      "path": "partNumberRule.source",
+      "value": "dn * 10 + 150",
+      "expected": {
+        "kind": "replace-part-number-rule",
+        "selectors": {},
+        "valueField": "newRule",
+        "source": "/partNumberRule",
+        "pointer": "/source"
+      }
+    },
+    {
+      "name": "VDI quantity by stable product id",
+      "rules": "parent",
+      "path": "catalog.products[id=P1].configuration.attributes.heatExponentN",
+      "value": 1.4,
+      "expected": {
+        "kind": "change-product-configuration",
+        "selectors": {
+          "id": "P1"
+        },
+        "valueField": "newConfiguration",
+        "source": "/catalog/products/0/configuration",
+        "pointer": "/attributes/heatExponentN"
+      }
+    },
+    {
+      "name": "position resolves to the same typed product id",
+      "rules": "parent",
+      "path": "catalog.products[0].configuration.attributes.heatExponentN",
+      "value": 1.4,
+      "expected": {
+        "kind": "change-product-configuration",
+        "selectors": {
+          "id": "P1"
+        },
+        "valueField": "newConfiguration",
+        "source": "/catalog/products/0/configuration",
+        "pointer": "/attributes/heatExponentN"
+      }
+    },
+    {
+      "name": "inner selectors stay inside the replaced value",
+      "rules": "parent",
+      "path": "catalog.products[id=P1].configuration.accessories[id=A1].quantity",
+      "value": 2,
+      "expected": {
+        "kind": "change-product-configuration",
+        "selectors": {
+          "id": "P1"
+        },
+        "valueField": "newConfiguration",
+        "source": "/catalog/products/0/configuration",
+        "pointer": "/accessories/0/quantity"
+      }
+    },
+    {
+      "name": "nearest semantic parent wins over catalogue replacement",
+      "rules": "parent",
+      "path": "catalog.products[id=P1].configuration.attributes.standardOutputW",
+      "value": 1200,
+      "expected": {
+        "kind": "change-product-configuration",
+        "selectors": {
+          "id": "P1"
+        },
+        "valueField": "newConfiguration",
+        "source": "/catalog/products/0/configuration",
+        "pointer": "/attributes/standardOutputW"
+      }
+    },
+    {
+      "name": "exact scalar kind wins over parent replacement",
+      "rules": "exact",
+      "path": "catalog.products[id=P1].configuration.attributes.heatExponentN",
+      "value": 1.4,
+      "expected": {
+        "kind": "change-heat-exponent",
+        "selectors": {
+          "id": "P1"
+        },
+        "valueField": "newExponent",
+        "source": "/catalog/products/0/configuration/attributes/heatExponentN",
+        "pointer": ""
+      }
+    },
+    {
+      "name": "null child never clears the enclosing configuration",
+      "rules": "parent",
+      "path": "catalog.products[id=P1].configuration.geometryRef",
+      "value": null,
+      "expected": {
+        "kind": "change-product-configuration",
+        "selectors": {
+          "id": "P1"
+        },
+        "valueField": "newConfiguration",
+        "source": "/catalog/products/0/configuration",
+        "pointer": "/geometryRef"
+      }
+    },
+    {
+      "name": "exact clear action keeps its own semantic kind",
+      "rules": "clear",
+      "path": "catalog.products[id=P1].configuration.geometryRef",
+      "value": null,
+      "expected": {
+        "kind": "clear-geometry-reference",
+        "selectors": {
+          "id": "P1"
+        },
+        "valueField": "",
+        "source": "/catalog/products/0/configuration/geometryRef",
+        "pointer": ""
+      }
+    },
+    {
+      "name": "direct null parent uses its explicit clear action",
+      "rules": "parent",
+      "path": "catalog.products[id=P1].configuration",
+      "value": null,
+      "expected": {
+        "kind": "clear-product-configuration",
+        "selectors": {
+          "id": "P1"
+        },
+        "valueField": "",
+        "source": "/catalog/products/0/configuration",
+        "pointer": ""
+      }
+    },
+    {
+      "name": "unknown child is refused",
+      "rules": "parent",
+      "path": "partNumberRule.unknown",
+      "value": "650",
+      "error": "missing field"
+    },
+    {
+      "name": "unknown product id is refused",
+      "rules": "parent",
+      "path": "catalog.products[id=missing].configuration.attributes.heatExponentN",
+      "value": 1.4,
+      "error": "unknown list element id"
+    },
+    {
+      "name": "text prefixes are not semantic ancestors",
+      "rules": "parent",
+      "path": "partNumberRules.source",
+      "value": "650",
+      "error": "no kind sets"
+    }
+  ],
+  "typedAdmission": [
+    {
+      "name": "integer carrier remains exact",
+      "value": 6,
+      "accept": true,
+      "count": 6
+    },
+    {
+      "name": "fractional numeric draft is refused",
+      "value": 5.6,
+      "accept": false
+    },
+    {
+      "name": "text draft is refused",
+      "value": "6",
+      "accept": false
+    }
+  ]
+}

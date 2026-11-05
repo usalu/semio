@@ -199,12 +199,14 @@ fn write_surface_camera(batch: &mut semio_framework_ui_action::BoundedActionBatc
 /// 🖌️ Whether this utility puts the surface in selection mode rather than paint mode — React's
 /// `isPaint2dSelectionUtility`.
 fn paint2d_selection_utility(active_utility: &str) -> bool {
-    matches!(active_utility, "selectMarquee" | "selectLasso" | "selectWand")
+    matches!(active_utility, "selectMarquee" | "selectEllipse" | "selectLasso" | "selectWand")
 }
 
 /// 🕹️ The merge mode a modifier combination selects — the wgpu twin of `marqueeModeFromModifiers`.
 fn paint2d_merge_mode(shift: bool, ctrl_or_meta: bool) -> &'static str {
-    if shift {
+    if shift && ctrl_or_meta {
+        "intersect"
+    } else if shift {
         "add"
     } else if ctrl_or_meta {
         "subtract"
@@ -252,6 +254,45 @@ struct Paint2dMarquee {
 /// 🧮️ Marquee gestures are per SURFACE and never outlive one press/release pair, so a plain map
 /// keyed by surface id is the whole bound — the same shape `scenes`' own `map_marquee_points` uses.
 static PAINT2D_MARQUEES: WorkerCell<HashMap<String, Paint2dMarquee>> = WorkerCell::new(Default::default);
+struct Paint2dPixelCandidate {utility:String,intent:semio_framework_surface::paint::RasterSelectionIntent,method:String,mode:String,path:String,cursor:usize,submitted:Option<semio_framework_ui_wgpu_input::RetainedInputActionHandle>,progress:(u64,u64)}
+static PAINT2D_PIXEL_CANDIDATES: WorkerCell<HashMap<String, Paint2dPixelCandidate>> = WorkerCell::new(Default::default);
+
+pub fn paint2d_pixel_selection_work_pending()->bool{PAINT2D_PIXEL_CANDIDATES.with(|cell|{let mut candidates=cell.borrow_mut();candidates.retain(|id,entry|{let valid=ENGINE_SURFACES.with(|surfaces|surfaces.borrow().get(id).and_then(|surface|surface.raster_host.as_ref()).is_some_and(|host|entry.intent.matches(host)));if !valid{if let Some(handle)=&entry.submitted{handle.cancel();}}valid});!candidates.is_empty()})}
+pub fn paint2d_pixel_selection_progress(surface_id:&str)->Option<(u64,u64)>{PAINT2D_PIXEL_CANDIDATES.with(|cell|cell.borrow().get(surface_id).map(|entry|entry.progress))}
+
+/// ⎋️ Cancels only active selection work, preserving the last published coverage.
+pub fn cancel_paint2d_pixel_selection(surface_id:&str)->bool{
+    let cancelled=PAINT2D_PIXEL_CANDIDATES.with(|cell|{if let Some(entry)=cell.borrow_mut().remove(surface_id){if let Some(handle)=entry.submitted{handle.cancel();}true}else{false}});
+    let tracking=with_paint2d_marquee(surface_id,|marquee|{let tracking=marquee.tracking;if tracking{*marquee=Paint2dMarquee::default();}tracking});
+    cancelled||tracking
+}
+
+/// ⏳️ Encodes a bounded path grant; the config owner computes and publishes selection coverage.
+pub fn advance_paint2d_pixel_selection_into(scene:&UiComponentSceneNode,window_id:&str,input:&mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>)->Result<(u64,u64,bool),semio_framework_ui_action::BoundedActionFault>{
+    PAINT2D_PIXEL_CANDIDATES.with(|cell|{
+        let mut candidates=cell.borrow_mut();
+        let Some(entry)=candidates.get_mut(&scene.host_id)else{return Ok((0,0,true));};
+        let valid=scene.paint_2d.as_ref().is_some_and(|paint|paint.active_utility==entry.utility)&&with_raster_host_mut(&scene.host_id,|host|entry.intent.matches(host)).unwrap_or(false);
+        if !valid{if let Some(handle)=&entry.submitted{handle.cancel();}candidates.remove(&scene.host_id);return Ok((0,0,true));}
+        if let Some(handle)=&entry.submitted{
+            if let Some((copied,total))=input.retained_action_progress(handle){entry.progress=(copied as u64,total as u64);return Ok((copied as u64,total as u64,false));}
+            candidates.remove(&scene.host_id);return Ok((0,0,true));
+        }
+        if entry.path.is_empty(){entry.path.push('[');}
+        let end=entry.intent.points.len().min(entry.cursor+64);
+        for point in &entry.intent.points[entry.cursor..end]{if entry.cursor>0{entry.path.push(',');}entry.path.push_str(&format!("[{:e},{:e}]",point[0],point[1]));entry.cursor+=1;}
+        entry.progress=(entry.cursor as u64,entry.intent.points.len() as u64);
+        if end<entry.intent.points.len(){return Ok((entry.progress.0,entry.progress.1,false));}
+        if input.retained_action_pending(){return Ok((entry.progress.0,entry.progress.1,false));}
+        entry.path.push(']');
+        use semio_framework_value::{DslValue,Number};
+        let intent=&entry.intent;
+        let args=DslValue::Object(vec![("layerId".into(),DslValue::String(intent.layer_id.clone())),("target".into(),DslValue::String(intent.target.into())),("expectedImageKey".into(),intent.image_key.clone().map_or(DslValue::Null,DslValue::String)),("width".into(),DslValue::Number(Number::UInt(u64::from(intent.width)))),("height".into(),DslValue::Number(Number::UInt(u64::from(intent.height)))),("method".into(),DslValue::String(entry.method.clone())),("mode".into(),DslValue::String(entry.mode.clone()))]);
+        let mut args=args;let DslValue::Object(fields)=&mut args else{return Err(semio_framework_ui_action::BoundedActionFault::Structure);};fields.push(("windowId".into(),DslValue::String(window_id.into())));
+        input.begin_retained_string_action_owned(ActionDescriptor {controller_id:scene.controller_id.clone(),action:"selectPixels".into(),args:Some(args)},"path".into(),std::mem::take(&mut entry.path))?;
+        entry.submitted=input.retained_action_handle();Ok((entry.progress.0,entry.progress.1,false))
+    })
+}
 
 fn with_paint2d_marquee<R>(surface_id: &str, f: impl FnOnce(&mut Paint2dMarquee) -> R) -> R {
     PAINT2D_MARQUEES.with(|cell| {
@@ -269,6 +310,7 @@ fn paint2d_marquee_snapshot(surface_id: &str) -> Option<Paint2dMarquee> {
 fn paint2d_selection_method(active_utility: &str) -> Option<&'static str> {
     match active_utility {
         "selectMarquee" => Some("rectangle"),
+        "selectEllipse" => Some("ellipse"),
         "selectLasso" => Some("lasso"),
         _ => None,
     }
@@ -357,12 +399,18 @@ pub fn paint2d_pointer_button_into(
     if paint2d_selection_utility(&paint.active_utility) {
         let method = paint2d_selection_method(&paint.active_utility);
         if down {
+            cancel_paint2d_pixel_selection(&scene.host_id);
             if method.is_some() {
                 with_paint2d_marquee(&scene.host_id, |marquee| {
                     *marquee = Paint2dMarquee { tracking: true, active: false, start: (x, y), points: vec![(x, y)], pan_last: None };
                 });
             }
             return Ok(false);
+        }
+        if paint.active_utility=="selectWand"&&!paint2d_selection(scene).is_empty(){
+            let intent=with_raster_host_mut(&scene.host_id,|host|host.pixel_selection_intent(&[[sx,sy]])).flatten();
+            if let Some(intent)=intent{PAINT2D_PIXEL_CANDIDATES.with(|cell|cell.borrow_mut().insert(scene.host_id.clone(),Paint2dPixelCandidate {utility:paint.active_utility.clone(),intent,method:"wand".into(),mode:paint2d_merge_mode(shift,ctrl_or_meta).into(),path:String::new(),cursor:0,submitted:None,progress:(0,0)}));}
+            return Ok(true);
         }
         let committed = method.and_then(|method| {
             let marquee = with_paint2d_marquee(&scene.host_id, |marquee| {
@@ -375,6 +423,11 @@ pub fn paint2d_pointer_button_into(
         if let Some((points, crossing)) = committed {
             let merge = paint2d_merge_mode(shift, ctrl_or_meta);
             let local: Vec<[f64; 2]> = points.iter().map(|point| [f64::from(point[0] - inner.x), f64::from(point[1] - inner.y)]).collect();
+            if !paint2d_selection(scene).is_empty(){
+                let intent=with_raster_host_mut(&scene.host_id,|host|host.pixel_selection_intent(&local)).flatten();
+                if let Some(intent)=intent{PAINT2D_PIXEL_CANDIDATES.with(|cell|cell.borrow_mut().insert(scene.host_id.clone(),Paint2dPixelCandidate {utility:paint.active_utility.clone(),intent,method:method.unwrap_or("rectangle").into(),mode:merge.into(),path:String::new(),cursor:0,submitted:None,progress:(0,0)}));}
+                return Ok(true);
+            }
             let query = json!({ "points": local.iter().map(|point| json!({ "x": point[0], "y": point[1] })).collect::<Vec<_>>(), "crossing": crossing }).to_string();
             let hits: Vec<String> = with_raster_host_mut(&scene.host_id, |host| host.marquee_hits_json(&query).ok()).flatten().and_then(|json| serde_json::from_str::<Vec<String>>(&json).ok()).unwrap_or_default();
             let ids = paint2d_merge_ids(merge, &paint2d_selection(scene), &hits);
@@ -397,6 +450,7 @@ pub fn paint2d_pointer_button_into(
         batch.publish()?;
         return Ok(true);
     }
+    if PAINT2D_PIXEL_CANDIDATES.with(|cell|cell.borrow().contains_key(&scene.host_id)){return Ok(false);}
     let flushed = flush_paint2d_edit(scene, input)?;
     let Some(camera) = with_raster_host_mut(&scene.host_id, |host| {
         if down {
@@ -524,7 +578,7 @@ pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f
                 if !marquee.active && distance >= PAINT2D_MARQUEE_THRESHOLD_PX {
                     marquee.active = true;
                 }
-                if marquee.active && method == "lasso" && marquee.points.last().copied() != Some((x, y)) {
+                if marquee.active && method == "lasso" && marquee.points.len()<4095 && marquee.points.last().copied() != Some((x, y)) {
                     marquee.points.push((x, y));
                 }
             });
@@ -560,6 +614,7 @@ pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f
 
 pub fn paint2d_pointer_cancel_into(surface_id: &str) -> bool {
     with_paint2d_marquee(surface_id, |marquee| *marquee = Paint2dMarquee::default());
+    cancel_paint2d_pixel_selection(surface_id);
     with_raster_host_mut(surface_id, |host| host.pointer_cancel_screen()).is_some()
 }
 

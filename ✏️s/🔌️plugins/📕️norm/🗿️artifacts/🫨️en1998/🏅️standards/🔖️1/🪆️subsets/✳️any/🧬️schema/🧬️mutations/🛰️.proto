@@ -308,6 +308,21 @@ message En1998Mutation {
     ChangeRetainingWallPermeabilityMS change_retaining_wall_permeability_m_s = 304;
     ChangeFoundationBaseFrictionDeg change_foundation_base_friction_deg = 305;
     ChangeFoundationBasePorePressurePa change_foundation_base_pore_pressure_pa = 306;
+    ChangeSeismicSlopeAngle change_seismic_slope_angle = 307;
+    ChangeSeismicSlopeCircleCentreX change_seismic_slope_circle_centre_x = 308;
+    ChangeSeismicSlopeCircleCentreZ change_seismic_slope_circle_centre_z = 309;
+    ChangeSeismicSlopeCircleRadius change_seismic_slope_circle_radius = 310;
+    ChangeSeismicSlopeCohesion change_seismic_slope_cohesion = 311;
+    ChangeSeismicSlopeFrictionAngle change_seismic_slope_friction_angle = 312;
+    ChangeSeismicSlopeHeight change_seismic_slope_height = 313;
+    ChangeSeismicSlopeTopographicFactor change_seismic_slope_topographic_factor = 314;
+    ChangeTieBeamDepth change_tie_beam_depth = 315;
+    ChangeTieBeamDisplacementLimit change_tie_beam_displacement_limit = 316;
+    ChangeTieBeamRelativeDisplacement change_tie_beam_relative_displacement = 317;
+    ChangeTieBeamSpan change_tie_beam_span = 318;
+    ChangeTieBeamSteelArea change_tie_beam_steel_area = 319;
+    ChangeTieBeamSteelDesignStrength change_tie_beam_steel_design_strength = 320;
+    ChangeTieBeamWidth change_tie_beam_width = 321;
   }
 }
 message ChangeAnnex {
@@ -1556,4 +1571,64 @@ message ChangeFoundationBaseFrictionDeg {
 message ChangeFoundationBasePorePressurePa {
   uint64 index = 1;
   double new_base_pore_pressure_pa = 2;
+}
+message ChangeSeismicSlopeAngle {
+  string id = 1;
+  double new_angle = 2;
+}
+message ChangeSeismicSlopeCircleCentreX {
+  string id = 1;
+  double new_circle_centre_x = 2;
+}
+message ChangeSeismicSlopeCircleCentreZ {
+  string id = 1;
+  double new_circle_centre_z = 2;
+}
+message ChangeSeismicSlopeCircleRadius {
+  string id = 1;
+  double new_circle_radius = 2;
+}
+message ChangeSeismicSlopeCohesion {
+  string id = 1;
+  double new_cohesion = 2;
+}
+message ChangeSeismicSlopeFrictionAngle {
+  string id = 1;
+  double new_friction_angle = 2;
+}
+message ChangeSeismicSlopeHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message ChangeSeismicSlopeTopographicFactor {
+  string id = 1;
+  double new_topographic_amplification = 2;
+}
+message ChangeTieBeamDepth {
+  string id = 1;
+  double new_depth = 2;
+}
+message ChangeTieBeamDisplacementLimit {
+  string id = 1;
+  double new_displacement_limit = 2;
+}
+message ChangeTieBeamRelativeDisplacement {
+  string id = 1;
+  double new_relative_displacement = 2;
+}
+message ChangeTieBeamSpan {
+  string id = 1;
+  double new_span = 2;
+}
+message ChangeTieBeamSteelArea {
+  string id = 1;
+  double new_steel_area = 2;
+}
+message ChangeTieBeamSteelDesignStrength {
+  string id = 1;
+  double new_steel_design_strength = 2;
+}
+message ChangeTieBeamWidth {
+  string id = 1;
+  double new_width = 2;
 }

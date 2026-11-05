@@ -1,6 +1,5 @@
 {
   "annex": "De",
-  "reliabilityClass": "RC2",
   "masonryClass": "Class1",
   "designSituation": "Persistent",
   "storeys": 2,
@@ -151,7 +150,6 @@
   ],
   "placements": [],
   "cases": [],
-  "movementJoints": [],
   "chases": [
     {
       "id": "chase-1",
@@ -163,5 +161,7 @@
       "lengthM": 1.2,
       "depthM": 0.02
     }
-  ]
+  ],
+  "movementJoints": [],
+  "reliabilityClass": "RC2"
 }

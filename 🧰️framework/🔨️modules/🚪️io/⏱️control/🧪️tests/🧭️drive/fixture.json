@@ -1,0 +1,107 @@
+{
+  "schema": "semio.native.snapshot-cursor-drive.v1",
+  "cases": [
+    {
+      "id": "work-only-progress",
+      "admitted": true,
+      "steps": [
+        {
+          "work": 7,
+          "items": 0,
+          "result": "pending",
+          "errors": []
+        },
+        {
+          "work": 2,
+          "items": 1,
+          "result": "ready",
+          "errors": []
+        }
+      ],
+      "expected": {
+        "producerWork": 9,
+        "items": 1,
+        "calls": 2,
+        "errors": [],
+        "cursorRetained": false
+      }
+    },
+    {
+      "id": "rich-partial-failure",
+      "admitted": true,
+      "steps": [
+        {
+          "work": 11,
+          "items": 1,
+          "result": "failed",
+          "errors": [
+            "primary",
+            "quote",
+            "allocation"
+          ]
+        }
+      ],
+      "expected": {
+        "producerWork": 11,
+        "items": 1,
+        "calls": 1,
+        "errors": [
+          "primary",
+          "quote",
+          "allocation"
+        ],
+        "cursorRetained": true
+      }
+    },
+    {
+      "id": "zero-work-denial",
+      "admitted": false,
+      "steps": [
+        {
+          "work": 19,
+          "items": 3,
+          "result": "ready",
+          "errors": []
+        }
+      ],
+      "expected": {
+        "producerWork": 0,
+        "items": 0,
+        "calls": 0,
+        "errors": [],
+        "cursorRetained": true
+      }
+    },
+    {
+      "id": "partial-then-refusal",
+      "admitted": true,
+      "steps": [
+        {
+          "work": 3,
+          "items": 2,
+          "result": "pending",
+          "errors": []
+        },
+        {
+          "work": 5,
+          "items": 0,
+          "result": "failed",
+          "errors": [
+            "quote",
+            "allocation"
+          ]
+        }
+      ],
+      "expected": {
+        "producerWork": 8,
+        "items": 2,
+        "calls": 2,
+        "errors": [
+          "quote",
+          "allocation"
+        ],
+        "cursorRetained": true
+      }
+    }
+  ]
+}

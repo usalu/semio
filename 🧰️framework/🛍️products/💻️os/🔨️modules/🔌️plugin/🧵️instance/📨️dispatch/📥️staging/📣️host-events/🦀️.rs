@@ -18,6 +18,9 @@ use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
 use semio_framework_ui_contract::*;
+#[path="background.rs"]
+mod background;
+use crate::dispatch_runtime_command::close_original_typed_source;
 
 /// 📬️ What one funded turn of window-fact delivery decided for the action being dispatched.
 pub enum HostEventTurn {
@@ -36,23 +39,18 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// ordinary typed operation that is never a history row of its own. An event the app ignores queues nothing.
     fn queue_host_event(&mut self, event: HostEvent) {
         self.as_render().end_window_gesture(&event);
-        if A::host_event(&event).is_some() {
+        if A::host_event_demands(&event).is_some() {
             self.host_events.queue.push_back(event);
         }
     }
 
     /// 🪟️ The metadata a queued fact is delivered under: `meta` retargeted at the view of the fact's window, `None` when no view holds it.
-    fn host_event_meta(&self, event: &HostEvent, meta: &ActionMeta) -> Option<ActionMeta> {
-        let window_id = event.window_id();
-        let view = meta.view_state.as_ref().and_then(|view| view.for_window_instance(window_id)).or_else(|| ViewModel { window_instances: self.host_events.host_event_roster.clone(), ..meta.view_state.as_ref()?.clone() }.for_window_instance(window_id))?;
-        Some(ActionMeta { view_state: Some(view), ..meta.clone() })
-    }
 
     /// 🧰️ Queues [`HostEvent::UtilityChanged`] for every window whose utility `meta`'s view moved since a dispatch
     /// last showed it — the targeted window reads the per-call overlay, every other one the view's map, and a window
     /// the view names no utility for is unknown, never a switch — and remembers the view's window roster.
     pub fn queue_utility_host_events(&mut self, meta: &ActionMeta) {
-        let Some(view) = meta.view_state.as_ref() else { return };
+        let Some(view) = meta.view_state.as_deref() else { return };
         if !view.window_instances.is_empty() && self.host_events.host_event_roster != view.window_instances {
             self.host_events.host_event_roster = view.window_instances.clone();
             self.host_events.host_event_utilities.retain(|window_id, _| view.window_instances.iter().any(|window| window.id == *window_id));
@@ -80,7 +78,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🌐️ Queues one instance-wide event, built per window, for every window of `meta`'s view, else of the last roster.
     pub fn queue_host_event_to_every_window(&mut self, event: impl Fn(String) -> HostEvent, meta: &ActionMeta) {
         self.as_render().end_every_gesture(&event(String::new()));
-        let roster = meta.view_state.as_ref().map(|view| view.window_instances.as_slice()).filter(|roster| !roster.is_empty()).unwrap_or(&self.host_events.host_event_roster);
+        let roster = meta.view_state.as_deref().map(|view| view.window_instances.as_slice()).filter(|roster| !roster.is_empty()).unwrap_or(&self.host_events.host_event_roster);
         let windows: Vec<String> = roster.iter().map(|window| window.id.clone()).collect();
         for window_id in windows {
             self.queue_host_event(event(window_id));
@@ -89,9 +87,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
     /// 🌐️ Queues [`HostEvent::BaseMoved`] for every window once a remote edit moved the base, as the local actor.
     pub fn queue_base_moved(&mut self) {
-        let Some(instance_id) = self.tools.live_runtime_instance_id else { return };
-        let meta = ActionMeta { actor: self.stores.store.local_actor_id().0.clone(), instance_id, view_state: None };
-        self.queue_host_event_to_every_window(|window_id| HostEvent::BaseMoved { window_id }, &meta);
+        if self.tools.live_runtime_instance_id.is_some(){self.host_events.routes.base_moved();}
     }
 
     /// 📨️ `hostEvent{windowId, kind}`: the host-forwarded window fact, queued ahead of the action's own reply; an unknown
@@ -132,38 +128,21 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     /// 📬️ Delivers the queue front: its typed answer is produced, admitted and mounted by the runtime-command lane; `true` once the queue is empty and the source idle.
-    async fn drive_host_event_delivery(&mut self, source: &mut OriginalTypedCommandSource<A>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-        if cx.is_cancelled() {
-            if source.pending() {
-                cx.with_original_retirement(|cx| source.close_step(cx))?;
-                return Ok(false);
-            }
-            self.host_events.queue.clear();
-            self.host_events.delivering = false;
-            self.host_events.reply = false;
-            return Err(ValueError::literal(ValueRefusalKind::Canceled, "window fact delivery was cancelled").into());
+    async fn drive_host_event_delivery(&mut self,source:&mut OriginalTypedCommandSource<A>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if cx.is_cancelled()||self.host_events.action_event_complete||self.host_events.action_delivery.outcome.is_some(){
+            if source.pending(){cx.with_original_retirement(|cx|source.close_step(cx))?;return Ok(false)}
+            if !self.host_events.action_event_removed&&!self.host_events.queue.is_empty(){let bytes=2*std::mem::size_of::<Option<HostEvent>>()+2*std::mem::size_of::<bool>();cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{*self.host_events.action_delivery.event=self.host_events.queue.pop_front();self.host_events.action_event_removed=true;self.host_events.action_event_complete=true;semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;Ok(())})?;return Ok(false)}
+            if !self.host_events.action_delivery.close_step(cx)?{return Ok(false)}
+            if cx.is_cancelled(){if self.host_events.queue.is_empty(){self.host_events.delivering=false;self.host_events.reply=false;return Err(ValueError::literal(ValueRefusalKind::Canceled,"window fact delivery was cancelled").into())}self.host_events.action_event_removed=false;return Ok(false)}
+            self.host_events.routes.reset_lookup(&mut self.host_events.action_event_complete,&mut self.host_events.action_event_removed,cx)?;return Ok(false)
         }
-        let Some(event) = self.host_events.queue.front().cloned() else {
-            if source.pending() {
-                cx.with_original_retirement(|cx| source.close_step(cx))?;
-                return Ok(false);
-            }
-            self.host_events.delivering = false;
-            return Ok(true);
-        };
-        if !source.pending() && self.host_event_meta(&event, meta).is_none() {
-            self.host_events.queue.pop_front();
-            return Ok(false);
+        let Some(event)=self.host_events.queue.front()else{if source.pending(){cx.with_original_retirement(|cx|source.close_step(cx))?;return Ok(false)}self.host_events.delivering=false;return Ok(true)};
+        match self.prepare_host_event_typed_command(source,event,cx).await?{None=>return Ok(false),Some(false)=>{let bytes=std::mem::size_of::<bool>();let mut done=None;semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{self.host_events.action_event_complete=true;semio_framework_value::RetainedWorkOutcome{result:Ok(((),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;return Ok(false)},Some(true)=>{}}
+        if source.metadata.is_none()&&source.receipt.is_none(){
+            if self.host_events.action_delivery.metadata.is_none(){let target=event.window_id();if meta.view_state.as_deref().and_then(|view|view.window_id.as_deref())==Some(target){meta.admit_routing_alias(&mut self.host_events.action_delivery.metadata,cx)?;}else{match self.host_events.routes.prepare_window_alias(target,&mut self.host_events.action_delivery.metadata,cx)?{Some(false)=>{self.host_events.action_event_complete=true;},_=>{}}}return Ok(false)}
+            source.capture_metadata(&mut self.host_events.action_delivery.metadata,cx)?;return Ok(false)
         }
-        let mut metadata = self.host_event_meta(&event, meta);
-        let mut tag = None;
-        let delivered = self.drive_runtime_typed_command(source, || A::host_event(&event).map(Box::new), &mut tag, &mut metadata, identity, cx).await?;
-        if let Some(operation) = source.operation {
-            self.host_events.host_event_operations.insert(operation.operation.0);
-        }
-        if delivered.is_some() {
-            self.host_events.queue.pop_front();
-        }
+        if let Some(outcome)=self.dispatch_typed_command_inner(source,&mut None,&mut None,identity,cx).await?{*self.host_events.action_delivery.outcome=Some(outcome);}
         Ok(false)
     }
 }

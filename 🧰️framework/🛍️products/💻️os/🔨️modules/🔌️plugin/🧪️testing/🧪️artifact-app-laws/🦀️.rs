@@ -18,7 +18,7 @@ use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_instance_app::VcsArtifactApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use store::os_store::backbone::{Backbone, BackboneMessage, MemoryBackbone};
-pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture};
+pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture, receive_persistent_fixture, receive_view_fixture};
     use semio_framework_value::ErasedSnapshotRetirement;
 
     /// 📃️ Observes each production page presentation with the exact original fixture grant.
@@ -35,6 +35,58 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
 
         let token=page.token;for _ in 0..100000{if page.terminal_is_empty(){return token;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||page.close_step(grant).expect("original fixture receiver page closure"));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_ne!(step.progress(),Default::default(),"original fixture close grant must fund its unchanged page authority");}panic!("original fixture receiver page did not close");
 
+    }
+
+    /// 🧳️ Retires caller-owned fixture custody without losing its pending cursor on refusal or pause.
+    pub fn retire_fixture_owned<T:semio_framework_value::retirement::RetireOwned+'static>(pending:&mut Option<T>,active:&mut Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        for _ in 0..OriginalFixtureCaller::maximum_turns(){
+            if pending.is_none()&&active.is_none(){return Ok(true)}
+            let demand=if let Some(owner)=active.as_ref(){store::os_store::snapshot_read::artifact_retirement_box_demands(owner.as_ref(),grant.maximum_copy_bytes)}else{store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(pending)}?;
+            let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(grant,|same|semio_framework_job::close_original_retained_step(same,demand,|issued|{
+                if active.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(active,issued)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(pending,active,issued)}
+            })));
+            let progress=match &result{Ok(step)=>step.progress(),Err(failure)=>failure.effects};
+            assert!(progress.fits(grant));
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+            result?;
+            if progress==Default::default(){return Ok(pending.is_none()&&active.is_none())}
+        }
+        Ok(pending.is_none()&&active.is_none())
+    }
+
+    /// 📨️ Presents a real mounted page under its caller, returning when the current turn cannot advance.
+    pub fn present_fixture_mounted_page<A: semio_framework_plugin_decl_app::ArtifactApp>(mounted:&mut semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_plugin_job::TypedOperationResultPage>,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+        for _ in 0..OriginalFixtureCaller::maximum_turns(){
+            let mut output=None;
+            let demand=mounted.result_page_presentation_demands()?;
+            let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,issued|{
+                let (page,progress)=mounted.take_result_page(issued)?;
+                let complete=page.is_some();output=page;
+                Ok((if complete{PluginLifecycleStep::Complete(progress)}else{PluginLifecycleStep::Progress(progress)},complete))
+            }));
+            let step=result?;
+            let progress=match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=>progress,_=>Default::default()};
+            assert!(progress.fits(grant));
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+            if output.is_some()||progress==Default::default(){return Ok(output)}
+        }
+        Err(semio_framework_value::ValueError::invariant("mounted page presentation exceeded its original caller bound").into())
+    }
+
+    /// 📫️ Retires the acknowledged producer through its financed public port without renewing the caller's turn.
+    pub fn retire_fixture_acknowledged_mounted_page<A: semio_framework_plugin_decl_app::ArtifactApp>(mounted:&mut semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+        for _ in 0..OriginalFixtureCaller::maximum_turns(){
+            if !mounted.result_page_retirement_pending(){return Ok(true)}
+            let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(grant,|same|mounted.advance_acknowledged_result_page(same)));
+            let step=result?;
+            let progress=match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=>progress,_=>Default::default()};
+            assert!(progress.fits(grant));
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+            if progress==Default::default(){return Ok(!mounted.result_page_retirement_pending())}
+        }
+        Err(semio_framework_value::ValueError::invariant("mounted page retirement exceeded its original caller bound").into())
     }
 
 

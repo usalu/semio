@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-manifest-input-compiler"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Source-bound compilation of canonical mutation schemas into native staged input declarations"
+
+[package.metadata.semio]
+role = "framework"
+id = "manifest-input-compiler"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-manifest-arg-schema = { path = "../../../../🧮️arg-schema/📦️packages/🦀️rust" }
+semio-framework-manifest-mutation-inputs = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../🔏️hash/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+sha2 = "0.10"

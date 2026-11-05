@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-diaphragm-gamma-d",
   "semanticKind": "change-diaphragm-gamma-d",
-  "displayName": "Change Overstrength factor gamma_d on the storey force (0 = registry transfer factor)",
+  "displayName": "Change overstrength factor on the storey force (0 = registry transfer factor)",
   "emoji": "✏️",
   "aggregateVariant": "ChangeDiaphragmGammaD",
   "payloadSchema": "🧬️schema/🔣️.json",

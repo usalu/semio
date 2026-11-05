@@ -385,8 +385,8 @@ pub fn puzzle2d_clipboard_media_type() -> MediaType {
 /// 🕹️ The node ids one selection copies: selected node ids, plus the parent node of every selected
 /// handle id — a handle-granularity selection still copies the whole node it belongs to, exactly as
 /// puzzle3d's `puzzle3d_selected_objects_from` resolves a vortex selection to its object.
-pub fn puzzle2d_selected_node_ids(snapshot: &Value, selected: &[String]) -> Vec<String> {
-    let selected: HashSet<&str> = selected.iter().map(String::as_str).collect();
+pub fn puzzle2d_selected_node_ids<'a>(snapshot: &Value, selected: impl IntoIterator<Item=&'a String>) -> Vec<String> {
+    let selected: HashSet<&str> = selected.into_iter().map(String::as_str).collect();
     board_snapshot_nodes(snapshot)
         .iter()
         .filter(|node| {

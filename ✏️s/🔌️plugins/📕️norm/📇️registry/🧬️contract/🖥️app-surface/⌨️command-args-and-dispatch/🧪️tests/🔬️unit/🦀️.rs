@@ -1,6 +1,7 @@
 use super::*;
 use semio_framework_value::DslValue;
 use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use crate::edit_commands::tests::model;
 
 fn args(entries: Vec<(&str, DslValue)>) -> DslValue {
     DslValue::object(entries.into_iter().map(|(k, v)| (k.to_string(), v)))
@@ -8,17 +9,6 @@ fn args(entries: Vec<(&str, DslValue)>) -> DslValue {
 
 fn write(path: &str, value: DslValue) -> DslValue {
     args(vec![("path", DslValue::String(path.into())), ("value", value)])
-}
-
-fn document() -> DslValue {
-    args(vec![("members", DslValue::Array(vec![args(vec![("id", DslValue::String("b1".into())), ("length", DslValue::float(4.0)), ("bolts", DslValue::uint(4))])]))])
-}
-
-fn resolver(_: &DslValue, edit: &NormEdit) -> Result<Vec<String>, String> {
-    match edit {
-        NormEdit::SetField { path, value } => Ok(vec![format!("{path}={}", semio_framework_pack_json::to_json_string(value))]),
-        _ => Err("only setField".into()),
-    }
 }
 
 #[test]
@@ -36,9 +26,10 @@ fn set_fields_parses_and_validates_the_bundle() {
 
 #[test]
 fn a_write_bundle_is_one_emit_with_one_mutation_per_leaf_and_typed_like_the_leaf() {
-    let writes = [FieldWrite::number("members[id=b1].length", 4.25), FieldWrite::number("members[id=b1].bolts", 6.0)];
-    let emit = handle_set_fields(&document(), &writes, resolver).expect("emit");
-    assert_eq!(emit.artifact_mutations, vec!["members[id=b1].length=4.25".to_string(), "members[id=b1].bolts=6".to_string()]);
+    let writes = [FieldWrite::number("configuration.a", 4.25), FieldWrite::number("configuration.count", 6.0)];
+    let emit = handle_set_fields(&model::document(), &writes, model::resolve).expect("emit");
+    assert_eq!(emit.artifact_mutations.len(), 2);
+    assert_eq!(model::replay(&model::document(), &emit.artifact_mutations).configuration, model::Configuration { a: 4.25, b: 2.0, count: 6 });
     assert_eq!(coerce_like(&DslValue::uint(1), &DslValue::float(5.6)), DslValue::uint(6));
     assert_eq!(coerce_like(&DslValue::int(1), &DslValue::float(-2.4)), DslValue::int(-2));
     assert_eq!(coerce_like(&DslValue::String("x".into()), &DslValue::float(1.0)), DslValue::float(1.0));
@@ -46,11 +37,11 @@ fn a_write_bundle_is_one_emit_with_one_mutation_per_leaf_and_typed_like_the_leaf
 
 #[test]
 fn a_failing_write_fails_the_whole_bundle() {
-    let writes = [FieldWrite::number("members[id=b1].length", 4.25), FieldWrite::number("members[id=zz].length", 1.0)];
-    let fault = handle_set_fields(&document(), &writes, resolver).err().expect("fault");
+    let writes = [FieldWrite::number("configuration.a", 4.25), FieldWrite::number("configuration.zz", 1.0)];
+    let fault = handle_set_fields(&model::document(), &writes, model::resolve).err().expect("fault");
     assert!(format!("{fault:?}").contains("zz"), "{fault:?}");
     let mut calls = 0;
-    assert!(resolve_set_fields(&document(), &[FieldWrite::number("members[id=b1].length", 1.0)], |d, e| { calls += 1; resolver(d, e) }).is_ok() && calls == 1);
+    assert!(resolve_set_fields(&model::document(), &[FieldWrite::number("configuration.a", 1.0)], |d, e| { calls += 1; model::resolve(d, e) }).is_ok() && calls == 1);
 }
 
 #[test]
@@ -68,7 +59,7 @@ fn the_other_live_commands_parse_to_lane_events_only() {
 }
 
 #[test]
-fn every_live_tool_id_round_trips_and_has_one_publication_contract() {
+fn every_live_tool_id_has_a_command_row() {
     let commands = [
         LiveCommand::SetFields { writes: vec![] },
         LiveCommand::PreviewRemedy { check_id: String::new(), index: 0, option: 0 },
@@ -84,8 +75,6 @@ fn every_live_tool_id_round_trips_and_has_one_publication_contract() {
     let command_ids: Vec<&str> = commands.iter().map(LiveCommand::id).collect();
     let expected_ids: Vec<&str> = NORM_LIVE_TOOL_IDS.iter().copied().filter(|id| *id != "viewportAct").collect();
     assert_eq!(command_ids, expected_ids, "every live tool but the view action is a LiveCommand");
-    assert_eq!(crate::NORM_LIVE_PUBLICATION_CONTRACTS.iter().map(|c| c.tool_id).collect::<Vec<_>>(), NORM_LIVE_TOOL_IDS);
-    assert!(NORM_LIVE_TOOL_IDS.iter().all(|id| !crate::NORM_RETAINED_TOOL_IDS.contains(id)));
 }
 
 #[test]
@@ -141,21 +130,6 @@ fn a_remedy_preview_is_the_ghost_apply_remedy_would_write() {
     assert!(preview_remedy(&report, &tree, "c.uls", 9, 0).is_err());
 }
 
-#[test]
-fn the_editor_tool_ids_are_the_retained_ids_then_the_live_ids_with_matching_contracts() {
-    let expected: Vec<&str> = crate::NORM_RETAINED_TOOL_IDS.iter().chain(crate::NORM_LIVE_TOOL_IDS).copied().collect();
-    assert_eq!(crate::NORM_EDITOR_TOOL_IDS, expected.as_slice());
-    let contracts: Vec<&str> = crate::NORM_EDITOR_PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
-    assert_eq!(contracts, expected);
-    for retained in crate::NORM_PUBLICATION_CONTRACTS {
-        let editor = crate::NORM_EDITOR_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == retained.tool_id).expect("retained contract is kept");
-        assert_eq!(editor.lanes, retained.lanes);
-    }
-    for live in crate::NORM_LIVE_PUBLICATION_CONTRACTS {
-        let editor = crate::NORM_EDITOR_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == live.tool_id).expect("live contract is kept");
-        assert!(live.lanes.iter().all(|lane| editor.lanes.contains(lane)));
-    }
-}
 
 #[test]
 fn the_insert_ghost_command_parses_with_an_optional_spec_and_position() {

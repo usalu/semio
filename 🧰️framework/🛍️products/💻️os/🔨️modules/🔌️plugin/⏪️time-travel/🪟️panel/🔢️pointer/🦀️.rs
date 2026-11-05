@@ -140,11 +140,7 @@ pub fn time_travel_default_value(schema: &ArgSchema) -> DslValue {
 /// no union, whose `group`s only lay its inputs out.
 #[doc(hidden)]
 pub fn time_travel_variant_selector(inputs: &[ActionArgDef]) -> Option<&ActionArgDef> {
-    let groups: BTreeSet<&str> = inputs.iter().filter_map(|input| input.group.as_deref()).collect();
-    if groups.is_empty() {
-        return None;
-    }
-    inputs.iter().filter(|input| input.group.is_none()).find(|input| matches!(&input.schema, ArgSchema::String { options, .. } if groups.iter().all(|group| options.iter().any(|option| option.value == *group))))
+    semio_framework::action_arg_variant_selector(inputs)
 }
 
 /// 🔀️ The inputs of the variant `value` is in: the selector, the ungrouped inputs and the active variant's fields; every

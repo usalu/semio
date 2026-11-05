@@ -59,9 +59,10 @@ export function applyInvokeExtensionEffect({ loadedPluginsRef, sessionRef, sessi
   const pluginsNow = loadedPluginsRef.current;
   const requesterId = pluginsNow.some((entry) => entry.handle.pluginId === baseSession.pluginId) ? baseSession.pluginId : sessionRef.current?.pluginId;
   const requester = requesterId && pluginsNow.some((entry) => entry.handle.pluginId === requesterId) ? { pluginId: requesterId, instanceId: baseSession.instanceId } : baseSession;
+  const requesterHandle = pluginsNow.find(entry => entry.handle.pluginId === requester.pluginId)?.handle ?? null;
   const releaseExtensionWork = sessionWorkRef.current.begin(requester.pluginId, requester.instanceId, "extension-invocation");
   void dispatchInvokeExtensionEffect(pluginsNow, requester, effect.invokeExtension, async (requestingPlugin, response) => {
-    if (dropForSealedInstance(requester, "extension answer", effect.invokeExtension.extensionId)) throw new Error("extension.requester-retired");
+    if (dropForSealedInstance(requestingPlugin.handle, requester, "extension answer", effect.invokeExtension.extensionId)) throw new Error("extension.requester-retired");
     if (!isCurrentEffectOwner(effectOwner)) throw new Error("extension.requester-retired");
     const current = sessionRef.current;
     const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === requester.pluginId)?.handle;
@@ -74,7 +75,7 @@ export function applyInvokeExtensionEffect({ loadedPluginsRef, sessionRef, sessi
     await applyHostEffects(response.requestedEffects ?? [], primary ? current : { ...baseSession, viewState: current.viewState }, resolveUiDirtyScope(response.uiScope), effectOwner);
   }).catch((error) => {
     const { extensionId, capability, req } = effect.invokeExtension;
-    if (sealedInstancesRef.current.sealed(requester.pluginId, requester.instanceId)) return;
+    if (sealedInstancesRef.current.sealed(requesterHandle, requester.pluginId, requester.instanceId)) return;
     if (isPluginInstanceRetiredV1(error)) {
       return;
     }

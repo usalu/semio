@@ -157,7 +157,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         apply_test_mutations(app.stores.test_store_mut().await, vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })]).await.expect("the actual parent declares the exact member before registration");
         let child = new_test_child("child-1").await.expect("construct child");
         app.register_child("slot", "child-1", test_child_dialect().await, child, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("register child");
-        semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect("admit retained child gesture");
+        semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: id, view_state: None }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect("admit retained child gesture");
 
         let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
@@ -256,7 +256,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("live child").member;
             assert_eq!(child.snapshot().expect("child snapshot").count, 9);
 
-            let admitted = active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("undo retained group");
+            let admitted = active.app.dispatch_action("undo", None, &ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("undo retained group");
             let undone = semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut active.app, admitted, cx).await.expect("undo reserved-job commit");
             artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("undo publication");
             let skipped: Vec<String> = undone.diagnostics.iter().map(|diagnostic| diagnostic.message.clone()).collect();
@@ -265,7 +265,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("undone child").member;
             assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
 
-            let admitted = active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("redo retained group");
+            let admitted = active.app.dispatch_action("redo", None, &ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("redo retained group");
             semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut active.app, admitted, cx).await.expect("redo reserved-job commit");
             artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("redo publication");
             assert_eq!(active.app.snapshot().expect("redone parent snapshot").count, 9);
@@ -324,7 +324,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
         semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
-        let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
+        let meta = ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: id, view_state: None };
         let outcome: Result<(), String> = async {
             let admitted = semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::PickItem { id: "item-1".into() }, &meta, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.map_err(|error| format!("admit the pick: {error:?}"))?;
             if !admitted.requested_effects.is_empty() || !admitted.mutations.is_empty() {

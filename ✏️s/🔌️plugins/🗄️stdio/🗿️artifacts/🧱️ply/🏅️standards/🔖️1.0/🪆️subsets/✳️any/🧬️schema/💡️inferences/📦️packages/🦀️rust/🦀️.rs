@@ -129,3 +129,6 @@ pub mod viewer {
         }
     }
 }
+
+#[path = "../../../../🚪️io/🗃️natural/🦀️.rs"]
+pub mod natural_file;

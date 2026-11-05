@@ -111,7 +111,7 @@
         let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let instance = 507;
         semio_framework_plugin_runtime_instances::inst_wire_frames::test_admit_instance_actor(&runtime, instance, "local");
-        let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
+        let meta = ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: instance, view_state: None };
         let restart_command = <TestCommand as ::protocol::OpBinary>::encode_op(&TestCommand::ApplyCountFromTask { value: 7 }).expect("must encode");
         let observed_completion = std::sync::Arc::new(std::sync::Mutex::new(None));
 

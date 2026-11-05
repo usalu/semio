@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "locales": [
+    {
+      "id": "en",
+      "readOnly": "Read only"
+    },
+    {
+      "id": "de",
+      "readOnly": "Schreibgeschützt"
+    }
+  ],
+  "families": [
+    {
+      "id": "en1990",
+      "provider": "🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "en1990_field_meta",
+      "mutations": "semio_s_artifact_norm_en1990_mutations"
+    },
+    {
+      "id": "en1991",
+      "provider": "🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "en1991_field_meta",
+      "mutations": "semio_s_artifact_norm_en1991_mutations"
+    },
+    {
+      "id": "en1992",
+      "provider": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "en1992_field_meta",
+      "mutations": "semio_s_artifact_norm_en1992_mutations"
+    },
+    {
+      "id": "en1993",
+      "provider": "🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "en1993_field_meta",
+      "mutations": "semio_s_artifact_norm_en1993_mutations"
+    },
+    {
+      "id": "en1994",
+      "provider": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "en1994_field_meta",
+      "mutations": "semio_s_artifact_norm_en1994_mutations"
+    },
+    {
+      "id": "en1995",
+      "provider": "🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "en1995_field_meta",
+      "mutations": "semio_s_artifact_norm_en1995_mutations"
+    },
+    {
+      "id": "en1996",
+      "provider": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "en1996_field_meta",
+      "mutations": "semio_s_artifact_norm_en1996_mutations"
+    },
+    {
+      "id": "en1997",
+      "provider": "🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "en1997_field_meta",
+      "mutations": "semio_s_artifact_norm_en1997_mutations"
+    },
+    {
+      "id": "en1998",
+      "provider": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🏷️field-meta/🦀️.rs",
+      "function": "en1998_field_meta",
+      "mutations": "semio_s_artifact_norm_en1998_mutations"
+    },
+    {
+      "id": "en1999",
+      "provider": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "en1999_field_meta",
+      "mutations": "semio_s_artifact_norm_en1999_mutations"
+    },
+    {
+      "id": "din4108",
+      "provider": "🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "din4108_field_meta",
+      "mutations": "semio_s_artifact_norm_din4108_mutations"
+    },
+    {
+      "id": "din16798",
+      "provider": "🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "din16798_field_meta",
+      "mutations": "semio_s_artifact_norm_din16798_mutations"
+    },
+    {
+      "id": "din18599",
+      "provider": "🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🏷️field-meta/🦀️.rs",
+      "function": "field_meta",
+      "mutations": "semio_s_artifact_norm_din18599_mutations"
+    },
+    {
+      "id": "iso16757",
+      "provider": "🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "iso16757_field_meta",
+      "mutations": "semio_s_artifact_norm_iso16757_mutations"
+    },
+    {
+      "id": "vdi3805",
+      "provider": "🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "vdi3805_field_meta",
+      "mutations": "semio_s_artifact_norm_vdi3805_mutations"
+    }
+  ],
+  "fields": [
+    {
+      "path": "identifier",
+      "value": "RAD-600",
+      "editable": false,
+      "text": {
+        "en": "RAD-600",
+        "de": "RAD-600"
+      }
+    },
+    {
+      "path": "quantity",
+      "value": 0.0015,
+      "editable": false,
+      "text": {
+        "en": "1.5 mm",
+        "de": "1,5 mm"
+      }
+    },
+    {
+      "path": "integer",
+      "value": 3,
+      "editable": false,
+      "text": {
+        "en": "3",
+        "de": "3"
+      }
+    },
+    {
+      "path": "enabled",
+      "value": true,
+      "editable": false,
+      "text": {
+        "en": "Yes",
+        "de": "Ja"
+      }
+    },
+    {
+      "path": "choice",
+      "value": "beam",
+      "editable": false,
+      "text": {
+        "en": "Beam",
+        "de": "Träger"
+      }
+    },
+    {
+      "path": "missing",
+      "value": null,
+      "editable": false,
+      "text": {
+        "en": "empty",
+        "de": "leer"
+      }
+    },
+    {
+      "path": "fallback",
+      "value": "visible without metadata",
+      "editable": false,
+      "text": {
+        "en": "visible without metadata",
+        "de": "visible without metadata"
+      }
+    },
+    {
+      "path": "editable",
+      "value": 0.0015,
+      "editable": true,
+      "text": {
+        "en": "1.5 mm",
+        "de": "1,5 mm"
+      }
+    }
+  ]
+}

@@ -63,14 +63,14 @@ type En1993MaterialModification {
   patch: En1993MaterialPatch!
 }
 type En1993MaterialPatch {
-  grade: String
-  fy: Float
-  fu: Float
-  eModulus: Float
-  gModulus: Float
-  subgrade: String
+  grade: JSON
+  fy: JSON
+  fu: JSON
+  eModulus: JSON
+  gModulus: JSON
+  subgrade: JSON
   kind: JSON
-  rambergOsgoodN: Float
+  rambergOsgoodN: JSON
 }
 type En1993SectionDelta {
   removed: [En1993SectionRemoval!]!
@@ -96,25 +96,26 @@ type En1993SectionModification {
   patch: En1993SectionPatch!
 }
 type En1993SectionPatch {
-  designation: String
+  designation: JSON
   kind: JSON
-  h: Float
-  b: Float
-  tw: Float
-  tf: Float
-  r: Float
-  area: Float
-  shearAreaY: Float
-  shearAreaZ: Float
-  iy: Float
-  iz: Float
-  it: Float
-  iw: Float
-  wElY: Float
-  wElZ: Float
-  wPlY: Float
-  wPlZ: Float
-  areaNet: Float
+  h: JSON
+  b: JSON
+  tw: JSON
+  tf: JSON
+  r: JSON
+  area: JSON
+  shearAreaY: JSON
+  shearAreaZ: JSON
+  iy: JSON
+  iz: JSON
+  it: JSON
+  iw: JSON
+  wElY: JSON
+  wElZ: JSON
+  wPlY: JSON
+  wPlZ: JSON
+  areaNet: JSON
+  fabrication: JSON
 }
 type En1993MemberDelta {
   removed: [En1993MemberRemoval!]!
@@ -140,32 +141,32 @@ type En1993MemberModification {
   patch: En1993MemberPatch!
 }
 type En1993MemberPatch {
-  label: String
+  label: JSON
   memberType: JSON
-  sectionId: String
-  materialId: String
-  length: Float
-  bucklingLengthY: Float
-  bucklingLengthZ: Float
-  ltbLength: Float
-  ltbRestraintSpacing: Float
+  sectionId: JSON
+  materialId: JSON
+  length: JSON
+  bucklingLengthY: JSON
+  bucklingLengthZ: JSON
+  ltbLength: JSON
+  ltbRestraintSpacing: JSON
   loadApplication: JSON
-  endMomentRatioPsi: Float
+  endMomentRatioPsi: JSON
   momentDiagram: JSON
-  deflectionLimitRatio: Float
+  deflectionLimitRatio: JSON
   analysis: JSON
   stainlessForming: JSON
-  designTemperature: Float
-  toughnessStressRatio: Float
-  radiationShift: Float
-  stressShift: Float
-  marginShift: Float
-  strainRateShift: Float
-  coldFormingRadius: Float
-  webMaterialId: String
+  designTemperature: JSON
+  toughnessStressRatio: JSON
+  radiationShift: JSON
+  stressShift: JSON
+  marginShift: JSON
+  strainRateShift: JSON
+  coldFormingRadius: JSON
+  webMaterialId: JSON
   torsionLoad: JSON
-  torquePosition: Float
-  warpingSupport: WarpingSupport
+  torquePosition: JSON
+  warpingSupport: JSON
 }
 type En1993LoadCaseDelta {
   removed: [En1993LoadCaseRemoval!]!
@@ -191,9 +192,9 @@ type En1993LoadCaseModification {
   patch: En1993LoadCasePatch!
 }
 type En1993LoadCasePatch {
-  name: String
+  name: JSON
   kind: JSON
-  category: String
+  category: JSON
 }
 type En1993MemberActionDelta {
   removed: [En1993MemberActionRemoval!]!
@@ -219,9 +220,9 @@ type En1993MemberActionModification {
   patch: En1993MemberActionPatch!
 }
 type En1993MemberActionPatch {
-  memberId: String
-  loadCaseId: String
-  action: DesignAction
+  memberId: JSON
+  loadCaseId: JSON
+  action: JSON
 }
 type En1993JointDelta {
   removed: [En1993JointRemoval!]!
@@ -248,66 +249,70 @@ type En1993JointModification {
 }
 type En1993JointPatch {
   kind: JSON
-  memberId: String
-  boltClass: String
-  boltDiameter: Float
-  boltRows: Int
-  boltsPerRow: Int
-  pitch: Float
-  gauge: Float
-  endDistance: Float
-  edgeDistance: Float
-  shearPlanes: Int
-  plateThickness: Float
-  plateFu: Float
-  weldThroat: Float
-  weldLength: Float
-  weldFu: Float
-  weldGrade: String
-  actions: [JointForceAction!]
+  memberId: JSON
+  boltClass: JSON
+  boltDiameter: JSON
+  boltRows: JSON
+  boltsPerRow: JSON
+  pitch: JSON
+  gauge: JSON
+  endDistance: JSON
+  edgeDistance: JSON
+  shearPlanes: JSON
+  plateThickness: JSON
+  plateFu: JSON
+  weldThroat: JSON
+  weldLength: JSON
+  weldFu: JSON
+  weldGrade: JSON
+  actions: JSON
   category: JSON
-  frictionMu: Float
-  preloadForce: Float
-  slipFactorKs: Float
-  frictionSurfaces: Int
-  plateFy: Float
-  plateWidth: Float
-  boltToWeb: Float
-  extensionToFlange: Float
-  extensionEdge: Float
-  alphaFactor: Float
-  boltStressArea: Float
-  boltGripLength: Float
-  columnFlangeThickness: Float
-  columnWebThickness: Float
-  columnWebDepth: Float
-  columnWebShearArea: Float
-  columnRootRadius: Float
-  columnFy: Float
-  columnWebStress: Float
-  beamFlangeThickness: Float
-  compressionLever: Float
-  momentDemand: Float
-  beamMomentResistance: Float
-  columnMomentResistance: Float
-  beamInertia: Float
-  beamSpan: Float
-  bracedFrame: Int
-  stiffnessRatio: Float
-  transformationParameter: Float
+  frictionMu: JSON
+  preloadForce: JSON
+  slipFactorKs: JSON
+  frictionSurfaces: JSON
+  plateFy: JSON
+  plateWidth: JSON
+  boltToWeb: JSON
+  extensionToFlange: JSON
+  extensionEdge: JSON
+  alphaFactor: JSON
+  boltStressArea: JSON
+  boltGripLength: JSON
+  columnFlangeThickness: JSON
+  columnWebThickness: JSON
+  columnWebDepth: JSON
+  columnWebShearArea: JSON
+  columnRootRadius: JSON
+  columnFy: JSON
+  columnWebStress: JSON
+  beamFlangeThickness: JSON
+  compressionLever: JSON
+  momentDemand: JSON
+  beamMomentResistance: JSON
+  columnMomentResistance: JSON
+  beamInertia: JSON
+  beamSpan: JSON
+  bracedFrame: JSON
+  stiffnessRatio: JSON
+  transformationParameter: JSON
   assumedClass: JSON
-  basePlateLength: Float
-  concreteFcd: Float
-  concreteModulus: Float
-  concreteAreaA0: Float
-  concreteAreaA1: Float
-  jointCoefficient: Float
-  anchorArea: Float
-  anchorLength: Float
-  baseNormalForce: Float
-  baseMoment: Float
-  baseLeverLeft: Float
-  baseLeverRight: Float
+  basePlateLength: JSON
+  concreteFcd: JSON
+  concreteModulus: JSON
+  concreteAreaA0: JSON
+  concreteAreaA1: JSON
+  jointCoefficient: JSON
+  anchorArea: JSON
+  anchorLength: JSON
+  baseNormalForce: JSON
+  baseMoment: JSON
+  baseLeverLeft: JSON
+  baseLeverRight: JSON
+  beamWebThickness: JSON
+  beamWebFy: JSON
+  weldForceLongitudinal: JSON
+  weldForceTransverse: JSON
 }
 type En1993FatigueDetailDelta {
   removed: [En1993FatigueDetailRemoval!]!
@@ -333,11 +338,12 @@ type En1993FatigueDetailModification {
   patch: En1993FatigueDetailPatch!
 }
 type En1993FatigueDetailPatch {
-  memberId: String
-  category: Int
+  memberId: JSON
+  category: JSON
   method: JSON
-  spectrum: [FatigueBand!]
-  stressHistory: String
+  spectrum: JSON
+  stressHistory: JSON
+  consequence: JSON
 }
 type En1993FireExposureDelta {
   removed: [En1993FireExposureRemoval!]!
@@ -363,15 +369,15 @@ type En1993FireExposureModification {
   patch: En1993FireExposurePatch!
 }
 type En1993FireExposurePatch {
-  memberId: String
+  memberId: JSON
   rating: JSON
-  protectionThickness: Float
-  sectionFactor: Float
-  mu0: Float
-  designTemperature: Float
-  protectionConductivity: Float
-  protectionDensity: Float
-  protectionSpecificHeat: Float
+  protectionThickness: JSON
+  sectionFactor: JSON
+  mu0: JSON
+  designTemperature: JSON
+  protectionConductivity: JSON
+  protectionDensity: JSON
+  protectionSpecificHeat: JSON
 }
 type En1993ColdFormedMemberDelta {
   removed: [En1993ColdFormedMemberRemoval!]!
@@ -397,33 +403,33 @@ type En1993ColdFormedMemberModification {
   patch: En1993ColdFormedMemberPatch!
 }
 type En1993ColdFormedMemberPatch {
-  bBar: Float
-  thickness: Float
-  kSigma: Float
-  psi: Float
-  fy: Float
-  grossResistance: Float
-  actions: [ForceAction!]
-  flangeWidth: Float
-  lipLength: Float
-  webHeight: Float
-  webSlope: Float
-  oppositeFlangeWidth: Float
-  springFactor: Float
-  cornerRadius: Float
-  flangeStress: Float
-  shearForce: Float
-  supportReaction: Float
-  supportLength: Float
-  cripplingCategory: Int
-  stiffenedSupport: Int
-  bendingMoment: Float
-  momentResistance: Float
-  sheetingStiffness: Float
-  requiredRestraintStiffness: Float
-  purlinSpan: Float
-  purlinLoad: Float
-  purlinLateralRatio: Float
+  bBar: JSON
+  thickness: JSON
+  kSigma: JSON
+  psi: JSON
+  fy: JSON
+  grossResistance: JSON
+  actions: JSON
+  flangeWidth: JSON
+  lipLength: JSON
+  webHeight: JSON
+  webSlope: JSON
+  oppositeFlangeWidth: JSON
+  springFactor: JSON
+  cornerRadius: JSON
+  flangeStress: JSON
+  shearForce: JSON
+  supportReaction: JSON
+  supportLength: JSON
+  cripplingCategory: JSON
+  stiffenedSupport: JSON
+  bendingMoment: JSON
+  momentResistance: JSON
+  sheetingStiffness: JSON
+  requiredRestraintStiffness: JSON
+  purlinSpan: JSON
+  purlinLoad: JSON
+  purlinLateralRatio: JSON
 }
 type En1993PlatedPanelDelta {
   removed: [En1993PlatedPanelRemoval!]!
@@ -449,54 +455,57 @@ type En1993PlatedPanelModification {
   patch: En1993PlatedPanelPatch!
 }
 type En1993PlatedPanelPatch {
-  a: Float
-  b: Float
-  thickness: Float
-  fy: Float
-  kSigma: Float
-  actions: [ForceAction!]
-  stiffenerInertia: Float
-  stiffenerArea: Float
-  stiffenerEccentricity: Float
-  stiffenerAlpha: Float
-  compressionStress: Float
-  halfWidth: Float
-  equivalentSpan: Float
-  hogging: Int
+  a: JSON
+  b: JSON
+  thickness: JSON
+  fy: JSON
+  kSigma: JSON
+  actions: JSON
+  stiffenerInertia: JSON
+  stiffenerArea: JSON
+  stiffenerEccentricity: JSON
+  stiffenerAlpha: JSON
+  compressionStress: JSON
+  halfWidth: JSON
+  equivalentSpan: JSON
+  hogging: JSON
   patchType: JSON
-  patchForce: Float
-  patchLength: Float
-  patchOffset: Float
-  flangeThickness: Float
-  flangeWidth: Float
-  flangeFy: Float
-  longitudinalOffset: Float
-  longitudinalInertia: Float
-  patchMoment: Float
-  patchMomentResistance: Float
-  bendingMoment: Float
-  plasticMoment: Float
-  flangeMoment: Float
-  shearForce: Float
-  transverseStiffenerInertia: Float
-  flangeInducedK: Float
-  flangeArea: Float
-  stressX: Float
-  stressZ: Float
-  shearStress: Float
-  alphaCr: Float
-  corrugationFlat: Float
-  corrugationProjection: Float
-  corrugationDepth: Float
-  webHeight: Float
-  stiffenerSpacing: Float
-  stiffenerShape: StiffenerShape
-  stiffenerDepth: Float
-  stiffenerThickness: Float
-  stiffenerFlangeWidth: Float
-  stiffenerFlangeThickness: Float
-  lateralPressure: Float
-  lateralPressureCoefficient: Float
+  patchForce: JSON
+  patchLength: JSON
+  patchOffset: JSON
+  flangeThickness: JSON
+  flangeWidth: JSON
+  flangeFy: JSON
+  longitudinalOffset: JSON
+  longitudinalInertia: JSON
+  patchMoment: JSON
+  patchMomentResistance: JSON
+  bendingMoment: JSON
+  plasticMoment: JSON
+  flangeMoment: JSON
+  shearForce: JSON
+  transverseStiffenerInertia: JSON
+  flangeInducedK: JSON
+  flangeArea: JSON
+  stressX: JSON
+  stressZ: JSON
+  shearStress: JSON
+  alphaCr: JSON
+  corrugationFlat: JSON
+  corrugationProjection: JSON
+  corrugationDepth: JSON
+  webHeight: JSON
+  stiffenerSpacing: JSON
+  stiffenerShape: JSON
+  stiffenerDepth: JSON
+  stiffenerThickness: JSON
+  stiffenerFlangeWidth: JSON
+  stiffenerFlangeThickness: JSON
+  lateralPressure: JSON
+  lateralPressureCoefficient: JSON
+  steelGrade: JSON
+  steelSubgrade: JSON
+  designTemperature: JSON
 }
 type En1993SiloShellDelta {
   removed: [En1993SiloShellRemoval!]!
@@ -522,33 +531,33 @@ type En1993SiloShellModification {
   patch: En1993SiloShellPatch!
 }
 type En1993SiloShellPatch {
-  thickness: Float
-  radius: Float
-  depth: Float
-  k: Float
-  gamma: Float
-  fy: Float
-  length: Float
+  thickness: JSON
+  radius: JSON
+  depth: JSON
+  k: JSON
+  gamma: JSON
+  fy: JSON
+  length: JSON
   fabricationClass: JSON
-  meridionalStress: Float
-  hoopStress: Float
-  shellShearStress: Float
-  boundaryFactorAxial: Float
-  boundaryFactorHoop: Float
-  boundaryFactorShear: Float
-  wallFriction: Float
-  planArea: Float
-  planPerimeter: Float
-  liquidDensity: Float
-  liquidHeight: Float
-  courseElevation: Float
-  internalPressure: Float
-  externalPressure: Float
-  temperatureChange: Float
-  ringSpacing: Float
-  ringArea: Float
-  ringInertia: Float
-  ringOffset: Float
+  meridionalStress: JSON
+  hoopStress: JSON
+  shellShearStress: JSON
+  boundaryFactorAxial: JSON
+  boundaryFactorHoop: JSON
+  boundaryFactorShear: JSON
+  wallFriction: JSON
+  planArea: JSON
+  planPerimeter: JSON
+  liquidDensity: JSON
+  liquidHeight: JSON
+  courseElevation: JSON
+  internalPressure: JSON
+  externalPressure: JSON
+  temperatureChange: JSON
+  ringSpacing: JSON
+  ringArea: JSON
+  ringInertia: JSON
+  ringOffset: JSON
 }
 type En1993TensionComponentDelta {
   removed: [En1993TensionComponentRemoval!]!
@@ -574,27 +583,27 @@ type En1993TensionComponentModification {
   patch: En1993TensionComponentPatch!
 }
 type En1993TensionComponentPatch {
-  fUk: Float
-  fK: Float
-  actions: [ForceAction!]
-  partialFactor: Float
-  cableLength: Float
-  cableWeight: Float
-  cableHorizontalForce: Float
-  cableModulus: Float
-  cableStress: Float
-  cableUnitWeight: Float
-  threadFactor: Float
-  rodStressArea: Float
-  rodFu: Float
-  pinDiameter: Float
-  pinPlateThickness: Float
-  pinGap: Float
-  pinOuterThickness: Float
-  pinInnerThickness: Float
-  pinFup: Float
-  pinFyp: Float
-  pinPlateFy: Float
+  fUk: JSON
+  fK: JSON
+  actions: JSON
+  partialFactor: JSON
+  cableLength: JSON
+  cableWeight: JSON
+  cableHorizontalForce: JSON
+  cableModulus: JSON
+  cableStress: JSON
+  cableUnitWeight: JSON
+  threadFactor: JSON
+  rodStressArea: JSON
+  rodFu: JSON
+  pinDiameter: JSON
+  pinPlateThickness: JSON
+  pinGap: JSON
+  pinOuterThickness: JSON
+  pinInnerThickness: JSON
+  pinFup: JSON
+  pinFyp: JSON
+  pinPlateFy: JSON
 }
 type En1993BridgeFatigueDelta {
   removed: [En1993BridgeFatigueRemoval!]!
@@ -620,30 +629,31 @@ type En1993BridgeFatigueModification {
   patch: En1993BridgeFatiguePatch!
 }
 type En1993BridgeFatiguePatch {
-  memberId: String
-  lambda: Float
-  phi2: Float
-  deltaSigmaP: Float
-  category: Int
+  memberId: JSON
+  lambda: JSON
+  phi2: JSON
+  deltaSigmaP: JSON
+  category: JSON
   method: JSON
-  heavyVehicleWeight: Float
-  referenceWeight: Float
-  observedTraffic: Float
-  designLife: Float
-  secondLaneTraffic: Float
-  secondLaneWeight: Float
+  heavyVehicleWeight: JSON
+  referenceWeight: JSON
+  observedTraffic: JSON
+  designLife: JSON
+  secondLaneTraffic: JSON
+  secondLaneWeight: JSON
   lambda1: Float
-  lambdaMax: Float
-  detailId: String
-  plateThickness: Float
-  deckThickness: Float
-  troughSpacing: Float
-  troughWidth: Float
-  troughThickness: Float
-  crossbeamSpacing: Float
-  surfacingThickness: Float
-  wheelLoad: Float
-  wheelPatch: Float
+  lambdaMax: JSON
+  detailId: JSON
+  plateThickness: JSON
+  deckThickness: JSON
+  troughSpacing: JSON
+  troughWidth: JSON
+  troughThickness: JSON
+  crossbeamSpacing: JSON
+  surfacingThickness: JSON
+  wheelLoad: JSON
+  wheelPatch: JSON
+  consequence: JSON
 }
 type En1993TowerLegDelta {
   removed: [En1993TowerLegRemoval!]!
@@ -669,31 +679,31 @@ type En1993TowerLegModification {
   patch: En1993TowerLegPatch!
 }
 type En1993TowerLegPatch {
-  memberId: String
-  forceCoefficient: Float
-  dynamicFactor: Float
-  actions: [ForceAction!]
+  memberId: JSON
+  forceCoefficient: JSON
+  dynamicFactor: JSON
+  actions: JSON
   latticeKind: JSON
-  slenderness: Float
-  diameter: Float
-  height: Float
-  bendingStiffness: Float
-  massPerLength: Float
-  strouhal: Float
-  logDecrement: Float
-  airDensity: Float
-  meanWindSpeed: Float
-  crossingRate: Float
-  designLife: Float
-  kFactor: Float
-  kwFactor: Float
-  lateralForceCoefficient: Float
-  permittedAmplitudeRatio: Float
-  ringMode: Float
-  shellThickness: Float
-  guyArea: Float
-  guyAngle: Float
-  guyLength: Float
+  slenderness: JSON
+  diameter: JSON
+  height: JSON
+  bendingStiffness: JSON
+  massPerLength: JSON
+  strouhal: JSON
+  logDecrement: JSON
+  airDensity: JSON
+  meanWindSpeed: JSON
+  crossingRate: JSON
+  designLife: JSON
+  kFactor: JSON
+  kwFactor: JSON
+  lateralForceCoefficient: JSON
+  permittedAmplitudeRatio: JSON
+  ringMode: JSON
+  shellThickness: JSON
+  guyArea: JSON
+  guyAngle: JSON
+  guyLength: JSON
 }
 type En1993PileDelta {
   removed: [En1993PileRemoval!]!
@@ -719,22 +729,22 @@ type En1993PileModification {
   patch: En1993PilePatch!
 }
 type En1993PilePatch {
-  sectionId: String
-  materialId: String
-  drivingStress: Float
-  embeddedLength: Float
-  shaftPerimeter: Float
-  actions: [ForceAction!]
+  sectionId: JSON
+  materialId: JSON
+  drivingStress: JSON
+  embeddedLength: JSON
+  shaftPerimeter: JSON
+  actions: JSON
   environment: JSON
-  designLife: Float
-  wallThickness: Float
-  interlockBendingFactor: Float
-  interlockStiffnessFactor: Float
-  sectionModulus: Float
-  shearArea: Float
-  designMoment: Float
-  designShear: Float
-  interlockShear: Float
+  designLife: JSON
+  wallThickness: JSON
+  interlockBendingFactor: JSON
+  interlockStiffnessFactor: JSON
+  sectionModulus: JSON
+  shearArea: JSON
+  designMoment: JSON
+  designShear: JSON
+  interlockShear: JSON
 }
 type En1993CraneRunwayDelta {
   removed: [En1993CraneRunwayRemoval!]!
@@ -760,30 +770,30 @@ type En1993CraneRunwayModification {
   patch: En1993CraneRunwayPatch!
 }
 type En1993CraneRunwayPatch {
-  memberId: String
-  wheelContactLength: Float
-  dispersion: Float
-  webThickness: Float
-  fy: Float
-  phi: Float
-  actions: [ForceAction!]
-  maxWheelLoad: Float
-  loadFactor: Float
-  railInertia: Float
-  railFixed: Int
-  flangeEffectiveWidth: Float
-  flangeThickness: Float
-  wheelEccentricity: Float
-  torsionConstant: Float
-  longitudinalStress: Float
-  railRadius: Float
-  railContactWidth: Float
-  craneNu: Float
-  craneKq: Float
-  damageExponent: Float
-  stressRange: Float
-  detailCategoryStress: Float
-  fatiguePhi: Float
+  memberId: JSON
+  wheelContactLength: JSON
+  dispersion: JSON
+  webThickness: JSON
+  fy: JSON
+  phi: JSON
+  actions: JSON
+  maxWheelLoad: JSON
+  loadFactor: JSON
+  railInertia: JSON
+  railFixed: JSON
+  flangeEffectiveWidth: JSON
+  flangeThickness: JSON
+  wheelEccentricity: JSON
+  torsionConstant: JSON
+  longitudinalStress: JSON
+  railRadius: JSON
+  railContactWidth: JSON
+  craneNu: JSON
+  craneKq: JSON
+  damageExponent: JSON
+  stressRange: JSON
+  detailCategoryStress: JSON
+  fatiguePhi: JSON
 }
 type En1993StoreyDelta {
   removed: [En1993StoreyRemoval!]!
@@ -809,18 +819,18 @@ type En1993StoreyModification {
   patch: En1993StoreyPatch!
 }
 type En1993StoreyPatch {
-  memberId: String
-  label: String
-  height: Float
-  verticalLoad: Float
-  horizontalLoad: Float
-  drift: Float
-  columns: Int
-  plasticAnalysis: Int
-  buildingHeight: Float
-  bracingLoad: Float
-  bracingLength: Float
-  bracingDeflection: Float
+  memberId: JSON
+  label: JSON
+  height: JSON
+  verticalLoad: JSON
+  horizontalLoad: JSON
+  drift: JSON
+  columns: JSON
+  plasticAnalysis: JSON
+  buildingHeight: JSON
+  bracingLoad: JSON
+  bracingLength: JSON
+  bracingDeflection: JSON
 }
 type En1993RestraintDelta {
   removed: [En1993RestraintRemoval!]!
@@ -846,20 +856,20 @@ type En1993RestraintModification {
   patch: En1993RestraintPatch!
 }
 type En1993RestraintPatch {
-  memberId: String
-  label: String
+  memberId: JSON
+  label: JSON
   startSupport: JSON
   endSupport: JSON
-  intermediatePosition: Float
-  torsionalSpring: Float
-  lateralSpringPosition: Float
-  lateralSpringStiffness: Float
-  loadHeight: Float
+  intermediatePosition: JSON
+  torsionalSpring: JSON
+  lateralSpringPosition: JSON
+  lateralSpringStiffness: JSON
+  loadHeight: JSON
   loadDistribution: JSON
-  designMoment: Float
-  designAxial: Float
-  generalMethod: Int
-  hingeToRestraint: Float
+  designMoment: JSON
+  designAxial: JSON
+  generalMethod: JSON
+  hingeToRestraint: JSON
 }
 type En1993BuiltUpMemberDelta {
   removed: [En1993BuiltUpMemberRemoval!]!
@@ -885,27 +895,27 @@ type En1993BuiltUpMemberModification {
   patch: En1993BuiltUpMemberPatch!
 }
 type En1993BuiltUpMemberPatch {
-  memberId: String
-  label: String
+  memberId: JSON
+  label: JSON
   kind: JSON
-  chordArea: Float
-  chordInertia: Float
-  chordDistance: Float
-  panelSpacing: Float
-  planes: Int
-  battenInertia: Float
-  diagonalArea: Float
-  diagonalLength: Float
-  designAxial: Float
-  designMoment: Float
-  backToBack: Int
-  minRadius: Float
-  chainSpacing: Float
+  chordArea: JSON
+  chordInertia: JSON
+  chordDistance: JSON
+  panelSpacing: JSON
+  planes: JSON
+  battenInertia: JSON
+  diagonalArea: JSON
+  diagonalLength: JSON
+  designAxial: JSON
+  designMoment: JSON
+  backToBack: JSON
+  minRadius: JSON
+  chainSpacing: JSON
   chordShape: JSON
-  chordDepth: Float
-  chordWidth: Float
-  chordFlangeThickness: Float
-  chordWebThickness: Float
+  chordDepth: JSON
+  chordWidth: JSON
+  chordFlangeThickness: JSON
+  chordWebThickness: JSON
 }
 type En1993WeldGroupDelta {
   removed: [En1993WeldGroupRemoval!]!
@@ -931,16 +941,16 @@ type En1993WeldGroupModification {
   patch: En1993WeldGroupPatch!
 }
 type En1993WeldGroupPatch {
-  memberId: String
-  label: String
+  memberId: JSON
+  label: JSON
   pattern: JSON
-  throat: Float
-  width: Float
-  depth: Float
-  shearForce: Float
-  eccentricity: Float
-  steelFu: Float
-  betaW: Float
+  throat: JSON
+  width: JSON
+  depth: JSON
+  shearForce: JSON
+  eccentricity: JSON
+  steelFu: JSON
+  betaW: JSON
 }
 type En1993ParametricSectionDelta {
   removed: [En1993ParametricSectionRemoval!]!
@@ -966,14 +976,14 @@ type En1993ParametricSectionModification {
   patch: En1993ParametricSectionPatch!
 }
 type En1993ParametricSectionPatch {
-  sectionId: String
-  label: String
+  sectionId: JSON
+  label: JSON
   shape: JSON
-  height: Float
-  width: Float
-  webThickness: Float
-  flangeThickness: Float
-  tolerance: Float
+  height: JSON
+  width: JSON
+  webThickness: JSON
+  flangeThickness: JSON
+  tolerance: JSON
 }
 type En1993HollowJointDelta {
   removed: [En1993HollowJointRemoval!]!
@@ -999,25 +1009,25 @@ type En1993HollowJointModification {
   patch: En1993HollowJointPatch!
 }
 type En1993HollowJointPatch {
-  memberId: String
-  label: String
-  chordWidth: Float
-  chordHeight: Float
-  chordThickness: Float
-  chordFy: Float
-  chordStress: Float
-  brace1Width: Float
-  brace1Height: Float
-  brace1Thickness: Float
-  brace1Angle: Float
-  brace1Force: Float
-  brace2Width: Float
-  brace2Height: Float
-  brace2Thickness: Float
-  brace2Angle: Float
-  brace2Force: Float
-  gap: Float
-  braceFy: Float
+  memberId: JSON
+  label: JSON
+  chordWidth: JSON
+  chordHeight: JSON
+  chordThickness: JSON
+  chordFy: JSON
+  chordStress: JSON
+  brace1Width: JSON
+  brace1Height: JSON
+  brace1Thickness: JSON
+  brace1Angle: JSON
+  brace1Force: JSON
+  brace2Width: JSON
+  brace2Height: JSON
+  brace2Thickness: JSON
+  brace2Angle: JSON
+  brace2Force: JSON
+  gap: JSON
+  braceFy: JSON
 }
 type En1993JointRowDelta {
   removed: [En1993JointRowRemoval!]!
@@ -1043,22 +1053,22 @@ type En1993JointRowModification {
   patch: En1993JointRowPatch!
 }
 type En1993JointRowPatch {
-  jointId: String
-  label: String
+  jointId: JSON
+  label: JSON
   rowType: JSON
-  lever: Float
-  boltToWeb: Float
-  edgeDistance: Float
-  extensionToFlange: Float
-  extensionEdge: Float
-  alphaFactor: Float
-  pitchToPrevious: Float
-  bolts: Int
-  boltDiameter: Float
-  boltStressArea: Float
-  gripLength: Float
-  boltClass: String
-  groupWithPrevious: Int
+  lever: JSON
+  boltToWeb: JSON
+  edgeDistance: JSON
+  extensionToFlange: JSON
+  extensionEdge: JSON
+  alphaFactor: JSON
+  pitchToPrevious: JSON
+  bolts: JSON
+  boltDiameter: JSON
+  boltStressArea: JSON
+  gripLength: JSON
+  boltClass: JSON
+  groupWithPrevious: JSON
 }
 type En1993FrameNodeDelta {
   removed: [En1993FrameNodeRemoval!]!
@@ -1084,12 +1094,12 @@ type En1993FrameNodeModification {
   patch: En1993FrameNodePatch!
 }
 type En1993FrameNodePatch {
-  label: String
-  x: Float
-  z: Float
+  label: JSON
+  x: JSON
+  z: JSON
   support: JSON
-  loadX: Float
-  loadZ: Float
+  loadX: JSON
+  loadZ: JSON
 }
 type En1993FrameBarDelta {
   removed: [En1993FrameBarRemoval!]!
@@ -1115,10 +1125,10 @@ type En1993FrameBarModification {
   patch: En1993FrameBarPatch!
 }
 type En1993FrameBarPatch {
-  memberId: String
-  label: String
-  startNodeId: String
-  endNodeId: String
+  memberId: JSON
+  label: JSON
+  startNodeId: JSON
+  endNodeId: JSON
   releaseStart: JSON
   releaseEnd: JSON
 }
@@ -1146,10 +1156,10 @@ type En1993PlacementModification {
   patch: En1993PlacementPatch!
 }
 type En1993PlacementPatch {
-  x: Float
-  y: Float
-  z: Float
-  yaw: Float
+  x: JSON
+  y: JSON
+  z: JSON
+  yaw: JSON
 }
 type En1993JointPlateDelta {
   removed: [En1993JointPlateRemoval!]!
@@ -1175,29 +1185,30 @@ type En1993JointPlateModification {
   patch: En1993JointPlatePatch!
 }
 type En1993JointPlatePatch {
-  jointId: String
-  label: String
-  role: String
-  plateHeight: Float
-  plateWidth: Float
-  plateThickness: Float
-  plateCount: Int
-  plateFy: Float
-  plateFu: Float
-  boltClass: String
-  boltDiameter: Float
-  holeDiameter: Float
-  boltRows: Int
-  boltsPerRow: Int
-  pitch: Float
-  gauge: Float
-  endDistance: Float
-  edgeDistance: Float
-  shearPlanes: Int
-  eccentricity: Float
-  weldThroat: Float
-  weldFu: Float
-  weldBetaW: Float
+  jointId: JSON
+  label: JSON
+  role: JSON
+  plateHeight: JSON
+  plateWidth: JSON
+  plateThickness: JSON
+  plateCount: JSON
+  plateFy: JSON
+  plateFu: JSON
+  boltClass: JSON
+  boltDiameter: JSON
+  holeDiameter: JSON
+  boltRows: JSON
+  boltsPerRow: JSON
+  pitch: JSON
+  gauge: JSON
+  endDistance: JSON
+  edgeDistance: JSON
+  shearPlanes: JSON
+  eccentricity: JSON
+  weldThroat: JSON
+  weldFu: JSON
+  weldBetaW: JSON
+  groupMethod: JSON
 }
 type En1993FoundationBlockDelta {
   removed: [En1993FoundationBlockRemoval!]!
@@ -1223,20 +1234,20 @@ type En1993FoundationBlockModification {
   patch: En1993FoundationBlockPatch!
 }
 type En1993FoundationBlockPatch {
-  jointId: String
-  label: String
-  blockLength: Float
-  blockWidth: Float
-  blockDepth: Float
-  concreteFck: Float
-  groutFck: Float
-  groutThickness: Float
-  anchorCount: Int
-  anchorClass: String
-  anchorDiameter: Float
-  anchorStressArea: Float
-  anchorEmbedment: Float
-  anchorEdgeDistance: Float
+  jointId: JSON
+  label: JSON
+  blockLength: JSON
+  blockWidth: JSON
+  blockDepth: JSON
+  concreteFck: JSON
+  groutFck: JSON
+  groutThickness: JSON
+  anchorCount: JSON
+  anchorClass: JSON
+  anchorDiameter: JSON
+  anchorStressArea: JSON
+  anchorEmbedment: JSON
+  anchorEdgeDistance: JSON
 }
 type En1993FrameActionDelta {
   removed: [En1993FrameActionRemoval!]!
@@ -1262,14 +1273,14 @@ type En1993FrameActionModification {
   patch: En1993FrameActionPatch!
 }
 type En1993FrameActionPatch {
-  loadCaseId: String
-  targetId: String
-  kind: String
-  fx: String
-  fz: String
-  my: String
-  startRatio: String
-  endRatio: String
+  loadCaseId: JSON
+  targetId: JSON
+  kind: JSON
+  fx: JSON
+  fz: JSON
+  my: JSON
+  startRatio: JSON
+  endRatio: JSON
 }
 type En1993FrameMemberBasisDelta {
   removed: [En1993FrameMemberBasisRemoval!]!
@@ -1295,6 +1306,176 @@ type En1993FrameMemberBasisModification {
   patch: En1993FrameMemberBasisPatch!
 }
 type En1993FrameMemberBasisPatch {
-  memberId: String
-  basis: String
+  memberId: JSON
+  basis: JSON
+}
+type En1993FatigueStressDelta {
+  removed: [En1993FatigueStressRemoval!]!
+  inserted: [En1993FatigueStressInsertion!]!
+  moved: [En1993FatigueStressRelocation!]!
+  modified: [En1993FatigueStressModification!]!
+}
+type En1993FatigueStressRemoval {
+  id: String!
+  index: Int!
+}
+type En1993FatigueStressInsertion {
+  index: Int!
+  row: FatigueStress!
+}
+type En1993FatigueStressRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993FatigueStressModification {
+  id: String!
+  patch: En1993FatigueStressPatch!
+}
+type En1993FatigueStressPatch {
+  detailId: JSON
+  maxCaseId: JSON
+  minCaseId: JSON
+  fibreZ: JSON
+  fibreY: JSON
+  relief: JSON
+  concentration: JSON
+  thickness: JSON
+  cycles: JSON
+}
+type En1993BucklingLengthDelta {
+  removed: [En1993BucklingLengthRemoval!]!
+  inserted: [En1993BucklingLengthInsertion!]!
+  moved: [En1993BucklingLengthRelocation!]!
+  modified: [En1993BucklingLengthModification!]!
+}
+type En1993BucklingLengthRemoval {
+  id: String!
+  index: Int!
+}
+type En1993BucklingLengthInsertion {
+  index: Int!
+  row: BucklingLength!
+}
+type En1993BucklingLengthRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993BucklingLengthModification {
+  id: String!
+  patch: En1993BucklingLengthPatch!
+}
+type En1993BucklingLengthPatch {
+  memberId: JSON
+  plane: JSON
+  sway: JSON
+  restraintA: JSON
+  columnStiffnessA: JSON
+  beamStiffnessA: JSON
+  restraintB: JSON
+  columnStiffnessB: JSON
+  beamStiffnessB: JSON
+}
+type En1993FormingGainDelta {
+  removed: [En1993FormingGainRemoval!]!
+  inserted: [En1993FormingGainInsertion!]!
+  moved: [En1993FormingGainRelocation!]!
+  modified: [En1993FormingGainModification!]!
+}
+type En1993FormingGainRemoval {
+  id: String!
+  index: Int!
+}
+type En1993FormingGainInsertion {
+  index: Int!
+  row: FormingGain!
+}
+type En1993FormingGainRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993FormingGainModification {
+  id: String!
+  patch: En1993FormingGainPatch!
+}
+type En1993FormingGainPatch {
+  memberId: JSON
+  forming: JSON
+  ultimateStrength: JSON
+  grossArea: JSON
+  bends: JSON
+  usedYield: JSON
+}
+type En1993MaterialDuctilityDelta {
+  removed: [En1993MaterialDuctilityRemoval!]!
+  inserted: [En1993MaterialDuctilityInsertion!]!
+  moved: [En1993MaterialDuctilityRelocation!]!
+  modified: [En1993MaterialDuctilityModification!]!
+}
+type En1993MaterialDuctilityRemoval {
+  id: String!
+  index: Int!
+}
+type En1993MaterialDuctilityInsertion {
+  index: Int!
+  row: MaterialDuctility!
+}
+type En1993MaterialDuctilityRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993MaterialDuctilityModification {
+  id: String!
+  patch: En1993MaterialDuctilityPatch!
+}
+type En1993MaterialDuctilityPatch {
+  materialId: JSON
+  elongation: JSON
+  ultimateStrain: JSON
+}
+type En1993FastenedJointDelta {
+  removed: [En1993FastenedJointRemoval!]!
+  inserted: [En1993FastenedJointInsertion!]!
+  moved: [En1993FastenedJointRelocation!]!
+  modified: [En1993FastenedJointModification!]!
+}
+type En1993FastenedJointRemoval {
+  id: String!
+  index: Int!
+}
+type En1993FastenedJointInsertion {
+  index: Int!
+  row: FastenedJoint!
+}
+type En1993FastenedJointRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993FastenedJointModification {
+  id: String!
+  patch: En1993FastenedJointPatch!
+}
+type En1993FastenedJointPatch {
+  memberId: JSON
+  kind: JSON
+  diameter: JSON
+  washerDiameter: JSON
+  count: JSON
+  perRow: JSON
+  headThickness: JSON
+  baseThickness: JSON
+  headStrength: JSON
+  baseStrength: JSON
+  endDistance: JSON
+  edgeDistance: JSON
+  pitch: JSON
+  gauge: JSON
+  sheetWidth: JSON
+  shearForce: JSON
+  tensionForce: JSON
+  shearResistance: JSON
 }
