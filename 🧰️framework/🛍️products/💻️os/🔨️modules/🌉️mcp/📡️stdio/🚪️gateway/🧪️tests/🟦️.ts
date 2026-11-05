@@ -1,3 +1,6 @@
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
+import policy from "../🧬️schema/🔣️.json";
 import { expect, test } from "bun:test";
 import { InitializeResultSchema, JSONRPCErrorSchema, ListToolsResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import { PassThrough } from "node:stream";
@@ -96,4 +99,34 @@ test("warm gateway ends cleanly when the client leaves during staging", async ()
   input.end();
   expect(await served).toBe(0);
   expect(aborted).toBe(true);
+});
+
+test("warm gateway never starts a peer after client EOF and late staging settlement", async () => {
+ const input = new PassThrough();
+ let release!: (status: number) => void, starts = 0;
+ const served = serveWarmMcpGateway({stage: () => new Promise<number>(resolve => {release = resolve;}), command: () => {starts++; return process.execPath;}, args: ["-e", "process.exit(0)"], cwd: process.cwd(), env: process.env, input, output: new PassThrough()});
+ input.write(JSON.stringify(corpus.replies[0]!.request) + "\n");
+ input.write(JSON.stringify({jsonrpc:"2.0",method:"notifications/initialized"}) + "\n");
+ input.end();
+ expect(await served).toBe(0);
+ release(0);
+ await new Promise(resolve => setTimeout(resolve, 20));
+ expect(starts).toBe(0);
+});
+
+test("native peer shutdown is bounded when EOF and graceful termination are ignored", async () => {
+ const input=new PassThrough(),output=new PassThrough();let announced!:()=>void;const ready=new Promise<void>(resolve=>{announced=resolve;});
+ let pid:number|undefined;output.on("data",chunk=>{for(const line of String(chunk).trim().split("\n")){const frame=JSON.parse(line);if(frame.method==="peer/ready"){pid=frame.params.pid;announced();}}});
+ const peer=`process.on("SIGTERM",()=>{});require("node:readline").createInterface({input:process.stdin}).on("line",line=>{const m=JSON.parse(line);if(m.method==="initialize")console.log(JSON.stringify({jsonrpc:"2.0",id:m.id,result:{protocolVersion:m.params.protocolVersion,capabilities:{},serverInfo:{name:"peer",version:"1"}}}));if(m.method==="notifications/initialized")console.log(JSON.stringify({jsonrpc:"2.0",method:"peer/ready",params:{pid:process.pid}}));});setInterval(()=>{},1000);`;
+ const served=serveWarmMcpGateway({stage:async()=>0,command:()=>process.execPath,args:["-e",peer],cwd:process.cwd(),env:process.env,input,output});
+ input.write(JSON.stringify(corpus.replies[0]!.request)+"\n");input.write(JSON.stringify({jsonrpc:"2.0",method:"notifications/initialized"})+"\n");
+ await ready;const started=performance.now();input.end();let timer:ReturnType<typeof setTimeout>|undefined;try{await Promise.race([served,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error("Bounded peer shutdown required")),1500);})]);}finally{clearTimeout(timer);if(pid)try{process.kill(pid,"SIGKILL");}catch{}}expect(performance.now()-started).toBeLessThan(corpus.shutdown.graceMilliseconds+corpus.shutdown.terminationMilliseconds+corpus.shutdown.killMilliseconds+500);
+},3000);
+
+test("neutral shutdown timing agrees with authored schema and SQLite budget", () => {
+ expect(new Ajv({strict:false}).validate(policy.definitions.Shutdown,corpus.shutdown)).toBe(true);const db=new Database(":memory:");try{expect(db.query("select ?1+?2+?3 maximum").get(corpus.shutdown.graceMilliseconds,corpus.shutdown.terminationMilliseconds,corpus.shutdown.killMilliseconds)).toEqual({maximum:750});}finally{db.close();}
+});
+
+test("modern discover-first preserves the exact native answer and SDK schema", () => {
+ const journey=corpus.journeys.find(row=>row.name==="modern-discover-first-is-native-and-stateless")!;const seen=replay(journey.steps as Step[]),answer=seen.find(row=>row.toClient?.id===10)?.toClient as {result:unknown}|undefined;expect(answer).toBeDefined();expect(InitializeResultSchema.parse(answer!.result)).toEqual(InitializeResultSchema.parse((journey.transcript as Transcript[]).find(row=>row.toClient?.id===10)?.toClient?.result));expect(seen.some(row=>row.toServer?.method==="initialize"||row.toServer?.method==="notifications/initialized")).toBe(false);
 });

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "payloadBytes": 70000,
+  "maximumBytes": 70128,
+  "ordinaryBytes": 65536,
+  "count": 7,
+  "invalidMaximumKinds": [
+    "zero",
+    "usizeMaximum"
+  ]
+}

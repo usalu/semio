@@ -1,3 +1,4 @@
+import policy from "./🧬️schema/🔣️.json" with {type:"json"};
 import { type ChildProcess, spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import type { Readable, Writable } from "node:stream";
@@ -37,8 +38,10 @@ type WarmState = "warming" | "handshaking" | "ready" | "failed";
 export class WarmMcpGateway {
   private state: WarmState = "warming";
   private staged = false;
+  private closed = false;
   private initialize: WarmMcpFrame | null = null;
   private initialized = false;
+  private modern = false;
   private server: WarmMcpServerPort | null = null;
   private failure = "";
   private readonly queue: WarmMcpFrame[] = [];
@@ -54,17 +57,20 @@ export class WarmMcpGateway {
   }
 
   fromClient(frame: WarmMcpFrame): void {
+    if (this.closed) return;
     if (this.state === "ready") return this.server!.send(frame);
     if (this.state === "failed") return this.refuse(frame);
+    if (frame.method === "server/discover" && this.initialize === null) this.modern = true;
     if (frame.method === "initialize" && this.initialize === null) this.initialize = frame;
     if (frame.method === "notifications/initialized") this.initialized = true;
-    const reply = warmMcpReply(frame);
+    const reply = this.modern ? null : warmMcpReply(frame);
     if (reply !== null) this.ports.toClient(reply);
     else if (frame.method !== "notifications/initialized") this.queue.push(frame);
     this.begin();
   }
 
   stagingFinished(status: number): void {
+    if (this.closed) return;
     if (status !== 0) return this.fail(`staging exited with status ${status}`);
     this.staged = true;
     this.begin();
@@ -85,14 +91,21 @@ export class WarmMcpGateway {
   }
 
   clientClosed(): void {
+    this.closed = true;
+    this.queue.length = 0;
     this.server?.stop();
   }
 
   private begin(): void {
-    if (this.state !== "warming" || !this.staged || this.initialize === null) return;
-    this.state = "handshaking";
-    this.server = this.ports.startServer();
-    this.server.send({ jsonrpc: "2.0", id: WARM_MCP_HANDSHAKE_ID, method: "initialize", params: this.initialize.params });
+    if (this.state !== "warming" || this.closed || !this.staged || !this.modern && (!this.initialized || this.initialize === null)) return;
+    this.state = this.modern ? "ready" : "handshaking";
+    try {
+      this.server = this.ports.startServer();
+      if (this.modern) for (const queued of this.queue.splice(0)) this.server.send(queued);
+      else this.server.send({ jsonrpc: "2.0", id: WARM_MCP_HANDSHAKE_ID, method: "initialize", params: this.initialize!.params });
+    } catch (error) {
+      this.fail(error instanceof Error ? error.message : String(error));
+    }
   }
 
   private fail(reason: string): void {
@@ -103,13 +116,13 @@ export class WarmMcpGateway {
   }
 
   private refuse(frame: WarmMcpFrame): void {
-    const reply = warmMcpReply(frame);
+    const reply = this.modern ? null : warmMcpReply(frame);
     if (reply !== null) return this.ports.toClient(reply);
     if (frame.method !== undefined && frame.id !== undefined && frame.id !== null) this.ports.toClient({ jsonrpc: "2.0", id: frame.id, error: { code: -32603, message: `semio-os-mcp is unavailable: ${this.failure}` } });
   }
 }
 
-export type WarmMcpLaunch = Readonly<{ stage: (progress: (line: string) => void, signal: AbortSignal) => Promise<number>; command: () => string; args: readonly string[]; cwd: string; env: NodeJS.ProcessEnv; input: Readable; output: Writable }>;
+export type WarmMcpLaunch = Readonly<{ stage: (progress: (line: string) => void, signal: AbortSignal) => Promise<number>; command: () => string; args: readonly string[]; cwd: string; env: NodeJS.ProcessEnv; input: Readable; output: Writable; onStop?: () => void }>;
 
 const parseFrame = (line: string): WarmMcpFrame | null => {
   try {
@@ -125,20 +138,40 @@ export function serveWarmMcpGateway(launch: WarmMcpLaunch): Promise<number> {
   return new Promise((resolve) => {
     const log = (line: string): void => void process.stderr.write(`${line}\n`);
     let child: ChildProcess | null = null;
-    let finished = false;
+    let finished = false, stopping = false;
+    let requestedExit: number | undefined;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const shutdown = policy.definitions.Shutdown.const;
     const staging = new AbortController();
     const signals = ["SIGINT", "SIGTERM", "SIGHUP"] as const;
     const interrupt = (): void => {
-      child?.kill();
-      finish(143);
+      stop(143);
     };
     for (const signal of signals) process.once(signal, interrupt);
     const finish = (code: number): void => {
       if (finished) return;
       finished = true;
       for (const signal of signals) process.off(signal, interrupt);
+      for (const timer of timers) clearTimeout(timer);
       staging.abort();
+      launch.onStop?.();
       resolve(code);
+    };
+    const stop = (code: number): void => {
+      if (finished || stopping) return;
+      stopping = true;
+      requestedExit = code;
+      staging.abort();
+      launch.onStop?.();
+      gateway.clientClosed();
+      if (child === null) return finish(code);
+      timers.push(setTimeout(() => {
+        child?.kill("SIGTERM");
+        timers.push(setTimeout(() => {
+          child?.kill("SIGKILL");
+          timers.push(setTimeout(() => finish(1), shutdown.killMilliseconds));
+        }, shutdown.terminationMilliseconds));
+      }, shutdown.graceMilliseconds));
     };
     const gateway = new WarmMcpGateway({
       toClient: (frame) => void launch.output.write(`${JSON.stringify(frame)}\n`),
@@ -151,15 +184,16 @@ export function serveWarmMcpGateway(launch: WarmMcpLaunch): Promise<number> {
           if (frame === null) log(`[semio-os-mcp] non-protocol stdout line ignored: ${line.slice(0, 200)}`);
           else gateway.fromServer(frame);
         });
-        spawned.on("exit", (code) => {
+        spawned.on("close", (code) => {
           gateway.serverExited(code);
-          finish(code ?? 1);
+          finish(requestedExit ?? code ?? 1);
         });
         spawned.on("error", (error) => {
           gateway.serverExited(null);
           log(`[semio-os-mcp] ${error.message}`);
           finish(1);
         });
+        spawned.stdin!.on("error", error => { if (!stopping) { log(`[semio-os-mcp] ${error.message}`); stop(1); } });
         return { send: (frame) => void spawned.stdin!.write(`${JSON.stringify(frame)}\n`), stop: () => void spawned.stdin!.end() };
       },
     });
@@ -167,14 +201,12 @@ export function serveWarmMcpGateway(launch: WarmMcpLaunch): Promise<number> {
       const frame = parseFrame(line);
       if (frame !== null) gateway.fromClient(frame);
     }).on("close", () => {
-      gateway.clientClosed();
-      if (child === null) finish(0);
+      stop(0);
     });
     void launch.stage(log, staging.signal).then(
-      (status) => gateway.stagingFinished(status),
+      (status) => { if (!finished) gateway.stagingFinished(status); },
       (error: unknown) => {
-        log(`[semio-os-mcp] ${String(error)}`);
-        gateway.stagingFinished(1);
+        if (!staging.signal.aborted) { log(`[semio-os-mcp] ${String(error)}`); gateway.stagingFinished(1); }
       },
     );
   });

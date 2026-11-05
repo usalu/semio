@@ -252,7 +252,7 @@ fn installed_gis_descriptor_discovery_uses_the_registered_tool_without_granting_
     let catalog=std::sync::Arc::new(compile(&CatalogSource {descriptors:vec![descriptor],..Default::default()},semio_ui_locale::Locale::En,semio_ui_locale::Terminology::Native).unwrap());
     let output=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).expect("select generated output for owner discovery");
     let folder=output.join("owner-discovery");std::fs::create_dir_all(&folder).unwrap();
-    let workspace=std::sync::Arc::new(HeadlessWorkspace::open_folder(folder,"agent:test".into(),Vec::new(),catalog).unwrap());
+    let workspace=std::sync::Arc::new(HeadlessWorkspace::open_folder(folder,"agent:test".into(),Vec::new(),catalog, serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/🏛️host-driver-policy.json")).expect("explicit host funding policy"), serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).unwrap());
     let mut registry=InMemoryToolRegistry::new();register_inference_tools(&mut registry,Some(workspace));
     let result=registry.call(fixture["tool"].as_str().unwrap(),fixture["arguments"].clone()).unwrap();
     assert!(!result.is_error);assert_eq!(result.structured_content.unwrap(),fixture["expected"]);

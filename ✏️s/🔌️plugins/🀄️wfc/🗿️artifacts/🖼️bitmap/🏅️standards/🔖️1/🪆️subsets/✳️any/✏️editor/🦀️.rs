@@ -81,10 +81,6 @@ pub use command_and_action_bridge::*;
 mod retained_commands;
 pub use retained_commands::*;
 
-#[path = "📬️store-preparation/🦀️.rs"]
-mod store_preparation;
-pub use store_preparation::*;
-
 #[path = "📝️artifact-editor/🦀️.rs"]
 mod artifact_editor;
 pub use artifact_editor::*;
@@ -123,7 +119,8 @@ pub fn create_bitmap_editor() -> semio_plugin::AppDefinition {
             .default_value(&set_active_example::BITMAP_EXAMPLE_BOOT_ID)],
         )
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-        .action_with(ActionDefinition::new(pin_solution::PIN_SOLUTION_ACTION_ID, LocalizedLabel::native("Pin Solution", "Lösung anheften"), ActionKind::Mutation, "check"))
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new(pin_solution::PIN_SOLUTION_ACTION_ID, LocalizedLabel::native("Pin Solution", "Lösung anheften"), ActionKind::Mutation, "check") })
+        .action_destructive("pin-preview")
         .action_destructive(pin_solution::PIN_SOLUTION_ACTION_ID)
         .action_args(
             pin_solution::PIN_SOLUTION_ACTION_ID,
@@ -147,6 +144,7 @@ pub fn create_bitmap_editor() -> semio_plugin::AppDefinition {
         .action_describe("pin-pixel", LocalizedLabel::native("Fixes one output pixel at x, y to a palette colour before solving; the solve must keep it.", "Legt ein Ausgabepixel an x, y vor dem Lösen auf eine Palettenfarbe fest; der Löser muss sie beibehalten."))
         .action_describe("unpin-pixel", LocalizedLabel::native("Releases the pin on one output pixel at x, y so the solve chooses its colour again; refused when the pixel carries no pin.", "Löst die Anheftung eines Ausgabepixels an x, y, sodass der Löser dessen Farbe wieder selbst wählt; wird abgelehnt, wenn das Pixel nicht angeheftet ist."))
         .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole document (sample, palette, model, output size, seed and pins) with one of the plugin's bundled bitmap examples, by example id.", "Ersetzt das gesamte Dokument (Muster, Palette, Modell, Ausgabegröße, Startwert und Anheftungen) durch eines der mitgelieferten Bitmap-Beispiele, anhand der Beispiel-Id."))
+        .action_describe("pin-preview", LocalizedLabel::native("Pins the displayed finished preview as one document edit. Solve again after changing the document.", "Heftet die angezeigte fertige Vorschau als eine Dokumentänderung an. Nach Dokumentänderungen erneut lösen."))
         .action_describe("pin-solution", LocalizedLabel::native("Makes a finished solve durable by pinning every output pixel to the colour the solve chose, replacing any pin that disagrees; a contradiction is refused.", "Macht eine fertige Lösung dauerhaft, indem jedes Ausgabepixel auf die vom Löser gewählte Farbe angeheftet wird; abweichende Anheftungen werden ersetzt, ein Widerspruch wird abgelehnt."))
         .action_describe("paint-stroke", LocalizedLabel::native("Paints one brush stroke on the input sample: the cells at the given points, joined by straight lines of cells, take the given palette colour (else the input window's armed colour); cells outside the sample are skipped. The whole stroke is one undoable edit whose points and colour can be edited in history.", "Malt einen Pinselstrich auf das Eingabemuster: Die Zellen an den angegebenen Punkten, verbunden durch gerade Zellenlinien, erhalten die angegebene Palettenfarbe (sonst die gewählte Farbe des Eingabefensters); Zellen außerhalb des Musters werden übersprungen. Der ganze Strich ist ein rückgängig machbarer Schritt, dessen Punkte und Farbe im Verlauf bearbeitet werden können."))
         .build_definition()

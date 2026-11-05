@@ -7,7 +7,9 @@ import {Database} from "bun:sqlite";
 import {leaseDatabaseUnopenableBusyV1,leaseFileBusyV1,leaseFilePortsV1,leaseRemovalOptionsV1,leaseUnopenablePausesV1,settleLeaseFileV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import {testPythonV1} from "../../../🧪️testing/🧰️toolchain/🟦️.ts";
-import {receiveScriptProcessInvocation,createIssuedResourceControlV1} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {createIssuedResourceControlV1} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../🧪️testing/📥️invocation/🟦️.ts";
+declareBuildTestEnvelopeV1({owner:"test:leases",maximumElapsedMilliseconds:300000,capabilities:{artifacts:true}});
 
 /** 🚧️ The lease store on a Windows host: sharing violations of a removal, a rename or a database open are retried on the declared pauses and then kept for the next sweep, never thrown, while the same codes on POSIX stay real refusals. The Windows rules run on any host through the platform argument and the file ports; the retirement runs over REAL lease databases, and Python's own sqlite3 reads the kept database back. */
 const policy=schema.definitions.Policy.const,python=testPythonV1()??Bun.which("python3")??"python3",reader=join(import.meta.dir,"🐍️oracle","🐍️.py");
@@ -52,7 +54,7 @@ test.skipIf(process.platform==="win32")("a REAL permission refusal (read-only di
  }finally{chmodSync(directory,0o755);rmSync(directory,{recursive:true,force:true});}
 });
 
-test("retirement of REAL lease databases: a busy unlink is retried, a persistent one keeps the lease for the next sweep, POSIX rules still refuse",async()=>receiveScriptProcessInvocation(process.env,async original=>{
+test("retirement of REAL lease databases: a busy unlink is retried, a persistent one keeps the lease for the next sweep, POSIX rules still refuse",async()=>withBuildTestInvocationV1(async original=>{
  const api=await import("../../🟦️.ts"),control=createIssuedResourceControlV1(original,"test:lease-windows",60000),root=mkdtempSync(join(tmpdir(),"semio-lease-win-"));
  const create=async(name:string)=>{const directory=join(root,name);mkdirSync(directory);(await api.acquireResourceLease({directory,resource:"windows:"+name,mode:"exclusive",signal:control.signal,control})).release();return{directory,path:api.resourceLeasePathV1(directory,"windows:"+name)};};
  const observe=(path:string)=>JSON.parse(spawnSync(python,["-I",reader,path],{encoding:"utf8"}).stdout) as {applicationId:number;tables:string[]};

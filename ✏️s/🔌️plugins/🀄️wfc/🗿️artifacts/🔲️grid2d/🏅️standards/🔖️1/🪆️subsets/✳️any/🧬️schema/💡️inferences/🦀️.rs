@@ -1,20 +1,4 @@
-//! 💡️ `s.wfc.grid2d` inferences — THE SOLVE ITSELF IS AN INFERENCE. `Grid2dSnapshot` only ever
-//! persists the PROBLEM (grid extent, cell size, periodicity, tiles, rules, pins, mask); the
-//! SOLUTION, the contradiction verdict and the pre-propagation entropy map are derived here, never
-//! mutation-authored state. The shared engine (`semio_s_plugin_wfc_engine`) supplies the tiled
-//! model builder, the four-neighbour `Stencil2d` relation declaration, the dense `Grid2dTopology`
-//! and the resumable `WfcJob` this facet drives.
-//!
-//! **Rule default.** A `(tileA, tileB, direction)` pair with no authored rule is FORBIDDEN: the
-//! rule set is the complete adjacency whitelist, so an empty rule set is unsatisfiable the moment
-//! the grid holds two adjacent unmasked cells. An authored row with `allowed = false` is a
-//! first-class refusal an editor can toggle without losing the row's id.
-//!
-//! Determinism: `solve_with_job` reads only `snapshot` fields (`seed` included) and drives the same
-//! resumable `WfcJob` interactive callers use; every step is watchdog-wrapped and explicitly
-//! bounded. No ambient randomness enters, so `DepHash` caching over `Grid2dSolve`/
-//! `Grid2dContradiction`/`Grid2dEntropy` is sound.
-
+//! 💡️ Resumable inference results for Grid2d. Completed jobs publish derived answers; pure fields expose cheap authored metrics.
 use crate::schema::snapshot::{Grid2dSnapshot, WfcDirection2d};
 
 //#region 📦️RetainedPayload
@@ -96,27 +80,15 @@ pub struct Grid2dInferenceCommit {
 //#endregion 🔖️Headless
 
 //#region 🔖️Solve
-/// 🏁 The solved assignment, or `Unsolved` for every non-solved outcome (contradiction, budget,
-/// cancellation) — see `Grid2dContradiction` for the dedicated satisfiability verdict.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase")]
-pub enum Grid2dSolveResult {
-    #[default]
-    Unsolved,
-    Solved {
-        assignments: Vec<(u32, u32, String)>,
-    },
-}
 
-pub struct Grid2dSolve;
+
+
 
 
 //#endregion 🔖️Solve
 
 //#region 🔖️Contradiction
-/// 🩺 The satisfiability verdict on its own, so a caller who only needs "is this grid solvable at
-/// all" never decodes a full assignment list to find out.
-pub struct Grid2dContradiction;
+
 
 
 //#endregion 🔖️Contradiction

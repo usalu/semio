@@ -43,7 +43,7 @@
         let mut scene_snapshot = empty_scene_snapshot();
         scene_snapshot.objects = ids
             .iter()
-            .map(|id| Puzzle3dObject {
+            .map(|id| Puzzle3dObject { anchor: Default::default(),
                 id: id.clone(),
                 label: None,
                 object_kind: Some("Object".into()),
@@ -156,7 +156,7 @@
     #[test]
     fn leftover_selected_vortex_uuid_falls_through_to_object_fields() {
         let (mut scene, mut interaction) = scene(&["seed-left-001".into()]);
-        scene.scene_snapshot.objects[0].vortices.push(Puzzle3dVortex {
+        scene.scene_snapshot.objects[0].vortices.push(Puzzle3dVortex { label: None,
             id: "5de35caa-0f02-43d7-ae74-aa730efd3386".into(),
             vortex_kind: None,
             position: [0.0, 0.0, 0.0],

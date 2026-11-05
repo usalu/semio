@@ -10,7 +10,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SUBSET = os.path.abspath(os.path.join(HERE, "..", ".."))
-CONTRACT = os.path.join(SUBSET, "🧫️fixtures", "🧩️mount-contract", "🔣️.json")
+CONTRACT = os.path.join(SUBSET, "🧪️tests", "🧫️fixtures", "🧩️mount-contract", "🔣️.json")
 MUTATIONS = os.path.join(SUBSET, "🧬️schema", "🧬️mutations")
 
 

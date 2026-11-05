@@ -3,5 +3,31 @@
   "tags": [
     "scope:framework",
     "language:rust"
-  ]
+  ],
+  "targets": {
+    "test-original-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source",
+            "runtimeSourceEntries": [
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🛬️receive/🟦️.ts"
+            ]
+          }
+        }
+      },
+      "options": {
+        "command": "repo 📜️script.ts test-original-source",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
 }

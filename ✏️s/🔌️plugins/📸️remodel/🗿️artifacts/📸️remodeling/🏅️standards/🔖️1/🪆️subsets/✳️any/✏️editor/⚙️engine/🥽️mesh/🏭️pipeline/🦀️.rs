@@ -100,7 +100,7 @@ pub struct MeshPipeline {
     pub(super) uvs: Option<Vec<[f32; 2]>>,
     pub(super) texture: Option<remodeling_image::ImageRgba8>,
     pub(super) views: Vec<TextureView>,
-    pub(super) result: Option<semio_framework::MeshData>,
+    pub(super) result: Option<semio_framework_mesh_engine::MeshData>,
     interchange: Option<InterchangePreparation>,
     pub(super) interactive: bool,
     cleaning: Option<BoundedCleanPreparation>,
@@ -229,7 +229,7 @@ impl MeshPipeline {
         self.report.as_ref()
     }
 
-    pub fn result(&self) -> Option<&semio_framework::MeshData> {
+    pub fn result(&self) -> Option<&semio_framework_mesh_engine::MeshData> {
         self.result.as_ref()
     }
 

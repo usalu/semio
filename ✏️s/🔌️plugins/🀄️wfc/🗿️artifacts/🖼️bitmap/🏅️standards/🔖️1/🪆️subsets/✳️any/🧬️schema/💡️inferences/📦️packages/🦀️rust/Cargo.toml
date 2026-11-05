@@ -15,7 +15,11 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
+semio-framework-value-factory = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 machine = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
@@ -50,6 +54,8 @@ semio-s-plugin-wfc-engine = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

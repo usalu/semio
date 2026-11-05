@@ -22,6 +22,13 @@ pub struct NativeEncodeProgress { pub completed:usize, pub total:usize, pub owne
 /// 🧵️ An opaque consuming receipt retains this operation's admission across callback lifetimes.
 #[derive(Debug)]
 pub struct NativeEncodeContinuation { receiving:bool, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, stage:u64 }
+/// 🧵️ Scoped Source encoding retains only cumulative admission and stage data between actual caller turns.
+#[derive(Debug)]
+pub struct NativeScopedEncodeContinuation{receipt:NativeEncodeContinuation}
+impl NativeScopedEncodeContinuation{
+ pub fn owned_bytes(&self)->usize{self.receipt.owned_bytes}
+ pub fn maximum_bytes(&self)->usize{self.receipt.maximum_bytes}
+}
 struct EncodeContinuationRetirement(Option<NativeEncodeContinuation>);
 impl crate::retirement::RetirementCursor for EncodeContinuationRetirement{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{Ok(crate::RetirementDemand{depth:usize::from(self.0.is_some()),..Default::default()})}
@@ -40,7 +47,7 @@ impl crate::retirement::RetireOwned for NativeEncodeContinuation{
 }
 
 /// 🧮️ One ownership ceiling persists through typed fields, physical output and its envelope.
-pub struct NativeEncodeControl<'a> { scope_maximum:Option<usize>, retirement:Option<&'a mut NativeEncodeRetirementRecipient>, receiving:bool, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, started:bool, stage:u64, depth:usize, callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool, allocation:allocation::Binding<'a> }
+pub struct NativeEncodeControl<'a> { scope_maximum:Option<usize>, retirement:Option<&'a mut NativeEncodeRetirementRecipient>, receiving:bool, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, started:bool, stage:u64, depth:usize, source_depth:Option<usize>,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool, allocation:allocation::Binding<'a>,scoped_allocation:Option<&'a mut dyn FnMut(NativeEncodeAllocation)->Result<(),ValueError>>,work:Option<&'a mut dyn FnMut(usize,usize)->Result<(),ValueError>> }
 
 struct StageScope<'owner,'control>{control:&'owner mut NativeEncodeControl<'control>,parent:(usize,usize,bool,u64)}
 impl Drop for StageScope<'_, '_>{fn drop(&mut self){if self.control.stage!=self.parent.3{self.control.completed=self.parent.0;self.control.total=self.parent.1;self.control.started=self.parent.2;self.control.stage=self.parent.3;}}}
@@ -48,7 +55,7 @@ impl Drop for StageScope<'_, '_>{fn drop(&mut self){if self.control.stage!=self.
 impl<'a> NativeEncodeControl<'a> {
 
     /// 🫴️ Loans exact remaining authority while every foreign allocation debits this original owner.
-    pub fn with_encoding_receiver<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(NativeEncodeProgress)->bool,&mut NativeEncodeAllocationPort<'_>)->Result<T,E>)->Result<T,E>{self.scoped_stage(|original|crate::scoped_encoding_receiver!(original,operation,NativeEncodeAllocation,NativeEncodeProgress))}
+    pub fn with_encoding_receiver<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(NativeEncodeProgress)->bool,&mut NativeEncodeAllocationPort<'_>)->Result<T,E>)->Result<T,E>{if self.work.is_some(){return Err(E::from(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"scoped Source encoding cannot detach its original work port")))}self.scoped_stage(|original|crate::scoped_encoding_receiver!(original,operation,NativeEncodeAllocation,NativeEncodeProgress))}
     /// 🔭️ Reborrows the complete caller owner and composes observers without resetting its receipt.
     pub fn scoped_observer<T,E>(&mut self,observer:&mut dyn FnMut(NativeEncodeProgress)->bool,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<T,E>)->Result<T,E>{observer::run(self,observer,operation)}
 
@@ -89,7 +96,7 @@ impl<'a> NativeEncodeControl<'a> {
 
     /// ⏸️ Transfers cumulative admission without retaining the current hop's callback.
     pub fn pause(self)->Result<NativeEncodeContinuation,ValueError>{
-        if matches!(self.allocation,allocation::Binding::Forwarded(_))||self.retirement.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"forwarded native encoding requires its original allocation continuation"));}
+        if !matches!(self.allocation,allocation::Binding::Local)||self.scoped_allocation.is_some()||self.work.is_some()||self.retirement.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"forwarded native encoding requires its original allocation continuation"));}
         self.continuation()
     }
     fn continuation(&self)->Result<NativeEncodeContinuation,ValueError>{
@@ -99,11 +106,24 @@ impl<'a> NativeEncodeControl<'a> {
     /// ▶️ Rebinds a moved operation receipt to the current hop's cancellation callback.
     pub fn resume(receipt:NativeEncodeContinuation,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool)->Result<Self,ValueError>{
         if receipt.owned_bytes>receipt.maximum_bytes||(receipt.total!=0&&receipt.completed>receipt.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native encode continuation has invalid cumulative accounting"));}
-        Ok(Self{scope_maximum:(!receipt.receiving).then_some(receipt.maximum_bytes),retirement:None,receiving:receipt.receiving,maximum_bytes:receipt.maximum_bytes,owned_bytes:receipt.owned_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback,allocation:allocation::Binding::Local})
+        Ok(Self{scope_maximum:(!receipt.receiving).then_some(receipt.maximum_bytes),retirement:None,receiving:receipt.receiving,maximum_bytes:receipt.maximum_bytes,owned_bytes:receipt.owned_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,source_depth:None,callback,allocation:allocation::Binding::Local,scoped_allocation:None,work:None})
     }
 
     /// 🚦️ Binds the exact caller ceiling and cancellation callback.
-    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool)->Self{Self{scope_maximum:Some(maximum_bytes),retirement:None,receiving:false,maximum_bytes,owned_bytes:0,completed:0,total:0,started:false,stage:0,depth:0,callback,allocation:allocation::Binding::Local}}
+    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool)->Self{Self{scope_maximum:Some(maximum_bytes),retirement:None,receiving:false,maximum_bytes,owned_bytes:0,completed:0,total:0,started:false,stage:0,depth:0,source_depth:None,callback,allocation:allocation::Binding::Local,scoped_allocation:None,work:None}}
+    /// 🎟️ A synchronous Source port admits actual reservations and each work span without observing stage counter deltas.
+    pub fn new_scoped_source(maximum_bytes:usize,maximum_depth:usize,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool,allocate:&'a mut dyn FnMut(NativeEncodeAllocation)->Result<(),ValueError>,work:&'a mut dyn FnMut(usize,usize)->Result<(),ValueError>)->Self{let mut control=Self::new_retained(callback);control.maximum_bytes=maximum_bytes;control.scoped_allocation=Some(allocate);control.work=Some(work);control.source_depth=Some(maximum_depth);control}
+    /// ⏸️ Ends the current actual port borrows while preserving the complete cumulative admission receipt.
+    pub fn pause_scoped_source(self)->Result<NativeScopedEncodeContinuation,ValueError>{
+        if !matches!(self.allocation,allocation::Binding::Local)||self.scoped_allocation.is_none()||self.work.is_none()||self.source_depth.is_none()||self.retirement.is_some()||!self.receiving||self.scope_maximum.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"scoped encoding continuation requires its complete original Source ports"))}
+        self.continuation().map(|receipt|NativeScopedEncodeContinuation{receipt})
+    }
+    /// ▶️ Reborrows fresh actual ports and capacity without resetting already admitted bytes or stage progress.
+    pub fn resume_scoped_source(receipt:NativeScopedEncodeContinuation,capacity:usize,depth:usize,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool,allocate:&'a mut dyn FnMut(NativeEncodeAllocation)->Result<(),ValueError>,work:&'a mut dyn FnMut(usize,usize)->Result<(),ValueError>)->Result<Self,(NativeScopedEncodeContinuation,ValueError)>{
+        if !receipt.receipt.receiving||receipt.receipt.owned_bytes>receipt.receipt.maximum_bytes||(receipt.receipt.total!=0&&receipt.receipt.completed>receipt.receipt.total){return Err((receipt,ValueError::literal(ValueRefusalKind::InvariantViolated,"scoped encoding continuation changed its original cumulative receipt")))}
+        let maximum=match crate::native_receiving::turn::maximum(receipt.receipt.owned_bytes,capacity,None){Ok(maximum)=>maximum,Err(error)=>return Err((receipt,error))};
+        let mut control=Self::resume(receipt.receipt,callback).expect("validated scoped Source encoding receipt");control.maximum_bytes=maximum;control.scope_maximum=None;control.source_depth=Some(depth);control.scoped_allocation=Some(allocate);control.work=Some(work);Ok(control)
+    }
     /// 📏️ Returns the complete allowance and cumulative admitted ownership.
     pub fn maximum_bytes(&self)->usize{self.maximum_bytes}
     /// 📊️ Returns storage admitted across every nested stage.
@@ -124,21 +144,21 @@ impl<'a> NativeEncodeControl<'a> {
     /// 🪆️ Restores the enclosing workload while retaining child allocation charges.
     pub fn scoped_stage<T,E>(&mut self,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{let parent=(self.completed,self.total,self.started,self.stage);let scope=StageScope{control:self,parent};operation(&mut *scope.control)}
     /// 🌲️ Bounds borrowed recursive projection independently of the input's depth.
-    pub fn scoped_depth<T,E:From<ValueError>>(&mut self,maximum:usize,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{if self.depth>=maximum{return Err(E::from(ValueError::literal(ValueRefusalKind::DepthLimit, "native encoding exceeds depth limit")))}self.depth+=1;let result=operation(self);self.depth-=1;result}
+    pub fn scoped_depth<T,E:From<ValueError>>(&mut self,maximum:usize,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{let maximum=self.source_depth.map_or(maximum,|source|source.min(maximum));if self.depth>=maximum{return Err(E::from(ValueError::literal(ValueRefusalKind::DepthLimit, "native encoding exceeds depth limit")))}self.depth+=1;let result=operation(self);self.depth-=1;result}
     /// 📍️ Publishes interior checkpoints at256-unit boundaries and stage completion.
-    pub fn advance(&mut self,units:usize)->Result<(),ValueError>{if !self.started{self.checkpoint()?;}let previous=self.completed;let next=self.completed.checked_add(units).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"native encoding work overflow"))?;if self.total!=0&&next>self.total{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native encoding exceeds declared workload"))}self.completed=next;if previous/256!=self.completed/256||(self.total!=0&&self.completed==self.total){self.checkpoint()?;}Ok(())}
+    pub fn advance(&mut self,units:usize)->Result<(),ValueError>{if !self.started{self.checkpoint()?;}let previous=self.completed;let next=self.completed.checked_add(units).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"native encoding work overflow"))?;if self.total!=0&&next>self.total{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native encoding exceeds declared workload"))}self.completed=next;if previous/256!=self.completed/256||(self.total!=0&&self.completed==self.total){self.checkpoint()?;}if let Some(work)=self.work.as_mut(){work(units,self.owned_bytes)?;}Ok(())}
     /// 🔢️ Advances one explicit owned field or collection item.
     pub fn step(&mut self)->Result<(),ValueError>{self.advance(1)}
     /// 📦️ Admits storage before an allocation, preserving all previous charges.
-    pub fn charge(&mut self,bytes:usize)->Result<(),ValueError>{let next=self.owned_bytes.checked_add(bytes).filter(|next|*next<=self.maximum_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native encoding ownership exceeds caller limit"))?;if !self.started||bytes>65536{self.checkpoint()?;}if let allocation::Binding::Forwarded(port)=&mut self.allocation{port(NativeEncodeAllocation{bytes,owned_bytes:self.owned_bytes,next_owned_bytes:next,maximum_bytes:self.maximum_bytes})?;}self.owned_bytes=next;Ok(())}
+    pub fn charge(&mut self,bytes:usize)->Result<(),ValueError>{let next=self.owned_bytes.checked_add(bytes).filter(|next|*next<=self.maximum_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native encoding ownership exceeds caller limit"))?;if !self.started||bytes>65536{self.checkpoint()?;}let request=NativeEncodeAllocation{bytes,owned_bytes:self.owned_bytes,next_owned_bytes:next,maximum_bytes:self.maximum_bytes};if let allocation::Binding::Forwarded(port)=&mut self.allocation{port(request)?;}if let Some(port)=self.scoped_allocation.as_mut(){port(request)?;}self.owned_bytes=next;Ok(())}
     /// 🗂️ Reserves a known typed frontier before creating its slots.
     pub fn allocate_vec<T>(&mut self,count:usize)->Result<Vec<T>,ValueError>{let bytes=count.checked_mul(size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native encoding collection size overflow"))?;self.charge(bytes)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native encoding collection allocation failed"))?;Ok(output)}
     /// 🔤️ Owns exact UTF-8 through cancellable64KiB spans.
-    pub fn copy_text(&mut self,text:&str)->Result<String,ValueError>{self.scoped_stage(|control|{control.begin_stage(text.len())?;control.charge(text.len())?;let mut output=String::new();output.try_reserve_exact(text.len()).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native encoding text allocation failed"))?;let mut position=0;while position<text.len(){let mut end=position.saturating_add(65536).min(text.len());while !text.is_char_boundary(end){end-=1;}output.push_str(&text[position..end]);control.advance(end-position)?;position=end;}Ok(output)})}
+    pub fn copy_text(&mut self,text:&str)->Result<String,ValueError>{if self.work.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Source byte encoding requires its explicit partial receiver"))}self.scoped_stage(|control|{control.begin_stage(text.len())?;control.charge(text.len())?;let mut output=String::new();output.try_reserve_exact(text.len()).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native encoding text allocation failed"))?;let mut position=0;while position<text.len(){let mut end=position.saturating_add(65536).min(text.len());while !text.is_char_boundary(end){end-=1;}output.push_str(&text[position..end]);control.advance(end-position)?;position=end;}Ok(output)})}
     /// 🧬️ Owns intrinsic octets through cancellable64KiB spans.
-    pub fn copy_bytes(&mut self,bytes:&[u8])->Result<Vec<u8>,ValueError>{self.scoped_stage(|control|{control.begin_stage(bytes.len())?;let mut output=control.allocate_vec(bytes.len())?;for chunk in bytes.chunks(65536){output.extend_from_slice(chunk);control.advance(chunk.len())?;}Ok(output)})}
+    pub fn copy_bytes(&mut self,bytes:&[u8])->Result<Vec<u8>,ValueError>{if self.work.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Source byte encoding requires its explicit partial receiver"))}self.scoped_stage(|control|{control.begin_stage(bytes.len())?;let mut output=control.allocate_vec(bytes.len())?;for chunk in bytes.chunks(65536){output.extend_from_slice(chunk);control.advance(chunk.len())?;}Ok(output)})}
     /// 📎️ Appends exact bytes with admission and cancellation inside materialization.
-    pub fn append_bytes(&mut self,output:&mut Vec<u8>,bytes:&[u8])->Result<(),ValueError>{self.scoped_stage(|control|{control.begin_stage(bytes.len())?;for chunk in bytes.chunks(65536){let capacity=output.len().checked_add(chunk.len()).filter(|capacity|*capacity<=isize::MAX as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native encoding output capacity overflow"))?;if capacity>output.capacity(){control.charge(capacity)?;output.try_reserve_exact(chunk.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native encoding output allocation failed"))?;}output.extend_from_slice(chunk);control.advance(chunk.len())?;}Ok(())})}
+    pub fn append_bytes(&mut self,output:&mut Vec<u8>,bytes:&[u8])->Result<(),ValueError>{self.scoped_stage(|control|{control.begin_stage(bytes.len())?;for chunk in bytes.chunks(65536){let capacity=output.len().checked_add(chunk.len()).filter(|capacity|*capacity<=isize::MAX as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native encoding output capacity overflow"))?;if capacity>output.capacity(){control.charge(capacity)?;output.try_reserve_exact(chunk.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native encoding output allocation failed"))?;}control.advance(chunk.len())?;output.extend_from_slice(chunk);}Ok(())})}
 }
 
 

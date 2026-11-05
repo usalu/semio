@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "target",
+    "rows",
+    "intervals",
+    "calls",
+    "publicInterval"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "target": {
+      "const": "child"
+    },
+    "rows": {
+      "const": [
+        {
+          "id": "root",
+          "started": 0,
+          "maximum": 1000,
+          "epochDeadline": 101000,
+          "waitedAtStart": 0
+        },
+        {
+          "id": "following",
+          "parent": "root",
+          "started": 50,
+          "maximum": 500,
+          "epochDeadline": 100550,
+          "waitedAtStart": 0
+        },
+        {
+          "id": "child",
+          "parent": "root",
+          "follows": "following",
+          "started": 250,
+          "maximum": 600,
+          "epochDeadline": 100850,
+          "waitedAtStart": 150
+        },
+        {
+          "id": "unreachable",
+          "started": 0,
+          "maximum": 1,
+          "epochDeadline": 100001,
+          "waitedAtStart": 0
+        }
+      ]
+    },
+    "intervals": {
+      "const": [
+        {
+          "start": 100,
+          "end": 400
+        },
+        {
+          "start": 250,
+          "end": 500
+        },
+        {
+          "start": 700,
+          "end": null
+        }
+      ]
+    },
+    "calls": {
+      "const": [
+        {
+          "id": "overlap-open",
+          "mono": 300,
+          "epoch": 100300,
+          "lastEnd": null,
+          "waited": 200,
+          "expected": 450
+        },
+        {
+          "id": "overlap-later",
+          "mono": 450,
+          "epoch": 100450,
+          "lastEnd": null,
+          "waited": 350,
+          "expected": 450
+        },
+        {
+          "id": "first-waits-ended",
+          "mono": 600,
+          "epoch": 100600,
+          "lastEnd": null,
+          "waited": 400,
+          "expected": 350
+        },
+        {
+          "id": "open-wait-before",
+          "mono": 750,
+          "epoch": 100750,
+          "lastEnd": null,
+          "waited": 450,
+          "expected": 250
+        },
+        {
+          "id": "open-wait-after",
+          "mono": 900,
+          "epoch": 100900,
+          "lastEnd": null,
+          "waited": 600,
+          "expected": 250
+        },
+        {
+          "id": "last-wait-ended",
+          "mono": 1000,
+          "epoch": 101000,
+          "lastEnd": 950,
+          "waited": 650,
+          "expected": 200
+        },
+        {
+          "id": "active-after-ended",
+          "mono": 1100,
+          "epoch": 101100,
+          "lastEnd": 950,
+          "waited": 650,
+          "expected": 100
+        },
+        {
+          "id": "wall-ahead",
+          "mono": 600,
+          "epoch": 100650,
+          "lastEnd": null,
+          "waited": 400,
+          "expected": 300
+        },
+        {
+          "id": "monotonic-ahead",
+          "mono": 650,
+          "epoch": 100600,
+          "lastEnd": null,
+          "waited": 400,
+          "expected": 300
+        }
+      ]
+    },
+    "publicInterval": {
+      "const": {
+        "budget": 180,
+        "first": 70,
+        "overlap": 70,
+        "last": 70,
+        "active": 35,
+        "tolerance": 25
+      }
+    }
+  }
+}

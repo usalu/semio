@@ -1,4 +1,27 @@
 {
+  "admissionSchema": {
+    "type": "object",
+    "properties": {
+      "schema": {
+        "const": "board.ports.directed.v1"
+      },
+      "nodes": {
+        "type": "array"
+      }
+    },
+    "anyOf": [
+      {
+        "required": [
+          "schema"
+        ]
+      },
+      {
+        "required": [
+          "nodes"
+        ]
+      }
+    ]
+  },
   "cases": [
     {
       "args": {
@@ -33,6 +56,83 @@
     },
     {
       "args": {},
+      "accepted": false
+    },
+    {
+      "args": {
+        "payload": {
+          "schema": "puzzle3d.board.snapshot.v1",
+          "nodes": [],
+          "edges": []
+        }
+      },
+      "accepted": false
+    },
+    {
+      "args": {
+        "payload": {
+          "schema": null,
+          "nodes": [],
+          "edges": []
+        }
+      },
+      "accepted": false
+    },
+    {
+      "args": {
+        "payload": {
+          "schema": 42,
+          "nodes": [],
+          "edges": []
+        }
+      },
+      "accepted": false
+    },
+    {
+      "args": {
+        "payload": {
+          "schema": "board.ports.directed.v1",
+          "nodes": {}
+        }
+      },
+      "accepted": false
+    },
+    {
+      "args": {
+        "payload": {
+          "schema": "board.ports.directed.v1",
+          "nodes": [],
+          "edges": []
+        }
+      },
+      "accepted": true
+    },
+    {
+      "args": {
+        "payload": "{\"schema\":\"puzzle3d.board.snapshot.v1\",\"nodes\":[],\"edges\":[]}"
+      },
+      "accepted": false
+    },
+    {
+      "args": {
+        "payload": []
+      },
+      "accepted": false
+    },
+    {
+      "args": {
+        "payload": {
+          "schema": "board.ports.directed.v1"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "args": {
+        "payload": {
+          "nodes": {}
+        }
+      },
       "accepted": false
     }
   ]

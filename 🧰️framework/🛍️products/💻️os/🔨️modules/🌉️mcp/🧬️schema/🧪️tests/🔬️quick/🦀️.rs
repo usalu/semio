@@ -49,6 +49,7 @@ fn invocation_report_example() -> serde_json::Value {
         undo_token: Some("undo_abc".into()),
         postconditions: vec!["selection.moved".into()],
         replayed: false,
+        untrusted: serde_json::Value::Null,
     })
     .unwrap()
 }
@@ -58,7 +59,7 @@ fn prepared_action_report_example() -> serde_json::Value {
         prepared_handle: "prep_abc".into(),
         capability_id: "cad.viewport.translateSelection".into(),
         expected_revision: Some(RevisionStamp { artifact_id: "cad-1".into(), head_edit_id: "edit-6".into(), cursor: "c0".into() }),
-        preview: serde_json::json!({ "dx": 1.0, "dy": 0.0, "dz": 0.0 }),
+        preview: serde_json::json!({ "opsCount": { "document": 1, "config": 0, "draft": 0, "childOpBytes": 0 }, "warnings": [], "untrusted": null }),
         expires_at_ms: 1_000,
     })
     .unwrap()

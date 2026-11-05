@@ -1,0 +1,47 @@
+{
+  "stock": {
+    "items": 16000000,
+    "copyBytes": 1073741824,
+    "capacityBytes": 1073741824,
+    "releaseBytes": 1073741824,
+    "depth": 256
+  },
+  "clockUs": 0,
+  "fuel": 100000000,
+  "deadlineUs": "18446744073709551615",
+  "close": {
+    "jobEmpty": true,
+    "originEmpty": true,
+    "callerEmpty": true
+  },
+  "cases": [
+    {
+      "id": "pending",
+      "stepFuel": 8,
+      "expectedReturned": "outcome",
+      "businessSteps": 2,
+      "observed": "yield"
+    },
+    {
+      "id": "yield",
+      "stepFuel": 8,
+      "expectedReturned": "outcome",
+      "businessSteps": 1,
+      "observed": "yield"
+    },
+    {
+      "id": "cancel",
+      "stepFuel": 8,
+      "expectedReturned": "outcome",
+      "businessSteps": 1,
+      "observed": "cancelled"
+    },
+    {
+      "id": "refusal",
+      "stepFuel": 8,
+      "expectedReturned": "continuation",
+      "businessSteps": 1,
+      "observed": "refusal"
+    }
+  ]
+}

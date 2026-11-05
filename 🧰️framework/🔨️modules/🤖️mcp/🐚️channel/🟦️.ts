@@ -1,3 +1,4 @@
+import { parseResolvedPluginViewState, type ResolvedPluginViewState } from "../../🛂️manifest/🟦️.ts";
 /** 🐚️ The shell bank of the live artifact route's payload codec — the TypeScript twin of
  * `🐚️channel/🦀️.rs`.
  *
@@ -87,7 +88,7 @@ export type ShellMutationOriginV1 = { readonly kind: "agent"; readonly principal
 export type ShellAppCommandV1 =
   | { readonly kind: "readHistory" }
   | { readonly kind: "readArtifact" }
-  | { readonly kind: "pureCommand"; readonly capabilityId: string; readonly input: unknown }
+  | { readonly kind: "pureCommand"; readonly capabilityId: string; readonly input: unknown; readonly context?: ResolvedPluginViewState | null }
   | { readonly kind: "transactionPrepare"; readonly txnId: string; readonly ops: ShellPreparedOpsV1; readonly origin: ShellMutationOriginV1 }
   | { readonly kind: "transactionCommit"; readonly txnId: string }
   | { readonly kind: "transactionRollback"; readonly txnId: string }
@@ -103,9 +104,9 @@ export type ShellAppCommandV1 =
  * protocol never permits, because it costs the agent its whole wall budget. */
 export type ShellAppFrameV1 =
   | { readonly kind: "historySnapshot"; readonly artifactId: string; readonly headEditId: string; readonly cursor: string }
-  | { readonly kind: "emit"; readonly ops: ShellPreparedOpsV1; readonly warnings: readonly string[] }
+  | { readonly kind: "emit"; readonly ops: ShellPreparedOpsV1; readonly warnings: readonly string[]; readonly output?: unknown }
   | { readonly kind: "transactionPrepared"; readonly txnId: string }
-  | { readonly kind: "transactionCommitted"; readonly txnId: string; readonly editId: string }
+  | { readonly kind: "transactionCommitted"; readonly txnId: string; readonly editId: string; readonly output?: unknown }
   | { readonly kind: "transactionRolledBack"; readonly txnId: string }
   | { readonly kind: "transactionUndone"; readonly groupId: string }
   | { readonly kind: "transactionRedone"; readonly groupId: string }
@@ -162,7 +163,7 @@ export function decodeShellAppCommand(bytes: Uint8Array): ShellAppCommandV1 {
     case "readArtifact":
       return { kind: "readArtifact" };
     case "pureCommand":
-      return { kind: "pureCommand", capabilityId: requireString(record, "capabilityId"), input: record.input };
+      return { kind: "pureCommand", capabilityId: requireString(record, "capabilityId"), input: record.input, ...(record.context == null ? {} : { context: parseResolvedPluginViewState(record.context) }) };
     case "transactionPrepare": {
       const ops = (record.ops ?? {}) as Record<string, unknown>;
       const origin = (record.origin ?? {}) as Record<string, unknown>;
@@ -205,12 +206,12 @@ export function shellAppFrameToJson(frame: ShellAppFrameV1): Record<string, unkn
     case "historySnapshot":
       return { version, kind: frame.kind, artifactId: frame.artifactId, headEditId: frame.headEditId, cursor: frame.cursor };
     case "emit":
-      return { version, kind: frame.kind, ops: encodeLanes(frame.ops), warnings: [...frame.warnings] };
+      return { version, kind: frame.kind, ops: encodeLanes(frame.ops), warnings: [...frame.warnings], ...(frame.output === undefined ? {} : { output: frame.output }) };
     case "transactionPrepared":
     case "transactionRolledBack":
       return { version, kind: frame.kind, txnId: frame.txnId };
     case "transactionCommitted":
-      return { version, kind: frame.kind, txnId: frame.txnId, editId: frame.editId };
+      return { version, kind: frame.kind, txnId: frame.txnId, editId: frame.editId, ...(frame.output === undefined ? {} : { output: frame.output }) };
     case "transactionUndone":
     case "transactionRedone":
       return { version, kind: frame.kind, groupId: frame.groupId };

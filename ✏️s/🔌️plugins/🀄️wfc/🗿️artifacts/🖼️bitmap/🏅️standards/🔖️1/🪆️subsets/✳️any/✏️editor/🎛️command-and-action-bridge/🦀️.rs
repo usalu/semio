@@ -38,11 +38,13 @@ pub enum BitmapEditorCommand {
     #[dsl(key = "solve")]
     Solve,
     #[dsl(key = "commit-fill-solve")]
-    CommitFillSolve { pixels: String, contradiction: bool, width: u32, height: u32 },
+    CommitFillSolve { pixels: String, contradiction: bool, width: u32, height: u32, source_revision: String },
     #[dsl(key = "set-active-example")]
     SetActiveExample { example_id: String },
     #[dsl(key = "pin-solution")]
     PinSolution { pixels: String, contradiction: bool },
+    #[dsl(key = "pin-preview")]
+    PinPreview,
     /// 🖱️ A canvas press in world coordinates: on the input surface, a primary press opens a brush stroke.
     #[dsl(key = "canvasPointerDown")]
     CanvasPointerDown { surface_id: String, world_x: Option<f64>, world_y: Option<f64>, button: u32 },
@@ -94,6 +96,7 @@ pub const BITMAP_TOOL_IDS: &[&str] = &[
     "commit-fill-solve",
     "setActiveExample",
     "pin-solution",
+    "pin-preview",
     "canvasPointerDown",
     "canvasPointerMove",
     "canvasPointerUp",
@@ -121,6 +124,7 @@ pub fn bitmap_command_id(command: &BitmapEditorCommand) -> &'static str {
         BitmapEditorCommand::CommitFillSolve { .. } => "commit-fill-solve",
         BitmapEditorCommand::SetActiveExample { .. } => "setActiveExample",
         BitmapEditorCommand::PinSolution { .. } => "pin-solution",
+        BitmapEditorCommand::PinPreview => "pin-preview",
         BitmapEditorCommand::CanvasPointerDown { .. } => "canvasPointerDown",
         BitmapEditorCommand::CanvasPointerMove { .. } => "canvasPointerMove",
         BitmapEditorCommand::CanvasPointerUp { .. } => "canvasPointerUp",
@@ -250,7 +254,9 @@ pub(super) mod args_bridge {
                 contradiction: bool_or("contradiction", false),
                 width: u32_or("width", 0),
                 height: u32_or("height", 0),
+                source_revision: text(args, "sourceRevision").unwrap_or_default(),
             },
+            "pin-preview" => BitmapEditorCommand::PinPreview,
             "pin-solution" => BitmapEditorCommand::PinSolution { pixels: text(args, "pixels").unwrap_or_default(), contradiction: bool_or("contradiction", false) },
             "canvasPointerDown" => BitmapEditorCommand::CanvasPointerDown { surface_id: text(args, "surfaceId").unwrap_or_default(), world_x: number(args, "worldX"), world_y: number(args, "worldY"), button: u32_or("button", 0) },
             "canvasPointerMove" => {

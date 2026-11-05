@@ -201,8 +201,9 @@ pub struct CommandDriverRegistry<const CAPACITY: usize> {
 /// derives must produce the same shape, so `#[serde(rename_all = "camelCase")]` mirrors `#[value(…)]`.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct CommandPageCursor {
     pub owner: u64,
     pub generation: u64,
@@ -218,13 +219,15 @@ pub struct CommandPageCursor {
 }
 
 /// 🚥️ `serde` kept alongside `ToValue`/`FromValue` — same wire-sharing reason as
-/// `CommandPageCursor` above. No `#[serde(tag = …)]`: `#[value(rename_all = "camelCase")]` with no
+/// `CommandPageCursor` above. No `#[serde(tag = …)]`: `#[value(crate = "::semio_framework_value", rename_all = "camelCase")]` with no
 /// `tag` derives externally-tagged (`✨️derive/🦀️.rs`'s documented default for a tag-less,
 /// mixed-variant enum), which is also serde's own default enum representation — the two already
 /// agree without a matching attribute.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub enum CommandIngressStatus {
     Idle,
     PageAccepted(CommandPageCursor),

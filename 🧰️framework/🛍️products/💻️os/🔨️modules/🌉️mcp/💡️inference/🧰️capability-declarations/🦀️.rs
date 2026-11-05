@@ -383,7 +383,7 @@ pub fn artifact_capabilities() -> Vec<CapabilityDefinition> {
             CapabilityKind::Query,
             "check",
             "Validate Artifact",
-            "Runs real plugin validation for an artifact — never a fabricated pass.",
+            "Validates the artifact canonical pack and event log with its owner codec and returns diagnostics with provenance. — Prüft das kanonische Pack und Ereignisprotokoll des Artefakts mit dem Codec seines Eigentümers und liefert Diagnosen mit Herkunft.",
             vec!["validate an artifact".to_string(), "is this artifact valid".to_string()],
             artifact_validate_input_schema(),
             artifact_validate_output_schema(),

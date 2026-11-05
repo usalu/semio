@@ -19,7 +19,7 @@ fn checkerboard(width: usize, height: usize, boundary: Boundary) -> (CompiledMod
 fn solves_a_checkerboard_grid() {
     let (model, topo) = checkerboard(5, 5, Boundary::Open);
     let mut solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();
-    let outcome = solver.solve(1);
+    let outcome = solver.solve(1).expect("original search and teardown complete");
     assert!(matches!(outcome, SolveOutcome::Solved(_)));
 }
 
@@ -29,7 +29,7 @@ fn fix_pins_a_cell_and_propagates() {
     let black = PatternId(0);
     let white = PatternId(1);
     let mut solver = Grid2dSolverBuilder::new(model, topo).fix(0, 0, black).unwrap().build().unwrap();
-    match solver.solve(1) {
+    match solver.solve(1).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => {
             assert_eq!(solver.get(&sol, 0, 0), Some(black));
             assert_eq!(solver.get(&sol, 1, 0), Some(white));
@@ -46,8 +46,8 @@ fn solve_chunk_respects_seam_pins_and_reproduces_deterministically() {
     let solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();
 
     let white = PatternId(1);
-    let a = solver.solve_chunk(42, 3, -2, &[(seam_node, white)]);
-    let b = solver.solve_chunk(42, 3, -2, &[(seam_node, white)]);
+    let a = solver.solve_chunk(42, 3, -2, &[(seam_node, white)]).expect("original search and teardown complete");
+    let b = solver.solve_chunk(42, 3, -2, &[(seam_node, white)]).expect("original search and teardown complete");
     match (a, b) {
         (SolveOutcome::Solved(sa), SolveOutcome::Solved(sb)) => {
             assert_eq!(sa.assignment, sb.assignment);
@@ -71,7 +71,7 @@ fn masked_cells_are_excluded_and_solve_completes() {
     mask[4] = false;
     let topo = Grid2dTopology::new(3, 3, &Stencil2d::VonNeumann, rels, Boundary::Open, Boundary::Open, Some(mask)).unwrap();
     let mut solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();
-    let outcome = solver.solve(1);
+    let outcome = solver.solve(1).expect("original search and teardown complete");
     assert!(matches!(outcome, SolveOutcome::Solved(_)));
 }
 
@@ -79,7 +79,7 @@ fn masked_cells_are_excluded_and_solve_completes() {
 fn wrap_boundary_solves_consistently() {
     let (model, topo) = checkerboard(4, 4, Boundary::Wrap);
     let mut solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();
-    let outcome = solver.solve(1);
+    let outcome = solver.solve(1).expect("original search and teardown complete");
     assert!(matches!(outcome, SolveOutcome::Solved(_)));
 }
 
@@ -87,7 +87,7 @@ fn wrap_boundary_solves_consistently() {
 fn odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard() {
     let (model, topo) = checkerboard(3, 3, Boundary::Wrap);
     let mut solver = Grid2dSolverBuilder::new(model, topo).config(SearchConfig { mode: search::SearchMode::Backtrack, ..Default::default() }).build().unwrap();
-    let outcome = solver.solve(1);
+    let outcome = solver.solve(1).expect("original search and teardown complete");
     assert!(matches!(outcome, SolveOutcome::Unsatisfiable(_)));
 }
 
@@ -135,8 +135,8 @@ fn graph_vs_grid2d_strict_equivalence_von_neumann_open() {
     for seed in 0..10u64 {
         let mut graph_solver = crate::solver_graph::GraphSolverBuilder::new(model.clone(), graph_topo.clone()).config(config).build().unwrap();
         let mut grid_solver = Grid2dSolverBuilder::new(model.clone(), grid_topo.clone()).config(config).build().unwrap();
-        let graph_outcome = graph_solver.solve(seed);
-        let grid_outcome = grid_solver.solve(seed);
+        let graph_outcome = graph_solver.solve(seed).expect("original search and teardown complete");
+        let grid_outcome = grid_solver.solve(seed).expect("original search and teardown complete");
         match (graph_outcome, grid_outcome) {
             (SolveOutcome::Solved(g), SolveOutcome::Solved(r)) => {
                 assert_eq!(g.assignment, r.assignment, "seed {seed}: graph and grid2d solutions diverged");
@@ -151,7 +151,7 @@ fn graph_vs_grid2d_strict_equivalence_von_neumann_open() {
 fn decode_tiles_round_trips_tile_provenance() {
     let (model, topo) = checkerboard(2, 2, Boundary::Open);
     let mut solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();
-    match solver.solve(1) {
+    match solver.solve(1).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => {
             let tiles = solver.decode_tiles(&sol);
             assert_eq!(tiles.len(), 4);
@@ -183,7 +183,7 @@ fn grid_domain_constraints_enumeration_and_cancellation_match_neutral_oracle() {
     assert_eq!(solver.topology().node_count(), nodes);
     let cancel = CancelToken::new();
     cancel.cancel();
-    let SolveOutcome::Cancelled { partial, report } = solver.solve_cancellable(seed, &cancel) else {
+    let SolveOutcome::Cancelled { partial, report } = solver.solve_cancellable(seed, &cancel).expect("original search and teardown complete") else {
         panic!("cancelled grid solve");
     };
     assert_eq!(partial.domains.len(), nodes);

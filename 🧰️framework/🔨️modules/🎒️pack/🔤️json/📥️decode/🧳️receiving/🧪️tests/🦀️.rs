@@ -37,7 +37,6 @@ fn original_json_receiving_keeps_native_source_and_exact_physical_custody(){
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).unwrap();for row in corpus["cases"].as_array().unwrap(){let turns=if row["value"].is_string(){schedule::<String>(row,None)}else if row["value"].is_array(){schedule::<Vec<String>>(row,None)}else{schedule::<u64>(row,None)};for cut in[0,1,2,turns/2,turns.saturating_sub(1)]{if row["value"].is_string(){schedule::<String>(row,Some(cut));}else if row["value"].is_array(){schedule::<Vec<String>>(row,Some(cut));}else{schedule::<u64>(row,Some(cut));}}}
 }
 
-/// 📤️ The owned terminal returns the same original native value and issuer only after all output aliases close.
 #[test]
 fn original_json_owned_terminal_transfers_one_native_owner_without_clone(){
  let mut bytes=source(b"op\"original-native-value\"".to_vec());let g=grant();let (wire,_)=bytes.retain_original(g).result.unwrap();let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<String>>=Arc::new(Issuer::<String>(std::marker::PhantomData));let mut accept=|_|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut c=NativeDecodeControl::new_retained(&mut accept);c.install_retirement_recipient(&mut recipient).unwrap();let(mut owner,_)=OriginalJsonReceiving::<String>::admit(wire,&factory,b"op",|s|s,&c,g).map_err(|(e,_)|e).unwrap();

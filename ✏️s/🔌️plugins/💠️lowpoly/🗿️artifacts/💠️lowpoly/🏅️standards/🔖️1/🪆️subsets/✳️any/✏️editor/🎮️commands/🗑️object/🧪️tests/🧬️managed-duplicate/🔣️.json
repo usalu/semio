@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "action": "duplicateObject",
+  "precondition": {
+    "literalMeshContent": "",
+    "managedMeshPresent": true,
+    "primitive": "box"
+  },
+  "expected": {
+    "objectCount": 3,
+    "positionOffset": [
+      1,
+      0,
+      0
+    ],
+    "sameGeometry": true,
+    "samePaint": true,
+    "distinctChildIdentity": true,
+    "undoObjectCount": 2,
+    "redoObjectCount": 3
+  }
+}

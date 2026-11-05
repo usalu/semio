@@ -4,8 +4,20 @@
   "dialect": "s.wfc.bitmap@1/*",
   "artifactKindId": "2d.wfcbitmap",
   "inferenceToolId": "s.wfc.bitmap.solve",
-  "windowKindIds": ["wfc-bitmap-input", "wfc-bitmap-output"],
-  "windowLabels": [{"en": "Input", "de": "Eingabe"}, {"en": "Output", "de": "Ausgabe"}],
+  "windowKindIds": [
+    "wfc-bitmap-input",
+    "wfc-bitmap-output"
+  ],
+  "windowLabels": [
+    {
+      "en": "Input",
+      "de": "Eingabe"
+    },
+    {
+      "en": "Output",
+      "de": "Ausgabe"
+    }
+  ],
   "mutationKinds": [
     "change-seed",
     "resize-input",
@@ -17,10 +29,30 @@
     "change-model",
     "pin-pixel",
     "unpin-pixel",
-    "paint-input-stroke"
+    "paint-input-stroke",
+    "pin-solution",
+    "restore-pins"
   ],
   "examples": [
-    {"id": "rooms-16", "label": {"en": "Rooms 16", "de": "Räume 16"}, "inputWidth": 16, "inputHeight": 16, "paletteSize": 3},
-    {"id": "flowers-24", "label": {"en": "Flowers 24", "de": "Blumen 24"}, "inputWidth": 24, "inputHeight": 24, "paletteSize": 4}
+    {
+      "id": "rooms-16",
+      "label": {
+        "en": "Rooms 16",
+        "de": "Räume 16"
+      },
+      "inputWidth": 16,
+      "inputHeight": 16,
+      "paletteSize": 3
+    },
+    {
+      "id": "flowers-24",
+      "label": {
+        "en": "Flowers 24",
+        "de": "Blumen 24"
+      },
+      "inputWidth": 24,
+      "inputHeight": 24,
+      "paletteSize": 4
+    }
   ]
 }

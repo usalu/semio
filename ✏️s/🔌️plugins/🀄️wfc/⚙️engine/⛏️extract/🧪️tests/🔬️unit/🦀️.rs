@@ -66,7 +66,7 @@ fn periodic_sample_solves_on_a_same_size_wrapped_grid() {
     let relations = Stencil2d::VonNeumann.offsets().iter().enumerate().map(|(i, _)| crate::ids::RelationId(i as u32)).collect::<Vec<_>>();
     let topo = Grid2dTopology::new(size, size, &Stencil2d::VonNeumann, relations, Boundary::Wrap, Boundary::Wrap, None).unwrap();
     let mut solver = Grid2dSolverBuilder::new(extracted.model, topo).fix(0, 0, anchor).unwrap().build().unwrap();
-    let crate::outcome::SolveOutcome::Solved(solution) = solver.solve(1) else {
+    let crate::outcome::SolveOutcome::Solved(solution) = solver.solve(1).expect("original search and teardown complete") else {
         panic!("periodic sample must remain solvable");
     };
     let decoded: Vec<u32> = extracted.decoder.decode(&solution.assignment).into_iter().map(TileId::get).collect();

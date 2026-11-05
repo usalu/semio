@@ -251,7 +251,7 @@ fn the_default_concrete_forest_catalogue_declares_kinds_with_resolvable_mesh_url
             .unwrap_or_else(|| panic!("catalogue row {kind_id} declares no representations[].url"))
             .to_string();
         assert!(url.starts_with("/mesh/"), "catalogue row {kind_id} must name a served mesh route, observed {url}");
-        let probe = semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject {
+        let probe = semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject { anchor: Default::default(),
             id: format!("probe-{kind_id}"),
             label: None,
             object_kind: Some(kind_id.clone()),

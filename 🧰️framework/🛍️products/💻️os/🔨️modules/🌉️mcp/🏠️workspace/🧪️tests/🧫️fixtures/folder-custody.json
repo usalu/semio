@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "commits": [
+    {
+      "id": "create",
+      "expected": null,
+      "pack": "pack0",
+      "spr": "spr0",
+      "accepted": true,
+      "current": [
+        "pack0",
+        "spr0"
+      ]
+    },
+    {
+      "id": "commit",
+      "expected": [
+        "pack0",
+        "spr0"
+      ],
+      "pack": "pack1",
+      "spr": "spr1",
+      "accepted": true,
+      "current": [
+        "pack1",
+        "spr1"
+      ]
+    },
+    {
+      "id": "stale-peer",
+      "expected": [
+        "pack0",
+        "spr0"
+      ],
+      "pack": "stale",
+      "spr": "stale",
+      "accepted": false,
+      "current": [
+        "pack1",
+        "spr1"
+      ]
+    },
+    {
+      "id": "undo",
+      "expected": [
+        "pack1",
+        "spr1"
+      ],
+      "pack": "pack0",
+      "spr": "undo",
+      "accepted": true,
+      "current": [
+        "pack0",
+        "undo"
+      ]
+    },
+    {
+      "id": "redo",
+      "expected": [
+        "pack0",
+        "undo"
+      ],
+      "pack": "pack1",
+      "spr": "redo",
+      "accepted": true,
+      "current": [
+        "pack1",
+        "redo"
+      ]
+    }
+  ],
+  "owners": [
+    {
+      "id": "unique",
+      "schema": "schema1",
+      "declarations": [
+        [
+          "schema1",
+          "plugin1",
+          "app1"
+        ]
+      ],
+      "accepted": true
+    },
+    {
+      "id": "none",
+      "schema": "schema1",
+      "declarations": [
+        [
+          "other",
+          "plugin1",
+          "app1"
+        ]
+      ],
+      "accepted": false
+    },
+    {
+      "id": "ambiguous",
+      "schema": "schema1",
+      "declarations": [
+        [
+          "schema1",
+          "plugin1",
+          "app1"
+        ],
+        [
+          "schema1",
+          "plugin2",
+          "app1"
+        ]
+      ],
+      "accepted": false
+    },
+    {
+      "id": "requested-alias-actual-schema",
+      "schema": "os.agent.probe/v1",
+      "declarations": [
+        [
+          "friendly-alias",
+          "plugin1",
+          "app1"
+        ],
+        [
+          "os.agent.probe/v1",
+          "plugin1",
+          "app1"
+        ]
+      ],
+      "accepted": true
+    }
+  ]
+}

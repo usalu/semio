@@ -10,7 +10,8 @@
     "expectedInstructions",
     "transferCuts",
     "hostFactory",
-    "nativeFactory"
+    "nativeFactory",
+    "clockImport"
   ],
   "properties": {
     "hostFactory": {
@@ -104,7 +105,9 @@
       "required": [
         "transferCopyBytes",
         "foreignSourceSameBusiness",
-        "terminalState"
+        "terminalState",
+        "sourceGrantMustExceedTurnCopy",
+        "tamperedTotalGrantRefused"
       ],
       "properties": {
         "transferCopyBytes": {
@@ -120,6 +123,44 @@
         },
         "terminalState": {
           "const": "Closed"
+        },
+        "sourceGrantMustExceedTurnCopy": {
+          "const": true
+        },
+        "tamperedTotalGrantRefused": {
+          "const": true
+        }
+      }
+    },
+    "clockImport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clockMicroseconds",
+        "actualTag",
+        "pointer",
+        "expectedHex",
+        "expectedInstructions"
+      ],
+      "properties": {
+        "clockMicroseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "actualTag": {
+          "const": 1
+        },
+        "pointer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedHex": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "expectedInstructions": {
+          "type": "integer",
+          "minimum": 1
         }
       }
     }

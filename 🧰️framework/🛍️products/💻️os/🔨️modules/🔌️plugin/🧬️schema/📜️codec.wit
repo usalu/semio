@@ -18,6 +18,7 @@ package semio:framework@1.0.0;
 /// with a fuel cap. SQLite calls retain their same instance and ticket through result handoff and
 /// admitted native retirement. The other pure codec functions complete on a transient instance.
 interface codec {
+  use reactor.{actor-context-budget};
   enum snapshot-encoding { binary, text }
   record snapshot-limits {
     max-file-bytes: u64,
@@ -41,17 +42,17 @@ interface codec {
   variant snapshot-file-result { done(snapshot-file), rejected(snapshot-rejection), pending(snapshot-retirement) }
   variant snapshot-payload-result { done(snapshot-payload), rejected(snapshot-rejection), pending(snapshot-retirement) }
   /// 🏛️ The exact dialect's handwritten domain SQL declaration.
-  sqlite-schema: async func(dialect: string) -> result<string, plugin-error>;
+  sqlite-schema: async func(budget: actor-context-budget) -> result<string, plugin-error>;
   /// 📤️ Projects one native snapshot through its individually declared semantic schema.
-  sqlite-export: async func(dialect: string, encoding: snapshot-encoding, snapshot: list<u8>, limits: snapshot-limits, native: retained-clone-grant) -> result<snapshot-file-result, plugin-error>;
+  sqlite-export: async func(budget: actor-context-budget) -> result<snapshot-file-result, plugin-error>;
   /// 📥️ Reconstructs one native snapshot after exact dialect and schema validation.
-  sqlite-import: async func(dialect: string, file: list<u8>, limits: snapshot-limits, native: retained-clone-grant) -> result<snapshot-payload-result, plugin-error>;
+  sqlite-import: async func(budget: actor-context-budget) -> result<snapshot-payload-result, plugin-error>;
   /// 👓️ Quotes actual retained ownership in this same component invocation.
-  sqlite-take-file: async func(ticket: u64) -> result<snapshot-file-result, plugin-error>;
-  sqlite-take-payload: async func(ticket: u64) -> result<snapshot-payload-result, plugin-error>;
-  sqlite-retirement: async func(copy-bytes: u64) -> result<snapshot-retirement, u32>;
+  sqlite-take-file: async func(budget: actor-context-budget) -> result<snapshot-file-result, plugin-error>;
+  sqlite-take-payload: async func(budget: actor-context-budget) -> result<snapshot-payload-result, plugin-error>;
+  sqlite-retirement: async func(budget: actor-context-budget) -> result<snapshot-retirement, u32>;
   /// ♻️ Executes one independently funded turn against the same original receiving ticket.
-  sqlite-close: async func(ticket: u64, native: retained-clone-grant) -> result<snapshot-close-receipt, u32>;
+  sqlite-close: async func(budget: actor-context-budget) -> result<snapshot-close-receipt, u32>;
 
   use types.{plugin-error, pack, retained-clone-grant, retained-clone-progress};
 
@@ -66,22 +67,22 @@ interface codec {
   /// over the editor snapshot's `RecordSpec`, exactly the 32 bytes `ArtifactCodec::pack_schema_hash`
   /// carries natively. A catalog row's `packSchemaHash` is pinned against this, so a bundle cannot
   /// name a schema identity the component itself does not own.
-  pack-schema-hash: async func(artifact-kind: string) -> result<list<u8>, plugin-error>;
+  pack-schema-hash: async func(budget: actor-context-budget) -> result<list<u8>, plugin-error>;
 
   /// 🌱️ The canonical empty document of `artifact-kind` at `document-id`: zero edits, zero changes,
   /// zero checkpoints, zero alternatives, an empty cursor, and the kind's own initial snapshot.
-  genesis: async func(artifact-kind: string, document-id: string) -> result<document-pair, plugin-error>;
+  genesis: async func(budget: actor-context-budget) -> result<document-pair, plugin-error>;
 
   /// 📥️ `(pack, spr) -> (dsl, ops)` text mirror — the host's pair-validation fence. A pair the
   /// component cannot print back is not a document of this kind.
-  print-mirror: async func(artifact-kind: string, pair: document-pair) -> result<tuple<string, string>, plugin-error>;
+  print-mirror: async func(budget: actor-context-budget) -> result<tuple<string, string>, plugin-error>;
 
   /// 🧩️ Applies one `encode_ops_vec` batch to a pair and returns the next pair. This is the
   /// host-authoritative edit apply for a package whose codec the host does not link.
-  apply-ops: async func(artifact-kind: string, pair: document-pair, ops: list<u8>) -> result<document-pair, plugin-error>;
+  apply-ops: async func(budget: actor-context-budget) -> result<document-pair, plugin-error>;
 
   /// 📜️ Folds one `encode-envelopes` ledger stream onto a pair through the replica merge gate and
   /// returns the next pair. A hub materializes a Check In with it: edit identity and history
   /// transitions (undo, redo, checkpoints) stay the replicas' own, which `apply-ops` cannot keep.
-  replay-envelopes: async func(artifact-kind: string, pair: document-pair, envelopes: list<u8>) -> result<document-pair, plugin-error>;
+  replay-envelopes: async func(budget: actor-context-budget) -> result<document-pair, plugin-error>;
 }

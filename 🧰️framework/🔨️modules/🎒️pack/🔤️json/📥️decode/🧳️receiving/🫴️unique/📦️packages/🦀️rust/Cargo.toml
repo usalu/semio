@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-pack-json-output-receiving"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Funded original JSON output receiving into unique typed ownership and complete paid retirement"
+
+[package.metadata.semio]
+role = "framework"
+id = "pack-json-output-receiving"
+rust-source-boundary = { maxSourceBytes = 262144, maxSourceFiles = 32, maxActiveLines = 4000 }
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-job-native-decode = { path = "../../../../../../../🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+serde = { workspace = true }
+semio-framework-job-testing-caller = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

@@ -1,5 +1,5 @@
-"""🐍️ s.wfc.bitmap — an INDEPENDENT second implementation of the document and all eleven typed
-mutations, written from `../../🧬️schema/📸️snapshot/🔣️.json`, the eleven per-kind payload schemas, and
+"""🐍️ s.wfc.bitmap — an INDEPENDENT second implementation of the document and all thirteen typed
+mutations, written from `../../🧬️schema/📸️snapshot/🔣️.json`, the thirteen per-kind payload schemas, and
 RFC 4648 §4 for the pixel carrier. It imports nothing from this repository and transliterates none
 of its Rust: the base64 codec below is written from the RFC, not ported.
 
@@ -21,7 +21,7 @@ VALUE = {character: index for index, character in enumerate(ALPHABET)}
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SUBSET = os.path.abspath(os.path.join(HERE, "..", ".."))
-FIXTURES = os.path.join(SUBSET, "🧫️fixtures", "🧬️mutations")
+FIXTURES = os.path.join(SUBSET, "🧪️tests", "🧫️fixtures", "🧬️mutations")
 
 
 def decode_base64(text):
@@ -118,7 +118,7 @@ def apply_mutation(document, mutation):
     if kind == "AddPaletteColor":
         index = payload["index"]
         palette = document["input"]["palette"]
-        if index > len(palette) or len(palette) >= 256:
+        if index > len(palette) or len(palette) >= 256 or any(not 0 <= value <= 255 for value in payload["color"].values()):
             raise Fatal("mutation.invariant")
         palette.insert(index, payload["color"])
         buffer = indices(document)
@@ -134,6 +134,8 @@ def apply_mutation(document, mutation):
         palette = document["input"]["palette"]
         if index >= len(palette):
             raise Fatal("mutation.target-missing")
+        if any(not 0 <= value <= 255 for value in payload["color"].values()):
+            raise Fatal("mutation.invariant")
         if palette[index] == payload["color"]:
             return document, ["mutation.no-op"]
         palette[index] = payload["color"]
@@ -224,6 +226,29 @@ def apply_mutation(document, mutation):
         if not changed:
             return document, ["mutation.no-op"]
         return with_indices(document, buffer), (["mutation.partial"] if len(inside) < len(walked) else [])
+    if kind in ("PinSolution", "RestorePins"):
+        pins = payload["pins"]
+        if not isinstance(pins, list) or len(pins) > 512 * 512:
+            raise Fatal("mutation.invariant")
+        width, height = document["output"]["width"], document["output"]["height"]
+        if kind == "PinSolution" and len(pins) != width * height:
+            raise Fatal("mutation.invariant")
+        seen = set()
+        for index, pin in enumerate(pins):
+            if set(pin) != {"x", "y", "color"} or any(type(pin[field]) is not int for field in ("x", "y", "color")):
+                raise Fatal("mutation.invariant")
+            x, y, color = pin["x"], pin["y"], pin["color"]
+            if not 0 <= x < width or not 0 <= y < height or (x, y) in seen:
+                raise Fatal("mutation.invariant")
+            if not 0 <= color < len(document["input"]["palette"]):
+                raise Fatal("mutation.invariant")
+            if kind == "PinSolution" and (x, y) != (index % width, index // width):
+                raise Fatal("mutation.invariant")
+            seen.add((x, y))
+        if document.get("pinned", []) == pins:
+            return document, ["mutation.no-op"]
+        document["pinned"] = json.loads(json.dumps(pins))
+        return document, []
     raise ValueError("unknown mutation kind " + kind)
 
 
@@ -324,6 +349,9 @@ def inverse(document, mutation):
             start = (y + row) * document["input"]["width"] + x
             prior += buffer[start : start + width]
         return [{"SetInputPixels": {"x": x, "y": y, "width": width, "height": height, "pixels": encode_base64(bytes(prior))}}]
+    if kind in ("PinSolution", "RestorePins"):
+        prior = document.get("pinned", [])
+        return [] if prior == payload["pins"] else [{"RestorePins": {"pins": json.loads(json.dumps(prior))}}]
     raise ValueError("unknown mutation kind " + kind)
 
 
@@ -457,6 +485,51 @@ def vectors():
             yield kind_dir, case_dir, os.path.join(kind_path, case_dir)
 
 
+def verify_batch_cases():
+    """🧷️ Cross-check the portable assignment laws independently of the committed quintets."""
+    fixture = read(os.path.join(SUBSET, "🧬️schema", "🧬️mutations", "🧪️tests", "🧫️pin-batch"), "🔣️.json")
+    for case in fixture["semanticCases"]:
+        before = json.loads(json.dumps(fixture["document"]))
+        before["pinned"] = case["beforePins"]
+        try:
+            produced, messages = apply_mutation(before, case["mutation"])
+        except Fatal as fault:
+            if str(fault) != case.get("fault"):
+                raise AssertionError(case["id"] + ": unexpected refusal " + str(fault))
+            continue
+        if "fault" in case:
+            raise AssertionError(case["id"] + ": expected refusal")
+        expected = json.loads(json.dumps(before))
+        expected["pinned"] = case["afterPins"]
+        if produced != expected or messages != case["messages"]:
+            raise AssertionError(case["id"] + ": independent batch result differs")
+        for step in inverse(before, case["mutation"]):
+            produced, _ = apply_mutation(produced, step)
+        if produced != before:
+            raise AssertionError(case["id"] + ": exact pin sequence did not restore")
+    return len(fixture["semanticCases"])
+
+def verify_retained_cases():
+    """🧳️ Validate portable decisions and sample carriers with Pillow's indexed image codec."""
+    from PIL import Image
+    fixture = read(os.path.join(SUBSET, "🧪️tests", "🧫️fixtures", "🧳️retained"), "🔣️.json")
+    for case in fixture["cases"]:
+        before = case.get("base", fixture["base"])
+        try:
+            produced, codes = apply_mutation(before, case["mutation"])
+            classification = "noop" if produced == before else "applied"
+        except Fatal as fault:
+            codes, classification = [str(fault)], "refused"
+            produced = before
+        if codes != case["expectedCodes"] or classification != case["classification"]:
+            raise AssertionError(case["id"] + ": unexpected " + classification + " " + repr(codes))
+        pixels = indices(produced)
+        image = Image.frombytes("P", (produced["input"]["width"], produced["input"]["height"]), bytes(pixels))
+        if image.tobytes() != bytes(pixels):
+            raise AssertionError(case["id"] + ": Pillow sample carrier differs")
+    return len(fixture["cases"])
+
+
 def main():
     failures = []
     checked = 0
@@ -488,7 +561,9 @@ def main():
         checked += 1
     for failure in failures:
         print("FAIL " + failure)
-    print("checked " + str(checked) + " committed vectors, " + str(len(failures)) + " failures")
+    batch_cases = verify_batch_cases()
+    retained_cases = verify_retained_cases()
+    print("checked " + str(checked) + " committed vectors and " + str(batch_cases) + " pin-batch cases and " + str(retained_cases) + " retained/Pillow cases, " + str(len(failures)) + " failures")
     return 1 if failures else 0
 
 

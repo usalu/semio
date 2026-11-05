@@ -199,12 +199,29 @@ impl ArtifactEditor for RemodelingPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "photos:in only accepts a Structured base64-image payload".into()));
                 };
                 let bytes = base64_codec::base64_standard_decode(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let (width, height) = decode_still_image("image/png", &bytes).map_or((0, 0), |image| (image.width, image.height));
+                let mime = if bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
+                    "image/png"
+                } else if bytes.starts_with(&[0xff, 0xd8, 0xff]) {
+                    "image/jpeg"
+                } else {
+                    return Err(MediaError::Payload(port.to_string(), "photos:in requires PNG or JPEG image bytes".into()));
+                };
+                let image = decode_still_image(mime, &bytes).map_err(|error| MediaError::Payload(port.to_string(), format!("photos:in cannot decode the image payload: {error}")))?;
+                if image.width == 0 || image.height == 0 {
+                    return Err(MediaError::Payload(port.to_string(), "photos:in requires nonzero image dimensions".into()));
+                }
+                let (width, height) = (image.width, image.height);
                 let scene = doc.snapshot;
                 let stream_id = REMODELING_WORKFLOW_PHOTOS_STREAM_ID;
-                let frame_index = scene.streams.iter().find(|stream| stream.id == stream_id).map_or(0, |stream| stream.frames.len() as u32);
+                let asset_prefix = format!("{stream_id}-frame-");
+                let reserved = scene.streams.iter().filter(|stream| stream.id == stream_id).flat_map(|stream| stream.frames.iter().map(|frame| frame.index))
+                    .chain(scene.assets.keys().filter_map(|id| id.strip_prefix(&asset_prefix)?.parse::<u32>().ok())).max();
+                let frame_index = match reserved {
+                    Some(index) => index.checked_add(1).ok_or_else(|| MediaError::Payload(port.to_string(), "photos:in exhausted the frame index range".into()))?,
+                    None => 0,
+                };
                 let asset_key = format!("{stream_id}-frame-{frame_index}");
-                let asset = ImageAsset { mime: "image/png".into(), data: json.clone(), width, height };
+                let asset = ImageAsset { mime: mime.into(), data: json.clone(), width, height };
                 let mut mutations = vec![semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset(asset_key.clone(), asset)];
                 match scene.streams.iter().any(|stream| stream.id == stream_id) {
                     true => mutations.push(semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame(stream_id.to_string(), FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key }, MediaKind::ImageSequence)),
@@ -215,7 +232,7 @@ impl ArtifactEditor for RemodelingPlayApp {
                         camera_id: None,
                         sync_offset_ms: 0.0,
                         fps_hint: 30.0,
-                        frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: asset_key }],
+                        frames: vec![FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key }],
                         source: None,
                     })),
                 }

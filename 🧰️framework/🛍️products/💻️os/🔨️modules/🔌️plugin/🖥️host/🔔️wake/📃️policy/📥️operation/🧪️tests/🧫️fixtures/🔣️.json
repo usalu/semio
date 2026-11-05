@@ -1,0 +1,305 @@
+{
+  "version": 1,
+  "caps": {
+    "turnFuel": 256,
+    "operationFuel": 1000000,
+    "turnExecutionFuel": 1000000,
+    "operationExecutionFuel": 1000000000,
+    "maximumTurnMicroseconds": 1000000,
+    "maxEffects": 100,
+    "maxPatchBytes": 65536,
+    "maxFrames": 100,
+    "admission": {
+      "maximumItems": 1024,
+      "maximumCopyBytes": 1048576,
+      "maximumCapacityBytes": 1048576,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 64
+    },
+    "drive": {
+      "maximumItems": 1024,
+      "maximumCopyBytes": 1048576,
+      "maximumCapacityBytes": 1048576,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 64
+    },
+    "wake": {
+      "maximumItems": 1024,
+      "maximumCopyBytes": 1048576,
+      "maximumCapacityBytes": 1048576,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 64
+    },
+    "operation": {
+      "maximumItems": 65536,
+      "maximumCopyBytes": 16777216,
+      "maximumCapacityBytes": 16777216,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 64
+    },
+    "cleanup": {
+      "retained": {
+        "maximumItems": 128,
+        "maximumCopyBytes": 16384,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 64
+      },
+      "workFuel": 10000,
+      "executionFuel": 10000,
+      "maximumMicroseconds": 10000
+    },
+    "transit": {
+      "retained": {
+        "maximumItems": 128,
+        "maximumCopyBytes": 16384,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 64
+      },
+      "workFuel": 10000
+    },
+    "infrastructure": {
+      "retained": {
+        "maximumItems": 128,
+        "maximumCopyBytes": 16384,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 64
+      },
+      "workFuel": 10000
+    },
+    "maximumLifetimeMicroseconds": 60000000
+  },
+  "cases": [
+    {
+      "id": "clamp",
+      "request": {
+        "workUnits": 10,
+        "maximumElapsedMicroseconds": 2000000,
+        "retained": {
+          "maximumItems": 32,
+          "maximumCopyBytes": 1000,
+          "maximumCapacityBytes": 1024,
+          "maximumReleaseBytes": 2048,
+          "maximumDepth": 8
+        }
+      },
+      "valid": true,
+      "expected": {
+        "turnFuel": 256,
+        "operationFuel": 1000000,
+        "turnExecutionFuel": 1000000,
+        "operationExecutionFuel": 1000000000,
+        "maximumTurnMicroseconds": 1000000,
+        "maxEffects": 100,
+        "maxPatchBytes": 65536,
+        "maxFrames": 100,
+        "admission": {
+          "maximumItems": 1024,
+          "maximumCopyBytes": 1048576,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 16777216,
+          "maximumDepth": 64
+        },
+        "drive": {
+          "maximumItems": 1024,
+          "maximumCopyBytes": 1048576,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 16777216,
+          "maximumDepth": 64
+        },
+        "wake": {
+          "maximumItems": 1024,
+          "maximumCopyBytes": 1048576,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 16777216,
+          "maximumDepth": 64
+        },
+        "operation": {
+          "maximumItems": 65536,
+          "maximumCopyBytes": 16777216,
+          "maximumCapacityBytes": 16777216,
+          "maximumReleaseBytes": 16777216,
+          "maximumDepth": 64
+        },
+        "cleanup": {
+          "retained": {
+            "maximumItems": 128,
+            "maximumCopyBytes": 16384,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 1048576,
+            "maximumDepth": 64
+          },
+          "workFuel": 10000,
+          "executionFuel": 10000,
+          "maximumMicroseconds": 10000
+        },
+        "transit": {
+          "retained": {
+            "maximumItems": 128,
+            "maximumCopyBytes": 16384,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 1048576,
+            "maximumDepth": 64
+          },
+          "workFuel": 10000
+        },
+        "infrastructure": {
+          "retained": {
+            "maximumItems": 128,
+            "maximumCopyBytes": 16384,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 1048576,
+            "maximumDepth": 64
+          },
+          "workFuel": 10000
+        },
+        "maximumLifetimeMicroseconds": 2000000
+      }
+    },
+    {
+      "id": "larger-request",
+      "request": {
+        "workUnits": 100000,
+        "maximumElapsedMicroseconds": 4000000,
+        "retained": {
+          "maximumItems": 1000,
+          "maximumCopyBytes": 1000000,
+          "maximumCapacityBytes": 1000000,
+          "maximumReleaseBytes": 1000000,
+          "maximumDepth": 128
+        }
+      },
+      "valid": true,
+      "expected": {
+        "turnFuel": 256,
+        "operationFuel": 1000000,
+        "turnExecutionFuel": 1000000,
+        "operationExecutionFuel": 1000000000,
+        "maximumTurnMicroseconds": 1000000,
+        "maxEffects": 100,
+        "maxPatchBytes": 65536,
+        "maxFrames": 100,
+        "admission": {
+          "maximumItems": 1024,
+          "maximumCopyBytes": 1048576,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 16777216,
+          "maximumDepth": 64
+        },
+        "drive": {
+          "maximumItems": 1024,
+          "maximumCopyBytes": 1048576,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 16777216,
+          "maximumDepth": 64
+        },
+        "wake": {
+          "maximumItems": 1024,
+          "maximumCopyBytes": 1048576,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 16777216,
+          "maximumDepth": 64
+        },
+        "operation": {
+          "maximumItems": 65536,
+          "maximumCopyBytes": 16777216,
+          "maximumCapacityBytes": 16777216,
+          "maximumReleaseBytes": 16777216,
+          "maximumDepth": 64
+        },
+        "cleanup": {
+          "retained": {
+            "maximumItems": 128,
+            "maximumCopyBytes": 16384,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 1048576,
+            "maximumDepth": 64
+          },
+          "workFuel": 10000,
+          "executionFuel": 10000,
+          "maximumMicroseconds": 10000
+        },
+        "transit": {
+          "retained": {
+            "maximumItems": 128,
+            "maximumCopyBytes": 16384,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 1048576,
+            "maximumDepth": 64
+          },
+          "workFuel": 10000
+        },
+        "infrastructure": {
+          "retained": {
+            "maximumItems": 128,
+            "maximumCopyBytes": 16384,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 1048576,
+            "maximumDepth": 64
+          },
+          "workFuel": 10000
+        },
+        "maximumLifetimeMicroseconds": 4000000
+      }
+    },
+    {
+      "id": "zero-work",
+      "request": {
+        "workUnits": 0,
+        "maximumElapsedMicroseconds": 100,
+        "retained": {
+          "maximumItems": 64,
+          "maximumCopyBytes": 65536,
+          "maximumCapacityBytes": 65536,
+          "maximumReleaseBytes": 262144,
+          "maximumDepth": 64
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "zero-time",
+      "request": {
+        "workUnits": 1,
+        "maximumElapsedMicroseconds": 0,
+        "retained": {
+          "maximumItems": 64,
+          "maximumCopyBytes": 65536,
+          "maximumCapacityBytes": 65536,
+          "maximumReleaseBytes": 262144,
+          "maximumDepth": 64
+        }
+      },
+      "valid": false
+    }
+  ],
+  "refusals": [
+    {
+      "id": "missing-infrastructure",
+      "field": "missing"
+    },
+    {
+      "id": "infrastructure-capacity-overdraw",
+      "field": "maximumCapacityBytes"
+    },
+    {
+      "id": "infrastructure-work-overdraw",
+      "field": "workFuel"
+    }
+  ],
+  "turnTrace": {
+    "maximumTurnMicroseconds": 2000000,
+    "requestedLifetimeMicroseconds": 30000000,
+    "now": [
+      1000,
+      3001000
+    ],
+    "absoluteDeadlineMicroseconds": 30001000,
+    "callbackDeadlinesMicroseconds": [
+      1991000,
+      4991000
+    ]
+  }
+}

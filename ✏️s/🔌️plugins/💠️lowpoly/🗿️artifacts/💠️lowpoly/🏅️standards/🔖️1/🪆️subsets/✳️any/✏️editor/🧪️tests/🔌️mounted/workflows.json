@@ -1,0 +1,15 @@
+{
+  "schema": "lowpoly.managed-edit-journey/v1",
+  "objectId": "obj-1",
+  "faceId": "lowpoly-document.obj-1.face.0",
+  "action": "extrude",
+  "arguments": { "extrudeDistance": 0.5 },
+  "expect": {
+    "geometryChanged": true,
+    "literalSourceChanged": false,
+    "packRoundtripEqual": true,
+    "jsonOracleRoundtripEqual": true,
+    "undoRestoresGeometry": true,
+    "redoRestoresGeometry": true
+  }
+}

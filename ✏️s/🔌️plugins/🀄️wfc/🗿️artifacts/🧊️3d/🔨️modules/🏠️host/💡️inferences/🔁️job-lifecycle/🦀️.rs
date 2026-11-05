@@ -47,9 +47,7 @@ impl Wfc3dInferenceJob {
                 Wfc3dInferenceStage::Restore => {
                     if self.restore_done {
                         self.child = self.restore.as_mut().expect("restore job").take_job();
-                        if let Some(mut restore) = self.restore.take() {
-                            engine::job::close_job(&mut restore);
-                        }
+                        if let Some(restore) = self.restore.as_mut() { restore.begin_close(); }
                         self.restore_done = false;
                         self.stage = Wfc3dInferenceStage::Solve;
                         return self.stage_preview(context);
@@ -67,22 +65,7 @@ impl Wfc3dInferenceJob {
                         return self.stage_fault(error.into_bytes());
                     }
                 }
-                Wfc3dInferenceStage::EncodeCommit => match self.encode_one(context) {
-                    Ok(true) => {
-                        let output = match self.output.take().expect("wfc3d output writer").finish() {
-                            Ok(output) => output,
-                            Err(mut writer) => {
-                                writer.begin_close();
-                                self.output = Some(writer);
-                                return Wfc3dInferenceJobRun::Yield;
-                            }
-                        };
-                        self.output_payload = Some(output);
-                        return Wfc3dInferenceJobRun::Yield;
-                    }
-                    Ok(false) => return Wfc3dInferenceJobRun::Yield,
-                    Err(error) => return self.stage_fault(error.into_bytes()),
-                },
+                Wfc3dInferenceStage::EncodeCommit => return Wfc3dInferenceJobRun::StepOutput,
                 Wfc3dInferenceStage::Complete => unreachable!("complete returns immediately"),
             }
             context.consume_fuel(1);
@@ -100,13 +83,8 @@ impl Wfc3dInferenceJob {
     }
 
     /// 🤝️ Closes the lent preview or fault turn by turn from the next step's own wallet.
-    fn retire_delivered<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
-        let publication = self.publication.as_mut().expect("a delivered inference publication is staged");
-        let step = match publication.close_step(context.retained_grant()) { Ok(step) => step, Err(error) => { context.consume_retained(error.retained_progress())?; return Err(error) } };
-        context.consume_retained(step.progress())?;
-        if publication.terminal_is_empty() {
-            self.publication = None;
-        }
+    fn retire_delivered<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        semio_s_plugin_wfc_engine::job::close_publication_step(&mut self.publication, context)?;
         Ok(None)
     }
 
@@ -116,9 +94,7 @@ impl Wfc3dInferenceJob {
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "inference close depth overflow"))?;
             Ok(demand)
         };
-        if let Some(publication) = self.publication.as_ref() {
-            return publication.retirement_demands();
-        }
+        if self.publication.is_some() { return semio_s_plugin_wfc_engine::job::publication_retirement_demands(&self.publication); }
         if let Some(output) = self.output.as_ref() {
             return if output.terminal_is_empty() { Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }) } else { nested(output.retirement_demands()?) };
         }
@@ -126,27 +102,27 @@ impl Wfc3dInferenceJob {
             return if payload.terminal_is_empty() { Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }) } else { nested(payload.retirement_demands()?) };
         }
         if let Some(restore) = self.restore.as_ref() {
+            if restore.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: restore.next_close_copy_byte_demand()?, capacity_bytes: restore.next_close_capacity_byte_demand(0)?, release_bytes: restore.next_close_release_byte_demand()?, depth: restore.next_close_depth_demand()?.saturating_add(1) });
         }
         if let Some(child) = self.child.as_ref() {
+            if child.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: child.next_close_copy_byte_demand()?, capacity_bytes: child.next_close_capacity_byte_demand(0)?, release_bytes: child.next_close_release_byte_demand()?, depth: child.next_close_depth_demand()?.saturating_add(1) });
         }
-        if let Some(source) = self.rejected_output_page.as_ref() {
-            return Ok(semio_framework_value::RetirementDemand { release_bytes: source.allocated_capacity_bytes(), depth: 1, ..Default::default() });
-        }
+        if let Some(chunk) = self.output_chunk.as_ref() { return Ok(semio_framework_value::RetirementDemand { release_bytes: chunk.capacity(), depth: 1, ..Default::default() }); }
         Ok(semio_framework_value::RetirementDemand::default())
     }
 }
 
 impl Wfc3dInferenceJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_job::JobOutcomeBorrow;
-        if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {
+        if self.publication.as_ref().is_some_and(|publication| publication.needs_retirement()) {
             return self.retire_delivered(context);
         }
         if context.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(context);
+            return Ok(JobOutcomeBorrow::admit_cancelled(context)?);
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             self.stage_fault(b"stale-wfc3d-inference-operation".to_vec());
@@ -156,11 +132,11 @@ impl Wfc3dInferenceJob {
             return self.publication.as_mut().expect("a staged inference publication").poll(context);
         }
         if self.output_payload.is_some() {
-            return JobOutcomeBorrow::admit_complete(context, self.child.as_ref().and_then(|child| child.commit_state()), self.output_payload.as_ref());
+            return Ok(JobOutcomeBorrow::admit_complete(context, self.child.as_ref().and_then(|child| child.commit_state()), self.output_payload.as_ref())?);
         }
         match self.run(context) {
             Wfc3dInferenceJobRun::Yield | Wfc3dInferenceJobRun::Staged => Ok(None),
-            Wfc3dInferenceJobRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
+            Wfc3dInferenceJobRun::Cancelled => Ok(JobOutcomeBorrow::admit_cancelled(context)?),
             Wfc3dInferenceJobRun::StepRestore => {
                 let result = self.restore.as_mut().expect("restore job").step_value(context)?;
                 if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
@@ -170,6 +146,7 @@ impl Wfc3dInferenceJob {
                 self.lent = Wfc3dInferenceJobLent::Restore;
                 Ok(result)
             }
+            Wfc3dInferenceJobRun::StepOutput => { self.encode_one(context)?; Ok(None) }
             Wfc3dInferenceJobRun::StepChild => {
                 let result = self.child.as_mut().expect("WFC child").step_value(context)?;
                 let end = if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
@@ -189,7 +166,7 @@ impl Wfc3dInferenceJob {
 }
 
 impl InteractiveJob for Wfc3dInferenceJob {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self, context:&mut semio_framework_job::StepContext<'_>, _claim:&mut semio_framework_job::OriginalJobReturnClaim)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         use semio_framework_job::JobOutcomeKind;
@@ -213,9 +190,6 @@ impl InteractiveJob for Wfc3dInferenceJob {
         if let Some(child) = self.child.as_mut() {
             child.begin_close();
         }
-        if let Some(output) = self.output.as_mut() {
-            output.begin_close();
-        }
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
@@ -233,61 +207,54 @@ impl InteractiveJob for Wfc3dInferenceJob {
             }
             let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
             let child_grant = semio_framework_job::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-            if let Some(publication) = self.publication.as_mut() {
-                let step = publication.close_step(grant)?;
-                if publication.terminal_is_empty() {
-                    self.publication = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
+            if self.publication.is_some() {
+                let step = semio_s_plugin_wfc_engine::job::close_publication_step(&mut self.publication, cx)?;
+                return Ok(match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
             }
             if let Some(output) = self.output.as_mut() {
                 if output.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.output = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return Ok(match output.close_step(child_grant) {
-                    Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                    Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
-                });
+                let step = semio_framework_job::receive_original_retained_work(cx, output.close_step_granted(child_grant))?;
+                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(payload) = self.output_payload.as_mut() {
                 if payload.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.output_payload = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return Ok(match payload.close_step(child_grant) {
-                    Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                    Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
-                });
+                let step = semio_framework_job::receive_original_retained_work(cx, payload.close_step(child_grant))?;
+                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(restore) = self.restore.as_mut() {
-                let step = cx.with_retained_loan(child_grant, |same| restore.close_step(same))?;
                 if restore.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.restore = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
+                    return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
+                let step = cx.with_retained_loan(child_grant, |same| restore.close_step(same))?;
                 return Ok(match step {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
                     step => step,
                 });
             }
             if let Some(child) = self.child.as_mut() {
-                let step = cx.with_retained_loan(child_grant, |same| child.close_step(same))?;
                 if child.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.child = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
+                    return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
+                let step = cx.with_retained_loan(child_grant, |same| child.close_step(same))?;
                 return Ok(match step {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
                     step => step,
                 });
             }
-            if let Some(source) = self.rejected_output_page.take() {
-                let released_bytes = source.allocated_capacity_bytes();
-                drop(source);
+            if let Some(chunk) = self.output_chunk.take() {
+                let released_bytes = chunk.capacity(); cx.consume_fuel(1); drop(chunk);
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { released_bytes, ..one } });
             }
             Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
@@ -313,6 +280,6 @@ impl InteractiveJob for Wfc3dInferenceJob {
     /// 🚪️ Ownership ONLY — deliberately NOT gated on a closing flag: the retained session calls `begin_close`
     /// itself, and a flag-gated predicate would spin its own close ladder forever.
     fn terminal_is_empty(&self) -> bool {
-        self.publication.is_none() && self.output.is_none() && self.output_payload.is_none() && self.restore.is_none() && self.child.is_none() && self.rejected_output_page.is_none()
+        self.publication.is_none() && self.output.is_none() && self.output_payload.is_none() && self.restore.is_none() && self.child.is_none() && self.output_chunk.is_none()
     }
 }

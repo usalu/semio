@@ -1,0 +1,94 @@
+{
+  "cases": [
+    {
+      "action": "changeCellSizes",
+      "args": {
+        "axis": "x",
+        "sizes": [
+          1,
+          2
+        ]
+      },
+      "commandJson": "{\"ChangeCellSizes\":{\"axis\":\"x\",\"sizes\":[1.0,2.0]}}"
+    },
+    {
+      "action": "changePeriodicity",
+      "args": {
+        "periodicX": true,
+        "periodicY": false,
+        "periodicZ": false
+      },
+      "commandJson": "{\"ChangePeriodicity\":{\"periodic_x\":true,\"periodic_y\":false,\"periodic_z\":false}}"
+    },
+    {
+      "action": "createTile",
+      "args": {
+        "id": "roof",
+        "label": "Roof",
+        "weight": 1,
+        "r": 70,
+        "g": 80,
+        "b": 90,
+        "a": 255
+      },
+      "commandJson": "{\"CreateTile\":{\"id\":\"roof\",\"label\":\"Roof\",\"weight\":1.0,\"r\":70,\"g\":80,\"b\":90,\"a\":255}}"
+    },
+    {
+      "action": "deleteTile",
+      "args": {
+        "id": "roof"
+      },
+      "commandJson": "{\"DeleteTile\":{\"id\":\"roof\"}}"
+    },
+    {
+      "action": "changeTileWeight",
+      "args": {
+        "tileId": "roof",
+        "weight": 2
+      },
+      "commandJson": "{\"ChangeTileWeight\":{\"tile_id\":\"roof\",\"weight\":2.0}}"
+    },
+    {
+      "action": "changeTileColor",
+      "args": {
+        "tileId": "roof",
+        "r": 70,
+        "g": 80,
+        "b": 90,
+        "a": 255
+      },
+      "commandJson": "{\"ChangeTileColor\":{\"tile_id\":\"roof\",\"r\":70,\"g\":80,\"b\":90,\"a\":255}}"
+    },
+    {
+      "action": "createRule",
+      "args": {
+        "id": "roof-right",
+        "tileAId": "roof",
+        "tileBId": "roof",
+        "direction": "RIGHT",
+        "allowed": true
+      },
+      "commandJson": "{\"CreateRule\":{\"id\":\"roof-right\",\"tile_a_id\":\"roof\",\"tile_b_id\":\"roof\",\"direction\":\"RIGHT\",\"allowed\":true}}"
+    },
+    {
+      "action": "deleteRule",
+      "args": {
+        "id": "roof-right"
+      },
+      "commandJson": "{\"DeleteRule\":{\"id\":\"roof-right\"}}"
+    },
+    {
+      "action": "setCamera",
+      "args": {
+        "x": 5,
+        "y": 5,
+        "z": 5,
+        "targetX": 0,
+        "targetY": 0,
+        "targetZ": 0,
+        "zoom": 1
+      },
+      "commandJson": "{\"SetCamera\":{\"x\":5.0,\"y\":5.0,\"z\":5.0,\"target_x\":0.0,\"target_y\":0.0,\"target_z\":0.0,\"zoom\":1.0}}"
+    }
+  ]
+}

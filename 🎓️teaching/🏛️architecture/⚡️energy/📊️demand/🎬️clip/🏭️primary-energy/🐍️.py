@@ -777,7 +777,7 @@ class Beat2_Primaerenergiefaktor(Scene):
             ("qe", r"Q_{E}", END_RED), ("dot", r"\cdot", P_WHITE),
             ("fp", tr(r"f_{p,\mathrm{n.\,ren.}}", r"f_{p,\mathrm{n.\,ern.}}"), P_YELLOW), ("unit", rf"\;[{UNIT}]", P_PRIMARY),
         ])
-        say(tr("renewable", "erneuerbar"),
+        say("erneuerbar",
             (1.0, unlane("umwelt")),
             (1.4, [Create(box2), *[ReplacementTransform(items[k], items2[k]) for k in ("qp", "eq", "qe", "dot", "fp")],
                    FadeIn(items2["unit"]), Indicate(VGroup(*reads.values()), color=P_YELLOW, scale_factor=1.06)]))
@@ -1306,7 +1306,7 @@ class Beat4_Referenzgebaeude(Scene):
                                    edge="left")
             return [Create(box2), TransformFromCopy(frozen["ee"], items2["ee"]), FadeIn(items2["ee_text"])]
 
-        say(tr("renewable", "erneuerbar"),
+        say("erneuerbar",
             (1.0, [FadeOut(box), FadeOut(row), FadeOut(ring_ht)]),
             (1.6, lambda: shown(ee_read, anims=[FadeIn(share_gauge["track"]), FadeIn(share_gauge["fill"]),
                                                 FadeIn(ee_name), t_ee.animate.set_value(EE_SHARE)])),

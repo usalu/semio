@@ -5,9 +5,7 @@ use semio_plugin_host::GuestRuntime as _;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_plugin_host::GuestRuntimes;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_plugin_host::SharedEngineConfig;
-#[cfg(not(target_arch = "wasm32"))]
-use semio_plugin_host::WasmtimeRuntime;
+use semio_plugin_host::OwnedRuntime;
 #[cfg(not(target_arch = "wasm32"))]
 use std::collections::HashMap;
 #[cfg(not(target_arch = "wasm32"))]
@@ -25,29 +23,28 @@ use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, ActivationScope, Fault};
 
-/// 🐎️ ONE compiled runtime for this process, built on first use. `build_shared_engine`'s own
-/// contract is one `Engine` per process (a pooling allocator reservation and a 1 ms epoch ticker
-/// each), and a `wasmtime::Component` may only be instantiated by the `Engine` that compiled it — so
-/// every `PluginArtifactChannel`, and every inference route they open, share this one.
-///
-/// 🧊️ Held as the `GuestRuntimes` enum because `PluginInstanceHandle::new` takes an
-/// `Arc<GuestRuntimes>`; the enum delegates every `GuestRuntime` method to the wasmtime arm with no
-/// indirection beyond a match.
-///
-/// ⛽️ Unmetered: every budget this gateway arms disarms fuel (`u64::MAX`) and bounds a guest call
-/// by its epoch deadline, so metering bought nothing here but instrumented every guest block — see
-/// [`SharedEngineConfig::fuel_metering`] for the measurement.
-///
-/// 🧯️ A failed engine build is cached as a `String` rather than retried per call: it fails for
-/// reasons that do not change inside a process (no virtual address space, an unusable cache root),
-/// and retrying it on every tool call would turn one honest refusal into a stall.
+/// 🧠️ The process shares one firstparty interpreter for dynamically supplied component bytes.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn shared_plugin_runtime() -> Result<Arc<GuestRuntimes>, GatewayError> {
-    static RUNTIME: std::sync::OnceLock<Result<Arc<GuestRuntimes>, String>> = std::sync::OnceLock::new();
-    RUNTIME
-        .get_or_init(|| semio_framework_async::block_on(WasmtimeRuntime::new(SharedEngineConfig { fuel_metering: false, ..SharedEngineConfig::default() },semio_framework_job::default_now_us)).map(|runtime| Arc::new(GuestRuntimes::from(runtime))).map_err(|error| error.to_string()))
-        .clone()
-        .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared plugin engine: {error}")))
+    Ok(Arc::clone(plugin_runtime_origin().get_or_init(||Arc::new(GuestRuntimes::Owned(OwnedRuntime::new(semio_framework_job::default_now_us))))))
+}
+
+#[cfg(not(target_arch="wasm32"))]
+fn plugin_runtime_origin()->&'static OnceLock<Arc<GuestRuntimes>>{static RUNTIME:OnceLock<Arc<GuestRuntimes>>=OnceLock::new();&RUNTIME}
+
+/// 🏠️ The actual immutable process cache lends its selected compiled parent without issuing aliases.
+#[cfg(not(target_arch="wasm32"))]
+pub fn native_instance_origin(package_hash:[u8;32])->semio_framework_plugin_host::GuestRelayNativeOrigin{
+    semio_framework_plugin_host::GuestRelayNativeOrigin{package_hash,resolve:resolve_native_instance_origin}
+}
+
+#[cfg(not(target_arch="wasm32"))]
+fn resolve_native_instance_origin(hash:[u8;32],run:&mut dyn FnMut(&GuestRuntimes,&semio_framework_plugin_host::CompiledHandle)->Result<(),semio_framework_job::OriginalTurnFailure>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let Some(runtime)=plugin_runtime_origin().get()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native instance has no admitted process runtime origin").into())};
+    let Ok(cache)=compiled_components().try_lock()else{return Ok(false)};
+    let compiled=cache.get(&hash).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native instance has no admitted immutable compiled origin"))?;
+    if compiled.package_hash!=hash{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native compiled cache identity differs from its selected origin").into())}
+    run(runtime,compiled)?;Ok(true)
 }
 
 /// 🧩️ ONE compiled component per staged build, for the life of the process, keyed by the

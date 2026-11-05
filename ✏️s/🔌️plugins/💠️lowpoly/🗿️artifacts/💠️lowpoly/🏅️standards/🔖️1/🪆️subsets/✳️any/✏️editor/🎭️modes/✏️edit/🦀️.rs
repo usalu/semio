@@ -37,7 +37,6 @@ use semio_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOpti
 use semio_ui_locale::LabelText;
 
 use crate::windows::model;
-use semio_plugin::create_default_layout;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
 use semio_plugin::WindowLayout;
@@ -53,7 +52,18 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[model::LOWPOLY_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Model".into()]))
+    lowpoly_layout(&[model::LOWPOLY_PLAY_WINDOW_MAIN], &[100.0])
+}
+/// 🪟️ Layout structure leaves window titles to their localized window-kind definitions.
+pub fn lowpoly_layout(window_ids: &[&str], sizes: &[f64]) -> WindowLayout {
+    use semio_plugin::{create_window_layout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
+    WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+        kind: "row".into(), size: None,
+        children: window_ids.iter().enumerate().map(|(index, id)| WindowLayoutChild::Stack(WindowLayoutStackNode {
+            kind: "stack".into(), size: sizes.get(index).copied(), active_window_kind_id: None,
+            children: vec![create_window_layout(*id, None, None, None)],
+        })).collect(),
+    }) }
 }
 //#endregion 🔖️Definition
 
@@ -111,7 +121,27 @@ pub fn lowpoly_window_engagement_with_selection(view: LowpolyView<'_>, active_ut
         disabled: None,
         action: Some(lowpoly_window_action("setUtilityParam", Some(semio_framework_value::DslValue::object([("key".to_string(), semio_framework_value::DslValue::String(key.to_string())), ("value".to_string(), semio_framework_value::DslValue::Bool(!pressed))])))),
     };
-    let status = if selected_components > 0 { format!("{active_utility} · {selected_components} {} {}", select.granularity, labels.selected.as_str()) } else { active_utility.to_string() };
+    let utility = match active_utility {
+        "move" => labels.gumball_move,
+        "rotate" => labels.gumball_rotate,
+        "scale" => labels.gumball_scale,
+        "brush" => labels.brush_group,
+        "eraser" => labels.eraser,
+        "fill" => labels.fill,
+        "eyedropper" => labels.eyedropper,
+        _ => labels.utility,
+    };
+    let status_granularity = match (select.granularity.as_str(), selected_components == 1) {
+        ("vertex", true) => labels.vertex,
+        ("edge", true) => labels.edge,
+        ("face", true) => labels.face,
+        ("vertex", false) => labels.vertices,
+        ("edge", false) => labels.edges,
+        ("face", false) => labels.faces,
+        (_, true) => labels.mesh,
+        _ => labels.meshes,
+    };
+    let status = if selected_components > 0 { format!("{} · {selected_components} {} {}", utility.as_str(), status_granularity.as_str(), labels.selected.as_str()) } else { utility.as_str().to_string() };
     WindowEngagement {
         session_active: Some(true),
         options: Some(vec![
@@ -136,7 +166,7 @@ pub fn lowpoly_window_engagement_with_selection(view: LowpolyView<'_>, active_ut
         input: Some(WindowEngagementInput {
             id: Some("lowpoly-engagement".into()),
             value: Some(config.engagement_input.clone()),
-            placeholder: Some("extrude, inset, mirror, decimate".into()),
+            placeholder: Some(labels.command_placeholder.as_str().into()),
             disabled: None,
             on_change: Some(lowpoly_window_action("engagementInput", None)),
             on_submit: Some(lowpoly_window_action("engagementSubmit", None)),

@@ -26,6 +26,8 @@ pub enum BitmapMutation {
     PinPixel(crate::standards::v1::subsets::any::schema::mutations::pin_pixel::PinPixel),
     UnpinPixel(crate::standards::v1::subsets::any::schema::mutations::unpin_pixel::UnpinPixel),
     PaintInputStroke(crate::standards::v1::subsets::any::schema::mutations::paint_input_stroke::PaintInputStroke),
+    PinSolution(crate::standards::v1::subsets::any::schema::mutations::pin_solution::PinSolution),
+    RestorePins(crate::standards::v1::subsets::any::schema::mutations::restore_pins::RestorePins),
 }
 
 //#region 🏷️Kinds
@@ -33,7 +35,7 @@ pub enum BitmapMutation {
 /// vocabulary the `wfc-bitmap-1-any` mutation catalog (`../../🔮️oracles/🔣️.json`) declares and the
 /// `🧩️mutate-bitmap-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// the unit test beside this file is what keeps the list honest against both.
-pub const KINDS: &[&str] = &["change-seed", "resize-input", "set-input-pixels", "add-palette-color", "change-palette-color", "remove-palette-color", "resize-output", "change-model", "pin-pixel", "unpin-pixel", "paint-input-stroke"];
+pub const KINDS: &[&str] = &["change-seed", "resize-input", "set-input-pixels", "add-palette-color", "change-palette-color", "remove-palette-color", "resize-output", "change-model", "pin-pixel", "unpin-pixel", "paint-input-stroke", "pin-solution", "restore-pins"];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
@@ -110,3 +112,13 @@ pub fn unpin_pixel(x: u32, y: u32) -> BitmapMutation {
     crate::standards::v1::subsets::any::schema::mutations::unpin_pixel::unpin_pixel::<BitmapMutation>(x, y)
 }
 //#endregion 🔖️ConcreteBuilders
+
+/// 📌️ Publishes one complete solution as one document event.
+pub fn pin_solution(pins: Vec<crate::schema::snapshot::BitmapPinnedPixel>) -> BitmapMutation {
+    crate::standards::v1::subsets::any::schema::mutations::pin_solution::pin_solution(pins)
+}
+
+/// ↩️ Restores the exact previous pin sequence.
+pub fn restore_pins(pins: Vec<crate::schema::snapshot::BitmapPinnedPixel>) -> BitmapMutation {
+    crate::standards::v1::subsets::any::schema::mutations::restore_pins::restore_pins(pins)
+}

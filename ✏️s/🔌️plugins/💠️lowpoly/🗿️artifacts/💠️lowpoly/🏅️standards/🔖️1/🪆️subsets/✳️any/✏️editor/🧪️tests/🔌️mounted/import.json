@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "action": "importMeshFile",
+  "name": "triangle.obj",
+  "source": "o Triangle\nv 0 0 0\nv 2 0 0\nv 0 3 0\nf 1 2 3\n",
+  "paddingLine": "# imported padding\n",
+  "paddingLines": 4096,
+  "forms": [
+    "raw",
+    "dataUrl"
+  ],
+  "expected": {
+    "objects": 1,
+    "faces": 1,
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        3,
+        0
+      ]
+    ],
+    "loadEffects": 1
+  },
+  "limits": {
+    "payloadBytes": 2097152,
+    "nameBytes": 4096,
+    "ordinaryCommandBytes": 16384,
+    "importCommandBytes": 2101280
+  }
+}

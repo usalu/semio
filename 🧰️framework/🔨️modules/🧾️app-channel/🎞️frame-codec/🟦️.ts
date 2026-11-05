@@ -35,6 +35,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeStr(out, value.mime_type);
     writeVarintU64Exact(out, value.total_bytes);
     writeStr(out, value.detail);
+    writeBytes(out, value.descriptor);
   } else if ("MediaExportChunk" in frame) {
     out.push(APP_FRAME_TAGS.MediaExportChunk);
     writeVarintU64Exact(out, frame.MediaExportChunk.in_reply_to);
@@ -222,7 +223,7 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
     case APP_FRAME_TAGS.MediaExportStatus: {
       const in_reply_to = readVarintU64Exact(bytes, pos), handle = readMediaExportHandle(bytes, pos), state = MEDIA_EXPORT_STATES[readU8(bytes, pos)];
       if (state === undefined) throw new Error("media export: invalid state");
-      return exactMediaExportFrame(bytes, pos, { MediaExportStatus: { in_reply_to, handle, state, applied_progress: readVarintU64Exact(bytes, pos), checkpoint_available: readBool(bytes, pos), mime_type: readStr(bytes, pos), total_bytes: readVarintU64Exact(bytes, pos), detail: readStr(bytes, pos) } });
+      return exactMediaExportFrame(bytes, pos, { MediaExportStatus: { in_reply_to, handle, state, applied_progress: readVarintU64Exact(bytes, pos), checkpoint_available: readBool(bytes, pos), mime_type: readStr(bytes, pos), total_bytes: readVarintU64Exact(bytes, pos), detail: readStr(bytes, pos), descriptor: readBytes(bytes, pos) } });
     }
     case APP_FRAME_TAGS.MediaExportChunk:
       return exactMediaExportFrame(bytes, pos, { MediaExportChunk: { in_reply_to: readVarintU64Exact(bytes, pos), handle: readMediaExportHandle(bytes, pos), data: readBytes(bytes, pos), terminal: readBool(bytes, pos) } });

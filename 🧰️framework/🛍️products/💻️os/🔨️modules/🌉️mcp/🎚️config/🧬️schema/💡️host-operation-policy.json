@@ -1,0 +1,190 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/mcp/host-operation-policy.json",
+  "title": "MCP Host Operation Policy",
+  "description": "Each authenticated request issues one finite operation. Cleanup, host transit, guest infrastructure and client semantic work use disjoint consumable currency within that Source.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "cleanup",
+    "transit",
+    "infrastructure"
+  ],
+  "properties": {
+    "scope": {
+      "const": "per-operation"
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retained",
+        "workFuel",
+        "executionFuel",
+        "maximumMicroseconds"
+      ],
+      "properties": {
+        "retained": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumCopyBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            }
+          }
+        },
+        "workFuel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "executionFuel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumMicroseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "transit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retained",
+        "workFuel"
+      ],
+      "properties": {
+        "retained": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumCopyBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            }
+          }
+        },
+        "workFuel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "infrastructure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retained",
+        "workFuel"
+      ],
+      "properties": {
+        "retained": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumCopyBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            }
+          }
+        },
+        "workFuel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  }
+}

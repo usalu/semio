@@ -35,7 +35,7 @@ fn always_satisfiable_child(_node: NodeId, _pattern: PatternId) -> (CompiledMode
 fn solves_macro_then_every_child() {
     let (model, topo) = checkerboard(4);
     let config = SearchConfig::default();
-    match solve_hierarchy(&model, &topo, &config, 1, always_satisfiable_child) {
+    match solve_hierarchy(&model, &topo, &config, 1, always_satisfiable_child).expect("original search and teardown complete") {
         HierarchyOutcome::Solved { macro_solution, children } => {
             assert_eq!(macro_solution.assignment.len(), 4);
             assert_eq!(children.len(), 4);
@@ -72,7 +72,7 @@ fn reports_macro_unsatisfiable_without_attempting_children() {
     let config = SearchConfig::default();
 
     let never_called = |_: NodeId, _: PatternId| -> (CompiledModel, GraphTopology, SearchConfig) { panic!("child should never be attempted") };
-    let outcome = solve_hierarchy(&model, &topo, &config, 1, never_called);
+    let outcome = solve_hierarchy(&model, &topo, &config, 1, never_called).expect("original search and teardown complete");
     assert!(matches!(outcome, HierarchyOutcome::MacroUnsatisfiable));
 }
 
@@ -101,7 +101,7 @@ fn reports_which_node_child_failed_at() {
         }
     };
 
-    let outcome = solve_hierarchy(&model, &topo, &config, 1, child_model_for);
+    let outcome = solve_hierarchy(&model, &topo, &config, 1, child_model_for).expect("original search and teardown complete");
     assert!(matches!(outcome, HierarchyOutcome::ChildFailed { node: NodeId(1) }));
 }
 

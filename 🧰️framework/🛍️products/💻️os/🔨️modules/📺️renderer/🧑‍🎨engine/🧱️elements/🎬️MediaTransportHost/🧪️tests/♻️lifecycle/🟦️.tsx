@@ -54,7 +54,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   /** 🎞️ The browser oracle selects one closed millisecond interval. */
   const selectionPair = (value: readonly number[]): readonly [number, number] => { if (value.length !== 2) throw new Error(`The oracle fixture names ${value.length} selection bounds`); return [value[0]!, value[1]!]; };
   const mediaKind = (value: string): "audio" | "video" => { if (value === "audio" || value === "video") return value; throw new Error(`The oracle fixture names the media kind ${JSON.stringify(value)}`); };
-  const status = (state: "running" | "complete" | "cancelled" | "failed", progress = 0n) => ({ handle, state, applied_progress: progress, checkpoint_available: false, mime_type: fixture.media.mediaType, total_bytes: BigInt(fixture.output.totalBytes), detail: state });
+  const status = (state: "running" | "complete" | "cancelled" | "failed", progress = 0n) => ({ handle, state, applied_progress: progress, checkpoint_available: false, descriptor: [], mime_type: fixture.media.mediaType, total_bytes: BigInt(fixture.output.totalBytes), detail: state });
   const makePort = () => {
     const polls = [status("running", 1n), status("running", 2n), status("complete", 2n)];
     const chunks = fixture.output.chunks.map((data: number[], index: number) => ({ handle, data: Uint8Array.from(data), terminal: index === fixture.output.chunks.length - 1 }));
@@ -85,7 +85,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("drains completed output before reporting a MIME refusal and never cancels an already-complete owner", async () => {
       const port = makePort();
       port.pollMediaExport.mockReset();
-      port.pollMediaExport.mockResolvedValue({ ...status("complete"), mime_type: "application/schema" });
+      port.pollMediaExport.mockResolvedValue({ ...status("complete"), descriptor: [], mime_type: "application/schema" });
       await expect(collectMediaTransportBytes({ instanceId: fixture.identity.instanceId, parentDocumentId: fixture.identity.parentDocumentId, revision: BigInt(fixture.identity.revision), generation: BigInt(fixture.identity.generation), mediaType: fixture.media.mediaType, port, cancelled: () => false, progress: () => {} })).rejects.toThrow("media-export.media-type");
       expect(port.takeMediaExportChunk).toHaveBeenCalledTimes(fixture.output.chunks.length);
       expect(port.cancelMediaExport).not.toHaveBeenCalled();

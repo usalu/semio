@@ -84,7 +84,7 @@ fn every_example_declares_a_distinct_id_and_a_localized_label() {
 #[cfg(test)]
 pub mod fixtures {
     use super::*;
-    use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, paint_input_stroke, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel, BitmapMutation, BitmapStrokePoint};
+    use crate::mutations::{pin_solution, restore_pins, add_palette_color, change_model, change_palette_color, change_seed, paint_input_stroke, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel, BitmapMutation, BitmapStrokePoint};
 
     /// 🧪️ The shared scene every case starts from: a 4 × 3 two-colour checker, a 6 × 4 output, an
     /// `N = 2` model, no pins. Small enough to read in a diff, structured enough that the
@@ -110,6 +110,8 @@ pub mod fixtures {
 
     pub fn cases() -> Vec<(&'static str, &'static str, BitmapSnapshot, BitmapMutation)> {
         vec![
+            ("📌️pin-solution", "📌️keeps", base_with_pins(), pin_solution((0..24).map(|index| BitmapPinnedPixel { x: index % 6, y: index / 6, color: (index % 6 + index / 6) % 2 }).collect())),
+            ("↩️restore-pins", "↩️restores", BitmapSnapshot { pinned: (0..24).map(|index| BitmapPinnedPixel { x: index % 6, y: index / 6, color: (index % 6 + index / 6) % 2 }).collect(), ..base() }, restore_pins(base_with_pins().pinned)),
             ("🎲️change-seed", "🎲️reseeds", base(), change_seed(99)),
             ("📐️resize-input", "📐️grows", base(), resize_input(6, 4)),
             ("🖌️set-input-pixels", "🖌️paints", base(), set_input_pixels(1, 0, 2, 2, ([1, 1, 1, 1]).to_vec())),
@@ -222,7 +224,7 @@ fn emit_committed_fixtures() {
         let outcome = <crate::BitmapMutation as protocol::ColdMutation<BitmapSnapshot>>::diff(&mutation, &before);
         let mut after = before.clone();
         vcs::apply_mutation(&after, &mutation).map(|(applied_state, _)| { after = applied_state; }).unwrap_or_else(|error| panic!("{kind}/{case} applies: {error}"));
-        let directory = root.join("🧫️fixtures/🧬️mutations").join(kind).join(case);
+        let directory = root.join("🧪️tests/🧫️fixtures/🧬️mutations").join(kind).join(case);
         write_fixture(&directory, "📸️snapshot/⬅️before/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&before)));
         write_fixture(&directory, "📸️snapshot/➡️after/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&after)));
         write_fixture(&directory, "🦠️mutation/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&mutation)));

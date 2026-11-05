@@ -137,7 +137,10 @@ pub const WFC_2D_RETAINED_TOOL_IDS: &[&str] = &[
 
 const WFC_2D_RETAINED_PAYLOAD_SCHEMA: &str = "wfc.wfc2d.tool-command.v1";
 
-pub(super) const WFC_2D_RETAINED_RAW_BYTES: usize = 65_536;
+pub(super) const WFC_2D_RETAINED_RAW_BYTES: usize = 2 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
+
+/// 📬️ Two complete solve records and their sparse diff fit within the admitted tick carrier.
+pub(super) const WFC_2D_RETAINED_OUTPUT_BYTES: usize = 4 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
 
 pub(super) const WFC_2D_RETAINED_WORK_ITEMS: usize = 4_096;
 
@@ -151,7 +154,7 @@ const fn config_route(tool_id: &'static str) -> ArtifactToolPublicationContract 
     ArtifactToolPublicationContract { tool_id, lanes: &[ArtifactToolPublicationLane::Config] }
 }
 
-/// 🛣️ One lane per route, read off each arm of `dispatch` and `solve_transient`. `solve` is the one
+/// 🛣️ One lane per route, declared by the retained command routes. `solve` is the one
 /// TRANSIENT route: the assignment is inferred, so it must never reach the document lanes. The example
 /// picker is `HostOnly` — it answers a whole-document `Effect::LoadDocument`, which is not an edit, so
 /// re-picking the boot example mints no phantom undo entry.
@@ -180,7 +183,7 @@ const WFC_2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
 ];
 
 fn wfc2d_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(WFC_2D_RETAINED_RAW_BYTES, WFC_2D_RETAINED_WORK_ITEMS, 1, 262_144, 7_500)
+    ToolExecutionContract::bounded_first_step(WFC_2D_RETAINED_RAW_BYTES, WFC_2D_RETAINED_WORK_ITEMS, 1, WFC_2D_RETAINED_OUTPUT_BYTES, 7_500)
 }
 
 /// 📏️ One bounded first step per route, admitted only while the WHOLE addressable document plus this
@@ -193,18 +196,7 @@ pub(super) fn wfc2d_retained_extent(command: &Wfc2dEditorCommand, snapshot: &Wfc
     (items <= WFC_2D_RETAINED_WORK_ITEMS).then_some(1)
 }
 
-/// 🏁 Runs `s.wfc.wfc2d.solve` to completion and answers the ONE transient mutation the preview paints
-/// from. The engine job is driven through the artifact's own headless adapter, so the live app and the
-/// crate's tests solve through exactly the same ladder.
-pub fn solve_transient(document: &Wfc2dSnapshot) -> Result<Vec<Wfc2dTransientMutation>, Fault> {
-    let commit = crate::inferences::solve_with_job(document).map_err(|error| Fault::from(format!("wfc2d-solve:{error}")))?;
-    let assignments = document
-        .slots
-        .iter()
-        .filter_map(|slot| commit.assignments.get(&slot.id).map(|tile_id| crate::editor::wfc2d::transient::Wfc2dAssignment { slot_id: slot.id.clone(), tile_id: tile_id.clone() }))
-        .collect();
-    Ok(vec![crate::editor::wfc2d::transient::SetSolve { assignments, contradiction: commit.contradiction }.into()])
-}
+
 
 /// 🧵️ The ONE bounded work step every wfc2d route runs — the pure `dispatch` reducer, plus the
 /// transient lane for `solve`.
@@ -243,7 +235,7 @@ impl ArtifactCommandWork<EditorApp<Wfc2dEditor>> for Wfc2dCommandWork {
         let transient = match input.command {
             Wfc2dEditorCommand::CommitFill { payload_json } => {
                 let payload = fill::decode_fill_payload(payload_json.as_bytes()).ok_or_else(|| Fault::from("wfc2d-commit-fill-payload"))?;
-                payload.set_solve_mutations()
+                if payload.completed_for(Some(&input.operation.canonical_base_revision)) { payload.set_solve_mutations() } else { Vec::new() }
             }
             _ => Vec::new(),
         };
@@ -299,3 +291,44 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for Wfc2dRetainedCommandJobFactor
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = WFC_2D_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️Retained
+
+#[cfg(test)]
+mod completion_source_tests {
+    use super::*;
+    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandSnapshotRead, ArtifactCommandWork, ArtifactCommandWorkStep};
+    use crate::editor::wfc2d::transient::{Wfc2dAssignment, Wfc2dTransient};
+
+    /// 📨️ Real retained completion work preserves an existing complete cache when a late callback is stale.
+    #[test]
+    fn stale_completion_emits_no_rows_and_cannot_overwrite_a_newer_cache() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🧪️tests/🧫️preview-revisions/🔣️.json")).unwrap();
+        let snapshot = crate::examples::two_room_corridor::document();
+        let config = crate::editor::wfc2d::config::Wfc2dConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let interaction = protocol::InteractionState::default();
+        let hover = Default::default();
+        let grant = semio_framework_plugin::artifact_app_laws::fixture_retained_turn().grant;
+        for case in fixture["cases"].as_array().unwrap() {
+            let source_revision: Vec<u8> = serde_json::from_value(case["sourceRevision"].clone()).unwrap();
+            let current: Option<[u8;32]> = serde_json::from_value(case["currentRevision"].clone()).unwrap();
+            let payload = fill::Wfc2dFillTickPayload { source_revision, done: true, assignments: [(snapshot.slots[0].id.clone(), Some(snapshot.tiles.last().unwrap().id.clone()))].into_iter().collect(), ..Default::default() };
+            let Some(revision) = current else { assert!(!payload.completed_for(None)); continue; };
+            let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wfc2d".into(), operation_id: 1, generation: 1, canonical_base_revision: revision, retained: grant, authoring_seed: "completion".into() };
+            let command = Wfc2dEditorCommand::CommitFill { payload_json: String::from_utf8(fill::encode_fill_payload(&payload)).unwrap() };
+            let input = ArtifactCommandInputs::<semio_framework_plugin::EditorApp<Wfc2dEditor>> { command: &command, snapshot: &snapshot, snapshot_owner: None, snapshot_read: ArtifactCommandSnapshotRead::unavailable(&operation), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
+            let mut cache = Wfc2dTransient { source_revision: revision.to_vec(), assignments: vec![Wfc2dAssignment { slot_id: snapshot.slots[0].id.clone(), tile_id: snapshot.tiles[0].id.clone() }], contradiction: false };
+            let before = cache.clone();
+            let mut work = Wfc2dCommandWork::new(fill::COMMIT_FILL_ACTION_ID);
+            let mut caller = semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();
+            let step = caller.work_turn(grant, 1, |cx| { cx.consume_fuel(1); work.step(&input, cx) }).unwrap();
+            let rows = match step { ArtifactCommandWorkStep::CompleteWithEphemeral { ephemeral, .. } => ephemeral.transient, ArtifactCommandWorkStep::Complete(_) => Vec::new(), _ => panic!("completion must settle") };
+            let visible = case["visible"].as_bool().unwrap();
+            assert_eq!(rows.len(), usize::from(visible), "{}", case["id"]);
+            for row in rows { cache = protocol::apply_mutation(&cache, &row).unwrap().0; }
+            assert_eq!(cache != before, visible, "{}", case["id"]);
+            if !visible { assert_eq!(cache, before); }
+            assert!(work.terminal_is_empty());
+            caller.finish();
+        }
+    }
+}

@@ -1,5 +1,5 @@
 //! 👁️ WFC 3D viewer — the read-only `ArtifactViewer` for `s.wfc.wfc3d@1/*`: one `wfc-3d-view`
-//! window showing the solved assembly. The viewer declares no mutating actions at all; its single
+//! window showing current admitted results and authored pins. The viewer declares no mutating actions at all; its single
 //! inert `Noop` command exists because the surface contract asks for a command type, not because
 //! there is anything to author here.
 //!
@@ -28,8 +28,6 @@ use semio_plugin::NoConfig;
 use semio_plugin::NoConfigMutation;
 use semio_plugin::NoPresence;
 use semio_plugin::NoPresenceMutation;
-use semio_plugin::NoTransient;
-use semio_plugin::NoTransientMutation;
 use semio_plugin::ViewEmit;
 use semio_plugin::Viewer;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -63,8 +61,8 @@ impl ArtifactViewer for Wfc3dViewer {
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
     type PresenceMutation = NoPresenceMutation;
-    type Transient = NoTransient;
-    type TransientMutation = NoTransientMutation;
+    type Transient = crate::editor::wfc3d::transient::Wfc3dTransient;
+    type TransientMutation = crate::editor::wfc3d::transient::Wfc3dTransientMutation;
     type Command = Wfc3dViewCommand;
 
     const DIALECT: Dialect = WFC3D_DIALECT;
@@ -89,7 +87,7 @@ impl ArtifactViewer for Wfc3dViewer {
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_plugin::no_transient_store_disposer())
+        Some(semio_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
@@ -101,8 +99,10 @@ impl ArtifactViewer for Wfc3dViewer {
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
+
+    fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> { Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>()) }
 
     fn reference_birth()->Option<fn()->Result<Wfc3dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::examples::two_room_corridor::snapshot())
@@ -119,16 +119,20 @@ impl ArtifactViewer for Wfc3dViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        render_body(body_key, doc.snapshot)
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+        render_with_transient(body_key, doc, &Self::Transient::default(), view_state.locale, view_state.terminology)
     }
+    fn render_with_request_context(_owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel, transient: &semio_plugin::TransientView<'_, Self::Transient>, _interaction: &semio_plugin::app::InteractionView<'_>, _cx: &mut semio_framework_job::StepContext<'_>) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        render_with_transient(body_key, doc, transient.snapshot, view_state.locale, view_state.terminology).map(Some).map_err(Into::into)
+    }
+
 }
 
 /// 🖼️ The read-only render, as a PURE function of the document — `render`'s `ArtifactView` adapter
 /// cannot be built outside the framework, so the body lives here where a test can reach it.
-pub fn render_body(body_key: &str, document: &Wfc3dSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+pub fn render_body(body_key: &str, document: &Wfc3dSnapshot, transient: &crate::editor::wfc3d::transient::Wfc3dTransient, revision: Option<&[u8;32]>, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     match body_key {
-        preview::WFC_3D_VIEW_BODY => preview::render(document).map(semio_plugin::built_to_component_tree),
+        preview::WFC_3D_VIEW_BODY => preview::render(document, transient, revision, locale, terminology).map(semio_plugin::built_to_component_tree),
         _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
     }
 }
@@ -152,3 +156,6 @@ pub fn create_wfc3d_viewer() -> semio_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+/// 🪪️ The mounted read-only adapter binds cached output to its actual render authority.
+pub fn render_with_transient(body_key: &str, doc: &ArtifactView<'_, Wfc3dSnapshot>, transient: &crate::editor::wfc3d::transient::Wfc3dTransient, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> { render_body(body_key, doc.snapshot, transient, doc.render_operation_ref().map(|operation| &operation.canonical_base_revision), locale, terminology) }

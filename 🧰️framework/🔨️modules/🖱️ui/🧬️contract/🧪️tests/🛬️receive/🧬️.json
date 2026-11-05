@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "version",
+    "cancelPrefixes",
+    "stock",
+    "components",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cancelPrefixes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "stock": {
+      "type": "object"
+    },
+    "components": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 21,
+      "maxItems": 21,
+      "items": {
+        "type": "string"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "family",
+          "wire",
+          "accepted"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "family": {
+            "enum": [
+              "component",
+              "patch",
+              "presence"
+            ]
+          },
+          "wire": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

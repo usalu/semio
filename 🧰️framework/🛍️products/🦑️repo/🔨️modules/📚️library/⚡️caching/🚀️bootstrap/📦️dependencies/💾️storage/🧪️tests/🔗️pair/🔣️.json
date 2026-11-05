@@ -1,0 +1,122 @@
+[
+  {
+    "id": "posix-siblings",
+    "style": "posix",
+    "target": "/w/cache/nm",
+    "parent": "/w/src",
+    "device": "same",
+    "base": "/w",
+    "shared": true,
+    "canceled": false
+  },
+  {
+    "id": "source-is-common-base",
+    "style": "posix",
+    "target": "/w/cache/nm",
+    "parent": "/w",
+    "device": "same",
+    "base": "/",
+    "shared": true,
+    "canceled": false
+  },
+  {
+    "id": "target-is-common-base",
+    "style": "posix",
+    "target": "/w/cache",
+    "parent": "/w/cache/src",
+    "device": "same",
+    "base": "/w",
+    "shared": true,
+    "canceled": false
+  },
+  {
+    "id": "same-directory",
+    "style": "posix",
+    "target": "/w/x",
+    "parent": "/w/x",
+    "device": "same",
+    "base": "/w",
+    "shared": true,
+    "canceled": false
+  },
+  {
+    "id": "filesystem-root",
+    "style": "posix",
+    "target": "/",
+    "parent": "/w",
+    "device": "same",
+    "base": null,
+    "shared": false,
+    "canceled": false
+  },
+  {
+    "id": "windows-siblings",
+    "style": "win32",
+    "target": "C:\\w\\cache\\nm",
+    "parent": "C:\\w\\src",
+    "device": "same",
+    "base": "C:\\w",
+    "shared": true,
+    "canceled": false
+  },
+  {
+    "id": "windows-source-base",
+    "style": "win32",
+    "target": "C:\\w\\cache\\nm",
+    "parent": "C:\\w",
+    "device": "same",
+    "base": "C:\\",
+    "shared": true,
+    "canceled": false
+  },
+  {
+    "id": "different-drive",
+    "style": "win32",
+    "target": "D:\\cache\\nm",
+    "parent": "C:\\w",
+    "device": "same",
+    "base": null,
+    "shared": false,
+    "canceled": false
+  },
+  {
+    "id": "unc-keeps-independent",
+    "style": "win32",
+    "target": "\\\\server\\share\\cache",
+    "parent": "\\\\server\\share\\src",
+    "device": "same",
+    "base": null,
+    "shared": false,
+    "canceled": false
+  },
+  {
+    "id": "separate-store-mount",
+    "style": "posix",
+    "target": "/w/cache/nm",
+    "parent": "/w/src",
+    "device": "split",
+    "base": "/w",
+    "shared": false,
+    "canceled": false
+  },
+  {
+    "id": "linked-ancestor",
+    "style": "posix",
+    "target": "/w/cache/nm",
+    "parent": "/w/src",
+    "device": "linked",
+    "base": "/w",
+    "shared": false,
+    "canceled": false
+  },
+  {
+    "id": "cancel-prequalification",
+    "style": "posix",
+    "target": "/w/cache/nm",
+    "parent": "/w/src",
+    "device": "same",
+    "base": "/w",
+    "shared": false,
+    "canceled": true
+  }
+]

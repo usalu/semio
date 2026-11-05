@@ -1,0 +1,5 @@
+{
+  "command": ["import-acceptance"],
+  "packages": ["semio-s-artifact-puzzle-5d-v1-unit-tests"],
+  "arguments": ["--offline", "--lib", "import_identity_matches_neutral_fixtures_and_independent_json", "--", "--nocapture"]
+}

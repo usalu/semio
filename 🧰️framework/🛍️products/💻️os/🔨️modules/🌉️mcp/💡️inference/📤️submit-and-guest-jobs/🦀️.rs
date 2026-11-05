@@ -24,7 +24,7 @@ pub(super) fn inference_submit_handler(context: &InferenceToolContext<'_>, argum
 /// session-owned handle, and the plugin's guest runs on a job thread of its own so the call answers
 /// at once. Every later fact — progress, result, proposal, cancel — lands in the job's journal.
 fn submit_guest_job(context: &InferenceToolContext<'_>, workspace: &Arc<HeadlessWorkspace>, service: InferenceService, document_id: &str, arguments: &serde_json::Value) -> Result<(String, serde_json::Value), GatewayError> {
-    inference_original_turn(arguments)?;
+    inference_call_request(arguments)?;
     validate_inference_request(&service.declared, arguments.get("payload").filter(|value| !value.is_null()), Some(document_id))?;
     let jobs = job_registry();
     let job_id = jobs.begin("inference.submit");

@@ -8,7 +8,7 @@ pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Demo Session", "Demo-Sitzung")
 }
 pub const ICON: &str = "play";
-pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🎮️.cmd.semio");
+pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️.dsl.semio");
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }

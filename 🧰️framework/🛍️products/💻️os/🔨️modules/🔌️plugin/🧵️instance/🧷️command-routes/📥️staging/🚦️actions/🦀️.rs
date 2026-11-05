@@ -390,9 +390,51 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             self.begin_agent_lane_preview(command,admission,meta,cx).await?;
             return Ok(None)
         }
+        self.finish_agent_lane_preview(&address.action_id, kind, meta, cx).await
+    }
+
+    /// ⌨️ Previews the declared app or mode command through its original typed producer.
+    pub async fn preview_addressed_command(&mut self, invocation: &semio_framework::manifest::CommandInvocation, meta: &ActionMeta, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
+        if self.host_events.resumes.in_flight(){return Ok(None)}
+        let address = &invocation.address;
+        let command_id = address.command_id.as_str();
+        let owner_app = self.app.instance_id().await;
+        if let ManifestCommandOwnerAddress::Mode { mode_id, .. } = &address.owner {
+            if meta.view_state.as_ref().and_then(|view| view.active_mode_id.as_deref()) != Some(mode_id.as_str()) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("plugin.unavailable"), "mode command requires its active retained caller surface context; activate that mode in the live shell before invocation").into());
+            }
+        }
+        let definition = match &address.owner {
+            ManifestCommandOwnerAddress::App { app_id, .. } if app_id == owner_app => self.tools.registry.app_command(command_id).await,
+            ManifestCommandOwnerAddress::Mode { app_id, mode_id, .. } if app_id == owner_app && self.tools.registry.has_mode(mode_id).await => self.tools.registry.mode_command(mode_id, command_id).await,
+            _ => return Err(plugin_sdk_fault("preview command does not belong to this app or one of its declared modes").into()),
+        }.ok_or_else(|| plugin_sdk_fault(format!("preview command owner declares no command {command_id}")))?;
+        let kind = definition.kind;
+        validate_ui_dispatch_classification("command", command_id, definition.semantics.execution.interactive_job)?;
+        if self.tools.agent_lane_preview.as_ref().is_none_or(|state| state.starting) {
+            if !self.admit_agent_lane_preview_key(meta, cx)? || !self.ingress.action_source_capture_ready(command_id, cx) { return Ok(None) }
+            let mut args = if self.ingress.action_source_pending() { None } else { Some(DslValue::Object(invocation.arguments.iter().map(|(key, value)| (key.clone(), value.clone())).collect())) };
+            let mut fault = None;
+            let Some(slot) = self.ingress.stage_action_source(command_id, &mut args, &mut fault, cx)? else { return Ok(None) };
+            let Some(mut source) = self.ingress.action_ingress_sources.get_mut(slot).unwrap().loan_source(cx)? else { return Ok(None) };
+            let prepared = self.prepare_original_action_source(command_id, &mut source, cx).await;
+            let terminal = !matches!(&prepared, Ok(false));
+            self.ingress.action_ingress_sources.get_mut(slot).unwrap().return_source(ManuallyDrop::into_inner(source), terminal);
+            if terminal { self.ingress.pending_action_ingress_identity = None; }
+            if !prepared? { return Ok(None) }
+            let (Some(command), Some(admission)) = (self.original_typed_command.command.take(), self.original_typed_command.admission.take()) else { return Err(plugin_sdk_fault("command preview lost its original typed command or admission").into()) };
+            self.media.require_complete_tool_operation_pipeline(&admission)?;
+            self.begin_agent_lane_preview(command, admission, meta, cx).await?;
+            return Ok(None)
+        }
+        self.finish_agent_lane_preview(command_id, kind, meta, cx).await
+    }
+
+    /// 🧺️ Publishes only preview op bytes; the later transaction owns their application.
+    async fn finish_agent_lane_preview(&mut self, action_id: &str, kind: semio_framework::ActionKind, meta: &ActionMeta, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         if self.original_typed_command.pending()&&self.original_typed_command.metadata.is_none()&&self.original_typed_command.operation.is_none(){cx.with_original_retirement(|cx|self.original_typed_command.close_step(cx))?;return Ok(None)}
         let maximum_bytes=self.tools.agent_lane_preview.as_ref().unwrap().maximum_bytes;
-        let Some((emit,(presence,transient,window_transient),job_steps))=self.tools.advance_agent_lane_preview(&address.action_id, cx)?else{return Ok(None)};
+        let Some((emit,(presence,transient,window_transient),job_steps))=self.tools.advance_agent_lane_preview(action_id, cx)?else{return Ok(None)};
         let carriage = agent_lane_carriage(&AgentLanePublication {
             carried_ops: emit.artifact_mutations.len() + emit.config_mutations.len() + emit.draft_mutations.len() + emit.child_emits.len(),
             effects: &emit.effects,
@@ -407,11 +449,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         });
         match carriage {
             AgentLaneCarriage::Carried => {}
-            AgentLaneCarriage::NoEffect => return Err((agent_lane_no_effect_fault(&address.action_id, &emit.effects)).into()),
-            AgentLaneCarriage::Uncarried(lanes) => return Err((agent_lane_uncarried_fault(&address.action_id, &lanes.join(", "))).into()),
+            AgentLaneCarriage::NoEffect => return Err((agent_lane_no_effect_fault(action_id, &emit.effects)).into()),
+            AgentLaneCarriage::Uncarried(lanes) => return Err((agent_lane_uncarried_fault(action_id, &lanes.join(", "))).into()),
         }
         if A::ROLE == AppRole::Viewer && (!emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty()) {
-            return Err((viewer_read_only_fault(&address.action_id)).into());
+            return Err((viewer_read_only_fault(action_id)).into());
         }
         let mut artifact_op_bytes = Vec::with_capacity(emit.artifact_mutations.len());
         for op in emit.artifact_mutations.iter() {
@@ -422,7 +464,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 return Err((Fault::new(
                     FaultOrigin::Framework,
                     FaultCode::new("interactive-job.agent-lane-child-missing"),
-                    format!("action '{}' edits owned child {:?} in slot {:?}, which this instance does not hold", address.action_id, child.child_id, child.slot),
+                    format!("action '{}' edits owned child {:?} in slot {:?}, which this instance does not hold", action_id, child.child_id, child.slot),
                 )).into());
             }
         }
@@ -440,13 +482,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return Err((Fault::new(
                 FaultOrigin::Framework,
                 FaultCode::new("interactive-job.preview-output"),
-                format!("previewed action '{}' produced {priced} op byte(s); its exact output cap is {}", address.action_id, maximum_bytes),
+                format!("previewed action '{}' produced {priced} op byte(s); its exact output cap is {}", action_id, maximum_bytes),
             )).into());
         }
         self.pending.last_emit_wire = Some(EmitWire { document: protocol::encode_ops_vec(&artifact_op_bytes), config: protocol::encode_ops_vec(&config_op_bytes), draft: protocol::encode_ops_vec(&draft_op_bytes), children: child_op_bytes });
-        let mut result = ToolOperations::<A>::empty_result(&address.action_id, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await;
+        let mut result = ToolOperations::<A>::empty_result(action_id, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await;
         result.output = DslValue::Object(vec![
-            ("previewedAction".into(), DslValue::String(address.action_id.clone())),
+            ("previewedAction".into(), DslValue::String(action_id.to_string())),
             ("actionKind".into(), DslValue::String(format!("{kind:?}"))),
             ("documentOps".into(), DslValue::String(artifact_op_bytes.len().to_string())),
             ("configOps".into(), DslValue::String(config_op_bytes.len().to_string())),
@@ -553,18 +595,19 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         Ok(())
     }
 
-    /// 🧩️ A typed frame IS an owner-qualified invocation — the exact wire `AppCommand::Command`
-    /// carries. Decoding it here is what gives the agent lane the same dispatch the shell's UI
-    /// lane has; running it through [`Self::preview_addressed_action`] rather than
-    /// `handle_action_invocation` is what makes it a PREPARE (see that method's own doc).
+    /// 📨️ Both declared invocation types preview their genuine producer without applying its operations.
     pub async fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
-        let invocation: ManifestActionInvocation = semio_framework_plugin_plugin_program::decode_wire_serialized(command_bytes).await.map_err(|_| {
+        let request: semio_framework::kernel::PureCommandRequest = semio_framework_plugin_plugin_program::decode_wire_serialized::<semio_framework::kernel::PureCommandRequest>(command_bytes).await.map_err(|_| {
             Fault::new(
                 FaultOrigin::Framework,
                 FaultCode::new("interactive-job.missing-exact-key"),
-                "a typed command frame carries one owner-qualified ManifestActionInvocation — the same wire AppCommand::Command carries; this frame decoded as neither, so no command-specific pre-serde envelope can be selected",
+                "pure command bytes require one schema-owned PureCommandRequest with a declared invocation and optional explicit caller context",
             )
-        })?;
-        self.preview_addressed_action(&invocation, meta, cx).await
+        })?.bind_context(meta.view_state.as_ref())?;
+        let meta = ActionMeta { actor: meta.actor.clone(), instance_id: meta.instance_id, view_state: request.view_state };
+        match request.invocation {
+            semio_framework::kernel::PureInvocation::Command(invocation) => self.preview_addressed_command(&invocation, &meta, cx).await,
+            semio_framework::kernel::PureInvocation::Action(invocation) => self.preview_addressed_action(&invocation, &meta, cx).await,
+        }
     }
 }

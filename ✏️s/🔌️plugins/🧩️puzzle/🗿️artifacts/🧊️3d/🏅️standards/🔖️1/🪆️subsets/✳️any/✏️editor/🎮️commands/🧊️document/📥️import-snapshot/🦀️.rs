@@ -71,12 +71,12 @@ pub fn import_snapshot(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
         Ok(value) => value,
         Err(fault) => return refuse(ctx, fault),
     };
-    let Ok(mut scene_snapshot) = Puzzle3dSceneSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&value)) else {
+    if !matches!(value.get("schema").and_then(Value::as_str), Some(semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA | PUZZLE3D_SCENE_SNAPSHOT_SCHEMA)) {
+        return refuse(ctx, Puzzle3dImportFault::Payload);
+    }
+    let Ok(scene_snapshot) = Puzzle3dSceneSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&value)) else {
         return refuse(ctx, Puzzle3dImportFault::Payload);
     };
-    if scene_snapshot.schema.is_empty() {
-        scene_snapshot.schema = PUZZLE3D_SCENE_SNAPSHOT_SCHEMA.into();
-    }
     let Ok(document) = puzzle3d_snapshot_from_host_snapshot(&scene_snapshot) else {
         return refuse(ctx, Puzzle3dImportFault::Payload);
     };

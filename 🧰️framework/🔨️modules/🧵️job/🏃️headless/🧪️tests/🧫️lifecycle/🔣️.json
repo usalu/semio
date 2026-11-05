@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "id": "rejected",
+      "expected": {
+        "closed": true,
+        "jobReturned": false,
+        "outputKept": false,
+        "causeKept": false
+      }
+    },
+    {
+      "id": "admission",
+      "expected": {
+        "closed": false,
+        "jobReturned": true,
+        "outputKept": false,
+        "causeKept": false
+      }
+    },
+    {
+      "id": "blocked-output",
+      "expected": {
+        "closed": false,
+        "jobReturned": false,
+        "outputKept": true,
+        "causeKept": false
+      }
+    },
+    {
+      "id": "original-cause",
+      "expected": {
+        "closed": false,
+        "jobReturned": false,
+        "outputKept": false,
+        "causeKept": true
+      }
+    }
+  ]
+}

@@ -7,7 +7,7 @@
 //! seed. The first statement is the stronger one — it does not care which of several valid
 //! assignments the solver picked — and the second is what catches engine drift.
 
-use crate::inferences::solve_assignments;
+use crate::inferences::solve_with_clock;
 use crate::Wfc3dSnapshot;
 use semio_framework_test_fixtures::{fixture_path, fixture_text};
 use std::collections::BTreeMap;
@@ -97,7 +97,7 @@ fn every_committed_assignment_is_consistent_with_its_own_spec() {
 fn the_live_solve_reproduces_every_committed_assignment() {
     for case in committed() {
         let snapshot = (case.snapshot)();
-        let solved = solve_assignments(&snapshot);
+        let solved = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("test-only example inference").assignments;
         assert_eq!(solved, assignments(&expected(&case)), "{}: the live solve drifted from its committed outcome", case.example);
     }
 }
@@ -148,7 +148,7 @@ fn regenerate_committed_example_assets() {
     for (case, (slug, id)) in committed().into_iter().zip(slugs) {
         let snapshot = (case.snapshot)();
         std::fs::write(root.join(slug).join("🖼️assets").join(slug).join("🗣️.dsl.semio"), crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&snapshot)).expect("write dsl asset");
-        let solved = solve_assignments(&snapshot);
+        let solved = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("test-only example inference").assignments;
         let outcome = serde_json::json!({
             "schema": OUTCOME_SCHEMA,
             "example": id,

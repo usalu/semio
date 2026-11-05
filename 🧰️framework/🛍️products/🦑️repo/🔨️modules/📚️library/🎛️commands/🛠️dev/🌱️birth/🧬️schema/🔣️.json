@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/library/dev-mcp-birth/schema.json",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "prefix": ["dev", "mcp", "stdio", "os"],
+        "helpFlags": ["-h", "--help"],
+        "buildTarget": "@semio-tech/framework-os-mcp-rs:build",
+        "catalogFlag": "--catalog-target",
+        "outputFlag": "--output=stream"
+      }
+    },
+    "Target": {
+      "type": "string",
+      "pattern": "^@?[A-Za-z0-9][A-Za-z0-9@/_.-]*:[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "argv", "targets", "rejected"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "argv": { "type": "array", "items": { "type": "string" } },
+        "targets": { "type": ["array", "null"], "items": { "$ref": "#/$defs/Target" } },
+        "rejected": { "type": "boolean" }
+      }
+    }
+  },
+  "type": "array",
+  "items": { "$ref": "#/$defs/Case" },
+  "minItems": 8
+}

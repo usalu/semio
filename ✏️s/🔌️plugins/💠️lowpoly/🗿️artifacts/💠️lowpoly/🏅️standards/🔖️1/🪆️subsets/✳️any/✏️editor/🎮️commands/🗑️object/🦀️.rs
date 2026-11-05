@@ -79,19 +79,17 @@ pub mod duplicate_object {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let source_id = payload.object_id.clone().or_else(|| ctx.selection_object_id().map(str::to_string)).unwrap_or_else(|| resolve_active_object_id(projection, config));
         let source = projection.objects.iter().find(|object| object.id == source_id).ok_or_else(|| Fault::from(format!("lowpoly duplicate: object {source_id} is not in the document")))?;
-        if source.mesh_content.is_empty() {
-            return Err(Fault::from(format!("lowpoly duplicate: object {source_id} carries no mesh content")));
-        }
+        let state = source.mesh_state.as_ref().ok_or_else(|| Fault::from(format!("lowpoly duplicate: object {source_id} carries no managed mesh")))?;
         let serial = projection.objects.iter().filter_map(|object| object.id.strip_prefix("obj-")?.parse::<u32>().ok()).max().unwrap_or(100) + 1;
         let id = format!("obj-{serial}");
         let mut transform = source.transform.clone();
         transform.position[0] += 1.0;
-        let copy = LowpolyObject { mesh_state:None,
+        let copy = LowpolyObject { mesh_state:Some(state.clone()),
             id: id.clone(),
             name: format!("{} copy", source.name),
             transform,
             smooth_shading: source.smooth_shading,
-            mesh: Some(semio_s_artifact_lowpoly_lowpoly_model::snapshot::mesh_child_handle(&id, &source.mesh_content)),
+            mesh: Some(semio_s_artifact_lowpoly_lowpoly_model::snapshot::managed_mesh_child_handle(&id, state)),
             paint_layers: source.paint_layers.iter().cloned().map(semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyPaintLayer::compacted).collect(),
             mesh_content: source.mesh_content.clone(),
         };

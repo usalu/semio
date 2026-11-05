@@ -1,4 +1,4 @@
-//! 🧪 Fill tool — payload shape, schema leaf, and interactive step progress.
+use semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver;
 
 use crate::editor::bitmap::modes::edit::windows::output;
 use crate::schema::snapshot::BitmapSnapshot;
@@ -7,7 +7,7 @@ use semio_plugin::Fault;
 use semio_framework_tool_run::{ToolRunIdentity, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunTraceKind};
 use crate::editor::bitmap::modes::edit::tools::fill::*;
 use crate::schema::snapshot::{BitmapColor, BitmapInput, BitmapOutputSpec, BitmapOverlappingModel};
-use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, OperationId, StepBudget};
+use semio_framework_job::Generation;
 use semio_plugin::ToolRunJobPort;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 
@@ -39,7 +39,6 @@ fn identity() -> ToolRunIdentity {
     ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 7 }, [0; 32])
 }
 
-const TEST_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
 
 /// 🧭️ What one driven call of the fill run lent to its caller.
 #[derive(Debug)]
@@ -52,19 +51,14 @@ enum Stepped {
 }
 
 /// 🦶️ One fuel budget against a shared operation — the child `WfcJob` is bound to that operation for the whole run.
-fn drive_once(job: &mut BitmapFillRunJob, operation: OperationId, generation: Generation, cancel: &semio_framework_job::CancelToken, sequence: &mut u64, fuel: u64) -> Stepped {
-    let now = semio_framework_job::default_now_us().expect("clock");
-    let budget = StepBudget::new(fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4, TEST_GRANT);
-    let mut receipt = semio_framework_job::RetainedCloneProgress::default();
-    let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(operation, generation, budget, cancel.clone(), sequence, &mut receipt);
-    let mut verdict = None;
-    match semio_framework_job::drive_step(job, &mut context, "wfc.bitmap.fill.run.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("fill step admission") {
+fn drive_once(job: &mut BitmapFillRunJob, driver: &mut TestJobDriver, fuel: u64) -> Stepped {
+    driver.step(job, fuel, |outcome| match outcome {
         None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. } | semio_framework_job::JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Yield,
         Some(semio_framework_job::JobOutcomeBorrow::PreviewReady { payload, .. }) => Stepped::Tick((0..payload.page_count()).flat_map(|index| payload.page(index).expect("page").to_vec()).collect()),
         Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
         Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
         Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
-    }
+    })
 }
 
 fn tick_payload(outcome: Stepped) -> Option<BitmapFillPayload> {
@@ -77,30 +71,7 @@ fn tick_payload(outcome: Stepped) -> Option<BitmapFillPayload> {
     }
 }
 
-fn close(job: &mut BitmapFillRunJob) {
-    job.begin_close();
-    for _ in 0..1_000_000 {
-        if job.terminal_is_empty() {
-            return;
-        }
-        let grant = semio_framework_job::RetainedCloneGrant {
-            maximum_items: 1,
-            maximum_copy_bytes: job.next_close_copy_byte_demand().expect("a locally owned fill quotes its copy demand"),
-            maximum_capacity_bytes: job.next_close_capacity_byte_demand(usize::MAX).expect("a locally owned fill quotes its capacity demand"),
-            maximum_release_bytes: job.next_close_release_byte_demand().expect("a locally owned fill quotes its release demand"),
-            maximum_depth: job.next_close_depth_demand().expect("a locally owned fill quotes its depth demand").max(1),
-        };
-        match semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn") {
-            InteractiveJobCloseStep::Complete { .. } => {
-                assert!(job.terminal_is_empty());
-                return;
-            }
-            InteractiveJobCloseStep::Pending { .. } => {}
-            InteractiveJobCloseStep::Blocked => panic!("fill close blocked or refused"),
-        }
-    }
-    panic!("fill close never completed");
-}
+
 
 #[test]
 fn the_fill_tool_declares_the_contract_shape() {
@@ -133,11 +104,10 @@ fn stepping_publishes_a_partial_payload_then_a_richer_one() {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), Generation(0), snapshot.seed);
     let (operation_id, generation) = (operation.operation, operation.generation);
     let mut job = BitmapFillRunJob::new(identity(), ToolRunJobPort::default(), snapshot, operation);
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(operation_id, generation);
     let mut payloads = Vec::new();
     for _ in 0..500_000 {
-        let outcome = drive_once(&mut job, operation_id, generation, &cancel, &mut sequence, 1);
+        let outcome = drive_once(&mut job, &mut driver, 1);
         let terminal = matches!(outcome, Stepped::Complete | Stepped::Cancelled | Stepped::Fault);
         if let Some(payload) = tick_payload(outcome) {
             payloads.push(payload);
@@ -146,7 +116,7 @@ fn stepping_publishes_a_partial_payload_then_a_richer_one() {
             break;
         }
     }
-    close(&mut job);
+    driver.close(&mut job);
     let finished = payloads.iter().rev().find(|payload| payload.done).expect("a finished payload");
     let finished_count = finished.decided_count();
     assert!(finished_count > 1, "fixture must have room to collapse");
@@ -162,11 +132,10 @@ fn the_final_payload_matches_solve_with_job() {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), Generation(0), snapshot.seed);
     let (operation_id, generation) = (operation.operation, operation.generation);
     let mut job = BitmapFillRunJob::new(identity(), ToolRunJobPort::default(), snapshot, operation);
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(operation_id, generation);
     let mut finished = None;
     for _ in 0..500_000 {
-        let outcome = drive_once(&mut job, operation_id, generation, &cancel, &mut sequence, 8);
+        let outcome = drive_once(&mut job, &mut driver, 8);
         let terminal = matches!(outcome, Stepped::Complete | Stepped::Cancelled | Stepped::Fault);
         if let Some(payload) = tick_payload(outcome) {
             if payload.done {
@@ -177,7 +146,8 @@ fn the_final_payload_matches_solve_with_job() {
             break;
         }
     }
-    close(&mut job);
+    assert_eq!(job.committed_solve().expect("committed source").source_revision, crate::standards::v1::subsets::any::io::text::snapshot::encode_base64(&identity().base_revision));
+    driver.close(&mut job);
     let finished = finished.expect("finished");
     assert_eq!(finished.contradiction, oracle.contradiction);
     if oracle.contradiction {
@@ -196,29 +166,28 @@ fn aborting_mid_run_does_not_publish_set_solve() {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), Generation(0), snapshot.seed);
     let (operation_id, generation) = (operation.operation, operation.generation);
     let mut job = BitmapFillRunJob::new(identity(), port.clone(), snapshot, operation);
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(operation_id, generation);
     let mut saw_partial = false;
     for _ in 0..20_000 {
-        let outcome = drive_once(&mut job, operation_id, generation, &cancel, &mut sequence, 1);
+        let outcome = drive_once(&mut job, &mut driver, 1);
         if let Some(payload) = tick_payload(outcome) {
             if payload.decided_count() > 0 && !payload.done {
                 saw_partial = true;
                 break;
             }
             if payload.done {
-                close(&mut job);
+                driver.close(&mut job);
                 panic!("finished before abort window");
             }
         }
     }
     assert!(saw_partial, "need a live partial before aborting");
     job.begin_close();
-    let outcome = drive_once(&mut job, operation_id, generation, &cancel, &mut sequence, 1);
+    let outcome = drive_once(&mut job, &mut driver, 1);
     assert!(matches!(outcome, Stepped::Cancelled), "closing mid-run must cancel: {outcome:?}");
     let _ = tick_payload(outcome);
     assert!(!port.has_effects(), "abort must not dispatch commit-fill-solve / SetSolve");
-    close(&mut job);
+    driver.close(&mut job);
     assert!(!port.has_effects(), "close after abort still must not publish SetSolve");
     assert!(job.committed_solve().is_none());
 }
@@ -229,11 +198,10 @@ fn a_full_lane_step_publishes_a_burst_of_collapses_and_keeps_discards() {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), Generation(0), snapshot.seed);
     let (operation_id, generation) = (operation.operation, operation.generation);
     let mut job = BitmapFillRunJob::new(identity(), ToolRunJobPort::default(), snapshot.clone(), operation);
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(operation_id, generation);
     let mut bursts = Vec::new();
     for _ in 0..20 {
-        let outcome = drive_once(&mut job, operation_id, generation, &cancel, &mut sequence, semio_framework_job::INTERACTIVE_LANE_FUEL);
+        let outcome = drive_once(&mut job, &mut driver, semio_framework_job::INTERACTIVE_LANE_FUEL);
         if let Some(payload) = tick_payload(outcome) {
             bursts.push(payload);
         }
@@ -241,7 +209,7 @@ fn a_full_lane_step_publishes_a_burst_of_collapses_and_keeps_discards() {
             break;
         }
     }
-    close(&mut job);
+    driver.close(&mut job);
     assert!(bursts.iter().any(|payload| payload.trace.len() > 1), "one host step must carry more than one collapse");
     let mut discarded = None;
     for seed in 1..6 {
@@ -249,10 +217,10 @@ fn a_full_lane_step_publishes_a_burst_of_collapses_and_keeps_discards() {
         let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), Generation(0), snapshot.seed);
         let (operation_id, generation) = (operation.operation, operation.generation);
         let mut job = BitmapFillRunJob::new(identity(), ToolRunJobPort::default(), snapshot.clone(), operation);
-        let mut sequence = 0u64;
+        let mut driver = TestJobDriver::new(operation_id, generation);
         let mut found = None;
         for _ in 0..40 {
-            let outcome = drive_once(&mut job, operation_id, generation, &cancel, &mut sequence, semio_framework_job::INTERACTIVE_LANE_FUEL);
+            let outcome = drive_once(&mut job, &mut driver, semio_framework_job::INTERACTIVE_LANE_FUEL);
             if let Some(payload) = tick_payload(outcome) {
                 if payload.trace.iter().any(|event| event.discarded) {
                     found = Some((snapshot, payload));
@@ -260,7 +228,7 @@ fn a_full_lane_step_publishes_a_burst_of_collapses_and_keeps_discards() {
                 }
             }
         }
-        close(&mut job);
+        driver.close(&mut job);
         if found.is_some() {
             discarded = found;
             break;
@@ -291,12 +259,11 @@ fn rooms_16_paints_several_new_cells_in_one_host_step() {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), Generation(0), snapshot.seed);
     let (operation_id, generation) = (operation.operation, operation.generation);
     let mut job = BitmapFillRunJob::new(identity(), ToolRunJobPort::default(), snapshot, operation);
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(operation_id, generation);
     let mut previous = 0usize;
     let mut best_delta = 0usize;
     for _ in 0..48 {
-        let outcome = drive_once(&mut job, operation_id, generation, &cancel, &mut sequence, semio_framework_job::INTERACTIVE_LANE_FUEL);
+        let outcome = drive_once(&mut job, &mut driver, semio_framework_job::INTERACTIVE_LANE_FUEL);
         if let Some(payload) = tick_payload(outcome) {
             let len = payload.trace.len();
             best_delta = best_delta.max(len.saturating_sub(previous));
@@ -306,6 +273,6 @@ fn rooms_16_paints_several_new_cells_in_one_host_step() {
             }
         }
     }
-    close(&mut job);
+    driver.close(&mut job);
     assert!(best_delta > 1, "one host step on rooms-16 must paint more than one new cell, best {best_delta}");
 }

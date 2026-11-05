@@ -15,6 +15,8 @@ message PinPixel { uint32 x = 1; uint32 y = 2; uint32 color = 3; }
 message UnpinPixel { uint32 x = 1; uint32 y = 2; }
 message BitmapStrokePoint { uint32 x = 1; uint32 y = 2; }
 message PaintInputStroke { repeated BitmapStrokePoint points = 1; uint32 color = 2; }
+message PinSolution { repeated semio.s.wfc.bitmap.snapshot.BitmapPinnedPixel pins = 1; }
+message RestorePins { repeated semio.s.wfc.bitmap.snapshot.BitmapPinnedPixel pins = 1; }
 
 message BitmapMutation {
   oneof kind {
@@ -29,5 +31,7 @@ message BitmapMutation {
     PinPixel pin_pixel = 9;
     UnpinPixel unpin_pixel = 10;
     PaintInputStroke paint_input_stroke = 11;
+    PinSolution pin_solution = 12;
+    RestorePins restore_pins = 13;
   }
 }

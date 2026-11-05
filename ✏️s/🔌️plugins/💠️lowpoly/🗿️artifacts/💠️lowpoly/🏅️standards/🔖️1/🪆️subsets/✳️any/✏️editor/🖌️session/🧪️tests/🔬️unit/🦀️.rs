@@ -39,6 +39,6 @@ fn paint_preview_applies_every_open_leaf() {
     let document = default_snapshot();
     assert!(LowpolyTransient::default().paint_preview(&document).is_none(), "nothing open, nothing to preview");
     let preview = LowpolyTransient::default().with_paint("lowpoly-main", Some(stroke_gesture("obj-1", 0.5))).paint_preview(&document).expect("an open stroke previews");
-    assert_ne!(preview.objects[0].paint_layers[0].materialized_pixels(), document.objects[0].paint_layers[0].materialized_pixels(), "the provisional dab shows");
+    assert_ne!(preview.objects[0].paint_layers[0].materialized_pixels().expect("canonical paint layer"), document.objects[0].paint_layers[0].materialized_pixels().expect("canonical paint layer"), "the provisional dab shows");
     assert_eq!(preview.objects[0].mesh_content, document.objects[0].mesh_content, "a paint preview never touches the mesh");
 }

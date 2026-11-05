@@ -148,7 +148,17 @@
         },
         "pixels": {
           "type": "string",
-          "contentEncoding": "base64"
+          "contentEncoding": "base64",
+          "anyOf": [
+            {
+              "maxLength": 0
+            },
+            {
+              "minLength": 349528,
+              "maxLength": 349528,
+              "pattern": "^[A-Za-z0-9+/]{349525}[AQgw]==$"
+            }
+          ]
         }
       }
     },

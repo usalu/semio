@@ -4,6 +4,30 @@ use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
 use super::*;
 
 //#region 📤️📥️DocumentIO
+#[test]
+fn import_identity_matches_neutral_fixtures_and_independent_json() {
+    let text = semio_framework_test_fixtures::fixture_text!("../../../🎮️commands/📥️import-snapshot/🧫️fixtures/🔣️.json");
+    let corpus: serde_json::Value = serde_json::from_str(text).expect("independent import corpus");
+    assert_eq!(corpus["schema"].as_str(), Some(PUZZLE5D_SCHEMA));
+    for case in corpus["cases"].as_array().expect("import cases") {
+        let document = &case["document"];
+        let oracle = document.as_object().is_some_and(|object| {
+            let parts = object.get("parts");
+            let identity = match object.get("schema") {
+                Some(schema) => schema.as_str() == Some(PUZZLE5D_SCHEMA),
+                None => parts.is_some_and(serde_json::Value::is_array),
+            };
+            identity && parts.is_none_or(serde_json::Value::is_array)
+        });
+        let expected = case["accepted"].as_bool().expect("acceptance");
+        assert_eq!(oracle, expected, "independent oracle: {}", case["id"]);
+        let serialized = serde_json::to_string(document).expect("independent document bytes");
+        assert_eq!(import_snapshot::puzzle5d_decode_document(&serialized).is_ok(), expected, "text: {}", case["id"]);
+        let payload = parse(&serialized, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native document");
+        assert_eq!(import_snapshot::puzzle5d_import_value(&semio_framework_pack_json::json!({"payload": payload})).is_ok(), expected, "inline: {}", case["id"]);
+    }
+}
+
 /// 📚️ LAW (diagnosis-first): the three SHIPPED examples really carry puzzle 5d content. Every other
 /// law in this region, and most of the clipboard, dialog and context-menu laws, read a shipped
 /// document — so when the examples are empty they all fail at once and none of them names WHY.

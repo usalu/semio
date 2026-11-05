@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","-p","semio-framework-plugin-host-wake","--lib","operation"],"configuration":"prototype","store":"shared","parallelism":2,"language":"en","agent":"semio-mcp-operation-laws"}}

@@ -2,7 +2,11 @@
   "name": "@semio-tech/remodel-js",
   "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🎚️config/🟦️.ts"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/**/*.{ts,tsx,json,semio,png,absent,rs}"
+    ]
   },
   "targets": {
     "test": {
@@ -12,6 +16,34 @@
         "cwd": "✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🎚️config/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🧪️tests/🧩️example/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🧩️suite/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/🧪️tests/🔬️declaration/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{projectRoot}/package.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json"
+            ]
+          }
+        }
       }
     }
   }

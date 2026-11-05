@@ -381,6 +381,15 @@ class VideoContractTest(unittest.TestCase):
                 files[0].write_bytes(b"updated canonical recording")
                 self.assertFalse(runtime.reusable_clip(clip, runtime.segment_state(segment, settings)))
 
+    def test_computed_narration_resolves_figure_calls(self):
+        runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
+        script = runtime.teaching_root(Path(runtime.__file__)) / "🏛️architecture/🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py"
+        rows = runtime.narration_rows(script, "Beat1_Anatomy")
+        self.assertEqual(rows[0][0], "hook")
+        self.assertNotIn("{wmin}", rows[2][1])
+        self.assertNotIn("{wmin}", rows[2][2])
+        self.assertIsInstance(runtime.source_narration({"script": "🏛️architecture/🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py", "scene": "Beat1_Anatomy"}, language="en"), list)
+
     def test_semantic_excerpt_ranges_and_source_reuse(self):
         runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
         case = CONTRACT["partial_reuse"]

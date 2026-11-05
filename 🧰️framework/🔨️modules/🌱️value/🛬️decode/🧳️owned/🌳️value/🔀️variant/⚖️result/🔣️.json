@@ -1,0 +1,72 @@
+{
+  "cases": [
+    {
+      "input": {
+        "Ok": "α🙂"
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "Ok": ""
+      },
+      "valid": true
+    },
+    {
+      "input": {
+        "Err": null
+      },
+      "valid": true
+    },
+    {
+      "input": "Ok",
+      "valid": false
+    },
+    {
+      "input": {
+        "Ok": null
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "Err": "fault"
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "Ok": "x",
+        "Err": null
+      },
+      "valid": false
+    },
+    {
+      "input": {
+        "ok": "x"
+      },
+      "valid": false
+    },
+    {
+      "input": {},
+      "valid": false
+    }
+  ],
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    5,
+    13,
+    31,
+    63
+  ],
+  "stock": {
+    "items": 1000000,
+    "copyBytes": 16777216,
+    "capacityBytes": 16777216,
+    "releaseBytes": 16777216,
+    "depth": 128,
+    "fuel": 1000000
+  }
+}

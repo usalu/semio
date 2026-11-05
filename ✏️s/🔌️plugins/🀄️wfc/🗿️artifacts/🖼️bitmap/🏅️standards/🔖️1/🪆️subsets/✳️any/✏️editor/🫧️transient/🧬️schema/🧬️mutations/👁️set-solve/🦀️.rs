@@ -12,6 +12,7 @@ pub struct SetSolve {
     pub contradiction: bool,
     pub output_width: u32,
     pub output_height: u32,
+    pub source_revision: String,
 }
 
 impl<Op> protocol::MutationKind<BitmapTransient, Op> for SetSolve
@@ -38,6 +39,7 @@ where
             contradiction: (base.contradiction != self.contradiction).then_some(self.contradiction),
             output_width: (base.output_width != self.output_width).then_some(self.output_width),
             output_height: (base.output_height != self.output_height).then_some(self.output_height),
+            source_revision: (base.source_revision != self.source_revision).then(|| self.source_revision.clone()),
         };
         if protocol::DiffAlgebra::<BitmapTransient>::is_empty(&diff) {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "The solve already holds that result.");
@@ -46,10 +48,10 @@ where
     }
     fn inverse(&self, base: &BitmapTransient) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![Self { output_pixels: base.output_pixels.clone(), contradiction: base.contradiction, output_width: base.output_width, output_height: base.output_height }.into()]
+        vec![Self { output_pixels: base.output_pixels.clone(), contradiction: base.contradiction, output_width: base.output_width, output_height: base.output_height, source_revision: base.source_revision.clone() }.into()]
     
     })())
 }
 }
 
-protocol::retained_set_record!(SetSolve => BitmapTransient, BitmapTransientDiff, BitmapTransientMutation { authored: SetSolve = |leaf| leaf, patch: |value: SetSolve| BitmapTransientDiff { output_pixels: Some(value.output_pixels), contradiction: Some(value.contradiction), output_width: Some(value.output_width), output_height: Some(value.output_height) }, inverse: |root: BitmapTransient| SetSolve { output_pixels: root.output_pixels, contradiction: root.contradiction, output_width: root.output_width, output_height: root.output_height }.into() });
+protocol::retained_set_record!(SetSolve => BitmapTransient, BitmapTransientDiff, BitmapTransientMutation { authored: SetSolve = |leaf| leaf, patch: |value: SetSolve| BitmapTransientDiff { output_pixels: Some(value.output_pixels), contradiction: Some(value.contradiction), output_width: Some(value.output_width), output_height: Some(value.output_height), source_revision: Some(value.source_revision) }, inverse: |root: BitmapTransient| SetSolve { output_pixels: root.output_pixels, contradiction: root.contradiction, output_width: root.output_width, output_height: root.output_height, source_revision: root.source_revision }.into() });

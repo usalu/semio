@@ -1,0 +1,43 @@
+{
+  "root": {
+    "operation": 1,
+    "generation": 1,
+    "turnFuel": 10000000,
+    "operationFuel": 1000000000,
+    "turnExecutionFuel": 10000000,
+    "operationExecutionFuel": 1000000000,
+    "maximumTurnMicroseconds": 1000000,
+    "maxEffects": 10000,
+    "maxPatchBytes": 16777216,
+    "maxFrames": 10000,
+    "maximumLifetimeMicroseconds": 86400000000
+  },
+  "admission": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 134217728,
+    "maximumReleaseBytes": 134217728,
+    "maximumDepth": 256
+  },
+  "drive": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 134217728,
+    "maximumReleaseBytes": 134217728,
+    "maximumDepth": 256
+  },
+  "wake": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 134217728,
+    "maximumReleaseBytes": 134217728,
+    "maximumDepth": 256
+  },
+  "operation": {
+    "maximumItems": 1000000,
+    "maximumCopyBytes": 1073741824,
+    "maximumCapacityBytes": 1073741824,
+    "maximumReleaseBytes": 1073741824,
+    "maximumDepth": 256
+  }
+}

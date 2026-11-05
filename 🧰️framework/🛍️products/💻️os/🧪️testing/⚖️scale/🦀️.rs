@@ -58,7 +58,7 @@ pub mod guest {
     pub struct FixtureGuest;
 
     /// 🤝️ The app-channel version this fixture speaks — a registered `channel-version` consumer, rewritten by its generator.
-    const CHANNEL_VERSION: u32 = 23;
+    const CHANNEL_VERSION: u32 = 25;
 
     #[derive(Clone, Copy, Default)]
     struct UiAuthority {

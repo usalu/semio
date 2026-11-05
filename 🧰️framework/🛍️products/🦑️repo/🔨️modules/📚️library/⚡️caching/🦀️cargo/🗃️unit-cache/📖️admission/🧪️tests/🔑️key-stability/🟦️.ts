@@ -44,3 +44,13 @@ test("every volatile name is one the plan copies from the invoking process",()=>
  const capture=readFileSync(join(import.meta.dir,"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts"),"utf8");
  for(const name of ADMISSION_VOLATILE_ENVIRONMENT_V1)expect(capture.includes('"'+name+'"'),name).toBe(true);
 });
+
+test("physical admission memo refuses changed probes, policy, toolchain and racy sources",()=>{
+ const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"memo-")),source=join(root,"lib.rs"),absent=join(root,"optional.rs");
+ try{for(const row of fixture.physicalCases){const directory=join(root,row.id),port=unitAdmissionMemoV1(directory,fixture.toolchain),unit=clone(fixture.unit) as Record<string,any>;writeFileSync(source,"pub fn a(){}\n");try{rmSync(absent,{force:true});}catch{}
+ expect(port.recall(unit,fixture.policy)).toBeUndefined();port.remember(unit,fixture.policy,{inputs:[{path:source,digest:"d",bytes:13}],cfg:["unix"],environment:unit.compilerEnvironment,probed:[source,absent],startedMs:Date.now()+(row.id==="racy"?0:3600000)});
+ if(row.id==="source")writeFileSync(source,"pub fn b(){}\n");if(row.id==="absent")writeFileSync(absent,"pub fn optional(){}\n");
+ const selected=row.id==="toolchain"?unitAdmissionMemoV1(directory,fixture.toolchain+"-changed"):port,policy=row.id==="policy"?{...fixture.policy,maxSourceBytes:1}:fixture.policy;
+ expect(selected.recall(clone(fixture.unit),policy)!==undefined,row.id).toBe(row.hit);
+ }}finally{rmSync(root,{recursive:true,force:true});}
+});

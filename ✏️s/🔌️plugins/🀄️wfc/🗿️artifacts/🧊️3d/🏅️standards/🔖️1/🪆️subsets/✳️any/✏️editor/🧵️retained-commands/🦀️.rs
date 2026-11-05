@@ -46,7 +46,10 @@ pub const WFC_3D_RETAINED_TOOL_IDS: &[&str] = &[
 
 const WFC_3D_RETAINED_PAYLOAD_SCHEMA: &str = "wfc.wfc3d.tool-command.v1";
 
-pub(super) const WFC_3D_RETAINED_RAW_BYTES: usize = 65_536;
+pub(super) const WFC_3D_RETAINED_RAW_BYTES: usize = 2 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
+
+/// 📬️ Two complete solve records and their sparse diff fit within the admitted tick carrier.
+pub(super) const WFC_3D_RETAINED_OUTPUT_BYTES: usize = 4 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
 
 pub(super) const WFC_3D_RETAINED_WORK_ITEMS: usize = 4_096;
 
@@ -89,7 +92,7 @@ const WFC_3D_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContr
 ];
 
 fn wfc3d_retained_contract() -> semio_framework::ToolExecutionContract {
-    semio_framework::ToolExecutionContract::bounded_first_step(WFC_3D_RETAINED_RAW_BYTES, WFC_3D_RETAINED_WORK_ITEMS, 1, 262_144, 7_500)
+    semio_framework::ToolExecutionContract::bounded_first_step(WFC_3D_RETAINED_RAW_BYTES, WFC_3D_RETAINED_WORK_ITEMS, 1, WFC_3D_RETAINED_OUTPUT_BYTES, 7_500)
 }
 
 /// 📏️ One bounded first step per route, admitted only while the WHOLE addressable document plus this
@@ -146,7 +149,7 @@ impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Wfc3dEditor>>
         let transient = match input.command {
             Wfc3dEditorCommand::CommitFill { payload_json } => {
                 let payload = fill::decode_fill_payload(payload_json.as_bytes()).ok_or_else(|| Fault::from("wfc3d-commit-fill-payload"))?;
-                payload.set_solve_mutations()
+                if payload.completed_for(Some(&input.operation.canonical_base_revision)) { payload.set_solve_mutations() } else { Vec::new() }
             }
             _ => Vec::new(),
         };
@@ -205,3 +208,44 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for Wfc3dRetainedCommandJobFactor
     const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = WFC_3D_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️Retained
+
+#[cfg(test)]
+mod completion_source_tests {
+    use super::*;
+    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandSnapshotRead, ArtifactCommandWork, ArtifactCommandWorkStep};
+    use crate::editor::wfc3d::transient::{Wfc3dAssignment, Wfc3dTransient};
+
+    /// 📨️ Real retained completion work preserves an existing complete cache when a late callback is stale.
+    #[test]
+    fn stale_completion_emits_no_rows_and_cannot_overwrite_a_newer_cache() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🧪️tests/🧫️preview-revisions/🔣️.json")).unwrap();
+        let snapshot = crate::examples::two_room_corridor::snapshot();
+        let config = crate::editor::wfc3d::config::Wfc3dConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let interaction = protocol::InteractionState::default();
+        let hover = Default::default();
+        let grant = semio_framework_plugin::artifact_app_laws::fixture_retained_turn().grant;
+        for case in fixture["cases"].as_array().unwrap() {
+            let source_revision: Vec<u8> = serde_json::from_value(case["sourceRevision"].clone()).unwrap();
+            let current: Option<[u8;32]> = serde_json::from_value(case["currentRevision"].clone()).unwrap();
+            let payload = fill::Wfc3dFillTickPayload { source_revision, done: true, assignments: [(snapshot.slots[0].id.clone(), Some(snapshot.tiles.last().unwrap().id.clone()))].into_iter().collect(), ..Default::default() };
+            let Some(revision) = current else { assert!(!payload.completed_for(None)); continue; };
+            let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wfc3d".into(), operation_id: 1, generation: 1, canonical_base_revision: revision, retained: grant, authoring_seed: "completion".into() };
+            let command = Wfc3dEditorCommand::CommitFill { payload_json: String::from_utf8(fill::encode_fill_payload(&payload)).unwrap() };
+            let input = ArtifactCommandInputs::<semio_framework_plugin::EditorApp<Wfc3dEditor>> { command: &command, snapshot: &snapshot, snapshot_owner: None, snapshot_read: ArtifactCommandSnapshotRead::unavailable(&operation), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
+            let mut cache = Wfc3dTransient { source_revision: revision.to_vec(), assignments: vec![Wfc3dAssignment { slot_id: snapshot.slots[0].id.clone(), tile_id: snapshot.tiles[0].id.clone() }], contradiction: false };
+            let before = cache.clone();
+            let mut work = Wfc3dCommandWork::new(fill::COMMIT_FILL_ACTION_ID);
+            let mut caller = semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();
+            let step = caller.work_turn(grant, 1, |cx| { cx.consume_fuel(1); work.step(&input, cx) }).unwrap();
+            let rows = match step { ArtifactCommandWorkStep::CompleteWithEphemeral { ephemeral, .. } => ephemeral.transient, ArtifactCommandWorkStep::Complete(_) => Vec::new(), _ => panic!("completion must settle") };
+            let visible = case["visible"].as_bool().unwrap();
+            assert_eq!(rows.len(), usize::from(visible), "{}", case["id"]);
+            for row in rows { cache = protocol::apply_mutation(&cache, &row).unwrap().0; }
+            assert_eq!(cache != before, visible, "{}", case["id"]);
+            if !visible { assert_eq!(cache, before); }
+            assert!(work.terminal_is_empty());
+            caller.finish();
+        }
+    }
+}

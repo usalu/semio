@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumElapsedMilliseconds",
+    "planningMaximumBytes",
+    "ordinaryCaptureMaximumBytes",
+    "large",
+    "failures",
+    "refusal",
+    "invalidMaximumBytes",
+    "controlRefusal"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumElapsedMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60000
+    },
+    "planningMaximumBytes": {
+      "const": 134217728
+    },
+    "ordinaryCaptureMaximumBytes": {
+      "const": 16777216
+    },
+    "large": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "paddingBytes",
+        "chunkBytes",
+        "label"
+      ],
+      "properties": {
+        "paddingBytes": {
+          "type": "integer",
+          "minimum": 16777217,
+          "maximum": 33554432
+        },
+        "chunkBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "stderr",
+          "status",
+          "stale"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stderr": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 255
+          },
+          "stale": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "refusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumBytes",
+        "bytes"
+      ],
+      "properties": {
+        "maximumBytes": {
+          "const": 1024
+        },
+        "bytes": {
+          "const": 2048
+        }
+      }
+    },
+    "invalidMaximumBytes": {
+      "const": 134217729
+    },
+    "controlRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reason",
+        "abortAtPublication",
+        "preserveIdentity"
+      ],
+      "properties": {
+        "reason": {
+          "const": "owned-command-failure"
+        },
+        "abortAtPublication": {
+          "const": 2
+        },
+        "preserveIdentity": {
+          "const": true
+        }
+      }
+    }
+  }
+}

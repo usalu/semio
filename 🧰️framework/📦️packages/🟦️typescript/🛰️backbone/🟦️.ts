@@ -1,4 +1,5 @@
 /** 🧵️ SDK entry `@semio-tech/framework/backbone`: explicit public surface of the framework module that plugins build on. */
+export { absoluteBackbonePathV1, backbonePathDirectoryV1 } from "../../../🔨️modules/🛰️backbone/🛣️path/🟦️.ts";
 export { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DEV_STREAM_ROUTES, FRAMEWORK_SYNC_CONTROLLER_ID, STREAM_MUX_ANNOUNCEMENT, STREAM_MUX_PATH, artifactBackboneRef, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, decodeDocumentPackBytes, decodeDocumentPackSnapshot, encodeDocumentPackBundle, encodeDocumentPackBytes, parseRemoteBackboneUri } from "../../../🔨️modules/🛰️backbone/🟦️.ts";
 export { resolveArtifactOpeningRelay } from "../../../🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts";
 export { BACKBONE_ENVELOPE_RETRY_WINDOW_MS, readBackboneEnvelope, writeBackboneEnvelope } from "../../../🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts";

@@ -108,11 +108,7 @@ pub(super) enum ArtifactDrive {
     Terminal,
 }
 
-/// 📁️ A folder/file binding's storage driver, keyed for multi-document sqlite or single
-/// pack-backed blob. Both variants move real `pack`+`spr` bytes end to end — this actor never
-/// touches JSON. `Sqlite` is fully codec-free (its row IS the pack+spr pair, no bridging
-/// needed). `Pack` requires the schema codec for both authoritative DSL fallback validation
-/// and synchronized text mirrors.
+/// 📁️ A folder/file binding's storage driver, keyed for multi-document sqlite or single See [design notes](README.md).
 pub(super) enum FolderEndpoint {
     EventLog { storage: FolderEventLogStorage, document_id: String, schema: String },
     Pack { storage: FolderTextStorage, document_id: String, extension: String, schema: String },
@@ -186,9 +182,7 @@ pub struct ArtifactActor {
     pub hub_surface: Option<String>,
     pub socket_actor: Option<semio_framework_value::SharedUtf8>,
     pub socket_actor_confirmed: bool,
-    /// 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) —
-    /// `None` until the hub sends it (or for a folder-only document, which never connects to a
-    /// hub). Stamped onto every outbound `PresenceHeartbeat` via {@link stamp_session}.
+    /// 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) — See [design notes](README.md).
     pub session_color: Option<u8>,
     pub semio_hub: Option<HubConn>,
     pub(super) connect_future: Option<ConnectFuture>,

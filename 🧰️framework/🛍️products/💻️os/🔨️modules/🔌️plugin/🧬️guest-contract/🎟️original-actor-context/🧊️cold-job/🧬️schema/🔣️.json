@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "job",
+    "operation",
+    "generation",
+    "maximumPayloadBytes",
+    "cases",
+    "version"
+  ],
+  "properties": {
+    "job": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "operation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "maximumPayloadBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "steps"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "event",
+                "next"
+              ],
+              "properties": {
+                "event": {
+                  "enum": [
+                    "actor-pending",
+                    "actor-ready",
+                    "input-pending",
+                    "input-ready",
+                    "start-pending",
+                    "start-ready",
+                    "running",
+                    "done",
+                    "chunk",
+                    "copied",
+                    "chunk-acknowledged",
+                    "output-closed",
+                    "output-acknowledged",
+                    "actor-close-pending",
+                    "actor-closed",
+                    "failed",
+                    "semantic-refusal",
+                    "failure-pending",
+                    "failure-published",
+                    "failure-chunk",
+                    "failure-chunk-acknowledged",
+                    "failure-output-closed",
+                    "failure-acknowledged"
+                  ]
+                },
+                "next": {
+                  "enum": [
+                    "admit-actor",
+                    "admit-input",
+                    "start",
+                    "step",
+                    "read",
+                    "borrow-chunk",
+                    "acknowledge-chunk",
+                    "acknowledge-output",
+                    "close-actor",
+                    "complete",
+                    "refused",
+                    "publish-failure",
+                    "read-failure",
+                    "borrow-failure-chunk",
+                    "acknowledge-failure-chunk",
+                    "acknowledge-failure"
+                  ]
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "length": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "version": {
+      "const": 26
+    }
+  }
+}

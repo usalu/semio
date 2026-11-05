@@ -9,7 +9,8 @@
     "operationExecutionFuel": 500000000,
     "maxEffects": 256,
     "maxPatchBytes": 1048576,
-    "maxFrames": 256
+    "maxFrames": 256,
+    "maximumLifetimeMicroseconds": 500
   },
   "clock": 1000,
   "deadline": 1500,

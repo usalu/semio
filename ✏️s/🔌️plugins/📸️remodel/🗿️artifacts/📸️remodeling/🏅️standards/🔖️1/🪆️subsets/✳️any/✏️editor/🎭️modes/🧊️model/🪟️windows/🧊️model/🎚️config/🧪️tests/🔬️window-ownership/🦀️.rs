@@ -25,8 +25,9 @@ fn block_on_remodel_windows<F: std::future::Future>(future: F) -> F::Output {
 fn assert_config_codecs<S, M>(base: &S, mutation: &M)
 where
     S: ArtifactDsl + ArtifactPack + Clone + std::fmt::Debug + PartialEq,
-    M: Mutation<S> + OpText + OpBinary + Clone + std::fmt::Debug + PartialEq,
+    M: Mutation<S> + ColdMutation<S> + OpText + OpBinary + Clone + std::fmt::Debug + PartialEq,
     M::Diff: MutationDiff<S>,
+    M::ReferenceDiff: protocol::ColdDiffAlgebra<S>,
 {
     let after = protocol::apply_diff_cold(mutation.diff(base).diff(), base).unwrap();
     let restored = mutation.inverse(base).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
@@ -166,15 +167,22 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
                 let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<RemodelingPlayApp>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                 reopened.bind_instance_id(89).await;
-                semio_plugin::artifact_app_laws::load_document(&mut reopened, &document_before, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-                for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
-                let reopened_model_left = model_scene(&mut reopened, &model_left, scope.cx()).await?;
-                let reopened_model_right = model_scene(&mut reopened, &model_right, scope.cx()).await?;
-                let reopened_frames_left = frames_scene(&mut reopened, &frames_left, scope.cx()).await?;
-                let reopened_frames_right = frames_scene(&mut reopened, &frames_right, scope.cx()).await?;
-                let reopened_report_left = report_scene(&mut reopened, &report_left, scope.cx()).await?;
-                let reopened_report_right = report_scene(&mut reopened, &report_right, scope.cx()).await?;
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+                let reopened_outcome: Result<_, String> = async {
+                    semio_plugin::artifact_app_laws::load_document(&mut reopened, &document_before, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+                    for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
+                    let reopened_model_left = model_scene(&mut reopened, &model_left, scope.cx()).await?;
+                    let reopened_model_right = model_scene(&mut reopened, &model_right, scope.cx()).await?;
+                    let reopened_frames_left = frames_scene(&mut reopened, &frames_left, scope.cx()).await?;
+                    let reopened_frames_right = frames_scene(&mut reopened, &frames_right, scope.cx()).await?;
+                    let reopened_report_left = report_scene(&mut reopened, &report_left, scope.cx()).await?;
+                    let reopened_report_right = report_scene(&mut reopened, &report_right, scope.cx()).await?;
+                    Ok((reopened_model_left, reopened_model_right, reopened_frames_left, reopened_frames_right, reopened_report_left, reopened_report_right))
+                }.await;
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).unwrap_or_else(|close_failure| match &reopened_outcome {
+                    Err(primary) => panic!("Remodel reopen failure: {primary}; original caller paid close failed: {close_failure:?}"),
+                    Ok(_) => panic!("Remodel reopened app original caller paid close failed: {close_failure:?}"),
+                });
+                let (reopened_model_left, reopened_model_right, reopened_frames_left, reopened_frames_right, reopened_report_left, reopened_report_right) = reopened_outcome?;
                 if reopened_model_left != left_model || reopened_model_right != right_model || reopened_frames_left != left_frames || reopened_frames_right != right_frames || reopened_report_left != left_report || reopened_report_right != right_report {
                     return Err("Remodel exact window configuration changed during reopen".into());
                 }

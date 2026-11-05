@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = ["semio-s-artifact-wfc-grid3d-inferences/testkit"]
+
 [dependencies]
 pack = { workspace = true }
 semio-framework = { workspace = true }
@@ -56,6 +59,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-wfc-grid3d-inferences = { path = "../../../../../💡️inferences/📦️packages/🦀️rust" , features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

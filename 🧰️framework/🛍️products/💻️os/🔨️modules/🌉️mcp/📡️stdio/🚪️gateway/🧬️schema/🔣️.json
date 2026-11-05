@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Shutdown": {
+      "const": {
+        "graceMilliseconds": 250,
+        "terminationMilliseconds": 250,
+        "killMilliseconds": 250
+      }
+    }
+  }
+}

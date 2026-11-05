@@ -5,7 +5,7 @@ mod original_root;
 pub use original_root::{GuestRelayRootPolicy,GuestRelayOriginalRoot};
 #[path="📃️policy/🦀️.rs"]
 mod driver_policy;
-pub use driver_policy::{GuestRelayDriverPolicy,GuestRelayDriverTreasury,GuestRelayDriverTurnGrant,GuestRelayWakeDriver};
+pub use driver_policy::{GuestRelayDriverPolicy,GuestRelayDriverTreasury,GuestRelayDriverTurnGrant,GuestRelayWakeDriver,GuestRelayOperationCaps,GuestRelayOperationRequest,GuestRelayGuestSubloan,GuestRelayGuestPurpose,GuestRelayOperationReserve,GuestRelayOperationTransit,GuestRelayOperationInfrastructure,GuestRelayAdmissionCall,GuestRelayAdmissionFailure};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct GuestRelayWakeTurnGrant{pub epoch:u64,pub grant:RetainedCloneGrant}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]

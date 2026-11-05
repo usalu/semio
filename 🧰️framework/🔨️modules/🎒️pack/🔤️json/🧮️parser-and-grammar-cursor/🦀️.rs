@@ -2,16 +2,12 @@
 
 use super::*;
 
-//#region 🔖️Parser
-/// 🌳️ Parses one whole JSON document from `input`, rejecting trailing non-whitespace bytes.
-// 🚫️async: R9 pure in-memory parse, no I/O.
 pub fn parse(input: &str, policy: JsonMemberPolicy) -> Result<Value, JsonError> {
     let mut cursor = JsonParseCursor::new(policy);
     let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(usize::MAX,&mut accepted);
     loop { if let Some(value) = cursor.step(input, 4096,&mut control,RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:isize::MAX as usize,maximum_capacity_bytes:isize::MAX as usize,maximum_release_bytes:isize::MAX as usize,maximum_depth:MAX_DEPTH as usize+4})? { return Ok(value); } }
 }
 
-/// 📖️ [`parse`] over raw bytes — errors with [`JsonError::InvalidUtf8`] if `input` is not UTF-8.
 pub fn parse_bytes(input: &[u8], policy: JsonMemberPolicy) -> Result<Value, JsonError> {
     let text = std::str::from_utf8(input).map_err(|_| JsonError::InvalidUtf8)?;
     parse(text, policy)
@@ -60,27 +56,19 @@ fn json_candidate_demand<T>(owner:&JsonCandidates<T>,demand:&mut RetirementDeman
     Ok(())
 }
 
-/// 🧵️ Retains the canonical JSON grammar and admitted candidates while borrowing unchanged source.
 pub type JsonParseCursor=JsonGrammarCursor<Value>;
 
-/// 🖱️ One retained grammar moves admitted semantic cells directly into its declared first-party output.
 pub struct JsonGrammarCursor<V:JsonParsedValue> {
     #[doc(hidden)] pub position: usize, validated_position:usize, #[doc(hidden)] pub limits:JsonReadLimits, #[doc(hidden)] pub policy: JsonMemberPolicy, #[doc(hidden)] pub frames: JsonCandidates<JsonFrame<V>>, #[doc(hidden)] pub lexeme: Option<JsonLexeme>,
     #[doc(hidden)] pub pending: Option<V>, #[doc(hidden)] pub result: Option<V>, retired: JsonCandidates<V>, obsolete:Option<V>, pub(super) complete: bool, pub(super) normal_step_progress:RetainedCloneProgress, normal_step_work:u64,
 }
 
 impl<V:JsonParsedValue> JsonGrammarCursor<V> {
-    /// 🌱️ Starts parsing without copying, scanning, or allocating for the source.
     pub fn new(policy: JsonMemberPolicy) -> Self { Self { position:0, validated_position:0, limits:JsonReadLimits{maximum_bytes:u64::MAX,maximum_allocation_bytes:usize::MAX,maximum_depth:MAX_DEPTH as usize,maximum_items:u64::MAX}, policy, frames:Default::default(), lexeme:None, pending:None, result:None, retired:Default::default(),obsolete:None,complete:false,normal_step_progress:Default::default(),normal_step_work:0 } }
-    /// 📍️ Returns the measured source byte offset.
     pub fn position(&self) -> usize { self.position }
-    /// 🧭️ Identifies the existing grammar or physical candidate frontier.
     pub fn phase(&self)->&'static str {match &self.lexeme {Some(JsonLexeme::String(scan))=>if scan.writing {"materialize-string"}else {"measure-string"},Some(JsonLexeme::Number(_))=>"number",None=>match self.frames.last(){Some(frame) if frame.state==8=>if frame.object {"materialize-object"}else {"materialize-array"},Some(frame)=>if frame.object {"collect-object"}else {"collect-array"},None=>"grammar"}}}
-    /// ⏱️ Advances admitted grammar transitions under this operation's cumulative decode authority.
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
-    /// ⏱️ Actual selected UTF-8 or grammar work remains visible when the operation refuses.
     pub fn last_turn_work(&self)->u64{self.normal_step_work}
-    /// 📏️ Quotes the actual next original semantic or physical frontier before any effect.
     pub fn normal_step_demands<S:JsonReadSource+?Sized>(&self,input:&S)->Result<RetirementDemand,JsonError>{
         if self.validated_position<input.byte_len(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         let mut demand=RetirementDemand{depth:self.frames.len()+1,..Default::default()};
@@ -361,19 +349,13 @@ impl semio_framework_value::retirement::RetireOwned for JsonCompletedFrameRetire
     fn controlled_retirement_supported()->bool{true}
 }
 
-/// 🎒️ Moves a parsed JSON candidate into admitted canonical values without payload clones.
 pub struct JsonValueProjection {#[doc(hidden)] pub pending:Option<Value>,#[doc(hidden)] pub output:Option<DslValue>,#[doc(hidden)] pub frames:Vec<JsonProjectionFrame>,pub(super) ordered:bool,#[doc(hidden)] pub retirement:Option<JsonCompletedFrameRetirement>,pub(super) normal_step_progress:RetainedCloneProgress}
 
 impl JsonValueProjection {
-    /// 🎚️ Takes ownership of the existing parsed candidate.
     pub fn new(value:Value)->Self {Self {pending:Some(value),output:None,frames:Vec::new(),ordered:false,retirement:None,normal_step_progress:Default::default()}}
-    /// 🧬️ Projects the same candidate with canonical member order for dependency identity.
     pub fn new_ordered(value:Value)->Self {let mut cursor=Self::new(value);cursor.ordered=true;cursor}
-    /// 📥️ Exposes the current admitted value or consumed input frontier.
     pub fn phase(&self)->&'static str {if self.retirement.is_some(){"project-retire"}else if self.frames.last().is_some_and(|frame|!frame.admitted)||self.pending.as_ref().is_some_and(|value|matches!(value,Value::Array(_)|Value::Object(_))){"project-admit"}else{"project"}}
-    /// 🪜️ Moves admitted values and drains consumed input under the same work and decode controls.
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
-    /// 👣️ Reads actual admitted output birth and original input backing release independently.
     pub fn normal_step_demands(&self)->Result<RetirementDemand,ValueError>{
         if let Some(retirement)=&self.retirement{return Ok(RetirementDemand{copy_bytes:if semio_framework_value::retirement::RetirementCursor::terminal_is_empty(retirement){size_of::<u8>()}else{0},release_bytes:retirement.release_demand(),depth:1,..Default::default()});}
         let mut demand=RetirementDemand{depth:self.frames.len()+1,..Default::default()};
@@ -433,7 +415,6 @@ impl semio_framework_value::retirement::RetireOwned for JsonValueProjection {
     fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.pending),deferred_birth_bytes_for(&self.output),deferred_birth_bytes_for(&self.frames),deferred_birth_bytes_for(&self.retirement)])}
     fn controlled_retirement_supported()->bool{true}
 }
-//#endregion 🔖️Parser
 
 #[cfg(test)]
 #[path="🎟️work/🧪️tests/🦀️.rs"]

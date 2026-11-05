@@ -106,7 +106,7 @@ fn a_cancel_in_any_binding_phase_is_answered_within_the_ceiling_and_leaves_no_ha
     set_component_compile_worker(PathBuf::from(env!("CARGO_BIN_EXE_semio-os-mcp")));
     let folder = std::env::temp_dir().join(format!("semio-binding-law-folder-{}", std::process::id()));
     let catalog = Arc::new(build_catalog());
-    let workspace = Arc::new(HeadlessWorkspace::open_folder(folder, "agent:binding-law".to_string(), Vec::new(), Arc::clone(&catalog)).expect("folder workspace"));
+    let workspace = Arc::new(HeadlessWorkspace::open_folder(folder, "agent:binding-law".to_string(), Vec::new(), Arc::clone(&catalog), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("folder workspace"));
     let channel = Box::new(ArtifactChannels::Routing(workspace.open_routing_channel()));
     let actions = Arc::new(ActionAdapter::new(channel, Arc::new(HandleTable::new()), Arc::new(IdempotencyStore::new()), Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), AutoApprovePolicy::Never, ClientInfo { name: "binding-law".to_string(), version: "1".to_string() }));
     workspace.bind_root_action_adapter(Arc::clone(&actions));

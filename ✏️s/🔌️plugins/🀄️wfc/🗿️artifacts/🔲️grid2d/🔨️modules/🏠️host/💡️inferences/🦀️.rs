@@ -109,8 +109,9 @@ pub struct Grid2dInferenceJob {
     pub(crate) child_commit: Option<wfc::job::WfcCommit>,
     pub(crate) assignments: Vec<(u32, u32, String)>,
     pub(crate) contradiction: bool,
-    pub(crate) output: Option<semio_framework_job_payload::RetainedJobPayloadWriter>,
-    pub(crate) rejected_output_page: Option<semio_framework_job_payload::JobPayloadPageSource>,
+    pub(crate) output: Option<semio_framework_job_payload::RetainedPayloadBuilder>,
+    pub(crate) output_chunk: Option<Vec<u8>>,
+    pub(crate) output_cursor: usize,
     pub(crate) encode_phase: u8,
     pub(crate) encoded_entries: usize,
     pub(crate) encode_total: usize,
@@ -159,8 +160,9 @@ impl Grid2dInferenceJob {
             child_commit: None,
             assignments: Vec::new(),
             contradiction: false,
-            output: Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput)),
-            rejected_output_page: None,
+            output: Some(semio_framework_job_payload::RetainedPayloadBuilder::new(semio_framework_job_payload::JobPayloadStream::CommitOutput)),
+            output_chunk: None,
+            output_cursor: 0,
             encode_phase: 0,
             encoded_entries: 0,
             encode_total: 0,
@@ -404,21 +406,49 @@ impl Grid2dInferenceJob {
         }
     }
 
-    pub(crate) fn encode_one(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, String> {
-        let Some(chunk) = self.encode_chunk() else { return Ok(true) };
-        let source = self.rejected_output_page.take().unwrap_or_default();
-        let writer = self.output.as_mut().ok_or("grid2d-output-writer-missing")?;
-        let mut page = match context.admit_payload_page(writer, source) {
-            Ok(page) => page,
-            Err(rejected) => {
-                self.rejected_output_page = Some(rejected.into_source());
-                return Err("grid2d-inference-output-admission-exceeded".into());
+    pub(crate) fn encode_one(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let writer = self.output.as_mut().expect("grid2d output builder");
+        if !writer.is_initialized() {
+            let turn = writer.advance_initialization(context);
+            semio_framework_job::receive_original_retained_work(context, turn)?;
+            return Ok(false);
+        }
+        if self.encode_phase == 3 {
+            if writer.published().is_none() {
+                let turn = writer.seal(context);
+                semio_framework_job::receive_original_retained_work(context, turn)?;
+                return Ok(false);
             }
-        };
-        page.write(&chunk).map_err(|_| "grid2d-inference-output-page")?;
-        page.commit();
-        self.advance_encode();
-        Ok(self.encode_phase == 3)
+            let turn = writer.take_finished(&mut self.output_payload, context.retained_grant());
+            semio_framework_job::receive_original_retained_work(context, turn)?;
+            return Ok(self.output_payload.is_some());
+        }
+        if self.output_chunk.is_none() {
+            let demand = semio_framework_value::RetirementDemand { capacity_bytes: MAX_GRID2D_ID_BYTES * 16 + 4096, depth: 1, ..Default::default() };
+            if !context.retained_work_can_enter(demand) { return Ok(false); }
+            let Some(chunk) = self.encode_chunk() else { return Ok(false); };
+            let capacity = chunk.capacity();
+            self.output_chunk = Some(chunk);
+            self.output_cursor = 0;
+            let received = context.consume_retained(semio_framework_job::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: capacity, ..Default::default() });
+            context.consume_fuel(1);
+            received?;
+            return Ok(false);
+        }
+        let chunk = self.output_chunk.as_ref().expect("retained output chunk");
+        if self.output_cursor < chunk.len() {
+            let writer = self.output.as_mut().expect("grid2d output builder");
+            let turn = writer.append_original(context, chunk, &mut self.output_cursor);
+            semio_framework_job::receive_original_retained_work(context, turn)?;
+            return Ok(false);
+        }
+        let demand = semio_framework_value::RetirementDemand { release_bytes: chunk.capacity(), depth: 1, ..Default::default() };
+        semio_framework_job::close_original_retained_step(context, demand, |_| {
+            drop(self.output_chunk.take());
+            semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::RetainedCloneStep::Complete(semio_framework_job::RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })), work: 1 }
+        })?;
+        if self.output_chunk.is_none() { self.advance_encode(); }
+        Ok(false)
     }
 }
 
@@ -429,6 +459,7 @@ pub(crate) enum Grid2dInferenceJobRun {
     Staged,
     StepRestore,
     StepChild,
+    StepOutput,
 }
 
 /// 🤝️ Which retained owner produced the outcome currently on loan.
@@ -491,8 +522,8 @@ impl Grid2dInferenceJob {
                 Grid2dInferenceStage::Restore => {
                     if self.restore_done {
                         self.child = self.restore.as_mut().expect("restore job").take_job();
-                        if let Some(mut restore) = self.restore.take() {
-                            wfc::job::close_job(&mut restore);
+                        if let Some(restore) = self.restore.as_mut() {
+                            restore.begin_close();
                         }
                         self.restore_done = false;
                         self.stage = Grid2dInferenceStage::Solve;
@@ -511,23 +542,7 @@ impl Grid2dInferenceJob {
                         return self.stage_fault(error.into_bytes());
                     }
                 }
-                Grid2dInferenceStage::EncodeCommit => match self.encode_one(context) {
-                    Ok(true) => {
-                        let output = match self.output.take().expect("grid2d output writer").finish() {
-                            Ok(output) => output,
-                            Err(mut writer) => {
-                                writer.begin_close();
-                                self.output = Some(writer);
-                                return Grid2dInferenceJobRun::Yield;
-                            }
-                        };
-                        self.output_payload = Some(output);
-                        return Grid2dInferenceJobRun::Yield;
-                    }
-                    Ok(false) => {},
-                    Err(error) => return self.stage_fault(error.into_bytes()),
-                },
-                Grid2dInferenceStage::Complete => unreachable!("complete returns immediately"),
+                Grid2dInferenceStage::EncodeCommit | Grid2dInferenceStage::Complete => return Grid2dInferenceJobRun::StepOutput,
             }
             context.consume_fuel(1);
             self.preview_units = self.preview_units.saturating_add(1);
@@ -544,13 +559,8 @@ impl Grid2dInferenceJob {
     }
 
     /// 🤝️ Closes the lent preview or fault turn by turn from the next step's own wallet.
-    fn retire_delivered<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
-        let publication = self.publication.as_mut().expect("a delivered inference publication is staged");
-        let step = match publication.close_step(context.retained_grant()) { Ok(step) => step, Err(error) => { context.consume_retained(error.retained_progress())?; return Err(error) } };
-        context.consume_retained(step.progress())?;
-        if publication.terminal_is_empty() {
-            self.publication = None;
-        }
+    fn retire_delivered<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        wfc::job::close_publication_step(&mut self.publication, context)?;
         Ok(None)
     }
 
@@ -560,8 +570,8 @@ impl Grid2dInferenceJob {
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "inference close depth overflow"))?;
             Ok(demand)
         };
-        if let Some(publication) = self.publication.as_ref() {
-            return publication.retirement_demands();
+        if self.publication.is_some() {
+            return wfc::job::publication_retirement_demands(&self.publication);
         }
         if let Some(output) = self.output.as_ref() {
             return if output.terminal_is_empty() { Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }) } else { nested(output.retirement_demands()?) };
@@ -575,8 +585,8 @@ impl Grid2dInferenceJob {
         if let Some(child) = self.child.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: child.next_close_copy_byte_demand()?, capacity_bytes: child.next_close_capacity_byte_demand(0)?, release_bytes: child.next_close_release_byte_demand()?, depth: child.next_close_depth_demand()?.saturating_add(1) });
         }
-        if let Some(source) = self.rejected_output_page.as_ref() {
-            return Ok(semio_framework_value::RetirementDemand { release_bytes: source.allocated_capacity_bytes(), depth: 1, ..Default::default() });
+        if let Some(chunk) = self.output_chunk.as_ref() {
+            return Ok(semio_framework_value::RetirementDemand { release_bytes: chunk.capacity(), depth: 1, ..Default::default() });
         }
         Ok(semio_framework_value::RetirementDemand::default())
     }
@@ -584,13 +594,13 @@ impl Grid2dInferenceJob {
 
 impl Grid2dInferenceJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_job::JobOutcomeBorrow;
-        if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {
+        if self.publication.as_ref().is_some_and(|publication| publication.needs_retirement()) {
             return self.retire_delivered(context);
         }
         if context.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(context);
+            return Ok(JobOutcomeBorrow::admit_cancelled(context)?);
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             self.stage_fault(b"stale-grid2d-inference-operation".to_vec());
@@ -600,11 +610,15 @@ impl Grid2dInferenceJob {
             return self.publication.as_mut().expect("a staged inference publication").poll(context);
         }
         if self.output_payload.is_some() {
-            return JobOutcomeBorrow::admit_complete(context, self.child.as_ref().and_then(|child| child.commit_state()), self.output_payload.as_ref());
+            return Ok(JobOutcomeBorrow::admit_complete(context, self.child.as_ref().and_then(|child| child.commit_state()), self.output_payload.as_ref())?);
         }
         match self.run(context) {
+            Grid2dInferenceJobRun::StepOutput => {
+                self.encode_one(context)?;
+                Ok(None)
+            }
             Grid2dInferenceJobRun::Yield | Grid2dInferenceJobRun::Staged => Ok(None),
-            Grid2dInferenceJobRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
+            Grid2dInferenceJobRun::Cancelled => Ok(JobOutcomeBorrow::admit_cancelled(context)?),
             Grid2dInferenceJobRun::StepRestore => {
                 let result = self.restore.as_mut().expect("restore job").step_value(context)?;
                 if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
@@ -620,7 +634,7 @@ impl Grid2dInferenceJob {
                     Some(InferenceChildEnd::Complete)
                 } else {
                     if let Some(JobOutcomeBorrow::Fault { detail, .. }) = &result {
-            if wfc::job::payload_bytes(detail) == b"wfc-unsatisfiable" {
+            if wfc::job::payload_equals(detail,b"wfc-unsatisfiable") {
                 Some(InferenceChildEnd::Unsatisfiable)
             } else {
                 None
@@ -641,7 +655,7 @@ impl Grid2dInferenceJob {
 }
 
 impl InteractiveJob for Grid2dInferenceJob {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         use semio_framework_job::JobOutcomeKind;
@@ -665,9 +679,6 @@ impl InteractiveJob for Grid2dInferenceJob {
         if let Some(child) = self.child.as_mut() {
             child.begin_close();
         }
-        if let Some(output) = self.output.as_mut() {
-            output.begin_close();
-        }
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
@@ -685,61 +696,45 @@ impl InteractiveJob for Grid2dInferenceJob {
             }
             let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
             let child_grant = semio_framework_job::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-            if let Some(publication) = self.publication.as_mut() {
-                let step = publication.close_step(grant)?;
-                if publication.terminal_is_empty() {
-                    self.publication = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
+            if self.publication.is_some() {
+                return wfc::job::close_publication_step(&mut self.publication, cx);
             }
             if let Some(output) = self.output.as_mut() {
                 if output.terminal_is_empty() {
                     self.output = None;
+                    cx.consume_fuel(1);
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return Ok(match output.close_step(child_grant) {
-                    Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                    Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
-                });
+                return cx.with_retained_loan(child_grant, |same| semio_framework_job::close_original_retained_step(same, output.retirement_demands()?, |grant| output.close_step_granted(grant)));
             }
             if let Some(payload) = self.output_payload.as_mut() {
                 if payload.terminal_is_empty() {
                     self.output_payload = None;
+                    cx.consume_fuel(1);
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return Ok(match payload.close_step(child_grant) {
-                    Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                    Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
-                });
+                return cx.with_retained_loan(child_grant, |same| semio_framework_job::close_original_retained_step(same, payload.retirement_demands()?, |grant| payload.close_step(grant)));
             }
             if let Some(restore) = self.restore.as_mut() {
-                let step = cx.with_retained_loan(child_grant, |same| restore.close_step(same))?;
                 if restore.terminal_is_empty() {
                     self.restore = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
+                    cx.consume_fuel(1);
+                    return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
+                return cx.with_retained_loan(child_grant, |same| restore.close_step(same)).map(|step| match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
             }
             if let Some(child) = self.child.as_mut() {
-                let step = cx.with_retained_loan(child_grant, |same| child.close_step(same))?;
                 if child.terminal_is_empty() {
                     self.child = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
+                    cx.consume_fuel(1);
+                    return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
+                return cx.with_retained_loan(child_grant, |same| child.close_step(same)).map(|step| match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
             }
-            if let Some(source) = self.rejected_output_page.take() {
-                let released_bytes = source.allocated_capacity_bytes();
-                drop(source);
+            if let Some(chunk) = self.output_chunk.as_ref() {
+                let released_bytes = chunk.capacity();
+                drop(self.output_chunk.take());
+                cx.consume_fuel(1);
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { released_bytes, ..one } });
             }
             Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
@@ -765,7 +760,7 @@ impl InteractiveJob for Grid2dInferenceJob {
     /// 🚪️ Ownership ONLY — deliberately NOT gated on a closing flag: the retained session calls `begin_close`
     /// itself, and a flag-gated predicate would spin its own close ladder forever.
     fn terminal_is_empty(&self) -> bool {
-        self.publication.is_none() && self.output.is_none() && self.output_payload.is_none() && self.restore.is_none() && self.child.is_none() && self.rejected_output_page.is_none()
+        self.publication.is_none() && self.output.is_none() && self.output_payload.is_none() && self.restore.is_none() && self.child.is_none() && self.output_chunk.is_none()
     }
 }
 
@@ -825,21 +820,32 @@ pub fn register_grid2d_inference_factory(bus: &semio_framework::ActionBus) -> Re
 }
 
 /// 🏁 Explicit headless adapter over the same complete parent job the public factory builds.
-pub fn solve_with_job(snapshot: &Grid2dSnapshot) -> Result<Grid2dInferenceCommit, String> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn solve_with_job(snapshot: &Grid2dSnapshot) -> Result<Grid2dInferenceCommit, semio_s_plugin_wfc_engine::job::HeadlessFailure<Grid2dInferenceJob, Grid2dInferenceCommit>> {
     solve_with_clock(snapshot, semio_framework_job::default_now_us)
 }
 
 /// 🧮️ The same headless adapter driven by an injected clock, so correctness laws run on
 /// [`semio_framework_job::logical_now_us`] and never on a descheduled thread's wall clock.
-pub fn solve_with_clock(snapshot: &Grid2dSnapshot, now_us: fn() -> Option<u64>) -> Result<Grid2dInferenceCommit, String> {
-    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
-    let job = Grid2dInferenceJob::new(operation, Grid2dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
-    wfc::job::run_headless(
+#[cfg(any(test, feature = "testkit"))]
+pub fn solve_with_clock(snapshot: &Grid2dSnapshot, now_us: fn() -> Option<u64>) -> Result<Grid2dInferenceCommit, semio_s_plugin_wfc_engine::job::HeadlessFailure<Grid2dInferenceJob, Grid2dInferenceCommit>> {
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(1), snapshot.seed);
+    let job = Grid2dInferenceJob::new(operation, Grid2dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None }).map_err(semio_s_plugin_wfc_engine::job::HeadlessFailure::rejected)?;
+    wfc::job::run_headless_supervised(
         job,
         operation,
         now_us,
-        wfc::job::HeadlessSite { site: "wfc.grid2d.inference.headless", label: "grid2d-inference-headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000 },
-        |_job, output| {
+        wfc::job::HeadlessSite { site: "wfc.grid2d.inference.headless", label: "grid2d-inference-headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000,
+            retained_stock: semio_framework_job::RetainedCloneGrant { maximum_items: 16_000_000, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 256 },
+            lifetime_fuel: 100_000_000, lifetime_budget_us: 60_000_000,
+        },
+        |_job| None,
+        |_job, outcome| {
+            let output = match outcome {
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Complete(bytes) => bytes,
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Fault(bytes) => return Err(String::from_utf8_lossy(bytes).into_owned()),
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Cancelled => return Err("grid2d-inference-cancelled".into()),
+            };
             std::str::from_utf8(output)
                 .map_err(|error| format!("grid2d-invalid-commit:{error}"))
                 .and_then(|text| crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value::<Grid2dInferenceCommit>(text).map_err(|error| format!("grid2d-invalid-commit:{error}")))
@@ -847,52 +853,9 @@ pub fn solve_with_clock(snapshot: &Grid2dSnapshot, now_us: fn() -> Option<u64>) 
     )
 }
 
-impl store::InferredField<Grid2dSnapshot> for Grid2dSolve {
-    type Dependency = Vec<u8>;
-    type Key = String;
-    type Value = Grid2dSolveResult;
 
-    const FIELD_ID: &'static str = "s.wfc.grid2d.inference.solve";
-    const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
-        &["seed", "width", "height", "periodicX", "periodicY", "tiles", "rules", "pinned", "masked"]
-    }
-    fn plan(_snapshot: &Grid2dSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
-        vec![store::InferenceStep { key: "grid2d".to_string(), parents: Vec::new() }]
-    }
-    fn dep_input(snapshot: &Grid2dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(snapshot).into_bytes()
-    }
-    fn compute(snapshot: &Grid2dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        match solve_with_job(snapshot) {
-            Ok(commit) if !commit.contradiction => Grid2dSolveResult::Solved { assignments: commit.assignments },
-            _ => Grid2dSolveResult::Unsolved,
-        }
-    }
-}
 
-impl store::InferredField<Grid2dSnapshot> for Grid2dContradiction {
-    type Dependency = Vec<u8>;
-    type Key = String;
-    type Value = bool;
-
-    const FIELD_ID: &'static str = "s.wfc.grid2d.inference.contradiction";
-    const SCHEMA_VERSION: u32 = 1;
-
-    fn reads() -> &'static [&'static str] {
-        &["seed", "width", "height", "periodicX", "periodicY", "tiles", "rules", "pinned", "masked"]
-    }
-    fn plan(_snapshot: &Grid2dSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
-        vec![store::InferenceStep { key: "grid2d".to_string(), parents: Vec::new() }]
-    }
-    fn dep_input(snapshot: &Grid2dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(snapshot).into_bytes()
-    }
-    fn compute(snapshot: &Grid2dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        matches!(solve_with_job(snapshot), Ok(commit) if commit.contradiction) || solve_with_job(snapshot).is_err()
-    }
-}
 
 impl store::InferredField<Grid2dSnapshot> for Grid2dEntropy {
     type Dependency = Vec<u8>;

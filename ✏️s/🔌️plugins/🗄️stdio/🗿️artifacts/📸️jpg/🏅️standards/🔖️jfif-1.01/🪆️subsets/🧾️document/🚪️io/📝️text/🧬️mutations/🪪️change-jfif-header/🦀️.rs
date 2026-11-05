@@ -31,3 +31,7 @@ pub fn parse(line: &str) -> Result<JpgMutation, semio_framework_diagnostic::Text
 }
 
 
+
+#[cfg(test)]
+#[path = "🧪️tests/🎯️direct/🦀️.rs"]
+mod direct_behavior_tests;

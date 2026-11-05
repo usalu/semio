@@ -11,7 +11,7 @@ import { type AppCommandValue, type AppFrameValue } from "../../🪢️wire-cont
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session.
  * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on; since v21 every host admits a guest
  * against it through {@link admitGuestChannelVersion} before any frame. */
-export const APP_CHANNEL_VERSION = 23;
+export const APP_CHANNEL_VERSION = 25;
 
 /** 🤝️ Fault code of a guest compiled for another app-channel version than its host — TS twin of Rust `CHANNEL_MISMATCH_CODE`. */
 export const CHANNEL_MISMATCH_CODE = "plugin.channel-mismatch";

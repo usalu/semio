@@ -113,15 +113,26 @@ async fn mesh_at_returns_none_past_object_count() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn sync_meshes_to_snapshot_writes_back_mesh_json() {
+async fn sync_meshes_to_snapshot_persists_managed_geometry_independently_of_source() {
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧬️managed-sync/🔣️.json")).unwrap();
     let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
-    doc.add_primitive("box").unwrap();
-    doc.active_mesh_mut().unwrap().translate(Vec3::new(1.0, 0.0, 0.0)).unwrap();
+    doc.add_primitive(contract["primitive"].as_str().unwrap()).unwrap();
+    let delta: [f32; 3] = std::array::from_fn(|axis| contract["translation"][axis].as_f64().unwrap() as f32);
+    let before_position = doc.active_mesh().unwrap().vertex_position(VertexId(0)).unwrap();
+    doc.active_mesh_mut().unwrap().translate(Vec3::new(delta[0], delta[1], delta[2])).unwrap();
     let idx = doc.active_index().unwrap();
     let object_id = doc.snapshot().objects[idx].id.clone();
     let before = doc.mesh_workspace().get(&object_id).cloned();
     doc.sync_meshes_to_snapshot().unwrap();
+    let object = &doc.snapshot().objects[idx];
     assert_ne!(doc.mesh_workspace().get(&object_id).cloned(), before);
+    assert_eq!(object.mesh_state.as_ref(), doc.mesh_workspace().get(&object_id));
+    assert_eq!(object.mesh_content, contract["expected"]["literalSource"].as_str().unwrap());
+    assert_eq!(object.mesh, Some(semio_s_artifact_lowpoly_lowpoly_model::snapshot::managed_mesh_child_handle(&object_id, object.mesh_state.as_ref().unwrap())));
+    let reloaded = LowpolyDocument::with_context(doc.snapshot().clone(), object_id, LowpolySelection::default(), HashMap::new()).unwrap();
+    let position = reloaded.active_mesh().unwrap().vertex_position(VertexId(0)).unwrap();
+    let expected = before_position.add(Vec3::new(delta[0], delta[1], delta[2]));
+    assert_eq!([position.x(), position.y(), position.z()], [expected.x(), expected.y(), expected.z()]);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -222,15 +233,26 @@ async fn selection_transform_pivot_empty_vertex_selection_is_origin() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn ensure_all_paint_buffers_adds_missing_layer_and_fixes_wrong_size() {
+async fn ensure_all_paint_buffers_adds_missing_layer_and_refuses_malformed_canvas_atomically() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/🎨️texture/🧪️tests/🔣️.json")).unwrap();
+    let case = &fixture["atomicCase"];
     let mut projection = default_snapshot();
     projection.objects[0].paint_layers.clear();
     let mut doc = LowpolyDocument::new(projection, default_mesh_workspace()).unwrap();
     assert_eq!(doc.snapshot().objects[0].paint_layers.len(), 1);
     assert_eq!(doc.snapshot().objects[0].paint_layers[0].name, "Base");
-    doc.snapshot_mut().objects[0].paint_layers[0].pixels = vec![1, 2, 3];
-    doc.ensure_all_paint_buffers();
     assert_eq!(doc.snapshot().objects[0].paint_layers[0].pixels.len(), LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4);
+    doc.add_primitive("box").unwrap();
+    assert_eq!(case["earlierLayers"].as_array().unwrap().len(), 0);
+    doc.snapshot_mut().objects[0].paint_layers.clear();
+    doc.snapshot_mut().objects[1].paint_layers[0].pixels = vec![17; case["laterInvalidBytes"].as_u64().unwrap() as usize];
+    let before = doc.snapshot().clone();
+    let error = doc.ensure_all_paint_buffers().expect_err("malformed nonempty texture refuses before inserting another object's missing layer");
+    let LowpolyCoreError::Paint(error) = error else { panic!("typed paint texture refusal") };
+    assert_eq!(error.actual_bytes, case["laterInvalidBytes"].as_u64().unwrap() as usize);
+    assert_eq!(semio_s_artifact_lowpoly_lowpoly_model::paint_texture::PaintTextureError::CODE, case["expectedCode"].as_str().unwrap());
+    assert_eq!(case["expectedChanged"], false);
+    assert_eq!(doc.snapshot(), &before, "no white replacement, padding, cropping or partial layer insertion");
 }
 
 #[semio_framework_async_macros::async_test]

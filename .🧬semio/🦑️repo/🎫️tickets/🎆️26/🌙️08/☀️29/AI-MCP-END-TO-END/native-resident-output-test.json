@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","-p","semio-framework-plugin-guest-contract","--lib","resident_turn_output"],"configuration":"prototype","store":"shared","parallelism":2,"language":"en","agent":"semio-mcp-resident-output-laws"}}

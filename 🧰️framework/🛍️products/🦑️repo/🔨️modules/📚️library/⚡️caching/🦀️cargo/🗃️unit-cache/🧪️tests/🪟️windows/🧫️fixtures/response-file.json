@@ -1,0 +1,6 @@
+{
+  "arguments": ["--crate-name", "neutral", "--print=cfg"],
+  "repeatedArgument": "--cfg=label=\"white space üni\"",
+  "repetitions": 2000,
+  "minimumCommandCharacters": 32768
+}

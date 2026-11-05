@@ -1,0 +1,20 @@
+{
+  "maximumTurnMicroseconds": 500,
+  "maximumLifetimeMicroseconds": 2000,
+  "initialNow": 1000,
+  "absoluteDeadline": 3000,
+  "cases": [
+    {
+      "now": 1000,
+      "deadline": 1500
+    },
+    {
+      "now": 1400,
+      "deadline": 1900
+    },
+    {
+      "now": 2800,
+      "deadline": 3000
+    }
+  ]
+}

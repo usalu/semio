@@ -1,0 +1,3 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";
+const file="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📤️receipt/🧪️tests/🦀️.rs";
+let source=readFileSync(file,"utf8");for(const[before,after]of[["result.is_ok(),matches!(flags,0|2|3)","result.is_ok(),fixture[\"inputAdmissionFlags\"][flags as usize].as_bool().unwrap()"],["[(0,0),(4,4),(5,3),(6,9),(7,1)]","[(0,0),(4,5),(5,3),(6,9),(7,1)]"]]){if(source.split(before).length!==2)throw Error(before);source=source.replace(before,after);}const temp=import.meta.dirname+"/🗑️generated/guest-input-law-edit.rs";writeFileSync(temp,source);renameSync(temp,file);

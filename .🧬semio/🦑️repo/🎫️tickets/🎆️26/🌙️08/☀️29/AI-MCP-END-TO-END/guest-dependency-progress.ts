@@ -1,0 +1,9 @@
+import {doctorPortsV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔌️ports/🟦️.ts";
+import {writeFileSync} from "node:fs";
+const ports=doctorPortsV1(process.cwd(),{signal:new AbortController().signal});
+const roots=process.argv.slice(2).map(Number);if(!roots.length||roots.some(pid=>!Number.isSafeInteger(pid)||pid<=0))throw Error("explicit observed process IDs required");
+const all=await ports.processes();const ids=new Set(roots);let changed=true;while(changed){changed=false;for(const row of all)if(ids.has(row.parent)&&!ids.has(row.pid)){ids.add(row.pid);changed=true;}}
+const samples=[];
+for(let i=0;i<2;i++){const output=(await ports.command("powershell",["-NoProfile","-NonInteractive","-Command",`Get-CimInstance Win32_Process | Where-Object { $_.ProcessId -in @(${[...ids].join(",")}) } | Select-Object ProcessId,ParentProcessId,CreationDate,KernelModeTime,UserModeTime | ConvertTo-Json -Compress`])).trim();const raw=output?JSON.parse(output):[];samples.push({at:Date.now(),rows:Array.isArray(raw)?raw:[raw]});if(i===0)await new Promise(resolve=>setTimeout(resolve,4000));}
+const elapsed=samples[1].at-samples[0].at;const counters=samples[1].rows.map(row=>{const prior=samples[0].rows.find(before=>before.ProcessId===row.ProcessId&&before.CreationDate===row.CreationDate);return{pid:row.ProcessId,sameBirth:!!prior,cpuSeconds:prior?Number(BigInt(row.KernelModeTime)+BigInt(row.UserModeTime)-BigInt(prior.KernelModeTime)-BigInt(prior.UserModeTime))/1e7:null};});
+const report={at:Date.now(),roots,elapsed,counters,samples,selected:all.filter(row=>ids.has(row.pid))};writeFileSync(import.meta.dirname+"/🗑️generated/guest-dependency-progress-census.json",JSON.stringify(report));console.log(JSON.stringify({at:report.at,roots,elapsed,counters}));

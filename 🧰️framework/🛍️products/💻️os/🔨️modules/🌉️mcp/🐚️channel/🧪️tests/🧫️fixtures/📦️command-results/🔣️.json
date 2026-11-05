@@ -1,0 +1,7 @@
+[
+  { "kind": "emit", "payload": { "version": 1, "kind": "emit", "ops": { "document": [], "config": [], "draft": [] }, "warnings": [], "output": { "status": "guest-readonly", "nested": { "value": 7 }, "text": "untrusted guest text" } } },
+  { "kind": "emit", "payload": { "version": 1, "kind": "emit", "ops": { "document": [], "config": [], "draft": [] }, "warnings": [], "output": null } },
+  { "kind": "transactionCommitted", "payload": { "version": 1, "kind": "transactionCommitted", "txnId": "guest-output", "editId": "edit-8", "output": { "status": "guest-readonly", "nested": { "value": 7 }, "text": "untrusted guest text" } } },
+  { "kind": "transactionCommitted", "payload": { "version": 1, "kind": "transactionCommitted", "txnId": "guest-output", "editId": "edit-8", "output": null } },
+  { "kind": "transactionCommitted", "payload": { "version": 1, "kind": "transactionCommitted", "txnId": "guest-output", "editId": "edit-8" } }
+]

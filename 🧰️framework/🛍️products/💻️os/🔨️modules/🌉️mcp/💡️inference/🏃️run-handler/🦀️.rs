@@ -10,62 +10,36 @@ pub struct GuestInferenceRun {
     pub payload: Option<Vec<u8>>,
 }
 
-/// 🎟️ All retained axes come from the original turn's explicit grant.
-pub(crate) fn inference_original_retained(grant:&serde_json::Value)->Result<semio_framework_value::RetainedCloneGrant,GatewayError>{
-    let invalid=||inference_field_invalid("turn.grant","all five explicit retained axes are required within the cross-platform address range");
+/// 🎟️ Requested per-call retained limits are data; only the native driver can fund them.
+pub(crate) fn inference_retained_policy(grant:&serde_json::Value)->Result<semio_framework_value::RetainedCloneGrant,GatewayError>{
+    let invalid=||inference_field_invalid("retainedPolicy","all five explicit retained limits are required within the cross-platform address range");
     let fields=grant.as_object().ok_or_else(invalid)?;
     if fields.len()!=5{return Err(invalid())}
     let axis=|name|fields.get(name).and_then(serde_json::Value::as_u64).and_then(|number|u32::try_from(number).ok()).map(|number|number as usize).ok_or_else(invalid);
     Ok(semio_framework_value::RetainedCloneGrant{maximum_items:axis("maximumItems")?,maximum_copy_bytes:axis("maximumCopyBytes")?,maximum_capacity_bytes:axis("maximumCapacityBytes")?,maximum_release_bytes:axis("maximumReleaseBytes")?,maximum_depth:axis("maximumDepth")?})
 }
 
-/// 🎟️ The command borrows original cancellation and carries its one caller turn and work policy.
-pub struct InferenceCallerAuthority<'a>{pub turn:semio_framework_actor::RetainedTurnInput,pub retained_policy:semio_framework_value::RetainedCloneGrant,pub revision:u64,pub cancellation_id:&'a str,pub work_units:u64,pub maximum_elapsed_milliseconds:u64}
+/// 📋️ Public request data contains no private native source or clock authority.
+pub struct InferenceCallRequest<'a>{pub retained_policy:semio_framework_value::RetainedCloneGrant,pub revision:u64,pub document_generation:u64,pub cancellation_id:&'a str,pub work_units:u64,pub maximum_elapsed_milliseconds:u64}
 
-/// 🎟️ Exact JSON identities are mandatory before any guest command or job is born.
-pub(crate) fn inference_original_turn(arguments: &serde_json::Value) -> Result<InferenceCallerAuthority<'_>, GatewayError> {
+/// 📏️ Validates explicit caller bounds before a native driver admits the inference.
+pub(crate) fn inference_call_request(arguments: &serde_json::Value) -> Result<InferenceCallRequest<'_>, GatewayError> {
     let integer = |value: &serde_json::Value, name: &str, minimum: u64| value.get(name)
         .and_then(serde_json::Value::as_u64)
         .filter(|number| *number >= minimum && *number <= 9007199254740991)
         .ok_or_else(|| inference_field_invalid(name, "an explicit exact unsigned JSON identity or work bound is required"));
-    let source = arguments.get("turn").and_then(serde_json::Value::as_object)
-        .filter(|source| source.len() == 5)
-        .ok_or_else(|| inference_field_invalid("turn", "the original operation, generation, epoch, work and total grant are required"))?;
-    let turn_value = &arguments["turn"];
-    let work = source.get("work").filter(|value| value.as_object().is_some_and(|fields| fields.len() == 3))
-        .ok_or_else(|| inference_field_invalid("turn.work", "the original clock binding, absolute deadline and total fuel are required"))?;
-    let turn = semio_framework_actor::RetainedTurnInput {
-        operation: integer(turn_value, "operation", 1)?,
-        generation: integer(turn_value, "generation", 1)?,
-        epoch: integer(turn_value, "epoch", 1)?,
-        work: semio_framework_actor::OriginalActorTurnWork {
-            clock_binding: integer(work, "clockBinding", 1)?,
-            absolute_deadline_us: integer(work, "absoluteDeadlineUs", 1)?,
-            fuel: integer(work, "fuel", 0)?,
-        },
-        grant: inference_original_retained(source.get("grant")
-            .ok_or_else(|| inference_field_invalid("turn.grant", "the original total grant is required"))?)?,
-    };
-    let policy = arguments.get("retainedPolicy").ok_or_else(|| inference_field_invalid("retainedPolicy", "an explicit original call policy is required"))?;
-    let retained_policy = inference_original_retained(policy)
-        .map_err(|_| inference_field_invalid("retainedPolicy", "all five explicit call limits are required"))?;
-    let total = turn.grant;
-    if retained_policy.maximum_items > total.maximum_items
-        || retained_policy.maximum_copy_bytes > total.maximum_copy_bytes
-        || retained_policy.maximum_capacity_bytes > total.maximum_capacity_bytes
-        || retained_policy.maximum_release_bytes > total.maximum_release_bytes
-        || retained_policy.maximum_depth > total.maximum_depth {
-        return Err(inference_field_invalid("retainedPolicy", "the call policy exceeds its original total grant"));
+    if arguments.get("turn").is_some() {
+        return Err(inference_field_invalid("turn", "private native turn authority is not a public request field"));
     }
+    let policy = arguments.get("retainedPolicy").ok_or_else(|| inference_field_invalid("retainedPolicy", "an explicit requested call policy is required"))?;
+    let retained_policy = inference_retained_policy(policy)
+        .map_err(|_| inference_field_invalid("retainedPolicy", "all five explicit requested call limits are required"))?;
     let work_units = integer(arguments, "workUnits", 1)?;
-    if work_units > turn.work.fuel {
-        return Err(inference_field_invalid("workUnits", "the call work limit exceeds its original remaining fuel"));
-    }
     let cancellation_id = arguments.get("cancellationId").and_then(serde_json::Value::as_str)
         .filter(|value| !value.is_empty())
-        .ok_or_else(|| inference_field_invalid("cancellationId", "the original nonempty cancellation identity is required"))?;
-    Ok(InferenceCallerAuthority {
-        turn, retained_policy, revision: integer(arguments, "revision", 0)?, cancellation_id,
+        .ok_or_else(|| inference_field_invalid("cancellationId", "an explicit nonempty cancellation identity is required"))?;
+    Ok(InferenceCallRequest {
+        retained_policy, revision: integer(arguments, "revision", 0)?, document_generation: integer(arguments, "documentGeneration", 0)?, cancellation_id,
         work_units, maximum_elapsed_milliseconds: integer(arguments, "maximumElapsedMilliseconds", 1)?,
     })
 }
@@ -74,7 +48,7 @@ pub(crate) fn inference_original_turn(arguments: &serde_json::Value) -> Result<I
 /// into the request, route it to the service's plugin guest, run it under `cancel`, reporting each
 /// step on `job_id`. `Ok(None)` is a run the caller's cancel stopped.
 pub(super) fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &ActionAdapter, item: &DeclaredInference, artifact_id: Option<&str>, arguments: &serde_json::Value, job_id: &str, cancel: InferenceCancel) -> Result<Option<GuestInferenceRun>, GatewayError> {
-    let authority=inference_original_turn(arguments)?;
+    let call=inference_call_request(arguments)?;
     let jobs = job_registry();
     jobs.report_progress(job_id, INFERENCE_BINDING_PROGRESS_START, Some(match artifact_id {
         Some(artifact_id) => format!("binding artifact `{artifact_id}` into the request body"),
@@ -89,12 +63,12 @@ pub(super) fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &
         plugin_id: item.route_plugin_id().to_string(),
         artifact_kind: item.artifact_kind.clone(),
         inference_schema: item.inference_schema.clone(),
-        revision: authority.revision,
-        turn: authority.turn,
-        retained_policy: authority.retained_policy,
-        cancellation_id: authority.cancellation_id.to_string(),
-        work_units: authority.work_units,
-        maximum_elapsed_milliseconds: authority.maximum_elapsed_milliseconds,
+        revision: call.revision,
+        document_generation: call.document_generation,
+        retained_policy: call.retained_policy,
+        cancellation_id: call.cancellation_id.to_string(),
+        work_units: call.work_units,
+        maximum_elapsed_milliseconds: call.maximum_elapsed_milliseconds,
         canonical_payload: inference_run_payload_bytes(arguments),
         artifact_id: artifact_id.unwrap_or_default().to_string(),
         artifact_document,
@@ -148,7 +122,7 @@ pub(super) fn inference_run_handler(context: &InferenceToolContext<'_>, argument
     }
     let item = service.declared.clone();
     let caller_payload = arguments.get("payload").filter(|value| !value.is_null());
-    let authority=match inference_original_turn(&arguments){Ok(authority)=>authority,Err(error)=>return CallToolResult::tool_error(&error)};
+    let authority=match inference_call_request(&arguments){Ok(authority)=>authority,Err(error)=>return CallToolResult::tool_error(&error)};
     let cancellation_id=authority.cancellation_id;
     let cancel = InferenceCancel::default();
 

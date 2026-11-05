@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "controller": "s.lowpoly.lowpoly@1/*#editor",
+  "action": "addPrimitive",
+  "items": 5,
+  "windowAction": "setUtilityParam"
+}

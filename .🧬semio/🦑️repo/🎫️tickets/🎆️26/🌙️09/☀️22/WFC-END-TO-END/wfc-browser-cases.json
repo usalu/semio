@@ -1,0 +1,229 @@
+{
+  "schema": "semio.wfc.browser-cases/v1",
+  "timeoutMs": 120000,
+  "pauseHoldMs": 1200,
+  "solvePersistence": "ephemeral",
+  "steps": [
+    101,
+    102,
+    103
+  ],
+  "variants": [
+    {
+      "variant": "bitmap",
+      "port": 6041,
+      "authorWindow": "wfc-bitmap-input",
+      "preview": "wfc.bitmap.output",
+      "forms": [
+        {
+          "action": "change-seed",
+          "args": {
+            "seed": "4001"
+          }
+        }
+      ],
+      "keep": "pin-preview",
+      "keepWindow": "wfc-bitmap-output",
+      "workload": {
+        "forms": [
+          {
+            "action": "resize-output",
+            "window": "wfc-bitmap-output",
+            "args": {
+              "width": "64",
+              "height": "64"
+            }
+          }
+        ]
+      },
+      "reloadSurfaces": [
+        {
+          "window": "wfc-bitmap-input",
+          "surface": "wfc.bitmap.input",
+          "meaning": "authored geometry and labels"
+        },
+        {
+          "window": "wfc-bitmap-output",
+          "surface": "wfc.bitmap.output",
+          "meaning": "authored bitmap pins"
+        }
+      ]
+    },
+    {
+      "variant": "grid2d",
+      "port": 6042,
+      "authorWindow": "wfc-grid2d-grid",
+      "preview": "wfc.grid2d.surface.preview",
+      "forms": [
+        {
+          "action": "change-seed",
+          "args": {
+            "seed": "4001"
+          }
+        },
+        {
+          "action": "create-tile",
+          "args": {
+            "id": "scenario-tile",
+            "weight": "2"
+          }
+        }
+      ],
+      "workload": {
+        "forms": [
+          {
+            "action": "resize-grid",
+            "args": {
+              "width": "64",
+              "height": "64"
+            }
+          }
+        ]
+      },
+      "reloadSurfaces": [
+        {
+          "window": "wfc-grid2d-grid",
+          "surface": "wfc.grid2d.surface.grid",
+          "meaning": "authored geometry and labels"
+        }
+      ]
+    },
+    {
+      "variant": "wfc2d",
+      "port": 6043,
+      "authorWindow": "wfc-graph",
+      "preview": "wfc.wfc2d.preview",
+      "forms": [
+        {
+          "action": "change-seed",
+          "args": {
+            "seed": "4001"
+          }
+        },
+        {
+          "action": "create-tile",
+          "args": {
+            "id": "scenario-tile",
+            "label": "Scenario",
+            "weight": "2"
+          }
+        }
+      ],
+      "workload": {
+        "forms": [],
+        "slots": {
+          "count": 256,
+          "idPrefix": "scenario-slot-",
+          "columns": 16,
+          "spacing": 2
+        }
+      },
+      "reloadSurfaces": [
+        {
+          "window": "wfc-graph",
+          "surface": "wfc.graph",
+          "meaning": "authored geometry and labels"
+        }
+      ]
+    },
+    {
+      "variant": "grid3d",
+      "port": 6044,
+      "authorWindow": "wfc-grid3d-grid",
+      "preview": "wfc.grid3d.preview",
+      "forms": [
+        {
+          "action": "changeSeed",
+          "args": {
+            "seed": "4001"
+          }
+        },
+        {
+          "action": "createTile",
+          "args": {
+            "id": "scenario-tile",
+            "label": "Scenario",
+            "weight": "2",
+            "r": "254",
+            "g": "253",
+            "b": "252",
+            "a": "255"
+          }
+        },
+        {
+          "action": "changeTileColor",
+          "args": {
+            "tileId": "scenario-tile",
+            "r": "3",
+            "g": "5",
+            "b": "7",
+            "a": "255"
+          }
+        }
+      ],
+      "workload": {
+        "forms": [
+          {
+            "action": "resizeGrid",
+            "args": {
+              "width": "16",
+              "height": "16",
+              "depth": "16"
+            }
+          }
+        ]
+      },
+      "reloadSurfaces": [
+        {
+          "window": "wfc-grid3d-grid",
+          "surface": "wfc.grid3d.grid",
+          "meaning": "authored geometry and labels"
+        }
+      ]
+    },
+    {
+      "variant": "wfc3d",
+      "port": 6045,
+      "authorWindow": "wfc-graph",
+      "preview": "wfc.3d.preview",
+      "forms": [
+        {
+          "action": "change-seed",
+          "args": {
+            "seed": "4001"
+          }
+        },
+        {
+          "action": "create-tile",
+          "args": {
+            "id": "scenario-tile",
+            "label": "Scenario",
+            "weight": "2"
+          }
+        }
+      ],
+      "workload": {
+        "forms": [],
+        "slots": {
+          "count": 256,
+          "idPrefix": "scenario-slot-",
+          "columns": 16,
+          "spacing": 2
+        }
+      },
+      "reloadSurfaces": [
+        {
+          "window": "wfc-graph",
+          "surface": "wfc.graph",
+          "meaning": "authored geometry and labels"
+        }
+      ]
+    }
+  ],
+  "controlCoverage": {
+    "pause": "observed-held-resumed",
+    "abort": "observed-active-aborted",
+    "terminalRace": "coverage-gap"
+  },
+  "setupTimeoutMs": 900000
+}

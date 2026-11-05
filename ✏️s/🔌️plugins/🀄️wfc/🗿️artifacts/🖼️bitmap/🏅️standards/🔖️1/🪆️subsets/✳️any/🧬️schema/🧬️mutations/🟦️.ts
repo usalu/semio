@@ -1,6 +1,6 @@
 /** 🧬️ Bitmap mutations — the externally-tagged dispatch union, one PascalCase key per variant. */
 
-import type { BitmapColor } from "../📸️snapshot/🟦️";
+import type { BitmapColor, BitmapPinnedPixel } from "../📸️snapshot/🟦️";
 
 export interface ChangeSeed { seed: bigint }
 export interface ResizeInput { width: number; height: number }
@@ -14,6 +14,8 @@ export interface PinPixel { x: number; y: number; color: number }
 export interface UnpinPixel { x: number; y: number }
 export interface BitmapStrokePoint { x: number; y: number }
 export interface PaintInputStroke { points: BitmapStrokePoint[]; color: number }
+export interface PinSolution { pins: BitmapPinnedPixel[] }
+export interface RestorePins { pins: BitmapPinnedPixel[] }
 
 export type BitmapMutation =
   | { ChangeSeed: ChangeSeed }
@@ -26,7 +28,9 @@ export type BitmapMutation =
   | { ChangeModel: ChangeModel }
   | { PinPixel: PinPixel }
   | { UnpinPixel: UnpinPixel }
-  | { PaintInputStroke: PaintInputStroke };
+  | { PaintInputStroke: PaintInputStroke }
+  | { PinSolution: PinSolution }
+  | { RestorePins: RestorePins };
 
 /** 🏷️ The kebab-case kind vocabulary, in BitmapMutation declaration order. */
 export const BITMAP_MUTATION_KINDS = [
@@ -41,6 +45,8 @@ export const BITMAP_MUTATION_KINDS = [
   "pin-pixel",
   "unpin-pixel",
   "paint-input-stroke",
+  "pin-solution",
+  "restore-pins",
 ] as const;
 
 /** 🧮️ The most points one stroke carries, as the Rust leaf and the payload schema bound it. */
@@ -103,4 +109,21 @@ export function strokeCells(points: readonly BitmapStrokePoint[]): BitmapStrokeP
     }
   }
   return cells;
+}
+
+/** 🧷️ Reads the pin batch shape shared by semantic keep and exact restoration. */
+export function parsePinBatch(value: unknown): PinSolution {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError("Invalid pin batch");
+  const row = value as Record<string, unknown>;
+  if (Object.keys(row).some(key => key !== "pins") || !Array.isArray(row.pins) || row.pins.length > 512 * 512) throw new TypeError("Invalid pin batch");
+  const integer = (raw: unknown, maximum: number): number => {
+    if (typeof raw !== "number" || !Number.isInteger(raw) || raw < 0 || raw > maximum) throw new TypeError("Invalid pinned pixel");
+    return raw;
+  };
+  return { pins: row.pins.map((pin): BitmapPinnedPixel => {
+    if (!pin || typeof pin !== "object" || Array.isArray(pin)) throw new TypeError("Invalid pinned pixel");
+    const fields = pin as Record<string, unknown>;
+    if (Object.keys(fields).some(key => key !== "x" && key !== "y" && key !== "color")) throw new TypeError("Invalid pinned pixel");
+    return { x: integer(fields.x, 511), y: integer(fields.y, 511), color: integer(fields.color, 255) };
+  }) };
 }

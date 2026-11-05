@@ -137,20 +137,20 @@ fn missing_required_field_is_input_invalid_before_any_workspace_check() {
 }
 
 #[test]
-fn workspace_bound_with_zero_resolvable_plugins_is_still_plugin_unavailable() {
+fn missing_artifact_is_not_found_without_plugin_ownership() {
     let dir = store::test_support::tempdir().expect("tempdir");
-    let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens"));
+    let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens"));
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(workspace), full_principal());
     let result = registry.call("artifact_open", serde_json::json!({ "artifactId": "whatever" })).unwrap();
     assert!(result.is_error);
-    assert_eq!(result.structured_content.unwrap()["code"], "PLUGIN_UNAVAILABLE");
+    assert_eq!(result.structured_content.unwrap()["code"], "NOT_FOUND");
 }
 
 #[test]
-fn artifact_create_then_open_round_trips_for_real_with_exactly_one_resolvable_plugin() {
+fn artifact_create_then_open_round_trips_without_any_plugin() {
     let dir = store::test_support::tempdir().expect("tempdir");
-    let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens"));
+    let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens"));
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(workspace), full_principal());
 
@@ -176,23 +176,25 @@ fn artifact_create_then_open_round_trips_for_real_with_exactly_one_resolvable_pl
 }
 
 #[test]
-fn artifact_validate_is_a_real_typed_gap_never_a_fabricated_pass() {
+fn artifact_validate_uses_the_owned_pair_decoder_without_a_plugin() {
     let dir = store::test_support::tempdir().expect("tempdir");
-    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-2", serde_json::json!({}).into())).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(Arc::new(workspace)), full_principal());
     let result = registry.call("artifact_validate", serde_json::json!({ "artifactId": "doc-2" })).unwrap();
-    assert!(result.is_error, "no live validate command is wired yet — this must never silently pass");
+    assert!(!result.is_error, "{result:?}");
     let structured = result.structured_content.unwrap();
-    assert_eq!(structured["code"], "PLUGIN_UNAVAILABLE");
-    assert_eq!(structured["retryable"], true);
+    assert_eq!(structured["artifactId"], "doc-2");
+    assert_eq!(structured["schema"], PROBE_SCHEMA);
+    assert_eq!(structured["validation"], "canonical-pair");
+    assert_eq!(structured["valid"], true);
 }
 
 #[test]
 fn artifact_snapshot_returns_real_bytes_for_the_current_revision_and_rejects_a_stale_one() {
     let dir = store::test_support::tempdir().expect("tempdir");
-    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin"), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-3", serde_json::json!({ "n": 7 }).into())).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(Arc::new(workspace)), full_principal());
@@ -210,7 +212,7 @@ fn artifact_snapshot_returns_real_bytes_for_the_current_revision_and_rejects_a_s
 #[test]
 fn artifact_export_never_fabricates_a_successful_export() {
     let dir = store::test_support::tempdir().expect("tempdir");
-    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin"), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-4", serde_json::json!({}).into())).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(Arc::new(workspace)), full_principal());
@@ -261,7 +263,7 @@ fn document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope
     let canary = law["canary"].as_str().expect("canary");
     let needles = canary_needles(canary);
     let dir = store::test_support::tempdir().expect("tempdir");
-    let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens"));
+    let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin"), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens"));
     ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-canary", serde_json::json!({ "text": canary }).into())).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(workspace.clone()), full_principal());

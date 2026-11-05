@@ -1,0 +1,37 @@
+[
+  {
+    "mode": "siblings",
+    "accepted": true,
+    "mutate": true
+  },
+  {
+    "mode": "parent-ancestor",
+    "accepted": true,
+    "mutate": true
+  },
+  {
+    "mode": "target-ancestor",
+    "accepted": true,
+    "mutate": true
+  },
+  {
+    "mode": "same",
+    "accepted": true,
+    "mutate": false
+  },
+  {
+    "mode": "target-race",
+    "accepted": false,
+    "mutate": true
+  },
+  {
+    "mode": "parent-race",
+    "accepted": false,
+    "mutate": true
+  },
+  {
+    "mode": "cancel",
+    "accepted": false,
+    "mutate": true
+  }
+]

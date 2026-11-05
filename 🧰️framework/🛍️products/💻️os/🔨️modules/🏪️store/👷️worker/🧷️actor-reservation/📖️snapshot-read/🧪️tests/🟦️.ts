@@ -20,7 +20,7 @@ export async function verifySnapshotPackReader(): Promise<void> {
    submit: async (port,document,revision) => { assert.equal(port,policy.port);assert.equal(document,fixture.documentId);assert.equal(revision,handle.base_revision);return mode === "foreignHandle" ? {...handle,base_revision:10n} : handle; },
    poll: async () => {
     if(mode === "cancelled")abort.abort();
-    return {handle,state:"complete",applied_progress:5n,checkpoint_available:false,mime_type:(mode === "wrongMediaType" || mode === "cancelFailure") ? "text/plain" : policy.mediaType,total_bytes:mode === "oversized" ? BigInt(policy.maximumBytes)+1n : BigInt(expected.length),detail:""};
+      return {handle,state:"complete",applied_progress:5n,checkpoint_available:false,descriptor:[],mime_type:(mode === "wrongMediaType" || mode === "cancelFailure") ? "text/plain" : policy.mediaType,total_bytes:mode === "oversized" ? BigInt(policy.maximumBytes)+1n : BigInt(expected.length),detail:""};
    },
    take: async () => {
     const data = mode === "stalled" ? new Uint8Array() : Uint8Array.from(fixture.chunks[index++] ?? []);

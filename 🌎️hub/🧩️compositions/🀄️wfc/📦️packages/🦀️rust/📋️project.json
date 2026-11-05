@@ -3,7 +3,8 @@
   "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/🌎️hub/🧩️compositions/🀄️wfc/**/*.rs",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🀄️wfc/**/*.{rs,json,toml,semio}",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🀄️wfc/🧪️tests/🧫️fixtures/**/*",
       "{projectRoot}/**/*"
     ]
   },

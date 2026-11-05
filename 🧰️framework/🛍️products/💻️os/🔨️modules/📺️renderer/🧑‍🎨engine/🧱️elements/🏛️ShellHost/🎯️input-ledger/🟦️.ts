@@ -1,3 +1,4 @@
+import type { ResolvedPluginViewState } from "@semio-tech/framework";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHost/input-ledger/component.ts
 /** 🎯️ The Input Causality Ledger — every host input (a pointer gesture, a utility or tool toggle,
@@ -51,6 +52,8 @@ export type InputProvenanceV1 = Readonly<{
 export type ShellInputActionV1 = Readonly<{
   controllerId: string;
   action: string;
+  callerViewState?: ResolvedPluginViewState;
+  commandAddress?: Readonly<{ owner: { plugin: { pluginId: string } } | { app: { pluginId: string; appId: string } } | { mode: { pluginId: string; appId: string; modeId: string } }; commandId: string }>;
   args?: unknown;
   /** 🪪️ `inputSeq` is re-minted by `issue`, so a caller stamping a follow-up names only what it knows. */
   provenance?: Omit<InputProvenanceV1, "inputSeq"> & Partial<Pick<InputProvenanceV1, "inputSeq">>;
@@ -114,7 +117,7 @@ export type InputDiagnosticV1 = Readonly<{
 export type InputDraftDispositionV1 = "discard" | "retain";
 
 export type InputOutcomeV1 =
-  | Readonly<{ kind: "applied"; inputSeq: number; commit?: InputCommitReceiptV1 }>
+  | Readonly<{ kind: "applied"; inputSeq: number; commit?: InputCommitReceiptV1; output?: unknown }>
   | Readonly<{ kind: "superseded"; inputSeq: number; by: number }>
   | Readonly<{ kind: "refused"; inputSeq: number; reason: InputRefusalReasonV1; retryable: boolean; detail?: string; diagnostic?: InputDiagnosticV1; draftDisposition?: InputDraftDispositionV1 }>;
 

@@ -1,7 +1,7 @@
 //! 🪣 Edit-mode tool — Fill: the interactive collapse of `s.wfc.grid3d`. A non-mutating framework
 //! tool run (`mutating: false`, `ToolRunTraceKind::None`) whose every step advances one preparation
 //! unit or one `WfcJob::step`, publishes a partial-assignment payload the preview pane paints, and
-//! on completion stores the finished assignment in `Grid3dPreviewResidency`. Abort never stores it.
+//! on completion dispatches the finished payload to the app-local transient. Abort never dispatches it.
 
 use crate::editor::grid3d::modes::edit::windows::preview;
 use crate::schema::inferences::{Grid3dAssignment, Grid3dInferenceCommit};
@@ -62,6 +62,7 @@ pub struct Grid3dFillTraceEvent {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dFillPayload {
+    pub source_revision:Vec<u8>,
     pub assignments: Vec<Grid3dFillCell>,
     pub contradiction: bool,
     pub done: bool,
@@ -320,7 +321,7 @@ enum FillSettled {
 pub struct Grid3dFillRunJob {
     identity: ToolRunIdentity,
     writer: ToolRunTickWriter,
-    window_id: String,
+    port:semio_framework_plugin::ToolRunJobPort,
     snapshot: Arc<Grid3dSnapshot>,
     operation: Option<Operation>,
     prep: PrepStage,
@@ -348,11 +349,11 @@ pub struct Grid3dFillRunJob {
 }
 
 impl Grid3dFillRunJob {
-    pub fn new(identity: ToolRunIdentity, snapshot: Arc<Grid3dSnapshot>, window_id: Option<String>) -> Self {
+    pub fn new(identity: ToolRunIdentity, snapshot: Arc<Grid3dSnapshot>, port:semio_framework_plugin::ToolRunJobPort) -> Self {
         Self {
             identity,
             writer: ToolRunTickWriter::new(identity),
-            window_id: window_id.unwrap_or_else(|| preview::WINDOW_KIND_ID.to_string()),
+            port,
             snapshot,
             operation: None,
             prep: PrepStage::Tiles,
@@ -417,7 +418,7 @@ impl Grid3dFillRunJob {
                 }
             }
         }
-        Grid3dFillPayload { assignments, contradiction, done, trace: Vec::new() }
+        Grid3dFillPayload { source_revision:self.identity.base_revision.to_vec(),assignments, contradiction, done, trace: Vec::new() }
     }
 
     fn payload_from_commit(&self, commit: &wfc::job::WfcCommit, done: bool) -> Grid3dFillPayload {
@@ -430,7 +431,7 @@ impl Grid3dFillRunJob {
             let tile_id = self.tile_ids.get(*pattern as usize).cloned();
             assignments.push(Grid3dFillCell { x, y, z, tile_id });
         }
-        Grid3dFillPayload { assignments, contradiction: false, done, trace: Vec::new() }
+        Grid3dFillPayload { source_revision:self.identity.base_revision.to_vec(),assignments, contradiction: false, done, trace: Vec::new() }
     }
 
     /// 👁️ Builds the live payload from `domain_masks` (full, not the truncated `incomplete_grid`) after reading `preview()`.
@@ -457,7 +458,7 @@ impl Grid3dFillRunJob {
                 }
             }
         }
-        Grid3dFillPayload { assignments, contradiction, done, trace: Vec::new() }
+        Grid3dFillPayload { source_revision:self.identity.base_revision.to_vec(),assignments, contradiction, done, trace: Vec::new() }
     }
 
     fn remember(&mut self, event: Grid3dFillTraceEvent) {
@@ -536,8 +537,8 @@ impl Grid3dFillRunJob {
         }
         if solved {
             let commit = self.child.as_ref().and_then(|child| child.commit());
-            if let Some(mut child) = self.child.take() {
-                wfc::job::close_job(&mut child);
+            if let Some(child) = self.child.as_mut() {
+                child.begin_close();
             }
             let contradiction = commit.is_none();
             let payload = match commit {
@@ -547,8 +548,8 @@ impl Grid3dFillRunJob {
             return self.finish_success(contradiction, Some(payload));
         }
         if unsatisfiable {
-            if let Some(mut child) = self.child.take() {
-                wfc::job::close_job(&mut child);
+            if let Some(child) = self.child.as_mut() {
+                child.begin_close();
             }
             return self.finish_success(true, Some(self.empty_payload(true, true)));
         }
@@ -612,15 +613,16 @@ impl Grid3dFillRunJob {
                 self.payload_from_child(false, true)
             }
         });
-        if !self.committed {
-            let assignments = if contradiction || self.last_payload.contradiction { Vec::new() } else { self.last_payload.decided_assignments() };
-            preview::commit_fill_result(&self.window_id, &self.snapshot, assignments);
-            self.committed = true;
-        }
         let reason = if contradiction || self.last_payload.contradiction { FillReason::Contradiction } else { FillReason::Collapsed };
         let decided = ToolRunStepArg::Unsigned(self.last_payload.decided_count() as u64);
                 self.stage = FillStage::Complete;
-        self.publish_tick(ToolRunState::Complete, Some((reason, &[decided])), Some(FillSettled::Complete))
+        let run=self.publish_tick(ToolRunState::Complete, Some((reason, &[decided])), Some(FillSettled::Complete));
+        if !self.committed && matches!(self.settled,Some(FillSettled::Complete)) {
+            let args=semio_framework::dsl_value!({"payloadJson":String::from_utf8(self.last_payload.encode()).unwrap_or_default()});
+            self.port.dispatch(semio_framework::kernel::Effect::DispatchAction{req:semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),action:"commit-fill".into(),args:Some(args),delay_ms:0});
+            self.committed=true;
+        }
+        run
     }
 
     /// 🔗 Binds the child `WfcJob` to the same operation and generation the framework drives this run with.
@@ -758,20 +760,15 @@ impl Grid3dFillRunJob {
     }
 
     /// 🤝️ Closes the lent tick turn by turn from the next step's own wallet.
-    fn retire_delivered<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
-        let publication = self.publication.as_mut().expect("a delivered fill publication is staged");
-        let step = match publication.close_step(context.retained_grant()) { Ok(step) => step, Err(error) => { context.consume_retained(error.retained_progress())?; return Err(error) } };
-        context.consume_retained(step.progress())?;
-        if publication.terminal_is_empty() {
-            self.publication = None;
-        }
+    fn retire_delivered<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        wfc::job::close_publication_step(&mut self.publication,context)?;
         Ok(None)
     }
 
     /// 📏️ Quotes the next close turn: the staged publication, the held verdict, then the child's own frontier.
     fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        if let Some(publication) = self.publication.as_ref() {
-            return publication.retirement_demands();
+        if self.publication.is_some() {
+            return wfc::job::publication_retirement_demands(&self.publication);
         }
         if let Some(FillSettled::Fault(message)) = self.settled.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { release_bytes: message.capacity(), depth: 1, ..Default::default() });
@@ -788,13 +785,13 @@ impl Grid3dFillRunJob {
 
 impl Grid3dFillRunJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
-        if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {
+    fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        if self.publication.as_ref().is_some_and(|publication| publication.needs_retirement()) {
             return self.retire_delivered(context);
         }
         if self.closing || context.is_cancelled() {
             let _ = self.writer.step(ToolRunStepKind::Warning, self.stage.index(), FillReason::Cancelled.code(), None, &[]);
-            return JobOutcomeBorrow::admit_cancelled(context);
+            return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);
         }
         if self.publication.is_none() {
             match self.settled.take() {
@@ -816,13 +813,13 @@ impl Grid3dFillRunJob {
         }
         match self.run(context) {
             FillRun::Yield | FillRun::Staged => Ok(None),
-            FillRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
+            FillRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into),
         }
     }
 }
 
 impl InteractiveJob for Grid3dFillRunJob {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>,_return_claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -853,30 +850,16 @@ impl InteractiveJob for Grid3dFillRunJob {
             if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
             }
-            if let Some(publication) = self.publication.as_mut() {
-                let step = publication.close_step(grant)?;
-                if publication.terminal_is_empty() {
-                    self.publication = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
+            if self.publication.is_some() { return wfc::job::close_publication_step(&mut self.publication,cx); }
+            if self.settled.is_some() {
+                return semio_framework_job::close_original_granted_step(cx,|_|{let settled=self.settled.take().expect("retained fill verdict");let released_bytes=match settled {FillSettled::Fault(message)=>message.capacity(),FillSettled::Complete=>0};semio_framework_value::RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,released_bytes,..Default::default()}}),work:1}});
             }
-            if let Some(settled) = self.settled.take() {
-                let released_bytes = match settled {
-                    FillSettled::Fault(message) => message.capacity(),
-                    FillSettled::Complete => 0,
-                };
-                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } });
+            if self.child.as_ref().is_some_and(InteractiveJob::terminal_is_empty) {
+                return semio_framework_job::close_original_granted_step(cx,|_|{self.child=None;semio_framework_value::RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}});
             }
             if let Some(child) = self.child.as_mut() {
                 let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
                 let step = cx.with_retained_loan(child_grant, |same| InteractiveJob::close_step(child, same))?;
-                if InteractiveJob::terminal_is_empty(child) {
-                    self.child = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
-                }
                 return Ok(match step {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
                     step => step,
@@ -912,10 +895,27 @@ pub fn build_run_job(request: ToolRunJobRequest<'_, semio_plugin::EditorApp<crat
     if request.tool_id != TOOL_ID || request.purpose != ToolRunJobPurpose::Run {
         return Ok(None);
     }
-    Ok(Some(Box::new(Grid3dFillRunJob::new(request.identity, request.snapshot, request.window_id.map(str::to_string)))))
+    Ok(Some(Box::new(Grid3dFillRunJob::new(request.identity, request.snapshot, request.port.clone()))))
 }
 //#endregion 🧵️Job
 
 //#region 🧪️Tests
 
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod publication_laws {
+    use super::*;
+    #[test]
+    fn an_oversized_terminal_tick_never_dispatches_a_completed_result() {
+        let identity=ToolRunIdentity::new(semio_framework_tool_run::ToolRunId{app_instance_id:1,run:1},[7;32]);
+        let port=semio_framework_plugin::ToolRunJobPort::default();
+        let mut job=Grid3dFillRunJob::new(identity,Arc::new(crate::examples::blocks::snapshot()),port.clone());
+        let payload=Grid3dFillPayload{source_revision:vec![7;32],assignments:vec![Grid3dFillCell{x:0,y:0,z:0,tile_id:Some("x".repeat(semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX))}],done:true,..Default::default()};
+        job.finish_success(false,Some(payload));
+        assert!(!port.has_effects());
+        assert!(!job.committed);
+        let mut driver=semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1));
+        driver.close(&mut job);
+    }
+}

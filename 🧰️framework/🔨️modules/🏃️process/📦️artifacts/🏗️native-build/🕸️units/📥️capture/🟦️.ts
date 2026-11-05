@@ -1,3 +1,5 @@
+import {withIssuedResourceOperationV1,scriptResourceProcessEnvironmentV1} from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {readCargoObjectStreamV1} from "../../⚙️configuration/📥️capture/🟦️.ts";
 import{rustCompilerExecutionEnvironmentV1}from"../📦️package/🌱️environment/🟦️.ts";
 import {readCargoCompilerConfigurationV1} from "./../../⚙️configuration/🎟️admission/🟦️.ts";
 import projectionPolicy from "./🔣️policy.json" with {type:"json"};
@@ -5,7 +7,7 @@ import projectionSchema from "./🧬️schema/📋️projection.json" with {type
 import {createHash} from "node:crypto";
 import {dirname,join} from "node:path";
 import {readdir,open,lstat} from "node:fs/promises";
-import {captureOwnedCommandV1} from "../../../../🎛️owned-execution/🟦️.ts";
+import {captureOwnedCommandV1,runOwnedCommand,OwnedCommandFailure} from "../../../../🎛️owned-execution/🟦️.ts";
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
@@ -13,12 +15,52 @@ import {rustCfgMatchesV1} from "../../📥️source/🟦️.ts";
 import {readCargoCompilationGraphV1,type CargoCompilationGraphV1} from "../🟦️.ts";
 import {ensureCargoLockCurrentV1,cargoLockStaleFailureV1} from "../../../../🦀️cargo-workspace/🟦️.ts";
 import {cargoPlanKeyV1,cargoToolIdentityV1,type CargoPlanMemoV1} from "./🧠️memo/🟦️.ts";
+import planningOutputSchema from "./🧬️schema/📬️output.json" with {type:"json"};
 /** 📏️ Bounds one complete Cargo planning capture: the resolved metadata of the whole root workspace exceeds 16 MiB. */
-export const cargoPlanningOutputBytesV1=134217728;
+const planningLimits=planningOutputSchema.definitions.Limits.const;
+export const cargoPlanningOutputBytesV1=planningLimits.maximumBytes;
 export interface CargoCompilerPlanningRequestV1 {readonly workspaceRoot:string;readonly cwd:string;readonly program:string;readonly prefix:readonly string[];readonly args:readonly string[];readonly environment:Readonly<Record<string,string|undefined>>;readonly maximumOutputBytes:number}
 export interface CargoCompilerPlanningPortV1 {cfg(program:string,target:string|null,environment:Readonly<Record<string,string|undefined>>,cwd:string,control:ResourceLeaseControl):Promise<readonly string[]>;sourceInputs(manifest:string,control:ResourceLeaseControl):Promise<{path:string;digest:string;bytes:number}[]>;compiler(environment:Readonly<Record<string,string|undefined>>,cwd:string,control:ResourceLeaseControl):Promise<{program:string;digest:string;hostTriple:string;cargoProgram:string}>;capture(program:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl,maximumBytes:number):Promise<unknown>;readonly plans?:CargoPlanMemoV1}
+
+/** 🗃️ Keeps the actual child outcome and cause beside its bounded planning diagnostic. */
+class CargoPlanningFailureV1 extends OwnedCommandFailure {
+ override readonly cause:OwnedCommandFailure;
+ constructor(original:OwnedCommandFailure,diagnostic:Uint8Array){
+  super("cargo:planning-capture",original.outcome);
+  this.cause=original;
+  this.message=original.message+"\n"+new TextDecoder().decode(diagnostic);
+ }
+}
+
+type CargoPlanningCaptureV1=Readonly<{value:Record<string,unknown>}>|Readonly<{failure:OwnedCommandFailure}>;
+
+/** 🧵️ Reads finite planning data through the real owned runner and the same Original custody. */
+async function captureCargoPlanningObjectV1(program:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl,maximumBytes:number):Promise<Record<string,unknown>>{
+ if(!Number.isSafeInteger(maximumBytes)||maximumBytes<1||maximumBytes>planningLimits.maximumBytes)throw Error("Closed Cargo planning output bound required");
+ const result=await withIssuedResourceOperationV1<CargoPlanningCaptureV1>(control,async()=>{
+  let controlRefused=false;
+  const started=performance.now(),check=()=>{try{return checkResourceLeaseControl(control);}catch(error){controlRefused=true;throw error;}},publish=async()=>{try{check();await control.publish({resource:"cargo:planning-capture",mode:"shared",elapsedMs:Math.max(0,Math.floor(performance.now()-started))});await control.yieldContinuation();check();}catch(error){controlRefused=true;throw error;}};
+  await publish();
+  const childEnvironment=scriptResourceProcessEnvironmentV1(control,environment),remaining=check();
+  if(remaining!==null&&remaining<1)throw Error("Original Cargo planning deadline exhausted");
+  let diagnostic=new Uint8Array(0),value:Record<string,unknown>|undefined;
+  try{value=await readCargoObjectStreamV1(async accept=>{
+   await runOwnedCommand(program,[...args],cwd,"cargo:planning-capture",remaining===null?0:Math.floor(remaining),{env:childEnvironment,control,signal:control.signal,stdout:"ignore",output:{maximumBytes,maximumLines:planningLimits.maximumLines},outputConsumer:(bytes,stream)=>{
+    check();
+    if(stream==="stderr"){const kept=bytes.subarray(Math.max(0,bytes.length-planningLimits.diagnosticMaximumBytes)),previous=Math.min(diagnostic.length,planningLimits.diagnosticMaximumBytes-kept.length),next=new Uint8Array(previous+kept.length);next.set(diagnostic.subarray(diagnostic.length-previous));next.set(kept,previous);diagnostic=next;}
+    accept(bytes,stream);
+   },onProgress:publish});
+   await publish();
+  });}catch(error){if(!controlRefused&&!control.signal.aborted&&error instanceof OwnedCommandFailure)return{failure:diagnostic.length?new CargoPlanningFailureV1(error,diagnostic):error};throw error;}
+  if(value===undefined)throw Error("One complete original Cargo planning response required");
+  return{value};
+ });
+ if("failure"in result)throw result.failure;
+ return result.value;
+}
+
 /** 📬️ Captures complete bounded Cargo data under the unchanged original child control. */
-export function actualCargoCompilerPlanningPortV1(options:Readonly<{digests?:FileDigestMemoV1;plans?:CargoPlanMemoV1}>={}):CargoCompilerPlanningPortV1{return{...(options.plans?{plans:options.plans}:{}),async cfg(program,target,environment,cwd,control){const text=await captureOwnedCommandV1(program,["--print","cfg",...(target?["--target",target]:[])],cwd,{env:rustCompilerExecutionEnvironmentV1(environment),control,output:{maximumBytes:1048576,maximumLines:65536}});return text.trim().split("\n").map(value=>value.replace(/=(".*")$/u,(_,quoted)=>"="+JSON.parse(quoted)));},async sourceInputs(manifest,control){let files=0;return foreignSourceInventoryV1(dirname(manifest),options.digests,{check:()=>checkResourceLeaseControl(control),tick:async()=>{if(++files%64===0){await control.publish({resource:"cargo:foreign-source",mode:"shared",elapsedMs:0});await control.yieldContinuation();}}});},async compiler(environment,cwd,control){const program=(await captureOwnedCommandV1("rustup",["which","rustc"],cwd,{env:environment,control})).trim(),file=await open(requireMaterializedPathV1(program),"r"),hash=createHash("sha256"),buffer=Buffer.alloc(65536);try{for(;;){checkResourceLeaseControl(control);const part=await file.read(buffer,0,buffer.length,null);if(!part.bytesRead)break;hash.update(buffer.subarray(0,part.bytesRead));}}finally{await file.close();}const version=await captureOwnedCommandV1(program,["-vV"],cwd,{env:rustCompilerExecutionEnvironmentV1(environment),control}),hostTriple=version.match(/^host: (.+)$/mu)?.[1];if(!hostTriple)throw Error("Original compiler host triple required");const cargoProgram=environment.CARGO??(await captureOwnedCommandV1("rustup",["which","cargo"],cwd,{env:environment,control})).trim();if(!cargoProgram)throw Error("Original actual Cargo compiler environment required");return{program,digest:hash.digest("hex"),hostTriple,cargoProgram};},async capture(program,args,cwd,environment,control,maximumBytes){const text=await captureOwnedCommandV1(program,args,cwd,{env:environment,control,output:{maximumBytes,maximumLines:65536}}),values=text.split("\n").flatMap(line=>{try{const value=JSON.parse(line);return value&&typeof value==="object"?[value]:[];}catch{return [];}});if(values.length!==1)throw Error("One complete original Cargo planning response required");return values[0];}};}
+export function actualCargoCompilerPlanningPortV1(options:Readonly<{digests?:FileDigestMemoV1;plans?:CargoPlanMemoV1}>={}):CargoCompilerPlanningPortV1{return{...(options.plans?{plans:options.plans}:{}),async cfg(program,target,environment,cwd,control){const text=await captureOwnedCommandV1(program,["--print","cfg",...(target?["--target",target]:[])],cwd,{env:rustCompilerExecutionEnvironmentV1(environment),control,output:{maximumBytes:1048576,maximumLines:65536}});return text.trim().split("\n").map(value=>value.replace(/=(".*")$/u,(_,quoted)=>"="+JSON.parse(quoted)));},async sourceInputs(manifest,control){let files=0;return foreignSourceInventoryV1(dirname(manifest),options.digests,{check:()=>checkResourceLeaseControl(control),tick:async()=>{if(++files%64===0){await control.publish({resource:"cargo:foreign-source",mode:"shared",elapsedMs:0});await control.yieldContinuation();}}});},async compiler(environment,cwd,control){const program=(await captureOwnedCommandV1("rustup",["which","rustc"],cwd,{env:environment,control})).trim(),file=await open(requireMaterializedPathV1(program),"r"),hash=createHash("sha256"),buffer=Buffer.alloc(65536);try{for(;;){checkResourceLeaseControl(control);const part=await file.read(buffer,0,buffer.length,null);if(!part.bytesRead)break;hash.update(buffer.subarray(0,part.bytesRead));}}finally{await file.close();}const version=await captureOwnedCommandV1(program,["-vV"],cwd,{env:rustCompilerExecutionEnvironmentV1(environment),control}),hostTriple=version.match(/^host: (.+)$/mu)?.[1];if(!hostTriple)throw Error("Original compiler host triple required");const cargoProgram=environment.CARGO??(await captureOwnedCommandV1("rustup",["which","cargo"],cwd,{env:environment,control})).trim();if(!cargoProgram)throw Error("Original actual Cargo compiler environment required");return{program,digest:hash.digest("hex"),hostTriple,cargoProgram};},async capture(program,args,cwd,environment,control,maximumBytes){return captureCargoPlanningObjectV1(program,args,cwd,environment,control,maximumBytes);}};}
 /** 🧭️ Projects Cargo run to its exact binary build without forwarding runtime arguments into planning. */
 export function projectCargoCompilerPlanningArgumentsV1(args:readonly string[],metadata:unknown):string[]{
  if(validateJsonSchemaSubset(projectionSchema,projectionPolicy).length||!args.length||args.length>512||args.some(arg=>typeof arg!=="string"||arg.length>4096||arg.includes("\0")))throw Error("Closed compiler planning projection required");

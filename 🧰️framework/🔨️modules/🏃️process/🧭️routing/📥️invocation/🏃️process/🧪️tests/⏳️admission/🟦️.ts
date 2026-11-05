@@ -1,4 +1,10 @@
 import{test,expect}from"bun:test";
+import"./projection.ts";
+import"./dag.ts";
+import"./freshness.ts";
+import"./extra.ts";
+import"./wait-model.ts";
+import{runToolSyncV1}from"../../../../../🧰️tools/🏃️run/🟦️.ts";
 import*as api from"../../🟦️.ts";
 import{admissionWaitedMillisecondsV1,beginAdmissionWaitV1,creditedDeadlineRemainingV1}from"../../🐕️watchdog/🟦️.ts";
 
@@ -6,8 +12,8 @@ const sleep=(milliseconds:number)=>new Promise<void>(done=>setTimeout(done,milli
 
 test("a deadline credits the time its process waited for machine admission, and an independent Python model agrees",()=>{
  const rows=[[600,0],[600,450],[-10,0],[-10,450],[0,0],[200,-5]],model=`import json,sys
-print(json.dumps([r+max(0,w) for r,w in json.loads(sys.argv[1])]))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rows)]);
- expect(run.exitCode,run.stderr.toString()).toBe(0);
+print(json.dumps([r+max(0,w) for r,w in json.loads(sys.argv[1])]))`,run=runToolSyncV1("python",["-I","-c",model,JSON.stringify(rows)],{encoding:"utf8",caller:import.meta.url,timeout:10000});
+ expect(run.status,run.stderr.toString()).toBe(0);
  expect(rows.map(([remaining,waited])=>creditedDeadlineRemainingV1(remaining!,waited!))).toEqual(JSON.parse(run.stdout.toString()));
 });
 

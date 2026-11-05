@@ -64,12 +64,12 @@ fn repair_region_reproduces_a_solved_checkerboard_when_reopened_around_one_node(
     let adjacency = crate::constraint::build_adjacency_view(&topo);
 
     let config = SearchConfig::default();
-    let previous = match search::solve(&model, &topo, &config, 1, None, &[]) {
+    let previous = match search::solve(&model, &topo, &config, 1, None, &[]).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => sol.assignment,
         other => panic!("expected an initial Solved baseline, got {other:?}"),
     };
 
-    let outcome = repair_region(&model, &topo, &adjacency, &previous, &[NodeId::from_index(3)], 1, &config, 2);
+    let outcome = repair_region(&model, &topo, &adjacency, &previous, &[NodeId::from_index(3)], 1, &config, 2).expect("original search and teardown complete");
     match outcome {
         SolveOutcome::Solved(sol) => {
             assert!(oracle::check_assignment(&model, &sol.assignment, &arcs).is_ok());
@@ -103,12 +103,12 @@ fn repair_region_with_radius_zero_pins_everything_and_reproduces_the_input_exact
     let adjacency = crate::constraint::build_adjacency_view(&topo);
     let config = SearchConfig::default();
 
-    let previous = match search::solve(&model, &topo, &config, 1, None, &[]) {
+    let previous = match search::solve(&model, &topo, &config, 1, None, &[]).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => sol.assignment,
         other => panic!("expected an initial Solved baseline, got {other:?}"),
     };
 
-    let outcome = repair_region(&model, &topo, &adjacency, &previous, &[NodeId::from_index(0)], 0, &config, 3);
+    let outcome = repair_region(&model, &topo, &adjacency, &previous, &[NodeId::from_index(0)], 0, &config, 3).expect("original search and teardown complete");
     match outcome {
         SolveOutcome::Solved(sol) => assert_eq!(sol.assignment, previous),
         other => panic!("expected Solved, got {other:?}"),

@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"input":7,"output":14},
+    {"input":0,"output":0},
+    {"input":-9,"output":-18}
+  ]
+}

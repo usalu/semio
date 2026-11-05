@@ -20,6 +20,7 @@ fn is_default<T: Default + PartialEq>(value: &T) -> bool {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum Liveness {
     #[default]
     Off,
@@ -34,6 +35,7 @@ pub enum Liveness {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct AccessibilitySpec {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]

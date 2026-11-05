@@ -40,7 +40,6 @@ interface jobs {
     spent: retained-progress,
     work-units-spent: u64,
     admitted: bool,
-    returned-source: option<job-source>,
     refusal: option<actor-call-failure>,
   }
   record job-step-call {
@@ -58,12 +57,15 @@ interface jobs {
     admitted: bool,
     refusal: option<actor-call-failure>,
   }
-  start-job: async func(source: option<job-source>, budget: job-budget) -> job-start-call;
+  start-job: async func(job: u64, budget: job-budget) -> job-start-call;
   step-job: async func(job: u64, budget: job-budget) -> job-step-call;
   read-job-output: async func(job: u64, budget: job-budget) -> job-output-call;
   acknowledge-job-output: async func(job: u64, budget: job-budget) -> job-output-ack-call;
   cancel-job: async func(job: u64, budget: job-budget) -> job-cancel-call;
   close-jobs: async func(budget: job-budget) -> job-cancel-call;
+  publish-actor-failure: async func(job: u64, budget: job-budget) -> job-step-call;
+  read-actor-failure: async func(job: u64, budget: job-budget) -> job-output-call;
+  acknowledge-actor-failure: async func(job: u64, budget: job-budget) -> job-output-ack-call;
   /// 🧵 Takes one sealed operation-owned download segment. Every `some` is at most 4,096
   /// bytes; the first `none` is the terminal observation and releases the operation authority.
   take-segmented-download-chunk: async func(instance-id: u32, operation-id: u64) -> result<option<list<u8>>, plugin-error>;

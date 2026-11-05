@@ -470,3 +470,6 @@ async function paintBrush(image:PixelImage,points:readonly PixelPoint[],brush:Pi
   if (options.signal?.aborted) aborted();
   return {width:image.width,height:image.height,pixels};
 }
+
+export{FloodRegionCursor}from"./🪣️flood/🟦️.ts";
+export type{FloodSource}from"./🪣️flood/🟦️.ts";

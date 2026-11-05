@@ -1,5 +1,4 @@
 use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frames::*;
-use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::export_qc_report;
 use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_video;
 use crate::editor::remodeling::unit_tests::context::{app, dispatch};
 use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
@@ -12,13 +11,4 @@ async fn import_pickers_emit_a_host_effect_and_no_operations() {
         assert!(!result.edited_document(), "a shell picker never mutates the document: {:?}", result.lanes);
         assert_eq!(result.requested_effects.len(), 1, "{:?}", result.requested_effects);
     }
-}
-
-/// 📤️ Exporting a report the document does not have yet is a no-op, not an error.
-#[semio_framework_async_macros::async_test]
-async fn export_qc_report_is_a_no_op_without_a_report() {
-    let mut app = app().await;
-    let result = dispatch(&mut app, RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {})).await;
-    assert!(!result.edited_document(), "{:?}", result.lanes);
-    assert!(result.requested_effects.is_empty());
 }

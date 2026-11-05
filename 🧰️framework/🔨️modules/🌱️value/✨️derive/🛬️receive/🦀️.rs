@@ -6,7 +6,17 @@ use super::{container_native_owned_path,parse_container_attrs,parse_field_attrs,
 fn optional(ty:&Type)->bool{matches!(ty,Type::Path(path)if path.path.segments.last().is_some_and(|s|s.ident=="Option"))}
 pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
  if !input.generics.params.is_empty(){return Err(syn::Error::new_spanned(input,"native record receiving requires an explicit concrete owner declaration"))}
- let attrs=parse_container_attrs(&input.attrs)?;let value:syn::Path=syn::parse_str(attrs.crate_path.as_deref().unwrap_or("::semio_framework_value"))?;let native=container_native_owned_path(&attrs);let owner=quote!(#native::native_decoding::owned);let tree=quote!(#owner::tree);let name=&input.ident;let vis=&input.vis;
+ let attrs=parse_container_attrs(&input.attrs)?;if attrs.validate.is_some()||attrs.validate_controlled.is_some()||attrs.deserialize_controlled_with.is_some(){return Err(syn::Error::new_spanned(input,"validated native receiving requires its authored controlled owner port"))}let value:syn::Path=syn::parse_str(attrs.crate_path.as_deref().unwrap_or("::semio_framework_value"))?;let native=container_native_owned_path(&attrs);let owner=quote!(#native::native_decoding::owned);let tree=quote!(#owner::tree);let name=&input.ident;let vis=&input.vis;
+ if let Data::Struct(data)=&input.data{if attrs.transparent||matches!(&data.fields,Fields::Unnamed(fields)if fields.unnamed.len()==1){
+  if data.fields.len()!=1{return Err(syn::Error::new_spanned(input,"transparent native receiving requires exactly one original field"))}
+  let field=data.fields.iter().next().unwrap();let field_attrs=parse_field_attrs(&field.attrs)?;
+  if field_attrs.skip||field_attrs.flatten||field_attrs.effective_deserialize_with().is_some(){return Err(syn::Error::new_spanned(field,"transparent native receiving requires the original child receiving port"))}
+  let ty=&field.ty;let construct=if let Some(member)=&field.ident{quote!(Self{#member:value})}else{quote!(Self(value))};
+  return Ok(quote!{
+   impl #owner::NativeReceiveMap<#ty> for #name{fn from_native(value:#ty)->Self{#construct}}
+   impl<I:#tree::NativeValueSource+?Sized>#native::native_decoding::NativeReceive<I> for #name where #ty:#native::native_decoding::NativeReceive<I>{type Receiver=#owner::NativeMappedReceiver<I,#ty,Self>;fn receiver()->Self::Receiver{#owner::NativeMappedReceiver::new()}}
+  })
+ }}
  if let Data::Enum(data)=&input.data{
   let defaults=data.variants.iter().filter(|v|v.attrs.iter().any(|a|a.path().is_ident("default"))).collect::<Vec<_>>();if defaults.len()>1{return Err(syn::Error::new_spanned(input,"native default requires exactly one declared unit variant"))}
   let default=if let Some(variant)=defaults.first(){if !matches!(variant.fields,Fields::Unit){return Err(syn::Error::new_spanned(variant,"native default requires a declared unit variant"))}let variant=&variant.ident;quote!{

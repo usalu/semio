@@ -4,6 +4,12 @@ use semio_framework_value_derive::{ToValue,FromValue};
 /// 🧾️ Exact native committed-document revision projected onto the u64 completion lane.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct UiPublicationRevision(pub u64);
+semio_framework_value::artifact_retire_leaf!(UiPublicationRevision);
+impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value::native_decoding::owned::tree::NativeScalarValue<I> for UiPublicationRevision{
+ fn read(input:&I)->Result<Self,semio_framework_value::ValueError>{let text=input.text()?;if text.is_empty()||text.len()>20||text.len()>1&&text.as_bytes()[0]==b'0'||!text.bytes().all(|byte|byte.is_ascii_digit()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"publication revision must be canonical decimal u64"))}text.parse::<u64>().map(Self).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"publication revision must fit u64"))}
+ fn read_copy_bytes(_:&I)->Result<usize,semio_framework_value::ValueError>{Ok(128)}
+}
+impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value::native_decoding::NativeReceive<I> for UiPublicationRevision{type Receiver=semio_framework_value::native_decoding::owned::tree::NativeScalarReceiver<I,Self>;fn receiver()->Self::Receiver{Self::Receiver::new()}}
 
 impl UiPublicationRevision {
     pub fn decimal(self) -> String { self.0.to_string() }
@@ -56,6 +62,7 @@ impl ::semio_framework_value::FromValue for UiPublicationRevision {
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(crate = "::semio_framework_value", transparent)]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct Label(pub crate::UiText);
 
 impl TryFrom<String> for Label {
@@ -91,6 +98,7 @@ impl std::fmt::Display for Label {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum TransitionHint {
     Introducing,
     Celebrating,

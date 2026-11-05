@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "owner": "fixture:control-dag-freshness",
+  "shortMilliseconds": 60,
+  "longMilliseconds": 60000,
+  "delayMilliseconds": 90,
+  "delayReads": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "expectedStaleAuthorizations": 0,
+  "waitClockRead": 4,
+  "expectedWaitAuthorized": true
+}

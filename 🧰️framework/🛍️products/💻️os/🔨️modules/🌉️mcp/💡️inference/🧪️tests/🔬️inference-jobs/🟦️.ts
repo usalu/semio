@@ -1,31 +1,25 @@
-/** 🎟️ Independent schemas and SQLite compare an inference caller's full source against its distinct loan. */
+/** 📏️ Independent JSON Schema and relational limits validate request data without claiming native authority. */
 import Ajv from "ajv";
-import { test, expect } from "bun:test";
-import { Database } from "bun:sqlite";
+import {test,expect} from "bun:test";
+import {Database} from "bun:sqlite";
 
-test("original MCP inference caller keeps finite work and a bounded physical policy", async () => {
- const source = await Bun.file(new URL("../🧫️fixtures/original-caller.json", import.meta.url)).json();
- const component = await Bun.file(new URL("../../../🧬️schema/🔣️.json", import.meta.url)).json();
- const ajv = new Ajv({strict:false,allErrors:true});
- ajv.addSchema(component,"original-mcp");
- const turn = ajv.compile({$ref:"original-mcp#/$defs/InferenceRetainedTurnInput"});
- const policy = ajv.compile({$ref:"original-mcp#/$defs/InferenceRetainedAuthority"});
- expect(turn(source.turn)).toBe(true);expect(policy(source.retainedPolicy)).toBe(true);
- for(const key of ["operation","generation","epoch","grant","work"]) {
-  const missing = {...source.turn};delete missing[key];expect(turn(missing)).toBe(false);
- }
- for(const key of ["clockBinding","absoluteDeadlineUs","fuel"]) {
-  const work = {...source.turn.work};delete work[key];expect(turn({...source.turn,work})).toBe(false);
- }
- expect(turn({...source.turn,work:{...source.turn.work,extra:0}})).toBe(false);
- const db = new Database(":memory:");
- try {
-  db.exec("CREATE TABLE source(axis TEXT PRIMARY KEY,total INTEGER CHECK(total>=0),loan INTEGER CHECK(loan>=0))");
-  for(const key of Object.keys(source.retainedPolicy))db.query("INSERT INTO source VALUES(?,?,?)").run(key,source.turn.grant[key],source.retainedPolicy[key]);
-  expect(db.query("SELECT count(*) AS count FROM source WHERE loan<=total").get()).toEqual({count:5});
-  expect(db.query("SELECT total,loan FROM source WHERE axis='maximumItems'").get()).toEqual({total:64,loan:1});
-  expect(db.query("SELECT total,loan FROM source WHERE axis='maximumCopyBytes'").get()).toEqual({total:4096,loan:3});
-  expect(db.query("SELECT (?1<=?2) AS permitted,?2-?1 AS unused").get(source.workUnits,source.turn.work.fuel)).toEqual({permitted:1,unused:53});
-  expect(db.query("SELECT (?1<=?2) AS permitted").get(source.turn.work.fuel+1,source.turn.work.fuel)).toEqual({permitted:0});
- }finally{db.close()}
+test("MCP inference exposes finite requested bounds and refuses private native turn data",async()=>{
+ const source=await Bun.file(new URL("../🧫️fixtures/call-request.json",import.meta.url)).json();
+ const component=await Bun.file(new URL("../../../🧬️schema/🔣️.json",import.meta.url)).json();
+ const ajv=new Ajv({strict:false,allErrors:true});ajv.addSchema(component,"mcp-data");
+ const validate=ajv.compile({$ref:"mcp-data#/$defs/InferenceRunInput"}),policy=ajv.compile({$ref:"mcp-data#/$defs/InferenceRetainedPolicy"});
+ const request={...source,artifactKind:"test.neutral.document",inferenceSchema:"test.neutral.inference"};
+ expect(validate(request)).toBe(true);expect(policy(source.retainedPolicy)).toBe(true);
+ for(const key of ["documentGeneration","retainedPolicy","revision","cancellationId","workUnits","maximumElapsedMilliseconds"]){const missing={...request};delete missing[key];expect(validate(missing)).toBe(false);}
+ expect(validate({...request,turn:{operation:71,generation:3,epoch:19}})).toBe(false);
+ for(const value of [-1,1.5,9007199254740992])expect(validate({...request,documentGeneration:value})).toBe(false);
+ const database=new Database(":memory:");
+ try{
+  database.exec("create table requested(axis text primary key,bound integer check(typeof(bound)='integer' and bound between 0 and 4294967295))");
+  for(const[key,bound]of Object.entries(source.retainedPolicy))database.query("insert into requested values(?,?)").run(key,bound as number);
+  expect(database.query("select count(*) count from requested").get()).toEqual({count:5});
+  expect(database.query("select bound from requested where axis=?").get("maximumCopyBytes")).toEqual({bound:3});
+  expect(()=>database.query("insert into requested values(?,?)").run("wide",4294967296)).toThrow();
+  expect(()=>database.query("insert into requested values(?,?)").run("fractional",1.5)).toThrow();
+ }finally{database.close();}
 });

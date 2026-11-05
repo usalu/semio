@@ -1,13 +1,7 @@
-//! 👁️ `s.wfc.grid3d` viewer — the read-only preview window: the same instanced `World3d` projection
-//! the editor's preview publishes, over the same pure `scene_internals` functions, so the two
-//! surfaces can never drift. The viewer imports nothing from the sibling editor
-//! (`policyViewerPurityBreaches`).
-//!
-//! ⏱️ A viewer has no app transient to cache a solve in, so it runs the inference INLINE on render.
-//! That is bounded by the same admission ceilings the cold route uses and is honest for a read-only
-//! surface; a document too large to solve inline paints the unsolved cage instead of failing.
+//! 👁️ Read-only grid preview projects current authored pins through the shared scene functions.
+//! 🧭️ Completed and live solve results belong to the editor's revision-bound resumable job.
 
-use crate::host::inferences::solve;
+use std::collections::{BTreeMap,BTreeSet};
 use crate::schema::scene_internals;
 use crate::Grid3dSnapshot;
 use semio_plugin::plugin_app_close_prelude::SurfaceKind;
@@ -60,8 +54,14 @@ pub fn framed_camera(document: &Grid3dSnapshot) -> ([f64; 3], [f64; 3]) {
     ([target[0] + distance, target[1] - distance, target[2] + distance * 0.75], target)
 }
 
+fn authored_assignments(document:&Grid3dSnapshot)->BTreeMap<(u32,u32,u32),String> {
+    let tiles=document.tiles.iter().map(|tile|tile.id.as_str()).collect::<BTreeSet<_>>();
+    let masked=document.masked.iter().map(|cell|(cell.x,cell.y,cell.z)).collect::<BTreeSet<_>>();
+    document.pinned.iter().filter(|pin|pin.x<document.width&&pin.y<document.height&&pin.z<document.depth&&tiles.contains(pin.tile_id.as_str())&&!masked.contains(&(pin.x,pin.y,pin.z))).map(|pin|((pin.x,pin.y,pin.z),pin.tile_id.clone())).collect()
+}
+
 pub fn render(document: &Grid3dSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let assignments = solve(document).unwrap_or_default().assignments;
+    let assignments = authored_assignments(document);
     let (position, target) = framed_camera(document);
     let scene = world3d_scene(
         world3d_camera_json(position, target, 45.0),

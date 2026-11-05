@@ -1,15 +1,4 @@
-//! 💡️ `s.wfc.grid3d` inferences — THE SOLVE ITSELF IS AN INFERENCE. `Grid3dSnapshot` only ever
-//! persists the PROBLEM (extent, cell sizes, periodicity, tiles, rules, pins, masks); the
-//! ASSIGNMENT, the contradiction verdict and the pre-propagation entropy map are all derived here,
-//! never mutation-authored state.
-//!
-//! 🧱️ The engine wiring: `TiledModelBuilder` + `declare_stencil_relations_3d_tiled(Stencil3d::Face6)`
-//! compile the closed adjacency allow-list into a `CompiledModel`, a `Grid3dTopology` carries the
-//! mask and the per-axis boundaries, and the SAME resumable `WfcJob` interactive callers drive
-//! solves it. Determinism: every input is read off the snapshot (seed included), every step is
-//! fuel-bounded and watchdog-wrapped, no ambient randomness enters — so `DepHash` caching over
-//! `Grid3dSolve`/`Grid3dContradiction`/`Grid3dEntropy` is sound.
-
+//! 💡️ Resumable inference results for Grid3d. Completed jobs publish derived answers; pure fields expose cheap authored metrics.
 use crate::schema::snapshot::Grid3dSnapshot;
 use semio_s_plugin_wfc_engine as engine;
 
@@ -129,27 +118,15 @@ pub(crate) fn payload_bytes(payload: &semio_framework_job_payload::RetainedJobPa
 //#endregion 🔖️Compile
 
 //#region 🔖️Solve
-/// 🏁️ The solved assignment, or `Unsolved` for every non-solved outcome (contradiction, budget,
-/// cancellation) — see `Grid3dContradiction` for the dedicated satisfiability verdict.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase")]
-pub enum Grid3dSolveResult {
-    #[default]
-    Unsolved,
-    Solved {
-        assignments: Vec<Grid3dAssignment>,
-    },
-}
 
-pub struct Grid3dSolve;
+
+
 
 
 //#endregion 🔖️Solve
 
 //#region 🔖️Contradiction
-/// 🩺️ The satisfiability verdict on its own, so a caller who only needs "is this grid solvable at
-/// all" never has to decode a full assignment list to find out.
-pub struct Grid3dContradiction;
+
 
 
 //#endregion 🔖️Contradiction

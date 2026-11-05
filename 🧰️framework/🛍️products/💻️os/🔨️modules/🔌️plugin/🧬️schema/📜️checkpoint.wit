@@ -8,7 +8,8 @@ package semio:framework@1.0.0;
 /// host reads, so they're simply marked re-run-on-restore instead.
 interface checkpoint {
   use types.{plugin-error};
+  use reactor.{actor-context-budget};
 
-  checkpoint: async func() -> result<list<u8>, plugin-error>;
-  restore: async func(state: list<u8>) -> result<_, plugin-error>;
+  checkpoint: async func(budget: actor-context-budget) -> result<list<u8>, plugin-error>;
+  restore: async func(budget: actor-context-budget) -> result<_, plugin-error>;
 }

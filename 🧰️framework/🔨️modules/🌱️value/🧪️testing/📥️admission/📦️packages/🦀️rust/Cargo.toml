@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-value-testing-admission"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Finite source admission and construction receipts shared by native test binaries."
+
+[package.metadata.semio]
+role = "test"
+id = "value-testing-admission"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-decoding = { path = "../../../../🛬️decode/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

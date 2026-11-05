@@ -10,6 +10,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct ContainerProps {
     #[serde(default, skip_serializing_if = "is_default_container_role")]
     #[value(default, skip_serializing_if = "is_default_container_role")]
@@ -43,6 +44,7 @@ fn is_default_container_role(value: &ContainerRole) -> bool {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct TextProps {
     pub value: Label,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -77,6 +79,7 @@ impl TextProps {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct ButtonProps {
     /// 🖼️ Icon key. The old `IconName` is generated per-consuming-crate via a `#[path]` mount (see
     /// `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs`), not a publishable
@@ -93,6 +96,7 @@ pub struct ButtonProps {
 /// struct (rather than a unit variant) purely for structural symmetry with every other component.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[value(crate = "::semio_framework_value")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct SeparatorProps {}
 
 /// ⌨️ Props for `Component::Input`. `on_change` moved to the record's `bindings`
@@ -100,6 +104,7 @@ pub struct SeparatorProps {}
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct InputProps {
     #[serde(default, skip_serializing_if = "is_default_input_kind")]
     #[value(default, skip_serializing_if = "is_default_input_kind")]
@@ -176,6 +181,7 @@ fn is_default_input_kind(value: &InputKind) -> bool {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct SelectProps {
     pub value: crate::UiText,
     pub items: crate::UiFixedList<SelectItem>,
@@ -193,6 +199,7 @@ pub struct SelectProps {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum SelectAppearance {
     #[default]
     Menu,
@@ -211,6 +218,7 @@ impl SelectAppearance {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct ToggleProps {
     #[serde(default, skip_serializing_if = "ToggleAppearance::is_button")]
     #[value(default, skip_serializing_if = "ToggleAppearance::is_button")]
@@ -226,6 +234,7 @@ pub struct ToggleProps {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum ToggleAppearance {
     #[default]
     Button,
@@ -242,6 +251,7 @@ impl ToggleAppearance {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct KeyValueListProps {
     pub entries: crate::UiFixedList<KeyValueEntry>,
 }
@@ -250,6 +260,7 @@ pub struct KeyValueListProps {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct RingProps {
     pub orb_id: crate::UiText,
     pub t: f64,
@@ -259,6 +270,7 @@ pub struct RingProps {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct IconSelectProps {
     pub value: crate::UiText,
     pub uniform: bool,
@@ -273,6 +285,7 @@ pub struct IconSelectProps {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct ProgressProps {
     pub completed: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]

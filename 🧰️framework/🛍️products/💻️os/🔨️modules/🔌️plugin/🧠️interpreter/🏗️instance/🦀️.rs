@@ -7,13 +7,13 @@ use std::mem::{ManuallyDrop,size_of};
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Vectors(u8),Memories(usize),Tables(usize),Globals(usize),Data(usize,usize),Elements(usize,usize),Ready,Closing}
 /// 🧱️ Holds the actual partial instance and initiating source until its resource opening or paid closure completes.
-pub struct CoreInstanceOpening{core:ManuallyDrop<Option<CoreInstance>>,source:ManuallyDrop<Option<OriginalCallerSourceLoan>>,epoch:u64,phase:Phase,invocation_complete:bool,returning_frame:bool}
+pub struct CoreInstanceOpening{core:ManuallyDrop<Option<CoreInstance>>,source:ManuallyDrop<Option<OriginalCallerSourceLoan>>,epoch:u64,phase:Phase,invocation_complete:bool,returning_frame:bool,control:Option<original_invocation::OriginalControlPlan>,memory_work:Option<original_invocation::OriginalMemoryWork>,host_call:Option<original_invocation::OriginalHostCall>}
 impl CoreInstanceOpening{
  pub fn begin(module:&Arc<CoreModule>,cx:&mut StepContext<'_>)->Result<Option<Self>,OriginalTurnFailure>{
   let epoch=cx.original_source_epoch().ok_or_else(||refused("Core opening requires the initiating input epoch"))?;
   if !charge(cx,size_of::<Self>(),0,0)?{return Ok(None)}
   let parent=cx.original_source_parent()?;let mut loan=None;if !parent.admit_loan(&mut loan,cx)?{return Ok(None)}let Some(source)=loan else{return Ok(None)};
-  Ok(Some(Self{core:ManuallyDrop::new(Some(CoreInstance{module:Arc::clone(module),memories:Vec::new(),tables:Vec::new(),globals:Vec::new(),data:Vec::new(),elements:Vec::new(),machine:None,next_host_call:1})),source:ManuallyDrop::new(Some(source)),epoch,phase:Phase::Vectors(0),invocation_complete:false,returning_frame:false}))
+  Ok(Some(Self{core:ManuallyDrop::new(Some(CoreInstance{module:Arc::clone(module),memories:Vec::new(),tables:Vec::new(),globals:Vec::new(),data:Vec::new(),elements:Vec::new(),machine:None,next_host_call:1})),source:ManuallyDrop::new(Some(source)),epoch,phase:Phase::Vectors(0),invocation_complete:false,returning_frame:false,control:None,memory_work:None,host_call:None}))
  }
  fn validate(&self,module:&Arc<CoreModule>,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{
   self.source.as_ref().ok_or_else(||refused("Core opening source has already returned"))?.validate_context(cx)?;
@@ -48,33 +48,34 @@ impl CoreInstanceOpening{
  }
  pub fn terminal_is_empty(&self)->bool{self.core.is_none()&&self.source.is_none()}
  pub fn close_step(&mut self,module:&Arc<CoreModule>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if self.terminal_is_empty(){return Ok(true)}if self.core.is_some(){self.validate(module,cx)?;}self.phase=Phase::Closing;if cx.should_yield(){return Ok(false)}
+  if self.terminal_is_empty(){return Ok(true)}if self.core.is_some(){self.validate(module,cx)?;}self.phase=Phase::Closing;if cx.retirement_should_yield(){return Ok(false)}
   if self.core.as_ref().is_some_and(|core|core.machine.is_some()){self.close_invocation_step(module,cx)?;return Ok(false)}
   if let Some(core)=self.core.as_mut(){
-   if let Some(memory)=core.memories.last(){let release=bytes_for::<u8>(memory.bytes.capacity())?;if charge(cx,size_of::<MemoryState>(),0,release)?{core.memories.pop();}return Ok(false)}
-   if let Some(table)=core.tables.last(){let release=bytes_for::<Option<u64>>(table.values.capacity())?;if charge(cx,size_of::<TableState>(),0,release)?{core.tables.pop();}return Ok(false)}
-   if let Some(segment)=core.data.last(){let release=segment.as_ref().map_or(0,Vec::capacity);if charge(cx,size_of::<Option<Vec<u8>>>(),0,release)?{core.data.pop();}return Ok(false)}
-   if let Some(segment)=core.elements.last(){let release=bytes_for::<Option<u32>>(segment.as_ref().map_or(0,Vec::capacity))?;if charge(cx,size_of::<Option<Vec<Option<u32>>>>(),0,release)?{core.elements.pop();}return Ok(false)}
-   if !core.globals.is_empty(){if charge(cx,size_of::<GlobalState>(),0,0)?{core.globals.pop();}return Ok(false)}
+   if let Some(memory)=core.memories.last(){let release=bytes_for::<u8>(memory.bytes.capacity())?;if retirement_charge(cx,size_of::<MemoryState>(),0,release)?{core.memories.pop();}return Ok(false)}
+   if let Some(table)=core.tables.last(){let release=bytes_for::<Option<u64>>(table.values.capacity())?;if retirement_charge(cx,size_of::<TableState>(),0,release)?{core.tables.pop();}return Ok(false)}
+   if let Some(segment)=core.data.last(){let release=segment.as_ref().map_or(0,Vec::capacity);if retirement_charge(cx,size_of::<Option<Vec<u8>>>(),0,release)?{core.data.pop();}return Ok(false)}
+   if let Some(segment)=core.elements.last(){let release=bytes_for::<Option<u32>>(segment.as_ref().map_or(0,Vec::capacity))?;if retirement_charge(cx,size_of::<Option<Vec<Option<u32>>>>(),0,release)?{core.elements.pop();}return Ok(false)}
+   if !core.globals.is_empty(){if retirement_charge(cx,size_of::<GlobalState>(),0,0)?{core.globals.pop();}return Ok(false)}
    if release_vector(&mut core.memories,cx)?||release_vector(&mut core.tables,cx)?||release_vector(&mut core.globals,cx)?||release_vector(&mut core.data,cx)?||release_vector(&mut core.elements,cx)?{return Ok(false)}
-   if !charge(cx,size_of::<CoreInstance>(),0,0)?{return Ok(false)}self.core.take();return Ok(false)
+   if !retirement_charge(cx,size_of::<CoreInstance>(),0,0)?{return Ok(false)}self.core.take();return Ok(false)
   }
   let parent=cx.original_source_parent()?;self.source.as_mut().unwrap().close_step(parent,cx)?;if self.source.as_ref().unwrap().terminal_is_empty(){self.source.take();}Ok(self.terminal_is_empty())
  }
 }
 #[path="▶️invocation/🦀️.rs"]
 mod original_invocation;
-pub use original_invocation::{CoreOriginalInvocationCall,CoreOriginalInvocationStatus};
+pub use original_invocation::{CoreOriginalInvocationCall,CoreOriginalInvocationStatus,CoreOriginalHostCall};
 
 impl Drop for CoreInstanceOpening{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Core resources reached Drop before paid retirement or custody transfer")}}
 fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,message)}
 fn bytes_for<T>(count:usize)->Result<usize,ValueError>{count.checked_mul(size_of::<T>()).ok_or_else(||refused("Core resource byte count exceeds original host storage"))}
 fn charge(cx:&mut StepContext<'_>,copy:usize,capacity:usize,release:usize)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,released_bytes:release})?;cx.consume_fuel(1);Ok(true)}
+fn retirement_charge(cx:&mut StepContext<'_>,copy:usize,capacity:usize,release:usize)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,released_bytes:release})?;cx.consume_fuel(1);Ok(true)}
 fn reserve<T>(vector:&mut Vec<T>,length:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if vector.capacity()>=length{return Ok(true)}if !vector.is_empty()||vector.capacity()!=0{return Err(refused("Core resource capacity must be admitted once from its actual zero owner").into())}let capacity=bytes_for::<T>(length)?;if !charge(cx,size_of::<Vec<T>>(),capacity,0)?{return Ok(false)}*vector=Vec::with_capacity(length);Ok(true)}
 fn copy_count(cx:&StepContext<'_>,remaining:usize,width:usize)->usize{remaining.min(cx.retained_grant().maximum_copy_bytes/width)}
 fn constant(core:&CoreInstance,value:&ConstExpr)->Result<Value,ValueError>{match value{ConstExpr::Value(value)=>Ok(*value),ConstExpr::Global(index)=>core.globals.get(*index as usize).map(|state|state.value).ok_or_else(||refused("Core constant requires an initialized global")),ConstExpr::RefFunction(index)=>Ok(Value::FuncRef(Some(*index)))}}
 fn offset(core:&CoreInstance,value:Option<&ConstExpr>)->Result<usize,ValueError>{match constant(core,value.ok_or_else(||refused("Core active segment requires its original offset"))?)?{Value::I32(offset)=>Ok(offset as u32 as usize),_=>Err(refused("Core active segment offset must be i32"))}}
-fn release_vector<T>(vector:&mut Vec<T>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if vector.capacity()==0{return Ok(false)}let release=bytes_for::<T>(vector.capacity())?;if !charge(cx,size_of::<Vec<T>>(),0,release)?{return Ok(true)}drop(std::mem::take(vector));Ok(true)}
+fn release_vector<T>(vector:&mut Vec<T>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if vector.capacity()==0{return Ok(false)}let release=bytes_for::<T>(vector.capacity())?;if !retirement_charge(cx,size_of::<Vec<T>>(),0,release)?{return Ok(true)}drop(std::mem::take(vector));Ok(true)}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

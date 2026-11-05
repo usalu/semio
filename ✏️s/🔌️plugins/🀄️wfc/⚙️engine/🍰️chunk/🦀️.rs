@@ -12,8 +12,7 @@
 use crate::bitset::PatternSet;
 use crate::ids::{NodeId, PatternId};
 use crate::model::CompiledModel;
-use crate::outcome::SolveOutcome;
-use crate::search::{self, SearchConfig};
+use crate::search::{self, SearchConfig,SearchResult};
 use crate::topology::Topology;
 
 // #region 🔖️Seed
@@ -39,7 +38,7 @@ pub fn chunk_seed(world_seed: u64, chunk_x: i64, chunk_y: i64, model_fingerprint
 /// model — the caller (e.g. via `crate::repair`) may need to widen the halo, regenerate the
 /// offending neighbor, or otherwise back off, not treat it as a hard failure.
 #[allow(clippy::too_many_arguments)]
-pub fn solve_chunk<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, world_seed: u64, chunk_x: i64, chunk_y: i64, init_domains: Option<&[PatternSet]>, seam_fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
+pub fn solve_chunk<T: Topology + Clone + Send + 'static>(model: &CompiledModel, topo: &T, config: &SearchConfig, world_seed: u64, chunk_x: i64, chunk_y: i64, init_domains: Option<&[PatternSet]>, seam_fixed: &[(NodeId, PatternId)]) -> SearchResult<T> {
     let seed = chunk_seed(world_seed, chunk_x, chunk_y, model.fingerprint());
     search::solve(model, topo, config, seed, init_domains, seam_fixed)
 }

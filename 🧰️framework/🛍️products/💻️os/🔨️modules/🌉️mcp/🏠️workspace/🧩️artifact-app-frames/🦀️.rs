@@ -530,16 +530,24 @@ impl ArtifactChannel for PluginArtifactChannel {
                     }
                     other => return Err(Self::not_wired("ReadHistory", format!("unexpected real AppFrame variant {other:?}"))),
                 },
-                AppCommand::PureCommand { capability_id, input } => {
-                    let invocation = self.addressed_action_invocation(&capability_id, || action_input_arguments(&input))?;
-                    let command = store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&invocation));
+                AppCommand::PureCommand { capability_id, input, view_state } => {
+                    let arguments = action_input_arguments(&input).map_err(|detail| Self::not_wired("PureCommand", detail))?;
+                    let invocation = if let Some(invocation) = self.addressed_command_invocation(&capability_id, arguments.clone()) {
+                        semio_framework::kernel::PureInvocation::Command(invocation)
+                    } else {
+                        let invocation = self.addressed_action_invocation(&capability_id, || Ok(arguments))?;
+                        semio_framework::kernel::PureInvocation::Action(invocation)
+                    };
+                    let request = semio_framework::kernel::PureCommandRequest { invocation, view_state };
+                    let command = store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&request));
                     match self.exchange_one_real(
                         instance,
                         store::AppCommand::PureCommand { seq: 0, command, head: Vec::new() },
                     )? {
-                        store::AppFrame::Emit { document_ops, config_ops, draft_ops, child_ops, .. } => {
+                        store::AppFrame::Emit { document_ops, config_ops, draft_ops, child_ops, output, .. } => {
                             let (ops, warnings) = headless_agent_ops(&capability_id, PreparedOps { document: ops_pack_lane(document_ops)?, config: ops_pack_lane(config_ops)?, draft: ops_pack_lane(draft_ops)?, children: child_ops })?;
-                            AppFrame::Emit { ops, warnings }
+                            let output = if output.is_empty() { None } else { Some(serde_json::Value::from(store::pack_rt::decode_wire_value(&output).map_err(|error| Self::not_wired("decoding command output", error))?)) };
+                            AppFrame::Emit { ops, warnings, output }
                         }
                         store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
                         other => return Err(Self::not_wired("PureCommand", format!("unexpected real AppFrame variant {other:?}"))),
@@ -560,7 +568,7 @@ impl ArtifactChannel for PluginArtifactChannel {
                     }
                 }
                 AppCommand::TransactionCommit { txn_id } => match self.exchange_one_real(instance, store::AppCommand::TransactionCommit { seq: 0, txn_id: txn_id.clone() })? {
-                    store::AppFrame::TransactionCommitted { txn_id, edit_id } => AppFrame::TransactionCommitted { txn_id, edit_id, relay: None },
+                    store::AppFrame::TransactionCommitted { txn_id, edit_id } => AppFrame::TransactionCommitted { txn_id, edit_id, relay: None, output: None },
                     store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
                     other => return Err(Self::not_wired("TransactionCommit", format!("unexpected real AppFrame variant {other:?}"))),
                 },

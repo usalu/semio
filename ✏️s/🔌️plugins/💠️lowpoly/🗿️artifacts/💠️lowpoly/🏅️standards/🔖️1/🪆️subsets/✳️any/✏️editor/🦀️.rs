@@ -83,7 +83,7 @@ use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
-/// `crate::artifact_kind()` declares for `"3d.lowpoly"`, plus the two workflow
+/// `crate::artifact_kind()` declares for `"s.lowpoly.lowpoly"`, plus the two workflow
 /// ports: `mesh:in` (Many, unrequired — accepts upstream mesh producers, e.g. cad via a Brep→Mesh
 /// conversion) and `mesh:out` (Many, unrequired). Relocated from the deleted
 /// `🗿️artifacts/💠️lowpoly/…/⚙️engine/🦀️.rs` (ticket
@@ -123,7 +123,7 @@ pub fn lowpoly_io() -> semio_plugin::AppIo {
         ],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_plugin::ArtifactPresentation { id: "3d.lowpoly".into(), name: "3D Lowpoly".into(), dimension: "3d".into(), component_kind: "lowpoly".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DIALECT.artifact_kind.into(), name: "3D Lowpoly".into(), dimension: "3d".into(), component_kind: "lowpoly".into() },
     }
 }
 //#endregion 🔖️Io
@@ -285,18 +285,25 @@ pub fn lowpoly_paint_step(
         _ => None,
     });
     let object_id = object_id.map(str::to_string).or(gesture_object).unwrap_or_else(|| resolve_active_object_id(snapshot, config));
-    let tick = match lowpoly_paint_tick(snapshot, config, &object_id, points) {
-        LowpolyPaintTick::Sample(mutation) => return Ok(ArtifactCommandWorkStep::Complete(Emit::config(vec![mutation]))),
-        LowpolyPaintTick::Leaf(leaf) => Some(leaf),
-        LowpolyPaintTick::Nothing => None,
+    let (tick, sample) = if matches!(phase, GesturePhase::Abort(_)) {
+        (None, None)
+    } else {
+        match lowpoly_paint_tick(snapshot, config, &object_id, points)? {
+            LowpolyPaintTick::Sample(mutation) => (None, Some(mutation)),
+            LowpolyPaintTick::Leaf(leaf) => (Some(leaf), None),
+            LowpolyPaintTick::Nothing => (None, None),
+        }
     };
     let base_revision: String = operation.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect();
     let drive = lowpoly_paint_drive(&context.transient, &window, phase, tick, &operation.authoring_seed, &base_revision)?;
-    let emit = match drive.committed {
+    let mut emit = match drive.committed {
         Some((reference, mutations)) if !operation.authoring_seed.is_empty() => Emit::commit_transaction(reference, mutations),
         Some((_, mutations)) => Emit::mutations(mutations),
         None => Emit::default(),
     };
+    if let Some(sample) = sample {
+        emit.config_mutations.push(sample);
+    }
     Ok(match drive.transient {
         Some(transient) => ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { presence: Vec::new(), transient: vec![LowpolyTransientMutation::Snapshot { transient }], window_transient: Vec::new() } },
         None => ArtifactCommandWorkStep::Complete(emit),

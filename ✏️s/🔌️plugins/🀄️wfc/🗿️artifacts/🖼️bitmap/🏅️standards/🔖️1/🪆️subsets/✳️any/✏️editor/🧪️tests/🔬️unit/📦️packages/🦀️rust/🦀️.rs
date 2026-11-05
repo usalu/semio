@@ -122,7 +122,13 @@ pub mod editor {
                             }
                         }
                     }
-                    pub use semio_s_artifact_wfc_bitmap_bitmap::editor::bitmap::modes::edit::windows::output;
+                    #[path = "."]
+                    pub mod output {
+                        pub use semio_s_artifact_wfc_bitmap_bitmap::editor::bitmap::modes::edit::windows::output::*;
+                        #[cfg(test)]
+                        #[path = "../../../../🎭️modes/✏️edit/🪟️windows/🧩️output/🧪️tests/📖️contract/🦀️.rs"]
+                        pub mod contracts;
+                    }
                 }
             }
         }

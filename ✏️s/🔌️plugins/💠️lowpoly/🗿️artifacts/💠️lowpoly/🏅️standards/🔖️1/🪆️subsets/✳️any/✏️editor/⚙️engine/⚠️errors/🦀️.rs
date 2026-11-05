@@ -8,6 +8,7 @@ use semio_framework_3d::mesh::MeshKernelError;
 #[derive(Debug)]
 pub enum LowpolyCoreError {
     Mesh(MeshKernelError),
+    Paint(semio_s_artifact_lowpoly_lowpoly_model::paint_texture::PaintTextureError),
     Managed(semio_framework_value::ValueError),
     UnknownPrimitive(String),
     LayerIndexOutOfRange,
@@ -24,6 +25,7 @@ pub enum LowpolyCoreError {
 impl std::fmt::Display for LowpolyCoreError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Paint(error) => write!(formatter,"{error}"),
             Self::Mesh(error) => write!(formatter, "{error}"),
             Self::Managed(error)=>write!(formatter,"{error:?}"),
             Self::UnknownPrimitive(primitive) => write!(formatter, "unknown primitive: {primitive}"),
@@ -51,3 +53,5 @@ impl From<MeshKernelError> for LowpolyCoreError {
     }
 }
 //#endregion ⚠️ Errors
+
+impl From<semio_s_artifact_lowpoly_lowpoly_model::paint_texture::PaintTextureError> for LowpolyCoreError{fn from(error:semio_s_artifact_lowpoly_lowpoly_model::paint_texture::PaintTextureError)->Self{Self::Paint(error)}}

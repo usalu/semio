@@ -1,4 +1,5 @@
 //! 🧵️ The mounted artifact instance `VcsArtifactApp`: its state, its turns and its `PluginApp` implementation.
+//! See [instance ownership and lifecycle](README.md).
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as pack;
@@ -18,6 +19,7 @@ use semio_framework::manifest::CommandAddress as ManifestCommandAddress;
 use semio_framework::kernel::{ActorId, AppEvent, Effect, HistoryPatch, InvocationResult};
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin, MediaForm, ViewModel};
 use semio_framework_tool_run::ToolRunTraceCursor;
+/// 🧬️ Renderer-neutral semantic UI vocabulary shared by every mounted plugin.
 use semio_framework_ui_contract::*;
 use semio_framework_ui_runtime::ComponentTree;
 use std::collections::{BTreeMap, HashMap};
@@ -28,8 +30,11 @@ use store::os_store::document_materialize::create_document_envelope;
 use store::os_store::store_schema::{ArtifactCommand, ArtifactEnvelope};
 use store::os_store::composition_coordinator::CompositionCoordinator;
 use semio_framework_ui_layout::layout::{ContextMenuItemSpec, ContextMenuRequest, WindowEngagement, WindowMeasure, FRAMEWORK_HISTORY_BODY_KEY};
+/// 🎞️ Media descriptor wire framing, distinct from the per-port media type.
 use semio_framework::{MediaWireFormat, AppRole};
+/// 🎨️ App-owned media values used by import, export and fingerprint hooks.
 use semio_framework::{Media, MediaError, MediaFingerprint, MediaPayload};
+/// 🎭️ Media classification used by artifact kinds and app port declarations.
 use semio_framework::{MediaClass, MediaType};
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{RetirementDemand, ValueError};

@@ -69,6 +69,15 @@ path = "../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦�
 version = "1.0.149"
 features = [ "raw_value" ]
 
+[workspace.dependencies.semio-framework-trace]
+path = "../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-job-testing-caller]
+path = "../../../🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value]
+path = "../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"
 unused_lifetimes = "warn"

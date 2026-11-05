@@ -24,5 +24,6 @@
   "maximumScalar": "18446744073709551615",
   "allocationBytes": 0,
   "copiedPayloadBytes": 0,
-  "callerInputPreserved": true
+  "callerInputPreserved": true,
+  "inputAdmissionFlags": [true, false, true, true, false, false, false, false]
 }

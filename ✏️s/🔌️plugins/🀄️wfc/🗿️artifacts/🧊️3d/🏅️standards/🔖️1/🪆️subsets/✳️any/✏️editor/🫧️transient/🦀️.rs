@@ -24,6 +24,7 @@ pub struct Wfc3dTransient {
     #[dsl(table)]
     pub assignments: Vec<Wfc3dAssignment>,
     pub contradiction: bool,
+    pub source_revision: Vec<u8>,
 }
 
 impl pack::snapshot::ArtifactDsl for Wfc3dTransient {
@@ -81,21 +82,7 @@ pub fn assigned_tile<'a>(transient: &'a Wfc3dTransient, slot_id: &str) -> Option
     transient.assignments.iter().find(|row| row.slot_id == slot_id).map(|row| row.tile_id.as_str())
 }
 
-/// 🧮️ Runs the solve inference and folds it into a fresh transient — kept for the viewer and as the
-/// fill oracle's finished shape. The editor preview must not call this while a fill run is live.
-pub fn solved_transient(document: &crate::Wfc3dSnapshot) -> Wfc3dTransient {
-    match crate::inferences::solve_with_job(document) {
-        Ok(commit) => Wfc3dTransient {
-            contradiction: false,
-            assignments: commit
-                .assignments
-                .into_iter()
-                .map(|(slot_id, tile_id)| Wfc3dAssignment { slot_id, tile_id })
-                .collect(),
-        },
-        Err(_) => Wfc3dTransient { contradiction: !document.slots.is_empty(), assignments: Vec::new() },
-    }
-}
+
 //#endregion 🔖️Transient
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
@@ -111,5 +98,12 @@ impl semio_framework_value_snapshot_projection::SnapshotProjection for Wfc3dTran
     type Output = Self;
     type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
     fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
-    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
+    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
 }
+
+/// 🪪️ Only a complete source identity equal to the current render authority exposes an inferred cache.
+pub fn source_matches(source: &[u8], revision: Option<&[u8;32]>) -> bool { revision.is_some_and(|revision| source.len() == 32 && source == revision) }
+
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧪️testing/🦀️.rs"]
+pub mod testing;

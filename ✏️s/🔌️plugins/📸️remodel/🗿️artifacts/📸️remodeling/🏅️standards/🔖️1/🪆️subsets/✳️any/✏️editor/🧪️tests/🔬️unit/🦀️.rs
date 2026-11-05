@@ -1,4 +1,5 @@
 pub(crate) mod context {
+    use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::{analyze, capture, model};
     use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::*;
     use semio_plugin::app::TypedOperationResultLane;
     use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, settle_registered_typed_operation};
@@ -255,8 +256,11 @@ use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::*;
 use crate::editor::remodeling::unit_tests::context::{app, app_with_registry, remodeling_app_manifest_for_tests, render};
 use protocol::{OpBinary, OpText};
 use semio_plugin::artifact_app_laws;
-use semio_plugin::{EditorApp, HistoryView};
-use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_plugin::{ConfigView, EditorApp, HistoryView, Media, MediaPortDirection, MediaType, NoConfig};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::model;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::*;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::*;
 use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture;
 use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::analyze;
@@ -276,6 +280,19 @@ use semio_framework::MediaForm;
 use semio_framework::MediaPayload;
 use semio_framework::InteractiveJobClassification;
 use semio_plugin::ArtifactEditor;
+
+
+/// 🧾️ Reads the public execution proofs and production factory registrations without exposing private job types.
+fn remodeling_retained_tool_ids() -> Vec<&'static str> {
+    <RemodelingPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id).collect()
+}
+
+fn remodeling_tool_registrations() -> std::collections::BTreeMap<String, semio_framework_plugin::ArtifactToolRegistration> {
+    let bus = semio_framework::ActionBus::new();
+    let mut registry = semio_framework_plugin::ArtifactToolFactoryRegistry::<EditorApp<RemodelingPlayApp>>::new(&bus, "s.remodel.remodeling@1/*#editor");
+    <RemodelingPlayApp as ArtifactEditor>::register_tool_job_factories(&mut registry).expect("registered production tool factories");
+    registry.finish()
+}
 
 //#region 🧪️RetainedCatalogOracle
 #[derive(Debug, PartialEq, Eq)]
@@ -322,7 +339,7 @@ impl RemodelingRetainedCatalogOracle for SerdeJsonRemodelingRetainedCatalogOracl
 async fn retained_command_catalog_matches_the_serde_json_oracle() {
     let oracle = SerdeJsonRemodelingRetainedCatalogOracle.summarize(include_str!("../🧫️fixtures/🚧️retained-command-limits/🔣️.json"));
     let command_ids: std::collections::BTreeSet<&str> = every_command().iter().map(RemodelingCommand::command_id).collect();
-    let bounded_ids: std::collections::BTreeSet<&str> = REMODELING_RETAINED_TOOL_IDS.iter().copied().collect();
+    let bounded_ids: std::collections::BTreeSet<&str> = remodeling_retained_tool_ids().iter().copied().collect();
     let bounded_owned = bounded_ids.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
     let host_only_ids = <RemodelingRetainedCommandJobFactory as semio_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
         .iter()
@@ -333,7 +350,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         routes: command_ids.len(),
         bounded: bounded_ids.len(),
         resumable: command_ids.difference(&bounded_ids).count(),
-        unique: bounded_ids.len() == REMODELING_RETAINED_TOOL_IDS.len() && bounded_ids.is_subset(&command_ids),
+        unique: bounded_ids.len() == remodeling_retained_tool_ids().len() && bounded_ids.is_subset(&command_ids),
         bounded_ids: bounded_owned.clone(),
         host_only_ids,
     };
@@ -432,11 +449,11 @@ fn every_command() -> Vec<RemodelingCommand> {
 #[semio_framework_async_macros::async_test]
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     let commands: std::collections::BTreeSet<&str> = every_command().iter().map(RemodelingCommand::command_id).collect();
-    let retained: std::collections::BTreeSet<&str> = REMODELING_RETAINED_TOOL_IDS.iter().copied().collect();
-    assert_eq!(retained.len(), REMODELING_RETAINED_TOOL_IDS.len(), "retained tool ids must be unique");
+    let retained: std::collections::BTreeSet<&str> = remodeling_retained_tool_ids().iter().copied().collect();
+    assert_eq!(retained.len(), remodeling_retained_tool_ids().len(), "retained tool ids must be unique");
     assert_eq!(retained, commands, "every command row is a retained route and vice versa");
 
-    assert_eq!(<RemodelingPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), REMODELING_RETAINED_TOOL_IDS.len());
+    assert_eq!(<RemodelingPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), remodeling_retained_tool_ids().len());
 
     let contracts = <RemodelingRetainedCommandJobFactory as semio_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
     assert_eq!(contracts.len(), REMODELING_RETAINED_TOOL_IDS.len());
@@ -466,6 +483,25 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
 
 #[semio_framework_async_macros::async_test]
 async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_once() {
+    use semio_framework_value::{RetainedCloneGrant, RetainedCloneStep, RetirementDemand, ValueError};
+    use store::os_store::one_item_publication::ArtifactStoreOneItemAdvance as Advance;
+    fn offered(cx: &semio_framework_job::StepContext<'_>) -> RetainedCloneGrant {
+        let remaining = cx.retained_grant();
+        let body = store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+        RetainedCloneGrant { maximum_items: remaining.maximum_items.min(1), maximum_copy_bytes: remaining.maximum_copy_bytes.min(body), maximum_capacity_bytes: remaining.maximum_capacity_bytes.min(body), maximum_release_bytes: remaining.maximum_release_bytes.min(body), maximum_depth: remaining.maximum_depth.min(16) }
+    }
+    fn close(cx: &mut semio_framework_job::StepContext<'_>, demand: RetirementDemand, advance: impl FnOnce(RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>) -> bool {
+        cx.with_original_retirement(|cx| {
+            let grant = offered(cx);
+            assert!(cx.retained_work_can_enter(demand));
+            assert!(semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand));
+            let step = advance(grant)?;
+            cx.consume_retained(step.progress())?;
+            cx.consume_fuel(1);
+            Ok(matches!(step, RetainedCloneStep::Complete(_)))
+        }).expect("Remodel original caller pays quoted close")
+    }
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let envelope = store::os_store::document_materialize::create_document_envelope(REMODELING_DOCUMENT_SCHEMA, "remodel-window-preparation-law", RemodelingSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut document = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("Remodel window preparation-law Store opens");
     document
@@ -479,39 +515,54 @@ async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_o
             semio_framework_job::OperationId(992),
             document.generation_now(),
             document.content_revision_now(),
-            "remodel-window-preparation-law".into(),
+            document.local_actor_id().0.clone(),
             vec![mutation],
             store::os_store::store_schema::HistoryLane::Document,
             Some(&factory),
             None,
         )
         .expect("Remodel one-item publication admits its exact factory");
-    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_capacity_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_release_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_depth: 16 };
     let mut published = false;
+    let mut receiving_identity = None;
     for _ in 0..64 {
-        match document.advance_apply_batch(&mut publication, grant).expect("Remodel candidate transfer turn") {
-            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_) => {
-                published = true;
-                break;
-            }
-            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked => panic!("Remodel one-item preparation blocked after admitting its exact candidate"),
-            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(_) => {}
-            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::AwaitingAck(_) => panic!("Remodel one-item preparation reached ACK without exposing its exact publication receipt"),
-            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Complete => panic!("Remodel one-item preparation completed before publishing its exact candidate"),
+        let cx = scope.cx();
+        let retained = offered(cx);
+        let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: retained.maximum_items, maximum_copy_bytes: retained.maximum_copy_bytes, maximum_capacity_bytes: retained.maximum_capacity_bytes, maximum_release_bytes: retained.maximum_release_bytes, maximum_depth: retained.maximum_depth };
+        let result = cx.with_native_receiving(|receiving| {
+            let identity = (receiving.ledger_identity(), receiving.retirement_recipient_identity());
+            if let Some(original) = receiving_identity { assert_eq!(identity, original); } else { receiving_identity = Some(identity); }
+            document.advance_apply_batch(&mut publication, retained.maximum_copy_bytes, grant, receiving)
+        });
+        if matches!(&result, Ok(Advance::Progress(_))) { assert_eq!(cx.receiving_child_progress(), Default::default(), "checkpoint-only progress cannot omit native ownership spend"); }
+        let progress = match &result { Ok(Advance::Published(_, progress) | Advance::PreparationProgress(_, progress)) => *progress, Err(store::os_vcs::VcsError::InverseRefused(error)) => error.retained_progress(), _ => Default::default() };
+        cx.consume_receiving_retained(cx.receiving_issued_grant().expect("original receiving grant"), progress).expect("Remodel receiving receipt");
+        cx.consume_fuel(1 + progress.copied_items as u64);
+        match result.expect("Remodel candidate transfer turn") {
+            Advance::Published(_, _) => { published = true; break; }
+            Advance::Blocked => panic!("Remodel one-item preparation blocked after admitting its exact candidate"),
+            Advance::Progress(_) | Advance::PreparationProgress(_, _) => {}
+            Advance::PreparationRefused => panic!("Remodel one-item preparation refused its admitted candidate"),
+            Advance::AwaitingAck(_) => panic!("Remodel one-item preparation reached ACK without exposing its exact publication receipt"),
+            Advance::Complete => panic!("Remodel one-item preparation completed before publishing its exact candidate"),
         }
     }
     assert!(published, "Remodel one-item preparation must transfer its candidate exactly once");
-    assert!(publication.acknowledge());
+    publication.retirement_demands(offered(scope.cx()).maximum_copy_bytes).expect("published candidate transferred its original stage before ACK");
+    let acknowledgement = publication.acknowledge_granted(offered(scope.cx())).expect("Remodel publication acknowledges once");
+    scope.cx().consume_retained(acknowledgement).expect("Remodel paid acknowledgement");
+    scope.cx().consume_fuel(1);
+    assert!(publication.acknowledge_granted(offered(scope.cx())).is_none());
     for _ in 0..64 {
-        let demand = publication.retirement_demands(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("Remodel publication close quote");
-        let turn = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        if matches!(publication.close_step(turn).expect("Remodel publication close"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
-            break;
-        }
+        let demand = publication.retirement_demands(offered(scope.cx()).maximum_copy_bytes).expect("Remodel publication close quote");
+        if close(scope.cx(), demand, |grant| publication.close_step(grant)) { break; }
     }
     assert!(publication.terminal_is_empty());
     drop(publication);
-    document.close_owned_unscheduled().expect("Remodel preparation-law Store close");
+    for _ in 0..semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+        if document.close_owned_terminal_is_empty() { break; }
+        let demand = document.close_owned_demands(offered(scope.cx()).maximum_copy_bytes).expect("Remodel Store close quote");
+        if close(scope.cx(), demand, |grant| document.close_owned_step(grant)) { break; }
+    }
     assert!(document.close_owned_terminal_is_empty());
 }
 
@@ -606,22 +657,22 @@ async fn command_ids_and_wire_keywords_are_unique_per_row() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests).await;
-    assert!(RemodelingPlayApp::command_from_action("nonsense", None, None).is_err());
+    assert!(RemodelingPlayApp::command_from_action("nonsense", &mut None, &mut None).is_err());
 }
 
 /// 🌉️ Select-typed args arrive as strings; numeric-option selects (`textureSize`) must still land in
 /// a `u32` field, and a `setCamera` payload is accepted both flat and `{camera:{…}}`-nested.
 #[semio_framework_async_macros::async_test]
 async fn the_action_bridge_coerces_select_strings_and_both_camera_arg_shapes() {
-    let mesh = RemodelingPlayApp::command_from_action("setMeshParams", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "textureSize": "4096" }))).clone()), None).expect("bridge");
+    let mesh = RemodelingPlayApp::command_from_action("setMeshParams", &mut Some((semio_framework_value::DslValue::from(&serde_json::json!({ "textureSize": "4096" }))).clone()), &mut None).expect("bridge");
     let RemodelingCommand::SetMeshParams(payload) = mesh else { panic!("expected SetMeshParams") };
     assert_eq!(payload.texture_size, 4096);
 
-    let flat = RemodelingPlayApp::command_from_action("setCamera", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 }))).clone()), None).expect("bridge");
-    let nested = RemodelingPlayApp::command_from_action("setCamera", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 } }))).clone()), None).expect("bridge");
+    let flat = RemodelingPlayApp::command_from_action("setCamera", &mut Some((semio_framework_value::DslValue::from(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 }))).clone()), &mut None).expect("bridge");
+    let nested = RemodelingPlayApp::command_from_action("setCamera", &mut Some((semio_framework_value::DslValue::from(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 } }))).clone()), &mut None).expect("bridge");
     assert_eq!(flat, nested);
 
-    let example = RemodelingPlayApp::command_from_action("setActiveExample", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "exampleId": "demo-session" }))).clone()), None).expect("bridge");
+    let example = RemodelingPlayApp::command_from_action("setActiveExample", &mut Some((semio_framework_value::DslValue::from(&serde_json::json!({ "exampleId": "demo-session" }))).clone()), &mut None).expect("bridge");
     assert_eq!(example, RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo-session".into() }));
 }
 
@@ -729,7 +780,7 @@ async fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
     assert_eq!(emit.artifact_mutations.len(), 2, "one create-asset + one create-stream");
     let next = emit.artifact_mutations.iter().fold(projection.clone(), |scene, operation| semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
     assert_eq!(next.streams.len(), 1);
-    assert_eq!(next.streams[0].id, REMODELING_WORKFLOW_PHOTOS_STREAM_ID);
+    assert_eq!(next.streams[0].id, "workflow-photos");
     assert_eq!(next.streams[0].frames.len(), 1);
 
     let history2 = HistoryView::empty();
@@ -781,3 +832,111 @@ async fn remodeling_io_declares_photos_in_and_mesh_out() {
     assert_eq!(mesh_out.multiplicity, semio_framework::PortMultiplicity::Many);
 }
 //#endregion 🔖️IoTests
+
+/// 🧫️ Language-neutral rejection vectors agree with independent PNG/JPEG decoders and both import surfaces.
+#[test]
+fn photo_import_rejects_undecodable_sources_atomically() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️photo-admission/🔣️.json")).expect("photo admission vectors");
+    let scene = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot::default();
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&scene, &history);
+    for case in fixture["cases"].as_array().expect("cases") {
+        let encoded = case["base64"].as_str().expect("base64");
+        if let Ok(bytes) = base64_codec::base64_standard_decode(encoded) {
+            if case["mime"] == "image/jpeg" {
+                assert!(semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_decode_luma(&bytes).is_err(), "{}", case["id"]);
+            } else {
+                let accepted = png::Decoder::new(std::io::Cursor::new(bytes)).read_info().is_ok_and(|mut reader| {
+                    if reader.info().width == 0 || reader.info().height == 0 { return false; }
+                    let mut pixels = vec![0; reader.output_buffer_size()];
+                    reader.next_frame(&mut pixels).is_ok()
+                });
+                assert!(!accepted, "{}", case["id"]);
+            }
+        }
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: encoded.into() } };
+        assert!(RemodelingPlayApp::import_media("photos:in", &media, &doc).is_err(), "{}", case["id"]);
+        let payload = semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frame_payload::ImportFramePayload { payload: format!("data:{};base64,{}", case["mime"].as_str().expect("mime"), encoded), name: "invalid.png".into(), index: 0, total: 1 };
+        let emit = semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frame_payload::handle(&payload, &doc, &ConfigView { snapshot: &NoConfig, window: None }).expect("undecodable files are skipped");
+        assert_eq!(emit.artifact_mutations.len(), case["frames"].as_u64().expect("frames") as usize, "{}", case["id"]);
+    }
+}
+
+/// 📷️ A third-party encoded PNG imports after deleted frames and never replaces an orphan asset.
+#[test]
+fn photo_import_appends_after_reserved_indices() {
+    use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{FrameRef, MediaKind, MediaStream};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️photo-admission/🔣️.json")).expect("photo admission vectors");
+    let mut bytes = Vec::new();
+    {
+        let mut encoder = png::Encoder::new(&mut bytes, 2, 3);
+        encoder.set_color(png::ColorType::Rgba);
+        encoder.set_depth(png::BitDepth::Eight);
+        let mut writer = encoder.write_header().expect("PNG header");
+        writer.write_image_data(&[255; 24]).expect("PNG pixels");
+        writer.finish().expect("PNG end");
+    }
+    let reader = png::Decoder::new(std::io::Cursor::new(&bytes)).read_info().expect("reference PNG");
+    assert_eq!((reader.info().width, reader.info().height), (2, 3));
+    let encoded = base64_codec::base64_standard_encode(&bytes);
+    let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: encoded.clone() } };
+    for case in fixture["appendCases"].as_array().expect("append cases") {
+        let mut scene = RemodelingSnapshot::default();
+        let frames = case["frameIndices"].as_array().expect("frame indices").iter().map(|index| {
+            let index = index.as_u64().expect("index") as u32;
+            FrameRef { index, timestamp_ms: f64::from(index), asset_id: format!("workflow-photos-frame-{index}") }
+        }).collect();
+        if case["existingStream"].as_bool().unwrap_or(true) {
+            scene.streams.push(MediaStream { id: "workflow-photos".into(), name: "Photos".into(), kind: MediaKind::ImageSequence, camera_id: None, sync_offset_ms: 0.0, fps_hint: 30.0, frames, source: None });
+        }
+        for index in case["assetIndices"].as_array().expect("asset indices") {
+            let id = format!("workflow-photos-frame-{}", index.as_u64().expect("asset index"));
+            let asset = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset { mime: "image/png".into(), data: encoded.clone(), width: 2, height: 3 };
+            scene.assets.insert(id.clone(), semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::store_remodeling_asset(&id, &asset));
+        }
+        let history = HistoryView::empty();
+        let doc = ArtifactView::new(&scene, &history);
+        let result = RemodelingPlayApp::import_media("photos:in", &media, &doc);
+        let Some(index) = case["nextIndex"].as_u64() else {
+            assert!(result.is_err(), "{}", case["id"]);
+            continue;
+        };
+        let emit = result.expect("valid PNG import");
+        let next = emit.artifact_mutations.iter().fold(scene.clone(), |scene, operation| semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, operation).expect("valid import mutation"));
+        let frame = next.streams[0].frames.last().expect("appended frame");
+        assert_eq!(frame.index, index as u32, "{}", case["id"]);
+        assert_eq!(frame.asset_id, format!("workflow-photos-frame-{index}"));
+        assert_eq!(next.assets.len(), scene.assets.len() + 1);
+        for (id, asset) in &scene.assets {
+            assert_eq!(next.assets.get(id), Some(asset));
+        }
+    }
+}
+
+/// 🖼️ The generic image port preserves an independently encoded JPEG through durable image admission.
+#[test]
+fn photo_import_accepts_jpeg_and_preserves_its_media_type() {
+    use semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::{oracle_decode_luma, oracle_encode_rgba};
+    use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{remodeling_asset, remodeling_asset_chunk_source};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️photo-admission/🔣️.json")).expect("photo admission vectors");
+    let vector = &fixture["jpeg"];
+    let pixels: Vec<u8> = vector["rgba"].as_array().expect("pixels").iter().map(|v| v.as_u64().expect("channel") as u8).collect();
+    let bytes = oracle_encode_rgba(vector["width"].as_u64().expect("width") as u32, vector["height"].as_u64().expect("height") as u32, &pixels, vector["quality"].as_u64().expect("quality") as u8).expect("independent JPEG");
+    let reference = oracle_decode_luma(&bytes).expect("independent JPEG decode");
+    let expected: Vec<u8> = vector["luma"].as_array().expect("luma").iter().map(|v| v.as_u64().expect("luma sample") as u8).collect();
+    assert_eq!(reference.2, expected);
+    let scene = RemodelingSnapshot::default();
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&scene, &history);
+    let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: base64_codec::base64_standard_encode(&bytes) } };
+    let emit = RemodelingPlayApp::import_media("photos:in", &media, &doc).expect("JPEG workflow photo");
+    let next = emit.artifact_mutations.iter().fold(scene, |scene, operation| semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, operation).expect("valid JPEG import mutation"));
+    let asset_id = &next.streams[0].frames[0].asset_id;
+    let source = remodeling_asset_chunk_source(&next, asset_id).expect("durable JPEG source");
+    assert_eq!(source.mime, vector["mime"].as_str().expect("mime"));
+    assert_eq!((source.width, source.height), (reference.0, reference.1));
+    let asset = remodeling_asset(&next, asset_id).expect("bounded JPEG asset");
+    let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image(&asset.mime, &base64_codec::base64_standard_decode(&asset.data).expect("stored JPEG")).expect("native JPEG decode");
+    assert_eq!((image.width, image.height), (reference.0, reference.1));
+    assert_eq!(image.data.chunks_exact(4).map(|pixel| pixel[0]).collect::<Vec<_>>(), reference.2);
+}

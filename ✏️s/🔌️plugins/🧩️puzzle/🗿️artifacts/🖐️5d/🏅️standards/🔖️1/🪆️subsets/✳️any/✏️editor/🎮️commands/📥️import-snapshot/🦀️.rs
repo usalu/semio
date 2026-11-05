@@ -42,7 +42,13 @@ impl Puzzle5dImportFault {
 //#region 🔖️Command
 /// 🔎️ A puzzle 5d document: one JSON object carrying its `schema`, or a `parts` array.
 fn is_document(value: &Value) -> bool {
-    value.as_object().is_some() && (value.get("schema").and_then(Value::as_str) == Some(PUZZLE5D_SCHEMA) || value.get("parts").is_some_and(|parts| parts.as_array().is_some()))
+    let Some(object) = value.as_object() else { return false };
+    let parts = object.get("parts");
+    let identity = match object.get("schema") {
+        Some(schema) => schema.as_str() == Some(PUZZLE5D_SCHEMA),
+        None => parts.is_some_and(|parts| parts.as_array().is_some()),
+    };
+    identity && parts.is_none_or(|parts| parts.as_array().is_some())
 }
 
 /// 📥 Decodes one whole file into a puzzle 5d document value — the decode every import runs, whatever its size.

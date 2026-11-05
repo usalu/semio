@@ -1,7 +1,9 @@
 #!/usr/bin/env repo
+import {runOwnedCommand,OwnedCommandFailure} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation, withIssuedResourceControlV1, scriptInvocationEnvironment } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🌉️ `@semio-tech/framework-os-mcp-rs` task router: `repo ./📜️script.ts <build|check|test|dev>`. */
@@ -10,11 +12,11 @@ import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
-import { daemonBudgetOpts, orchestratorBudgetOpts, runCmd, runCargo, runProbe, runRepositoryCommand, resolveTypescriptCompilerV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { orchestratorBudgetOpts, runCmd, runCargo, runProbe, runRepositoryCommand, resolveTypescriptCompilerV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runAdmittedCargoPackageTestsV1, buildAdmittedCargoArtifactsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, MCP_GATEWAY_PACKAGES, readMcpGatewaySource, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
+import { buildMcpArtifactV1, MCP_MANIFEST_REL, MCP_STDIO_BUILD_MODE_V1, withMcpHostDriverPolicy, type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, MCP_GATEWAY_PACKAGES, readMcpGatewaySource, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath } from "../../🟦️.ts";
 import { capabilityDescriptionCensus } from "../../🗂️catalog/🟦️.ts";
 import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 
@@ -87,7 +89,7 @@ function proveMcpEntrypointCredentialMarker(executable: string, root: string): v
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP build has a fixed binary output contract");
-    await buildAdmittedCargoArtifactsV1(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  sourcesRecord: MCP_BINARY_SOURCES_FILE });
+    await buildMcpArtifactV1(this.repoRoot, this.invocation, scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0));
   }
 }
 
@@ -370,11 +372,29 @@ class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
 /** ▶️ `repo ./📜️script.ts dev [-- stdio [flags...]]` — boots the real stdio server for local/manual
  *  smoke testing (`printf '<json-rpc line>' | repo ./📜️script.ts dev -- stdio | ...`). Defaults to
  *  `stdio` when no mode is given, matching `🏗️bootstrap/🦀️.rs`'s own default-less argv contract. */
-class DevScript extends BundleScript {
-  run(segments: string[]): void {
-    const args = segments.length > 0 ? segments : ["stdio"];
-    runCmd(requireMcpBinary(this.repoRoot), args, { cwd: this.root, ...daemonBudgetOpts() });
-  }
+/** 👓️ Keeps every native task consumer inside the original shared publication reader. */
+abstract class PublishedMcpScript extends BundleScript {
+ protected async withPublished<T>(command:string,maximumMilliseconds:number,consume:(binary:string,environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+  const {withAdmittedPublishedCargoExecutableV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts");
+  const {readBuildMode}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts");
+  const mode=readBuildMode((this.invocation.capabilities as Readonly<{buildMode?:unknown}>).buildMode??process.env.SEMIO_BUILD_MODE??MCP_STDIO_BUILD_MODE_V1);
+  return withIssuedResourceControlV1(this.invocation,command,maximumMilliseconds,control=>withAdmittedPublishedCargoExecutableV1(MCP_MANIFEST_REL,MCP_BINARY_NAME+(process.platform==="win32"?".exe":""),this.repoRoot,mode,this.invocation,control,(artifact,phase)=>consume(artifact.path,scriptInvocationEnvironment(this.invocation,{...process.env,...artifact.environment}),phase)));
+ }
+ protected async capturePublished(args:string[],maximumMilliseconds:number,cwd:string=this.root):Promise<{stdout:string;stderr:string;status:number}>{
+  return this.withPublished("mcp:capture",maximumMilliseconds,async(binary,env,control)=>{
+   const chunks:{stdout:Buffer[];stderr:Buffer[]}={stdout:[],stderr:[]};let status=0;
+   try{await runOwnedCommand(binary,args,cwd,"mcp:capture",scriptInvocationBudget(this.invocation,maximumMilliseconds),{env,signal:control.signal,control,stdout:"ignore",output:{maximumBytes:16777216,maximumLines:65536},outputConsumer:(bytes,stream)=>{chunks[stream].push(Buffer.from(bytes));}});}
+   catch(error){if(!(error instanceof OwnedCommandFailure)||error.outcome.status===null)throw error;status=error.outcome.status;}
+   return{stdout:Buffer.concat(chunks.stdout).toString("utf8"),stderr:Buffer.concat(chunks.stderr).toString("utf8"),status};
+  });
+ }
+}
+
+class DevScript extends PublishedMcpScript {
+ async run(segments:string[]):Promise<void>{
+  const args=withMcpHostDriverPolicy(segments.length?segments:["stdio"]);
+  await this.withPublished("mcp:dev",0,(binary,env,control)=>runOwnedCommand(binary,args,this.root,"mcp:dev",scriptInvocationBudget(this.invocation,0),{env,signal:control.signal,control,stdout:"inherit"}));
+ }
 }
 
 /** 🚨️ The capability-audience/destructive/description gate (ticket 26/09/18 slice M5a §7.4, ticket
@@ -385,9 +405,9 @@ class DevScript extends BundleScript {
  * and German under the manifest's `CapabilityDescription` contract. The description census is held
  * against its AJV twin (`🗂️catalog/🟦️.ts`) over the same descriptors: both must name the identical
  * `(capability, problem)` set. `derive_audience` guessing right is not evidence; a human declaring it is. */
-class CapabilityAuditCheckScript extends BundleScript {
-  run(): void {
-    const audited = runProbe(requireMcpBinary(this.repoRoot), ["audit", "--folder", this.repoRoot], { cwd: this.repoRoot, budgetMs: 120_000 });
+class CapabilityAuditCheckScript extends PublishedMcpScript {
+  async run(): Promise<void> {
+    const audited = await this.capturePublished(["audit", "--folder", this.repoRoot],120000,this.repoRoot);
     process.stdout.write(audited.stdout);
     const rustPlugin = new Set(
       audited.stdout
@@ -409,12 +429,12 @@ class CapabilityAuditCheckScript extends BundleScript {
  *  two language mirrors from the ONE Rust registry, by running the built binary's own
  *  `semio-os-mcp schemas` emitter. `--check` writes nothing and fails on any drift, so a stale
  *  mirror is a red gate rather than a silently divergent contract. */
-class SchemaMirrorScript extends BundleScript {
-  run(segments: string[]): void {
+class SchemaMirrorScript extends PublishedMcpScript {
+  async run(segments: string[]): Promise<void> {
     const check = segments.includes("--check");
     if (segments.some((segment) => segment !== "--check")) throw new Error("schema-mirror accepts only --check");
     const schemaRoot = join(this.root, "..", "..", "🧬️schema");
-    const emitted = runProbe(requireMcpBinary(this.repoRoot), ["schemas"], { cwd: this.root, budgetMs: 60_000 });
+    const emitted = await this.capturePublished(["schemas"],60000);
     if (emitted.status !== 0) throw new Error(`semio-os-mcp schemas failed: status=${emitted.status} stderr=${emitted.stderr.slice(-4_000)}`);
     const json = emitted.stdout;
     const document = JSON.parse(json) as SchemaDocument;

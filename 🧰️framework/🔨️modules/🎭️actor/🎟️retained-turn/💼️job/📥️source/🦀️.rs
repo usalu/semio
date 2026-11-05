@@ -5,7 +5,7 @@ use semio_framework_job::StepContext;
 use semio_framework_value::{retirement::controlled::ControlledRetirement,RetirementDemand};
 
 /// 📥️ The existing registered-job source schema carries one owned kind, input and optional checkpoint.
-#[derive(Debug,serde::Serialize,serde::Deserialize,semio_framework_value_derive::FromValue,semio_framework_value_derive::ToValue,semio_framework_value::RetireOwned)]
+#[derive(Debug,serde::Serialize,serde::Deserialize,semio_framework_value_derive::FromValue,semio_framework_value_derive::ToValue,semio_framework_value::RetireOwned,semio_framework_value_derive::NativeReceive)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 #[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct OriginalJobSource{pub job:u64,pub kind:String,pub input:Option<Vec<u8>>,pub checkpoint:Option<Vec<u8>>}

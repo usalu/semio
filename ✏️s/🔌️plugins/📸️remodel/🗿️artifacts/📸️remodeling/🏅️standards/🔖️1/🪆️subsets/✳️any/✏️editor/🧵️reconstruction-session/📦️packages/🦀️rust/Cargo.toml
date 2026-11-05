@@ -17,7 +17,7 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-job-publication = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
-semio-framework = { workspace = true }
+semio-framework-mesh-engine = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
@@ -34,6 +34,7 @@ semio-s-artifact-remodel-remodeling-mutations = { workspace = true }
 semio-s-artifact-remodel-remodeling-reconstruct = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 bitvec = "1"
 base64_codec = { workspace = true }
 pack = { workspace = true }

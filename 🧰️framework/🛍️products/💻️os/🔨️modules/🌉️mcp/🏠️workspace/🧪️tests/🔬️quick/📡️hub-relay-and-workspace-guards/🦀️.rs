@@ -102,6 +102,7 @@ fn a_hub_session_edit_is_refused_before_its_guest_runs_unless_an_author_holds_a_
         plugin_id: "note".to_string(),
         app_id: "note.editor".to_string(),
         surface_id: Some("s.note.note@1/*#editor".to_string()),
+        archive: None,
         document: Some(Arc::new(SessionDocumentPair { pack: b"pack".to_vec(), spr: b"spr".to_vec() })),
         backbone: None,
         backbone_blocked_by: Some(blocked.to_string()),
@@ -121,8 +122,10 @@ fn a_hub_session_edit_is_refused_before_its_guest_runs_unless_an_author_holds_a_
     document.relay.record_terminal(store::sync::DocumentLinkStatus::AccessRevoked.code(), "access was withdrawn");
     let revoked = hub_edit_refusal(Ok(DirectorySpaceRole::Author), "note", Some(("hub-note", &document))).expect("a terminal link takes no edit");
     assert_eq!(revoked.code, store::sync::DocumentLinkStatus::AccessRevoked.code());
-    let committed = commits_with_nothing_relayed(vec![AppFrame::TransactionCommitted { txn_id: "t".into(), edit_id: "e".into(), relay: None }]);
+    let guest_output = serde_json::json!({ "source": "guest", "value": 7 });
+    let committed = commits_with_nothing_relayed(vec![AppFrame::TransactionCommitted { txn_id: "t".into(), edit_id: "e".into(), relay: None, output: Some(guest_output.clone()) }]);
     assert!(matches!(&committed[..], [AppFrame::TransactionCommitted { relay: Some(relay), .. }] if !relay.acknowledged && relay.refused.is_none()), "{committed:?}");
+    assert!(matches!(&committed[..], [AppFrame::TransactionCommitted { output: Some(output), .. }] if output == &guest_output));
 }
 
 /// 🗂️ A hub workspace's catalog follows the hub's descriptor authority: a new selection set (a package installed on the

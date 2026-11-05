@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "name",
+    "width",
+    "height",
+    "rgba",
+    "object",
+    "commands",
+    "expected"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "name": {
+      "const": "Canonical Constant Color Snapshot"
+    },
+    "width": {
+      "const": 256
+    },
+    "height": {
+      "const": 256
+    },
+    "rgba": {
+      "const": [
+        17,
+        34,
+        51,
+        255
+      ]
+    },
+    "object": {
+      "const": {
+        "id": "color",
+        "name": "Canonical Color"
+      }
+    },
+    "commands": {
+      "const": [
+        "importSnapshotJson",
+        "replaceSnapshotJson"
+      ]
+    },
+    "expected": {
+      "const": {
+        "pixelBytes": 262144,
+        "base64Bytes": 349528,
+        "exceedsOrdinaryWire": true,
+        "exceedsJsonFieldGuard": true
+      }
+    }
+  }
+}

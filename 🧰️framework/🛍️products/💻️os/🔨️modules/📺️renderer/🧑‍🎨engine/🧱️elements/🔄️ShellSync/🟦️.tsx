@@ -18,7 +18,7 @@ import { deriveSavedStateV1 } from "../🛠️ShellHelpers/💾️saved-state/�
 import { type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { Button, Icon, Input, Popover, PopoverAnchor, PopoverContent, useLabel, type IconName } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type Conflict, type UtilityNode } from "@semio-tech/framework";
-import { type ArtifactSyncStatus, type FrameworkSyncUtilityLeaf } from "@semio-tech/framework/backbone";
+import { absoluteBackbonePathV1, backbonePathDirectoryV1, type ArtifactSyncStatus, type FrameworkSyncUtilityLeaf } from "@semio-tech/framework/backbone";
 import { type SyncCardKind } from "../🐚️Shell/👥️peer-interaction/🟦️.ts";
 import { UtilityTree, groupUtilityNodesByCategory } from "../🎛️UtilityTree/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -42,8 +42,8 @@ export function syncAttachTargetV1(kind: SyncCardKind, draftPath: string): SyncA
     const [hostPort = "", ...rest] = draft.split("/");
     return rest.length >= 2 ? { kind, hostPort, spaceId: rest[0]!, documentId: rest.slice(1).join("/") } : { kind, hostPort, spaceId: "default", documentId: rest[0] || null };
   }
-  const path = draft.startsWith("/") ? draft : `/${draft}`;
-  return kind === "folder" ? { kind, path } : { kind, path, folder: path.replace(/\/[^/]*$/u, "") || "/" };
+  const path = absoluteBackbonePathV1(draft);
+  return kind === "folder" ? { kind, path } : { kind, path, folder: backbonePathDirectoryV1(path) };
 }
 
 type SyncAttachCardProps = {

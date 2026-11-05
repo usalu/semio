@@ -54,21 +54,32 @@ pub fn register_wfc3d_inference_factory(bus: &semio_framework::ActionBus) -> Res
 }
 
 /// 🏁 Explicit headless adapter over the same complete parent job used by the public factory.
-pub(crate) fn solve_with_job(snapshot: &Wfc3dSnapshot) -> Result<Wfc3dInferenceCommit, String> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn solve_with_job(snapshot: &Wfc3dSnapshot) -> Result<Wfc3dInferenceCommit, semio_s_plugin_wfc_engine::job::HeadlessFailure<Wfc3dInferenceJob, Wfc3dInferenceCommit>> {
     solve_with_clock(snapshot, semio_framework_job::default_now_us)
 }
 
 /// 🧮️ The same headless adapter driven by an injected clock, so correctness laws run on
 /// [`semio_framework_job::logical_now_us`] and never on a descheduled thread's wall clock.
-pub(crate) fn solve_with_clock(snapshot: &Wfc3dSnapshot, now_us: fn() -> Option<u64>) -> Result<Wfc3dInferenceCommit, String> {
-    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
-    let job = Wfc3dInferenceJob::new(operation, Wfc3dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
-    engine::job::run_headless(
+#[cfg(any(test, feature = "testkit"))]
+pub fn solve_with_clock(snapshot: &Wfc3dSnapshot, now_us: fn() -> Option<u64>) -> Result<Wfc3dInferenceCommit, semio_s_plugin_wfc_engine::job::HeadlessFailure<Wfc3dInferenceJob, Wfc3dInferenceCommit>> {
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(1), snapshot.seed);
+    let job = Wfc3dInferenceJob::new(operation, Wfc3dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None }).map_err(semio_s_plugin_wfc_engine::job::HeadlessFailure::rejected)?;
+    engine::job::run_headless_supervised(
         job,
         operation,
         now_us,
-        engine::job::HeadlessSite { site: "wfc3d.inference.headless", label: "wfc3d-inference-headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: HEADLESS_FUEL_PER_STEP, step_budget_us: HEADLESS_STEP_BUDGET_US },
-        |_job, output| {
+        engine::job::HeadlessSite { site: "wfc3d.inference.headless", label: "wfc3d-inference-headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: HEADLESS_FUEL_PER_STEP, step_budget_us: HEADLESS_STEP_BUDGET_US,
+            retained_stock: semio_framework_job::RetainedCloneGrant { maximum_items: 16_000_000, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 256 },
+            lifetime_fuel: 100_000_000, lifetime_budget_us: 60_000_000,
+        },
+        |_job| None,
+        |_job, outcome| {
+            let output = match outcome {
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Complete(bytes) => bytes,
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Fault(bytes) => return Err(String::from_utf8_lossy(bytes).into_owned()),
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Cancelled => return Err("wfc3d-inference-cancelled".into()),
+            };
             std::str::from_utf8(output)
                 .map_err(|error| format!("wfc3d-invalid-commit:{error}"))
                 .and_then(|text| crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value::<Wfc3dInferenceCommit>(text).map_err(|error| format!("wfc3d-invalid-commit:{error}")))
@@ -76,52 +87,9 @@ pub(crate) fn solve_with_clock(snapshot: &Wfc3dSnapshot, now_us: fn() -> Option<
     )
 }
 
-impl store::InferredField<Wfc3dSnapshot> for Wfc3dSolve {
-    type Dependency = Vec<u8>;
-    type Key = String;
-    type Value = Wfc3dSolveResult;
 
-    const FIELD_ID: &'static str = "s.wfc.wfc3d.inference.solve";
-    const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
-        &["seed", "slots", "edges", "tiles", "rules"]
-    }
-    fn plan(_snapshot: &Wfc3dSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
-        vec![store::InferenceStep { key: "wfc3d".to_string(), parents: Vec::new() }]
-    }
-    fn dep_input(snapshot: &Wfc3dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(snapshot).into_bytes()
-    }
-    fn compute(snapshot: &Wfc3dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        match solve_with_job(snapshot) {
-            Ok(solution) => Wfc3dSolveResult::Solved { assignments: solution.assignments },
-            _ => Wfc3dSolveResult::Unsolved,
-        }
-    }
-}
 
-impl store::InferredField<Wfc3dSnapshot> for Wfc3dContradiction {
-    type Dependency = Vec<u8>;
-    type Key = String;
-    type Value = bool;
-
-    const FIELD_ID: &'static str = "s.wfc.wfc3d.inference.contradiction";
-    const SCHEMA_VERSION: u32 = 1;
-
-    fn reads() -> &'static [&'static str] {
-        &["seed", "slots", "edges", "tiles", "rules"]
-    }
-    fn plan(_snapshot: &Wfc3dSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
-        vec![store::InferenceStep { key: "wfc3d".to_string(), parents: Vec::new() }]
-    }
-    fn dep_input(snapshot: &Wfc3dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(snapshot).into_bytes()
-    }
-    fn compute(snapshot: &Wfc3dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        solve_with_job(snapshot).is_ok()
-    }
-}
 
 impl store::InferredField<Wfc3dSnapshot> for Wfc3dEntropy {
     type Dependency = Vec<u8>;

@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum SpaceToken {
     #[default]
     None,
@@ -76,6 +77,7 @@ impl EdgeSpace {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum Sizing {
     #[default]
     Hug,
@@ -87,6 +89,7 @@ pub enum Sizing {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum Axis {
     #[default]
     Horizontal,
@@ -98,6 +101,7 @@ pub enum Axis {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum Align {
     Start,
     Center,
@@ -111,6 +115,7 @@ pub enum Align {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum Justify {
     #[default]
     Start,
@@ -125,6 +130,7 @@ pub enum Justify {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum GridTrack {
     #[default]
     Auto,
@@ -138,6 +144,7 @@ pub enum GridTrack {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum ScrollAxes {
     #[default]
     None,
@@ -151,6 +158,7 @@ pub enum ScrollAxes {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum Anchor {
     TopStart,
     Top,
@@ -169,6 +177,7 @@ pub enum Anchor {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum EdgeSpace {
     All(SpaceToken),
     Symmetric { vertical: SpaceToken, horizontal: SpaceToken },
@@ -185,6 +194,7 @@ impl Default for EdgeSpace {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct StackLayout {
     pub axis: Axis,
     pub gap: SpaceToken,
@@ -202,6 +212,7 @@ pub type UiGridTracks = crate::UiFixedList<GridTrack, UI_GRID_TRACKS>;
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct GridLayout {
     pub columns: UiGridTracks,
     pub rows: UiGridTracks,
@@ -227,6 +238,7 @@ impl GridLayout {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct OverlayLayout {
     pub anchor: Anchor,
     pub inset: EdgeSpace,
@@ -237,6 +249,7 @@ pub struct OverlayLayout {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct ScrollLayout {
     pub axes: ScrollAxes,
     pub padding: EdgeSpace,
@@ -247,6 +260,7 @@ pub struct ScrollLayout {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct AbsoluteLayout {
     pub sizing_width: Sizing,
     pub sizing_height: Sizing,
@@ -256,6 +270,7 @@ pub struct AbsoluteLayout {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct LeafLayout {
     pub width: Sizing,
     pub height: Sizing,
@@ -267,6 +282,7 @@ pub struct LeafLayout {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", tag = "kind", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum LayoutSpec {
     /// 🍁️ A node that participates in its parent's layout but imposes none of its own.
     Leaf(LeafLayout),
@@ -383,6 +399,7 @@ impl UiFlow {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum WindowStackCorner {
     #[default]
     TopLeft,
@@ -400,6 +417,8 @@ pub enum WindowStackCorner {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(crate = "::semio_framework_value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
+#[value(receive_recursive)]
 pub enum WindowLayoutNode {
     Window {
         window_kind_id: String,
@@ -439,6 +458,7 @@ pub enum WindowLayoutNode {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct WindowLayout {
     pub root: WindowLayoutNode,
 }

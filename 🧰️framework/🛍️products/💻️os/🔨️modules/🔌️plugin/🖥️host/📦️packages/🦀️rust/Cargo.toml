@@ -63,6 +63,7 @@ semio-plugin-host-shard = { path = "../../🧵️shard/📦️packages/🦀️ru
 semio-plugin-host-shard-executor = { path = "../../🧵️shard/🧵️executor/📦️packages/🦀️rust" }
 semio-plugin-host-wake = { path = "../../🔔️wake/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true }
+semio-framework-plugin-host-codec = { path = "../../🔀️post-turn-relay/🧬️codec/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-plugin-host-operation = { path = "../../🚪️io/🎛️operation/📦️packages/🦀️rust", features = ["testkit"] }

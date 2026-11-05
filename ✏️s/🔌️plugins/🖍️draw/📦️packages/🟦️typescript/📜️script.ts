@@ -1,5 +1,5 @@
 #!/usr/bin/env repo
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { createIssuedResourceControlV1, receiveScriptProcessInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🖍️ Draw example twins plus the publication-authority law: every dispatchable route is declared once, in every place the framework joins. */
 import { join, resolve } from "node:path";
 import { runOwnedCommand } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
@@ -165,6 +165,7 @@ class TestScript extends BundleScript {
     const scenePicking=join(scenePaint,"📋️prepare/🎯️query");
     const selectionStatus=join(subset,"✏️editor/🧮️status");
     if(segments.length) {
+      if(segments.length===1&&segments[0]==="io-descriptors") {await (await import(join(subset,"🚪️io/🧪️tests/🔬️descriptor-parity/🟦️.ts"))).testArtifactIoDescriptorParity();typecheckPathRaster(this.repoRoot,join(subset,"🚪️io"),[join(subset,"🚪️io/🧪️tests/🔬️descriptor-parity/🟦️.ts")]);return;}
       if(segments.length===2&&segments[0]==="font-shape"&&segments[1]==="unicode") {await provisionUnicodeShapeTables(this.repoRoot);return;}
       if(segments.length===1&&segments[0]==="owned-export") {const writer=join(subset,"🚪️io/📤️export/📦️owned");runCmd(process.execPath,["test","--timeout","120000",join(writer,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,join(writer,"🧪️tests"));return;}
       if(segments.length===1&&segments[0]==="scene-text") {const text=join(subset,"🧬️schema/🎬️scene/🔤️text");runCmd(process.execPath,["test","--timeout","120000",join(text,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,text,[join(subset,"🧬️schema/🎬️scene/📋️prepare/🟦️.ts")]);return;}
@@ -222,6 +223,7 @@ class TestScript extends BundleScript {
       typecheckPathRaster(this.repoRoot,selected,selected===scenePaint?[join(scenePaint,"📋️prepare/🟦️.ts")]:selected===sceneRaster?[join(subset,"🚪️io/🖼️image/🟦️.ts"),join(scenePrepare,"🟦️.ts"),join(sceneBooleans,"🟦️.ts"),join(sceneTrace,"🟦️.ts"),join(sceneRetire,"🟦️.ts"),join(sceneIdentity,"🟦️.ts"),join(sceneIdentity,"🚦️admission/🟦️.ts"),join(sceneView,"🟦️.ts"),join(scenePaint,"🟦️.ts"),join(scenePaint,"📋️prepare/🟦️.ts"),join(scenePaint,"📋️prepare/🎯️query/🟦️.ts")]:[]);
       return;
     }
+    await (await import(join(subset,"🚪️io/🧪️tests/🔬️descriptor-parity/🟦️.ts"))).testArtifactIoDescriptorParity();typecheckPathRaster(this.repoRoot,join(subset,"🚪️io"),[join(subset,"🚪️io/🧪️tests/🔬️descriptor-parity/🟦️.ts")]);
     runCmd(process.execPath,["test",join(subset,"✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts"),join(subset,"✏️editor/🎮️commands/🔀️combine-boolean/🧪️tests/🔬️unit/🟦️.ts")]);
     typecheckPathRaster(this.repoRoot,join(subset,"✏️editor/📋️clipboard"));
     const inspectorActions=join(subset,"✏️editor/📌️panels/🔍️properties/🎬️actions");
@@ -290,5 +292,14 @@ class PublicationAuthorityAuditScript extends BundleScript {
 class UtilityActionPolicyScript extends BundleScript {
   async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("utility-action-policy accepts no arguments");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🟦️.ts")],this.repoRoot,"draw-utility-action-policy",45000,{env:process.env});}
 }
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", PublicationAuthorityAuditScript).register("utility-action-policy",UtilityActionPolicyScript);
+/** 🌍️ Runs the real served guest journey within the repository cancellation boundary. */
+class BrowserAcceptanceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { repoCacheDirectory } = await import("@semio-tech/process/execution");
+    const control = createIssuedResourceControlV1(this.invocation, "draw-browser-acceptance", 300000);
+    const oracle = segments.length === 1 && segments[0] === "oracle";
+    await runOwnedCommand(process.execPath, [resolve(this.root, oracle ? "../../🧪️tests/🌐️browser/🔮️check.mjs" : "../../🧪️tests/🌐️browser/🟦️.mjs"), ...(oracle ? [] : segments)], this.repoRoot, "draw-browser-acceptance", 300000, { control, signal: control.signal, env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(this.repoRoot, "tools", "ms-playwright") } });
+  }
+}
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", PublicationAuthorityAuditScript).register("utility-action-policy",UtilityActionPolicyScript).register("browser-acceptance", BrowserAcceptanceScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

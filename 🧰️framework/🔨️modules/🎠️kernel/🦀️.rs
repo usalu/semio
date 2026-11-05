@@ -78,6 +78,7 @@ pub use clipboard_envelope::{CLIPBOARD_TEXT_MAX_BYTES,CLIPBOARD_METADATA_MAX_WIR
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct ClipboardFragment {
     pub schema: String,
     pub media_type: MediaType,
@@ -141,6 +142,7 @@ impl std::error::Error for ClipboardError {}
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub enum Effect {
     OpenWindow {
         req: RequestId,
@@ -492,6 +494,7 @@ impl Effect {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub enum JobPlacement {
     Inline,
     Isolated,
@@ -594,6 +597,51 @@ pub struct CommandContext {
     pub view_state: ViewModel,
 }
 
+/// 🧭️ The declaration-owned invocation a pure preview evaluates.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub enum PureInvocation {
+    Action(semio_framework_manifest_address::ActionInvocation),
+    Command(semio_framework_manifest_address::CommandInvocation),
+}
+
+/// 🧑‍💻️ Pure command context; absent view state requires an authoritative retained caller surface.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PureCommandRequest {
+    pub invocation: PureInvocation,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub view_state: Option<ViewModel>,
+}
+
+impl PureCommandRequest {
+    /// 🪟️ Binds a declared preview to explicit or authoritative retained caller context.
+    pub fn bind_context(mut self, retained: Option<&ViewModel>) -> Result<Self, Fault> {
+        self.view_state = self.view_state.or_else(|| retained.cloned());
+        let unavailable = |message| Fault::new(FaultOrigin::Framework, FaultCode::new("plugin.unavailable"), message);
+        match &mut self.invocation {
+            PureInvocation::Action(invocation) => {
+                let view = self.view_state.as_ref().ok_or_else(|| unavailable("action preview requires explicit caller context or its retained live surface"))?;
+                invocation.address.mode_id = view.active_mode_id.clone().ok_or_else(|| unavailable("action preview requires the caller activeModeId"))?;
+                let window = view.window_id.as_ref().or(view.focused_window_id.as_ref()).ok_or_else(|| unavailable("action preview requires the caller windowId or focusedWindowId"))?;
+                let kind = view.window_instances.iter().find(|instance| &instance.id == window).map(|instance| instance.window_kind_id.as_str()).or(view.active_window_kind_id.as_deref());
+                if invocation.address.window_kind_id != "*" && kind != Some(invocation.address.window_kind_id.as_str()) {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("input.invalid"), "action declaration does not own the caller target window kind"));
+                }
+                invocation.address.window_instance_id = window.clone();
+            }
+            PureInvocation::Command(invocation) => {
+                if let semio_framework_manifest_address::CommandOwnerAddress::Mode { mode_id, .. } = &invocation.address.owner {
+                    if self.view_state.as_ref().and_then(|view| view.active_mode_id.as_deref()) != Some(mode_id.as_str()) {
+                        return Err(unavailable("mode command requires its active caller context"));
+                    }
+                }
+            }
+        }
+        Ok(self)
+    }
+}
+
 //#region 🔖️Presence
 
 pub use ::replication::{decode_presence_history_edit, decode_presence_peer, encode_presence_history_edit, encode_presence_peer, PresenceHistoryEdit, PresenceHistoryEditStage, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView};
@@ -639,8 +687,9 @@ pub enum ArtifactMergeKind {
 /// replies, and topic subscriptions.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate="::semio_framework_value",rename_all = "camelCase",rename_all_fields="camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub enum MessageEndpoint {
     Shell { instance: PluginInstanceId },
     Backbone { uri: String },
@@ -788,6 +837,9 @@ pub enum Event {
 //#region 🔖️TurnResult
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct TurnResult {
     pub retained_receipt: RetainedTurnReceipt,
     pub ui_patches: UiTurnPatches,
@@ -799,8 +851,10 @@ pub struct TurnResult {
     /// is unchanged and carries collaboration TRUTH, not render addressing — see this field's own
     /// wire doc at `kernel_turn_result_to_wit` for the WIT `presence-update` repoint this pairs with.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default,skip_serializing_if="Vec::is_empty")]
     pub presence: Vec<PresenceUpdate>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default,skip_serializing_if="Option::is_none")]
     pub next_wake: Option<u64>,
     pub status: TurnStatus,
     pub fuel_used: u64,

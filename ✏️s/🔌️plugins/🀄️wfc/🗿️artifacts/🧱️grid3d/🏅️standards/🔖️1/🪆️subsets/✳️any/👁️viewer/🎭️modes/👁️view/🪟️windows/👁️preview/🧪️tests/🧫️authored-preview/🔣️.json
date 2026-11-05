@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "unsolved-boot",
+      "size": [
+        2,
+        2,
+        2
+      ],
+      "tiles": [
+        "a",
+        "b"
+      ],
+      "pins": [],
+      "masked": [],
+      "expected": []
+    },
+    {
+      "id": "only-valid-authored-pins",
+      "size": [
+        2,
+        2,
+        2
+      ],
+      "tiles": [
+        "a",
+        "b"
+      ],
+      "pins": [
+        [
+          0,
+          0,
+          0,
+          "a"
+        ],
+        [
+          1,
+          0,
+          0,
+          "b"
+        ],
+        [
+          2,
+          0,
+          0,
+          "a"
+        ],
+        [
+          0,
+          1,
+          0,
+          "missing"
+        ]
+      ],
+      "masked": [
+        [
+          1,
+          0,
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0,
+          0,
+          0,
+          "a"
+        ]
+      ]
+    },
+    {
+      "id": "current-document-replacement",
+      "size": [
+        2,
+        2,
+        2
+      ],
+      "tiles": [
+        "a",
+        "b"
+      ],
+      "pins": [
+        [
+          1,
+          1,
+          1,
+          "b"
+        ]
+      ],
+      "masked": [],
+      "expected": [
+        [
+          1,
+          1,
+          1,
+          "b"
+        ]
+      ]
+    },
+    {
+      "id": "authored-order-is-canonical",
+      "size": [
+        2,
+        2,
+        2
+      ],
+      "tiles": [
+        "a",
+        "b"
+      ],
+      "pins": [
+        [
+          1,
+          1,
+          1,
+          "b"
+        ],
+        [
+          0,
+          1,
+          0,
+          "a"
+        ],
+        [
+          0,
+          0,
+          1,
+          "b"
+        ]
+      ],
+      "masked": [],
+      "expected": [
+        [
+          0,
+          0,
+          1,
+          "b"
+        ],
+        [
+          0,
+          1,
+          0,
+          "a"
+        ],
+        [
+          1,
+          1,
+          1,
+          "b"
+        ]
+      ]
+    }
+  ]
+}

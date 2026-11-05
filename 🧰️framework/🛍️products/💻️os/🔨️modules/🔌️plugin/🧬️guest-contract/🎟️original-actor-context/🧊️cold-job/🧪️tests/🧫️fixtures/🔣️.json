@@ -1,0 +1,235 @@
+{
+  "job": 91,
+  "operation": 71,
+  "generation": 3,
+  "maximumPayloadBytes": 4194304,
+  "cases": [
+    {
+      "id": "pending-start-and-paged-output",
+      "steps": [
+        {
+          "event": "actor-pending",
+          "next": "admit-actor"
+        },
+        {
+          "event": "actor-ready",
+          "next": "admit-input"
+        },
+        {
+          "event": "input-pending",
+          "next": "admit-input"
+        },
+        {
+          "event": "input-ready",
+          "next": "start"
+        },
+        {
+          "event": "start-pending",
+          "next": "start"
+        },
+        {
+          "event": "start-ready",
+          "next": "step"
+        },
+        {
+          "event": "running",
+          "next": "step"
+        },
+        {
+          "event": "done",
+          "length": 5,
+          "next": "read"
+        },
+        {
+          "event": "chunk",
+          "offset": 0,
+          "length": 2,
+          "next": "borrow-chunk"
+        },
+        {
+          "event": "copied",
+          "next": "acknowledge-chunk"
+        },
+        {
+          "event": "chunk-acknowledged",
+          "next": "read"
+        },
+        {
+          "event": "chunk",
+          "offset": 2,
+          "length": 3,
+          "next": "borrow-chunk"
+        },
+        {
+          "event": "copied",
+          "next": "acknowledge-chunk"
+        },
+        {
+          "event": "chunk-acknowledged",
+          "next": "read"
+        },
+        {
+          "event": "output-closed",
+          "next": "acknowledge-output"
+        },
+        {
+          "event": "output-acknowledged",
+          "next": "close-actor"
+        },
+        {
+          "event": "actor-close-pending",
+          "next": "close-actor"
+        },
+        {
+          "event": "actor-closed",
+          "next": "complete"
+        }
+      ]
+    },
+    {
+      "id": "failed-job-keeps-original-output",
+      "steps": [
+        {
+          "event": "actor-ready",
+          "next": "admit-input"
+        },
+        {
+          "event": "input-ready",
+          "next": "start"
+        },
+        {
+          "event": "start-ready",
+          "next": "step"
+        },
+        {
+          "event": "failed",
+          "length": 0,
+          "next": "read"
+        },
+        {
+          "event": "output-closed",
+          "next": "acknowledge-output"
+        },
+        {
+          "event": "output-acknowledged",
+          "next": "close-actor"
+        },
+        {
+          "event": "actor-closed",
+          "next": "complete"
+        }
+      ]
+    },
+    {
+      "id": "wrong-chunk-offset",
+      "steps": [
+        {
+          "event": "actor-ready",
+          "next": "admit-input"
+        },
+        {
+          "event": "input-ready",
+          "next": "start"
+        },
+        {
+          "event": "start-ready",
+          "next": "step"
+        },
+        {
+          "event": "done",
+          "length": 5,
+          "next": "read"
+        },
+        {
+          "event": "chunk",
+          "offset": 1,
+          "length": 2,
+          "next": "refused"
+        }
+      ]
+    },
+    {
+      "id": "early-output-close",
+      "steps": [
+        {
+          "event": "actor-ready",
+          "next": "admit-input"
+        },
+        {
+          "event": "input-ready",
+          "next": "start"
+        },
+        {
+          "event": "start-ready",
+          "next": "step"
+        },
+        {
+          "event": "done",
+          "length": 5,
+          "next": "read"
+        },
+        {
+          "event": "output-closed",
+          "next": "refused"
+        }
+      ]
+    },
+    {
+      "id": "semantic-marker-publishes-original-failure",
+      "steps": [
+        {
+          "event": "actor-ready",
+          "next": "admit-input"
+        },
+        {
+          "event": "input-ready",
+          "next": "start"
+        },
+        {
+          "event": "start-ready",
+          "next": "step"
+        },
+        {
+          "event": "semantic-refusal",
+          "next": "publish-failure"
+        },
+        {
+          "event": "failure-pending",
+          "next": "publish-failure"
+        },
+        {
+          "event": "failure-published",
+          "length": 4,
+          "next": "read-failure"
+        },
+        {
+          "event": "failure-chunk",
+          "offset": 0,
+          "length": 4,
+          "next": "borrow-failure-chunk"
+        },
+        {
+          "event": "copied",
+          "next": "acknowledge-failure-chunk"
+        },
+        {
+          "event": "failure-chunk-acknowledged",
+          "next": "read-failure"
+        },
+        {
+          "event": "failure-output-closed",
+          "next": "acknowledge-failure"
+        },
+        {
+          "event": "failure-acknowledged",
+          "next": "close-actor"
+        },
+        {
+          "event": "actor-closed",
+          "next": "complete"
+        }
+      ]
+    }
+  ],
+  "version": 26
+}

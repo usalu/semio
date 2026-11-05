@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "arguments": [
+    "--catalog",
+    "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated",
+    "--catalog-target",
+    "@semio-tech/s-dev-composition:generate",
+    "--folder",
+    "space"
+  ],
+  "catalog": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated",
+  "target": "@semio-tech/s-dev-composition:generate",
+  "forwarded": [
+    "--folder",
+    "space"
+  ]
+}

@@ -69,6 +69,7 @@ impl HeadlessWorkspace {
             plugin_id: lease.package.plugin_id.clone(),
             app_id: lease.surface.app_id.clone(),
             surface_id: Some(lease.surface.surface_id.clone()),
+            archive: None,
             document: Some(Arc::new(SessionDocumentPair { pack: pack.to_vec(), spr: spr.to_vec() })),
             backbone,
             backbone_blocked_by,

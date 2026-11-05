@@ -2,7 +2,10 @@
   "name": "@semio-tech/lowpoly-plugin",
   "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🌎️hub/🧩️compositions/💠️lowpoly/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🌎️hub/🧩️compositions/💠️lowpoly/**/*",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "test": {
@@ -14,6 +17,26 @@
       },
       "outputs": [],
       "cache": true
+    },
+    "test-runtime": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🔲️pixels/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🔧️tests-11-2/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🌳️tree/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test-runtime",
+        "forwardAllArgs": true
+      }
     }
   }
 }

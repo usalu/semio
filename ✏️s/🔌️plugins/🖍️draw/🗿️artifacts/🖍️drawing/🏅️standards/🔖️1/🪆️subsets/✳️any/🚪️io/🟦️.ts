@@ -1,37 +1,21 @@
-// 🚪️ IoEntryDescriptor[] mirror for `s.draw.drawing@1/*` (ticket
-// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM). Mirrors the real Rust `io()` entries
-// (`🦀️.rs`) — one `Serializer`/`Deserializer` pair per foreign stdio dialect this subset
-// bridges to. svg export and json both directions are real conversions; svg import and every
-// pdf/png/dwg/dxf hop are honest not-yet-implemented stubs (pdf/png/dwg/dxf export previously
-// mislabeled this artifact's own DSL text as the target format — fixed to refuse honestly instead).
-// Shaped inline (no generated `IoEntryDescriptor` type checked in anywhere yet in this repo) so this
-// file has no fragile forward reference; swap for a real import once owned schema generation lands.
-export interface IoEntryDescriptorMirror {
-  from: string;
-  into: string;
-  fidelity: "Exact" | "Canonical" | "Semantic" | "Lossy";
-  sniffs: boolean;
-}
+/** 🚪️ Registered native Drawing IO metadata using the shared wire contract. */
+import { parseDialectCoordinate, type IoEntryDescriptor } from "@semio-tech/framework/io/schema";
 
-const DRAWING = "s.draw.drawing@1/*";
-const SVG = "s.stdio.svg@1.1/*";
-const PDF = "s.stdio.pdf@1.4/*";
-const PNG = "s.stdio.png@1.2/*";
-const JSON_DIALECT = "s.stdio.json@rfc8259/*";
-const DWG = "s.stdio.dwg@ac1018/*";
-const DXF = "s.stdio.dxf@r12/*";
+const DRAWING = parseDialectCoordinate("s.draw.drawing@1/*");
+const SVG = parseDialectCoordinate("s.stdio.svg@1.1/*");
+const PDF = parseDialectCoordinate("s.stdio.pdf@1.4/*");
+const PNG = parseDialectCoordinate("s.stdio.png@1.2/*");
+const JSON_DIALECT = parseDialectCoordinate("s.stdio.json@rfc8259/*");
+const DWG = parseDialectCoordinate("s.stdio.dwg@ac1018/*");
+const DXF = parseDialectCoordinate("s.stdio.dxf@r12/*");
 
-export const ioEntries: IoEntryDescriptorMirror[] = [
+export const ioEntries: IoEntryDescriptor[] = [
   { from: DRAWING, into: SVG, fidelity: "Lossy", sniffs: false },
-  { from: SVG, into: DRAWING, fidelity: "Lossy", sniffs: false },
   { from: DRAWING, into: PDF, fidelity: "Lossy", sniffs: false },
-  { from: PDF, into: DRAWING, fidelity: "Lossy", sniffs: false },
   { from: DRAWING, into: PNG, fidelity: "Lossy", sniffs: false },
-  { from: PNG, into: DRAWING, fidelity: "Lossy", sniffs: false },
   { from: DRAWING, into: JSON_DIALECT, fidelity: "Exact", sniffs: false },
-  { from: JSON_DIALECT, into: DRAWING, fidelity: "Exact", sniffs: false },
+  { from: JSON_DIALECT, into: DRAWING, fidelity: "Exact", sniffs: true },
+  { from: SVG, into: DRAWING, fidelity: "Semantic", sniffs: true },
   { from: DRAWING, into: DWG, fidelity: "Lossy", sniffs: false },
-  { from: DWG, into: DRAWING, fidelity: "Lossy", sniffs: false },
   { from: DRAWING, into: DXF, fidelity: "Lossy", sniffs: false },
-  { from: DXF, into: DRAWING, fidelity: "Lossy", sniffs: false },
 ];

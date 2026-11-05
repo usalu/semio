@@ -105,7 +105,8 @@ def video_status(video_id: str, language: str, audience: str, output: str, state
         state = states[job["source_ordinal"]]
         fresh = rt.reusable_clip(clip, state)
         segments.append({"scene": job["segment"]["scene"], "script": job["segment"]["script"], "ordinal": job["source_ordinal"],
-                         "clip": clip, "fresh": fresh, "state": state, "state_sha256": hashlib.sha256(canonical(state).encode()).hexdigest()})
+                         "clip": clip, "fresh": fresh, "declared": job["segment"], "state": state,
+                         "state_sha256": hashlib.sha256(canonical(state).encode()).hexdigest()})
     master = folder / "rendered" / f"{output}_{audience}_{language}_{LABEL}.mp4"
     return {"video": video_id, "segments": segments, "master": master, "settings": config}
 
@@ -117,7 +118,8 @@ def master_fresh(status: dict) -> bool:
     if not master or not master.is_file() or not sidecar.is_file() or not all(segment["fresh"] for segment in status["segments"]):
         return False
     recorded = [segment for chapter in json.loads(sidecar.read_text(encoding="utf-8"))["content"]["chapters"] for segment in chapter["segments"]]
-    return recorded == [segment["state"] for segment in status["segments"]]
+    expected = [{**segment["state"], "segment": segment["declared"]} for segment in status["segments"]]
+    return recorded == expected
 
 
 def frame(path: Path, at: float, size: tuple[int, int]):

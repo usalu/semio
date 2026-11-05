@@ -139,7 +139,7 @@ fn snapshot_object_from_host_snapshot(object: &Puzzle3dObject) -> Result<semio_s
         id: object.id.clone(),
         label: object.label.clone(),
         object_kind: object.object_kind.clone(),
-        anchor: semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor::default(),
+        anchor: object.anchor,
         origin: object.origin,
         orientation: object.orientation,
         scale: object.scale.clone().map(FromValue::from_value).transpose()?,
@@ -151,7 +151,7 @@ fn snapshot_object_from_host_snapshot(object: &Puzzle3dObject) -> Result<semio_s
 }
 
 fn snapshot_vortex_from_host_snapshot(vortex: &Puzzle3dVortex) -> semio_s_artifact_puzzle_3d_model::Puzzle3dVortex {
-    semio_s_artifact_puzzle_3d_model::Puzzle3dVortex { id: vortex.id.clone(), vortex_kind: vortex.vortex_kind.clone(), label: None, position: vortex.position, direction: vortex.direction, radius: vortex.radius, hidden: vortex.hidden, locked: vortex.locked }
+    semio_s_artifact_puzzle_3d_model::Puzzle3dVortex { id: vortex.id.clone(), vortex_kind: vortex.vortex_kind.clone(), label: vortex.label.clone(), position: vortex.position, direction: vortex.direction, radius: vortex.radius, hidden: vortex.hidden, locked: vortex.locked }
 }
 
 fn snapshot_attraction_from_host_snapshot(attraction: &Puzzle3dAttraction) -> semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction {
@@ -165,8 +165,8 @@ fn snapshot_attraction_from_host_snapshot(attraction: &Puzzle3dAttraction) -> se
         rotation: attraction.rotation,
         turn: attraction.turn,
         tilt: attraction.tilt,
-        x: 0.0,
-        y: 0.0,
+        x: attraction.x,
+        y: attraction.y,
     }
 }
 
@@ -187,6 +187,7 @@ fn snapshot_reference_from_host_snapshot(reference: &Puzzle3dReference) -> semio
 
 pub fn scene_object_from_snapshot(object: &semio_s_artifact_puzzle_3d_model::Puzzle3dObject) -> Puzzle3dObject {
     Puzzle3dObject {
+        anchor: object.anchor,
         id: object.id.clone(),
         label: object.label.clone(),
         object_kind: object.object_kind.clone(),
@@ -201,11 +202,13 @@ pub fn scene_object_from_snapshot(object: &semio_s_artifact_puzzle_3d_model::Puz
 }
 
 fn scene_vortex_from_snapshot(vortex: &semio_s_artifact_puzzle_3d_model::Puzzle3dVortex) -> Puzzle3dVortex {
-    Puzzle3dVortex { id: vortex.id.clone(), vortex_kind: vortex.vortex_kind.clone(), position: vortex.position, direction: vortex.direction, radius: vortex.radius, hidden: vortex.hidden, locked: vortex.locked }
+    Puzzle3dVortex { id: vortex.id.clone(), vortex_kind: vortex.vortex_kind.clone(), label: vortex.label.clone(), position: vortex.position, direction: vortex.direction, radius: vortex.radius, hidden: vortex.hidden, locked: vortex.locked }
 }
 
 fn scene_attraction_from_snapshot(attraction: &semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction) -> Puzzle3dAttraction {
     Puzzle3dAttraction {
+        x: attraction.x,
+        y: attraction.y,
         id: attraction.id.clone(),
         attracting: attraction.attracting.clone(),
         attracted: attraction.attracted.clone(),

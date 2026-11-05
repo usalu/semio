@@ -1,0 +1,14 @@
+{
+  "retainedPolicy": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 3,
+    "maximumCapacityBytes": 524288,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 128
+  },
+  "revision": 7,
+  "cancellationId": "inference cancellation 源",
+  "workUnits": 11,
+  "maximumElapsedMilliseconds": 13,
+  "documentGeneration": 3
+}

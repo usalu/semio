@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "artifactId": "mcp-roundtrip",
+  "kind": "os.agent.probe/v1",
+  "initial": {
+    "title": { "en": "Artifact Roundtrip", "de": "Artefakt-Rundlauf" },
+    "values": [1, true, null, "ä"]
+  }
+}

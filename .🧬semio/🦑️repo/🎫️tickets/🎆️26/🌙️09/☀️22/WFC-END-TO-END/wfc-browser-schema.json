@@ -1,0 +1,254 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "timeoutMs",
+    "pauseHoldMs",
+    "solvePersistence",
+    "steps",
+    "variants",
+    "controlCoverage",
+    "setupTimeoutMs"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.wfc.browser-cases/v1"
+    },
+    "timeoutMs": {
+      "type": "integer",
+      "minimum": 1000,
+      "maximum": 120000
+    },
+    "pauseHoldMs": {
+      "type": "integer",
+      "minimum": 500,
+      "maximum": 5000
+    },
+    "solvePersistence": {
+      "const": "ephemeral"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "enum": [
+          101,
+          102,
+          103
+        ]
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true
+    },
+    "variants": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "port",
+          "authorWindow",
+          "preview",
+          "forms",
+          "workload",
+          "reloadSurfaces"
+        ],
+        "properties": {
+          "variant": {
+            "enum": [
+              "bitmap",
+              "grid2d",
+              "wfc2d",
+              "grid3d",
+              "wfc3d"
+            ]
+          },
+          "port": {
+            "type": "integer",
+            "minimum": 6041,
+            "maximum": 6045
+          },
+          "authorWindow": {
+            "type": "string",
+            "minLength": 1
+          },
+          "preview": {
+            "type": "string",
+            "minLength": 1
+          },
+          "forms": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "action",
+                "args"
+              ],
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "window": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "keep": {
+            "const": "pin-preview"
+          },
+          "keepWindow": {
+            "type": "string",
+            "minLength": 1
+          },
+          "workload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "forms"
+            ],
+            "properties": {
+              "forms": {
+                "type": "array",
+                "maxItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "action",
+                    "args"
+                  ],
+                  "properties": {
+                    "action": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "args": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "window": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "slots": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "count",
+                  "idPrefix",
+                  "columns",
+                  "spacing"
+                ],
+                "properties": {
+                  "count": {
+                    "type": "integer",
+                    "minimum": 128,
+                    "maximum": 512
+                  },
+                  "idPrefix": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]{0,30}$"
+                  },
+                  "columns": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 32
+                  },
+                  "spacing": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 8
+                  }
+                }
+              }
+            }
+          },
+          "reloadSurfaces": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "window",
+                "surface",
+                "meaning"
+              ],
+              "properties": {
+                "window": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "surface": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "meaning": {
+                  "enum": [
+                    "authored geometry and labels",
+                    "authored bitmap pins"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "dependencies": {
+          "keep": [
+            "keepWindow"
+          ],
+          "keepWindow": [
+            "keep"
+          ]
+        }
+      }
+    },
+    "controlCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pause",
+        "abort",
+        "terminalRace"
+      ],
+      "properties": {
+        "pause": {
+          "const": "observed-held-resumed"
+        },
+        "abort": {
+          "const": "observed-active-aborted"
+        },
+        "terminalRace": {
+          "const": "coverage-gap"
+        }
+      }
+    },
+    "setupTimeoutMs": {
+      "type": "integer",
+      "minimum": 5000,
+      "maximum": 900000
+    }
+  }
+}

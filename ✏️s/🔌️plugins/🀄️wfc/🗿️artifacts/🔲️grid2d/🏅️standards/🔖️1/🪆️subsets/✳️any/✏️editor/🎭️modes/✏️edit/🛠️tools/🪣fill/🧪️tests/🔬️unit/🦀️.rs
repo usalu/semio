@@ -9,7 +9,8 @@ use std::sync::Arc;
 use crate::editor::grid2d::modes::edit::tools::fill::*;
 use crate::host::inferences::solve_with_clock;
 use crate::examples::grid2d::pipes;
-use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, StepBudget};
+use semio_framework_job::Generation;
+use semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 
 static PARTIAL_VECTOR: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣fill/🧪️tests/🧫️fixtures/🎞️partial-tick.json"));
@@ -17,8 +18,6 @@ static PARTIAL_VECTOR: std::sync::LazyLock<&'static str> = std::sync::LazyLock::
 fn identity() -> ToolRunIdentity {
     ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [7; 32])
 }
-
-const TEST_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
 
 /// 🧭️ What one driven call of the fill run lent to its caller.
 #[derive(Debug)]
@@ -31,19 +30,14 @@ enum Stepped {
 }
 
 /// 🦶️ One fuel budget against a shared operation — the child `WfcJob` is bound to that operation for the whole run.
-fn drive_once(job: &mut Grid2dFillRunJob, operation: OperationId, generation: Generation, cancel: &semio_framework_job::CancelToken, sequence: &mut u64, fuel: u64) -> Stepped {
-    let now = semio_framework_job::default_now_us().expect("clock");
-    let budget = StepBudget::new(fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4, TEST_GRANT);
-    let mut receipt = semio_framework_job::RetainedCloneProgress::default();
-    let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(operation, generation, budget, cancel.clone(), sequence, &mut receipt);
-    let mut verdict = None;
-    match semio_framework_job::drive_step(job, &mut context, "wfc.grid2d.fill.run.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("fill step admission") {
+fn drive_once(job: &mut Grid2dFillRunJob, driver: &mut TestJobDriver, fuel: u64) -> Stepped {
+    driver.step(job, fuel, |outcome| match outcome {
         None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. } | semio_framework_job::JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Yield,
         Some(semio_framework_job::JobOutcomeBorrow::PreviewReady { payload, .. }) => Stepped::Tick((0..payload.page_count()).flat_map(|index| payload.page(index).expect("page").to_vec()).collect()),
         Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
         Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
         Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
-    }
+    })
 }
 
 fn tick_payload(outcome: Stepped) -> Option<Grid2dFillPayload> {
@@ -56,29 +50,8 @@ fn tick_payload(outcome: Stepped) -> Option<Grid2dFillPayload> {
     }
 }
 
-fn close(job: &mut Grid2dFillRunJob) {
-    job.begin_close();
-    for _ in 0..1_000_000 {
-        if job.terminal_is_empty() {
-            return;
-        }
-        let grant = semio_framework_job::RetainedCloneGrant {
-            maximum_items: 1,
-            maximum_copy_bytes: job.next_close_copy_byte_demand().expect("a locally owned fill quotes its copy demand"),
-            maximum_capacity_bytes: job.next_close_capacity_byte_demand(usize::MAX).expect("a locally owned fill quotes its capacity demand"),
-            maximum_release_bytes: job.next_close_release_byte_demand().expect("a locally owned fill quotes its release demand"),
-            maximum_depth: job.next_close_depth_demand().expect("a locally owned fill quotes its depth demand").max(1),
-        };
-        match semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn") {
-            InteractiveJobCloseStep::Complete { .. } => {
-                assert!(job.terminal_is_empty());
-                return;
-            }
-            InteractiveJobCloseStep::Pending { .. } => {}
-            InteractiveJobCloseStep::Blocked => panic!("fill close blocked or refused"),
-        }
-    }
-    panic!("fill close never completed");
+fn close(job: &mut Grid2dFillRunJob, driver: &mut TestJobDriver) {
+    driver.close(job);
 }
 
 #[test]
@@ -117,11 +90,10 @@ fn stepping_publishes_a_strictly_increasing_partial_before_the_finish() {
     let finished = oracle.assignments.len();
     assert!(finished > 2, "the fixture must leave room to collapse");
     let mut job = Grid2dFillRunJob::new(identity(), snapshot, ToolRunJobPort::default());
-    let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(semio_framework_job::allocate_operation_id(), Generation(1));
     let mut partials = Vec::new();
     for _ in 0..500_000 {
-        let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, 1);
+        let outcome = drive_once(&mut job, &mut driver, 1);
         if let Some(payload) = tick_payload(outcome) {
             let decided = payload.decided_count();
             if payload.done {
@@ -132,7 +104,7 @@ fn stepping_publishes_a_strictly_increasing_partial_before_the_finish() {
                 assert!(!partials.is_empty(), "at least one partial must precede the finish");
                 assert!(partials.iter().any(|&count| count > 0 && count < finished), "need a decided count strictly between 0 and finished: {partials:?}");
                 assert!(partials.windows(2).any(|pair| pair[1] > pair[0]) || partials.iter().any(|&count| count > 0), "a later step must grow the decided count: {partials:?}");
-                close(&mut job);
+                close(&mut job, &mut driver);
                 return;
             }
             if decided > 0 {
@@ -140,7 +112,7 @@ fn stepping_publishes_a_strictly_increasing_partial_before_the_finish() {
             }
         }
     }
-    close(&mut job);
+    close(&mut job, &mut driver);
     panic!("fill never finished; partials={partials:?}");
 }
 
@@ -149,28 +121,27 @@ fn aborting_mid_run_cancels_and_never_dispatches_commit_fill() {
     let snapshot = Arc::new(pipes::document());
     let port = ToolRunJobPort::default();
     let mut job = Grid2dFillRunJob::new(identity(), snapshot, port.clone());
-    let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(semio_framework_job::allocate_operation_id(), Generation(1));
     let mut saw_partial = false;
     for _ in 0..500_000 {
-        let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, 1);
+        let outcome = drive_once(&mut job, &mut driver, 1);
         if let Some(payload) = tick_payload(outcome) {
             if payload.decided_count() > 0 && !payload.done {
                 saw_partial = true;
                 break;
             }
             if payload.done {
-                close(&mut job);
+                close(&mut job, &mut driver);
                 panic!("finished before abort window");
             }
         }
     }
     assert!(saw_partial, "need a live partial before aborting");
     job.begin_close();
-    let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, 1);
+    let outcome = drive_once(&mut job, &mut driver, 1);
     assert!(matches!(outcome, Stepped::Cancelled), "closing mid-run must cancel: {outcome:?}");
     assert!(!port.has_effects(), "abort must not dispatch commit-fill");
-    close(&mut job);
+    close(&mut job, &mut driver);
 }
 
 #[test]
@@ -178,24 +149,23 @@ fn the_final_payload_matches_solve_with_job_for_pipes() {
     let snapshot = Arc::new(pipes::document());
     let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("pipes solves");
     let mut job = Grid2dFillRunJob::new(identity(), snapshot, ToolRunJobPort::default());
-    let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(semio_framework_job::allocate_operation_id(), Generation(1));
     for _ in 0..500_000 {
-        let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, 8);
+        let outcome = drive_once(&mut job, &mut driver, 8);
         let terminal = matches!(outcome, Stepped::Complete | Stepped::Cancelled | Stepped::Fault);
         if let Some(payload) = tick_payload(outcome) {
             if payload.done {
                 assert_eq!(payload.as_commit().assignments, oracle.assignments);
                 assert_eq!(payload.contradiction, oracle.contradiction);
-                close(&mut job);
+                close(&mut job, &mut driver);
                 return;
             }
         } else if terminal {
-            close(&mut job);
+            close(&mut job, &mut driver);
             panic!("completed without a done payload");
         }
     }
-    close(&mut job);
+    close(&mut job, &mut driver);
     panic!("fill never produced a done payload");
 }
 
@@ -203,11 +173,10 @@ fn the_final_payload_matches_solve_with_job_for_pipes() {
 fn a_full_lane_step_publishes_many_collapses_in_one_tick() {
     let snapshot = Arc::new(pipes::document());
     let mut job = Grid2dFillRunJob::new(identity(), snapshot, ToolRunJobPort::default());
-    let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(semio_framework_job::allocate_operation_id(), Generation(1));
     let mut bursts = Vec::new();
     for _ in 0..400 {
-        let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, semio_framework_job::INTERACTIVE_LANE_FUEL);
+        let outcome = drive_once(&mut job, &mut driver, semio_framework_job::INTERACTIVE_LANE_FUEL);
         if let Some(payload) = tick_payload(outcome) {
             bursts.push(payload);
         }
@@ -215,7 +184,68 @@ fn a_full_lane_step_publishes_many_collapses_in_one_tick() {
             break;
         }
     }
-    close(&mut job);
+    close(&mut job, &mut driver);
     let best = bursts.iter().map(|payload| payload.trace.len()).max().unwrap_or(0);
     assert!(best > 1, "one host step must carry more than one collapse, best {best} across {} ticks", bursts.len());
+}
+
+#[test]
+fn only_an_admitted_completion_tick_can_publish_a_cached_solve() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️dispatch-envelope/🔣️.json")).expect("portable capacity fixture");
+    for case in fixture["tickCases"].as_array().expect("cases") {
+        let cells = case["cells"].as_u64().unwrap() as u32;
+        let tile_id = "t".repeat(case["idBytes"].as_u64().unwrap() as usize);
+        let payload = Grid2dFillPayload { assignments: (0..cells).map(|x| Grid2dFillCell { x, y: 0, tile_id: Some(tile_id.clone()) }).collect(), done: true, ..Default::default() };
+        let expected = case["complete"].as_bool().unwrap();
+        let port = ToolRunJobPort::default();
+        let mut job = Grid2dFillRunJob::new(identity(), Arc::new(pipes::document()), port.clone());
+        let mut driver = TestJobDriver::new(semio_framework_job::allocate_operation_id(), Generation(1));
+        let _ = job.finish_success(false, Some(payload));
+        assert_eq!(matches!(job.settled, Some(FillSettled::Complete)), expected);
+        assert_eq!(job.committed, expected);
+        assert_eq!(port.has_effects(), expected, "a failed tick must not enqueue a completed cache");
+        close(&mut job, &mut driver);
+    }
+}
+
+#[test]
+fn completed_source_identity_survives_the_effect_bridge_and_current_revision_fence() {
+    use crate::editor::grid2d::{Grid2dEditor, Grid2dEditorCommand};
+    use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, NoConfig, ViewModel};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🧪️tests/🧫️preview-revisions/🔣️.json")).expect("portable revision cases");
+    let document = Arc::new(pipes::document());
+    let solved = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("portable pipes solve");
+    let payload = Grid2dFillPayload { assignments: solved.assignments.iter().map(|(x, y, tile_id)| Grid2dFillCell { x: *x, y: *y, tile_id: Some(tile_id.clone()) }).collect(), done: true, ..Default::default() };
+    let history = semio_framework_plugin::HistoryView::empty();
+    let no_config = NoConfig::default();
+    let config = ConfigView { snapshot: &no_config, window: None };
+    let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    view.window_id = Some("preview-1".into());
+    view.window_instances = vec![semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: preview::WINDOW_KIND_ID.into() }];
+    for case in fixture["cases"].as_array().expect("cases") {
+        let source: Vec<u8> = serde_json::from_value(case["sourceRevision"].clone()).expect("source");
+        let Ok(source_revision) = <[u8; 32]>::try_from(source.as_slice()) else { continue };
+        let original = ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, source_revision);
+        let port = ToolRunJobPort::default();
+        let mut job = Grid2dFillRunJob::new(original, document.clone(), port.clone());
+        let mut driver = TestJobDriver::new(semio_framework_job::allocate_operation_id(), Generation(1));
+        let _ = job.finish_success(false, Some(payload.clone()));
+        let Some(semio_framework::kernel::Effect::DispatchAction { action, mut args, .. }) = port.pop_effect() else { panic!("completion dispatches its cache") };
+        assert!(!port.has_effects(), "one completion publishes one effect");
+        let command = <Grid2dEditor as ArtifactEditor>::command_from_action(&action, &mut args, &mut None).expect("owned effect bridges");
+        let Grid2dEditorCommand::CommitFill { solve_json, source_revision: bridged } = &command else { panic!("completion command") };
+        assert_eq!(bridged, &source);
+        let cache = semio_framework_pack_json::from_json_str::<Grid2dCachedSolve>(solve_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("current cache envelope");
+        assert_eq!(cache.source_revision, source);
+        assert_eq!(cache.commit.assignments, solved.assignments);
+        let current: Option<[u8; 32]> = serde_json::from_value(case["currentRevision"].clone()).expect("current");
+        let doc = match current {
+            Some(revision) => ArtifactView::with_operation(document.as_ref(), &history, semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: revision, retained: semio_framework_plugin::artifact_app_laws::fixture_retained_turn().grant, authoring_seed: "seed".into() }),
+            None => ArtifactView::new(document.as_ref(), &history),
+        };
+        let emitted = Grid2dEditor::dispatch(&command, &doc, &config, Some(&view)).expect("completion dispatch");
+        assert_eq!(emitted.window_config_mutations.len(), usize::from(case["visible"].as_bool().unwrap()), "{}", case["id"]);
+        assert!(emitted.artifact_mutations.is_empty());
+        close(&mut job, &mut driver);
+    }
 }

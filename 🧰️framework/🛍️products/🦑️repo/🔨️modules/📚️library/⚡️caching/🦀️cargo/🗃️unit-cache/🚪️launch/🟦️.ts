@@ -1,7 +1,7 @@
 import {availableParallelism,setPriority} from "node:os";
 import {spawn,spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
-import {appendFileSync,chmodSync,closeSync,existsSync,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {appendFileSync,chmodSync,closeSync,existsSync,mkdirSync,openSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {createHash,randomBytes} from "node:crypto";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
@@ -55,15 +55,14 @@ export const UNIT_CACHE_NATIVE_BUILD_V1:UnitCacheNativeBuildV1=Object.freeze({
 /** 🚫️ Why no native wrapper could be made, in every language: the unit cache is switched off for that Cargo process, never half-working. */
 export function unitCacheWrapperRefusalV1(reason:string):string{return (["en","de"] as const).map(language=>laneMessageV1("wrapperUnavailable",{reason},language)).join("\n");}
 
-/** 🪟️ Makes the native wrapper: bundle, name by digest, compile once (a temporary name, then an atomic rename), and remove the executables of older code that no running Cargo holds. */
+/** 🪟️ Publishes a digest-addressed executable from its own stage and retains every peer-owned generation. */
 function ensureNativeWrapperV1(cacheRoot:string,runtime:string,entry:string,platform:NodeJS.Platform,build:UnitCacheNativeBuildV1):string{
  const digest=createHash("sha256").update(build.bundle(runtime,entry)).digest("hex").slice(0,16),path=unitCacheShimPathV1(cacheRoot,platform,digest);
  if(existsSync(path))return path;
  mkdirSync(dirname(path),{recursive:true});
- const temporary=path+"."+randomBytes(4).toString("hex")+".tmp";
+ const temporary=path+"."+randomBytes(4).toString("hex")+".tmp.exe";
  try{build.compile(runtime,entry,temporary);chmodSync(temporary,0o755);renameSync(temporary,path);}
  catch(error){rmSync(temporary,{force:true});if(!existsSync(path))throw error;}
- for(const name of readdirSync(dirname(path)))if(/^rustc-wrapper-[0-9a-f]+\.exe(\..*\.tmp)?$/u.test(name)&&join(dirname(path),name)!==path)try{rmSync(join(dirname(path),name),{force:true});}catch{}
  return path;
 }
 

@@ -1,0 +1,101 @@
+
+/// 🕰️ Original host imports keep prepared scalar replies and virtual stream owners on the caller's genuine instance.
+mod original_host{
+ use semio_framework_plugin_interpreter::Value;
+ use semio_framework_plugin_guest_contract::operation_authority;
+ use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiving;
+ use std::sync::Arc;
+ use semio_framework_plugin_interpreter::{CoreInstanceOpening,CoreModule,CoreOriginalHostCall,ExportKind};
+ use semio_framework_job::{StepContext,OriginalTurnFailure};
+ use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+ use std::mem::size_of;
+ #[derive(Clone,Copy)]
+ struct Resource{id:i32,kind:u8}
+ struct Reply{value:Option<Value>,pointer:u32,bytes:[u8;16],length:usize,copied:usize,completed:bool}
+ /// 🪢️ Prepared replies and bounded diagnostic streams stay in their actual native owner across physical turns.
+ pub struct OriginalHostState{binding:semio_framework_job::OriginalSourceBinding,epoch:u64,context:i32,next:i32,resources:[Resource;32],diagnostics:std::mem::ManuallyDrop<Vec<u8>>,reply:Option<Reply>}
+ impl OriginalHostState{
+  pub fn new(cx:&StepContext<'_>)->Result<Self,OriginalTurnFailure>{cx.original_source_parent()?;let epoch=cx.original_source_epoch().ok_or_else(||refused("original host state requires its actual source epoch"))?;Ok(Self{binding:semio_framework_job::OriginalSourceBinding::borrow(cx),epoch,context:0,next:1,resources:[Resource{id:0,kind:0};32],diagnostics:std::mem::ManuallyDrop::new(Vec::new()),reply:None})}
+  pub fn diagnostics(&self)->&[u8]{&self.diagnostics}
+  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if !self.binding.matches(cx)||cx.original_source_epoch().is_none_or(|epoch|epoch<self.epoch){return Err(refused("original host state requires its same source and causal epoch").into())}Ok(())}
+  pub fn reply_pending(&self)->bool{self.reply.is_some()}
+  pub fn terminal_is_empty(&self)->bool{self.reply.is_none()&&self.diagnostics.capacity()==0&&self.resources.iter().all(|slot|slot.id==0)}
+  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.reply.is_some(){if !charge(cx,size_of::<Reply>(),0,0,true)?{return Ok(false)}self.reply=None;return Ok(false)}if self.diagnostics.capacity()>0{if !charge(cx,size_of::<Vec<u8>>(),0,self.diagnostics.capacity(),true)?{return Ok(false)}drop(std::mem::take(&mut *self.diagnostics));return Ok(false)}if let Some(slot)=self.resources.iter_mut().find(|slot|slot.id!=0){if !charge(cx,size_of::<Resource>(),0,0,true)?{return Ok(false)}*slot=Resource{id:0,kind:0};return Ok(false)}Ok(true)}
+  fn kind(&self,id:i32)->Result<u8,ValueError>{self.resources.iter().find(|slot|slot.id==id&&slot.id!=0).map(|slot|slot.kind).ok_or_else(||refused("original host resource is absent or already returned"))}
+  fn allocate(&mut self,kind:u8)->Result<i32,ValueError>{let slot=self.resources.iter_mut().find(|slot|slot.id==0).ok_or_else(||refused("original host fixed resource slots are full"))?;let id=self.next;let next=id.checked_add(1).ok_or_else(||refused("original host resource identities are exhausted"))?;*slot=Resource{id,kind};self.next=next;Ok(id)}
+ }
+ impl Drop for OriginalHostState{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original host state reached Drop before paid import/stream/diagnostic retirement")}}
+ #[derive(Clone,Copy)]
+ enum Request{SourceClock(u64,u32),Monotonic,WallClock(u32),NowMs,RandomWord,Seed(u32),ContextGet,ContextSet(i32),StreamNew(u8),StreamDrop(i32,u8),CheckWrite(i32,u32),Write(i32,u32,usize,u32),Flush(i32,u32),Zero(u32,usize),Log{pointer:u32,length:usize,level:Option<(u32,usize)>},PureBegin(u32),PureProgress([usize;3]),PureAllocation([usize;4]),PureFinish(usize),PureReserve(u32,usize)}
+ impl Request{
+  fn parse(call:&CoreOriginalHostCall<'_>)->Result<Self,ValueError>{let i=|index|argument_i32(call,index);let n=|index|argument_size(call,index);match(call.module,call.name){
+   ("semio:framework/pure@1.0.0","operation-clock-us")=>Ok(Self::SourceClock(argument_u64(call,0)?,i(1)?as u32)),
+   ("semio:framework/pure@1.0.0","now-ms")=>Ok(Self::NowMs),
+   ("semio:framework/pure@1.0.0","log")=>Ok(Self::Log{pointer:i(2)?as u32,length:i(3)?as u32 as usize,level:Some((i(0)?as u32,i(1)?as u32 as usize))}),
+   ("semio:framework/pure@1.0.0","trace-span")=>Ok(Self::Log{pointer:i(0)?as u32,length:i(1)?as u32 as usize,level:None}),
+   ("semio:framework/pure@1.0.0","operation-begin")=>Ok(Self::PureBegin(i(0)?as u32)),
+   ("semio:framework/pure@1.0.0","operation-progress")=>Ok(Self::PureProgress([n(0)?,n(1)?,n(2)?])),
+   ("semio:framework/pure@1.0.0","operation-allocation")=>Ok(Self::PureAllocation([n(0)?,n(1)?,n(2)?,n(3)?])),
+   ("semio:framework/pure@1.0.0","operation-finish")=>Ok(Self::PureFinish(n(0)?)),
+   ("semio:framework/pure@1.0.0","operation-reserve-return")=>Ok(Self::PureReserve(i(0)?as u32,n(1)?)),
+   ("$root","[context-get-0]")=>Ok(Self::ContextGet),("$root","[context-set-0]")=>Ok(Self::ContextSet(i(0)?)),
+   ("wasi:clocks/monotonic-clock@0.2.0","now")=>Ok(Self::Monotonic),("wasi:clocks/wall-clock@0.2.0","now")=>Ok(Self::WallClock(i(0)?as u32)),
+   ("wasi:random/random@0.2.9","get-random-u64")=>Ok(Self::RandomWord),("wasi:random/insecure-seed@0.2.9","insecure-seed")=>Ok(Self::Seed(i(0)?as u32)),
+   ("wasi:cli/stdout@0.2.0","get-stdout")=>Ok(Self::StreamNew(1)),("wasi:cli/stderr@0.2.0","get-stderr")=>Ok(Self::StreamNew(2)),("wasi:cli/stdin@0.2.0","get-stdin")=>Ok(Self::StreamNew(3)),
+   ("wasi:io/streams@0.2.0","[resource-drop]output-stream")=>Ok(Self::StreamDrop(i(0)?,1)),("wasi:io/streams@0.2.0","[resource-drop]input-stream")=>Ok(Self::StreamDrop(i(0)?,3)),
+   ("wasi:io/streams@0.2.0","[method]output-stream.check-write")=>Ok(Self::CheckWrite(i(0)?,i(1)?as u32)),
+   ("wasi:io/streams@0.2.0","[method]output-stream.write")=>Ok(Self::Write(i(0)?,i(1)?as u32,i(2)?as u32 as usize,i(3)?as u32)),
+   ("wasi:io/streams@0.2.0","[method]output-stream.blocking-flush")=>Ok(Self::Flush(i(0)?,i(1)?as u32)),
+   ("wasi:cli/environment@0.2.0","get-environment")|("wasi:cli/terminal-stdin@0.2.0","get-terminal-stdin")|("wasi:cli/terminal-stdout@0.2.0","get-terminal-stdout")|("wasi:cli/terminal-stderr@0.2.0","get-terminal-stderr")=>Ok(Self::Zero(i(0)?as u32,8)),
+   _=>Err(refused("original host import has no admitted implementation"))
+  }}
+  fn argument_count(&self)->usize{match self{Self::SourceClock(..)=>2,Self::Monotonic|Self::NowMs|Self::RandomWord|Self::ContextGet|Self::StreamNew(_)=>0,Self::WallClock(_)|Self::Seed(_)|Self::ContextSet(_)|Self::StreamDrop(..)|Self::Zero(..)|Self::PureBegin(_)|Self::PureFinish(_)=>1,Self::CheckWrite(..)|Self::Flush(..)|Self::PureReserve(..)=>2,Self::Write(..)|Self::PureAllocation(_)=>4,Self::Log{level:Some(_),..}=>4,Self::Log{level:None,..}=>2,Self::PureProgress(_)=>3}}
+  fn reply_span(&self)->Option<(u32,usize,usize)>{match self{Self::SourceClock(_,pointer)|Self::WallClock(pointer)|Self::Seed(pointer)|Self::CheckWrite(_,pointer)|Self::PureBegin(pointer)=>Some((*pointer,16,8)),Self::Flush(_,pointer)|Self::Write(_,_,_,pointer)=>Some((*pointer,12,4)),Self::Zero(pointer,length)=>Some((*pointer,*length,4)),_=>None}}
+  fn result_type(&self)->Option<semio_framework_plugin_interpreter::ValueType>{use semio_framework_plugin_interpreter::ValueType;match self{Self::Monotonic|Self::NowMs|Self::RandomWord=>Some(ValueType::I64),Self::ContextGet|Self::StreamNew(_)|Self::PureProgress(_)|Self::PureAllocation(_)|Self::PureFinish(_)|Self::PureReserve(_,_)=>Some(ValueType::I32),_=>None}}
+ }
+ /// ▶️ Host work follows its actual VM call receipt; no instruction budget or Source is issued here.
+ pub fn advance(state:&mut OriginalHostState,core:&mut CoreInstanceOpening,module:&Arc<CoreModule>,mut receiver:Option<&mut dyn OriginalOperationReceiving>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  core.validate_original_context(module,cx)?;state.validate(cx)?;if cx.is_cancelled()||cx.should_yield(){return Ok(false)}
+  if state.reply.is_none(){
+   let call=core.original_host_call(module,cx)?.ok_or_else(||refused("original host advance has no actual pending import"))?;let request=Request::parse(&call)?;if call.arguments.len()!=request.argument_count(){return Err(refused("original host import argument count differs from its declared actual ABI").into())}let expected=request.result_type();if call.results.len()!=usize::from(expected.is_some())||expected.is_some_and(|ty|call.results[0]!=ty){return Err(refused("original host import result differs from its declared actual type").into())}
+   let memory=match module.export("memory"){Some(ExportKind::Memory(index))=>*index,_=>return Err(refused("original host import requires actual exported memory").into())};
+   if let Some((pointer,length,alignment))=request.reply_span(){if pointer as usize%alignment!=0{return Err(refused("original host reply pointer violates its canonical ABI alignment").into())}borrow(core,memory,pointer,length)?;}let level=if let Request::Log{level:Some((pointer,length)),..}=request{if length>semio_framework_plugin_guest_contract::GUEST_DIAGNOSTICS_CAPACITY_BYTES{return Err(refused("original log level exceeds bounded diagnostics").into())}borrow(core,memory,pointer,length)?;length}else if matches!(request,Request::Log{..}){5}else{0};let span=match request{Request::Write(_,pointer,length,_)|Request::Log{pointer,length,..}=>Some((pointer,length)),_=>None};let copy=if let Some((pointer,length))=span{if matches!(request,Request::Log{..})&&(length>semio_framework_plugin_guest_contract::GUEST_DIAGNOSTICS_CAPACITY_BYTES||length.saturating_add(level).saturating_add(4).saturating_add(size_of::<Reply>())>cx.retained_grant().maximum_copy_bytes){return Err(refused("original log extent exceeds its actual bounded receiving grant").into())}borrow(core,memory,pointer,length)?;length.saturating_add(if matches!(request,Request::Log{..}){level.saturating_add(4)}else{0}).min(semio_framework_plugin_guest_contract::GUEST_DIAGNOSTICS_CAPACITY_BYTES.saturating_sub(state.diagnostics.len()))}else{0};
+   if copy>0&&state.diagnostics.capacity()==0{let capacity=semio_framework_plugin_guest_contract::GUEST_DIAGNOSTICS_CAPACITY_BYTES;if !charge(cx,size_of::<Vec<u8>>(),capacity,0,false)?{return Ok(false)}*state.diagnostics=Vec::with_capacity(capacity);return Ok(false)}
+   let inspection=if let Request::Log{length,..}=request{length.saturating_add(level)}else{0};if !charge(cx,size_of::<Reply>()+copy+inspection,0,0,false)?{return Ok(false)}if let Request::Log{pointer,length,level}=request{std::str::from_utf8(borrow(core,memory,pointer,length)?).map_err(|_|refused("original log message has invalid UTF-8"))?;if let Some((pointer,length))=level{std::str::from_utf8(borrow(core,memory,pointer,length)?).map_err(|_|refused("original log level has invalid UTF-8"))?;}}let mut reply=Reply{value:None,pointer:0,bytes:[0;16],length:0,copied:0,completed:false};
+   match request{
+    Request::SourceClock(binding,pointer)=>{reply.pointer=pointer;reply.length=16;if cx.original_clock_binding()==Some(binding){let now=cx.now_us().ok_or_else(||refused("original host clock has no actual observation"))?;reply.bytes[..4].copy_from_slice(&1u32.to_le_bytes());reply.bytes[8..].copy_from_slice(&now.to_le_bytes());}},
+    Request::Monotonic=>{let value=cx.now_us().and_then(|now|now.checked_mul(1000)).ok_or_else(||refused("original monotonic clock exceeds its unsigned ABI extent"))?;reply.value=Some(Value::I64(value as i64));},
+    Request::WallClock(pointer)=>{let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_|refused("original wall clock precedes its declared epoch"))?;reply.pointer=pointer;reply.length=16;reply.bytes[..8].copy_from_slice(&now.as_secs().to_le_bytes());reply.bytes[8..12].copy_from_slice(&now.subsec_nanos().to_le_bytes());},
+    Request::NowMs=>{let value=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).ok().and_then(|duration|i64::try_from(duration.as_millis()).ok()).ok_or_else(||refused("original wall clock exceeds its signed millisecond ABI extent"))?;reply.value=Some(Value::I64(value));},
+    Request::RandomWord=>{let value=semio_framework_os_kernel::os_identity::entropy_u64().map_err(|_|refused("original platform entropy refused its word"))?;reply.value=Some(Value::I64(value as i64));},
+    Request::Seed(pointer)=>{semio_framework_os_kernel::os_identity::fill_entropy(&mut reply.bytes).map_err(|_|refused("original platform entropy refused its seed"))?;reply.pointer=pointer;reply.length=16;},
+    Request::ContextGet=>reply.value=Some(Value::I32(state.context)),Request::ContextSet(value)=>state.context=value,
+    Request::StreamNew(kind)=>reply.value=Some(Value::I32(state.allocate(kind)?)),
+    Request::StreamDrop(id,kind)=>{let actual=state.kind(id)?;if actual!=kind&&!(kind==1&&actual==2){return Err(refused("original stream drop changes its resource kind").into())}let slot=state.resources.iter_mut().find(|slot|slot.id==id).unwrap();*slot=Resource{id:0,kind:0};},
+    Request::CheckWrite(id,pointer)=>{output(state,id)?;reply.pointer=pointer;reply.length=16;reply.bytes[8..].copy_from_slice(&65536u64.to_le_bytes());},
+    Request::Write(id,pointer,length,result)=>{output(state,id)?;borrow(core,memory,pointer,length)?;let bytes=borrow(core,memory,pointer,copy)?;state.diagnostics.extend_from_slice(bytes);reply.pointer=result;reply.length=12;},
+    Request::Flush(id,pointer)=>{output(state,id)?;reply.pointer=pointer;reply.length=12;},
+    Request::Zero(pointer,length)=>{reply.pointer=pointer;reply.length=length;},
+    Request::Log{pointer,length,level}=>{let mut left=copy;let mut append=|bytes:&[u8]|{let count=bytes.len().min(left);state.diagnostics.extend_from_slice(&bytes[..count]);left-=count;};append(b"[");if let Some((pointer,length))=level{append(borrow(core,memory,pointer,length)?)}else{append(b"trace")}append(b"] ");append(borrow(core,memory,pointer,length)?);append(b"\n");},
+    Request::PureBegin(pointer)=>{reply.pointer=pointer;reply.length=16;match receiver.take().ok_or_else(||refused("original operation begin has no actual receiving loan")).and_then(|receiver|receiver.begin()){Ok(maximum)=>reply.bytes[8..].copy_from_slice(&(maximum as u64).to_le_bytes()),Err(error)=>{reply.bytes[..4].copy_from_slice(&1u32.to_le_bytes());reply.bytes[8..12].copy_from_slice(&operation_authority::refusal_code(error.kind).to_le_bytes());}}},
+    request=>{let outcome=receiver.take().ok_or_else(||refused("original operation import has no actual receiving loan")).and_then(|receiver|match request{Request::PureProgress([completed,total,owned_bytes])=>receiver.progress(semio_framework_value::native_encoding::NativeEncodeProgress{completed,total,owned_bytes}),Request::PureAllocation([bytes,owned_bytes,next_owned_bytes,maximum_bytes])=>receiver.allocation(semio_framework_value::native_encoding::NativeEncodeAllocation{bytes,owned_bytes,next_owned_bytes,maximum_bytes}),Request::PureFinish(owned)=>receiver.finish(owned),Request::PureReserve(kind,count)=>{let width=match kind{0|1=>1,2=>size_of::<u64>(),_=>return Err(refused("owned JSON import cannot reserve a foreign canonical return layout"))};let bytes=count.checked_mul(width).ok_or_else(||refused("original native return reservation exceeds address space"))?;receiver.reserve_return(bytes)},_=>unreachable!()});reply.value=Some(Value::I32(outcome.map_or_else(|error|operation_authority::refusal_code(error.kind)as i32,|()|0)));}
+   }state.reply=Some(reply);return Ok(false)
+  }
+  if state.reply.as_ref().is_some_and(|reply|reply.completed){if !charge(cx,size_of::<Reply>(),0,0,false)?{return Ok(false)}state.reply=None;return Ok(true)}let reply=state.reply.as_mut().unwrap();let memory=match module.export("memory"){Some(ExportKind::Memory(index))=>*index,_=>return Err(refused("original host reply requires its actual exported memory").into())};if reply.length>0&&!core.write_original_memory_step(module,memory,reply.pointer as usize,&reply.bytes[..reply.length],&mut reply.copied,cx)?{return Ok(false)}let values=reply.value.as_ref().map_or(&[][..],std::slice::from_ref);if !core.reply_original_host_step(module,values,cx)?{return Ok(false)}reply.completed=true;Ok(false)
+ }
+ #[cfg(test)]mod tests{use super::*;
+ #[test]fn original_host_reply_spans_match_independent_wit_layouts(){let c:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🔣️.json")).unwrap();let mut resolve=wit_parser::Resolve::default();resolve.push_str("owned-host-replies.wit",c["wit"].as_str().unwrap()).unwrap();let mut sizes=wit_parser::SizeAlign::default();sizes.fill(&resolve);let interface=resolve.interfaces.iter().find(|(_,owner)|owner.name.as_deref()==Some("imports")).unwrap().1;for row in c["cases"].as_array().unwrap(){let name=row["type"].as_str().unwrap();let ty=wit_parser::Type::Id(interface.types[name]);let oracle=(sizes.size(&ty).size_wasm32(),sizes.align(&ty).align_wasm32());let request=match row["operation"].as_str().unwrap(){"clock"=>Request::SourceClock(1,64),"wall"=>Request::WallClock(64),"seed"=>Request::Seed(64),"check"=>Request::CheckWrite(1,64),"write"=>Request::Write(1,128,3,64),"flush"=>Request::Flush(1,64),"environment"|"terminal"=>Request::Zero(64,8),"begin"=>Request::PureBegin(64),_=>panic!("declared host reply")};let(pointer,bytes,alignment)=request.reply_span().unwrap();assert_eq!(pointer,64);assert_eq!((bytes,alignment),oracle);assert_eq!((bytes,alignment),(row["bytes"].as_u64().unwrap()as usize,row["alignment"].as_u64().unwrap()as usize));}}
+ }
+
+ fn output(state:&OriginalHostState,id:i32)->Result<(),ValueError>{if matches!(state.kind(id)?,1|2){Ok(())}else{Err(refused("original output operation addresses another resource kind"))}}
+ fn borrow(core:&CoreInstanceOpening,memory:u32,pointer:u32,length:usize)->Result<&[u8],ValueError>{let bytes=core.resources().and_then(|core|core.memory(memory)).ok_or_else(||refused("original host memory is absent"))?;let start=pointer as usize;let end=start.checked_add(length).filter(|end|*end<=bytes.len()).ok_or_else(||refused("original host byte span exceeds actual guest memory"))?;Ok(&bytes[start..end])}
+ fn argument_i32(call:&CoreOriginalHostCall<'_>,index:usize)->Result<i32,ValueError>{match call.arguments.get(index){Some(Value::I32(value))=>Ok(*value),_=>Err(refused("original host import requires its declared i32 argument"))}}
+ fn argument_u64(call:&CoreOriginalHostCall<'_>,index:usize)->Result<u64,ValueError>{match call.arguments.get(index){Some(Value::I64(value))=>Ok(*value as u64),_=>Err(refused("original host import requires its declared u64 argument"))}}
+ fn argument_size(call:&CoreOriginalHostCall<'_>,index:usize)->Result<usize,ValueError>{usize::try_from(argument_u64(call,index)?).map_err(|_|refused("original host extent exceeds native address space"))}
+ fn charge(cx:&mut StepContext<'_>,copy:usize,capacity:usize,release:usize,retirement:bool)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();let work=1u64.saturating_add(u64::try_from(copy.div_ceil(64)).unwrap_or(u64::MAX));if cx.fuel_remaining()<work||(if retirement{cx.retirement_should_yield()}else{cx.should_yield()})||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,released_bytes:release})?;cx.consume_fuel(work);Ok(true)}
+ fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,message)}
+}
+
+/// 🪪️ The authored import implementation participates in the interpreter engine identity.
+pub const ORIGINAL_HOST_SOURCE:&str=include_str!("🦀️.rs");
+pub use original_host::{OriginalHostState,advance};

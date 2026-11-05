@@ -68,33 +68,10 @@ impl<T: Topology + Clone> WfcJob<T> {
         Self { operation, model, topology, config, initial_domains, fixed, state, checkpoint_build: None, final_checkpoint: None, commit_build: None, completed_commit: None, preview_units: 0, last_preview_ms: None, publication: None, closing: false, visible: Vec::new() }
     }
 
-    pub fn from_checkpoint(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<Vec<PatternSet>>, fixed: Vec<(NodeId, PatternId)>, bytes: &[u8]) -> Result<Self, String>
-    where
-        T: Send + 'static,
-    {
-        let mut restore = WfcRestore::new(operation, model, topology, config, initial_domains, fixed, bytes.to_vec())?;
-        let mut authority = admit_payload_authority(operation);
-        let cancel = semio_framework_job::root_cancel_token();
-        let mut sequence = 0;
-        let result = loop {
-            let mut receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::with_payload_authority(operation.operation, operation.generation, semio_framework_job::StepBudget::new(64, u64::MAX, HEADLESS_GRANT), &cancel, semio_framework_job::default_now_us, &mut sequence, &mut receipt, &authority).map_err(|error| format!("wfc-restore-context:{error:?}"))?;
-            let end = match restore.step(&mut context) {
-                Ok(Some(JobOutcomeBorrow::Complete { .. })) => Some(Ok(())),
-                Ok(Some(JobOutcomeBorrow::Fault { detail, .. })) => Some(Err(String::from_utf8_lossy(&payload_bytes(detail)).into_owned())),
-                Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => Some(Err("wfc-restore-cancelled".to_string())),
-                Ok(None | Some(JobOutcomeBorrow::Yield { .. } | JobOutcomeBorrow::PreviewReady { .. } | JobOutcomeBorrow::CheckpointReady { .. })) => None,
-                Err(error) => Some(Err(format!("wfc-restore-step:{error:?}"))),
-            };
-            match end {
-                Some(Ok(())) => break restore.take_job().ok_or_else(|| "wfc-restore-completed-without-job".to_string()),
-                Some(Err(error)) => break Err(error),
-                None => {}
-            }
-        };
-        close_job(&mut restore);
-        close_payload_authority(&mut authority);
-        result
+    pub fn from_checkpoint(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<Vec<PatternSet>>, fixed: Vec<(NodeId, PatternId)>, bytes: &[u8], now_us:fn()->Option<u64>, site:HeadlessSite) -> Result<Self, HeadlessFailure<WfcRestore<T>,Self>>
+    where T: Send + 'static {
+        let restore=WfcRestore::new(operation,model,topology,config,initial_domains,fixed,bytes.to_vec()).map_err(HeadlessFailure::rejected)?;
+        run_headless(restore,operation,now_us,site,|restore,_|restore.take_job().ok_or_else(||"wfc-restore-completed-without-job".to_string()))
     }
 
     pub fn preview(&self, sequence: u64) -> WfcPreview {

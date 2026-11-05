@@ -1,7 +1,7 @@
 //! 🔺️ lowpoly -> obj
 //!
 //! Writes real Wavefront OBJ geometry through `engine::encode_obj` (never a second bespoke
-//! grammar): every object whose persisted `mesh_content` is non-empty contributes an `o <name>`
+//! grammar): every object's current mesh contributes an `o <name>`
 //! block of world-space `v` positions (scale → Euler-degree rotation → translation) and its
 //! original n-gon `f` polygons. Object names are made single-token (OBJ readers, including
 //! `decode_obj`, keep only the first token of `o`) and unique (same-named `o` blocks merge on

@@ -56,19 +56,15 @@ impl ApplyPaintStroke {
     /// 🎨️ The pixel runs this stroke writes into `base`'s layer: every dab stamped in order onto the layer's buffer (a
     /// never-painted layer reads as the opaque-white texture), then diffed per RGBA pixel against the untouched
     /// buffer. `None` when the object or layer is missing or the buffer is not a square RGBA texture.
-    pub fn runs(&self, base: &LowpolySnapshot) -> Option<Vec<PixelRun>> {
-        let layer = base.objects.iter().find(|object| object.id == self.object_id)?.paint_layers.get(self.layer_index)?;
-        let before = layer.materialized_pixels();
-        let side = if layer.pixels.is_empty() { LOWPOLY_PAINT_TEXTURE_SIZE } else { (before.len() / 4).isqrt() };
-        if before.len() != side * side * 4 {
-            return None;
-        }
+    pub fn runs(&self, base: &LowpolySnapshot) -> Result<Option<Vec<PixelRun>>,semio_framework_value::ValueError> {
+        let Some(layer) = base.objects.iter().find(|object| object.id == self.object_id).and_then(|object|object.paint_layers.get(self.layer_index)) else { return Ok(None) };
+        let before = layer.materialized_pixels()?;
         let mut after = before.clone();
         let [red, green, blue] = self.color_bytes();
         for point in &self.points {
-            semio_s_artifact_lowpoly_lowpoly_model::stamp_brush_on(&mut after, side, point[0], point[1], self.radius, [red, green, blue, u8::MAX], self.hardness, self.opacity, self.eraser);
+            semio_s_artifact_lowpoly_lowpoly_model::stamp_brush(&mut after, point[0], point[1], self.radius, [red, green, blue, u8::MAX], self.hardness, self.opacity, self.eraser)?;
         }
-        Some(semio_s_artifact_lowpoly_lowpoly_model::pixel_runs_from_diff(&before, &after).into_iter().map(|(offset, bytes)| PixelRun { offset, bytes }).collect())
+        Ok(Some(semio_s_artifact_lowpoly_lowpoly_model::pixel_runs_from_diff(&before, &after).into_iter().map(|(offset, bytes)| PixelRun { offset, bytes }).collect()))
     }
 
     /// ➕️ This stroke followed by `tick` as ONE stroke — the dabs appended — when both land on the same layer with the

@@ -7,6 +7,12 @@ use crate::lowpoly_paint_step;
 const LOWPOLY_RETAINED_PAYLOAD_SCHEMA: &str = "lowpoly.command.v1";
 
 pub(super) const LOWPOLY_RETAINED_RAW_BYTES: usize = 16_384;
+/// 🧱️ Variant, record, two field ids and two raw UTF-8 string lengths fit this Pack framing bound.
+const LOWPOLY_IMPORT_WIRE_FRAMING_BYTES: usize = 32;
+pub(super) const LOWPOLY_IMPORT_RAW_BYTES: usize = media::LOWPOLY_MESH_FILE_BYTES + LOWPOLY_RETAINED_FIELD_BYTES + LOWPOLY_IMPORT_WIRE_FRAMING_BYTES;
+pub(super) const LOWPOLY_IMPORT_TOOL_IDS: &[&str] = &["importMeshFile", "importSnapshotJson", "replaceSnapshotJson"];
+pub(super) const LOWPOLY_SNAPSHOT_JSON_BYTES: usize = semio_s_artifact_lowpoly_lowpoly_commands::document::LOWPOLY_SNAPSHOT_JSON_BYTES;
+pub(super) const LOWPOLY_SNAPSHOT_JSON_RAW_BYTES: usize = LOWPOLY_SNAPSHOT_JSON_BYTES + LOWPOLY_IMPORT_WIRE_FRAMING_BYTES;
 
 pub(super) const LOWPOLY_RETAINED_WORK_ITEMS: usize = 258;
 
@@ -20,7 +26,7 @@ const LOWPOLY_RETAINED_PAINT_LAYERS_PER_OBJECT: usize = 8;
 
 const LOWPOLY_RETAINED_PAINT_LAYER_BYTES: usize = 4 * 1024 * 1024;
 
-const LOWPOLY_MIGRATED_TOOL_IDS: &[&str] = &[
+pub(super) const LOWPOLY_MIGRATED_TOOL_IDS: &[&str] = &[
     "patchObject",
     "addPaintLayer",
     "setActiveObject",
@@ -33,11 +39,8 @@ const LOWPOLY_MIGRATED_TOOL_IDS: &[&str] = &[
     "setSunElevation",
     "setSunIntensity",
     "setCamera",
-    "importSnapshotJson",
-    "replaceSnapshotJson",
     "exportMesh",
     "loadMeshRequest",
-    "importMeshFile",
     "deleteSelection",
     "duplicateObject",
     "paintSample",
@@ -73,7 +76,7 @@ const LOWPOLY_MIGRATED_TOOL_IDS: &[&str] = &[
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
-enum LowpolyCommandDisposition {
+pub(super) enum LowpolyCommandDisposition {
     Artifact = 1,
     Config = 2,
     HostOnly = 3,
@@ -100,8 +103,20 @@ pub(super) fn lowpoly_command_disposition(tool_id: &str) -> Option<LowpolyComman
     })
 }
 
-fn lowpoly_contract() -> ToolExecutionContract {
+pub(super) fn lowpoly_contract() -> ToolExecutionContract {
     ToolExecutionContract::resumable(LOWPOLY_RETAINED_RAW_BYTES, LOWPOLY_RETAINED_WORK_ITEMS, 1, 32 * 1024 * 1024, 7_500, 1, 1)
+}
+
+pub(super) fn lowpoly_import_contract() -> ToolExecutionContract {
+    ToolExecutionContract::resumable(LOWPOLY_IMPORT_RAW_BYTES, LOWPOLY_RETAINED_WORK_ITEMS, 1, 32 * 1024 * 1024, 7_500, 1, 1)
+}
+
+pub(super) fn lowpoly_command_maximum_raw_bytes(command: &LowpolyCommand) -> usize {
+    match command {
+        LowpolyCommand::ImportMeshFile(_) => LOWPOLY_IMPORT_RAW_BYTES,
+        LowpolyCommand::ImportSnapshotJson(_) | LowpolyCommand::ReplaceSnapshotJson(_) => LOWPOLY_SNAPSHOT_JSON_RAW_BYTES,
+        _ => LOWPOLY_RETAINED_RAW_BYTES,
+    }
 }
 
 pub(super) fn lowpoly_snapshot_admitted(snapshot: &LowpolySnapshot) -> bool {
@@ -112,7 +127,7 @@ pub(super) fn lowpoly_snapshot_admitted(snapshot: &LowpolySnapshot) -> bool {
                 && object.name.len() <= LOWPOLY_RETAINED_FIELD_BYTES
                 && object.mesh.as_ref().is_none_or(|mesh| mesh.child_id.len() <= LOWPOLY_RETAINED_FIELD_BYTES && mesh.target.to_uri().len() <= LOWPOLY_RETAINED_FIELD_BYTES)
                 && object.paint_layers.len() <= LOWPOLY_RETAINED_PAINT_LAYERS_PER_OBJECT
-                && object.paint_layers.iter().all(|layer| layer.name.len() <= LOWPOLY_RETAINED_FIELD_BYTES && layer.blend_mode.len() <= LOWPOLY_RETAINED_FIELD_BYTES && layer.pixels.len() <= LOWPOLY_RETAINED_PAINT_LAYER_BYTES)
+                && object.paint_layers.iter().all(|layer| layer.name.len() <= LOWPOLY_RETAINED_FIELD_BYTES && layer.blend_mode.len() <= LOWPOLY_RETAINED_FIELD_BYTES && layer.validate_pixels().is_ok())
         })
 }
 
@@ -126,8 +141,8 @@ pub(super) fn lowpoly_command_admitted(command: &LowpolyCommand, snapshot: &Lowp
             LowpolyCommand::SetActiveObject(payload) => field(&payload.object_id),
             LowpolyCommand::SetUtilityParam(payload) => field(&payload.key) && field(&payload.value_json),
             LowpolyCommand::EngagementInput(payload) => field(&payload.value),
-            LowpolyCommand::ImportSnapshotJson(payload) => payload.json.len() <= LOWPOLY_RETAINED_RAW_BYTES,
-            LowpolyCommand::ReplaceSnapshotJson(payload) => payload.json.len() <= LOWPOLY_RETAINED_RAW_BYTES,
+            LowpolyCommand::ImportSnapshotJson(payload) => payload.json.len() <= LOWPOLY_SNAPSHOT_JSON_BYTES,
+            LowpolyCommand::ReplaceSnapshotJson(payload) => payload.json.len() <= LOWPOLY_SNAPSHOT_JSON_BYTES,
             LowpolyCommand::ExportMesh(payload) => field(&payload.format),
             LowpolyCommand::LoadMeshRequest(_) => true,
             LowpolyCommand::ImportMeshFile(payload) => field(&payload.name) && payload.payload.len() <= media::LOWPOLY_MESH_FILE_BYTES,
@@ -339,7 +354,7 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
 
     fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover: _hover, context, operation } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, snapshot_read: _, command, snapshot, config, history, interaction, hover: _hover, context, operation } = *input;
         if self.complete {
             return Err(Fault::from("lowpoly-retained-work-repeated"));
         }
@@ -426,38 +441,35 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
     }
 }
 
-pub(super) struct LowpolyCommandJobFactory {
-    keys: Vec<ToolFactoryKey>,
+macro_rules! lowpoly_command_factory {
+    ($factory:ident, $tools:ident, $contract:ident, $maximum:ident) => {
+        pub(super) struct $factory { keys: Vec<ToolFactoryKey> }
+        impl $factory {
+            pub(super) fn new(controller_id: &str) -> Self { Self { keys: $tools.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() } }
+        }
+        impl ToolJobFactory for $factory {
+            type Payload = ArtifactRetainedCommandPayload<EditorApp<LowpolyPlayApp>>;
+            type Job = ArtifactRetainedCommandJob<EditorApp<LowpolyPlayApp>>;
+            fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
+            fn payload_schema_id(&self) -> &str { LOWPOLY_RETAINED_PAYLOAD_SCHEMA }
+            fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
+            fn execution_contract(&self) -> ToolExecutionContract { $contract() }
+            semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: $maximum, checkpoint_resume: true);
+        }
+    };
 }
+lowpoly_command_factory!(LowpolyCommandJobFactory, LOWPOLY_MIGRATED_TOOL_IDS, lowpoly_contract, LOWPOLY_RETAINED_RAW_BYTES);
+lowpoly_command_factory!(LowpolyImportJobFactory, LOWPOLY_IMPORT_TOOL_IDS, lowpoly_import_contract, LOWPOLY_IMPORT_RAW_BYTES);
 
-impl LowpolyCommandJobFactory {
-    pub(super) fn new(controller_id: &str) -> Self {
-        Self { keys: LOWPOLY_MIGRATED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
-    }
-}
-
-impl ToolJobFactory for LowpolyCommandJobFactory {
-    type Payload = ArtifactRetainedCommandPayload<EditorApp<LowpolyPlayApp>>;
-    type Job = ArtifactRetainedCommandJob<EditorApp<LowpolyPlayApp>>;
-
-    fn keys(&self) -> &[ToolFactoryKey] {
-        &self.keys
-    }
-
-    fn payload_schema_id(&self) -> &str {
-        LOWPOLY_RETAINED_PAYLOAD_SCHEMA
-    }
-
-    fn classification(&self) -> InteractiveJobClassification {
-        InteractiveJobClassification::Migrated
-    }
-
-    fn execution_contract(&self) -> ToolExecutionContract {
-        lowpoly_contract()
-    }
-
-    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: LOWPOLY_RETAINED_RAW_BYTES, checkpoint_resume: true);
-
+impl ArtifactOwnedToolJobFactory for LowpolyImportJobFactory {
+    type Owner = EditorApp<LowpolyPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = LOWPOLY_IMPORT_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "importMeshFile", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "importSnapshotJson", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "replaceSnapshotJson", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    ];
 }
 
 impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
@@ -477,11 +489,8 @@ impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
-        semio_plugin::ArtifactToolPublicationContract { tool_id: "importSnapshotJson", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_plugin::ArtifactToolPublicationContract { tool_id: "replaceSnapshotJson", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "exportMesh", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "loadMeshRequest", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_plugin::ArtifactToolPublicationContract { tool_id: "importMeshFile", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
         semio_plugin::ArtifactToolPublicationContract {
             tool_id: "duplicateObject",
@@ -537,3 +546,7 @@ impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
     ];
 }
 //#endregion 🧵️RetainedCommands
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

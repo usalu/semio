@@ -368,7 +368,7 @@ async fn media_export_wire_matches_the_language_neutral_fixture_above_number_saf
     }
     let frames = [
         ("submitted", AppFrame::MediaExportSubmitted { in_reply_to: 9_007_199_254_740_993, handle: handle.clone() }),
-        ("status", AppFrame::MediaExportStatus { in_reply_to: 9_007_199_254_740_994, handle: handle.clone(), state: MediaExportStateWire::Complete, applied_progress: 4096, checkpoint_available: true, mime_type: "video/mp4".into(), total_bytes: 9_007_199_254_740_997, detail: String::new() }),
+        ("status", AppFrame::MediaExportStatus { in_reply_to: 9_007_199_254_740_994, handle: handle.clone(), state: MediaExportStateWire::Complete, applied_progress: 4096, checkpoint_available: true, mime_type: "video/mp4".into(), total_bytes: 9_007_199_254_740_997, detail: String::new(), descriptor: vec![1,2,255] }),
         ("chunk", AppFrame::MediaExportChunk { in_reply_to: 9_007_199_254_740_996, handle: handle.clone(), data: vec![0, 255, 1, 128], terminal: false }),
         ("terminalChunk", AppFrame::MediaExportChunk { in_reply_to: 9_007_199_254_740_997, handle, data: Vec::new(), terminal: true }),
     ];

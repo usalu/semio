@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "output-limit-after-json",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "bytes": [
+            123,
+            125
+          ]
+        }
+      ],
+      "terminal": "output-limit",
+      "accepted": false
+    },
+    {
+      "id": "cancel-after-json",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "bytes": [
+            123,
+            125
+          ]
+        }
+      ],
+      "terminal": "cancelled",
+      "accepted": false
+    },
+    {
+      "id": "nonzero-after-json",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "bytes": [
+            123,
+            125
+          ]
+        }
+      ],
+      "terminal": "nonzero",
+      "accepted": false
+    },
+    {
+      "id": "invalid-utf8",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "bytes": [
+            123,
+            34,
+            120,
+            34,
+            58,
+            34,
+            255,
+            34,
+            125
+          ]
+        }
+      ],
+      "terminal": "success",
+      "accepted": false
+    },
+    {
+      "id": "truncated-utf8-final-flush",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "bytes": [
+            123,
+            34,
+            120,
+            34,
+            58,
+            34,
+            240,
+            159
+          ]
+        }
+      ],
+      "terminal": "success",
+      "accepted": false
+    }
+  ]
+}

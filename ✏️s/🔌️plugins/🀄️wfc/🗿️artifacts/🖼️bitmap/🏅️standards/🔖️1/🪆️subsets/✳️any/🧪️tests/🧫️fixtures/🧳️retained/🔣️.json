@@ -1,0 +1,1558 @@
+{
+  "version": 1,
+  "base": {
+    "schema": "s.wfc.bitmap",
+    "seed": 7,
+    "input": {
+      "width": 2,
+      "height": 2,
+      "palette": [
+        {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 255
+        },
+        {
+          "r": 255,
+          "g": 255,
+          "b": 255,
+          "a": 255
+        }
+      ],
+      "pixels": "AAEBAA=="
+    },
+    "output": {
+      "width": 2,
+      "height": 2,
+      "periodic": false
+    },
+    "model": {
+      "patternSize": 2,
+      "symmetry": 1,
+      "periodicInput": true
+    },
+    "pinned": []
+  },
+  "cases": [
+    {
+      "id": "seed-changes",
+      "mutation": {
+        "ChangeSeed": {
+          "seed": 8
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied"
+    },
+    {
+      "id": "seed-identical",
+      "mutation": {
+        "ChangeSeed": {
+          "seed": 7
+        }
+      },
+      "expectedCodes": [
+        "mutation.no-op"
+      ],
+      "classification": "noop"
+    },
+    {
+      "id": "input-grows",
+      "mutation": {
+        "ResizeInput": {
+          "width": 3,
+          "height": 2
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied"
+    },
+    {
+      "id": "input-identical",
+      "mutation": {
+        "ResizeInput": {
+          "width": 2,
+          "height": 2
+        }
+      },
+      "expectedCodes": [
+        "mutation.no-op"
+      ],
+      "classification": "noop"
+    },
+    {
+      "id": "input-zero",
+      "mutation": {
+        "ResizeInput": {
+          "width": 0,
+          "height": 2
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "input-oversized",
+      "mutation": {
+        "ResizeInput": {
+          "width": 513,
+          "height": 2
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "pixels-change",
+      "mutation": {
+        "SetInputPixels": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "pixels": "AQ=="
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied"
+    },
+    {
+      "id": "pixels-identical",
+      "mutation": {
+        "SetInputPixels": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "pixels": "AA=="
+        }
+      },
+      "expectedCodes": [
+        "mutation.no-op"
+      ],
+      "classification": "noop"
+    },
+    {
+      "id": "pixels-outside",
+      "mutation": {
+        "SetInputPixels": {
+          "x": 2,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "pixels": "AA=="
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "pixels-unknown-color",
+      "mutation": {
+        "SetInputPixels": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "pixels": "Ag=="
+        }
+      },
+      "expectedCodes": [
+        "mutation.target-missing"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "pixels-short",
+      "mutation": {
+        "SetInputPixels": {
+          "x": 0,
+          "y": 0,
+          "width": 2,
+          "height": 1,
+          "pixels": "AA=="
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "palette-insert",
+      "mutation": {
+        "AddPaletteColor": {
+          "index": 1,
+          "color": {
+            "r": 128,
+            "g": 128,
+            "b": 128,
+            "a": 255
+          }
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied"
+    },
+    {
+      "id": "palette-insert-outside",
+      "mutation": {
+        "AddPaletteColor": {
+          "index": 3,
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0,
+            "a": 255
+          }
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "palette-insert-component",
+      "mutation": {
+        "AddPaletteColor": {
+          "index": 1,
+          "color": {
+            "r": 256,
+            "g": 0,
+            "b": 0,
+            "a": 255
+          }
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "palette-recolor",
+      "mutation": {
+        "ChangePaletteColor": {
+          "index": 0,
+          "color": {
+            "r": 255,
+            "g": 255,
+            "b": 255,
+            "a": 255
+          }
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied"
+    },
+    {
+      "id": "palette-same-color",
+      "mutation": {
+        "ChangePaletteColor": {
+          "index": 0,
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0,
+            "a": 255
+          }
+        }
+      },
+      "expectedCodes": [
+        "mutation.no-op"
+      ],
+      "classification": "noop"
+    },
+    {
+      "id": "palette-recolor-missing",
+      "mutation": {
+        "ChangePaletteColor": {
+          "index": 2,
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0,
+            "a": 255
+          }
+        }
+      },
+      "expectedCodes": [
+        "mutation.target-missing"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "palette-recolor-component",
+      "mutation": {
+        "ChangePaletteColor": {
+          "index": 0,
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0,
+            "a": 256
+          }
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "palette-remove-unused",
+      "mutation": {
+        "RemovePaletteColor": {
+          "index": 2
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            },
+            {
+              "r": 128,
+              "g": 128,
+              "b": 128,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": []
+      }
+    },
+    {
+      "id": "palette-remove-used",
+      "mutation": {
+        "RemovePaletteColor": {
+          "index": 1
+        }
+      },
+      "expectedCodes": [
+        "mutation.target-referenced"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "palette-remove-missing",
+      "mutation": {
+        "RemovePaletteColor": {
+          "index": 2
+        }
+      },
+      "expectedCodes": [
+        "mutation.target-missing"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "output-grows",
+      "mutation": {
+        "ResizeOutput": {
+          "width": 3,
+          "height": 2,
+          "periodic": true
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied"
+    },
+    {
+      "id": "output-identical",
+      "mutation": {
+        "ResizeOutput": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        }
+      },
+      "expectedCodes": [
+        "mutation.no-op"
+      ],
+      "classification": "noop"
+    },
+    {
+      "id": "output-zero",
+      "mutation": {
+        "ResizeOutput": {
+          "width": 2,
+          "height": 0,
+          "periodic": false
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "output-cascades",
+      "mutation": {
+        "ResizeOutput": {
+          "width": 1,
+          "height": 1,
+          "periodic": false
+        }
+      },
+      "expectedCodes": [
+        "mutation.cascade"
+      ],
+      "classification": "applied",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": [
+          {
+            "x": 1,
+            "y": 1,
+            "color": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "model-changes",
+      "mutation": {
+        "ChangeModel": {
+          "patternSize": 3,
+          "symmetry": 2,
+          "periodicInput": false
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied"
+    },
+    {
+      "id": "model-identical",
+      "mutation": {
+        "ChangeModel": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        }
+      },
+      "expectedCodes": [
+        "mutation.no-op"
+      ],
+      "classification": "noop"
+    },
+    {
+      "id": "model-pattern-invalid",
+      "mutation": {
+        "ChangeModel": {
+          "patternSize": 1,
+          "symmetry": 1,
+          "periodicInput": true
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "model-ground-missing",
+      "mutation": {
+        "ChangeModel": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true,
+          "ground": 2
+        }
+      },
+      "expectedCodes": [
+        "mutation.target-missing"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "pin-new",
+      "mutation": {
+        "PinPixel": {
+          "x": 0,
+          "y": 0,
+          "color": 1
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied"
+    },
+    {
+      "id": "pin-identical",
+      "mutation": {
+        "PinPixel": {
+          "x": 1,
+          "y": 1,
+          "color": 1
+        }
+      },
+      "expectedCodes": [
+        "mutation.no-op"
+      ],
+      "classification": "noop",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": [
+          {
+            "x": 1,
+            "y": 1,
+            "color": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "pin-recolor",
+      "mutation": {
+        "PinPixel": {
+          "x": 1,
+          "y": 1,
+          "color": 0
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": [
+          {
+            "x": 1,
+            "y": 1,
+            "color": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "pin-outside",
+      "mutation": {
+        "PinPixel": {
+          "x": 2,
+          "y": 0,
+          "color": 1
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "pin-unknown-color",
+      "mutation": {
+        "PinPixel": {
+          "x": 0,
+          "y": 0,
+          "color": 2
+        }
+      },
+      "expectedCodes": [
+        "mutation.target-missing"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "unpin-existing",
+      "mutation": {
+        "UnpinPixel": {
+          "x": 1,
+          "y": 1
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": [
+          {
+            "x": 1,
+            "y": 1,
+            "color": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "unpin-missing",
+      "mutation": {
+        "UnpinPixel": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "expectedCodes": [
+        "mutation.target-missing"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "stroke-changes",
+      "mutation": {
+        "PaintInputStroke": {
+          "points": [
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "color": 1
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied"
+    },
+    {
+      "id": "stroke-identical",
+      "mutation": {
+        "PaintInputStroke": {
+          "points": [
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "color": 0
+        }
+      },
+      "expectedCodes": [
+        "mutation.no-op"
+      ],
+      "classification": "noop"
+    },
+    {
+      "id": "stroke-empty",
+      "mutation": {
+        "PaintInputStroke": {
+          "points": [],
+          "color": 1
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "stroke-missing-color",
+      "mutation": {
+        "PaintInputStroke": {
+          "points": [
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "color": 2
+        }
+      },
+      "expectedCodes": [
+        "mutation.target-missing"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "stroke-outside",
+      "mutation": {
+        "PaintInputStroke": {
+          "points": [
+            {
+              "x": 2,
+              "y": 2
+            }
+          ],
+          "color": 1
+        }
+      },
+      "expectedCodes": [
+        "mutation.target-missing"
+      ],
+      "classification": "refused"
+    },
+    {
+      "id": "stroke-partial",
+      "mutation": {
+        "PaintInputStroke": {
+          "points": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 0
+            }
+          ],
+          "color": 1
+        }
+      },
+      "expectedCodes": [
+        "mutation.partial"
+      ],
+      "classification": "applied"
+    },
+    {
+      "id": "batch-complete-event",
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": [
+          {
+            "x": 1,
+            "y": 1,
+            "color": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "batch-idempotent-event",
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "expectedCodes": [
+        "mutation.no-op"
+      ],
+      "classification": "noop",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": [
+          {
+            "x": 0,
+            "y": 0,
+            "color": 0
+          },
+          {
+            "x": 1,
+            "y": 0,
+            "color": 1
+          },
+          {
+            "x": 0,
+            "y": 1,
+            "color": 1
+          },
+          {
+            "x": 1,
+            "y": 1,
+            "color": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "batch-partial-event",
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            }
+          ]
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": []
+      }
+    },
+    {
+      "id": "batch-unordered-complete-event",
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 1,
+              "y": 1,
+              "color": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": []
+      }
+    },
+    {
+      "id": "batch-duplicate-restore",
+      "mutation": {
+        "RestorePins": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "color": 1
+            }
+          ]
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": [
+          {
+            "x": 0,
+            "y": 0,
+            "color": 0
+          },
+          {
+            "x": 1,
+            "y": 0,
+            "color": 1
+          },
+          {
+            "x": 0,
+            "y": 1,
+            "color": 1
+          },
+          {
+            "x": 1,
+            "y": 1,
+            "color": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "batch-unknown-palette-index",
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 2
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": []
+      }
+    },
+    {
+      "id": "batch-exact-prior-order",
+      "mutation": {
+        "RestorePins": {
+          "pins": [
+            {
+              "x": 1,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": [
+          {
+            "x": 0,
+            "y": 0,
+            "color": 0
+          },
+          {
+            "x": 1,
+            "y": 0,
+            "color": 1
+          },
+          {
+            "x": 0,
+            "y": 1,
+            "color": 1
+          },
+          {
+            "x": 1,
+            "y": 1,
+            "color": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "batch-empty-prior-assignment",
+      "mutation": {
+        "RestorePins": {
+          "pins": []
+        }
+      },
+      "expectedCodes": [],
+      "classification": "applied",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": [
+          {
+            "x": 0,
+            "y": 0,
+            "color": 0
+          },
+          {
+            "x": 1,
+            "y": 0,
+            "color": 1
+          },
+          {
+            "x": 0,
+            "y": 1,
+            "color": 1
+          },
+          {
+            "x": 1,
+            "y": 1,
+            "color": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "batch-duplicate-complete-event",
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "expectedCodes": [
+        "mutation.invariant"
+      ],
+      "classification": "refused",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": []
+      }
+    },
+    {
+      "id": "restore-identical-order",
+      "mutation": {
+        "RestorePins": {
+          "pins": [
+            {
+              "x": 1,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "expectedCodes": [
+        "mutation.no-op"
+      ],
+      "classification": "noop",
+      "base": {
+        "schema": "s.wfc.bitmap",
+        "seed": 7,
+        "input": {
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0,
+              "a": 255
+            },
+            {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        },
+        "output": {
+          "width": 2,
+          "height": 2,
+          "periodic": false
+        },
+        "model": {
+          "patternSize": 2,
+          "symmetry": 1,
+          "periodicInput": true
+        },
+        "pinned": [
+          {
+            "x": 1,
+            "y": 1,
+            "color": 1
+          },
+          {
+            "x": 0,
+            "y": 0,
+            "color": 0
+          }
+        ]
+      }
+    }
+  ]
+}

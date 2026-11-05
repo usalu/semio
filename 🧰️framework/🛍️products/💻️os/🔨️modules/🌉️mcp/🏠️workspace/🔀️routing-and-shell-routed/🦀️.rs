@@ -16,7 +16,7 @@ use semio_os_mcp_catalog::catalog::Catalog;
 use semio_os_mcp_foundation::clock::now_ms;
 use semio_os_mcp_foundation::errors::GatewayError;
 use semio_os_mcp_hub_remote::remote::{AuthorizedCatalogSnapshot, HubRemoteBinding};
-use semio_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, UnboundArtifactChannel};
+use semio_os_mcp_port::channel_port::{ActivationScope, ActionTarget, AppCommand, AppFrame, ArtifactChannel, Fault, UnboundArtifactChannel};
 use semio_os_mcp_shell_channel::shell_channel::{ChannelKind, SessionChannelBinding, ShellArtifactChannel};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::hub_relay::{HUB_RELAY_ACK_WAIT_MS, HubInbound, HubInboundDelivery, carries_hub_inbound, commits_with_nothing_relayed, hub_edit_refusal, hub_link_tick, plan_hub_inbound, route_session_artifact};
@@ -39,13 +39,7 @@ use semio_os_mcp_port::channel_port::MockArtifactChannel;
 
 //#region 🔖️Routing
 
-/// 🧭️ `plugin_id` for every catalog entry `CapabilityOwner::Plugin{..}` names, deduplicated and
-/// sorted — doubles as a stable, catalog-derived NUMBERING (`plugin_instance_slot`/
-/// `plugin_for_instance_slot` below), not just a set: `ActionAdapter::prepare` issues a bare
-/// `AppCommand::ReadHistory` (no capability id at all) BEFORE the `PureCommand` that names one
-/// (`🔀️dispatch/🦀️.rs`'s own `prepare`), so `RoutingArtifactChannel::exchange` cannot always
-/// read a capability id off the wire — it needs `instance` itself to already encode the plugin, which
-/// only works if every caller derives `instance` from the SAME deterministic function of the catalog.
+/// 🧭️ `plugin_id` for every catalog entry `CapabilityOwner::Plugin{..}` names, deduplicated and See [design notes](README.md).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn distinct_plugin_ids(catalog: &Catalog) -> Vec<String> {
     let set: std::collections::BTreeSet<String> = catalog.entries.iter().filter_map(|entry| match &entry.owner { CapabilityOwner::Plugin { plugin_id, .. } => Some(plugin_id.clone()), _ => None }).collect();
@@ -101,13 +95,7 @@ pub fn app_instance_slot(catalog: &Catalog, plugin_id: &str, app_id: &str) -> Op
     route_slot(catalog, &AppRoute { plugin_id: plugin_id.to_string(), app_id: Some(app_id.to_string()) })
 }
 
-/// 🎯️ The `instance` slot any caller must pass to [`ActionAdapter::prepare`]/[`ActionAdapter::invoke`]
-/// for `capability_id` — [`plugin_instance_slot`] of the plugin that capability's own catalog entry
-/// names. Public because the `action_prepare`/`action_invoke` MCP tools drive the ROOT-owned
-/// adapter directly (never [`HeadlessWorkspace::prepare_action`]) and so need the identical
-/// derivation: with the bare `0` they used to pass, `prepare`'s leading capability-less
-/// `ReadHistory` was routed by [`plugin_for_instance_slot`] to whichever plugin happens to sort
-/// first in the catalog, not to the capability's own.
+/// 🎯️ The `instance` slot any caller must pass to [`ActionAdapter::prepare`]/[`ActionAdapter::invoke`] See [design notes](README.md).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn capability_instance_slot(catalog: &Catalog, capability_id: &str) -> Option<u32> {
     route_slot(catalog, &resolve_route_for_capability_in(catalog, capability_id).ok()?)
@@ -132,12 +120,7 @@ fn resolve_route_for_capability_in(catalog: &Catalog, capability_id: &str) -> Re
     Ok(AppRoute { plugin_id, app_id })
 }
 
-/// 🔎️ `capability_id` → its owning plugin id — [`HeadlessWorkspace::resolve_plugin_for_capability`]'s
-/// actual body, factored out so [`RoutingArtifactChannel`] (which holds only the `Arc<Catalog>` it
-/// needs, not a whole `&HeadlessWorkspace`) can run the identical lookup for a `PureCommand` it is
-/// asked to route, without a second copy of this match. An unknown id or one owned by anything other
-/// than a plugin (`Os`/`Framework`/`🐚️Shell`/`Gateway`/`Extension`) is a typed error naming exactly
-/// which of the two it was — never a guess.
+/// 🔎️ `capability_id` → its owning plugin id — [`HeadlessWorkspace::resolve_plugin_for_capability`]'s See [design notes](README.md).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn resolve_plugin_for_capability_in(catalog: &Catalog, capability_id: &str) -> Result<String, GatewayError> {
     let capability = catalog.get(capability_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("unknown capability: {capability_id}")))?;
@@ -167,14 +150,14 @@ fn routing_fault(error: GatewayError) -> Fault {
 /// → committed descriptor → editor app → real `PluginArtifactChannel`) for a bare `plugin_id`,
 /// differing only in where `repo_root`/`actor_label` come from.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<PluginArtifactChannel, GatewayError> {
-    open_plugin_artifact_channel_scoped(source, plugin_id, app_id, actor_label, &ActivationScope::detached(), host_driver_policy)
+pub fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Result<PluginArtifactChannel, GatewayError> {
+    open_plugin_artifact_channel_scoped(source, plugin_id, app_id, actor_label, &ActivationScope::detached(), host_driver_policy, operation_policy)
 }
 
 /// 🔌️ [`open_plugin_artifact_channel`] under a caller's progress and cancel. `app_id` names the app
 /// the guest instance hosts; `None` is the plugin's first editor app.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, scope: &ActivationScope, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<PluginArtifactChannel, GatewayError> {
+pub fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, scope: &ActivationScope, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Result<PluginArtifactChannel, GatewayError> {
     scope.enter(ActivationPhase::ResolvingComponent).map_err(activation_fault)?;
     let runtime = shared_plugin_runtime()?;
     let (compiled, descriptor) = match source.ok_or_else(|| {
@@ -197,15 +180,10 @@ pub fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource
         None => descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?,
     };
     let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: app.id.clone() };
-    Ok(PluginArtifactChannel::from_compiled(runtime, compiled, plugin_id.to_string(), descriptor, app_ref, actor_label.to_string(), host_driver_policy))
+    Ok(PluginArtifactChannel::from_compiled(runtime, compiled, plugin_id.to_string(), descriptor, app_ref, actor_label.to_string(), host_driver_policy, operation_policy))
 }
 
-/// 🧩️ Where a workspace's plugin components come from. A `--folder` workspace builds them itself and
-/// reads them off the repo's own `wasm32-wasip2` deliverable tree; a `--hub` workspace has NO repo —
-/// its components are the execution targets the Hub authorized, served by the Hub, verified against
-/// the Hub's own manifest. One enum rather than an `Option<PathBuf>` that silently means "no plugins
-/// at all" for every hub-bound session, which is what made every `action_prepare` from an agent
-/// answer `repo root not found` (M8 §5.3, measured live 2026-09-21).
+/// 🧩️ Where a workspace's plugin components come from. A `--folder` workspace builds them itself and See [design notes](README.md).
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone)]
 pub enum PluginComponentSource {
@@ -213,12 +191,7 @@ pub enum PluginComponentSource {
     Hub(Arc<HubPluginComponents>),
 }
 
-/// 🌎️ Resolves a plugin id to the component bytes and package descriptor the authenticated Hub
-/// selected for one of the space's own documents. The descriptor comes from the catalog snapshot the
-/// binding already verified (manifest identity, canonical projection, digest); only the component
-/// bytes are fetched here, lazily — one plugin at a time, when an open or an action needs it — by the
-/// content address the current catalog's lease names, from the persistent execution-target store or
-/// the hub ([`remote::HubComponentAssets`]); a republished catalog names other bytes, never a stale hit.
+/// 🌎️ Resolves a plugin id to the component bytes and package descriptor the authenticated Hub See [design notes](README.md).
 #[cfg(not(target_arch = "wasm32"))]
 pub struct HubPluginComponents {
     pub binding: Arc<HubRemoteBinding>,
@@ -302,20 +275,11 @@ fn selected_package_key(snapshot: &AuthorizedCatalogSnapshot) -> String {
     packages.join(",")
 }
 
-/// 🚦️ `crate::actions::ArtifactChannel` implementor that picks the plugin from the CALL instead of
-/// pinning one for the whole process — replaces the deleted `resolve_default_plugin_id`'s "exactly
-/// one plugin or bust" (`📓️w8-capability-routing.md`). A `PureCommand{capability_id,..}` names its
-/// plugin directly (`resolve_plugin_for_capability_in`); every other `AppCommand` variant carries no
-/// capability id, so it decodes the SAME plugin from `instance` via `plugin_for_instance_slot` —
-/// sound only because `HeadlessWorkspace::prepare_action` (the one caller that mints a FRESH
-/// `instance`) derives it from `plugin_instance_slot(capability's owner)` up front, never a bare `0`.
-/// Opens (and caches) at most one real `PluginArtifactChannel` per [`AppRoute`] — never all up
-/// front, never twice for the same app; the cache lock is held only across one `HashMap`
-/// lookup/insert, never across a channel's own `exchange` (no lock-ordering hazard against
-/// `open_probes`/`action_adapter`'s mutexes, which this struct never touches).
+/// 🚦️ `crate::actions::ArtifactChannel` implementor that picks the plugin from the CALL instead of See [design notes](README.md).
 #[cfg(not(target_arch = "wasm32"))]
 pub struct RoutingArtifactChannel {
-    pub host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy,
+    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
+    pub operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy,
     pub catalog: Arc<WorkspaceCatalog>,
     pub components: Option<PluginComponentSource>,
     pub actor_label: String,
@@ -328,6 +292,9 @@ pub struct RoutingArtifactChannel {
     /// here — plugin id → the artifact this workspace bound to it — so every stamp a command answers
     /// with names the artifact a client can address, not the plugin that happens to host it.
     pub plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>,
+    selected: Mutex<HashMap<u32, (AppRoute, Option<String>)>>,
+    folder: Option<PathBuf>,
+    seeded: Mutex<HashMap<u32, (Arc<SessionDocumentPair>, Option<Arc<Vec<u8>>>)>>,
     /// 🌎️ The hub's descriptor authority for this session — present exactly when the workspace is hub-bound. Every
     /// edit reads the principal's space role from it before any guest runs ([`hub_edit_refusal`]).
     pub hub: Option<Arc<HubRemoteBinding>>,
@@ -335,8 +302,35 @@ pub struct RoutingArtifactChannel {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RoutingArtifactChannel {
-    pub fn new(catalog: Arc<WorkspaceCatalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>, hub: Option<Arc<HubRemoteBinding>>, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Self {
-        Self { catalog, components, actor_label, host_driver_policy, channels: Mutex::new(HashMap::new()), default_apps: Mutex::new(HashMap::new()), plugin_artifacts, hub }
+    pub fn new(catalog: Arc<WorkspaceCatalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>, hub: Option<Arc<HubRemoteBinding>>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Self {
+        Self { catalog, components, actor_label, host_driver_policy, operation_policy, channels: Mutex::new(HashMap::new()), default_apps: Mutex::new(HashMap::new()), plugin_artifacts, hub, selected: Mutex::new(HashMap::new()), folder: None, seeded: Mutex::new(HashMap::new()) }
+    }
+
+
+    /// 📂️ Carries the actual workspace origin into local snapshot custody.
+    pub fn with_folder(mut self, folder: Option<PathBuf>) -> Self { self.folder = folder; self }
+
+    fn persist_folder_guest(&self, instance: u32, artifact_id: &str, channel: &mut PluginArtifactChannel) -> Result<(), Fault> {
+        let Some(folder) = &self.folder else { return Ok(()) };
+        let frames = channel.exchange(instance, vec![AppCommand::ReadArtifact])?;
+        let (pack, spr) = match frames.into_iter().next() {
+            Some(AppFrame::Artifact { pack, spr }) => (pack, spr),
+            Some(AppFrame::Error(fault)) => return Err(fault),
+            _ => return Err(Fault { code: "folder.persistence".into(), message: "owner did not return its canonical pair".into() }),
+        };
+        let mut bindings = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let binding = bindings.get_mut(artifact_id).ok_or_else(|| Fault { code: "folder.persistence".into(), message: "artifact binding disappeared".into() })?;
+        let previous = binding.document.as_ref().ok_or_else(|| Fault { code: "folder.persistence".into(), message: "artifact baseline disappeared".into() })?;
+        if previous.pack == pack && previous.spr == spr { return Ok(()) }
+        let storage = store::sync::FolderEventLogStorage::new(folder.clone());
+        let published = semio_framework_async::block_on(storage.write_snapshot_if_current(artifact_id, &binding.schema, (&previous.pack, &previous.spr), binding.archive.as_deref().map(Vec::as_slice), &pack, &spr))
+            .map_err(|error| Fault { code: "folder.persistence".into(), message: error.to_string() })?;
+        let Some(archive) = published else { return Err(Fault { code: "folder.persistence".into(), message: "persisted artifact changed; reopen the exact artifact before retrying".into() }); };
+        binding.archive = archive.map(Arc::new);
+        let pair = Arc::new(SessionDocumentPair { pack, spr });
+        binding.document = Some(Arc::clone(&pair));
+        self.seeded.lock().expect("seeded document lock poisoned").insert(instance, (pair, binding.archive.clone()));
+        Ok(())
     }
 
     /// 🧭️ `route` with its app named: a plugin-scope route resolves to the plugin's first editor app,
@@ -348,7 +342,7 @@ impl RoutingArtifactChannel {
         if let Some(app_id) = self.default_apps.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&route.plugin_id).cloned() {
             return Ok(AppRoute { plugin_id: route.plugin_id, app_id: Some(app_id) });
         }
-        let channel = open_plugin_artifact_channel_scoped(self.components.as_ref(), &route.plugin_id, None, &self.actor_label, scope, self.host_driver_policy).map_err(routing_fault)?;
+        let channel = open_plugin_artifact_channel_scoped(self.components.as_ref(), &route.plugin_id, None, &self.actor_label, scope, self.host_driver_policy, self.operation_policy).map_err(routing_fault)?;
         let resolved = AppRoute { plugin_id: route.plugin_id.clone(), app_id: Some(channel.app_ref.app_id.clone()) };
         self.default_apps.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(route.plugin_id, channel.app_ref.app_id.clone());
         self.channels.lock().expect("routing channel cache lock poisoned").entry(resolved.clone()).or_insert(channel);
@@ -359,12 +353,19 @@ impl RoutingArtifactChannel {
     /// the agent opened or edited last, or the one artifact a folder session bound to it — `None` when there is none, or
     /// two folder artifacts, which no single stamp could name truthfully.
     pub fn session_artifact_for(&self, route: &AppRoute) -> Option<String> {
+        self.artifact_for(None, route)
+    }
+
+    fn artifact_for(&self, instance: Option<u32>, route: &AppRoute) -> Option<String> {
+        if let Some(selected) = instance.and_then(|instance| self.selected.lock().expect("target routing lock poisoned").get(&instance).cloned()) {
+            return selected.1;
+        }
         let bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         route_session_artifact(
             bound
                 .iter()
                 .filter(|(_, binding)| binding.plugin_id == route.plugin_id && route.app_id.as_deref().is_none_or(|app_id| binding.app_id == app_id))
-                .map(|(artifact_id, binding)| (artifact_id.as_str(), binding.document.is_some(), binding.used)),
+                .map(|(artifact_id, binding)| (artifact_id.as_str(), binding.surface_id.is_some(), binding.used)),
         )
         .map(str::to_string)
     }
@@ -373,8 +374,8 @@ impl RoutingArtifactChannel {
     /// document, whose bytes live on the hub and nowhere a guest could reach on its own. Keyed off
     /// exactly the binding [`Self::session_artifact_for`] names, so a plugin with two bound
     /// artifacts (which no single session document could be) seeds none.
-    fn session_document_for(&self, route: &AppRoute) -> Option<(String, Arc<SessionDocumentPair>)> {
-        let artifact_id = self.session_artifact_for(route)?;
+    fn session_document_for(&self, instance: u32, route: &AppRoute) -> Option<(String, Arc<SessionDocumentPair>)> {
+        let artifact_id = self.artifact_for(Some(instance), route)?;
         let bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let document = bound.get(&artifact_id)?.document.clone()?;
         Some((artifact_id, document))
@@ -383,14 +384,14 @@ impl RoutingArtifactChannel {
     /// 🚫️ The refusal a NEW edit on a hub session gets before its guest runs ([`hub_edit_refusal`]); `None` in a
     /// folder workspace and for every command that authors no edit. A commit or rollback of a transaction already in
     /// flight and an undo still run: they only settle or revert local state.
-    fn edit_refusal(&self, route: &AppRoute, commands: &[AppCommand]) -> Option<Fault> {
+    fn edit_refusal(&self, instance: u32, route: &AppRoute, commands: &[AppCommand]) -> Option<Fault> {
         if !commands.iter().any(|command| matches!(command, AppCommand::PureCommand { .. } | AppCommand::TransactionPrepare { .. } | AppCommand::TransactionRedo { .. })) {
             return None;
         }
         let hub = self.hub.as_ref()?;
         hub.await_settled(remote::HUB_AUTHORITY_SETTLE_WAIT_MS);
         let role = hub.ready_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX)).map(|snapshot| snapshot.space.role).map_err(|error| error.message);
-        let artifact_id = self.session_artifact_for(route);
+        let artifact_id = self.artifact_for(Some(instance), route);
         let mut bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let refusal = hub_edit_refusal(role, &route.plugin_id, artifact_id.as_deref().and_then(|artifact_id| bound.get(artifact_id).map(|binding| (artifact_id, binding))));
         if let Some(binding) = artifact_id.as_deref().and_then(|artifact_id| bound.get_mut(artifact_id)).filter(|_| refusal.is_none()) {
@@ -402,8 +403,8 @@ impl RoutingArtifactChannel {
     /// 📥️ Takes what `route`'s bound hub document actor delivered since the last take and plans it against
     /// the pair the guest was seeded from ([`plan_hub_inbound`]); a new baseline replaces the binding's pair
     /// here, before the guest is (re)loaded from it. `None` for a route with no bound hub document.
-    fn take_hub_inbound(&self, route: &AppRoute) -> Result<Option<HubInboundDelivery>, Fault> {
-        let Some(artifact_id) = self.session_artifact_for(route) else { return Ok(None) };
+    fn take_hub_inbound(&self, instance: u32, route: &AppRoute) -> Result<Option<HubInboundDelivery>, Fault> {
+        let Some(artifact_id) = self.artifact_for(Some(instance), route) else { return Ok(None) };
         let mut bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(binding) = bound.get_mut(&artifact_id) else { return Ok(None) };
         let Some(seeded) = binding.document.clone() else { return Ok(None) };
@@ -428,16 +429,19 @@ impl RoutingArtifactChannel {
     /// archive load, reporting to and cancellable by `scope`), backbone bound, then every mutation batch after
     /// the baseline, oldest first. A batch the guest refuses is the
     /// typed fault it is; the batches it did not reach go back to the relay for the next command.
-    fn seed_session_guest(channel: &mut PluginArtifactChannel, instance: u32, artifact_id: &str, document: &SessionDocumentPair, inbound: Option<HubInboundDelivery>, scope: &ActivationScope) -> Result<(), Fault> {
-        if inbound.as_ref().is_some_and(|delivery| delivery.reseeded) {
+    fn seed_session_guest(&self, channel: &mut PluginArtifactChannel, instance: u32, artifact_id: &str, document: &SessionDocumentPair, inbound: Option<HubInboundDelivery>, scope: &ActivationScope) -> Result<(), Fault> {
+        let archive = if self.folder.is_some() { self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id).and_then(|binding| binding.archive.clone()) } else { None };
+        let changed = self.folder.is_some() && self.seeded.lock().expect("seeded document lock poisoned").get(&instance).is_some_and(|previous| previous.0.pack != document.pack || previous.0.spr != document.spr || previous.1 != archive);
+        if changed || inbound.as_ref().is_some_and(|delivery| delivery.reseeded) {
             channel.reseed_session_document(instance);
         }
-        if let Err(fault) = channel.load_session_document(instance, artifact_id, &document.pack, &document.spr, scope).and_then(|()| channel.ensure_document_backbone(instance)) {
+        if let Err(fault) = channel.load_session_document(instance, artifact_id, &document.pack, &document.spr, archive.as_deref().map(Vec::as_slice), scope).and_then(|()| channel.ensure_document_backbone(instance)) {
             if let Some(delivery) = inbound {
                 delivery.restore();
             }
             return Err(fault);
         }
+        if self.folder.is_some() { self.seeded.lock().expect("seeded document lock poisoned").insert(instance, (Arc::new(SessionDocumentPair { pack: document.pack.clone(), spr: document.spr.clone() }), archive)); }
         let Some(delivery) = inbound else { return Ok(()) };
         let mut batches = delivery.backbone.into_iter();
         while let Some(message) = batches.next() {
@@ -449,21 +453,14 @@ impl RoutingArtifactChannel {
         Ok(())
     }
 
-    /// 🧵️ Hands `plugin_id`'s bound document actor every backbone message its guest just published.
-    /// `ArtifactActorMsg::DocumentBackbone` is the actor's own verified ingress — it decodes the
-    /// envelopes, refuses any that name another document, retains them and relays them to the hub as
-    /// `ClientFrame::Commands`. Nothing here interprets a byte of them.
-    ///
-    /// 🚧️ A binding with no document actor is a typed, named fault, never a silent drop: the guest
-    /// HAS committed by the time these bytes exist, so "the edit went nowhere" must be something the
-    /// agent is told. [`PluginArtifactBinding::backbone_blocked_by`] carries the reason.
-    ///
-    /// 🔒️ `session_artifact_for` takes the same lock, so it is called BEFORE this one is held —
-    /// `std::sync::Mutex` is not reentrant and nesting them deadlocked the very first committed
-    /// message (measured 2026-09-22, the test hung past its 60 s report threshold).
+    /// 🧵️ Hands `plugin_id`'s bound document actor every backbone message its guest just published. See [design notes](README.md).
     pub fn relay_backbone_egress(&self, route: &AppRoute, egress: Vec<Vec<u8>>) -> Result<(Arc<HubRelay>, u64), Fault> {
+        self.relay_target_egress(None, route, egress)
+    }
+
+    fn relay_target_egress(&self, instance: Option<u32>, route: &AppRoute, egress: Vec<Vec<u8>>) -> Result<(Arc<HubRelay>, u64), Fault> {
         let plugin_id = route.plugin_id.as_str();
-        let artifact_id = self.session_artifact_for(route);
+        let artifact_id = self.artifact_for(instance, route);
         let binding = {
             let bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             artifact_id.and_then(|artifact_id| bound.get(&artifact_id).map(|binding| (artifact_id, binding.backbone.clone(), binding.backbone_blocked_by.clone(), Arc::clone(&binding.relayed), Arc::clone(&binding.relay))))
@@ -510,6 +507,23 @@ impl RoutingArtifactChannel {
     /// (the declared row's contributor) — so it routes directly, never through the
     /// `instance` slot encoding `prepare_action` mints for the mutation protocol.
     fn route_for(&self, instance: u32, commands: &[AppCommand]) -> Result<AppRoute, Fault> {
+        if let Some((route, artifact)) = self.selected.lock().expect("target routing lock poisoned").get(&instance).cloned() {
+            if let Some(artifact) = artifact {
+                let bindings = self.plugin_artifacts.lock().expect("artifact bindings lock poisoned");
+                if !bindings.get(&artifact).is_some_and(|binding| binding.plugin_id == route.plugin_id && route.app_id.as_ref() == Some(&binding.app_id) && binding.document.is_some()) {
+                    return Err(Fault { code: "plugin.unavailable".to_string(), message: "the prepared target lost its owned canonical artifact binding".to_string() });
+                }
+            }
+            for command in commands {
+                if let AppCommand::PureCommand { capability_id, .. } = command {
+                    let owner = resolve_route_for_capability_in(&self.catalog.current(), capability_id).map_err(routing_fault)?;
+                    if owner.plugin_id != route.plugin_id || owner.app_id.as_ref().is_some_and(|app| route.app_id.as_ref() != Some(app)) {
+                        return Err(Fault { code: "capability-denied".to_string(), message: "target does not own this capability".to_string() });
+                    }
+                }
+            }
+            return Ok(route);
+        }
         let catalog = self.catalog.current();
         for command in commands {
             match command {
@@ -532,51 +546,78 @@ impl RoutingArtifactChannel {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl ArtifactChannel for RoutingArtifactChannel {
-    /// 🗿️ Re-read on every exchange, never once at open: `artifact_create` binds the artifact
-    /// AFTER the channel that seeded it from the plugin's genesis was already opened, so a
-    /// stamp taken from an open-time snapshot would name nothing for the very first mutation.
-    ///
-    /// 📥️ …and the same re-read seeds the guest with the bound document itself when the binding
-    /// carries one (a hub document, whose bytes live on the hub and nowhere this guest can
-    /// reach). `load_session_document` is idempotent per instance, so a prepare/commit pair does
-    /// not reload between its two halves; an `Infer` skips it because the inference lane drives
-    /// its own guest on its own actor ordinal, which this document never belongs to.
-    ///
-    /// 🧵️ …then bind the guest's document backbone, in that order: the guest refuses a load
-    /// while bound. Until this runs the guest publishes no backbone effect at all, so a
-    /// committed transaction would answer `SUCCEEDED` and reach nobody.
-    ///
-    /// 🧵️ …and whatever the guest published on its document backbone during that exchange leaves
-    /// the process now, on the bound document's own actor mailbox. Drained on BOTH outcomes: a
-    /// command that faulted after its guest already committed still owes those envelopes to the
-    /// hub, and leaving them in the channel would hand them to the next, unrelated exchange.
+    fn select_target(&mut self, instance: u32, capability_id: &str, target: &ActionTarget) -> Result<ActionTarget, Fault> {
+        if target.instance_id.is_some() {
+            return Err(Fault { code: "plugin.unavailable".to_string(), message: "live instance IDs require an attached shell".to_string() });
+        }
+        let owner = resolve_route_for_capability_in(&self.catalog.current(), capability_id).map_err(routing_fault)?;
+        if target.plugin_id.as_ref().is_some_and(|id| id != &owner.plugin_id) || target.app_id.as_ref().is_some_and(|id| owner.app_id.as_ref().is_some_and(|app| app != id)) {
+            return Err(Fault { code: "capability-denied".to_string(), message: "target plugin/app does not own this capability".to_string() });
+        }
+        let route = self.resolved_route(AppRoute { plugin_id: owner.plugin_id, app_id: target.app_id.clone().or(owner.app_id) }, &ActivationScope::detached())?;
+        let bound = self.plugin_artifacts.lock().expect("artifact bindings lock poisoned");
+        let candidates: Vec<_> = bound.iter().filter(|(id, binding)| binding.plugin_id == route.plugin_id && route.app_id.as_ref().is_none_or(|app| &binding.app_id == app) && target.artifact_ref.as_ref().is_none_or(|requested| *id == requested)).collect();
+        if candidates.len() > 1 || (target.artifact_ref.is_some() && candidates.is_empty()) {
+            return Err(Fault { code: "plugin.unavailable".to_string(), message: format!("target names {} registered artifacts; open the exact artifact first", candidates.len()) });
+        }
+        if candidates.first().is_some_and(|(_, binding)| binding.document.is_none()) {
+            return Err(Fault { code: "plugin.unavailable".to_string(), message: "target artifact has no owned canonical document binding; refusing to run against a genesis guest".to_string() });
+        }
+        let artifact = candidates.first().map(|(id, _)| (*id).clone());
+        let resolved = ActionTarget { instance_id: None, plugin_id: Some(route.plugin_id.clone()), app_id: route.app_id.clone(), artifact_ref: artifact.clone() };
+        let selected = (route, artifact);
+        let mut targets = self.selected.lock().expect("target routing lock poisoned");
+        if targets.get(&instance).is_some_and(|existing| existing != &selected) {
+            return Err(Fault { code: "capability-denied".to_string(), message: "a prepared target cannot change artifact ownership".to_string() });
+        }
+        targets.insert(instance, selected);
+        Ok(resolved)
+    }
+
+
+    /// 🗿️ Re-read on every exchange, never once at open: `artifact_create` binds the artifact See [design notes](README.md).
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         let route = self.resolved_route(self.route_for(instance, &commands)?, &ActivationScope::detached())?;
-        let session_artifact_id = self.session_artifact_for(&route);
-        if let Some(refusal) = self.edit_refusal(&route, &commands) {
+        let session_artifact_id = self.artifact_for(Some(instance), &route);
+        if let Some(refusal) = self.edit_refusal(instance, &route, &commands) {
             return Err(refusal);
         }
-        let inbound = if carries_hub_inbound(&commands) { self.take_hub_inbound(&route)? } else { None };
-        let session_document = self.session_document_for(&route);
+        let inbound = if carries_hub_inbound(&commands) { self.take_hub_inbound(instance, &route)? } else { None };
+        let session_document = self.session_document_for(instance, &route);
         let hub_bound = self.hub.is_some() && session_document.is_some();
         let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
         if !channels.contains_key(&route) {
-            let channel = open_plugin_artifact_channel(self.components.as_ref(), &route.plugin_id, route.app_id.as_deref(), &self.actor_label, self.host_driver_policy).map_err(routing_fault)?;
+            let channel = open_plugin_artifact_channel(self.components.as_ref(), &route.plugin_id, route.app_id.as_deref(), &self.actor_label, self.host_driver_policy, self.operation_policy).map_err(routing_fault)?;
             channels.insert(route.clone(), channel);
         }
         let channel = channels.get_mut(&route).expect("just inserted above");
-        channel.bind_session_artifact(session_artifact_id);
+        channel.bind_session_artifact(session_artifact_id.clone());
         let seeded = match session_document.filter(|_| !matches!(commands.first(), Some(AppCommand::Infer(_)))) {
-            Some((artifact_id, document)) => Self::seed_session_guest(channel, instance, &artifact_id, &document, inbound, &ActivationScope::detached()),
+            Some((artifact_id, document)) => self.seed_session_guest(channel, instance, &artifact_id, &document, inbound, &ActivationScope::detached()),
             None => Ok(()),
         };
+        let mutates = commands.iter().any(|command| matches!(command, AppCommand::TransactionCommit { .. } | AppCommand::TransactionUndo { .. } | AppCommand::TransactionRedo { .. }));
         let frames = seeded.and_then(|()| channel.exchange(instance, commands));
         let egress = channel.drain_backbone_egress();
+        if self.folder.is_some() {
+            if let Some(artifact_id) = session_artifact_id.filter(|_| mutates || !egress.is_empty()) {
+                if let Err(fault) = self.persist_folder_guest(instance, &artifact_id, channel) {
+                    return match frames {
+                        Ok(frames) if frames.iter().any(|frame| matches!(frame, AppFrame::TransactionCommitted { .. })) => Ok(frames.into_iter().map(|frame| match frame {
+                            AppFrame::TransactionCommitted { txn_id, edit_id, output, .. } => AppFrame::TransactionCommitted { txn_id, edit_id, output, relay: Some(semio_framework_os_mcp_port::channel_port::HubRelayOutcome { acknowledged: false, detail: fault.message.clone(), refused: Some(fault.code.clone()) }) },
+                            other => other,
+                        }).collect()),
+                        _ => Err(fault),
+                    };
+                }
+            }
+            return frames;
+        }
         drop(channels);
         if egress.is_empty() {
             return if hub_bound { frames.map(commits_with_nothing_relayed) } else { frames };
         }
-        let (relay, since) = self.relay_backbone_egress(&route, egress)?;
+        let (relay, since) = self.relay_target_egress(Some(instance), &route, egress)?;
         let frames = frames?;
         if !frames.iter().any(|frame| matches!(frame, AppFrame::TransactionCommitted { .. })) {
             return Ok(frames);
@@ -585,7 +626,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
         Ok(frames
             .into_iter()
             .map(|frame| match frame {
-                AppFrame::TransactionCommitted { txn_id, edit_id, .. } => AppFrame::TransactionCommitted { txn_id, edit_id, relay: Some(outcome.clone()) },
+                AppFrame::TransactionCommitted { txn_id, edit_id, output, .. } => AppFrame::TransactionCommitted { txn_id, edit_id, relay: Some(outcome.clone()), output },
                 other => other,
             })
             .collect())
@@ -596,18 +637,18 @@ impl ArtifactChannel for RoutingArtifactChannel {
     /// hub document — that document loaded and its backbone bound, in the same order.
     fn activate(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
         let route = self.resolved_route(self.route_for(instance, &[])?, scope)?;
-        let session_artifact_id = self.session_artifact_for(&route);
-        let inbound = self.take_hub_inbound(&route)?;
-        let session_document = self.session_document_for(&route);
+        let session_artifact_id = self.artifact_for(Some(instance), &route);
+        let inbound = self.take_hub_inbound(instance, &route)?;
+        let session_document = self.session_document_for(instance, &route);
         let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
         if !channels.contains_key(&route) {
-            let channel = open_plugin_artifact_channel_scoped(self.components.as_ref(), &route.plugin_id, route.app_id.as_deref(), &self.actor_label, scope, self.host_driver_policy).map_err(routing_fault)?;
+            let channel = open_plugin_artifact_channel_scoped(self.components.as_ref(), &route.plugin_id, route.app_id.as_deref(), &self.actor_label, scope, self.host_driver_policy, self.operation_policy).map_err(routing_fault)?;
             channels.insert(route.clone(), channel);
         }
         let channel = channels.get_mut(&route).expect("just inserted above");
-        channel.bind_session_artifact(session_artifact_id);
+        channel.bind_session_artifact(session_artifact_id.clone());
         let activated = match (channel.activate(instance, scope), session_document) {
-            (Ok(()), Some((artifact_id, document))) => Self::seed_session_guest(channel, instance, &artifact_id, &document, inbound, scope),
+            (Ok(()), Some((artifact_id, document))) => self.seed_session_guest(channel, instance, &artifact_id, &document, inbound, scope),
             (activated, _) => {
                 if let Some(delivery) = inbound {
                     delivery.restore();
@@ -616,9 +657,13 @@ impl ArtifactChannel for RoutingArtifactChannel {
             }
         };
         let egress = channel.drain_backbone_egress();
+        if self.folder.is_some() {
+            if let Some(artifact_id) = session_artifact_id.filter(|_| !egress.is_empty()) { self.persist_folder_guest(instance, &artifact_id, channel)?; }
+            return activated;
+        }
         drop(channels);
         if !egress.is_empty() {
-            self.relay_backbone_egress(&route, egress)?;
+            self.relay_target_egress(Some(instance), &route, egress)?;
         }
         activated
     }
@@ -659,14 +704,7 @@ dyn_enum_close! {
 
 //#region 🔖️ShellRouted
 
-/// 🔀️ The channel a `--folder`/`--hub`-bound gateway that can ALSO reach a live shell runs on: one
-/// value holding both routes, with [`crate::shell_channel::SessionChannelBinding`] deciding — once,
-/// at `context_resolve` time — which of them a session executes through.
-///
-/// Both are built up front rather than lazily, because the decision must be observable before the
-/// first mutation: `ContextSummary.channel` reports it, and a client that reads `"shell"` is
-/// promised the shell for the whole session (a shell that then disconnects answers a typed,
-/// retryable fault — never a silent fall back onto a different document owner mid-transaction).
+/// 🔀️ The channel a `--folder`/`--hub`-bound gateway that can ALSO reach a live shell runs on: one See [design notes](README.md).
 pub struct ShellRoutedArtifactChannel {
     pub binding: Arc<SessionChannelBinding>,
     pub(super) shell: ShellArtifactChannel,
@@ -681,20 +719,15 @@ impl ShellRoutedArtifactChannel {
 }
 
 impl ArtifactChannel for ShellRoutedArtifactChannel {
-    /// 💡️ An inference is not a shell command and never was: `ShellArtifactChannel` refuses
-    /// `AppCommand::Infer` outright ("the gateway owns its own inference guest"), and the
-    /// headless lane's `ensure_inference_route` drives its OWN guest instance on its own actor
-    /// ordinal, holding no document the shell owns. Sending it down the shell branch made
-    /// `inference_run` answer `plugin.unavailable` for the whole of a shell-resolved session —
-    /// i.e. exactly the session an MCP client driving a live shell has (measured 2026-09-22
-    /// 22:1x, `🗑️generated/gj1-trap-probe.txt` first run). Routing it headless here is what the
-    /// refusal's own message asks a caller to do, done for them, and it splits no document:
-    /// the inference guest is not the shell's.
-    ///
-    /// 🎯️ Name the artifact's owner before dispatching, exactly as the headless lane
-    /// does: without it a capability-less leg of the mutation protocol (`ReadArtifact`,
-    /// `ReadHistory`) had nothing to resolve an instance from and refused as soon as the
-    /// shell had more than one program open.
+    fn select_target(&mut self, instance: u32, capability_id: &str, target: &ActionTarget) -> Result<ActionTarget, Fault> {
+        match self.binding.resolve() {
+            ChannelKind::Shell => self.shell.select_target(instance, capability_id, target),
+            ChannelKind::Headless => self.headless.select_target(instance, capability_id, target),
+        }
+    }
+
+
+    /// 💡️ An inference is not a shell command and never was: `ShellArtifactChannel` refuses See [design notes](README.md).
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         if matches!(commands.first(), Some(AppCommand::Infer(_))) {
             return self.headless.exchange(instance, commands);
@@ -727,6 +760,7 @@ pub struct PluginArtifactBinding {
     pub app_id: String,
     pub surface_id: Option<String>,
     pub document: Option<Arc<SessionDocumentPair>>,
+    pub archive: Option<Arc<Vec<u8>>>,
     /// 🧵️ The hub document actor's own mailbox, when this binding opened one. Every
     /// `MessageEndpoint::Backbone` message the plugin's guest publishes for this document is handed
     /// to it as `ArtifactActorMsg::DocumentBackbone`, which is the actor path that persists the
@@ -734,11 +768,7 @@ pub struct PluginArtifactBinding {
     /// shell's `route_document_backbone_effects` drives for a human's edit.
     #[cfg(not(target_arch = "wasm32"))]
     pub backbone: Option<store::sync::ArtifactMailboxSender>,
-    /// 🚧️ Why this binding opened no document actor, when it did not. A hub document whose artifact
-    /// schema has no registered `store::os_store::serialization::ArtifactCodec` in this process cannot open a document socket
-    /// at all: `connect_hub` reads `document_codec(schema).pack_schema_hash` to build its
-    /// `SocketHelloV1` and silently reschedules a reconnect forever when there is none. Recording
-    /// the reason here is what turns that silence into something a reader can see.
+    /// 🚧️ Why this binding opened no document actor, when it did not. A hub document whose artifact See [design notes](README.md).
     pub backbone_blocked_by: Option<String>,
     /// 🧾️ How many document-backbone messages this binding has handed to its document actor. The
     /// ONE fact that separates "the guest published nothing" from "the actor has it and the socket

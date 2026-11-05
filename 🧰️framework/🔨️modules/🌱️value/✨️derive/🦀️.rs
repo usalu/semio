@@ -42,16 +42,19 @@ pub fn value_codec(input: TokenStream) -> TokenStream {
     let mut projection = true;
     let mut admission = true;
     let mut canonical = false;
+    let mut receiving = false;
     for attribute in &input.attrs {
         if attribute.path().is_ident("derive") {
             projection = false;
             admission = false;
             canonical = false;
+            receiving = false;
             if let Err(error) = attribute.parse_nested_meta(|meta| {
                 if meta.path.is_ident("ToValue") { projection = true; }
                 else if meta.path.is_ident("FromValue") { admission = true; }
                 else if meta.path.is_ident("CanonicalJsonTree") { canonical = true; }
-                else { return Err(meta.error("value_codec supports ToValue, FromValue and CanonicalJsonTree")); }
+                else if meta.path.is_ident("NativeReceive") { receiving = true; }
+                else { return Err(meta.error("value_codec supports ToValue, FromValue, CanonicalJsonTree and NativeReceive")); }
                 Ok(())
             }) { return error.to_compile_error().into(); }
         }
@@ -61,6 +64,13 @@ pub fn value_codec(input: TokenStream) -> TokenStream {
         if projection { output.extend(component::expand_to_value(&input)?); }
         if admission { output.extend(component::expand_from_value(&input)?); }
         if canonical { output.extend(component::expand_canonical_tree(&input)?); }
+        if receiving {
+            let syn::Data::Struct(data)=&input.data else{return Err(syn::Error::new_spanned(&input,"existing native receiving requires a concrete record owner"))};
+            let syn::Fields::Named(fields)=&data.fields else{return Err(syn::Error::new_spanned(&input,"existing native receiving requires exhaustive named fields"))};
+            let name=&input.ident;let names=fields.named.iter().map(|field|field.ident.as_ref().unwrap()).collect::<Vec<_>>();let types=fields.named.iter().map(|field|&field.ty).collect::<Vec<_>>();
+            output.extend(quote::quote!(const _:fn(#name)->(#(#types,)*)=|#name{#(#names,)*}|(#(#names,)*);));
+            output.extend(component::expand_native_receive(&input)?);
+        }
         Ok(output)
     })();
     expanded.unwrap_or_else(|error| error.to_compile_error()).into()

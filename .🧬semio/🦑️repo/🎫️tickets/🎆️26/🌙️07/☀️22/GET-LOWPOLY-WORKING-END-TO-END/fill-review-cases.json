@@ -1,0 +1,319 @@
+{
+  "schema": "lowpoly.fill-colour-law/v1",
+  "cases": [
+    {
+      "id": "four-connected-not-diagonal",
+      "width": 3,
+      "height": 3,
+      "palette": {
+        ".": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "#": [
+          0,
+          0,
+          0,
+          255
+        ]
+      },
+      "rows": [
+        ".#.",
+        "#.#",
+        ".#."
+      ],
+      "seed": [
+        0,
+        0
+      ],
+      "color": [
+        17,
+        34,
+        51,
+        255
+      ],
+      "expected": {
+        "reached": [
+          0
+        ],
+        "changed": [
+          0
+        ],
+        "rows": [
+          "R#.",
+          "#.#",
+          ".#."
+        ],
+        "runOffsets": [
+          0
+        ]
+      }
+    },
+    {
+      "id": "barrier-keeps-other-region",
+      "width": 4,
+      "height": 3,
+      "palette": {
+        ".": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "#": [
+          0,
+          0,
+          0,
+          255
+        ]
+      },
+      "rows": [
+        "..#.",
+        "..#.",
+        "..#."
+      ],
+      "seed": [
+        0,
+        0
+      ],
+      "color": [
+        17,
+        34,
+        51,
+        255
+      ],
+      "expected": {
+        "reached": [
+          0,
+          1,
+          4,
+          5,
+          8,
+          9
+        ],
+        "changed": [
+          0,
+          1,
+          4,
+          5,
+          8,
+          9
+        ],
+        "rows": [
+          "RR#.",
+          "RR#.",
+          "RR#."
+        ],
+        "runOffsets": [
+          0,
+          16,
+          32
+        ]
+      }
+    },
+    {
+      "id": "alpha-is-part-of-exact-match-and-replacement",
+      "width": 3,
+      "height": 2,
+      "palette": {
+        ".": [
+          10,
+          20,
+          30,
+          128
+        ],
+        "a": [
+          10,
+          20,
+          30,
+          127
+        ]
+      },
+      "rows": [
+        ".a.",
+        "..."
+      ],
+      "seed": [
+        0,
+        0
+      ],
+      "color": [
+        17,
+        34,
+        51,
+        0
+      ],
+      "expected": {
+        "reached": [
+          0,
+          2,
+          3,
+          4,
+          5
+        ],
+        "changed": [
+          0,
+          2,
+          3,
+          4,
+          5
+        ],
+        "rows": [
+          "RaR",
+          "RRR"
+        ],
+        "runOffsets": [
+          0,
+          8
+        ]
+      }
+    },
+    {
+      "id": "same-colour-is-no-edit",
+      "width": 2,
+      "height": 2,
+      "palette": {
+        ".": [
+          17,
+          34,
+          51,
+          128
+        ]
+      },
+      "rows": [
+        "..",
+        ".."
+      ],
+      "seed": [
+        1,
+        1
+      ],
+      "color": [
+        17,
+        34,
+        51,
+        128
+      ],
+      "expected": {
+        "reached": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "changed": [],
+        "rows": [
+          "..",
+          ".."
+        ],
+        "runOffsets": []
+      }
+    },
+    {
+      "id": "uv-top-left",
+      "width": 3,
+      "height": 2,
+      "palette": {
+        ".": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "#": [
+          0,
+          0,
+          0,
+          255
+        ]
+      },
+      "rows": [
+        "...",
+        "###"
+      ],
+      "seedUv": [
+        0,
+        1
+      ],
+      "color": [
+        17,
+        34,
+        51,
+        128
+      ],
+      "expected": {
+        "reached": [
+          0,
+          1,
+          2
+        ],
+        "changed": [
+          0,
+          1,
+          2
+        ],
+        "rows": [
+          "RRR",
+          "###"
+        ],
+        "runOffsets": [
+          0
+        ]
+      }
+    },
+    {
+      "id": "uv-bottom-right",
+      "width": 3,
+      "height": 2,
+      "palette": {
+        ".": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "#": [
+          0,
+          0,
+          0,
+          255
+        ]
+      },
+      "rows": [
+        "...",
+        "###"
+      ],
+      "seedUv": [
+        1,
+        0
+      ],
+      "color": [
+        17,
+        34,
+        51,
+        128
+      ],
+      "expected": {
+        "reached": [
+          3,
+          4,
+          5
+        ],
+        "changed": [
+          3,
+          4,
+          5
+        ],
+        "rows": [
+          "...",
+          "RRR"
+        ],
+        "runOffsets": [
+          12
+        ]
+      }
+    }
+  ]
+}

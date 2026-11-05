@@ -1,0 +1,1 @@
+{"name":"run","arguments":{"target":"@semio-tech/ui-contract-rs:test-original-source","configuration":"prototype","parallel":1,"language":"en","agent":"semio-mcp-ui-source"}}

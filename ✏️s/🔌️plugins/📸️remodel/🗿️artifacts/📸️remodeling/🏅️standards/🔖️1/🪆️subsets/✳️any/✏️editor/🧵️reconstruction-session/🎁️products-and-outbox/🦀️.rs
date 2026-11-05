@@ -38,7 +38,7 @@ impl ContentLeaves {
 }
 
 /// 🧊️ Field-tagged mesh leaves: `[field, values…]` per ≤ 4 KiB leaf, fields in ascending order.
-fn mesh_leaves(mesh: &semio_framework::MeshData) -> ContentLeaves {
+fn mesh_leaves(mesh: &semio_framework_mesh_engine::MeshData) -> ContentLeaves {
     let mut content = ContentLeaves::new(RemodelingContentKind::Mesh);
     let value_bytes = (REMODELING_DURABLE_CHUNK_RAW_BYTES - 1) / 4 * 4;
     let fields: [(u8, Vec<u8>); 12] = [

@@ -4,37 +4,92 @@
   "title": "Grid3d fill tick payload",
   "type": "object",
   "additionalProperties": false,
-  "required": ["assignments", "contradiction", "done"],
+  "required": [
+    "assignments",
+    "contradiction",
+    "done",
+    "sourceRevision"
+  ],
   "properties": {
     "assignments": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["x", "y", "z"],
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
         "properties": {
-          "x": { "type": "integer", "minimum": 0 },
-          "y": { "type": "integer", "minimum": 0 },
-          "z": { "type": "integer", "minimum": 0 },
-          "tileId": { "type": "string", "minLength": 1 }
+          "x": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "z": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tileId": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
-    "contradiction": { "type": "boolean" },
-    "done": { "type": "boolean" },
+    "contradiction": {
+      "type": "boolean"
+    },
+    "done": {
+      "type": "boolean"
+    },
     "trace": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["x", "y", "z", "tileId", "discarded"],
+        "required": [
+          "x",
+          "y",
+          "z",
+          "tileId",
+          "discarded"
+        ],
         "properties": {
-          "x": { "type": "integer", "minimum": 0 },
-          "y": { "type": "integer", "minimum": 0 },
-          "z": { "type": "integer", "minimum": 0 },
-          "tileId": { "type": "string", "minLength": 1 },
-          "discarded": { "type": "boolean" }
+          "x": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "z": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tileId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "discarded": {
+            "type": "boolean"
+          }
         }
+      }
+    },
+    "sourceRevision": {
+      "type": "array",
+      "minItems": 32,
+      "maxItems": 32,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
       }
     }
   }

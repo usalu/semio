@@ -100,11 +100,7 @@ async fn configured_component_executes_owned_describe_reactor_jobs_cancel_and_ch
 /// (`unreachable`), so any frame a host served before admitting the guest would surface as a trap, not a refusal.
 pub(super) use crate::channel_fixture::owned_channel_guest;
 
-/// 🤝️ LAW (audit F2/F7): both owned host paths admit a guest's app channel before serving it anything. An actor
-/// instantiation and a codec call (the origin a hub Check In fold, the SQLite export/import and the wgpu document codec run
-/// on) refuse an older or newer guest with `plugin.channel-mismatch` naming both versions — before any other export ran,
-/// since every other export of the guest traps — while a guest of the host's own channel is admitted and reaches its
-/// first frame.
+/// 🤝️ Both host paths refuse a mismatched guest channel before serving an artifact.
 #[semio_framework_async_macros::async_test]
 async fn owned_hosts_admit_a_guest_channel_before_any_frame() {
     let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);

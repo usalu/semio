@@ -1,0 +1,88 @@
+{
+  "type": "object",
+  "required": [
+    "flush",
+    "archive"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "flush": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "persistent",
+          "uncertain",
+          "current"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "persistent": {
+            "enum": [
+              "0",
+              "1"
+            ]
+          },
+          "uncertain": {
+            "enum": [
+              "0",
+              "1"
+            ]
+          },
+          "current": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "archive": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "format",
+          "root",
+          "history",
+          "member",
+          "current",
+          "recursive"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "pair",
+              "archive"
+            ]
+          },
+          "root": {
+            "type": "string"
+          },
+          "history": {
+            "type": "string"
+          },
+          "member": {
+            "type": "string"
+          },
+          "current": {
+            "type": "string"
+          },
+          "recursive": {
+            "enum": [
+              "0",
+              "1"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

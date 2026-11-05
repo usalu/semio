@@ -1,0 +1,8 @@
+{
+  "tickMaximumBytes": 262144,
+  "rawMaximumBytes": 540672,
+  "outputMaximumBytes": 1064960,
+  "acceptedAssignments": 100,
+  "oversizedAssignments": 300,
+  "idBytes": 1024
+}

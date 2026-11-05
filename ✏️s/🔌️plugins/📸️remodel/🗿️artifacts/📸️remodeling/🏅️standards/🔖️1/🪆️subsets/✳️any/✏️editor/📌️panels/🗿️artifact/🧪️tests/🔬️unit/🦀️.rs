@@ -1,3 +1,5 @@
+use semio_framework_plugin::{FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_TOOL_RUN_BODY_KEY};
+use semio_framework_tool_run::ToolRunAction;
 use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::document::*;
 use semio_ui_locale::Locale;
 use semio_plugin::BuiltNode;

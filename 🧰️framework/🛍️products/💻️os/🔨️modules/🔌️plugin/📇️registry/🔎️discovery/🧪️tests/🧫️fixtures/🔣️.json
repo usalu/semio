@@ -459,7 +459,7 @@
       },
       "execution": "isolated",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {

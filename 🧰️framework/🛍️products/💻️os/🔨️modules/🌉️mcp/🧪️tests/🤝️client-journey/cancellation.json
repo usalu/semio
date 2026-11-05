@@ -1,0 +1,10 @@
+{
+ "cases":[
+  {"active":{"state":"RUNNING","progress":[{"fraction":0.2}]},"terminal":{"state":"CANCELLED","cancelRequested":true,"commit":null},"unchanged":true,"expected":true},
+  {"active":{"state":"SUCCEEDED","progress":[{"fraction":1}]},"terminal":{"state":"CANCELLED","cancelRequested":true,"commit":null},"unchanged":true,"expected":false},
+  {"active":{"state":"RUNNING","progress":[]},"terminal":{"state":"CANCELLED","cancelRequested":true,"commit":null},"unchanged":true,"expected":false},
+  {"active":{"state":"RUNNING","progress":[{"fraction":0.2}]},"terminal":{"state":"SUCCEEDED","cancelRequested":true,"commit":null},"unchanged":true,"expected":false},
+  {"active":{"state":"RUNNING","progress":[{"fraction":0.2}]},"terminal":{"state":"CANCELLED","cancelRequested":true,"commit":{"mutation":"committed"}},"unchanged":true,"expected":false},
+  {"active":{"state":"RUNNING","progress":[{"fraction":0.2}]},"terminal":{"state":"CANCELLED","cancelRequested":true,"commit":null},"unchanged":false,"expected":false}
+ ]
+}

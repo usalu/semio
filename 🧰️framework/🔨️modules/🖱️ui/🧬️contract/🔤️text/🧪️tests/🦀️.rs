@@ -1,5 +1,6 @@
 use super::*;
 use semio_framework_value::{ToValue,FromValue,RetainedCloneGrant};
+#[path="../🛬️receive/🧪️tests/🦀️.rs"]mod receiving;
 #[test]
 fn native_text_codecs_match_utf8_corpus(){let value:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧱️foundation/🔣️.json")).unwrap();for row in value["texts"].as_array().unwrap(){let source=row["unit"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap() as usize);assert_eq!(source.len(),row["bytes"].as_u64().unwrap()as usize);let parsed=UiText::try_from_str(&source);assert_eq!(parsed.is_some(),row["valid"].as_bool().unwrap());assert_eq!(serde_json::from_value::<UiText>(serde_json::json!(source)).is_ok(),parsed.is_some());if let Some(text)=parsed{assert_eq!(serde_json::to_value(&text).unwrap(),serde_json::json!(source));assert_eq!(UiText::from_value(text.to_value()).unwrap(),text);assert_eq!(text.as_ref(),source);assert_eq!(text.to_string(),source);assert_eq!(format!("{:?}",text),format!("{:?}",source));}else{let clipped=UiText::clipped(&source);assert!(clipped.len()<=UI_TEXT_MAX_BYTES);assert!(clipped.as_str().ends_with(UI_TEXT_CLIP_MARK));assert!(source.starts_with(clipped.as_str().strip_suffix(UI_TEXT_CLIP_MARK).unwrap()));}}}
 #[test]

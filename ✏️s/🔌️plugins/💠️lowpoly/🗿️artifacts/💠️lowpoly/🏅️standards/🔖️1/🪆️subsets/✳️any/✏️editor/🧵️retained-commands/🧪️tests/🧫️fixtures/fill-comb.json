@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "width": 256,
+  "height": 256,
+  "whiteColumnStride": 2,
+  "connectorRow": 255,
+  "seed": [
+    0,
+    255
+  ],
+  "background": [
+    0,
+    0,
+    0,
+    255
+  ],
+  "target": [
+    255,
+    255,
+    255,
+    255
+  ],
+  "replacement": [
+    17,
+    34,
+    51,
+    255
+  ],
+  "expected": {
+    "changedPixels": 32896,
+    "sparseRuns": 32641,
+    "maximumSparseRuns": 32768
+  }
+}

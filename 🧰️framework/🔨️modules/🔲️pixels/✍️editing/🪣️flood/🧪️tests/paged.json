@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "pagePixels": 4096,
+  "referenceBytes": 8,
+  "maximumPixels": 16777216,
+  "maximumDirectoryBytes": 32768,
+  "grant": {
+    "maximumItems": 32,
+    "maximumCopyBytes": 32768,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 4096
+  },
+  "cases": [
+    {
+      "name": "Non-Square Comb Across Page Boundary",
+      "width": 67,
+      "height": 63,
+      "seed": [
+        0,
+        62
+      ],
+      "whiteColumnStride": 2,
+      "connectorRow": 62,
+      "target": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "background": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "expectedReached": 2175,
+      "expectedPages": 2,
+      "expectedCapacityBytes": 25374
+    }
+  ],
+  "maximumWork": 127,
+  "accounting": "typescript-logical"
+}

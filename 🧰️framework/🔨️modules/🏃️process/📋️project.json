@@ -1917,6 +1917,132 @@
           ]
         }
       }
+    },
+    "test-owned-cancellation": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "{projectRoot}/🧭️routing/📥️invocation/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test owned-cancellation"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🧭️routing/📥️invocation/🏃️process/🧪️tests/🛑️owned-cancellation/🟦️.ts",
+            "{projectRoot}/🧭️routing/📥️invocation/🏃️process/🧪️tests/☣️retry-after-tracked-failure/🟦️.ts",
+            "{projectRoot}/🧭️routing/📥️invocation/🏃️process/🧪️tests/🌊️drain/🟦️.ts"
+          ]
+        }
+      }
+    },
+    "test-deadline-following": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test deadline-following"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/⏳️following/🟦️.ts",
+            "{projectRoot}/🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/⏳️progress/🟦️.ts",
+            "{projectRoot}/🧭️routing/📥️invocation/🏃️process/📤️child/🧪️tests/🟦️.ts",
+            "{projectRoot}/🧭️routing/📥️invocation/🏃️process/🧪️tests/⏳️admission/projection.ts",
+            "{projectRoot}/🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/⏳️following/👷️child/📜️script.ts",
+            "{projectRoot}/🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/🟦️.ts"
+          ]
+        }
+      }
+    },
+    "test-root-family-preservation": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📦️artifacts/💾️cache/**/*",
+        "{projectRoot}/📜️script.ts",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        },
+        "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/**/*",
+        "{projectRoot}/🧪️testing/🗂️suites/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test root-family-preservation"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Verify Root Family Preservation",
+              "de": "Erhaltung in Wurzelfamilien prüfen"
+            },
+            "description": {
+              "en": "Verify actual issued path custody and retained inode identity.",
+              "de": "Tatsächliche Pfadzuständigkeit und erhaltene Inode-Identität prüfen."
+            }
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts"
+          ],
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
     }
   },
   "tags": [

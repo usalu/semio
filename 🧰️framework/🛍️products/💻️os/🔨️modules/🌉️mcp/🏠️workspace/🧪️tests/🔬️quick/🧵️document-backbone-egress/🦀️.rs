@@ -1,6 +1,5 @@
 /// 🧵️ Document backbone egress: the backbone effect addressed to this channel and the committed message without a document actor.
 
-//#region 🧵️DocumentBackboneEgress
 
 /// 🧵️ ticket 26/09/18 slice M10: a guest's committed envelopes leave the process on the DOCUMENT
 /// BACKBONE, and the only messages this channel may relay are the ones addressed at its own actor
@@ -32,7 +31,7 @@ fn only_a_backbone_effect_addressed_at_this_channel_is_document_egress() {
 #[test]
 fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() {
     let bound = unbound_plugin_artifacts();
-    let router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(note_and_cad_catalog())), None, "agent:test#sess".to_string(), Arc::clone(&bound), None);
+    let router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(note_and_cad_catalog())), None, "agent:test#sess".to_string(), Arc::clone(&bound), None, crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy"));
     let note = AppRoute { plugin_id: "note".to_string(), app_id: Some("note.editor".to_string()) };
     let unbound = router.relay_backbone_egress(&note, vec![vec![1, 2, 3]]).expect_err("no bound document at all");
     assert_eq!(unbound.code, "channel.not-wired");
@@ -44,6 +43,7 @@ fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() 
             plugin_id: "note".to_string(),
             app_id: "note.editor".to_string(),
             surface_id: Some("s.note.note@1/*#editor".to_string()),
+            archive: None,
             document: None,
             backbone: None,
             backbone_blocked_by: Some("no `store::os_store::serialization::ArtifactCodec` is registered for artifact schema `s.note.note`".to_string()),
@@ -57,4 +57,3 @@ fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() 
     assert!(blocked.message.contains("hub-note") && blocked.message.contains("no `store::os_store::serialization::ArtifactCodec` is registered"), "the fault carries the binding's own recorded reason: {}", blocked.message);
 }
 
-//#endregion 🧵️DocumentBackboneEgress

@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "width",
+    "height",
+    "whiteColumnStride",
+    "connectorRow",
+    "seed",
+    "background",
+    "target",
+    "replacement",
+    "expected"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "width": {
+      "const": 256
+    },
+    "height": {
+      "const": 256
+    },
+    "whiteColumnStride": {
+      "const": 2
+    },
+    "connectorRow": {
+      "const": 255
+    },
+    "seed": {
+      "const": [
+        0,
+        255
+      ]
+    },
+    "background": {
+      "const": [
+        0,
+        0,
+        0,
+        255
+      ]
+    },
+    "target": {
+      "const": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    "replacement": {
+      "const": [
+        17,
+        34,
+        51,
+        255
+      ]
+    },
+    "expected": {
+      "const": {
+        "changedPixels": 32896,
+        "sparseRuns": 32641,
+        "maximumSparseRuns": 32768
+      }
+    }
+  }
+}

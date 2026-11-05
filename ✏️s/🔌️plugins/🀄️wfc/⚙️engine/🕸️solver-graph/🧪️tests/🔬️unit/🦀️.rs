@@ -22,7 +22,7 @@ fn checkerboard(n: usize) -> (CompiledModel, GraphTopology) {
 fn builds_and_solves() {
     let (model, topo) = checkerboard(5);
     let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
-    let outcome = solver.solve(1);
+    let outcome = solver.solve(1).expect("original search and teardown complete");
     assert!(matches!(outcome, SolveOutcome::Solved(_)));
 }
 
@@ -30,7 +30,7 @@ fn builds_and_solves() {
 fn fix_pins_a_node() {
     let (model, topo) = checkerboard(4);
     let mut solver = GraphSolverBuilder::new(model, topo).fix(NodeId(0), PatternId(0)).build().unwrap();
-    match solver.solve(1) {
+    match solver.solve(1).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => assert_eq!(sol.assignment[0], PatternId(0)),
         other => panic!("expected Solved, got {other:?}"),
     }
@@ -49,7 +49,7 @@ fn domain_override_restricts_a_node() {
     let mut allowed = PatternSet::new_empty(2);
     allowed.set(PatternId(1), true);
     let mut solver = GraphSolverBuilder::new(model, topo).domain(NodeId(0), allowed).build().unwrap();
-    match solver.solve(1) {
+    match solver.solve(1).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => assert_eq!(sol.assignment[0], PatternId(1)),
         other => panic!("expected Solved, got {other:?}"),
     }
@@ -70,7 +70,7 @@ fn solve_cancellable_reports_cancelled_when_pre_cancelled() {
     let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
     let cancel = CancelToken::new();
     cancel.cancel();
-    let outcome = solver.solve_cancellable(1, &cancel);
+    let outcome = solver.solve_cancellable(1, &cancel).expect("original search and teardown complete");
     assert!(matches!(outcome, SolveOutcome::Cancelled { .. }));
 }
 
@@ -105,12 +105,12 @@ fn resume_rejects_mismatched_fingerprint() {
 fn repair_reopens_only_the_requested_halo() {
     let (model, topo) = checkerboard(6);
     let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
-    let previous = match solver.solve(1) {
+    let previous = match solver.solve(1).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => sol.assignment,
         other => panic!("expected an initial Solved baseline, got {other:?}"),
     };
 
-    match solver.repair(&previous, &[NodeId(3)], 1, 2) {
+    match solver.repair(&previous, &[NodeId(3)], 1, 2).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => {
             for i in [0usize, 1, 5] {
                 assert_eq!(sol.assignment[i], previous[i], "node {i} is outside the radius-1 halo and must be unchanged");
@@ -135,7 +135,7 @@ fn solve_beam_finds_a_valid_solution_and_respects_fixed_pins() {
 fn solve_multi_start_finds_a_valid_solution_and_respects_fixed_pins() {
     let (model, topo) = checkerboard(10);
     let solver = GraphSolverBuilder::new(model, topo).fix(NodeId(0), PatternId(0)).build().unwrap();
-    match solver.solve_multi_start(11, 4) {
+    match solver.solve_multi_start(11, 4).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => assert_eq!(sol.assignment[0], PatternId(0)),
         other => panic!("expected Solved, got {other:?}"),
     }
@@ -155,7 +155,7 @@ fn cardinality_constraint_forces_the_unique_matching_checkerboard_coloring() {
     let black = PatternId(0);
     let constraint = CardinalityConstraint::new(model.clone(), PatternSelector::Pattern(black), Scope::All, 3, 3).unwrap();
     let mut solver = GraphSolverBuilder::new(model, topo).constraint(constraint.into()).build().unwrap();
-    match solver.solve(1) {
+    match solver.solve(1).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => {
             assert_eq!(sol.assignment, vec![PatternId(0), PatternId(1), PatternId(0), PatternId(1), PatternId(0)]);
             assert_eq!(sol.assignment.iter().filter(|&&p| p == black).count(), 3);
@@ -173,7 +173,7 @@ fn cardinality_constraint_beyond_both_colorings_is_unsatisfiable() {
     let black = PatternId(0);
     let constraint = CardinalityConstraint::new(model.clone(), PatternSelector::Pattern(black), Scope::All, 4, 5).unwrap();
     let mut solver = GraphSolverBuilder::new(model, topo).constraint(constraint.into()).build().unwrap();
-    match solver.solve(1) {
+    match solver.solve(1).expect("original search and teardown complete") {
         SolveOutcome::Unsatisfiable(report) => assert!(report.proven),
         other => panic!("expected Unsatisfiable, got {other:?}"),
     }
@@ -203,7 +203,7 @@ fn flow_constraint_end_to_end_forces_a_connected_path_through_a_real_solve() {
 
     let constraint = FlowConstraint::new(model.clone(), PatternSelector::Pattern(floor), vec![NodeId(0)], vec![NodeId(3)], 1);
     let mut solver = GraphSolverBuilder::new(model, topo).constraint(constraint.into()).build().unwrap();
-    match solver.solve(1) {
+    match solver.solve(1).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => assert!(sol.assignment.iter().all(|&p| p == floor)),
         other => panic!("expected Solved, got {other:?}"),
     }

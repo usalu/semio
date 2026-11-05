@@ -23,6 +23,7 @@ pub struct Wfc2dTransient {
     #[dsl(table)]
     pub assignments: Vec<Wfc2dAssignment>,
     pub contradiction: bool,
+    pub source_revision: Vec<u8>,
 }
 
 impl pack::snapshot::ArtifactDsl for Wfc2dTransient {
@@ -96,5 +97,8 @@ impl semio_framework_value_snapshot_projection::SnapshotProjection for Wfc2dTran
     type Output = Self;
     type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
     fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
-    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
+    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
 }
+
+/// 🪪️ Only a complete source identity equal to the current render authority exposes an inferred cache.
+pub fn source_matches(source: &[u8], revision: Option<&[u8;32]>) -> bool { revision.is_some_and(|revision| source.len() == 32 && source == revision) }

@@ -13,7 +13,15 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+/** 🧪️ Exercises the Lowpoly composition, editor commands, managed engine and interchange IO together. */
+class RuntimeTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runRepositoryCargoTests(["semio-s-artifact-lowpoly-lowpoly-model", "semio-s-artifact-lowpoly-lowpoly-model-diff", "semio-s-artifact-lowpoly-lowpoly-mut-paint", "semio-s-artifact-lowpoly-lowpoly-commands", "semio-s-artifact-lowpoly-lowpoly-view", "semio-framework-plugin-command", "semio-framework-plugin-tests-11-2", "semio-framework-pixels", "semio-hub-lowpoly", "semio-s-artifact-lowpoly-lowpoly-editor", "semio-s-artifact-lowpoly-lowpoly-engine", "semio-s-artifact-lowpoly-lowpoly-io", "semio-s-artifact-lowpoly-lowpoly-mut-objects", "semio-s-artifact-lowpoly-lowpoly-modes", "semio-s-artifact-lowpoly-lowpoly-viewer"], this.repoRoot, this.invocation, rest);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-runtime", RuntimeTestScript);
 
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

@@ -10,7 +10,7 @@ use crate::grid2d::Grid2dTopology;
 use crate::ids::PatternId;
 use crate::model::CompiledModel;
 use crate::outcome::{Solution, SolveOutcome};
-use crate::search::{self, CancelToken, SearchConfig};
+use crate::search::{self, CancelToken, SearchConfig,SearchResult};
 use crate::topology::Topology;
 
 // #region 🔖️Builder
@@ -95,16 +95,16 @@ impl Grid2dSolver {
         }
     }
 
-    pub fn solve(&mut self, seed: u64) -> SolveOutcome {
+    pub fn solve(&mut self, seed: u64) -> SearchResult<Grid2dTopology> {
         match self.constraint_set() {
-            Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, None, &cs),
+            Some(cs) => Ok(search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, None, &cs)),
             None => search::solve(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed),
         }
     }
 
-    pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
+    pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SearchResult<Grid2dTopology> {
         match self.constraint_set() {
-            Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, Some(cancel), &cs),
+            Some(cs) => Ok(search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, Some(cancel), &cs)),
             None => search::solve_cancellable(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, cancel),
         }
     }
@@ -128,7 +128,7 @@ impl Grid2dSolver {
     /// cell whose value a neighboring chunk already committed, and the seed is deterministically
     /// derived from `world_seed` plus `(chunk_x, chunk_y)` — see [`crate::chunk`]'s docs for the
     /// exact contract. Re-solving the same chunk coordinate later reproduces identical content.
-    pub fn solve_chunk(&self, world_seed: u64, chunk_x: i64, chunk_y: i64, seam_fixed: &[(crate::ids::NodeId, PatternId)]) -> SolveOutcome {
+    pub fn solve_chunk(&self, world_seed: u64, chunk_x: i64, chunk_y: i64, seam_fixed: &[(crate::ids::NodeId, PatternId)]) -> SearchResult<Grid2dTopology> {
         chunk::solve_chunk(&self.model, &self.topology, &self.config, world_seed, chunk_x, chunk_y, Some(&self.init_domains), seam_fixed)
     }
 

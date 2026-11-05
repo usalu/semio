@@ -1,0 +1,21 @@
+# Owned Process Custody — 2026-11-05
+
+The repository fleet census identified only the obsolete read-only show command as owned cleanup scope: PID37212 with immutable-loader child16028, agent01a1a8b4-b334-7803-91e5-f3e1d5d7d561 and session5cea31605a9b.a1nnb4ysj55. Fresh Windows creation identities and complete command lines were obtained through the existing doctor OS command port, sampled twice and matched against the earlier fleet age/identity and exact authored command/digest. The initial stricter guard refused without signalling anything; examination established that37212 was the parent,16028 its child, and the fleet age/observation timestamps differed by about6seconds.
+
+The corrected guard verified both unchanged creation identities, exact command/digest and parent-child relation, then called the existing tool-independent terminateOwnedProcessTree port for37212. Both processes were confirmed absent afterward. The actual note producer was outside this tree and remains live. No shared dependency-builder process was signalled.
+
+A fresh repository MCP capacity_status afterward confirmed no grant for37212. This agent session has exactly one remaining grant: actual note producer9996,13694MiB reservation. The obsolete show's5120MiB reservation was released. The generated capacity capture is mcp-13032.json until ticket cleanup.
+
+The shared dependency builder was sampled read-only over6326milliseconds. Parent36736 retained its exact creation identity and CPU counter522343750×100ns. Its actual immutable-loader child5492 retained its exact creation identity and advanced from16785625000 to16791093750×100ns:0.546875CPU seconds during that interval. This is measurable CPU work; age alone does not establish a stall. The latest prior fleet phase was dependencies:workspace-edges with26751 operations. A second fresh counter sample would be required to claim whether that specific phase counter advanced; the CPU sample does not establish completion.
+
+The retained guest-process-custody.ts input uses the owned doctor and termination interfaces, refuses identity mismatch before termination, and records generated probes/results solely below this ticket's generated directory. Generated outputs must be removed at ticket completion; this report and input remain.
+
+## Current Producer Credits and Progress
+
+The later process census at 1793846247040 observed the producer root 9996, nested owned launcher 47476 and immutable executor 55240. The catalog peer remained a separate live tree 35312 → 52252 → 54840 → 54612. The catalog directory was still absent. No process was signalled or restarted.
+
+The doctor-backed CPU probe sampled the actual descendant trees of 54612 and 55240 over 5120 milliseconds with unchanged Windows creation identities. There were no additional child processes in those sampled trees. Executor 55240 accumulated 3.265625 CPU seconds (about 63.8% of one core); catalog executor 54612 accumulated 0.078125 seconds. This proves activity, not compilation or successful publication.
+
+The producer subsequently reported genuine phase progress: dependency store-ownership frontiers 1489344, 1535872 and 1536832, followed by JavaScript preserving-source work and shared dependency store-input replay. Its seven-job, seven-CPU, 13694-MiB capacity grant therefore spans substantial serial preparation before any observed guest compiler work. It is not currently evidence of seven active compiler children. The capacity evaluator counts active grant CPU in its load ceiling, so this overreservation can constrain other required work even when memory has headroom.
+
+The existing tool-independent host-capacity gate can lend a grant while the entire actual process tree publishes a real wait episode. It can resume a lent grant and upgrade or grow capacity. `markHostCapacityPhaseV1` calls the existing resize hook for memory and ramp metadata; it does not narrow jobs or CPU. `ResourceLeaseControl.yieldContinuation` yields execution but does not itself release host CPU credits. No public live downward-resize port was found. Marking an actively progressing producer as waiting, editing its grant files, or forging another process's owner environment would not be an honest use of these interfaces. No such action was taken.

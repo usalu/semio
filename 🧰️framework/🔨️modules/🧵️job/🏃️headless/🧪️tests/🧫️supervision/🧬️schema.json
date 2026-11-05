@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/job/headless/supervision/schema.json",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "initialStop",
+          "preparationTurns",
+          "yields",
+          "stopAtStep",
+          "terminal",
+          "blockClose",
+          "expected",
+          "payloadBytes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "initialStop": {
+            "enum": [
+              null,
+              "cancelled",
+              "budget"
+            ]
+          },
+          "preparationTurns": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "yields": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "stopAtStep": {
+            "enum": [
+              null,
+              1
+            ]
+          },
+          "terminal": {
+            "enum": [
+              "complete",
+              "cancelled",
+              "fault"
+            ]
+          },
+          "blockClose": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "businessSteps",
+              "supervisorCalls",
+              "finishCalls",
+              "result",
+              "keptAcrossBlocked"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "businessSteps": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              },
+              "supervisorCalls": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3
+              },
+              "finishCalls": {
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "result": {
+                "enum": [
+                  "supervisor:cancelled",
+                  "supervisor:budget",
+                  "finish:complete",
+                  "finish:cancelled",
+                  "finish:fault"
+                ]
+              },
+              "keptAcrossBlocked": {
+                "type": "boolean"
+              }
+            }
+          },
+          "payloadBytes": {
+            "enum": [
+              0,
+              32785
+            ]
+          }
+        }
+      }
+    }
+  }
+}

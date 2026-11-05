@@ -4,6 +4,18 @@
 
     pub(super) const ROWS: &[SchemaMetadata] = &[
         SchemaMetadata {
+            name: "PureInvocation",
+            version: 1,
+            typescript: r####"/** 🧭️ A declaration-owned action or command preview. */
+export type PureInvocation = { action: ActionInvocation } | { command: CommandInvocation };"####,
+        },
+        SchemaMetadata {
+            name: "PureCommandRequest",
+            version: 1,
+            typescript: r####"/** 🧑‍💻️ Explicit caller context or an authoritative retained surface. */
+export type PureCommandRequest = { invocation: PureInvocation, viewState?: ViewModel };"####,
+        },
+        SchemaMetadata {
             name: "HoverSpec",
             version: 1,
             typescript: r####"/**

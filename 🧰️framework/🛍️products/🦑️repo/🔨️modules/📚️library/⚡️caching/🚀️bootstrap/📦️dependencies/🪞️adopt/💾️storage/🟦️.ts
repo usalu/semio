@@ -3,7 +3,7 @@ import {cp} from "node:fs/promises";
 import {join,relative,sep} from "node:path";
 import {writeJavascriptDependencyGenerationFilesV1} from "../../🧾️generation/💾️storage/🟦️.ts";
 import {generationSha256V1} from "../../🧾️generation/🟦️.ts";
-import {adoptClonedRootsV1,adoptCloneCommandV1,adoptDonorQualifiesV1,adoptProtocolV1 as protocol,installProjectionSha256V1,parseAdoptReceiptV1,sealAdoptReceiptV1,type AdoptFileV1,type AdoptReceiptV1,type AdoptRuntimeV1} from "../🟦️.ts";
+import {adoptClonedRootsV1,adoptCloneCommandV1,adoptDonorQualifiesV1,adoptCurrentGenerationQualifiesV1,adoptProtocolV1 as protocol,installProjectionSha256V1,parseAdoptReceiptV1,sealAdoptReceiptV1,type AdoptFileV1,type AdoptReceiptV1,type AdoptRuntimeV1} from "../🟦️.ts";
 
 const directory=(storeRoot:string)=>join(storeRoot,protocol.directory);
 const names=(storeRoot:string,prefix:string):string[]=>{
@@ -77,3 +77,17 @@ export async function adoptJavascriptDependencyInstalledTreeV1(request:AdoptRequ
 export const adoptReceiptBodyV1=(generation:string,projectionSha256:string,runtime:AdoptRuntimeV1,installed:string):Omit<AdoptReceiptV1,"sha256">=>({version:1,purpose:"dependency-adopt-receipt",generation,projectionSha256,runtime,installed});
 /** 🪪️ Digests the producer recipe constant a runtime claim is bound to. */
 export const adoptRecipeSha256V1=(recipe:unknown):string=>generationSha256V1(JSON.stringify(recipe));
+
+/** 🏁️ Reuses completed current-generation work only after live installed and export verification under the caller's retained custody. */
+export async function reuseJavascriptDependencyInstalledGenerationV1(request:Readonly<{storeRoot:string;generation:string;directory:string;files:readonly AdoptFileV1[];runtime:AdoptRuntimeV1;check:()=>void;verifyInstalled:()=>Promise<Readonly<{sha256:string;shape:import("../../🧾️incremental/🟦️.ts").InstalledShapeV1}>|undefined>;verifyExports:(shape:import("../../🧾️incremental/🟦️.ts").InstalledShapeV1)=>Promise<boolean>}>):Promise<boolean>{
+ request.check();const wanted={generation:request.generation,projectionSha256:adoptProjectionOfV1(request.directory,request.files),runtime:request.runtime};
+ for(const name of names(request.storeRoot,request.generation.slice(0,20)+".")){
+  request.check();const receipt=read(request.storeRoot,name);
+  if(!receipt||!adoptCurrentGenerationQualifiesV1(receipt,wanted))continue;
+  const installed=await request.verifyInstalled();request.check();
+  if(!installed||installed.sha256!==receipt.installed)continue;
+  if(!await request.verifyExports(installed.shape)){request.check();continue;}
+  request.check();return true;
+ }
+ request.check();return false;
+}

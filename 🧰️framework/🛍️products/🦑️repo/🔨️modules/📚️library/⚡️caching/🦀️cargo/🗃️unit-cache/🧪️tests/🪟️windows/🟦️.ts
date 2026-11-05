@@ -1,11 +1,18 @@
 import {expect,test} from "bun:test";
-import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,rmSync,writeFileSync} from "node:fs";
+import { Database } from "bun:sqlite";
+import Ajv from "ajv";
+import publicationSchema from "./🧫️fixtures/publication-interleaving.schema.json" with {type:"json"};
+import publicationInterleaving from "./🧫️fixtures/publication-interleaving.json" with {type:"json"};
+import {chmodSync,readFileSync,existsSync,mkdirSync,mkdtempSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import responseFixture from "./🧫️fixtures/response-file.json" with {type:"json"};
+import responseSchema from "./🧫️fixtures/response-file.schema.json" with {type:"json"};
+import {expandRustcArgumentsV1} from "../../🔏️key/🟦️.ts";
 import {ensureUnitCacheShimV1,unitCacheEnvironmentV1,unitCacheShimPathV1,UNIT_CACHE_NATIVE_BUILD_V1,type UnitCacheNativeBuildV1} from "../../🚪️launch/🟦️.ts";
 import {removeClaimFileV1,tryClaimV1} from "../../🔒️lock/🟦️.ts";
 import {churnProtocolV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
@@ -24,7 +31,7 @@ test("the Windows stand-in is a native executable that hands Cargo's quoted argu
   for(const row of fixture.rustcArguments){
    const run=spawnSync(wrapper,["C:\\rust\\bin\\rustc.exe",...row],{encoding:"utf8",env:{PATH:process.env.PATH??"",SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,echoScript])}});
    expect(run.status,run.stderr).toBe(0);expect(JSON.parse(run.stdout)).toEqual(row);
-   if(python){const oracle=spawnSync(python,["-I",echoPython,...row],{encoding:"utf8"});expect(JSON.parse(oracle.stdout)).toEqual(JSON.parse(run.stdout));}
+   if(python){const oracle=spawnSync(python,["-I","-X","utf8",echoPython,...row],{encoding:"utf8"});expect(JSON.parse(oracle.stdout)).toEqual(JSON.parse(run.stdout));}
   }
   for(const status of fixture.exitStatuses){
    const run=spawnSync(wrapper,["rustc","--crate-name","x"],{encoding:"utf8",env:{PATH:process.env.PATH??"",XPLAT_EXIT:String(status),SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,echoScript])}});
@@ -33,15 +40,34 @@ test("the Windows stand-in is a native executable that hands Cargo's quoted argu
  }finally{rmSync(root,{recursive:true,force:true});}
 },120000);
 
-test("the executable is named by the code it embeds: unchanged code is never recompiled, changed code replaces the older executable", () => {
+test("Cargo response files remain response files across a cache miss above the Windows command limit", () => {
+ expect(new Ajv({strict:true}).validate(responseSchema,responseFixture)).toBe(true);
+ const root=scratch();
+ try {
+  const args=[...responseFixture.arguments,...Array.from({length:responseFixture.repetitions},()=>responseFixture.repeatedArgument)],file=join(root,"rustc-arguments.rsp"),reference="@"+file;
+  expect(args.join(" ").length).toBeGreaterThan(responseFixture.minimumCommandCharacters);
+  writeFileSync(file,args.join("\n"));
+  const wrapper=ensureUnitCacheShimV1(join(root,"u"),process.execPath,undefined,"win32"),run=spawnSync(wrapper,["rustc",reference],{encoding:"utf8",env:{PATH:process.env.PATH??"",SEMIO_UNIT_CACHE_ROOT:join(root,"u"),SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,echoScript])}});
+  expect(run.status,run.stderr).toBe(0);
+  expect(JSON.parse(run.stdout)).toEqual([reference]);
+  expect(expandRustcArgumentsV1([reference],root)).toEqual(args);
+  const python=testPythonV1();
+  expect(python).toBeDefined();
+  const oracle=spawnSync(python!,["-I","-X","utf8","-c","import argparse,json,sys; print(json.dumps(argparse.ArgumentParser(fromfile_prefix_chars=chr(64),add_help=False).parse_known_args(sys.argv[1:])[1],ensure_ascii=False))",reference],{encoding:"utf8"});
+  expect(oracle.status,oracle.stderr).toBe(0);
+  expect(JSON.parse(oracle.stdout)).toEqual(expandRustcArgumentsV1([reference],root));
+ } finally {rmSync(root,{recursive:true,force:true});}
+},120000);
+
+test("the executable is named by the code it embeds: unchanged code is never recompiled, changed code retains prior immutable executables", () => {
  const root=join(scratch(),"u"),calls={bundle:0,compile:0};let code="one";
  const build:UnitCacheNativeBuildV1={bundle:()=>{calls.bundle++;return code;},compile:(_runtime,_entry,outfile)=>{calls.compile++;writeFileSync(outfile,"exe:"+code);}};
  try{
   const first=ensureUnitCacheShimV1(root,"/bin/bun","/s.ts","win32",build,"/entry.ts");
   expect(ensureUnitCacheShimV1(root,"/bin/bun","/s.ts","win32",build,"/entry.ts")).toBe(first);expect(calls.compile).toBe(1);
   code="two";const second=ensureUnitCacheShimV1(root,"/bin/bun","/s.ts","win32",build,"/entry.ts");
-  expect(second).not.toBe(first);expect(calls.compile).toBe(2);expect(existsSync(first),"the older executable is removed").toBe(false);expect(existsSync(second)).toBe(true);
-  expect(readdirSync(join(root,"bin")).filter(name=>name.endsWith(".tmp"))).toEqual([]);
+  expect(second).not.toBe(first);expect(calls.compile).toBe(2);expect(existsSync(first),"a peer may still need its immutable executable").toBe(true);expect(existsSync(second)).toBe(true);
+  expect(readdirSync(join(root,"bin")).filter(name=>name.includes(".tmp"))).toEqual([]);
  }finally{rmSync(join(root,".."),{recursive:true,force:true});}
 });
 
@@ -73,4 +99,26 @@ test.skipIf(process.platform==="win32")("releasing a claim never throws, whateve
   expect(removeClaimFileV1(join(locks,"unit.lock"))).toBe(true);expect(existsSync(join(locks,"unit.lock"))).toBe(false);
   expect(removeClaimFileV1(join(locks,"absent.lock"))).toBe(true);
  }finally{try{chmodSync(locks,0o700);}catch{}rmSync(root,{recursive:true,force:true});}
+});
+
+test("native wrapper publication preserves another producer staged executable", () => {
+ expect(new Ajv({strict:true}).validate(publicationSchema,publicationInterleaving)).toBe(true);
+ const root=join(scratch(),"u"),database=new Database(":memory:");
+ database.exec("create table files(owner text primary key, phase text)");
+ try {
+  for(const step of publicationInterleaving.steps){
+   const [owner,operation]=step.split(".");
+   if(operation==="stage")database.query("insert into files values(?,?)").run(owner!,"staged");
+   else if(operation==="publish")database.query("update files set phase=? where owner=?").run("published",owner!);
+   else database.query("delete from files where phase=?").run("retired");
+  }
+  const oracle=(database.query("select owner from files where phase=? order by owner").all("published") as {owner:string}[]).map(row=>row.owner);
+  expect(oracle).toEqual(publicationInterleaving.expectedPublished);
+  const winner:UnitCacheNativeBuildV1={bundle:()=>"winner",compile:(_runtime,_entry,outfile)=>writeFileSync(outfile,"exe:winner")};
+  const peer:UnitCacheNativeBuildV1={bundle:()=>"peer",compile:(_runtime,_entry,outfile)=>{expect(outfile.endsWith(publicationInterleaving.temporarySuffix)).toBe(true);writeFileSync(outfile,"exe:peer");ensureUnitCacheShimV1(root,"/bin/bun",undefined,"win32",winner,"/winner.ts");expect(existsSync(outfile),"the winner must retain its peer original stage").toBe(true);}};
+  const published=ensureUnitCacheShimV1(root,"/bin/bun",undefined,"win32",peer,"/peer.ts");
+  expect(readFileSync(published,"utf8")).toBe("exe:peer");
+  expect(readdirSync(join(root,"bin")).map(name=>readFileSync(join(root,"bin",name),"utf8").slice(4)).sort()).toEqual(oracle);
+  expect(readdirSync(join(root,"bin")).filter(name=>name.includes(".tmp"))).toEqual([]);
+ } finally { database.close();rmSync(join(root,".."),{recursive:true,force:true}); }
 });

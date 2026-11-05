@@ -7,10 +7,16 @@ VCS → backbone path, so a live shell sees an agent's edit exactly as it sees a
 
 ## Run it
 
-Headless MCP agent clients start the stdio gateway from dashboard-owned declarations.
-Choose **New Task** (`Ctrl+B n`), search `agents write` and start `workspace:agents-write`
-to derive `.mcp.json` and `.codex/config.toml`. The declaration of
-`tool:workspace/os-mcp-stdio` owns the command and its working-space policy.
+The `semio` entry in `.mcp.json` and `.codex/config.toml` launches this server through `repo`:
+
+```text
+repo dev mcp stdio os --catalog ✏️s/🧑‍💻dev/🧩️catalog/🤖️generated --catalog-target @semio-tech/s-dev-composition:generate --folder .🧬semio/🔗space/os-mcp --scopes workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write
+```
+
+The root `📋️project.json` declaration `tool:workspace/os-mcp-stdio` owns this command.
+The client configuration writer derives both client files from that declaration.
+The launcher answers the cold handshake immediately, prepares the native executable and catalog through their owning build and generation interfaces, then forwards requests to the native server.
+A handshake whose `serverInfo.version` is `warming` means preparation is still running. Native discovery and successful tool calls are the readiness checks.
 
 For development choose **New Task**, search `mcp http` or `mcp inspector`, complete
 its form and choose **Start**. Inspect output and readiness in Task overview;
@@ -48,12 +54,12 @@ Concretely, the working loop is:
 |---|---|---|
 | "what can you do here?" | `capabilities_search`, `capabilities_describe`, `context_resolve` | It searches the live catalog of your installed plugins instead of guessing. |
 | "open my site plan" / "start a new one" | `artifact_open`, `artifact_create` | The document becomes the working subject. |
-| "widen that wall to 300" | `action_prepare` → `action_invoke` | `prepare` is a true dry run: you see the proposed change before anything is written. `invoke` commits it. |
+| "widen that wall to 300" | `action_prepare` → `action_invoke` | Inspect the preview and warnings before invoking. The attached React route stages the command; its domain validation runs at commit. |
 | "do these five things as one change" | `transaction_begin` → … → `transaction_commit` | One undo step, all-or-nothing. `transaction_rollback` abandons it. |
-| "save this state so I can come back" | `artifact_snapshot` | A named point you can return to. |
+| "read the current document bytes" | `artifact_snapshot` | The current canonical pack/history pair, with provenance. This call does not create a checkpoint. |
 | "no, undo that" | `history_undo`, `history_redo` | The same undo stack your own edits use. |
 | "run the solver on this" | `inference_run`, or `inference_submit`/`inference_events`/`inference_cancel` | A plugin's own computation (GIS geometry, a WFC solve), locally or as a hub job. |
-| "export it" | `artifact_export`, `artifact_validate` | |
+| "check or export it" | `artifact_validate`, `artifact_export` | Validation checks the canonical pair with its owner codec. Export uses the owning app's media output. |
 
 **Approvals.** A capability whose manifest marks it destructive parks the call and asks a human
 before it proceeds — through your client's own approval prompt if it supports MCP elicitation,
@@ -81,21 +87,15 @@ One binary, `semio-os-mcp`, in two profiles:
 
 ```bash
 repo run @semio-tech/framework-os-mcp-rs:build
-# → …/🌉️mcp/📦️packages/🦀️rust/dist/build/semio-os-mcp          (debug — the dev loop)
 
 repo run @semio-tech/framework-os-mcp-rs:build-release
-# → …/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp  (release — use this one)
 ```
 
-Use the release build for a client you actually work in; the debug build is what this repo's own
-`.mcp.json` runs through `bun`. `SEMIO_OS_MCP_BIN` overrides where tooling looks for the binary.
+The development launcher selects the prototype executable from the original compiler store's publication and retains that store while the server runs. Clients use the canonical launcher above rather than guessing a cache or package `dist` path. `SEMIO_OS_MCP_BIN` is an explicit prebuilt executable override used by process tests and embeddings.
 
 `semio-os-mcp <stdio|http|audit|schemas>` is the whole surface.
 
-What still does not exist: **no npm package, no Homebrew formula, no signed download, no GitHub
-release.** Installing this server means clone this repository, install `bun`, and build. A macOS user
-should expect an unsigned binary — nothing in this codebase codesigns or notarizes anything, so
-Gatekeeper will need to be told to allow it.
+Toolchain preparation and native compilation go through the repository tool registry and build catalogue on Windows, macOS, Linux and devcontainers. Release packaging and signing use the native build owner's distribution functions.
 
 ### Binding it to your work: `--folder` vs `--hub`
 
@@ -393,7 +393,7 @@ sentence, and with no client attached the panel is empty rather than chatty.
 ## Mutation protocol
 
 `Observe → Prepare → Preview → Approve → Commit → Verify`, over the existing channel frames:
-`PureCommand` is a true dry-run, the commit is a two-phase `TransactionPrepare`/`TransactionCommit`
+Guest `PureCommand` can compute a preview; the attached React route stages a validated command envelope and reports that domain validation occurs at commit. The commit uses `TransactionPrepare`/`TransactionCommit`
 (so a stale `expectedRevision` surfaces as `REVISION_CONFLICT` rather than a lost update), and an
 `undoToken` maps to `TransactionUndo{group_id}`. Idempotency keys make a retried invoke replay its
 stored report instead of mutating twice.

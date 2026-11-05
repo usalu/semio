@@ -12,8 +12,8 @@ use super::*;
 pub struct SharedWorkspace(pub Arc<HeadlessWorkspace>);
 
 impl GatewayBackend for SharedWorkspace {
-    fn resolve_context(&self, principal: &str) -> Result<ContextSummary, GatewayError> {
-        self.0.resolve_context(principal)
+    fn resolve_context(&self, principal: &str, locale: &str) -> Result<ContextSummary, GatewayError> {
+        self.0.resolve_context(principal, locale)
     }
 
     fn search_capabilities(&self, query: &str) -> Result<Vec<SearchHit>, GatewayError> {

@@ -3,31 +3,22 @@
 use super::*;
 
 //#region 🔖️ArtifactChannel
-/// 🔌️ Real `crate::actions::ArtifactChannel` implementation — the seam `P6-actions-policy`'s
-/// `ActionAdapter` drives (`🔀️dispatch/🦀️.rs`'s own module doc: "is P7's job when it
-/// implements `ArtifactChannel` for real"). `ReadHistory` is driven for REAL over
-/// `GuestRuntime::execute_turn` (one retained command page per turn, scan `TurnResult.effects` for
-/// `Effect::Respond{req, result}` where `req.0 == seq`, decode `RequestOutcome::Ok` as a real
-/// `store::AppFrame::HistorySnapshot` — exactly the "real body" `🏃️run/🦀️.rs`'s own
-/// `WasmtimeNodeHost::exchange` doc comment describes and does not itself build). The mutation
-/// variants (`PureCommand`/`TransactionPrepare`/`Commit`/`Rollback`/`Undo`/`Redo`) need a real
-/// `manifest::ActionInvocation{address: ActionAddress{plugin_id, app_id, mode_id, window_kind_id,
-/// window_instance_id, action_id}, arguments}` — every one of those five address fields beyond
-/// `plugin_id`/`app_id` is normally supplied by a LIVE window/mode the headless gateway has none of;
-/// inventing placeholder values for them is a real design decision (what does a headless agent's
-/// "window"/"mode" even mean) this packet is not positioned to make unilaterally in the time
-/// available, so — same honesty rule as `🏃️run`'s own `run_transaction`/`undo_transaction_group` —
-/// these return a well-formed, typed `"channel.not-wired"` `Fault` naming exactly what is missing,
-/// never a fabricated result.
+/// 🔌️ Owns real guest sessions, prepared transactions, history and explicit caller context.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct PluginArtifactChannel {
-    pub host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy,
-    pub(super) host_driver:Arc<semio_plugin_host::GuestRelayWakeDriver>,
+    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
+    pub operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy,
+    pub(super) startup_instance_custody:Option<(semio_framework_plugin_host::GuestInstance,Arc<semio_framework_plugin_host::GuestRelayWakeDriver>)>,
+    pub(super) startup_custody:Option<(semio_framework_plugin_host::GuestActorOpening,Arc<semio_framework_plugin_host::GuestRelayWakeDriver>)>,
+    pub(super) startup_failure:Option<semio_framework_plugin_host::GuestRelayAdmissionFailure>,
+    pub(super) operation_refusal:Option<(Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,semio_framework_plugin_host::GuestRelayAdmissionFailure,Option<Fault>)>,
+    pub(super) host_driver:Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,
     /// 🐎️ The process-wide compiled runtime ([`shared_plugin_runtime`]), held as the `GuestRuntimes`
     /// enum rather than a bare `WasmtimeRuntime` because the inference lane's
     /// `PluginInstanceHandle` takes exactly that `Arc` — and it MUST be the same one: a
     /// `wasmtime::Component` belongs to the `Engine` that compiled it, so a second runtime could not
     /// instantiate `compiled` at all.
+    /// 🧠️ The process-wide firstparty interpreter of the retained compiled component.
     pub runtime: Arc<GuestRuntimes>,
     pub compiled: semio_plugin_host::CompiledHandle,
     /// 🔌️ The plugin this channel drives. It is the id alone, never a registry ROW: the row names a
@@ -37,6 +28,7 @@ pub struct PluginArtifactChannel {
     pub app_ref: semio_framework::AppRef,
     pub actor_label: String,
     pub(super) instances: HashMap<u32, semio_plugin_host::GuestInstance>,
+    pub(super) closing_instances:std::collections::BTreeSet<u32>,
     pub(super) pending_exchanges: PendingExchangeRegistry<1>,
     pub(super) pending_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
     pub(super) rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,

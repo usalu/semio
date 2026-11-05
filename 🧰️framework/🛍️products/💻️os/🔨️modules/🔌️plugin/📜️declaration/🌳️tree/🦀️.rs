@@ -135,6 +135,54 @@ pub fn stamp_fault_notices<A: ArtifactApp>(def: &mut AppDefinition) {
     }
 }
 
+
+/// 🪞️ Projects typed proof cancellation into public action data without admitting any factory or job.
+pub fn project_tool_cancellation<A: ArtifactApp>(def: &mut AppDefinition, rows: &[semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedFirstStepProof]) -> Result<(), PluginAssemblyError> {
+    use semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness;
+    use std::collections::BTreeSet;
+    let registry = AppActionRegistry::from_definition(def);
+    if registry.is_registry_less() { return Ok(()); }
+    if !registry.controller_id.is_empty() && registry.controller_id != def.id {
+        return Err(PluginAssemblyError::new("plugin-assembly.cancellation-controller", format!("app {} has a different action controller", def.id)));
+    }
+    let migrated = registry.migrated_tool_ids();
+    let expected = <A::Command as semio_framework_os_kernel::OpBinary>::TOOL_JOB_IDS.iter()
+        .filter(|id| **id != "typed-command" && migrated.contains(**id)).copied().collect::<BTreeSet<_>>();
+    let mut seen = BTreeSet::new();
+    for row in rows {
+        if row.owner != ToolOwnerWitness::of::<A>() || row.controller_id != def.id
+            || row.artifact_schema != A::DOCUMENT_SCHEMA || row.owner_file.is_empty()
+            || !expected.contains(row.tool_id) || !seen.insert(row.tool_id) {
+            return Err(PluginAssemblyError::new("plugin-assembly.cancellation-proof", format!("app {} has an invalid cancellation proof for {}", def.id, row.tool_id)));
+        }
+    }
+    if seen != expected {
+        return Err(PluginAssemblyError::new("plugin-assembly.cancellation-incomplete", format!("app {} has a migrated generated command without its cancellation proof", def.id)));
+    }
+    for action in def.actions.iter_mut().chain(def.window_kinds.iter_mut().flat_map(|window| window.actions.iter_mut())) {
+        if let Some(row) = rows.iter().find(|row| row.tool_id == action.id) {
+            action.semantics.execution.cancellable = match row.contract.cancellation {
+                semio_framework::ToolCancellationPolicy::PerOperation => true,
+            };
+        }
+    }
+    for command in def.commands.iter_mut().chain(def.modes.iter_mut().flat_map(|mode| mode.commands.iter_mut())) {
+        if let Some(row) = rows.iter().find(|row| row.tool_id == command.id) {
+            command.semantics.execution.cancellable = match row.contract.cancellation {
+                semio_framework::ToolCancellationPolicy::PerOperation => true,
+            };
+        }
+    }
+    Ok(())
+}
+
+/// 🏗️ Stamps the concrete app's published contracts before its definition is shared with factories.
+pub fn stamp_app_contracts<A: ArtifactApp>(def: &mut AppDefinition) {
+    stamp_fault_notices::<A>(def);
+    project_tool_cancellation::<A>(def, &A::bounded_first_step_tool_proofs())
+        .unwrap_or_else(|error| panic!("app {}: {error:?}", def.id));
+}
+
 /// 🪆️ One complete standalone subset — own schema, own io, own viewer, own editor, own
 /// examples (design.md rule 2). `dialect` is the one source of truth `editor.definition.id`/
 /// `viewer.definition.id` must derive from via `surface_app_id` (proven by

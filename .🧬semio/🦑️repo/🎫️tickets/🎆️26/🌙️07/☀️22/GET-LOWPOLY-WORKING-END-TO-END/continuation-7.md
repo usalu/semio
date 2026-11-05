@@ -1,0 +1,15 @@
+# Continuation 7
+
+Prior turn made authoritative source progress and verified the ongoing native wait. This turn executed the owning TypeScript surfaceAppId/parseSurfaceAppId controller oracle successfully against the neutral fixture and actual static descriptor; see controller-routing.md. No Rust helper or live action execution is implied by that cross-implementation metadata result.
+
+Inspected actual framework pixels editing code and existing Raster fill. Rust flood_selection remains a complete synchronous traversal; TypeScript floodSelection is async but no bounded flood cursor job is exposed. Existing PixelEditJob provides a useful pixel-grant pattern. Lowpoly replacement-color semantics differ from framework source-over fill, so do not replace its law blindly. No shared framework source was changed.
+
+Corrected fill-budget physical grants to the actual current MountedOwnerPolicyV1 interactive maintenance policy:32 items,32KiB copy,16MiB capacity,1MiB release, depth4096. The Rust regression asserts that public authority directly, while intentionally narrowing algorithm fuel to256. This avoids introducing an arbitrary release ceiling that would strand valid image storage. Actual red/green remains pending before cooperative cursor implementation; current source spends no domain fuel. Graphlib pixel semantics are unchanged from the independently passed65,536-pixel oracle.
+
+Native67153 remains live and has advanced through source admission to unit473/630 (Lowpoly mut-objects) and roughly35MB admitted source at outer2964s. No compiler/test body or terminal result exists. Keep polling the same handle; filter repetitive script activity when printing large output. The only extra formatter probe47346 was previously cancelled before work. Current source includes changes after native snapshot preparation began, so final results must be checked for actual newest regression/source coverage and a fresh follow-up used when necessary.
+
+Revalidated shared JavaScript producer5492 through OS: active with original creation134383003412184987 and advancing CPU kernel5278125000/user11709062500 in100ns units. Doctor still reports no dependency publication and36 unfinished historical generations. Read-only Draw cursor now c65249d6-65bd-47f4-894d-d5f6f48c226f:14. No other chat process was stopped and no duplicate Lowpoly suite/server was started.
+
+Goal/ticket remain open with full acceptance unchanged: relevant native/composition execution, bounded expensive work, catalog/activation, real editor/viewer rendered geometry and errors, UI editing/painting/UV/history, picker/download formats, actual browser reload persistence and both locales. Sol subagents remain unavailable after explicit provider usage-limit failures; root continues available work.
+
+Latest milestone supersedes473/630 above: native67153 completed source admission630/630,4877 source files and46,240,902 bytes at outer3384s. Still live; no compiler/test result. All source-admission complete markers refer only to source checks, not executed Rust tests.

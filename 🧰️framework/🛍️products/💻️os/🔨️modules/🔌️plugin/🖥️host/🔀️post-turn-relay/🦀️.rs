@@ -1,4 +1,11 @@
-//! 🔀️ The post-turn relay of the plugin host: guest relay pool, instance slots and leases, cold relay jobs, the mounted registry and the plugin instance handle.
+//! 🔀️ Source-funded guest operations and their original result recipients.
+pub use semio_framework_plugin_host_source_json::{SourceJsonEncoder,OriginalJobBudgetJson};
+#[path="🎟️unit/🦀️.rs"]
+mod original_unit_flow;
+pub use original_unit_flow::{GuestRelayUnitFlow,GuestRelayUnitStatus};
+#[path="📤️output/🦀️.rs"]
+mod original_output;
+pub use original_output::{GuestRelayOutput,GuestRelayOutputHome,GuestRelayFaultHome,GuestRelayFault,GuestRelayResult};
 
 //#region 🔀️PostTurnRelay
 
@@ -27,6 +34,14 @@ use relay_attempts_and_publication::{
     receive_relay_close, recover_guest_relay_failure, run_guest_relay_request, GuestRelayAttempt,
     GuestRelayPublication, GuestRelayPublicationKind,
 };
+
+#[path = "🥶️cold-relay-job/📨️original-crossing/🦀️.rs"]
+mod original_crossing;
+use original_crossing::GuestRelayNativeResponse;
+
+#[path="🏠️native/🦀️.rs"]
+mod native_home;
+pub use native_home::{GuestRelayNativeHome,GuestRelayNativeOrigin,GuestRelayNativeResolver,GuestRelayNativeState,NativeInstanceHome,NativeInstanceRetirement};
 
 #[path = "🥶️cold-relay-job/🦀️.rs"]
 mod cold_relay_job;

@@ -12,7 +12,7 @@
           "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
-            "appChannelVersion": 23
+            "appChannelVersion": 25
           },
           "componentReceipt": {
             "schema": "semio.plugin.component-receipt/v1",
@@ -36,7 +36,7 @@
           "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
-            "appChannelVersion": 23
+            "appChannelVersion": 25
           },
           "componentReceipt": {
             "schema": "semio.plugin.component-receipt/v1",
@@ -80,7 +80,7 @@
           "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
-            "appChannelVersion": 23
+            "appChannelVersion": 25
           },
           "componentReceipt": {
             "schema": "semio.plugin.component-receipt/v1",
@@ -104,7 +104,7 @@
           "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
-            "appChannelVersion": 23
+            "appChannelVersion": 25
           },
           "componentReceipt": {
             "schema": "semio.plugin.component-receipt/v1",
@@ -142,7 +142,7 @@
           "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
-            "appChannelVersion": 23
+            "appChannelVersion": 25
           },
           "componentReceipt": {
             "schema": "semio.plugin.component-receipt/v1",
@@ -166,7 +166,7 @@
           "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
-            "appChannelVersion": 23
+            "appChannelVersion": 25
           },
           "componentReceipt": {
             "schema": "semio.plugin.component-receipt/v1",
@@ -227,7 +227,7 @@
           "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
-            "appChannelVersion": 23
+            "appChannelVersion": 25
           },
           "componentReceipt": {
             "schema": "semio.plugin.component-receipt/v1",
@@ -251,7 +251,7 @@
           "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
-            "appChannelVersion": 23
+            "appChannelVersion": 25
           },
           "componentReceipt": {
             "schema": "semio.plugin.component-receipt/v1",

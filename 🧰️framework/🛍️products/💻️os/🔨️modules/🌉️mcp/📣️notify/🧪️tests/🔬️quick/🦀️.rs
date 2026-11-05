@@ -19,7 +19,6 @@ use semio_os_mcp_capabilities::source_builders::note_and_cad_source;
 #[cfg(test)]
 use semio_os_mcp_port::channel_port::MockArtifactChannel;
 
-//#region 🧫️Fixtures
 
 fn fixture_catalog() -> Arc<Catalog> {
     Arc::new(compile(&note_and_cad_source(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("the note+cad fixture always compiles"))
@@ -49,9 +48,7 @@ fn result_of(server: &mut McpServer, request: JsonRpcRequest) -> serde_json::Val
     serde_json::to_value(&response).expect("a response always serializes").get("result").cloned().unwrap_or(serde_json::Value::Null)
 }
 
-//#endregion 🧫️Fixtures
 
-//#region 🧪️Pagination
 
 #[test]
 fn a_cursor_round_trips_through_its_opaque_form() {
@@ -135,9 +132,7 @@ fn a_tools_list_page_walk_visits_every_tool_exactly_once() {
     assert_eq!(walked, names, "the page walk did not reproduce the whole, stably-ordered tool list");
 }
 
-//#endregion 🧪️Pagination
 
-//#region 🧪️ResourceRoster
 
 #[test]
 fn resources_list_never_repeats_a_uri() {
@@ -149,9 +144,7 @@ fn resources_list_never_repeats_a_uri() {
     assert_eq!(uris.iter().filter(|uri| uri.as_str() == "semio://workspace/artifacts").count(), 1);
 }
 
-//#endregion 🧪️ResourceRoster
 
-//#region 🧪️Subscriptions
 
 #[test]
 fn subscribing_to_an_unknown_resource_is_refused_rather_than_silently_accepted() {
@@ -224,14 +217,7 @@ fn the_declared_table_says_which_tool_changed_which_resource() {
     assert!(changes_from_tool_result("capabilities_search", false, Some(&serde_json::json!({ "hits": [] }))).is_empty(), "a read-only tool changed nothing");
 }
 
-/// 🧫️ `MockArtifactChannel` names its artifact `mock-artifact-<instance>`; subscribe to every
-/// instance the fixture could mint so this test asserts the WIRING, not an id guess.
-///
-/// 🔔️ The real proof: the very artifact id the invocation reports is the URI a subscriber was
-/// told about, through `tools/call` alone — no test-only broadcast anywhere in this path.
-///
-/// 🧫️ The fixture refused the invocation (no scope, no such capability): then nothing may have
-/// been published either — silence on a non-mutation is exactly as load-bearing.
+/// 🧫️ Subscribe to every mock instance artifact so legitimate document notifications reach the observed channel.
 #[test]
 fn a_committed_mutation_through_tools_call_reaches_a_subscriber() {
     let (mut server, sink) = server_with_sink();
@@ -257,9 +243,7 @@ fn a_committed_mutation_through_tools_call_reaches_a_subscriber() {
     }
 }
 
-//#endregion 🧪️Subscriptions
 
-//#region 🧪️Progress
 
 #[test]
 fn a_job_minted_outside_a_progress_scope_publishes_nothing() {
@@ -377,9 +361,7 @@ fn the_stdio_reader_consumes_notifications_cancelled_out_of_band() {
     job_registry().mark_cancelled(&job_id);
 }
 
-//#endregion 🧪️Progress
 
-//#region 🧪️StructuredOutput
 
 /// 📐️ Every tool that declares an `outputSchema` must declare one that COMPILES with this repo's own
 /// owned JSON-Schema validator, and a representative real result of that tool must validate against
@@ -405,14 +387,7 @@ fn every_tool_declares_a_compilable_output_schema() {
     assert!(without.is_empty(), "tools with no declared outputSchema: {without:?}");
 }
 
-/// 📐️ The structural contract every tool result carries: a non-error result declares
-/// `structuredContent`, and that content validates against the tool's own declared `outputSchema`.
-/// Driven through `tools/call` for real, over every tool this fixture server can call with no
-/// arguments — a tool whose no-argument call is an input error is skipped, and the skipped names are
-/// reported so the count is never silently zero.
-///
-/// 📐️ One representative REAL argument set per tool that needs one, so the oracle validates an
-/// actual result rather than only the handful of tools that answer to `{}`.
+/// 📐️ Every successful tool reply satisfies its declared output schema.
 #[test]
 fn every_callable_tool_result_validates_against_its_own_output_schema() {
     let (mut server, _sink) = server_with_sink();
@@ -421,7 +396,7 @@ fn every_callable_tool_result_validates_against_its_own_output_schema() {
     let representative: BTreeMap<&str, serde_json::Value> = BTreeMap::from([
         ("capabilities_search", serde_json::json!({ "query": "note" })),
         ("capabilities_describe", serde_json::json!({ "capabilityId": "capabilities.search" })),
-        ("context_resolve", serde_json::json!({})),
+        ("context_resolve", serde_json::json!({ "locale": "en" })),
         ("action_prepare", serde_json::json!({ "capabilityId": "capabilities.search", "input": { "query": "note" } })),
     ]);
     let mut validated = 0usize;
@@ -454,9 +429,7 @@ fn every_callable_tool_result_validates_against_its_own_output_schema() {
     assert!(validated >= 3, "only {validated} tool(s) could be driven with no arguments (skipped: {skipped:?}) — the oracle proved almost nothing");
 }
 
-//#endregion 🧪️StructuredOutput
 
-//#region 🧪️HubInferenceRouting
 
 #[test]
 fn a_submit_request_validates_any_well_formed_service_id_and_refuses_a_malformed_one() {
@@ -474,4 +447,3 @@ fn a_published_route_family_is_relative_and_lower_case_only() {
     }
 }
 
-//#endregion 🧪️HubInferenceRouting

@@ -1,0 +1,17 @@
+[
+  {
+    "name": "ascii",
+    "suffix": "target",
+    "utf8Bytes": 6
+  },
+  {
+    "name": "bmp",
+    "suffix": "ziel-ä",
+    "utf8Bytes": 7
+  },
+  {
+    "name": "non-bmp",
+    "suffix": "ziel-🖍",
+    "utf8Bytes": 9
+  }
+]

@@ -801,3 +801,7 @@ impl<'a> SelectionCombineJob<'a> {
     pub fn into_result(self)->Result<Vec<u8>,PixelEditError> {self.result()?;Ok(self.output)}
 }
 
+
+#[path="🪣️flood/🦀️.rs"]
+pub mod flood;
+pub use flood::{FloodRegionCursor,FloodSource,FloodProgress,FloodMask,FLOOD_PAGE_PIXELS};

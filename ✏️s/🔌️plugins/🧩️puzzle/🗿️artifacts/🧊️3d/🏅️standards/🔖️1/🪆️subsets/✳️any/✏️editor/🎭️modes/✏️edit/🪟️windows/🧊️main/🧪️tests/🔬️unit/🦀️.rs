@@ -16,7 +16,7 @@
             [8.10001, 2.338269, 0.0],
             [8.10001, 2.338269, 3.0],
         ];
-        Puzzle3dObject {
+        Puzzle3dObject { anchor: Default::default(),
             id: "seed-left-001".into(),
             label: None,
             object_kind: None,

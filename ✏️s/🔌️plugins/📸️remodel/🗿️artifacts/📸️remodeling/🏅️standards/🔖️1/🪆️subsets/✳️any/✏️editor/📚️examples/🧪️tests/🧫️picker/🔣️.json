@@ -1,0 +1,67 @@
+{
+  "examples": [
+    {
+      "id": "demo",
+      "asset": "🖼️assets/🎬️demo/🗣️.dsl.semio",
+      "expected": {
+        "snapshotId": "remodeling",
+        "streamIds": [],
+        "cameraIds": [],
+        "frames": 0,
+        "meshSource": "placeholder",
+        "meshChildId": "remodeling-mesh-constant-box"
+      }
+    },
+    {
+      "id": "demo-session",
+      "asset": "✏️editor/📚️examples/🎬️demo-session/🖼️assets/🗣️.dsl.semio",
+      "expected": {
+        "snapshotId": "remodeling",
+        "streamIds": [
+          "left-capture",
+          "right-capture"
+        ],
+        "cameraIds": [
+          "demo-left",
+          "demo-right"
+        ],
+        "frames": 0,
+        "meshSource": "placeholder",
+        "meshChildId": "remodeling-mesh-constant-box"
+      }
+    },
+    {
+      "id": "synthetic-orbit",
+      "asset": "📚️examples/🛰️synthetic-orbit/🖼️assets/🗣️.dsl.semio",
+      "expected": {
+        "snapshotId": "remodeling",
+        "streamIds": [
+          "synthetic-orbit"
+        ],
+        "cameraIds": [
+          "synthetic-cam"
+        ],
+        "frames": 36,
+        "meshSource": "placeholder",
+        "meshChildId": "remodeling-mesh-constant-box"
+      }
+    }
+  ],
+  "switches": [
+    {
+      "from": "synthetic-orbit",
+      "to": "demo-session",
+      "historyEdits": 0
+    },
+    {
+      "from": "demo-session",
+      "to": "demo",
+      "historyEdits": 0
+    },
+    {
+      "from": "demo",
+      "to": "synthetic-orbit",
+      "historyEdits": 0
+    }
+  ]
+}

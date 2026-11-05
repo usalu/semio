@@ -11,7 +11,7 @@ impl ArtifactEditor for BitmapEditor {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         use semio_ui_locale::LocalizedLabel;
-        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 13]> = std::sync::LazyLock::new(|| {
+        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 16]> = std::sync::LazyLock::new(|| {
             [
             ("wfc.bitmap.stroke.phase-invalid", LocalizedLabel::native("This stroke step is not known.", "Dieser Strichschritt ist unbekannt.")),
             ("wfc.bitmap.stroke.points-invalid", LocalizedLabel::native("The stroke's cells are not valid.", "Die Zellen des Strichs sind ungültig.")),
@@ -25,6 +25,9 @@ impl ArtifactEditor for BitmapEditor {
             ("wfc.bitmap.output.window-required", LocalizedLabel::native("Focus the output window for this action.", "Für diese Aktion das Ausgabefenster fokussieren.")),
             ("wfc.bitmap.output.window-kind-required", LocalizedLabel::native("This action belongs to the output window.", "Diese Aktion gehört zum Ausgabefenster.")),
             ("wfc.bitmap.solution.contradiction", LocalizedLabel::native("A contradicting solve cannot be pinned.", "Eine widersprüchliche Lösung lässt sich nicht fixieren.")),
+            ("wfc.bitmap.preview.unavailable", LocalizedLabel::native("Solve the output before pinning its preview.", "Vor dem Anheften der Vorschau die Ausgabe lösen.")),
+            ("wfc.bitmap.preview.stale", LocalizedLabel::native("The document changed after this preview. Solve it again before pinning.", "Das Dokument hat sich nach dieser Vorschau geändert. Vor dem Anheften erneut lösen.")),
+            ("wfc.bitmap.preview.extent", LocalizedLabel::native("The preview has a different output size. Solve it again before pinning.", "Die Vorschau hat eine andere Ausgabegröße. Vor dem Anheften erneut lösen.")),
             ("wfc.bitmap.solution.pixels-invalid", LocalizedLabel::native("The solved pixels cannot be read.", "Die gelösten Pixel lassen sich nicht lesen.")),
             ]
         });
@@ -102,7 +105,7 @@ impl ArtifactEditor for BitmapEditor {
         artifact_schema: "s.wfc.bitmap",
         factory: "BitmapCommandJobFactory",
         factory_type: BitmapCommandJobFactory,
-        contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(BITMAP_RETAINED_RAW_BYTES, BITMAP_RETAINED_WORK_ITEMS, pin_solution::BITMAP_PIN_WORK_UNITS_PER_TURN as u64, BITMAP_MUTATION_OUTPUT_MAXIMUM_BYTES, 7_500),
         tools: [
             "change-seed",
             "resize-input",
@@ -120,6 +123,7 @@ impl ArtifactEditor for BitmapEditor {
             "commit-fill-solve",
             "setActiveExample",
             "pin-solution",
+            "pin-preview",
             "canvasPointerDown",
             "canvasPointerMove",
             "canvasPointerUp",
@@ -131,7 +135,7 @@ impl ArtifactEditor for BitmapEditor {
     /// 📬️ Publication authority for the document lane. Without it every `Artifact`-lane verb is
     /// refused closed with `interactive-job.publication-authority-missing`.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(BitmapOneItemPreparationFactory { maximum_bytes: BITMAP_ARTIFACT_MUTATION_MAXIMUM_BYTES }))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot,Self::Mutation>())
     }
 
     /// 🫧️ Publication + retirement authority for the solve cache the output window renders.
@@ -156,7 +160,7 @@ impl ArtifactEditor for BitmapEditor {
         if tool_id != original.tool_id {
             return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC bitmap command does not match its exact registered tool").into());
         }
-        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, bitmap_command_id, BITMAP_RETAINED_RAW_BYTES, BITMAP_RETAINED_WORK_ITEMS, false, |request| BitmapCommandWork { tool_id, consumed: false })
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, bitmap_command_id, BITMAP_RETAINED_RAW_BYTES, BITMAP_RETAINED_WORK_ITEMS, false, |request| BitmapCommandWork::new(tool_id))
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
@@ -184,7 +188,7 @@ impl ArtifactEditor for BitmapEditor {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        Self::render_bodies(body_key, doc.snapshot, cfg, &BitmapTransient::default(), None)
+        Self::render_bodies(body_key, doc, cfg, &BitmapTransient::default(), None)
     }
 
     /// 🧮️ The real render path: the same bodies, but reading the solve cache the `Solve` command published on the
@@ -200,7 +204,7 @@ impl ArtifactEditor for BitmapEditor {
         cx:&mut semio_plugin::StepContext<'_>,
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
-        Self::render_bodies(body_key, doc.snapshot, cfg, transient.snapshot, doc.tool_run())
+        Self::render_bodies(body_key, doc, cfg, transient.snapshot, doc.tool_run())
 
         })();
         rendered.map(Some).map_err(Into::into)
@@ -239,6 +243,7 @@ impl BitmapEditor {
                 BitmapEditorCommand::SetActiveColor { index } => Self::set_active_color(doc, cfg, view_state, *index),
                 BitmapEditorCommand::PaintStroke { .. } => Self::paint_stroke(command, doc, cfg, &semio_plugin::app::GestureSlot::detached(), false),
                 BitmapEditorCommand::SetActiveExample { example_id } => set_active_example::handle(&set_active_example::SetActiveExample { example_id: example_id.clone() }, doc),
+                BitmapEditorCommand::PinPreview => Err(pin_solution::preview_fault("unavailable")),
                 BitmapEditorCommand::PinSolution { pixels, contradiction } => pin_solution::handle(&pin_solution::PinSolution { pixels: pixels.clone(), contradiction: *contradiction }, doc),
                 BitmapEditorCommand::Solve => Ok(Emit { effects: vec![fill_tool::start_fill_effect()], ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
                 BitmapEditorCommand::CommitFillSolve { .. } => Ok(Emit { ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
@@ -249,21 +254,7 @@ impl BitmapEditor {
         Ok(Emit::mutations(vec![mutation]))
     }
 
-    /// 🫧️ Runs the artifact's own headless inference adapter and packages the answer as the one
-    /// transient write the output window reads.
-    ///
-    /// An UNSATISFIABLE problem answers a real transient with no pixels — that is the document's own
-    /// answer and the pane says so. An inference that could not RUN is a FAULT, not a contradiction:
-    /// folding the two together is what made a silently refused solve look like a black square with no
-    /// diagnostic anywhere in the shell.
-    pub fn solve_transient(snapshot: &BitmapSnapshot) -> Result<BitmapTransientMutation, Fault> {
-        let (pixels, contradiction) = match crate::inferences::solve_with_job(snapshot) {
-            Ok(commit) if !commit.contradiction && !commit.pixels.is_empty() => (Some(crate::standards::v1::subsets::any::io::text::snapshot::encode_base64(&commit.pixels)), false),
-            Ok(_) => (None, true),
-            Err(error) => return Err(Fault::from(format!("wfc-bitmap-solve-failed:{error}"))),
-        };
-        Ok(BitmapTransientMutation::SetSolve(SetSolve { output_pixels: pixels, contradiction, output_width: snapshot.output.width, output_height: snapshot.output.height }))
-    }
+
 
     /// 🗺️ The command→mutation map, lifted out of `dispatch` so it is a pure, testable function: a
     /// command that answers `None` is one of the non-document verbs this file's own doc comment
@@ -286,6 +277,7 @@ impl BitmapEditor {
             | BitmapEditorCommand::CommitFillSolve { .. }
             | BitmapEditorCommand::SetActiveExample { .. }
             | BitmapEditorCommand::PinSolution { .. }
+            | BitmapEditorCommand::PinPreview
             | BitmapEditorCommand::CanvasPointerDown { .. }
             | BitmapEditorCommand::CanvasPointerMove { .. }
             | BitmapEditorCommand::CanvasPointerUp { .. }
@@ -294,10 +286,10 @@ impl BitmapEditor {
         })
     }
 
-    fn render_bodies(body_key: &str, snapshot: &BitmapSnapshot, cfg: &ConfigView<'_, NoConfig>, transient: &BitmapTransient, tool_run: Option<&semio_plugin::ToolRunView>) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+    fn render_bodies(body_key: &str, doc: &ArtifactView<'_, BitmapSnapshot>, cfg: &ConfigView<'_, NoConfig>, transient: &BitmapTransient, tool_run: Option<&semio_plugin::ToolRunView>) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            input::BODY_KEY => input::render(snapshot, &input::config::current(cfg)).map(semio_plugin::built_to_component_tree),
-            output::BODY_KEY => output::render(snapshot, transient, &output::config::current(cfg), tool_run).map(semio_plugin::built_to_component_tree),
+            input::BODY_KEY => input::render(doc.snapshot, &input::config::current(cfg)).map(semio_plugin::built_to_component_tree),
+            output::BODY_KEY => output::render(doc.snapshot, transient, &output::config::current(cfg), tool_run, doc.render_operation_ref().map(|operation| operation.canonical_base_revision)).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -361,3 +353,7 @@ impl BitmapEditor {
     }
 }
 //#endregion 🔖️Editor
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️render-source/🦀️.rs"]
+mod render_source_tests;

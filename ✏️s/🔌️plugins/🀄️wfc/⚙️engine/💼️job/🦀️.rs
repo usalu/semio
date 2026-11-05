@@ -6,13 +6,14 @@ use std::collections::{BinaryHeap, VecDeque};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, RetainedCloneGrant, RetainedCloneProgress, StepContext};
 use semio_framework_value::{RetirementDemand, ValueError};
 
-#[path = "🏃️headless/🦀️.rs"]
-mod headless;
-pub use headless::{admit_payload_authority, close_job, close_payload_authority, payload_bytes, run_headless, HeadlessSite, HEADLESS_GRANT};
+pub use semio_framework_job_headless::{payload_bytes,payload_equals,run_headless,run_headless_supervised,HeadlessOutcome,HeadlessSite,HeadlessFailure,HeadlessCloseStep,HEADLESS_GRANT};
 
 #[path = "📤️publication/🦀️.rs"]
 mod publication;
 pub use publication::{close_result, Kind as PublicationKind, Publication};
+#[path = "📤️publication/📦️owner/🦀️.rs"]
+mod publication_owner;
+pub use publication_owner::{close_publication_step, publication_retirement_demands};
 
 use crate::bitset::PatternSet;
 use crate::ids::{NodeId, PatternId, RelationId};
@@ -63,7 +64,7 @@ mod restore_job_run_and_interactive_job;
 mod job_run_and_interactive_job;
 
 //#region 🚚️Drive
-// 🚚️ The synchronous drivers live in `🏃️headless`; `payload_bytes`, `close_job` and `run_headless` are re-exported above.
+// 🚚️ The neutral headless component owns explicit callers and paid retirement.
 //#endregion 🚚️Drive
 
 //#region 🧪️Tests

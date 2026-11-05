@@ -16,3 +16,15 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 async fn viewer_command_default_is_noop() {
     assert_eq!(LowpolyViewCommand::default(), LowpolyViewCommand::Noop);
 }
+
+#[semio_framework_async_macros::async_test]
+async fn viewer_window_title_uses_the_bilingual_kind_label() {
+    let contract: serde_json::Value = serde_json::from_str(include_str!("locales.json")).expect("viewer locale contract");
+    let layout = serde_json::to_value(view::layout()).expect("independent layout serializer");
+    let definition = serde_json::to_value(model::definition()).expect("independent definition serializer");
+    let observed = serde_json::json!({
+        "windowTitleOverride": layout["root"]["children"][0].get("title").is_some(),
+        "windowLabels": definition["label"]["native"]
+    });
+    assert_eq!(observed, contract["expect"]);
+}

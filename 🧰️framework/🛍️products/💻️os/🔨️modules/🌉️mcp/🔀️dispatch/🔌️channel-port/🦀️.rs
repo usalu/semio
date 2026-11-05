@@ -89,10 +89,22 @@ pub enum MutationOrigin {
 /// frame — simpler to implement and test than the real channel's batched duplex; P7's real
 /// implementation is responsible for wrapping each call in a one-element batch (or its own
 /// seq/in_reply_to bookkeeping) against the real channel underneath.
+/// 🎯️ Closed caller selectors resolved against live channel ownership.
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActionTarget {
+    pub instance_id: Option<String>,
+    pub plugin_id: Option<String>,
+    pub app_id: Option<String>,
+    pub artifact_ref: Option<String>,
+    pub window_id: Option<String>,
+    pub mode_id: Option<String>,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum AppCommand {
     ReadHistory,
-    PureCommand { capability_id: String, input: serde_json::Value },
+    PureCommand { capability_id: String, input: serde_json::Value, view_state: Option<semio_framework::ViewModel> },
     TransactionPrepare { txn_id: String, ops: PreparedOps, origin: MutationOrigin },
     TransactionCommit { txn_id: String },
     TransactionRollback { txn_id: String },
@@ -117,13 +129,43 @@ pub enum AppCommand {
 /// plugin out of `instance`, because an inference carries no capability id. Every remaining field is
 /// exactly what `semio_plugin_host::ArtifactInferenceRouter::infer`'s own request wire
 /// carries — this port never invents one of its own.
+/// 🧹️ Explicit server-configured cleanup data for one funded native operation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct HostOperationReserve {
+    pub retained: semio_framework_value::RetainedCloneGrant,
+    pub work_fuel: u64,
+    pub execution_fuel: u64,
+    pub maximum_microseconds: u64,
+}
+
+/// 📦️ Native framing and handback retain an explicit budget separate from guest logical work.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct HostOperationTransit{pub retained:semio_framework_value::RetainedCloneGrant,pub work_fuel:u64}
+
+/// 🏗️ Guest allocator and protocol work consume a separate explicit infrastructure grant.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct HostOperationInfrastructure{pub retained:semio_framework_value::RetainedCloneGrant,pub work_fuel:u64}
+
+/// 🎚️ A configured server may issue fresh finite requests only in its explicitly declared scope.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all="kebab-case")]
+pub enum HostOperationScope{PerOperation}
+
+/// 🛂️ The exact closed administrative operation policy contains no caller or clock authority.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct HostOperationPolicy{pub scope:HostOperationScope,pub cleanup:HostOperationReserve,pub transit:HostOperationTransit,pub infrastructure:HostOperationInfrastructure}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct InferCommand {
     pub plugin_id: String,
     pub artifact_kind: String,
     pub inference_schema: String,
     pub revision: u64,
-    pub turn: semio_framework_actor::RetainedTurnInput,
+    pub document_generation: u64,
     pub retained_policy: semio_framework_value::RetainedCloneGrant,
     pub cancellation_id: String,
     pub work_units: u64,
@@ -279,11 +321,11 @@ pub struct HubRelayOutcome {
 #[derive(Clone, Debug, PartialEq)]
 pub enum AppFrame {
     HistorySnapshot(RevisionStamp),
-    Emit { ops: PreparedOps, warnings: Vec<String> },
+    Emit { ops: PreparedOps, warnings: Vec<String>, output: Option<serde_json::Value> },
     TransactionPrepared { txn_id: String },
     /// 💠️ `relay` is present when the commit relayed envelopes to a hub document: whether the hub
     /// acknowledged them within [`crate::workspace::HUB_RELAY_ACK_WAIT_MS`].
-    TransactionCommitted { txn_id: String, edit_id: String, relay: Option<HubRelayOutcome> },
+    TransactionCommitted { txn_id: String, edit_id: String, relay: Option<HubRelayOutcome>, output: Option<serde_json::Value> },
     TransactionRolledBack { txn_id: String },
     TransactionUndone { group_id: String },
     TransactionRedone { group_id: String },
@@ -320,16 +362,17 @@ pub struct InferenceOutcome {
     pub payload: Option<Vec<u8>>,
 }
 
-/// 🔌️ The narrow port `ActionAdapter` drives — this packet's brief §3.1 names this exact shape.
-/// `instance` is an opaque handle a real `InstanceDirectory` (P7) would resolve from a
-/// `(plugin_id, app_id, artifact_ref)` triple; until P7 lands, every capability in this crate's live
-/// binary targets a single default instance (`0`), documented at the call site in the module root.
-// 🔀️ dedyn-fw-os-misc, O1/R11: closed 2-implementor set (`MockArtifactChannel` here,
-// `🏠️workspace::PluginArtifactChannel`) — `#[dyn_enum]` here + `dyn_enum_close!` at `🏠️workspace`'s
+/// 🔌️ Drives capability previews and transactions through the owning channel.
+/// Selected session-local instances retain the owner's resolved artifact and live surface identity.
+#[dyn_enum]` here + `dyn_enum_close!` at `🏠️workspace`'s
 // `ArtifactChannels` (the module both implementors are jointly nameable from) closes it into an enum
 // instead of `Box<dyn ArtifactChannel>`.
 #[dyn_enum]
 pub trait ArtifactChannel: Send {
+    fn select_target(&mut self, _instance: u32, _capability_id: &str, _target: &ActionTarget) -> Result<ActionTarget, Fault> {
+        Err(Fault { code: "plugin.unavailable".to_string(), message: "this channel has no target directory".to_string() })
+    }
+
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault>;
 
     /// 🔌️ Brings `instance`'s session up to where its next exchange runs without opening anything:
@@ -418,7 +461,7 @@ pub fn map_fault(fault: &Fault) -> GatewayError {
         "app.command.rejected" => GatewayError::new(GatewayErrorCode::SideEffectRejected, fault.message.clone()),
         "transaction.member-rejected" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()),
         "interactive-job.not-ui-safe" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()),
-        "interactive-job.preview-output" => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
+        "interactive-job.preview-output" | "input.invalid" => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
         COMMAND_TARGETS_REQUIRED_FAULT_CODE => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
         COMMAND_NO_EFFECT_FAULT_CODE => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone())
             .with_details(serde_json::json!({ "faultCode": fault.code, "remedy": { "en": COMMAND_NO_EFFECT_REMEDY.0, "de": COMMAND_NO_EFFECT_REMEDY.1 } })),
@@ -522,12 +565,14 @@ struct MockInstanceState {
     pub force_undo_fails: bool,
     empty_preview: bool,
     child_preview: Option<Vec<u8>>,
+    preview_output: Option<serde_json::Value>,
+    commit_output: Option<serde_json::Value>,
 }
 
 #[cfg(any(test, feature = "testkit"))]
 impl MockInstanceState {
     fn new(instance: u32) -> Self {
-        Self { artifact_id: format!("mock-artifact-{instance}"), generation: 0, head_edit_id: 0, pending: None, prepared: BTreeMap::new(), force_budget_exceeded: false, force_commit_fault: None, force_relay: None, force_undo_fails: false, empty_preview: false, child_preview: None }
+        Self { artifact_id: format!("mock-artifact-{instance}"), generation: 0, head_edit_id: 0, pending: None, prepared: BTreeMap::new(), force_budget_exceeded: false, force_commit_fault: None, force_relay: None, force_undo_fails: false, empty_preview: false, child_preview: None, preview_output: None, commit_output: None }
     }
 
     pub fn revision(&self) -> RevisionStamp {
@@ -546,11 +591,11 @@ impl MockInstanceState {
     pub fn handle(&mut self, command: AppCommand) -> AppFrame {
         match command {
             AppCommand::ReadHistory => AppFrame::HistorySnapshot(self.revision()),
-            AppCommand::PureCommand { .. } if self.empty_preview => AppFrame::Emit { ops: PreparedOps::default(), warnings: Vec::new() },
-            AppCommand::PureCommand { .. } if self.child_preview.is_some() => AppFrame::Emit { ops: PreparedOps { children: self.child_preview.clone().unwrap_or_default(), ..PreparedOps::default() }, warnings: Vec::new() },
-            AppCommand::PureCommand { capability_id, input } => {
+            AppCommand::PureCommand { .. } if self.empty_preview => AppFrame::Emit { ops: PreparedOps::default(), warnings: Vec::new(), output: self.preview_output.clone() },
+            AppCommand::PureCommand { .. } if self.child_preview.is_some() => AppFrame::Emit { ops: PreparedOps { children: self.child_preview.clone().unwrap_or_default(), ..PreparedOps::default() }, warnings: Vec::new(), output: self.preview_output.clone() },
+            AppCommand::PureCommand { capability_id, input, .. } => {
                 let payload = serde_json::to_vec(&serde_json::json!({ "capabilityId": capability_id, "input": input })).unwrap_or_default();
-                AppFrame::Emit { ops: PreparedOps { document: vec![payload], config: Vec::new(), draft: Vec::new(), children: Vec::new() }, warnings: Vec::new() }
+                AppFrame::Emit { ops: PreparedOps { document: vec![payload], config: Vec::new(), draft: Vec::new(), children: Vec::new() }, warnings: Vec::new(), output: self.preview_output.clone() }
             }
             AppCommand::TransactionPrepare { txn_id, ops, .. } => {
                 if self.force_budget_exceeded {
@@ -583,7 +628,7 @@ impl MockInstanceState {
                             let edit_id = format!("edit-{}", self.head_edit_id);
                             self.prepared.remove(&txn_id);
                             self.pending = None;
-                            AppFrame::TransactionCommitted { txn_id, edit_id, relay: self.force_relay.take() }
+                            AppFrame::TransactionCommitted { txn_id, edit_id, relay: self.force_relay.take(), output: self.commit_output.clone() }
                         }
                     }
                 }
@@ -608,8 +653,8 @@ impl MockInstanceState {
                 AppFrame::TransactionRedone { group_id }
             }
             AppCommand::Infer(command) => {
-                if command.turn.generation != self.generation {
-                    return AppFrame::Error(Fault { code: "transaction.generation-mismatch".into(), message: format!("inference base generation {} no longer matches current generation {}", command.turn.generation, self.generation) });
+                if command.document_generation != self.generation {
+                    return AppFrame::Error(Fault { code: "transaction.generation-mismatch".into(), message: format!("inference base generation {} no longer matches current generation {}", command.document_generation, self.generation) });
                 }
                 AppFrame::Inferred { inference_schema: command.inference_schema, complete: true, payload: Some(command.canonical_payload) }
             }
@@ -689,6 +734,11 @@ impl MockArtifactChannel {
     pub fn force_child_preview(&self, instance: u32, children: Vec<u8>) {
         self.with_instance(instance, |state| state.child_preview = Some(children));
     }
+
+    /// 📦️ Scripts actual port reply data for dispatch result-envelope tests.
+    pub fn force_result_output(&self, instance: u32, preview: Option<serde_json::Value>, committed: Option<serde_json::Value>) {
+        self.with_instance(instance, |state| { state.preview_output = preview; state.commit_output = committed; });
+    }
 }
 
 #[cfg(any(test, feature = "testkit"))]
@@ -731,6 +781,8 @@ pub struct PreparedActionRecord {
     pub baseline: RevisionStamp,
     pub ops: PreparedOps,
     pub principal_id: String,
+    #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
+    pub untrusted: serde_json::Value,
 }
 
 /// 🎫️ The `txn_` (saga) handle payload — an ordered list of already-prepared members bound together
@@ -830,6 +882,7 @@ pub struct InvokeRequest {
     pub expected_revision: Option<RevisionStamp>,
     pub idempotency_key: Option<String>,
     pub approval_handle: Option<String>,
+    pub context: Option<semio_framework::ViewModel>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]

@@ -1,0 +1,142 @@
+[
+  {
+    "id": "completed",
+    "mode": "completed",
+    "reused": true,
+    "finalAccepted": true,
+    "canceled": false
+  },
+  {
+    "id": "partial",
+    "mode": "partial",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "forged",
+    "mode": "forged",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "generation",
+    "mode": "generation",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "projection",
+    "mode": "projection",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "bun",
+    "mode": "bun",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "platform",
+    "mode": "platform",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "arch",
+    "mode": "arch",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "recipe",
+    "mode": "recipe",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "installed-missing",
+    "mode": "installed-missing",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "installed-digest",
+    "mode": "installed-digest",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "shape",
+    "mode": "shape",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "root-alias",
+    "mode": "root-alias",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "projected-root",
+    "mode": "projected-root",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "projected-subpath",
+    "mode": "projected-subpath",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "retarget-race",
+    "mode": "retarget-race",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "immutable-input",
+    "mode": "immutable-input",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "provider-facts",
+    "mode": "provider-facts",
+    "reused": true,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "id": "unrelated-file-body",
+    "mode": "unrelated-file-body",
+    "reused": true,
+    "finalAccepted": true,
+    "canceled": false
+  },
+  {
+    "id": "canceled",
+    "mode": "canceled",
+    "reused": false,
+    "finalAccepted": false,
+    "canceled": true
+  }
+]

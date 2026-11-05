@@ -66,6 +66,14 @@ pub struct Grid2dFillPayload {
     pub trace: Vec<Grid2dFillTraceEvent>,
 }
 
+/// 🔗️ A completed solve bound to the canonical document revision it read.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Grid2dCachedSolve {
+    pub source_revision: Vec<u8>,
+    pub commit: Grid2dInferenceCommit,
+}
+
 impl Grid2dFillPayload {
     /// 🔢 How many cells already carry a tile.
     pub fn decided_count(&self) -> usize {
@@ -145,8 +153,9 @@ pub fn start_effect() -> semio_framework::kernel::Effect {
 }
 
 /// 💾 `commit-fill` effect that lands the finished cache in `solve_json`.
-pub fn commit_effect(commit: &Grid2dInferenceCommit) -> semio_framework::kernel::Effect {
-    let args = semio_framework::dsl_value!({ "solveJson": semio_framework_pack_json::to_json_string(commit) });
+pub fn commit_effect(commit: Grid2dInferenceCommit, source_revision: [u8; 32]) -> semio_framework::kernel::Effect {
+    let cache = Grid2dCachedSolve { source_revision: source_revision.to_vec(), commit };
+    let args = semio_framework::dsl_value!({ "solveJson": semio_framework_pack_json::to_json_string(&cache), "sourceRevision": source_revision.to_vec() });
     semio_framework::kernel::Effect::DispatchAction {
         req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
         action: COMMIT_FILL_ACTION_ID.into(),
@@ -552,8 +561,8 @@ impl Grid2dFillRunJob {
         }
         if solved {
             let commit = self.child.as_ref().and_then(|child| child.commit());
-            if let Some(mut child) = self.child.take() {
-                wfc::job::close_job(&mut child);
+            if let Some(child) = self.child.as_mut() {
+                child.begin_close();
             }
             let contradiction = commit.is_none();
             let payload = match commit {
@@ -563,8 +572,8 @@ impl Grid2dFillRunJob {
             return self.finish_success(contradiction, Some(payload));
         }
         if unsatisfiable {
-            if let Some(mut child) = self.child.take() {
-                wfc::job::close_job(&mut child);
+            if let Some(child) = self.child.as_mut() {
+                child.begin_close();
             }
             return self.finish_success(true, Some(self.empty_payload(true, true)));
         }
@@ -608,7 +617,7 @@ impl Grid2dFillRunJob {
             }
             None => {
                 self.settled = None;
-                self.publication = Some(wfc::job::Publication::new(wfc::job::PublicationKind::Fault, Vec::new(), Vec::new()));
+                self.publication = Some(wfc::job::Publication::new(wfc::job::PublicationKind::Fault, b"grid2d-fill-payload-capacity".to_vec(), Vec::new()));
             }
         }
         FillRun::Staged
@@ -628,14 +637,15 @@ impl Grid2dFillRunJob {
                 self.payload_from_child(false, true)
             }
         });
-        if !self.committed {
-            self.port.dispatch(commit_effect(&self.last_payload.as_commit()));
-            self.committed = true;
-        }
         let reason = if contradiction { FillReason::Contradiction } else { FillReason::Collapsed };
         let decided = ToolRunStepArg::Unsigned(self.last_payload.decided_count() as u64);
         self.stage = FillStage::Complete;
-        self.publish_tick(ToolRunState::Complete, Some((reason, &[decided])), Some(FillSettled::Complete))
+        let run = self.publish_tick(ToolRunState::Complete, Some((reason, &[decided])), Some(FillSettled::Complete));
+        if matches!(self.settled, Some(FillSettled::Complete)) && !self.committed {
+            self.port.dispatch(commit_effect(self.last_payload.as_commit(), self.identity.base_revision));
+            self.committed = true;
+        }
+        run
     }
 
     fn advance_prep(&mut self, operation: Operation) -> Result<(), String> {
@@ -761,20 +771,15 @@ impl Grid2dFillRunJob {
     }
 
     /// 🤝️ Closes the lent tick turn by turn from the next step's own wallet.
-    fn retire_delivered<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
-        let publication = self.publication.as_mut().expect("a delivered fill publication is staged");
-        let step = match publication.close_step(context.retained_grant()) { Ok(step) => step, Err(error) => { context.consume_retained(error.retained_progress())?; return Err(error) } };
-        context.consume_retained(step.progress())?;
-        if publication.terminal_is_empty() {
-            self.publication = None;
-        }
+    fn retire_delivered<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        wfc::job::close_publication_step(&mut self.publication, context)?;
         Ok(None)
     }
 
     /// 📏️ Quotes the next close turn: the staged publication, the held verdict, then the child's own frontier.
     fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        if let Some(publication) = self.publication.as_ref() {
-            return publication.retirement_demands();
+        if self.publication.is_some() {
+            return wfc::job::publication_retirement_demands(&self.publication);
         }
         if let Some(FillSettled::Fault(message)) = self.settled.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { release_bytes: message.capacity(), depth: 1, ..Default::default() });
@@ -791,13 +796,13 @@ impl Grid2dFillRunJob {
 
 impl Grid2dFillRunJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
-        if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {
+    fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        if self.publication.as_ref().is_some_and(|publication| publication.needs_retirement()) {
             return self.retire_delivered(context);
         }
         if self.closing || context.is_cancelled() {
             let _ = self.writer.step(ToolRunStepKind::Warning, self.stage.index(), FillReason::Cancelled.code(), None, &[]);
-            return JobOutcomeBorrow::admit_cancelled(context);
+            return Ok(JobOutcomeBorrow::admit_cancelled(context)?);
         }
         if self.publication.is_none() {
             match self.settled.take() {
@@ -819,13 +824,13 @@ impl Grid2dFillRunJob {
         }
         match self.run(context) {
             FillRun::Yield | FillRun::Staged => Ok(None),
-            FillRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
+            FillRun::Cancelled => Ok(JobOutcomeBorrow::admit_cancelled(context)?),
         }
     }
 }
 
 impl InteractiveJob for Grid2dFillRunJob {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -856,17 +861,11 @@ impl InteractiveJob for Grid2dFillRunJob {
             if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
             }
-            if let Some(publication) = self.publication.as_mut() {
-                let step = publication.close_step(grant)?;
-                if publication.terminal_is_empty() {
-                    self.publication = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
+            if self.publication.is_some() {
+                return wfc::job::close_publication_step(&mut self.publication, cx);
             }
             if let Some(settled) = self.settled.take() {
+                cx.consume_fuel(1);
                 let released_bytes = match settled {
                     FillSettled::Fault(message) => message.capacity(),
                     FillSettled::Complete => 0,
@@ -874,16 +873,13 @@ impl InteractiveJob for Grid2dFillRunJob {
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } });
             }
             if let Some(child) = self.child.as_mut() {
-                let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-                let step = cx.with_retained_loan(child_grant, |same| InteractiveJob::close_step(child, same))?;
                 if InteractiveJob::terminal_is_empty(child) {
                     self.child = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
+                    cx.consume_fuel(1);
+                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
                 }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
+                let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+                return cx.with_retained_loan(child_grant, |same| InteractiveJob::close_step(child, same)).map(|step| match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
             }
             Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
         })

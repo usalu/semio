@@ -53,6 +53,8 @@ fn is_false(value: &bool) -> bool {
 // `UiValue`, the deliberate DslValue-free exception — see its docstring in `🎬️action.rs`.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct UiNodeRecord {
     pub id: UiNodeId,
     /// 🔑️ Reconciliation key, unique only among this node's own siblings (not surface-wide).
@@ -62,15 +64,20 @@ pub struct UiNodeRecord {
     pub style: crate::StyleSpec,
     pub activity: crate::Activity,
     #[serde(default, skip_serializing_if = "is_false")]
+    #[value(default, skip_serializing_if = "is_false")]
     pub disabled: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub transition: Option<TransitionHint>,
     pub accessibility: crate::AccessibilitySpec,
     #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    #[value(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     pub bindings: UiNodeBindings,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub menu: Option<crate::MenuRef>,
     #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    #[value(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     pub children: UiNodeChildren,
 }
 
@@ -106,6 +113,8 @@ impl UiNodeRecord {
 // `UiNodeRecord` is the deliberate DslValue-free exception above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct UiSnapshot {
     pub surface: SurfaceId,
     pub revision: UiRevision,
@@ -125,6 +134,8 @@ pub struct UiSnapshot {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[allow(clippy::large_enum_variant)]
 #[serde(tag = "type", rename_all = "camelCase")]
+#[value(tag = "type", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum UiPatchOp {
     Upsert(UiNodeRecord),
     SetComponent {
@@ -202,6 +213,8 @@ impl UiPatchOp {
 // is the deliberate DslValue-free exception above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct UiPatch {
     pub surface: SurfaceId,
     pub base_revision: UiRevision,

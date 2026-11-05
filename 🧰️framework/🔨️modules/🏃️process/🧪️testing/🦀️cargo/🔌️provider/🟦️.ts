@@ -27,11 +27,12 @@ export interface CargoAdmissionProviderV1 {
   runExactLaws(request: ExactCargoLawRequestV1): Promise<readonly ExactCargoLawReceipt[]>;
   buildArtifacts(manifest: string, args: string[], root: string, request: CargoArtifactBuildRequestV1): Promise<void>;
   withArtifactPlan<T>(manifest:string,args:string[],root:string,request:CargoArtifactBuildRequestV1,body:(plan:CargoArtifactPlanV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>;
+  withPublishedExecutable<T>(manifest:string,name:string,workspace:string,mode:BuildMode,invocation:ScriptInvocation,control:ResourceLeaseControl,body:(artifact:Readonly<{path:string;environment:Readonly<Record<string,string|undefined>>}>,control:ResourceLeaseControl)=>Promise<T>):Promise<T>;
   withCompilerStore<T>(workspace: string, mode: BuildMode, control: ResourceLeaseControl, environment: Readonly<Record<string, string | undefined>>, body: (store: CompilerStoreViewV1, control: ResourceLeaseControl) => Promise<T>): Promise<T>;
 }
 
 /** 🧷️ Names the port and the exact functions its implementation must expose. */
-export const CARGO_ADMISSION_PROVIDER_V1 = defineScriptProviderV1<CargoAdmissionProviderV1>("cargo-admission", ["runTests", "runLint", "runCommand", "runPackageTests", "testPolicy", "runExactLaws", "buildArtifacts", "withArtifactPlan", "withCompilerStore"]);
+export const CARGO_ADMISSION_PROVIDER_V1 = defineScriptProviderV1<CargoAdmissionProviderV1>("cargo-admission", ["runTests", "runLint", "runCommand", "runPackageTests", "testPolicy", "runExactLaws", "buildArtifacts", "withArtifactPlan", "withCompilerStore", "withPublishedExecutable"]);
 const provider = (): Promise<CargoAdmissionProviderV1> => loadScriptProviderV1(CARGO_ADMISSION_PROVIDER_V1);
 
 /** 🧪️ Runs Cargo tests of one manifest under the issued compiler admission. */
@@ -69,3 +70,8 @@ export async function withAdmittedCompilerStoreV1<T>(workspace: string, mode: Bu
 
 /** 📋️ Keeps genuine native input and Source custody live throughout one planned operation. */
 export async function withAdmittedCargoArtifactPlanV1<T>(manifest:string,args:string[],root:string,request:CargoArtifactBuildRequestV1,body:(plan:CargoArtifactPlanV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{return (await provider()).withArtifactPlan(manifest,args,root,request,body);}
+
+/** 👓️ Holds the original published executable and its shared publication reader until consumption settles. */
+export async function withAdmittedPublishedCargoExecutableV1<T>(manifest:string,name:string,workspace:string,mode:BuildMode,invocation:ScriptInvocation,control:ResourceLeaseControl,body:(artifact:Readonly<{path:string;environment:Readonly<Record<string,string|undefined>>}>,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+ return (await provider()).withPublishedExecutable(manifest,name,workspace,mode,invocation,control,body);
+}

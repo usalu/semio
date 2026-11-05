@@ -6,9 +6,9 @@ use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::model:
 #[semio_framework_async_macros::async_test]
 async fn default_scene_seeds_the_world3d_mesh_json() {
     let scene = default_remodeling_scene();
-    assert!(world_meshes_json(&scene).contains(REMODELING_MESH_ID));
+    assert!(world_meshes_json(&scene).contains("remodeling-result"));
     let config = RemodelingModelWindowConfig::default();
-    assert!(world_instances_json(&config).contains(REMODELING_MESH_ID));
+    assert!(world_instances_json(&config).contains("remodeling-result"));
 }
 
 #[semio_framework_async_macros::async_test]

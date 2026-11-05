@@ -84,7 +84,7 @@ pub fn capabilities_describe_output_schema() -> serde_json::Value {
 }
 
 pub fn context_resolve_input_shape() -> serde_json::Value {
-    serde_json::json!({ "type": "object", "properties": { "principal": { "type": "string" }, "locale": { "type": "string" } }, "additionalProperties": false })
+    serde_json::json!({ "type": "object", "properties": { "principal": { "type": "string" }, "locale": { "enum": ["en", "de"] } }, "required": ["locale"], "additionalProperties": false })
 }
 
 pub fn context_resolve_input_schema() -> serde_json::Value {
@@ -101,8 +101,29 @@ pub fn context_resolve_output_schema() -> serde_json::Value {
 //#endregion 🔖️CoreToolSchemas
 
 //#region 🔖️MutationToolSchemas
+pub fn action_target_shape() -> serde_json::Value {
+    serde_json::json!({"type":"object","properties":{"instanceId":{"type":"string","minLength":1,"maxLength":256},"pluginId":{"type":"string","minLength":1,"maxLength":256},"appId":{"type":"string","minLength":1,"maxLength":256},"artifactRef":{"type":"string","minLength":1,"maxLength":256},"windowId":{"type":"string","minLength":1,"maxLength":256},"modeId":{"type":"string","minLength":1,"maxLength":256}},"minProperties":1,"additionalProperties":false})
+}
+
+pub fn action_context_shape() -> serde_json::Value {
+    let source: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json")).expect("canonical view context schema");
+    fn inline(value: &serde_json::Value, source: &serde_json::Value) -> serde_json::Value {
+        match value {
+            serde_json::Value::Object(fields) => {
+                if let Some(reference) = fields.get("$ref").and_then(serde_json::Value::as_str).and_then(|reference| reference.strip_prefix("#/$defs/")) {
+                    return inline(&source["$defs"][reference], source);
+                }
+                serde_json::Value::Object(fields.iter().filter(|(key, _)| !matches!(key.as_str(), "$id" | "$schema" | "$defs")).map(|(key, value)| (key.clone(), inline(value, source))).collect())
+            }
+            serde_json::Value::Array(items) => serde_json::Value::Array(items.iter().map(|value| inline(value, source)).collect()),
+            _ => value.clone(),
+        }
+    }
+    inline(&source, &source)
+}
+
 pub fn action_prepare_input_shape() -> serde_json::Value {
-    serde_json::json!({ "type": "object", "properties": { "capabilityId": { "type": "string" }, "input": { "type": "object" } }, "required": ["capabilityId"], "additionalProperties": false })
+    serde_json::json!({ "type": "object", "properties": { "capabilityId": { "type": "string" }, "input": { "type": "object" }, "target": action_target_shape(), "context": action_context_shape() }, "required": ["capabilityId"], "additionalProperties": false })
 }
 
 pub fn action_prepare_input_schema() -> serde_json::Value {
@@ -113,6 +134,8 @@ pub fn action_invoke_input_shape() -> serde_json::Value {
     serde_json::json!({
         "type": "object",
         "properties": {
+            "target": action_target_shape(),
+            "context": action_context_shape(),
             "preparedActionHandle": { "type": "string" },
             "capabilityId": { "type": "string" },
             "input": { "type": "object" },

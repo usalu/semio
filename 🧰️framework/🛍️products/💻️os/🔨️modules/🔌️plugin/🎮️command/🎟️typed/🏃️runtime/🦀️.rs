@@ -13,7 +13,7 @@ impl<A:ArtifactApp> OriginalTypedCommandSource<A>{
   self.validate(cx)?;
   if self.caller.is_none(){if !cx.original_source_parent()?.admit_loan(&mut *self.caller,cx)?{return Ok(false)}}
   if self.command.is_some()||self.wire.is_some(){if self.command.is_none()||self.wire.is_none(){return Err(refused().into())}if self.producer.is_some(){self.close_producer(cx)?;return Ok(false)}return Ok(true)}
-  if self.producer.is_none(){admit_op_binary_producer(make,None,cx,&mut self.producer)?;return Ok(false)}
+  if self.producer.is_none(){admit_op_binary_producer(make,None,|_|RUNTIME_COMMAND_WIRE_MAXIMUM,cx,&mut self.producer)?;return Ok(false)}
   let producer=self.producer.as_mut().unwrap();
   if !producer.ready(){producer.advance("",&mut None,&mut None,cx)?;return Ok(false)}
   producer.take_into(&mut self.command,&mut self.wire,cx)?;Ok(false)
@@ -38,7 +38,7 @@ mod tests{
  const STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<29,maximum_release_bytes:1<<29,maximum_depth:4096};
  const G:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:4096};
  fn turn<R>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,run:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->R{caller.turn_with_decoder(G,decoder,run).unwrap()}
- fn born(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,make:Option<Command>,birth:Option<OriginalCommandBirth<Command>>)->Box<dyn ArtifactOriginalCommandProducer<Command>>{let mut slot=None;let mut make=make.map(Box::new);turn(caller,decoder,|cx|{admit_op_binary_producer(||make.take(),birth,cx,&mut slot)?;Ok(())});slot.expect("producer birth fits the fixture grant")}
+ fn born(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,make:Option<Command>,birth:Option<OriginalCommandBirth<Command>>)->Box<dyn ArtifactOriginalCommandProducer<Command>>{let mut slot=None;let mut make=make.map(Box::new);turn(caller,decoder,|cx|{admit_op_binary_producer(||make.take(),birth,|_|RUNTIME_COMMAND_WIRE_MAXIMUM,cx,&mut slot)?;Ok(())});slot.expect("producer birth fits the fixture grant")}
  fn retire<T:RetireOwned>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,value:T){let mut value=Some(value);let mut close=RetainedCloneClose::default();for _ in 0..64{if value.is_none()&&close.is_empty(){return}turn(caller,decoder,|cx|cx.with_original_retirement(|cx|{let d=if !close.is_empty(){close.demands(G.maximum_copy_bytes)?}else{close.next_owner_demands::<T>(true,&None,G.maximum_copy_bytes)?};close_original_retained_step(cx,d,|g|{if !close.is_empty(){return match close.select(G.maximum_copy_bytes){Ok(selected)=>selected.step(g),Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}}}let turn=close.begin_granted(&mut value,g);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step|step.expect("original owner admission returns its physical step")),work:turn.work}})?;Ok(())}))}panic!("retirement did not finish")}
  fn finish(mut caller:OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){while !decoder.terminal_is_empty(){caller.turn(G,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(G.maximum_copy_bytes)?;close_original_retained_step(cx,d,|g|decoder.close_step(g))?;Ok(())})).unwrap();}caller.retire(G);}
  fn caller(operation:u64)->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(operation),Generation(1),STOCK,default_now_us,u64::MAX,1<<30)}
@@ -59,7 +59,7 @@ mod tests{
  fn declared_action_bridge_births_the_command_from_the_action_and_its_arguments_then_encodes_it(){
   let oracle=serde_json::to_vec(&serde_json::json!({"kind":"setWidget","count":41})).unwrap();
   let mut caller=caller(903);let mut decoder=OriginalJobDecodeOwner::empty();
-  let factory=OriginalActionCommandBridge::<Command>(bridge);let mut producer=None;
+  let factory=OriginalActionCommandBridge::<Command>(bridge,|_|RUNTIME_COMMAND_WIRE_MAXIMUM);let mut producer=None;
   assert!(turn(&mut caller,&mut decoder,|cx|factory.admit(cx,&mut producer)));let mut producer=producer.unwrap();
   let mut args=Some(DslValue::String("41".into()));produce(&mut caller,&mut decoder,&mut producer,"setWidget",&mut args);assert!(args.is_none());
   let(mut command,mut wire)=(None,None);turn(&mut caller,&mut decoder,|cx|producer.take_into(&mut command,&mut wire,cx));
@@ -87,4 +87,26 @@ mod tests{
    assert!(producer.terminal_is_empty(),"cut {cut}");drop(producer);finish(caller,&mut decoder);
   }
  }
+ #[test]
+ fn owned_producer_limit_admits_large_wire_and_keeps_ordinary_limit(){
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("limit.json")).unwrap();let kind="k".repeat(fixture["payloadBytes"].as_u64().unwrap()as usize);let oracle=serde_json::to_vec(&serde_json::json!({"kind":kind,"count":fixture["count"]})).unwrap();
+  for large in[true,false]{
+   let mut caller=caller(if large{905}else{906});let mut decoder=OriginalJobDecodeOwner::empty();let mut slot=None;let mut command=Some(Box::new(Command{kind:kind.clone(),count:7}));let maximum:fn(&Command)->usize=if large{ |_|70_128 }else{ |_|RUNTIME_COMMAND_WIRE_MAXIMUM };
+   turn(&mut caller,&mut decoder,|cx|{admit_op_binary_producer(||command.take(),None,maximum,cx,&mut slot)?;Ok(())});let mut producer=slot.unwrap();let mut failure=None;
+   for _ in 0..4096{if producer.ready(){break;}if let Err(error)=caller.turn_with_decoder(G,&mut decoder,|cx|producer.advance("",&mut None,&mut None,cx)){failure=Some(error);break;}}
+   if large{assert!(failure.is_none());assert!(producer.ready());let(mut command,mut wire)=(None,None);turn(&mut caller,&mut decoder,|cx|producer.take_into(&mut command,&mut wire,cx));assert_eq!(wire_bytes(wire.as_ref().unwrap()),oracle);assert!(oracle.len()>fixture["ordinaryBytes"].as_u64().unwrap()as usize);assert!(oracle.len()<=fixture["maximumBytes"].as_u64().unwrap()as usize);retire(&mut caller,&mut decoder,command);retire(&mut caller,&mut decoder,wire);}else{assert!(format!("{:?}",failure.expect("ordinary producer refuses oversized wire")).contains("declared maximum"));}
+   for _ in 0..4096{if producer.terminal_is_empty(){break;}turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|producer.close_step(cx)));}assert!(producer.terminal_is_empty());drop(producer);finish(caller,&mut decoder);
+  }
+ }
+
+ #[test]
+ fn invalid_owned_wire_limits_refuse_before_allocation_and_keep_command_for_paid_close(){
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("limit.json")).unwrap();
+  for kind in fixture["invalidMaximumKinds"].as_array().unwrap(){let maximum=match kind.as_str().unwrap(){"zero"=>0,"usizeMaximum"=>usize::MAX,_=>panic!("unknown neutral limit case")};
+   let mut caller=caller(907);let mut decoder=OriginalJobDecodeOwner::empty();let mut command=Some(Box::new(Command{kind:"owned".into(),count:7}));let mut slot=None;let selector:fn(&Command)->usize=if maximum==0{ |_|0 }else{ |_|usize::MAX };
+   turn(&mut caller,&mut decoder,|cx|{admit_op_binary_producer(||command.take(),None,selector,cx,&mut slot)?;Ok(())});assert!(command.is_none());let mut producer=slot.unwrap();let failure=caller.turn_with_decoder(G,&mut decoder,|cx|producer.advance("",&mut None,&mut None,cx)).unwrap_err();assert!(format!("{failure:?}").contains("portable allocation bounds"));
+   for _ in 0..64{if producer.terminal_is_empty(){break;}turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|producer.close_step(cx)));}assert!(producer.terminal_is_empty());drop(producer);finish(caller,&mut decoder);
+  }
+ }
+
 }

@@ -1,0 +1,17 @@
+{
+  "fuel": 1,
+  "turns": [
+    {
+      "yielded": false,
+      "yieldNext": true
+    },
+    {
+      "yielded": true,
+      "yieldNext": false
+    },
+    {
+      "yielded": false,
+      "yieldNext": true
+    }
+  ]
+}

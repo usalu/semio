@@ -9,6 +9,7 @@
   ],
   "namedInputs": {
     "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🀄️wfc/🧪️tests/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*"
     ]

@@ -1,0 +1,257 @@
+{
+  "entries": [
+    {
+      "from": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.pdf",
+        "standard": "1.4",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "*"
+      },
+      "fidelity": "Exact",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "fidelity": "Exact",
+      "sniffs": true
+    },
+    {
+      "from": {
+        "artifactKind": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "fidelity": "Semantic",
+      "sniffs": true
+    },
+    {
+      "from": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.dwg",
+        "standard": "ac1018",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    }
+  ],
+  "invalidEntries": [
+    {
+      "from": "s.draw.drawing@1/*",
+      "into": {
+        "artifactKind": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "*"
+      },
+      "fidelity": "exact",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": 0
+    },
+    {
+      "from": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false,
+      "extra": true
+    },
+    {
+      "from": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.svg",
+        "standard": "1.1",
+        "subset": "*",
+        "extra": true
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    }
+  ],
+  "unsupportedPairs": [
+    {
+      "from": {
+        "artifactKind": "s.stdio.pdf",
+        "standard": "1.4",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      }
+    },
+    {
+      "from": {
+        "artifactKind": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      }
+    },
+    {
+      "from": {
+        "artifactKind": "s.stdio.dwg",
+        "standard": "ac1018",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      }
+    },
+    {
+      "from": {
+        "artifactKind": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*"
+      }
+    }
+  ],
+  "mismatches": [
+    {
+      "index": 5,
+      "field": "fidelity",
+      "value": "Lossy"
+    },
+    {
+      "index": 4,
+      "field": "sniffs",
+      "value": false
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "cases": [
+    {
+      "id": "initial-cancel",
+      "initialStop": "cancelled",
+      "preparationTurns": 0,
+      "yields": 0,
+      "stopAtStep": null,
+      "terminal": "complete",
+      "blockClose": false,
+      "expected": {
+        "businessSteps": 0,
+        "supervisorCalls": 1,
+        "finishCalls": 0,
+        "result": "supervisor:cancelled",
+        "keptAcrossBlocked": false
+      },
+      "payloadBytes": 32785
+    },
+    {
+      "id": "initial-budget",
+      "initialStop": "budget",
+      "preparationTurns": 0,
+      "yields": 0,
+      "stopAtStep": null,
+      "terminal": "complete",
+      "blockClose": false,
+      "expected": {
+        "businessSteps": 0,
+        "supervisorCalls": 1,
+        "finishCalls": 0,
+        "result": "supervisor:budget",
+        "keptAcrossBlocked": false
+      },
+      "payloadBytes": 32785
+    },
+    {
+      "id": "post-yield-stop",
+      "initialStop": null,
+      "preparationTurns": 0,
+      "yields": 1,
+      "stopAtStep": 1,
+      "terminal": "complete",
+      "blockClose": false,
+      "expected": {
+        "businessSteps": 1,
+        "supervisorCalls": 2,
+        "finishCalls": 0,
+        "result": "supervisor:budget",
+        "keptAcrossBlocked": false
+      },
+      "payloadBytes": 32785
+    },
+    {
+      "id": "terminal-complete-precedes-stop",
+      "initialStop": null,
+      "preparationTurns": 0,
+      "yields": 0,
+      "stopAtStep": 1,
+      "terminal": "complete",
+      "blockClose": false,
+      "expected": {
+        "businessSteps": 1,
+        "supervisorCalls": 1,
+        "finishCalls": 1,
+        "result": "finish:complete",
+        "keptAcrossBlocked": false
+      },
+      "payloadBytes": 32785
+    },
+    {
+      "id": "terminal-cancelled-precedes-stop",
+      "initialStop": null,
+      "preparationTurns": 0,
+      "yields": 0,
+      "stopAtStep": 1,
+      "terminal": "cancelled",
+      "blockClose": false,
+      "expected": {
+        "businessSteps": 1,
+        "supervisorCalls": 1,
+        "finishCalls": 1,
+        "result": "finish:cancelled",
+        "keptAcrossBlocked": false
+      },
+      "payloadBytes": 0
+    },
+    {
+      "id": "terminal-fault-precedes-stop",
+      "initialStop": null,
+      "preparationTurns": 0,
+      "yields": 0,
+      "stopAtStep": 1,
+      "terminal": "fault",
+      "blockClose": false,
+      "expected": {
+        "businessSteps": 1,
+        "supervisorCalls": 1,
+        "finishCalls": 1,
+        "result": "finish:fault",
+        "keptAcrossBlocked": false
+      },
+      "payloadBytes": 32785
+    },
+    {
+      "id": "blocked-supervisor-result",
+      "initialStop": null,
+      "preparationTurns": 0,
+      "yields": 1,
+      "stopAtStep": 1,
+      "terminal": "complete",
+      "blockClose": true,
+      "expected": {
+        "businessSteps": 1,
+        "supervisorCalls": 2,
+        "finishCalls": 0,
+        "result": "supervisor:budget",
+        "keptAcrossBlocked": true
+      },
+      "payloadBytes": 32785
+    },
+    {
+      "id": "preparation-does-not-supervise",
+      "initialStop": null,
+      "preparationTurns": 2,
+      "yields": 1,
+      "stopAtStep": 1,
+      "terminal": "complete",
+      "blockClose": false,
+      "expected": {
+        "businessSteps": 1,
+        "supervisorCalls": 2,
+        "finishCalls": 0,
+        "result": "supervisor:budget",
+        "keptAcrossBlocked": false
+      },
+      "payloadBytes": 32785
+    },
+    {
+      "id": "blocked-terminal-capture",
+      "initialStop": null,
+      "preparationTurns": 0,
+      "yields": 0,
+      "stopAtStep": 1,
+      "terminal": "complete",
+      "blockClose": true,
+      "payloadBytes": 32785,
+      "expected": {
+        "businessSteps": 1,
+        "supervisorCalls": 1,
+        "finishCalls": 1,
+        "result": "finish:complete",
+        "keptAcrossBlocked": true
+      }
+    }
+  ]
+}

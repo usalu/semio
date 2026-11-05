@@ -13,11 +13,13 @@
 // #region 🔌️Adapters
 import { cleanup, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it } from "vitest";
-import { type ArtifactSyncStatus } from "@semio-tech/framework/backbone";
-import { posix } from "node:path";
+import { buildFileBackboneUri, buildFolderBackboneUri, type ArtifactSyncStatus } from "@semio-tech/framework/backbone";
+import { posix, win32 } from "node:path";
+import Ajv from "ajv";
 import { HubConnectionIndicator, SyncAttachCard, hubConnectionSummaryV1, syncAttachTargetV1, syncStatusLabelV1, type HubLinkV1, type HubSessionPresenceV1, type SyncStatusTextsV1 } from "../../🟦️.tsx";
 import hubSummary from "../🧫️fixtures/📶️hub-connection-summary.json";
 import attachTargets from "../🧫️fixtures/🎯️sync-attach-target.json";
+import attachTargetSchema from "../🧫️fixtures/📐️sync-attach-target.json";
 import hubProjection from "@semio-tech/framework-os/modules/renderer/engine/testing/fixtures/hub-projection.json";
 // #endregion 🔌️Adapters
 
@@ -130,11 +132,24 @@ describe("HubConnectionIndicator", () => {
 //#endregion 🔖️HubConnectionIndicator
 
 describe("🎯️ sync attach target", () => {
+  it("validates the native path corpus against its neutral schema", () => {
+    expect(new Ajv({ strict: true }).validate(attachTargetSchema, attachTargets)).toBe(true);
+  });
   for (const row of attachTargets.cases) {
     it(row.name, () => {
       const target = syncAttachTargetV1(row.kind as "file" | "folder" | "remote", row.draft);
       expect(target).toEqual(row.expected);
-      if (target?.kind === "file") expect(target.folder).toBe(posix.dirname(target.path));
+      if (target?.kind === "file") {
+        expect(target.folder).toBe((row.platform === "win32" ? win32 : posix).dirname(target.path));
+        expect(buildFileBackboneUri(target.path).slice("file://".length)).toBe(target.path);
+      }
+      if (target?.kind === "file" || target?.kind === "folder") {
+        const path = target.kind === "file" ? target.folder : target.path;
+        expect(buildFolderBackboneUri(path).slice("folder://".length)).toBe(path);
+        const request = new URL("http://localhost/semio-backbone");
+        request.searchParams.set("uri", buildFolderBackboneUri(path));
+        expect(new URL(request.href).searchParams.get("uri")?.slice("folder://".length)).toBe(path);
+      }
       if (target?.kind === "remote" && row.draft.trim().split("/").length >= 3) {
         const url = new URL(`http://${row.draft.trim()}`);
         const [spaceId, ...document] = url.pathname.slice(1).split("/");

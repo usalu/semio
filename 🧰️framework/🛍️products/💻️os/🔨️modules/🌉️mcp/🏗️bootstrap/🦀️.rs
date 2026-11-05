@@ -20,7 +20,6 @@ use semio_os_mcp_inference_hub::service::{RemoteInferenceProtocolV1, install_rem
 use semio_os_mcp_port::policy::AutoApprovePolicy;
 use semio_os_mcp_schema::schema::schema_mirror_json;
 
-//#region 🔖️Args
 
 enum Mode {
     Stdio(StdioOptions),
@@ -45,15 +44,8 @@ fn parse_auto_approve(raw: &str) -> Result<AutoApprovePolicy, String> {
     AutoApprovePolicy::parse(raw).ok_or_else(|| format!("--auto-approve expects never|readonly|all, got `{raw}`"))
 }
 
-/// 🏠️ Shared `--hub <url> --space <id>` selector, plus the *path* of the delegated agent
-/// credential — never the credential itself, because argv is world-readable through `ps`.
-///
-/// Before this flag existed, `--hub` could only authenticate through the inherited fd-3
-/// local-bootstrap envelope, which a `dev s` launcher mints for its own children. No MCP client
-/// configuration — `claude_desktop_config.json`, `.mcp.json`, `.cursor/mcp.json` — can pass a file
-/// descriptor, so `--hub` was mechanically unreachable for an end user. `--credential-file <path>`
-/// is the reachable shape: a `0600` file the delegation UI hands the human once, named in the
-/// client config.
+/// 🏠️ Hub/space selection accepts a delegated credential file path, never credential bytes in world-readable argv.
+/// The delegation UI supplies the private credential file for MCP clients that cannot inherit bootstrap descriptors.
 #[derive(Default)]
 struct HubArgs {
     pub(crate) base_url: Option<String>,
@@ -98,10 +90,40 @@ fn parse_credential_fd(raw: &str, stdio_mode: bool) -> Result<i32, String> {
 }
 
 /// 🎟️ Reads the required independently authored Host policies without scalar conversion or renewal.
-fn read_host_driver_policy(path:&str)->Result<semio_plugin_host::GuestRelayDriverPolicy,String>{let original=std::fs::read_to_string(path).map_err(|error|error.to_string())?;semio_framework_pack_json::from_json_str(&original,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())}
+pub(crate) fn parse_host_driver_policy(original: &str) -> Result<semio_plugin_host::GuestRelayDriverPolicy, String> {
+    let policy: semio_plugin_host::GuestRelayDriverPolicy = semio_framework_pack_json::from_json_str(original, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    policy.root.validate().map_err(|error| error.to_string())?;
+    Ok(policy)
+}
+
+fn read_host_driver_policy(path: &str) -> Result<semio_plugin_host::GuestRelayDriverPolicy, String> {
+    parse_host_driver_policy(&std::fs::read_to_string(path).map_err(|error| error.to_string())?)
+}
+
+/// 🧮️ Reads the explicit per-operation cleanup policy without accepting unknown authority fields.
+fn read_host_operation_policy(path:&str)->Result<semio_os_mcp_port::channel_port::HostOperationPolicy,String>{
+    let text=std::fs::read_to_string(path).map_err(|error|format!("cannot read host operation policy: {error}"))?;
+    parse_host_operation_policy(&text)
+}
+
+/// 🧾️ The native decoder mirrors the language-neutral per-operation policy schema.
+pub(crate) fn parse_host_operation_policy(text:&str)->Result<semio_os_mcp_port::channel_port::HostOperationPolicy,String>{
+    let original:semio_framework_value::DslValue=semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
+    let value=serde_json::Value::from(original);
+    let object=value.as_object().ok_or("host operation policy must be an object")?;
+    if object.len()!=4||value["scope"]!="per-operation"{return Err("host operation policy requires only scope per-operation, cleanup, transit and infrastructure".into())}
+    for section in ["cleanup","transit","infrastructure"]{
+        let retained=value[section]["retained"].as_object().ok_or("explicit retained limits are required")?;
+        if retained.len()!=5||["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"].iter().any(|axis|retained.get(*axis).and_then(serde_json::Value::as_u64).is_none_or(|value|value==0||value>u64::from(u32::MAX))){return Err("retained requires exactly five positive cross-platform axes".into())}
+    }
+    let reserve:semio_os_mcp_port::channel_port::HostOperationPolicy=serde_json::from_value(value).map_err(|error|error.to_string())?;
+    if [reserve.cleanup.work_fuel,reserve.cleanup.execution_fuel,reserve.cleanup.maximum_microseconds,reserve.transit.work_fuel,reserve.infrastructure.work_fuel].iter().any(|value|*value==0||*value>9007199254740991){return Err("cleanup fuel and duration must be positive".into())}
+    Ok(reserve)
+}
 
 pub(crate) fn parse_stdio_args(argv: &mut impl Iterator<Item = String>) -> Result<StdioOptions, String> {
     let mut host_driver_policy = None;
+    let mut operation_policy = None;
     let mut options_folder = None;
     let mut options_principal = None;
     let mut options_scopes = Vec::new();
@@ -110,6 +132,7 @@ pub(crate) fn parse_stdio_args(argv: &mut impl Iterator<Item = String>) -> Resul
     let mut hub = HubArgs::default();
     while let Some(flag) = argv.next() {
         match flag.as_str() {
+            "--operation-policy" => operation_policy = Some(read_host_operation_policy(&argv.next().ok_or("--operation-policy requires a JSON path")?)?),
             "--host-driver-policy" => host_driver_policy = Some(read_host_driver_policy(&argv.next().ok_or("--host-driver-policy requires a JSON path")?)?),
             "--folder" => options_folder = Some(argv.next().ok_or("--folder requires a value")?),
             "--hub" => hub.base_url = Some(argv.next().ok_or("--hub requires a value")?),
@@ -127,11 +150,12 @@ pub(crate) fn parse_stdio_args(argv: &mut impl Iterator<Item = String>) -> Resul
     if options_folder.is_some() && hub.is_some() {
         return Err("--folder and --hub are mutually exclusive".to_string());
     }
-    Ok(StdioOptions { host_driver_policy: host_driver_policy.ok_or("--host-driver-policy is required")?, folder:options_folder, hub, principal:options_principal, scopes:options_scopes, auto_approve:options_auto_approve, no_bridge:options_no_bridge })
+    Ok(StdioOptions { host_driver_policy: host_driver_policy.ok_or("--host-driver-policy is required")?, operation_policy:operation_policy.ok_or("--operation-policy is required")?, folder:options_folder, hub, principal:options_principal, scopes:options_scopes, auto_approve:options_auto_approve, no_bridge:options_no_bridge })
 }
 
 pub(crate) fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOptions, String> {
     let mut host_driver_policy = None;
+    let mut operation_policy = None;
     let mut port: u16 = 6300;
     let mut bind = "127.0.0.1".to_string();
     let mut folder = None;
@@ -143,6 +167,7 @@ pub(crate) fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result
     let mut auto_approve = AutoApprovePolicy::default();
     while let Some(flag) = argv.next() {
         match flag.as_str() {
+            "--operation-policy" => operation_policy = Some(read_host_operation_policy(&argv.next().ok_or("--operation-policy requires a JSON path")?)?),
             "--host-driver-policy" => host_driver_policy = Some(read_host_driver_policy(&argv.next().ok_or("--host-driver-policy requires a JSON path")?)?),
             "--port" => port = argv.next().ok_or("--port requires a value")?.parse().map_err(|_| "--port must be a number".to_string())?,
             "--bind" => bind = argv.next().ok_or("--bind requires a value")?,
@@ -163,7 +188,7 @@ pub(crate) fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result
     if folder.is_some() && hub.is_some() {
         return Err("--folder and --hub are mutually exclusive".to_string());
     }
-    Ok(HttpOptions { host_driver_policy: host_driver_policy.ok_or("--host-driver-policy is required")?, port, bind, folder, hub, principal, scopes, audit_dir, allow_origin, auto_approve })
+    Ok(HttpOptions { host_driver_policy: host_driver_policy.ok_or("--host-driver-policy is required")?, operation_policy:operation_policy.ok_or("--operation-policy is required")?, port, bind, folder, hub, principal, scopes, audit_dir, allow_origin, auto_approve })
 }
 
 /// 🚨️ `audit` takes one optional `--folder <dir>` (default `.`) and nothing else — it never opens a
@@ -183,7 +208,7 @@ fn parse_args() -> Result<Mode, String> {
     let mut argv = std::env::args().skip(1);
     let Some(mode) = argv.next() else {
         return Err(
-            "usage: semio-os-mcp <stdio|http|audit|schemas> [--folder <dir> | --hub <url> --space <id> [--credential-file <path> | --credential-fd <n>]] [--principal <id>] [--scopes a,b] [--auto-approve never|readonly|all] [stdio-only: --no-bridge] [http-only: --port <p> --bind <addr> --audit-dir <dir> --allow-origin <origin>]".to_string()
+            "usage: semio-os-mcp <stdio|http|audit|schemas> [stdio/http: --host-driver-policy <path> --operation-policy <path>] [--folder <dir> | --hub <url> --space <id> [--credential-file <path> | --credential-fd <n>]] [--principal <id>] [--scopes a,b] [--auto-approve never|readonly|all] [stdio-only: --no-bridge] [http-only: --port <p> --bind <addr> --audit-dir <dir> --allow-origin <origin>]".to_string()
         );
     };
     match mode.as_str() {
@@ -194,7 +219,6 @@ fn parse_args() -> Result<Mode, String> {
     }
 }
 
-//#endregion 🔖️Args
 
 /// 🏷️ Exact hub-authority carriers the OS/hub processes export by name — `S_USER`/`VITE_S_USER`
 /// (`🏛️ShellHost`'s identity pin), `S_HUB_URL`/`VITE_S_HUB_URL` (`🌐️vite`'s hub origin define) and
@@ -275,15 +299,8 @@ fn compile_component_worker() -> Result<(), String> {
     semio_plugin_host::compile_component_isolated(&engine, &bytes, &out).map_err(|error| error.to_string())
 }
 
-/// 🪞️ `semio-os-mcp schemas` prints the `os.mcp` scope's whole draft-07 schema document on stdout —
-/// the generator behind `repo run @semio-tech/framework-os-mcp-rs:schema-mirror`. It reads no
-/// environment, no filesystem and no credential, so it deliberately runs BEFORE the process-entry
-/// seal every serving mode is gated on.
-///
-/// 🧊️ `semio-os-mcp compile-component --engine <cfg> --out <cache.cwasm>` compiles the component
-/// on stdin into the compiled-code cache and exits — the isolated worker a cancellable cold
-/// compile runs in (`🏠️workspace`'s `CompileFlight`), killed when its last requester cancels. It
-/// reads no credential and serves nothing, so it runs before the process-entry seal too.
+/// 🪞️ Credential-free schema export and isolated component compilation run before the serving-mode process seal.
+/// `schemas` emits the full os.mcp draft-07 mirror; `compile-component` reads stdin and exits, and its cold worker is killed after its last requester cancels.
 pub fn run_mcp_entrypoint(services:Vec<RemoteInferenceProtocolV1>, credentials: Vec<CredentialExchangeProtocolV1>) {
     if let Err(error) = install_credential_exchange_protocols_v1(credentials) { eprintln!("MCP credential protocol inventory refused: {}", error.message); std::process::exit(1); }
     if let Err(error)=install_remote_inference_protocols_v1(services) {eprintln!("MCP installed service inventory refused: {}",error.message);std::process::exit(1);}

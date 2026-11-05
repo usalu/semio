@@ -1,0 +1,11 @@
+{
+ "binding":{"artifactId":"document-a","artifactKind":"test.bitmap","inferenceSchema":"test.solve","pluginId":"test"},
+ "outputSchema":{"type":"object","additionalProperties":false,"required":["pixels"],"properties":{"pixels":{"type":"string","minLength":1}}},
+ "cases":[
+  {"expected":true,"reply":{"structuredContent":{"jobId":"job-a","status":"SUCCEEDED","complete":true,"artifactId":"document-a","artifactKind":"test.bitmap","inferenceSchema":"test.solve","pluginId":"test","payloadBytes":14,"payload":{"pixels":"AA=="}}}},
+  {"expected":false,"reply":{"structuredContent":{"jobId":"job-a","status":"RUNNING","complete":false,"artifactId":"document-a","artifactKind":"test.bitmap","inferenceSchema":"test.solve","pluginId":"test","payloadBytes":14,"payload":{"pixels":"AA=="}}}},
+  {"expected":false,"reply":{"structuredContent":{"jobId":"job-a","status":"SUCCEEDED","complete":true,"artifactId":"document-b","artifactKind":"test.bitmap","inferenceSchema":"test.solve","pluginId":"test","payloadBytes":14,"payload":{"pixels":"AA=="}}}},
+  {"expected":false,"reply":{"structuredContent":{"jobId":"job-a","status":"SUCCEEDED","complete":true,"artifactId":"document-a","artifactKind":"test.bitmap","inferenceSchema":"test.solve","pluginId":"test","payloadBytes":0,"payload":null}}},
+  {"expected":false,"reply":{"structuredContent":{"jobId":"job-a","status":"SUCCEEDED","complete":true,"artifactId":"document-a","artifactKind":"test.bitmap","inferenceSchema":"test.solve","pluginId":"test","payloadBytes":14,"payload":{"pixels":42}}}}
+ ]
+}

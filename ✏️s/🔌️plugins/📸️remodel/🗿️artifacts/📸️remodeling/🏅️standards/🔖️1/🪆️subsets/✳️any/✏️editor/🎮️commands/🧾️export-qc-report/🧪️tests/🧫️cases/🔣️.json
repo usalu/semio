@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "filename": "remodeling-qc-report.json",
+  "mimeType": "application/json",
+  "cases": [
+    {
+      "id": "missing-report",
+      "report": null,
+      "effects": 0,
+      "documentQc": null
+    },
+    {
+      "id": "present-report",
+      "report": {
+        "reprojectionRmsPx": 0.75,
+        "gcpCheckpointRmse": 0.25,
+        "watertight": null,
+        "meanTrackLength": 4,
+        "registeredFrameRatio": 1,
+        "denseCoverageRatio": 0.8,
+        "warnings": [
+          "Sparse overlap"
+        ]
+      },
+      "effects": 1,
+      "documentQc": {
+        "reprojectionRmsPx": {
+          "bits": "3fe8000000000000"
+        },
+        "gcpCheckpointRmse": {
+          "bits": "3fd0000000000000"
+        },
+        "watertight": null,
+        "meanTrackLength": {
+          "bits": "40800000"
+        },
+        "registeredFrameRatio": {
+          "bits": "3f800000"
+        },
+        "denseCoverageRatio": {
+          "bits": "3f4ccccd"
+        },
+        "warnings": [
+          "Sparse overlap"
+        ]
+      }
+    }
+  ],
+  "reportSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "reprojectionRmsPx",
+      "gcpCheckpointRmse",
+      "watertight",
+      "meanTrackLength",
+      "registeredFrameRatio",
+      "denseCoverageRatio",
+      "warnings"
+    ],
+    "properties": {
+      "reprojectionRmsPx": {
+        "type": "number"
+      },
+      "gcpCheckpointRmse": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "watertight": {
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "meanTrackLength": {
+        "type": "number"
+      },
+      "registeredFrameRatio": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "denseCoverageRatio": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "warnings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -11,7 +11,7 @@ import { toolRunPanelReveal } from "../../../🛠️ShellHelpers/⏯️tool-run-
 import { useTimeTravelRevealV1 } from "../../../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { FRAMEWORK_SETTINGS_PANEL_ID } from "../../../📌️ChromePanels/🆔️panel-ids/🟦️.ts";
 import { leftoverInspectionRefreshScope, leftoverInspectionPanelHash } from "../../../🔌️PluginRuntime/🟦️.tsx";
-import { shellAppFault, type ShellAppFrameV1 } from "@semio-tech/framework/mcp/channel";
+import { createAgentArtifactRouteV1 } from "../../🌉️agent-artifact-route/🟦️.ts";
 import type { ShellCommand } from "@semio-tech/framework/shell";
 import type { useDockModel } from "../🧱️dock-model-and-persistence/🟦️.ts";
 import type { useOverrideAnchorsAndIntroductionIds } from "../🎓️override-anchors-and-introduction/🟦️.ts";
@@ -128,104 +128,7 @@ export function usePanelPathsAndOverrideReveals({ dock, panels, session, refresh
  */
 export function useToolTabSelectionEffects({ agentDeferredPlansRef, agentArtifactRouteRef, sessionRef, spawnedAppsRef, loadedPluginsRef, onActionRef, activeWindowIdRef, leftoverInspectionIdsRef, leftoverInspectionEpoch, dock, panels, dispatch, uiRefreshCacheRef, refreshUi, reportRefreshFault, activeWindowId, spawnedIdsRef, detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, mobile, mobilePanelPath, mobilePanelTabs, session, panelActivePaths, activeToolId, onActionStable, toolGeneration }: Pick<ReturnType<typeof useDockModel>, "agentDeferredPlansRef" | "agentArtifactRouteRef" | "sessionRef" | "spawnedAppsRef" | "loadedPluginsRef" | "onActionRef" | "activeWindowIdRef" | "leftoverInspectionIdsRef" | "leftoverInspectionEpoch" | "dock" | "panels" | "dispatch" | "uiRefreshCacheRef" | "refreshUi" | "reportRefreshFault" | "activeWindowId" | "spawnedIdsRef" | "mobile" | "mobilePanelPath" | "mobilePanelTabs" | "session" | "activeToolId" | "onActionStable" | "toolGeneration"> & Pick<ReturnType<typeof useOverrideAnchorsAndIntroductionIds>, "detailsOverrideTabId" | "detailsOverrideAnchor" | "studioOverrideAnchor"> & Pick<ReturnType<typeof usePanelPathsAndOverrideReveals>, "panelActivePaths">) {
   useEffect(() => {
-    const deferred = agentDeferredPlansRef.current;
-    agentArtifactRouteRef.current = async (request): Promise<readonly ShellAppFrameV1[]> => {
-      const session = sessionRef.current;
-      if (!session) return [shellAppFault("plugin.unavailable", "no plugin session is established in this shell — open an artifact here before driving it from an agent")];
-      /** 🗿️🪟️ The program this request addresses: the session, or any SPAWNED program of it.
-       *
-       * 🧯️ This route bound `sessionRef.current` and refused every other instance by name — the LAST
-       * of the session-only decision sites S5 started on (five), S6 continued (the agent census) and
-       * §3 finished (progress). With it, an MCP client could reach only the landing app of the shell
-       * whose whole purpose is hosting every other plugin's artifacts: measured on the live gate
-       * against `s` with a spawned `note` editor as
-       * `this shell's live instance is \`1\`, not \`3\` — the agent addressed an instance this shell
-       * has closed`, where instance 3 was exactly the editor the human was looking at. */
-      const spawnedTarget = spawnedAppsRef.current.find((entry) => String(entry.instanceId) === request.instanceId);
-      const spawnedTargetApp = spawnedTarget ? loadedPluginsRef.current.find((entry) => entry.handle.pluginId === spawnedTarget.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawnedTarget.appId) : undefined;
-      const live =
-        request.instanceId === String(session.instanceId)
-          ? { pluginId: session.pluginId, instanceId: session.instanceId, app: session.app }
-          : spawnedTarget && spawnedTargetApp
-            ? { pluginId: spawnedTarget.pluginId, instanceId: spawnedTarget.instanceId, app: spawnedTargetApp }
-            : null;
-      if (!live) {
-        const open = [`${session.pluginId}:${session.app.id}:${session.instanceId}`, ...spawnedAppsRef.current.map((entry) => `${entry.pluginId}:${entry.appId}:${entry.instanceId}`)].join(", ");
-        return [shellAppFault("plugin.unavailable", `this shell has no open instance \`${request.instanceId}\` — the agent addressed an instance this shell has closed (open: ${open})`)];
-      }
-      const readHistory = async (): Promise<ShellAppFrameV1> => {
-        const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === live.pluginId)?.handle;
-        if (!plugin?.readHistory) return shellAppFault("plugin.unavailable", `plugin \`${live.pluginId}\` exposes no history port in this shell`);
-        const patch = await plugin.readHistory(live.instanceId);
-        const head = [...(patch?.upserts ?? [])].sort((left, right) => right.seq - left.seq)[0];
-        return { kind: "historySnapshot", artifactId: `${live.pluginId}:${live.app.id}:${live.instanceId}`, headEditId: head?.actionId ?? "", cursor: String(patch?.cursor ?? 0) };
-      };
-      const dispatchVerb = async (action: string, args: Record<string, unknown>): Promise<ShellAppFrameV1 | null> => {
-        const outcome = await onActionRef.current({ controllerId: live.app.controllerId, action, args, provenance: { origin: "agent", windowId: activeWindowIdRef.current ?? null, causedBy: null } });
-        if (outcome.kind === "refused") return shellAppFault(outcome.reason === "viewer-read-only" ? "viewer.read-only" : outcome.reason === "mutation-rejected" ? "app.command.rejected" : "channel.not-wired", `the shell refused \`${action}\`: ${outcome.reason}${outcome.detail ? ` (${outcome.detail})` : ""}`);
-        return null;
-      };
-      switch (request.command.kind) {
-        case "readHistory":
-          return [await readHistory()];
-        case "pureCommand": {
-          const verb = request.command.capabilityId.split(".").pop() ?? "";
-          if (!(live.app.actions ?? []).some((declared) => declared.id === verb)) {
-            return [shellAppFault("capability.not-found", `app \`${live.app.id}\` declares no action \`${verb}\` (from capability \`${request.command.capabilityId}\`)`)];
-          }
-          const plan = new TextEncoder().encode(JSON.stringify({ deferredAction: verb, args: request.command.input ?? {} }));
-          return [{ kind: "emit", ops: { document: [plan], config: [], draft: [] }, warnings: [] }];
-        }
-        case "transactionPrepare": {
-          const lane = request.command.ops.document[0];
-          if (!lane) return [shellAppFault("app.command.rejected", "the shell route prepares only its own deferred plan; this transaction carries no document-lane ops")];
-          deferred.set(request.command.txnId, new TextDecoder().decode(lane));
-          return [{ kind: "transactionPrepared", txnId: request.command.txnId }];
-        }
-        case "transactionRollback":
-          deferred.delete(request.command.txnId);
-          return [{ kind: "transactionRolledBack", txnId: request.command.txnId }];
-        case "transactionCommit": {
-          const plan = deferred.get(request.command.txnId);
-          deferred.delete(request.command.txnId);
-          if (plan === undefined) return [shellAppFault("transaction.generation-mismatch", `this shell holds no prepared plan for transaction \`${request.command.txnId}\``)];
-          let parsed: { readonly deferredAction?: string; readonly args?: Record<string, unknown> };
-          try {
-            parsed = JSON.parse(plan) as { readonly deferredAction?: string; readonly args?: Record<string, unknown> };
-          } catch {
-            return [shellAppFault("app.command.rejected", "the prepared plan is not this shell route's own")];
-          }
-          if (!parsed.deferredAction) return [shellAppFault("app.command.rejected", "the prepared plan names no action")];
-          const refusal = await dispatchVerb(parsed.deferredAction, parsed.args ?? {});
-          if (refusal) return [refusal];
-          const after = await readHistory();
-          return [{ kind: "transactionCommitted", txnId: request.command.txnId, editId: after.kind === "historySnapshot" ? after.headEditId : "" }];
-        }
-        case "transactionUndo":
-        case "transactionRedo": {
-          const verb = request.command.kind === "transactionUndo" ? "undo" : "redo";
-          const refusal = await dispatchVerb(verb, {});
-          if (refusal) return [refusal];
-          return request.command.kind === "transactionUndo" ? [{ kind: "transactionUndone", groupId: request.command.groupId }] : [{ kind: "transactionRedone", groupId: request.command.groupId }];
-        }
-        case "cancel":
-          return [shellAppFault("budget.exceeded", `the gateway abandoned command ${request.command.cancelSeq}`)];
-        case "readArtifact": {
-          const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === live.pluginId)?.handle;
-          if (!plugin?.readAppDocumentPack) return [shellAppFault("plugin.unavailable", `plugin \`${live.pluginId}\` exposes no document port in this shell — an agent needing a genesis read must resolve a headless context (\`--folder\`/\`--hub\`)`)];
-          const document = await plugin.readAppDocumentPack(live.instanceId);
-          if (!document) return [shellAppFault("plugin.unavailable", `plugin \`${live.pluginId}\` instance ${live.instanceId} holds no document to read`)];
-          return [{ kind: "artifact", pack: document.pack, spr: document.spr }];
-        }
-        case "exportMedia": {
-          const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === live.pluginId)?.handle;
-          if (!plugin?.exportAppMedia) return [shellAppFault("plugin.unavailable", `plugin \`${live.pluginId}\` exposes no media OUT port in this shell — an agent needing an export must resolve a headless context (\`--folder\`/\`--hub\`)`)];
-          const exported = await plugin.exportAppMedia(live.instanceId, request.command.port);
-          if (!exported) return [shellAppFault("plugin.unavailable", `plugin \`${live.pluginId}\` produced no media on port \`${request.command.port}\``)];
-          return [{ kind: "exported", port: exported.port, descriptor: exported.descriptor, data: exported.data }];
-        }
-      }
-    };
+    agentArtifactRouteRef.current = createAgentArtifactRouteV1({ agentDeferredPlansRef, sessionRef, spawnedAppsRef, loadedPluginsRef, onActionRef, activeWindowIdRef });
   }, []);
 
   useEffect(() => {

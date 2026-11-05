@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "accept": ".obj,.ply,.stl",
+  "readAs": "dataUrl",
+  "multiple": true,
+  "terminalEvents": [
+    "cancel",
+    "empty",
+    "clickFailure"
+  ],
+  "files": [
+    {
+      "name": "café.obj",
+      "type": "model/obj",
+      "text": "v 0 0 0\n",
+      "contents": "data:model/obj;base64,diAwIDAgMAo="
+    },
+    {
+      "name": "triangle.stl",
+      "type": "model/stl",
+      "text": "solid mesh\nendsolid mesh\n",
+      "contents": "data:model/stl;base64,c29saWQgbWVzaAplbmRzb2xpZCBtZXNoCg=="
+    }
+  ]
+}

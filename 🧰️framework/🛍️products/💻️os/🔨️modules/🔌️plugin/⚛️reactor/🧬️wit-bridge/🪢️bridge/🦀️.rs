@@ -515,7 +515,7 @@ fn kernel_effect_to_wit(effect: Effect) -> Result<semio_plugin_abi::wasip2::expo
     }
     Ok(match effect {
         Effect::OpenWindow { req, kind, params } => wit::Effect::OpenWindow(wit_effects::OpenWindowEffect { req: req.0, params: wit_effects::OpenWindowParams { kind: kind.0, params: pack(&params) } }),
-        Effect::CloseWindow { window } => wit::Effect::CloseWindow(wit_effects::CloseWindowEffect { window: window.0 as u64 }),
+        Effect::CloseWindow { window } => wit::Effect::CloseWindow(wit_effects::CloseWindowEffect { window: window.0.to_string() }),
         Effect::Notify { message } => wit::Effect::Notify(wit_effects::NotifyEffect { message }),
         Effect::ClipboardWrite { fragment } => wit::Effect::ClipboardWrite(wit_effects::ClipboardWriteEffect { fragment: pack(&fragment) }),
         Effect::RequestSync => wit::Effect::RequestSync,
@@ -550,8 +550,8 @@ fn kernel_effect_to_wit(effect: Effect) -> Result<semio_plugin_abi::wasip2::expo
         Effect::BlobWrite { req, media_type, bytes } => wit::Effect::BlobWrite(wit_effects::BlobWriteEffect { req: req.0, params: wit_effects::BlobWriteParams { media_type: pack(&media_type), bytes } }),
         Effect::BlobLoad { req, hash } => wit::Effect::BlobLoad(wit_effects::BlobLoadEffect { req: req.0, params: wit_effects::BlobLoadParams { hash } }),
         Effect::HttpRequest { req, method, url, headers, body, stream } => wit::Effect::HttpRequest(wit_effects::HttpRequestEffect { req: req.0, params: wit_effects::HttpParams { method, url, headers, body, streaming: stream } }),
-        Effect::DocumentRead { req, doc, lane } => wit::Effect::ArtifactRead(wit_effects::ArtifactReadEffect { req: req.0, params: wit_effects::ArtifactReadParams { doc: doc.0 as u64, lane } }),
-        Effect::DocumentWrite { req, doc, lane, ops } => wit::Effect::ArtifactWrite(wit_effects::ArtifactWriteEffect { req: req.0, params: wit_effects::ArtifactWriteParams { doc: doc.0 as u64, lane, ops } }),
+        Effect::DocumentRead { req, doc, lane } => wit::Effect::ArtifactRead(wit_effects::ArtifactReadEffect { req: req.0, params: wit_effects::ArtifactReadParams { doc: doc.0.to_string(), lane } }),
+        Effect::DocumentWrite { req, doc, lane, ops } => wit::Effect::ArtifactWrite(wit_effects::ArtifactWriteEffect { req: req.0, params: wit_effects::ArtifactWriteParams { doc: doc.0.to_string(), lane, ops } }),
         Effect::LinkResolve { req, link } => wit::Effect::LinkResolve(wit_effects::LinkResolveEffect { req: req.0, link: link.into_bytes() }),
         Effect::RegistryQuery { req, kind, filter } => wit::Effect::RegistryQuery(wit_effects::RegistryQueryEffect { req: req.0, params: wit_effects::RegistryQueryParams { kind, filter: filter.map(|value| pack(&value)).unwrap_or_default() } }),
         Effect::IoCompose { req, key, sources } => wit::Effect::IoCompose(wit_effects::IoComposeEffect { req: req.0, params: wit_effects::IoComposeParams { key: key.into_bytes(), sources: pack(&sources) } }),

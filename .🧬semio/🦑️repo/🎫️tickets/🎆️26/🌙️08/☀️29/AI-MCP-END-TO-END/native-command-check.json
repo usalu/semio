@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["check","-p","semio-framework-kernel","-p","semio-framework-plugin-instance-commands","-p","semio-framework-plugin-runtime-exchange","--lib"],"configuration":"prototype","store":"shared","parallelism":2,"language":"en","agent":"semio-mcp-native"}}

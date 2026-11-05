@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "id": "empty-en",
+      "authored": false,
+      "locale": "en",
+      "message": "No current result. Run Fill in the editor."
+    },
+    {
+      "id": "empty-de",
+      "authored": false,
+      "locale": "de",
+      "message": "Kein aktuelles Ergebnis. Füllen im Editor starten."
+    },
+    {
+      "id": "authored-en",
+      "authored": true,
+      "locale": "en",
+      "message": "Showing authored pins. No current solve is available."
+    },
+    {
+      "id": "authored-de",
+      "authored": true,
+      "locale": "de",
+      "message": "Angelegte Fixierungen werden angezeigt. Kein aktuelles Ergebnis verfügbar."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "required": ["arguments", "repeatedArgument", "repetitions", "minimumCommandCharacters"],
+  "properties": {
+    "arguments": {"type": "array", "items": {"type": "string"}},
+    "repeatedArgument": {"type": "string", "minLength": 1},
+    "repetitions": {"type": "integer", "minimum": 1},
+    "minimumCommandCharacters": {"type": "integer", "minimum": 32768}
+  },
+  "additionalProperties": false
+}

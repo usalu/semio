@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "owner": "fixture:control-dag",
+  "maximumMilliseconds": 60000,
+  "depths": [
+    0,
+    2,
+    4,
+    8
+  ],
+  "maximumClockReadsPerUniqueNode": 4
+}

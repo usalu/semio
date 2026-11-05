@@ -21,7 +21,7 @@
     },
     "descriptorDigestV1": "831781b18dfd55bb3f7c539834736d89986c3a973ac739854ff8fd4b31478dfd",
     "catalog": {
-      "generationId": "5788ccf56af6fcf64abda0c77498f053c69235782405b22d8651f1c06c8205c4"
+      "generationId": "57214575920354fea77a9e8e6c27a13b91cfd5c2d513307a76579c12c1c6c8e8"
     },
     "package": {
       "pluginId": "gis",
@@ -30,7 +30,7 @@
       "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
       "componentBlake3": "4444444444444444444444444444444444444444444444444444444444444444",
       "descriptorByteSha256": "5555555555555555555555555555555555555555555555555555555555555555",
-      "executionProtocol": { "appChannelVersion": 23 },
+      "executionProtocol": { "appChannelVersion": 25 },
       "componentReceipt": {
         "schema": "semio.plugin.component-receipt/v1",
         "pluginId": "gis",
@@ -141,7 +141,7 @@
     },
     "descriptorDigestV1": "831781b18dfd55bb3f7c539834736d89986c3a973ac739854ff8fd4b31478dfd",
     "catalog": {
-      "generationId": "5788ccf56af6fcf64abda0c77498f053c69235782405b22d8651f1c06c8205c4"
+      "generationId": "57214575920354fea77a9e8e6c27a13b91cfd5c2d513307a76579c12c1c6c8e8"
     },
     "package": {
       "pluginId": "gis",
@@ -150,7 +150,7 @@
       "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
       "componentBlake3": "4444444444444444444444444444444444444444444444444444444444444444",
       "descriptorByteSha256": "5555555555555555555555555555555555555555555555555555555555555555",
-      "executionProtocol": { "appChannelVersion": 23 },
+      "executionProtocol": { "appChannelVersion": 25 },
       "componentReceipt": {
         "schema": "semio.plugin.component-receipt/v1",
         "pluginId": "gis",

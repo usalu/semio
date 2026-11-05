@@ -156,10 +156,7 @@ pub mod editor {
             }
             #[path = "."]
             pub mod pin_solution {
-                pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::editor::bitmap::commands::pin_solution::*;
-                #[cfg(test)]
-                #[path = "../../../🎮️commands/📌️pin-solution/🧪️tests/🔬️unit/🦀️.rs"]
-                pub mod tests;
+                pub use semio_s_artifact_wfc_bitmap_pin_solution::*;
             }
         }
         #[path = "."]

@@ -11,10 +11,10 @@ use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use serde::Deserialize;
 use serde::Serialize;
+#[path="🔢️handles/🦀️.rs"]mod decimal_handles;
 
 //#region 🔖️Identifiers
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ArtifactHandle(pub u128);
 
@@ -30,14 +30,13 @@ impl semio_framework_value::ToValue for ArtifactHandle {
 impl semio_framework_value::FromValue for ArtifactHandle {
     fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            DslValue::String(s) => s.parse().map(ArtifactHandle).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for ArtifactHandle, found {s:?}"))),
-            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for ArtifactHandle, found {other:?}"))),
+            DslValue::String(s) => decimal_handles::parse(&s).map(ArtifactHandle),
+            _ => Err(decimal_handles::invalid()),
         }
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[derive(semio_framework_value::RetireOwned)]
 pub struct WindowHandle(pub u128);
 
@@ -52,8 +51,8 @@ impl semio_framework_value::ToValue for WindowHandle {
 impl semio_framework_value::FromValue for WindowHandle {
     fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            DslValue::String(s) => s.parse().map(WindowHandle).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for WindowHandle, found {s:?}"))),
-            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for WindowHandle, found {other:?}"))),
+            DslValue::String(s) => decimal_handles::parse(&s).map(WindowHandle),
+            _ => Err(decimal_handles::invalid()),
         }
     }
 }
@@ -89,6 +88,7 @@ impl semio_framework_value::FromValue for CapabilityToken {
 #[serde(transparent)]
 #[value(transparent)]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct PluginInstanceId(pub String);
 
 // 🎞️ CW3 kernel cut-over: MutationId/ActorId/ArtifactId/ArtifactVersion/SchemaId moved to
@@ -135,6 +135,7 @@ pub struct SchemaVersion(pub String);
 #[serde(transparent)]
 #[value(transparent)]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct WindowKindId(pub String);
 
 //#endregion 🔖️Identifiers
@@ -281,6 +282,7 @@ pub struct CommandInvocation {
 #[serde(transparent)]
 #[value(transparent)]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct RequestId(pub u64);
 
 //#endregion 🔖️Effect
@@ -403,6 +405,7 @@ pub struct WindowInput {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub enum RequestOutcome {
     Ok(Vec<u8>),
     Err(Vec<u8>),
@@ -464,6 +467,9 @@ impl Budget {
 /// 🏁️ Outcome of one `reactor::poll` — `📜️wit/📜️reactor.wit`'s `turn-status` variant.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum TurnStatus {
     Idle,
     MoreWork,
@@ -495,6 +501,7 @@ pub struct Usage {
 #[serde(transparent)]
 #[value(transparent)]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct CapabilityId(pub String);
 
 /// 🙏️ A guest's ask for a capability — `📓️design-abi.md` §5. Replaces `CapabilityRequirement`
@@ -506,6 +513,7 @@ pub struct CapabilityId(pub String);
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct CapabilityRequest {
     pub id: CapabilityId,
     pub scope: String,

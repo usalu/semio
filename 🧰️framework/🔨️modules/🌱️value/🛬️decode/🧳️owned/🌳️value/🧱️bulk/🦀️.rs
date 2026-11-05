@@ -3,10 +3,8 @@ use super::{NativeValueSource,NativeTreeKind,fixed,invalid,receipt};
 use crate::{DslValue,Number,NativeDecodeControl,RetainedWorkOutcome,OriginalReceivingPrimary,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits}};
 use super::super::{NativeReceive,NativeReceiver};
 use std::mem::{ManuallyDrop,size_of};
-/// 🌳️ The original production dynamic nesting ceiling remains unchanged.
 pub const NATIVE_TREE_MAXIMUM_DEPTH:usize=64;
 const TEXT_FRAGMENT:usize=64;
-/// 🧱️ Consuming constructors move already funded bodies without new allocation or recursive traversal.
 pub trait NativeTreeValue:RetireOwned+Sized{
  fn null()->Self;
  fn boolean(value:bool)->Self;
@@ -31,9 +29,7 @@ impl<T:NativeTreeValue> Frame<T>{
  fn compare(&mut self,left:usize,right:usize,next:u8){self.compare_left=left;self.compare_right=right;self.compare_offset=0;self.compare_next=next;self.phase=50;}
 }
 fn fragment(text:&str,offset:usize)->usize{let mut end=offset.saturating_add(TEXT_FRAGMENT).min(text.len());while !text.is_char_boundary(end){end-=1;}end-offset}
-/// 🫴️ Every partial original node and output remains owned until its genuine paid handoff or retirement.
 pub struct NativeTreeReceiver<I:NativeValueSource+?Sized,T:NativeTreeValue>{binding:Option<RetainedCloneBinding>,frames:ManuallyDrop<[Option<Frame<T>>;NATIVE_TREE_MAXIMUM_DEPTH+1]>,depth:usize,output:ManuallyDrop<Option<T>>,retirement:RetainedCloneClose,closing:bool,taken:bool,complete:bool,failure:Option<(ValueRefusalKind,&'static str)>,input:std::marker::PhantomData<fn(&I)>}
-/// 🧵️ Node and text pointers borrow only immutable Sync originals kept alive by this receiver's genuine source binding; all mutable bodies move exclusively with the receiver.
 unsafe impl<I:NativeValueSource+?Sized,T:NativeTreeValue> Send for NativeTreeReceiver<I,T>{}
 impl<I:NativeValueSource+?Sized,T:NativeTreeValue> NativeTreeReceiver<I,T>{
  pub fn new()->Self{Self{binding:None,frames:ManuallyDrop::new(std::array::from_fn(|_|None)),depth:0,output:ManuallyDrop::new(None),retirement:Default::default(),closing:false,taken:false,complete:false,failure:None,input:std::marker::PhantomData}}

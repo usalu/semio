@@ -32,7 +32,7 @@ fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
     lease.descriptor.byte_length = descriptor_bytes.len() as u64;
     lease.package.component_receipt = semio_os_kernel::os_component_receipt::ComponentReceiptV1 { plugin_id: lease.package.plugin_id.clone(), package_id: lease.package.package_id.clone(), wasm_sha256: lease.package.component_sha256.clone(), wasm_bytes: lease.component.byte_length, semantic_descriptor_sha256: lease.package.descriptor_byte_sha256.clone(), ..lease.package.component_receipt.clone() };
     binding.install_catalog_for_test(vec![remote::AuthorizedPackageSelection { scope: lease.scope.clone(), descriptor_digest_v1: lease.descriptor_digest_v1.clone(), lease, descriptor }]);
-    let mut workspace = HeadlessWorkspace::new(WorkspaceOrigin::Hub { base_url: "https://hub.invalid".to_string(), space_id: "space-a".to_string() }, "forged-local-principal".to_string(), vec!["admin".to_string()], empty_catalog());
+    let mut workspace = HeadlessWorkspace::new(WorkspaceOrigin::Hub { base_url: "https://hub.invalid".to_string(), space_id: "space-a".to_string() }, "forged-local-principal".to_string(), vec!["admin".to_string()], empty_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy"));
     workspace.catalog = Arc::new(WorkspaceCatalog::following(Arc::clone(&binding)).expect("the fixture's authority compiles"));
     workspace.hub_binding = Some(binding);
     workspace

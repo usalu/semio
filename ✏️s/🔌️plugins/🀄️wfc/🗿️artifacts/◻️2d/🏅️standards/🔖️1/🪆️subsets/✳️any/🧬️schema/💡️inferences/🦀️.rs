@@ -1,18 +1,4 @@
-//! 💡️ WFC 2D inferences — THE SOLVE ITSELF IS AN INFERENCE. `Wfc2dSnapshot` only ever persists the
-//! PROBLEM (slots/edges/tiles/rules/seed); the SOLUTION, the contradiction verdict and the entropy
-//! map are all derived here, never mutation-authored state.
-//!
-//! The compile route is assembly's graph route generalised to NAMED RELATIONS: every distinct
-//! `Wfc2dSlotEdge::relation` string becomes its own `RelationId` in a `ModelBuilder`, a rule with
-//! `relation: None` applies to all of them, and `allowed: false` compiles to a `deny` (which the
-//! model resolves after every `allow`, so a deny always wins). The topology is the engine's
-//! production `GraphTopologyBuild`; the solver is the resumable `WfcJob<GraphTopology>` interactive
-//! callers drive, stepped here under an explicit fuel/step budget so every step is watchdog-bounded.
-//!
-//! Determinism: `solve_with_job` reads only snapshot fields (`seed` included) and no ambient
-//! randomness enters, so `DepHash` caching over `Wfc2dSolve`/`Wfc2dContradiction`/`Wfc2dEntropy` is
-//! sound.
-
+//! 💡️ Resumable inference results for Wfc2d. Completed jobs publish derived answers; pure fields expose cheap authored metrics.
 use crate::schema::snapshot::Wfc2dSnapshot;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -96,25 +82,15 @@ pub(crate) fn slot_entropy(snapshot: &Wfc2dSnapshot, slot: &crate::schema::snaps
 //#endregion 🔖️Compile
 
 //#region 🔖️Solve
-/// 🏁 The solved assignment (slot id → tile id), or `Unsolved` for every non-solved outcome.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
-pub enum Wfc2dSolveResult {
-    #[default]
-    Unsolved,
-    Solved {
-        assignments: BTreeMap<String, String>,
-    },
-}
 
-pub struct Wfc2dSolve;
+
+
 
 
 //#endregion 🔖️Solve
 
 //#region 🔖️Contradiction
-/// 🩺 The satisfiability verdict on its own, so a caller who only needs "is this spec solvable at
-/// all" never has to decode a whole assignment map to find out.
-pub struct Wfc2dContradiction;
+
 
 
 //#endregion 🔖️Contradiction

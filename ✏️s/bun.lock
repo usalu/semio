@@ -1740,8 +1740,11 @@
       "name": "@semio-tech/draw-js",
       "version": "0.1.0",
       "devDependencies": {
+        "@napi-rs/canvas": "^1.0.2",
         "@semio-tech/framework": "workspace:*",
         "ajv": "8.20.0",
+        "pdfjs-dist": "^5.4.296",
+        "playwright": "^1.57.0",
         "scheduler": "0.28.0",
         "typescript": "^5.9.3"
       }

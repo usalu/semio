@@ -1,9 +1,7 @@
 use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::mesh_child_handle, snapshot::LowpolyObject, snapshot::LowpolyPaintLayer, snapshot::LowpolySnapshot, snapshot::LowpolyTransform, snapshot::LOWPOLY_DOCUMENT_SCHEMA};
 
-/// 🧪️ A small (deliberately NOT the real `LOWPOLY_PAINT_TEXTURE_SIZE`-scoped canvas) but
-/// structurally representative fixture: two objects, one carrying a mesh handle and a paint
-/// layer, the other bare -- exercising every field kind `LowpolySnapshot` actually has.
+/// 🧪️ Two objects with a canonical alternating-color paint canvas exercise snapshot field fidelity.
 fn box_mesh_json() -> String {
     HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
 }
@@ -16,7 +14,7 @@ fn fixture() -> LowpolySnapshot {
         transform: LowpolyTransform { position: [1.0, 2.0, 3.0], rotation: [0.0, 90.0, 0.0], scale: [1.0, 1.0, 1.0] },
         smooth_shading: false,
         mesh: Some(mesh_child_handle("obj-1", &mesh_json)),
-        paint_layers: vec![LowpolyPaintLayer { name: "Base".into(), visible: true, opacity: 0.5, blend_mode: "normal".into(), pixels: vec![10, 20, 30, 40, 50, 60, 70, 80] }],
+        paint_layers: vec![LowpolyPaintLayer { name: "Base".into(), visible: true, opacity: 0.5, blend_mode: "normal".into(), pixels: [10, 20, 30, 40, 50, 60, 70, 80].repeat(semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_PAINT_TEXTURE_SIZE.pow(2) / 2) }],
         mesh_content: mesh_json,
     };
     let obj2 = LowpolyObject { mesh_state:None, id: "obj-2".into(), name: "Second Object".into(), transform: LowpolyTransform::default(), smooth_shading: true, mesh: None, paint_layers: Vec::new(), mesh_content: String::new() };
@@ -94,8 +92,16 @@ use crate::{export::serializers::artifacts::obj::v3_0::any as obj_export, export
 use semio_framework_3d::mesh::HalfedgeMesh;
 
 fn mesh_of(object: &LowpolyObject) -> HalfedgeMesh {
-    assert_eq!(object.mesh, Some(mesh_child_handle(&object.id, &object.mesh_content)), "handle must hash mesh_content");
-    HalfedgeMesh::from_json(&object.mesh_content).expect("mesh_content parses")
+    match &object.mesh_state {
+        Some(state) => {
+            assert_eq!(object.mesh, Some(semio_s_artifact_lowpoly_lowpoly_model::snapshot::managed_mesh_child_handle(&object.id, state)), "handle must hash managed state");
+            state.clone().into_mesh().expect("managed mesh")
+        }
+        None => {
+            assert_eq!(object.mesh, Some(mesh_child_handle(&object.id, &object.mesh_content)), "handle must hash authored source");
+            HalfedgeMesh::from_json(&object.mesh_content).expect("mesh_content parses")
+        }
+    }
 }
 
 fn total_faces(snapshot: &LowpolySnapshot) -> usize {
@@ -241,3 +247,184 @@ async fn geometry_export_then_import_preserves_face_counts_and_applies_transform
     assert_eq!(total_faces(&stl_geometry), triangles);
 }
 //#endregion 🕸️RealGeometryIo
+
+
+#[semio_framework_async_macros::async_test]
+async fn managed_geometry_exports_current_state_independently_of_authored_source() {
+    use semio_s_artifact_lowpoly_lowpoly_model::{managed_mesh::LowpolyMeshState, snapshot::managed_mesh_child_handle};
+    let data: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/managed-export.json")).expect("neutral fixture");
+    let source_positions: Vec<[f32; 3]> = serde_json::from_value(data["sourcePositions"].clone()).unwrap();
+    let positions: Vec<[f32; 3]> = serde_json::from_value(data["positions"].clone()).unwrap();
+    let faces: Vec<Vec<u32>> = serde_json::from_value(data["faces"].clone()).unwrap();
+    let source = HalfedgeMesh::from_faces(&source_positions, &faces).unwrap().to_json().unwrap();
+    let state = LowpolyMeshState::from_mesh(HalfedgeMesh::from_faces(&positions, &faces).unwrap());
+    let mut snapshot = fixture();
+    snapshot.objects.truncate(1);
+    snapshot.objects[0].mesh = Some(managed_mesh_child_handle(&snapshot.objects[0].id, &state));
+    snapshot.objects[0].mesh_state = Some(state);
+    snapshot.objects[0].transform = LowpolyTransform {
+        position: serde_json::from_value(data["transform"]["position"].clone()).unwrap(),
+        rotation: serde_json::from_value(data["transform"]["rotation"].clone()).unwrap(),
+        scale: serde_json::from_value(data["transform"]["scale"].clone()).unwrap(),
+    };
+    for (scale, output) in [(&data["transform"]["scale"], &data), (&data["reflected"]["scale"], &data["reflected"])] {
+        snapshot.objects[0].transform.scale = serde_json::from_value(scale.clone()).unwrap();
+        let expected: Vec<[f32; 3]> = serde_json::from_value(output["expectedPositions"].clone()).unwrap();
+        let indices: Vec<u32> = serde_json::from_value(output["expectedIndices"].clone()).unwrap();
+        for source in [source.as_str(), "", "independent authored source"] {
+            snapshot.objects[0].mesh_content = source.into();
+            let before = snapshot.clone();
+            let parts = crate::mesh_geometry::world_parts("gltf", &snapshot).expect("managed geometry");
+            assert_eq!(parts.len(), 1);
+            assert_eq!(parts[0].positions.len(), expected.len());
+            for (actual, expected) in parts[0].positions.iter().zip(&expected) {
+                assert!(actual.iter().zip(expected).all(|(actual, expected)| (actual - f64::from(*expected)).abs() < 1e-5));
+            }
+            assert_eq!(parts[0].faces, vec![indices.clone()]);
+            let bytes = crate::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&snapshot).expect("managed GLB");
+            let (document, buffers, _) = gltf::import_slice(&bytes).expect("independent GLB reader");
+            let primitive = document.meshes().next().unwrap().primitives().next().unwrap();
+            let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+            let oracle_positions = reader.read_positions().unwrap().collect::<Vec<_>>();
+            assert_eq!(oracle_positions.len(), expected.len());
+            for (actual, expected) in oracle_positions.iter().zip(&expected) {
+                assert!(actual.iter().zip(expected).all(|(actual, expected)| (actual - expected).abs() < 1e-5));
+            }
+            assert_eq!(reader.read_indices().unwrap().into_u32().collect::<Vec<_>>(), indices);
+            assert_eq!(snapshot, before, "export preserves paint, literal source and managed owners");
+        }
+    }
+    snapshot.objects[0].transform.scale = serde_json::from_value(data["tinyReflectedScale"].clone()).unwrap();
+    assert_eq!(crate::mesh_geometry::world_parts("obj", &snapshot).unwrap()[0].faces, vec![vec![2, 1, 0]], "tiny binary32 scales retain reflection sign");
+    let empty = LowpolyMeshState::empty();
+    snapshot.objects[0].mesh = Some(managed_mesh_child_handle(&snapshot.objects[0].id, &empty));
+    snapshot.objects[0].mesh_state = Some(empty);
+    snapshot.objects[0].mesh_content = source;
+    let parts = crate::mesh_geometry::world_parts("obj", &snapshot).expect("present empty managed mesh");
+    assert!(parts.iter().all(|part| part.positions.is_empty() && part.faces.is_empty()));
+}
+
+
+#[semio_framework_async_macros::async_test]
+async fn gltf_import_preserves_selected_scene_hierarchy_and_mesh_instances() {
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::{schema::snapshot::{GltfNode, GltfScene}, io::export::encode_glb};
+    let data: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/gltf-scene.json")).unwrap();
+    let positions: Vec<[f32; 3]> = serde_json::from_value(data["positions"].clone()).unwrap();
+    let faces: Vec<Vec<u32>> = serde_json::from_value(data["faces"].clone()).unwrap();
+    let source = crate::mesh_geometry::snapshot_from_parts("fixture", vec![crate::mesh_geometry::PolygonPart { name: "Triangle".into(), positions, faces }]).unwrap();
+    let mut glb = crate::export::serializers::artifacts::gltf::v2_0::any::serialize(&source).unwrap();
+    glb.document.nodes = vec![
+        GltfNode { children: vec![1, 2, 3], translation: Some(serde_json::from_value(data["rootTranslation"].clone()).unwrap()), ..Default::default() },
+        GltfNode { mesh: Some(0), name: Some("TRS".into()), translation: Some(serde_json::from_value(data["childTranslation"].clone()).unwrap()), rotation: Some(serde_json::from_value(data["childRotation"].clone()).unwrap()), scale: Some(serde_json::from_value(data["childScale"].clone()).unwrap()), ..Default::default() },
+        GltfNode { mesh: Some(0), name: Some("Matrix".into()), matrix: Some(serde_json::from_value(data["matrix"].clone()).unwrap()), ..Default::default() },
+        GltfNode { mesh: Some(0), name: Some("Reflected".into()), scale: Some(serde_json::from_value(data["reflectedScale"].clone()).unwrap()), ..Default::default() },
+        GltfNode { mesh: Some(0), translation: Some([1000.0; 3]), ..Default::default() },
+    ];
+    glb.document.scenes[0].nodes = vec![0];
+    let mut other_scene: GltfScene = glb.document.scenes[0].clone();
+    other_scene.nodes = vec![4];
+    glb.document.scenes.push(other_scene);
+    let bytes = encode_glb(&glb).unwrap();
+    let (oracle, buffers, _) = gltf::import_slice(&bytes).expect("independent valid GLB");
+    let recovered = crate::import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(&bytes).unwrap();
+    let expected: Vec<Vec<[f32; 3]>> = serde_json::from_value(data["expectedPositions"].clone()).unwrap();
+    assert_eq!(recovered.objects.iter().map(|object| object.name.as_str()).collect::<Vec<_>>(), vec!["TRS", "Matrix", "Reflected"]);
+    let expected_faces: Vec<Vec<u32>> = serde_json::from_value(data["expectedFaces"].clone()).unwrap();
+    let root = oracle.default_scene().unwrap().nodes().next().unwrap();
+    for (index, node) in root.children().enumerate() {
+        let primitive = node.mesh().unwrap().primitives().next().unwrap();
+        let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+        let transform = |point: [f32; 3], matrix: [[f32; 4]; 4]| -> [f32; 3] {
+            std::array::from_fn(|row| matrix[0][row] * point[0] + matrix[1][row] * point[1] + matrix[2][row] * point[2] + matrix[3][row])
+        };
+        let oracle_positions: Vec<_> = reader.read_positions().unwrap().map(|point| transform(transform(point, node.transform().matrix()), root.transform().matrix())).collect();
+        let mesh = mesh_of(&recovered.objects[index]);
+        let mut oracle_face: Vec<u32> = reader.read_indices().unwrap().into_u32().collect();
+        if node.transform().decomposed().2.into_iter().chain(root.transform().decomposed().2).product::<f32>() < 0.0 { oracle_face.reverse(); }
+        assert_eq!(oracle_face, expected_faces[index]);
+        assert_eq!(mesh.face_vertex_ids(semio_framework_3d::mesh::FaceId(0)).unwrap().into_iter().map(|vertex| vertex.0).collect::<Vec<_>>(), expected_faces[index]);
+        for (vertex, point) in expected[index].iter().enumerate() {
+            let actual = mesh.vertex_position(semio_framework_3d::mesh::VertexId(vertex as u32)).unwrap().0;
+            assert!(actual.iter().zip(point).all(|(actual, expected)| (actual - expected).abs() < 1e-5));
+            assert!(oracle_positions[vertex].iter().zip(point).all(|(actual, expected)| (actual - expected).abs() < 1e-5));
+        }
+    }
+    for mode in data["unsupportedModes"].as_array().unwrap() {
+        glb.document.meshes[0].primitives[0].mode = mode.as_u64();
+        let error = crate::import::deserializers::artifacts::gltf::v2_0::any::deserialize(&glb).expect_err("unsupported topology");
+        assert!(error.to_string().contains("primitive mode"), "{error}");
+    }
+    glb.document.meshes[0].primitives[0].mode = Some(4);
+    glb.document.nodes[1].children = vec![0];
+    assert!(crate::import::deserializers::artifacts::gltf::v2_0::any::deserialize(&glb).is_err(), "cycles are refused");
+    glb.document.scene = None;
+    glb.document.scenes.clear();
+    glb.document.nodes.truncate(2);
+    glb.document.nodes[0].children = vec![1];
+    let error = crate::import::deserializers::artifacts::gltf::v2_0::any::deserialize(&glb).expect_err("scene-less cycle");
+    assert!(error.to_string().contains("no polygon faces") || error.to_string().contains("cycle"), "{error}");
+}
+
+
+#[semio_framework_async_macros::async_test]
+async fn gltf_import_admits_complete_node_forests_before_scene_extraction() {
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::{schema::snapshot::GltfNode, io::export::encode_glb};
+    let data: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/gltf-forest.json")).unwrap();
+    let positions: Vec<[f32; 3]> = serde_json::from_value(data["positions"].clone()).unwrap();
+    let faces: Vec<Vec<u32>> = serde_json::from_value(data["faces"].clone()).unwrap();
+    let geometry = crate::mesh_geometry::snapshot_from_parts("fixture", vec![crate::mesh_geometry::PolygonPart { name: "Triangle Library".into(), positions, faces }]).unwrap();
+    let source = crate::export::serializers::artifacts::gltf::v2_0::any::serialize(&geometry).unwrap();
+    for case in data["cases"].as_array().unwrap() {
+        let mut snapshot = source.clone();
+        let mesh_count = case["meshCount"].as_u64().or_else(|| data["meshCount"].as_u64()).unwrap() as usize;
+        snapshot.document.meshes = (0..mesh_count).map(|_| source.document.meshes[0].clone()).collect();
+        snapshot.document.nodes = case["nodes"].as_array().unwrap().iter().map(|node| GltfNode {
+            mesh: node["mesh"].as_u64().map(|index| index as usize),
+            translation: node.get("translation").map(|translation| serde_json::from_value(translation.clone()).unwrap()),
+            children: node.get("children").map(|children| serde_json::from_value(children.clone()).unwrap()).unwrap_or_default(),
+            ..Default::default()
+        }).collect();
+        snapshot.document.scenes = case["scenes"].as_array().unwrap().iter().map(|roots| {
+            let mut scene = source.document.scenes[0].clone();
+            scene.nodes = serde_json::from_value(roots.clone()).unwrap();
+            scene
+        }).collect();
+        snapshot.document.scene = case["scene"].as_u64().map(|index| index as usize);
+        let imported = crate::import::deserializers::artifacts::gltf::v2_0::any::deserialize(&snapshot);
+        if case["valid"].as_bool().unwrap() {
+            let imported = imported.unwrap_or_else(|error| panic!("{}: {error}", case["id"]));
+            assert_eq!(imported.objects.len(), case["objects"].as_u64().unwrap() as usize, "{}", case["id"]);
+            let (oracle, buffers, _) = gltf::import_slice(&encode_glb(&snapshot).unwrap()).expect("independent valid node forest or entity library");
+            assert_eq!(oracle.meshes().count(), mesh_count);
+            let primitive = oracle.meshes().next().unwrap().primitives().next().unwrap();
+            let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+            let expected = reader.read_positions().unwrap().collect::<Vec<_>>();
+            let object_positions: Option<Vec<Vec<[f32; 3]>>> = case.get("expectedObjectPositions").map(|value| serde_json::from_value(value.clone()).unwrap());
+            for (index, object) in imported.objects.iter().enumerate() {
+                let mesh = mesh_of(object);
+                let expected = object_positions.as_ref().map_or(&expected, |positions| &positions[index]);
+                assert_eq!(mesh.vertex_count(), expected.len());
+                for (vertex, expected) in expected.iter().enumerate() {
+                    assert_eq!(mesh.vertex_position(semio_framework_3d::mesh::VertexId(vertex as u32)).unwrap().0, *expected);
+                }
+            }
+            if let Some(positions) = &object_positions {
+                let matrix = oracle.nodes().next().unwrap().transform().matrix();
+                let transformed: Vec<[f32; 3]> = expected.iter().map(|point| std::array::from_fn(|row| matrix[0][row]*point[0] + matrix[1][row]*point[1] + matrix[2][row]*point[2] + matrix[3][row])).collect();
+                assert_eq!(transformed, positions[0]);
+                assert_eq!(expected, positions[1]);
+            }
+            assert_eq!(oracle.nodes().count(), snapshot.document.nodes.len());
+            for (node, authored) in oracle.nodes().zip(&snapshot.document.nodes) {
+                assert_eq!(node.children().map(|child| child.index()).collect::<Vec<_>>(), authored.children);
+                assert_eq!(node.mesh().map(|mesh| mesh.index()), authored.mesh);
+            }
+        } else {
+            let error = imported.expect_err(case["id"].as_str().unwrap());
+            assert!(error.to_string().contains(case["error"].as_str().unwrap()), "{}: {error}", case["id"]);
+            if case["externalReject"].as_bool().unwrap_or(false) {
+                assert!(gltf::import_slice(&encode_glb(&snapshot).unwrap()).is_err(), "independent invalid index: {}", case["id"]);
+            }
+        }
+    }
+}

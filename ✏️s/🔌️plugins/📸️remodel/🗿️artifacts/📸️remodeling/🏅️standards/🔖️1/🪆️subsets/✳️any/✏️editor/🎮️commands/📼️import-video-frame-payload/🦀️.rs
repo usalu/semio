@@ -12,7 +12,6 @@ use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::imag
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::blur_gate_admits;
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::sharpness_score;
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::BLUR_GATE_ROLLING_WINDOW;
-#[cfg(test)]
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::payload_from_data_url;
 use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingImport;
 use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingWindowTransient;

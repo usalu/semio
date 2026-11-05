@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "scenarios": [
+    {
+      "appId": "s.draw.drawing@1/*#editor",
+      "actor": "editor",
+      "expectedStatus": "idle"
+    },
+    {
+      "appId": "s.draw.drawing@1/*#viewer",
+      "actor": "viewer",
+      "expectedStatus": "idle"
+    }
+  ]
+}

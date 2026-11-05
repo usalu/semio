@@ -11,16 +11,19 @@ use semio_ui_locale::LabelText;
 use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Constants
-pub const LOWPOLY_PLAY_APP_ID: &str = "lowpoly-play";
-pub const LOWPOLY_PLAY_CONTROLLER_ID: &str = "lowpoly-play";
+/// 🪪️ The editor address derives once from the owned dialect and surface role.
+pub fn lowpoly_controller_id() -> &'static str {
+    static ID: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| semio_framework::surface_app_id(&semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DIALECT.into(), semio_framework_plugin::AppRole::Editor));
+    ID.as_str()
+}
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🛠️options/*`, `📌️panels/*`, window/engagement builders) builds its `on_change`/item actions with.
 pub fn lowpoly_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
-    semio_plugin::ActionFactory::new(LOWPOLY_PLAY_CONTROLLER_ID).action(action, args)
+    semio_plugin::ActionFactory::new(lowpoly_controller_id()).action(action, args)
 }
 /// 🪟️ Bridges window chrome, which still carries the retained WGPU action descriptor.
 pub fn lowpoly_window_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: LOWPOLY_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: lowpoly_controller_id().into(), action: action.into(), args }
 }
 /// 🏷️ Admits resolved Lowpoly text into the semantic UI contract.
 pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {

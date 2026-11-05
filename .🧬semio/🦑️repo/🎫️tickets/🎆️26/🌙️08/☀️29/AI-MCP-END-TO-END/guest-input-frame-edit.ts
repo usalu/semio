@@ -1,0 +1,3 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";
+const file="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📤️receipt/🦀️.rs";
+let source=readFileSync(file,"utf8");const before="3 if flags==0=>OriginalActorFixedKind::Failure{authority:refusal},_=>return Err(invalid())";if(source.split(before).length!==2)throw Error("expected fixed frame decoder");source=source.replace(before,"3 if flags==0=>OriginalActorFixedKind::Failure{authority:refusal},4 if matches!(flags,0|2|3)=>OriginalActorFixedKind::InputAdmission{ready:flags&1!=0,input_returned:flags&2!=0,refusal},_=>return Err(invalid())");const temp=import.meta.dirname+"/🗑️generated/guest-input-frame-edit.rs";writeFileSync(temp,source);renameSync(temp,file);

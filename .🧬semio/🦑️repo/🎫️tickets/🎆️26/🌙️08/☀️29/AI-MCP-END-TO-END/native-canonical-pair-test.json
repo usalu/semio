@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","-p","semio-framework-os-mcp","--lib","canonical_pair_validation_matches_independent_json_oracle"],"configuration":"prototype","store":"shared","parallelism":2,"language":"en","agent":"semio-mcp-native"}}

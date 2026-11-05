@@ -2,8 +2,6 @@
 
 use super::*;
 
-//#region 🔖️Errors
-/// 🚨️ Every parse failure this crate can produce, with a byte offset into the input.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JsonError {
     Native(ValueError),
@@ -44,9 +42,7 @@ impl std::error::Error for JsonError {}
 impl From<ValueError> for JsonError {fn from(error:ValueError)->Self {Self::Native(error)}}
 
 impl JsonError {
-    /// 🧭️ Retains parse semantics at the owned value refusal boundary.
     pub const fn kind(&self) -> ValueRefusalKind { match self { Self::Native(error) => error.kind, Self::MaxDepthExceeded(_) => ValueRefusalKind::DepthLimit, _ => ValueRefusalKind::InvalidValue } }
-    /// 🌱️ Carries parse refusal into typed native construction.
     pub fn into_value_error(self) -> ValueError { match self { Self::Native(error)=>error, error=>ValueError::new(error.kind(),error.to_string()) } }
 }
 
@@ -56,7 +52,4 @@ impl semio_framework_value::retirement::RetireOwned for JsonError {
     fn controlled_retirement_supported()->bool{true}
 }
 
-/// 🛡️ Recursion ceiling for nested arrays/objects — matches `serde_json`'s own default
-/// (128), the value this repo's fixtures were authored against.
 pub const MAX_DEPTH: u32 = 128;
-//#endregion 🔖️Errors

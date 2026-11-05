@@ -98,7 +98,7 @@ fn window_of(node: &serde_json::Value) -> (usize, usize) {
 fn scaled_fixture(objects: usize, vortices: usize) -> Puzzle3dSceneSnapshot {
     let mut scene_snapshot = empty_scene_snapshot();
     scene_snapshot.objects = (0..objects)
-        .map(|index| Puzzle3dObject {
+        .map(|index| Puzzle3dObject { anchor: Default::default(),
             id: format!("object-{index}"),
             label: None,
             object_kind: Some("capsule".into()),
@@ -404,7 +404,7 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
     for flagged in [false, true] {
         drain_retired_ui_owners();
         let mut scene_snapshot = empty_scene_snapshot();
-        scene_snapshot.objects.push(Puzzle3dObject {
+        scene_snapshot.objects.push(Puzzle3dObject { anchor: Default::default(),
             id: "object-1".into(),
             label: None,
             object_kind: Some("Object".into()),
@@ -452,7 +452,7 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
 fn an_outliner_flag_row_undoes_itself_on_the_second_click() {
     let view = opened_everywhere();
     let mut scene_snapshot = empty_scene_snapshot();
-    scene_snapshot.objects.push(Puzzle3dObject {
+    scene_snapshot.objects.push(Puzzle3dObject { anchor: Default::default(),
         id: "object-1".into(),
         label: None,
         object_kind: Some("Object".into()),

@@ -1,0 +1,7 @@
+import{BundleScript,ScriptRouter,receiveScriptProcessInvocation,runScriptMain,scriptInvocationBudget}from"../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{runOwnedCommand,resolveTypescriptCompilerV1}from"../../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import{isMainModuleV1}from"../../../../../⚙️runtime/🏁️main/🟦️.ts";
+import{resolve}from"node:path";
+/** 🧪️ Verifies original UI leaf wire laws with independent validators through the owned command interface. */
+class OriginalSource extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw new Error("UI leaf source laws accept no arguments");const tests=[resolve(this.root,"../../🛬️receive/🟦️.ts")];for(const command of[[resolveTypescriptCompilerV1(this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun,node",...tests],["test",...tests]])await runOwnedCommand(process.execPath,command,this.repoRoot,"ui-presentation:original:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});}}
+if(isMainModuleV1(import.meta.url))await receiveScriptProcessInvocation(process.env,original=>runScriptMain(new ScriptRouter(import.meta.dirname).register("test-original-source",OriginalSource),{invocation:original}));

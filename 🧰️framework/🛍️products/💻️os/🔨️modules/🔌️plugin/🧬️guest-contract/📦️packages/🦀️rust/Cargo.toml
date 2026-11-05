@@ -27,6 +27,7 @@ semio-framework-job-fault-publication = { path = "../../../../../../../🔨️mo
 semio-os-kernel = { workspace = true }
 semio-plugin-abi = { path = "../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

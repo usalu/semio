@@ -236,7 +236,7 @@
           ],
           "properties": {
             "appChannelVersion": {
-              "const": 23
+              "const": 25
             }
           }
         }

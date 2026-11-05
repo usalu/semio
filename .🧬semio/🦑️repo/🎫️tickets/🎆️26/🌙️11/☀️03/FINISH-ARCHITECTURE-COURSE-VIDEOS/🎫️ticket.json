@@ -1,0 +1,25 @@
+{
+  "title": "Finish Architecture Course Videos",
+  "emoji": "🎬",
+  "status": "open",
+  "description": "Finish every architecture course video in the manifest and rerender the English course preview that includes all of them.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2782"
+  },
+  "goal": "🎯updatedtutorials",
+  "sessions": [
+    "c1471c15-1bd1-4f5f-a695-fa6de78f80fe"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-03 23:38:06",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "cursor-chat",
+      "checkpoint": "45ef25ecbd34d20ab312585ca5ba370b066c9117",
+      "prompt": "Finish every architecture course video in the manifest and rerender the English course preview that includes all of them.",
+      "llm": "grok-4"
+    }
+  ]
+}

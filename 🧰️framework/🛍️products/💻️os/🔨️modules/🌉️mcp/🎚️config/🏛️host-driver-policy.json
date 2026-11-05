@@ -1,23 +1,23 @@
 {
   "admission": {
-    "maximumItems": 1,
-    "maximumCopyBytes": 4096,
-    "maximumCapacityBytes": 65536,
-    "maximumReleaseBytes": 262144,
+    "maximumItems": 32,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 134217728,
+    "maximumReleaseBytes": 536870912,
     "maximumDepth": 64
   },
   "drive": {
-    "maximumItems": 1,
-    "maximumCopyBytes": 4096,
-    "maximumCapacityBytes": 65536,
-    "maximumReleaseBytes": 262144,
+    "maximumItems": 32,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 134217728,
+    "maximumReleaseBytes": 536870912,
     "maximumDepth": 64
   },
   "wake": {
-    "maximumItems": 1,
-    "maximumCopyBytes": 4096,
-    "maximumCapacityBytes": 65536,
-    "maximumReleaseBytes": 262144,
+    "maximumItems": 32,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 134217728,
+    "maximumReleaseBytes": 536870912,
     "maximumDepth": 64
   },
   "operation": {
@@ -30,13 +30,14 @@
   "root": {
     "operation": 71,
     "generation": 3,
-    "turnFuel": 64,
+    "turnFuel": 4096,
     "operationFuel": 1000000000,
     "maximumTurnMicroseconds": 2000000,
     "turnExecutionFuel": 1000000,
     "operationExecutionFuel": 500000000000,
     "maxEffects": 256,
     "maxPatchBytes": 1048576,
-    "maxFrames": 256
+    "maxFrames": 256,
+    "maximumLifetimeMicroseconds": 86400000000
   }
 }

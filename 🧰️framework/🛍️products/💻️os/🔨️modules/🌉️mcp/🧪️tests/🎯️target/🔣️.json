@@ -1,0 +1,149 @@
+{
+  "valid": [
+    {
+      "capabilityId": "test.command",
+      "target": {
+        "instanceId": "editor-b",
+        "pluginId": "test",
+        "appId": "editor",
+        "artifactRef": "document-b",
+        "windowId": "pane-b",
+        "modeId": "edit"
+      },
+      "context": {
+        "locale": "de",
+        "terminology": "reuse",
+        "activeModeId": "edit",
+        "windowId": "pane-b"
+      }
+    },
+    {
+      "capabilityId": "test.command",
+      "context": {
+        "locale": "en",
+        "terminology": "native"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "capabilityId": "test.command",
+      "target": {}
+    },
+    {
+      "capabilityId": "test.command",
+      "target": {
+        "instance": 4
+      }
+    },
+    {
+      "capabilityId": "test.command",
+      "context": {
+        "terminology": "native"
+      }
+    },
+    {
+      "capabilityId": "test.command",
+      "context": {
+        "locale": "de"
+      }
+    },
+    {
+      "capabilityId": "test.command",
+      "context": {
+        "locale": "xx",
+        "terminology": "native"
+      }
+    }
+  ],
+  "entries": [
+    {
+      "pluginId": "test",
+      "appId": "editor",
+      "instanceId": "editor-a",
+      "artifactRef": "document-a",
+      "windowIds": [
+        "pane-a"
+      ]
+    },
+    {
+      "pluginId": "test",
+      "appId": "editor",
+      "instanceId": "editor-b",
+      "artifactRef": "document-b",
+      "windowIds": [
+        "pane-b"
+      ]
+    },
+    {
+      "pluginId": "test",
+      "appId": "viewer",
+      "instanceId": "viewer-b",
+      "artifactRef": "document-b",
+      "windowIds": [
+        "view-b"
+      ]
+    },
+    {
+      "pluginId": "other",
+      "appId": "editor",
+      "instanceId": "other-b",
+      "artifactRef": "other-b",
+      "windowIds": [
+        "other-pane"
+      ]
+    }
+  ],
+  "selectionCases": [
+    {
+      "target": {
+        "instanceId": "editor-b"
+      },
+      "selected": "editor-b"
+    },
+    {
+      "target": {
+        "artifactRef": "document-b"
+      },
+      "selected": "editor-b"
+    },
+    {
+      "target": {
+        "windowId": "pane-a"
+      },
+      "selected": "editor-a"
+    },
+    {
+      "target": {
+        "appId": "editor"
+      },
+      "selected": null
+    },
+    {
+      "target": {
+        "pluginId": "other",
+        "instanceId": "other-b"
+      },
+      "selected": null
+    },
+    {
+      "target": {
+        "instanceId": "editor-b",
+        "artifactRef": "document-a"
+      },
+      "selected": null
+    },
+    {
+      "target": {
+        "instanceId": "viewer-b"
+      },
+      "selected": null
+    },
+    {
+      "target": {
+        "windowId": "other-pane"
+      },
+      "selected": null
+    }
+  ]
+}

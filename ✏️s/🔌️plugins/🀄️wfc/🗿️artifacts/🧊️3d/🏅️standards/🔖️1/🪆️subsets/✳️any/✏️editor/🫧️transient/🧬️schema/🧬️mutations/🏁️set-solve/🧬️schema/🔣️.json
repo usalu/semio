@@ -6,7 +6,8 @@
   "additionalProperties": false,
   "required": [
     "assignments",
-    "contradiction"
+    "contradiction",
+    "sourceRevision"
   ],
   "properties": {
     "assignments": {
@@ -84,6 +85,24 @@
         },
         "group": "solver",
         "order": 20
+      }
+    },
+    "sourceRevision": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "maxItems": 32,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Source Revision",
+          "de": "Quellrevision"
+        },
+        "group": "solver",
+        "order": 30
       }
     }
   }

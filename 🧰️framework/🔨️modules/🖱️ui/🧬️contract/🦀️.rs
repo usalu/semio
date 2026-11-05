@@ -33,3 +33,5 @@ pub(crate) fn arena_test_gate() -> std::sync::MutexGuard<'static, ()> {
     static GATE: std::sync::Mutex<()> = std::sync::Mutex::new(());
     GATE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
+
+#[cfg(test)]#[path="🧪️tests/🛬️receive/🦀️.rs"]mod native_receiving_tests;

@@ -5,6 +5,7 @@
 //! carrying shape `contract-doc`/`contract-layout` left behind wholesale, per that ruling):
 //!
 //! ```text
+//! #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 //! pub struct SurfaceProps {
 //!     pub kind: SurfaceKind,
 //!     pub doc_schema: UiText,      // "<kind>@<version>", e.g. "world3d@1"
@@ -78,6 +79,7 @@ use serde::{Deserialize, Serialize};
 /// `surface_kind_wire_tags_agree_between_contract_and_wgpu_target` pins it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[value(crate = "::semio_framework_value")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum SurfaceKind {
     /// 🖌️ The plainest surface a host can always satisfy, so a `SurfaceProps` built from defaults
     /// names something renderable rather than a kind no backend registered.
@@ -134,6 +136,7 @@ pub enum SurfaceKind {
 /// `🎬️scene` crate) knows how to decode.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[value(crate = "::semio_framework_value")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct SurfaceDoc {
     pub bytes: crate::UiFixedBytes,
 }
@@ -148,6 +151,7 @@ pub struct SurfaceDoc {
 // deliberate DslValue-free exception — see its own note above.
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SurfaceProps {
     pub kind: SurfaceKind,
     /// 🏷️ `"<kind>@<version>"`, e.g. `"world3d@1"` — the axis a renderer gates its own per-kind decode
@@ -159,6 +163,7 @@ pub struct SurfaceProps {
     /// "reset view" action a host chrome offers around the embedded content), as opposed to intents the
     /// embedded content's own scene graph interprets internally via `doc`'s opaque bytes.
     #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    #[value(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     pub bindings: crate::UiNodeBindings,
 }
 

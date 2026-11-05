@@ -55,6 +55,8 @@ pub use guest_runtimes_and_test_doubles::RecordingRuntime;
 #[path="../🏗️instance/🦀️.rs"]
 mod original_instance_opening;
 pub use original_instance_opening::GuestActorOpening;
+#[path="🎟️unit/🦀️.rs"]
+mod original_unit;
 
 #[path = "💼️job-crossing/🦀️.rs"]
 mod job_crossing;
@@ -92,7 +94,12 @@ use wasm::{Engine, ResourceLimiter, Store};
 use semio_plugin_guest_contract::{GUEST_DIAGNOSTICS_CAPACITY_BYTES, GuestCallCancellation, GuestDocumentMirror, GuestDocumentPair, JobBudget, JobStep, PluginHostError, TurnFault, decode_guest_fault_bytes, identity_turn_fault, sqlite_wire};
 use std::collections::{HashMap, VecDeque};
 use semio_plugin_host_engine::original_deadline::{OriginalDeadlineError, remaining_original_deadline_us};
-use semio_plugin_interpreter_runtime::{OriginalGuestJobCall, OwnedCompiledGuest, OwnedGuestInstance, OwnedRuntime};
+pub use semio_plugin_interpreter_runtime::OriginalGuestJobCall;
+pub use semio_plugin_interpreter_runtime::OriginalOperationReceiving;
+pub use semio_plugin_interpreter_runtime::{OriginalCoreValue,OwnedOriginalCallResult};
+pub use semio_plugin_interpreter_runtime::{OwnedActorStartupStatus,OwnedSemioExport,OwnedOriginalCallProgress,OwnedOriginalCallStatus};
+pub use semio_plugin_interpreter_runtime::{OwnedCodecInput,OwnedSnapshotInput};
+use semio_plugin_interpreter_runtime::{OwnedCompiledGuest, OwnedGuestInstance, OwnedRuntime};
 use std::path::PathBuf;
 use wasm::wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 use semio_plugin_host_wit::conversion::{kernel_turn_inputs_to_wit, wit_command_ingress_to_kernel, wit_effect_to_kernel, wit_lifecycle_receipt_to_kernel, wit_patch_receipt_to_kernel, wit_snapshot_grant, wit_snapshot_limits, wit_snapshot_rejection, wit_snapshot_retirement, wit_turn_status_to_kernel};

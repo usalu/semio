@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "unbounded-control-signal",
+      "remaining": null,
+      "accepted": true,
+      "milliseconds": 0
+    },
+    {
+      "id": "fractional-original-failure",
+      "remaining": 119876.234567,
+      "accepted": true,
+      "milliseconds": 119876
+    },
+    {
+      "id": "fractional-one",
+      "remaining": 1.99,
+      "accepted": true,
+      "milliseconds": 1
+    },
+    {
+      "id": "integer",
+      "remaining": 1000,
+      "accepted": true,
+      "milliseconds": 1000
+    },
+    {
+      "id": "less-than-one",
+      "remaining": 0.999,
+      "accepted": false
+    },
+    {
+      "id": "exhausted",
+      "remaining": 0,
+      "accepted": false
+    }
+  ]
+}

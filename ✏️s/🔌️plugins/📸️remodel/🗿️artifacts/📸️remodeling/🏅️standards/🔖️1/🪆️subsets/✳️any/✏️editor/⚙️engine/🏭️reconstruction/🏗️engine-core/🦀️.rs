@@ -63,7 +63,7 @@ pub struct ReconstructionEngine {
 
     pub mesh_pipeline: Option<semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::MeshPipeline>,
     pub meshing_preparation: Option<MeshingPreparation>,
-    pub mesh_data: Option<semio_framework::MeshData>,
+    pub mesh_data: Option<semio_framework_mesh_engine::MeshData>,
     pub(super) watertight_report: Option<semio_s_artifact_remodel_remodeling_mesh_repair::editor::remodeling::engine::mesh::repair::WatertightReport>,
 
     failure: Option<String>,

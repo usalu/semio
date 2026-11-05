@@ -88,12 +88,12 @@ impl<T: Topology + Clone> WfcJob<T> {
 
 impl<T: Topology + Clone + Send> WfcJob<T> {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    pub fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
-        if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) && !context.is_cancelled() && context.operation() == self.operation.operation && context.generation() == self.operation.generation {
+    pub fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        if self.publication.as_ref().is_some_and(|publication| publication.needs_retirement()) && !context.is_cancelled() && context.operation() == self.operation.operation && context.generation() == self.operation.generation {
             return self.retire_delivered_publication(context);
         }
         if context.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(context);
+            return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             if self.publication.as_ref().is_some_and(|publication| !publication.is_fault()) {
@@ -108,13 +108,13 @@ impl<T: Topology + Clone + Send> WfcJob<T> {
         }
         match self.run(context) {
             WfcRun::Yield | WfcRun::Staged => Ok(None),
-            WfcRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
+            WfcRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into),
         }
     }
 }
 
 impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>,_return_claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
@@ -129,7 +129,10 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if self.publication.is_some() { return close_publication_step(&mut self.publication,cx); }
         semio_framework_job::close_original_granted_step(cx,|grant|{
+            let work=1;
+            let result=(|| {
             self.closing = true;
             let demand = match self.close_demands() {
                 Ok(demand) => demand,
@@ -142,16 +145,6 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
             }
             let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-            if let Some(publication) = self.publication.as_mut() {
-                let step = publication.close_step(grant)?;
-                if publication.terminal_is_empty() {
-                    self.publication = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
-            }
             if let Some(bytes) = self.final_checkpoint.take() {
                 let released_bytes = bytes.capacity();
                 drop(bytes);
@@ -189,6 +182,8 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
                 return Ok(InteractiveJobCloseStep::Pending { progress: one });
             }
             Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
+            })();
+            semio_framework_value::RetainedWorkOutcome { result, work }
         })
     }
 
@@ -236,24 +231,19 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
 
 impl<T: Topology + Clone + Send> WfcJob<T> {
     /// 🤝️ Closes the lent payload turn by turn from the next step's own wallet before the search resumes.
-    pub(super) fn retire_delivered_publication<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
-        let publication = self.publication.as_mut().expect("a delivered wfc publication is staged");
-        let step = match publication.close_step(context.retained_grant()) { Ok(step) => step, Err(error) => { context.consume_retained(error.retained_progress())?; return Err(error) } };
-        context.consume_retained(step.progress())?;
-        if publication.terminal_is_empty() {
-            self.publication = None;
-        }
+    pub(super) fn retire_delivered_publication<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        close_publication_step(&mut self.publication,context)?;
         Ok(None)
     }
 
-    pub(super) fn drive_publication<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    pub(super) fn drive_publication<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         self.publication.as_mut().expect("a staged wfc publication").poll(context)
     }
 
     /// 📏️ Quotes the next close turn: the staged publication, the final checkpoint bytes, or one popped owner.
     pub(super) fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
-        if let Some(publication) = self.publication.as_ref() {
-            return publication.retirement_demands();
+        if self.publication.is_some() {
+            return publication_retirement_demands(&self.publication);
         }
         if let Some(bytes) = self.final_checkpoint.as_ref() {
             return Ok(RetirementDemand { release_bytes: bytes.capacity(), depth: 1, ..Default::default() });

@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "s.wfc.publication-owner.frontiers.v1",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": [
+        {
+          "const": {
+            "id": "items-denied",
+            "items": 0,
+            "release": "header",
+            "removed": false,
+            "work": 0
+          }
+        },
+        {
+          "const": {
+            "id": "release-denied",
+            "items": 1,
+            "release": "short",
+            "removed": false,
+            "work": 0
+          }
+        },
+        {
+          "const": {
+            "id": "exact-header",
+            "items": 1,
+            "release": "header",
+            "removed": true,
+            "work": 1
+          }
+        }
+      ],
+      "additionalItems": false,
+      "minItems": 3
+    }
+  }
+}

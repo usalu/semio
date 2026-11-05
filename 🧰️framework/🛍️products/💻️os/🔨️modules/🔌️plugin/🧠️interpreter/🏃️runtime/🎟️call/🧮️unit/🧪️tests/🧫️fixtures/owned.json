@@ -1,0 +1,41 @@
+{
+  "inputHex": "6f726967696e616c20696e707574",
+  "deniedCopyBytes": 0,
+  "copyBytes": 512,
+  "deniedReleaseBytes": 0,
+  "executionFuelPerSlice": 1,
+  "maximumSlices": 200,
+  "expected": {
+    "donorRetainedOnDenied": true,
+    "donorMovedOnAdmission": true,
+    "outputRetainedBeforeAcknowledgement": true,
+    "inputCapacityRetainedOnDeniedRelease": true
+  },
+  "inputAdmission": {
+    "budgetScalars": 19,
+    "prefixScalars": 2,
+    "callScalars": 21,
+    "scalars": [
+      71,
+      3,
+      9,
+      1871,
+      1000000,
+      1000,
+      100,
+      10000,
+      10000,
+      10000,
+      64,
+      10,
+      1000,
+      1000,
+      1000,
+      8,
+      20,
+      900000,
+      0
+    ],
+    "expectedSum": 1936156
+  }
+}

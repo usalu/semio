@@ -91,11 +91,19 @@ pub fn artifact_validate_input_schema() -> serde_json::Value {
     wire("artifact.validate", "input", artifact_validate_input_shape())
 }
 
-/// 📐️ Deliberately permissive: the real wire protocol has no validate query command yet
-/// (`🏠️workspace/🦀️.rs` `read_artifact_resource`'s `validation` arm), so no shape can be pinned
-/// down before that lands.
+/// 🔎️ Owner-codec validation of the complete canonical pair, with untrusted diagnostics.
 pub fn artifact_validate_output_shape() -> serde_json::Value {
-    serde_json::json!({ "type": "object" })
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "artifactId": { "type": "string" }, "schema": { "type": "string" },
+            "validation": { "const": "canonical-pair" }, "valid": { "type": "boolean" },
+            "jobId": { "type": "string" },
+            "untrusted": untrusted_content_shape_with(serde_json::json!({ "type": "object", "properties": { "diagnostics": { "type": "array", "items": { "type": "string" } } }, "required": ["diagnostics"], "additionalProperties": false })),
+        },
+        "required": ["artifactId", "schema", "validation", "valid", "untrusted"],
+        "additionalProperties": false,
+    })
 }
 
 pub fn artifact_validate_output_schema() -> serde_json::Value {

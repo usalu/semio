@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "version",
+    "cancelPrefixes",
+    "stock",
+    "definitions",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cancelPrefixes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "stock": {
+      "type": "object",
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "fuel"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "definitions": {
+      "type": "object"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "family",
+          "wire",
+          "accepted"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "family": {
+            "enum": [
+              "Variant",
+              "SizeToken",
+              "Density",
+              "Tone",
+              "Emphasis",
+              "Liveness",
+              "UiRevision",
+              "UiNodeId",
+              "SurfaceId",
+              "Activity",
+              "SpaceToken",
+              "Axis",
+              "Align",
+              "Justify",
+              "ScrollAxes",
+              "Anchor",
+              "TransitionHint",
+              "StyleSpec",
+              "AccessibilitySpec",
+              "Label",
+              "Trigger",
+              "ActionId",
+              "ActionBinding",
+              "MenuRef",
+              "UiIntent",
+              "UiPublicationRevision",
+              "WindowLayout"
+            ]
+          },
+          "wire": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

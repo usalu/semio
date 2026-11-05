@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "wit": "package semio:host-layout; interface imports { resource error; variant stream-error { last-operation-failed(error), closed, } type write-reply = result<_, stream-error>; type check-reply = result<u64, stream-error>; type clock-reply = option<u64>; record datetime { seconds: u64, nanoseconds: u32, } type seed = tuple<u64, u64>; type environment = list<tuple<string, string>>; resource terminal; type terminal-reply = option<terminal>; type begin-reply = result<u64, u32>; }",
+  "cases": [
+    {
+      "operation": "clock",
+      "type": "clock-reply",
+      "bytes": 16,
+      "alignment": 8
+    },
+    {
+      "operation": "wall",
+      "type": "datetime",
+      "bytes": 16,
+      "alignment": 8
+    },
+    {
+      "operation": "seed",
+      "type": "seed",
+      "bytes": 16,
+      "alignment": 8
+    },
+    {
+      "operation": "check",
+      "type": "check-reply",
+      "bytes": 16,
+      "alignment": 8
+    },
+    {
+      "operation": "write",
+      "type": "write-reply",
+      "bytes": 12,
+      "alignment": 4
+    },
+    {
+      "operation": "flush",
+      "type": "write-reply",
+      "bytes": 12,
+      "alignment": 4
+    },
+    {
+      "operation": "environment",
+      "type": "environment",
+      "bytes": 8,
+      "alignment": 4
+    },
+    {
+      "operation": "terminal",
+      "type": "terminal-reply",
+      "bytes": 8,
+      "alignment": 4
+    },
+    {
+      "operation": "begin",
+      "type": "begin-reply",
+      "bytes": 16,
+      "alignment": 8
+    }
+  ]
+}

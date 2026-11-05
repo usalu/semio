@@ -1,0 +1,98 @@
+[
+  {
+    "mode": "completed",
+    "reuse": true,
+    "canceled": false,
+    "error": false,
+    "work": [],
+    "events": [
+      "admit",
+      "fence",
+      "environment",
+      "reuse",
+      "fence",
+      "publish",
+      "yield",
+      "fence"
+    ],
+    "allocated": 37
+  },
+  {
+    "mode": "unsealed",
+    "reuse": false,
+    "canceled": false,
+    "error": false,
+    "work": [
+      "donor",
+      "installer",
+      "exports",
+      "installed",
+      "seal"
+    ],
+    "events": [
+      "admit",
+      "fence",
+      "environment",
+      "reuse",
+      "environment",
+      "fence",
+      "fence"
+    ],
+    "allocated": 0
+  },
+  {
+    "mode": "canceled",
+    "reuse": true,
+    "canceled": true,
+    "error": true,
+    "work": [],
+    "events": [
+      "admit",
+      "fence",
+      "environment",
+      "reuse"
+    ],
+    "allocated": 37
+  },
+  {
+    "mode": "verification-error",
+    "reuse": true,
+    "canceled": false,
+    "error": true,
+    "work": [],
+    "events": [
+      "admit",
+      "fence",
+      "environment",
+      "reuse"
+    ],
+    "allocated": 37
+  },
+  {
+    "mode": "input-drift",
+    "reuse": true,
+    "canceled": false,
+    "error": true,
+    "work": [],
+    "events": [
+      "admit",
+      "fence"
+    ],
+    "allocated": 37
+  },
+  {
+    "mode": "source-drift",
+    "reuse": true,
+    "canceled": false,
+    "error": true,
+    "work": [],
+    "events": [
+      "admit",
+      "fence",
+      "environment",
+      "reuse",
+      "fence"
+    ],
+    "allocated": 37
+  }
+]

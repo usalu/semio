@@ -40,6 +40,8 @@ pub mod standards {
                         #[path = "../../../🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "../../../🧬️mutations/🧳️retained/🦀️.rs"]
+                        pub mod retained;
                         #[path = "."]
                         pub mod change_seed {
                             pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::schema::mutations::change_seed::*;
@@ -105,6 +107,26 @@ pub mod standards {
                             pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::paint_input_stroke::*;
                             pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::paint_input_stroke::diff;
                             pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::paint_input_stroke::inverse;
+                        }
+                        #[path = "."]
+                        pub mod pin_solution {
+                            #[path = "../../../🧬️mutations/📌️pin-solution/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "../../../🧬️mutations/📌️pin-solution/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../../🧬️mutations/📌️pin-solution/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                        }
+                        #[path = "."]
+                        pub mod restore_pins {
+                            #[path = "../../../🧬️mutations/↩️restore-pins/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "../../../🧬️mutations/↩️restore-pins/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../../🧬️mutations/↩️restore-pins/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                     }
                     #[path = "."]

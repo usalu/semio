@@ -2,10 +2,12 @@
 //! is reported as a contradiction rather than a wrong answer, and the roster identity is the one the
 //! plugin root advertises.
 
+use crate::host::inferences::{BitmapInferenceJob, BitmapInferenceRequest};
+use crate::standards::v1::subsets::any::schema::inferences::BitmapInferenceCommit;
 use semio_framework_job::InteractiveJob;
 use crate::schema::snapshot::BitmapSnapshot;
 use crate::host::inferences::*;
-use crate::standards::v1::subsets::any::schema::inferences::{pattern_universe_entropy, symmetry_group, BitmapContradiction, BitmapEntropy, BitmapSolve, BitmapSolveResult};
+use crate::standards::v1::subsets::any::schema::inferences::{pattern_universe_entropy, symmetry_group, BitmapEntropy };
 use crate::schema::snapshot::{BitmapColor, BitmapInput, BitmapOutputSpec, BitmapOverlappingModel, BitmapPinnedPixel};
 use semio_framework_test_fixtures::fixture_text;
 
@@ -21,6 +23,15 @@ fn stripes() -> BitmapSnapshot {
         pinned: Vec::new(),
         ..BitmapSnapshot::default()
     }
+}
+
+fn resumable_result(snapshot: &BitmapSnapshot) -> Result<BitmapInferenceCommit, String> {
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(1), snapshot.seed);
+    let mut job = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
+    let mut driver = semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::new(operation.operation, operation.generation);
+    let bytes = driver.completed_output(&mut job, 64, 2_000_000)?;
+    let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
+    crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value::<BitmapInferenceCommit>(text).map_err(|error| error.to_string())
 }
 
 #[test]
@@ -97,8 +108,8 @@ fn a_sample_that_cannot_tile_the_output_reports_a_contradiction() {
     assert!(solved.contradiction, "a spec with no consistent assignment is a verdict, never a wrong bitmap");
     assert!(solved.pixels.is_empty(), "a contradiction carries no output pixels");
     assert_eq!(solved.entropy.len(), 3, "the entropy map still describes the output it could not fill");
-    assert!(<BitmapContradiction as store::InferredField<BitmapSnapshot>>::compute(&snapshot, &"bitmap".to_string(), &[]));
-    assert_eq!(<BitmapSolve as store::InferredField<BitmapSnapshot>>::compute(&snapshot, &"bitmap".to_string(), &[]), BitmapSolveResult::Unsolved);
+    let streamed = resumable_result(&snapshot).expect("resumable unsatisfiable answer completes");
+    assert_eq!(streamed, solved);
 }
 
 /// 🩺 With `N = 2` over a non-periodic `0 1 2`, only `0` and `1` are ever a window's top-left
@@ -119,7 +130,9 @@ fn a_pin_on_a_colour_no_pattern_anchors_is_refused_rather_than_dropped() {
         pinned: vec![BitmapPinnedPixel { x: 0, y: 0, color: 2 }],
         ..BitmapSnapshot::default()
     };
-    assert_eq!(solve_with_clock(&snapshot, semio_framework_job::logical_now_us).unwrap_err(), "bitmap-inference-unreachable-pin");
+    let refusal = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).unwrap_err();
+    assert!(refusal.terminal_is_empty(), "ordinary pin refusal returns all native custody");
+    assert_eq!(refusal.message(), "bitmap-inference-unreachable-pin");
 }
 
 #[test]
@@ -141,13 +154,12 @@ fn the_prior_entropy_is_zero_for_a_pinned_cell_and_positive_elsewhere() {
 }
 
 #[test]
-fn the_solve_field_answers_solved_for_a_tileable_sample() {
+fn the_resumable_job_commits_pixels_for_a_tileable_sample() {
     let snapshot = stripes();
-    match <BitmapSolve as store::InferredField<BitmapSnapshot>>::compute(&snapshot, &"bitmap".to_string(), &[]) {
-        BitmapSolveResult::Solved { pixels } => assert_eq!(pixels.clone().len(), 24),
-        BitmapSolveResult::Unsolved => panic!("the stripe sample is tileable"),
-    }
-    assert!(!<BitmapContradiction as store::InferredField<BitmapSnapshot>>::compute(&snapshot, &"bitmap".to_string(), &[]));
+    let solved = resumable_result(&snapshot).expect("resumable stripe sample completes");
+    assert_eq!(solved.pixels.len(), 24);
+    assert!(!solved.contradiction);
+    assert_eq!(solved.entropy.len(), 24);
 }
 
 //#region 🧩️LocalSimilarity
@@ -266,17 +278,8 @@ fn a_within_budget_checkpoint_request_is_admitted_on_the_inference_job() {
     let admitted = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: Some(snapshot), document: None, checkpoint: Some(vec![0u8; 16]) });
     assert!(admitted.is_ok(), "a within-budget checkpoint request is a real inference input");
     let mut job = admitted.expect("admitted");
-    semio_framework_job::InteractiveJob::begin_close(&mut job);
-    while !semio_framework_job::InteractiveJob::terminal_is_empty(&job) {
-        let grant = semio_framework_job::RetainedCloneGrant {
-            maximum_items: 1,
-            maximum_copy_bytes: semio_framework_job::InteractiveJob::next_close_copy_byte_demand(&job).expect("a locally owned job quotes its copy demand"),
-            maximum_capacity_bytes: semio_framework_job::InteractiveJob::next_close_capacity_byte_demand(&job, usize::MAX).expect("a locally owned job quotes its capacity demand"),
-            maximum_release_bytes: semio_framework_job::InteractiveJob::next_close_release_byte_demand(&job).expect("a locally owned job quotes its release demand"),
-            maximum_depth: semio_framework_job::InteractiveJob::next_close_depth_demand(&job).expect("a locally owned job quotes its depth demand").max(1),
-        };
-        let _ = semio_framework_job::close_with_self_funded_context(grant, |cx| semio_framework_job::InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
-    }
+    let mut driver = semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::new(operation.operation, operation.generation);
+    driver.close(&mut job);
 }
 
 //#region 📜️PublishedContract

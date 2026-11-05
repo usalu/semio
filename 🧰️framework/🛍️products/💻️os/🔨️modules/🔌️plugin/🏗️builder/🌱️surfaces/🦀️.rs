@@ -11,6 +11,7 @@ impl<PA:PluginApp> PluginBuilder<Ready,PA>{
   if definition.io.artifact_schema.is_empty(){definition.io.artifact_schema=E::DOCUMENT_SCHEMA.into();}
   if let Some(codec)=E::natural_file_codec(){semio_plugin_decl_app::mount_natural_file_actions(&mut definition,codec);}
   semio_plugin_decl_registry::declarations::stamp_fault_notices::<EditorApp<E>>(&mut definition);
+  semio_plugin_decl_registry::declarations::stamp_app_contracts::<EditorApp<E>>(&mut definition);
   self.install_native_surface::<EditorApp<E>,E::Members,R>(definition,E::examples())?;
   use semio_framework::kernel::{ArtifactKind,Rights,Scope};
   Ok(self.capability(CapabilityRequirement{artifact:ArtifactKind::Document,rights:Rights::Read,scope:Scope::App}).capability(CapabilityRequirement{artifact:ArtifactKind::Document,rights:Rights::Write,scope:Scope::App}))
@@ -20,6 +21,7 @@ impl<PA:PluginApp> PluginBuilder<Ready,PA>{
  where V:OriginalArtifactViewerBirth,R:OriginalInstanceRegistration<ViewerApp<V>,V::Members>,PA:From<OriginalVcsApp<ViewerApp<V>,V::Members>>{
   if definition.io.artifact_schema.is_empty(){definition.io.artifact_schema=V::DOCUMENT_SCHEMA.into();}
   semio_plugin_decl_registry::declarations::stamp_fault_notices::<ViewerApp<V>>(&mut definition);
+  semio_plugin_decl_registry::declarations::stamp_app_contracts::<ViewerApp<V>>(&mut definition);
   self.install_native_surface::<ViewerApp<V>,V::Members,R>(definition,Vec::new())?;
   use semio_framework::kernel::{ArtifactKind,Rights,Scope};
   Ok(self.capability(CapabilityRequirement{artifact:ArtifactKind::Document,rights:Rights::Read,scope:Scope::App}))

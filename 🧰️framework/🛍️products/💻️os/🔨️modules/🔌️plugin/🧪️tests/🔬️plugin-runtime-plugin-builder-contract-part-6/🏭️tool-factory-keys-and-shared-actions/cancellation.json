@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "policy": "PerOperation",
+  "cases": [
+    {
+      "name": "Exact App Action",
+      "surface": "app",
+      "proof": "exact",
+      "initial": false,
+      "outcome": "projected",
+      "expected": true
+    },
+    {
+      "name": "Exact Window Action",
+      "surface": "window",
+      "proof": "exact",
+      "initial": false,
+      "outcome": "projected",
+      "expected": true
+    },
+    {
+      "name": "Unmatched Action Remains False",
+      "surface": "app",
+      "proof": "absent-unrelated",
+      "initial": false,
+      "outcome": "unchanged",
+      "expected": false
+    },
+    {
+      "name": "Unmatched Authored Flag Is Preserved",
+      "surface": "window",
+      "proof": "absent-unrelated",
+      "initial": true,
+      "outcome": "unchanged",
+      "expected": true
+    },
+    {
+      "name": "Wrong Owner Proof Refuses",
+      "surface": "app",
+      "proof": "wrong-owner",
+      "initial": false,
+      "outcome": "refused",
+      "expected": null
+    },
+    {
+      "name": "Wrong Schema Proof Refuses",
+      "surface": "window",
+      "proof": "wrong-schema",
+      "initial": false,
+      "outcome": "refused",
+      "expected": null
+    },
+    {
+      "name": "Duplicate Proof Refuses",
+      "surface": "app",
+      "proof": "duplicate",
+      "initial": false,
+      "outcome": "refused",
+      "expected": null
+    },
+    {
+      "name": "Missing Migrated Proof Refuses",
+      "surface": "window",
+      "proof": "missing-migrated",
+      "initial": false,
+      "outcome": "refused",
+      "expected": null
+    },
+    {
+      "name": "Exact command",
+      "surface": "command",
+      "proof": "exact",
+      "initial": false,
+      "outcome": "projected",
+      "expected": true
+    },
+    {
+      "name": "Exact mode-command",
+      "surface": "mode-command",
+      "proof": "exact",
+      "initial": false,
+      "outcome": "projected",
+      "expected": true
+    },
+    {
+      "name": "Wrong Proof Controller Refuses",
+      "surface": "app",
+      "proof": "wrong-controller",
+      "initial": false,
+      "outcome": "refused",
+      "expected": null
+    },
+    {
+      "name": "Wrong Registry Controller Refuses",
+      "surface": "window",
+      "proof": "wrong-registry-controller",
+      "initial": false,
+      "outcome": "refused",
+      "expected": null
+    },
+    {
+      "name": "Registry-less Authored false Is Preserved",
+      "surface": "app",
+      "proof": "registry-less",
+      "initial": false,
+      "outcome": "unchanged",
+      "expected": false
+    },
+    {
+      "name": "Registry-less Authored true Is Preserved",
+      "surface": "app",
+      "proof": "registry-less",
+      "initial": true,
+      "outcome": "unchanged",
+      "expected": true
+    }
+  ]
+}

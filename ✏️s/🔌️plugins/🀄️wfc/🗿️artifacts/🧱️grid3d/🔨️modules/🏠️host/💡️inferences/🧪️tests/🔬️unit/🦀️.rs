@@ -4,8 +4,10 @@
 //! 🚪️ Every job driven here goes through the engine's close ladder before it is dropped: a leaked
 //! retained payload page aborts the process rather than failing a test.
 
+use crate::host::inferences::{Grid3dInferenceJob, Grid3dInferenceRequest};
+use crate::standards::v1::subsets::any::schema::inferences::Grid3dInferenceCommit;
 use crate::host::inferences::*;
-use crate::standards::v1::subsets::any::schema::inferences::{shannon_entropy_over_tiles, Grid3dContradiction, Grid3dEntropy, Grid3dSolve, Grid3dSolveResult};
+use crate::standards::v1::subsets::any::schema::inferences::{shannon_entropy_over_tiles, Grid3dEntropy };
 use semio_framework_job::InteractiveJob;
 use crate::schema::snapshot::{Grid3dCell, Grid3dDirection, Grid3dPinnedCell, Grid3dRule, Grid3dSnapshot, Grid3dTile};
 
@@ -28,6 +30,15 @@ fn two_tile_pair() -> Grid3dSnapshot {
     }
 }
 
+fn resumable_result(snapshot: &Grid3dSnapshot) -> Result<Grid3dInferenceCommit, String> {
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(1), snapshot.seed);
+    let mut job = Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
+    let mut driver = semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::new(operation.operation, operation.generation);
+    let bytes = driver.completed_output(&mut job, 64, 2_000_000)?;
+    let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
+    crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value::<Grid3dInferenceCommit>(text).map_err(|error| error.to_string())
+}
+
 #[test]
 fn a_satisfiable_grid_assigns_every_unmasked_cell() {
     let commit = solve(&two_tile_pair()).expect("a trivially satisfiable grid must solve");
@@ -40,10 +51,9 @@ fn a_satisfiable_grid_assigns_every_unmasked_cell() {
 fn a_grid_with_no_allowed_pair_is_reported_as_a_contradiction_not_a_panic() {
     let mut snapshot = two_tile_pair();
     snapshot.rules.clear();
-    assert!(!solve(&snapshot).expect("an unsatisfiable grid is an answer, not a failure").satisfiable, "a closed allow-list with no rule admits nothing");
-    let satisfiable = store::infer_field::<Grid3dSnapshot, Grid3dContradiction>(&snapshot, None);
-    assert!(!satisfiable["grid3d"]);
-    assert_eq!(store::infer_field::<Grid3dSnapshot, Grid3dSolve>(&snapshot, None)["grid3d"], Grid3dSolveResult::Unsolved);
+    let result = resumable_result(&snapshot).expect("unsatisfiable grid commits its verdict");
+    assert!(!result.satisfiable);
+    assert!(result.assignments.is_empty());
 }
 
 #[test]
@@ -108,13 +118,11 @@ fn a_periodic_axis_wraps_rather_than_ending_the_run() {
 }
 
 #[test]
-fn the_solve_field_reports_the_same_assignment_the_headless_adapter_does() {
+fn the_resumable_job_and_headless_batch_publish_the_same_assignment() {
     let snapshot = two_tile_pair();
-    let values = store::infer_field::<Grid3dSnapshot, Grid3dSolve>(&snapshot, None);
-    match &values["grid3d"] {
-        Grid3dSolveResult::Solved { assignments } => assert_eq!(assignments, &solve(&snapshot).expect("solves").assignments),
-        Grid3dSolveResult::Unsolved => panic!("a trivially satisfiable grid must solve"),
-    }
+    let stepped = resumable_result(&snapshot).expect("resumable grid completes");
+    let batch = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("headless grid completes");
+    assert_eq!(stepped, batch);
 }
 
 #[test]
@@ -166,40 +174,16 @@ fn the_inference_job_publishes_a_twenty_five_byte_preview() {
     let document = two_tile_pair();
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), document.seed);
     let mut job = Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot: Some(document), document: None, checkpoint: None }).expect("admit");
-    let (operation_id, generation, cancel) = (job.operation().operation, job.operation().generation, semio_framework_job::root_cancel_token());
-    let mut sequence = 0;
-    let mut verdict = None;
+    let mut driver = semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::new(operation.operation, operation.generation);
+    let mut published = false;
     for _ in 0..100_000 {
-        let now = semio_framework_job::default_now_us().expect("clock");
-        let mut receipt = semio_framework_job::RetainedCloneProgress::default();
-        let grant = semio_framework_job::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
-        let budget = semio_framework_job::StepBudget::new(1, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4, grant);
-        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(operation_id, generation, budget, cancel.clone(), &mut sequence, &mut receipt);
-        let preview = match semio_framework_job::drive_step(&mut job, &mut context, "wfc.grid3d.inference.preview.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("inference step admission") {
-            Some(semio_framework_job::JobOutcomeBorrow::PreviewReady { payload, .. }) => Some((0..payload.page_count()).flat_map(|index| payload.page(index).expect("page").to_vec()).collect::<Vec<u8>>()),
+        published = driver.step(&mut job, 1, |outcome| match outcome {
+            Some(semio_framework_job::JobOutcomeBorrow::PreviewReady { payload, .. }) => { assert_eq!((0..payload.page_count()).map(|index| payload.page(index).unwrap().len()).sum::<usize>(), 25); true },
             Some(semio_framework_job::JobOutcomeBorrow::Complete { .. } | semio_framework_job::JobOutcomeBorrow::Cancelled { .. } | semio_framework_job::JobOutcomeBorrow::Fault { .. }) => panic!("expected a preview before the terminal outcome"),
-            _ => None,
-        };
-        if let Some(bytes) = preview {
-            assert_eq!(bytes.len(), 25, "the parent inference preview is a fixed 25-byte progress record");
-            drop(context);
-            job.begin_close();
-            for _ in 0..1_000_000 {
-                if job.terminal_is_empty() {
-                    return;
-                }
-                let grant = semio_framework_job::RetainedCloneGrant {
-                    maximum_items: 1,
-                    maximum_copy_bytes: job.next_close_copy_byte_demand().expect("a locally owned job quotes its copy demand"),
-                    maximum_capacity_bytes: job.next_close_capacity_byte_demand(usize::MAX).expect("a locally owned job quotes its capacity demand"),
-                    maximum_release_bytes: job.next_close_release_byte_demand().expect("a locally owned job quotes its release demand"),
-                    maximum_depth: job.next_close_depth_demand().expect("a locally owned job quotes its depth demand").max(1),
-                };
-                let step = semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn");
-                assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Blocked), "a locally owned job close has no external owner and no refusal");
-            }
-            panic!("inference close stalled");
-        }
+            _ => false,
+        });
+        if published { break; }
     }
-    panic!("no preview published");
+    driver.close(&mut job);
+    assert!(published, "no preview published");
 }

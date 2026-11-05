@@ -42,7 +42,7 @@ async fn relay_session(
 async fn mounted_handle(mock: Arc<MockGuestRuntime>, actor: RuntimeActorId) -> PluginInstanceHandle {
     let compiled = mock.compile(&PackageRef { package: PackageId("mounted-relay-test".to_string()), hash: PackageHash([43; 32]) }, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4_096, 1)).await.expect("mock instantiate");
-    PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance,test_relay_original_input(),test_relay_wake_authority()).await
+    PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), compiled.clone(),instance,test_relay_wake_authority()).await
 }
 
 async fn relay_session_for_handle(
@@ -161,7 +161,7 @@ fn spawn_mounted_infer(pool: WorkerPool, handle: Arc<PluginInstanceHandle>, requ
         pool,
         Lane::UserVisible,
         async move {
-            let _ = sender.send(handle.infer(request, &semio_framework_job::root_cancel_token()).await);
+            let _ = sender.send(handle.infer(request, &semio_framework_job::root_cancel_token(), &test_relay_wake_authority()).await);
         },
         |_| {},
     );

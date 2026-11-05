@@ -52,6 +52,7 @@ impl ArtifactActor {
     /// drop the socket and ask the host for the pair ([`ArtifactEvent::RebootstrapRequired`]); the actor dials again only
     /// once the host re-seeded it ([`Self::reseed_hub_document`]) — never into a Welcome it would have to refuse, and never
     /// after an outage backoff (the rebuild's own close is not a shortage).
+    /// See [design notes](README.md).
     pub async fn require_artifact_rebootstrap(&mut self, control: semio_os_directory::RebootstrapRequired) {
         self.requeue_pending_batches();
         self.abort_artifact_bootstrap();

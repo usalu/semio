@@ -19,6 +19,13 @@ pub const SEMIO_OWNED_DESCRIBE_EXPORT: &str = "semio_owned_describe_v1";
 
 pub const SEMIO_OWNED_CANCEL_JOB_EXPORT: &str = "semio_owned_cancel_job_v1";
 
+pub const SEMIO_OWNED_ADMIT_ACTOR_INPUT_EXPORT:&str="semio_owned_admit_actor_input_v1";
+pub const SEMIO_OWNED_PUBLISH_ACTOR_FAILURE_EXPORT:&str="semio_owned_publish_actor_failure_v1";
+pub const SEMIO_OWNED_READ_ACTOR_FAILURE_EXPORT:&str="semio_owned_read_actor_failure_v1";
+pub const SEMIO_OWNED_BORROW_ACTOR_FAILURE_EXPORT:&str="semio_owned_borrow_actor_failure_v1";
+pub const SEMIO_OWNED_ACKNOWLEDGE_ACTOR_FAILURE_CHUNK_EXPORT:&str="semio_owned_acknowledge_actor_failure_chunk_v1";
+pub const SEMIO_OWNED_ACKNOWLEDGE_ACTOR_FAILURE_EXPORT:&str="semio_owned_acknowledge_actor_failure_v1";
+
 pub const SEMIO_OWNED_START_JOB_EXPORT: &str = "semio_owned_start_job_v1";
 
 pub const SEMIO_OWNED_STEP_JOB_EXPORT: &str = "semio_owned_step_job_v1";
@@ -38,6 +45,8 @@ pub const SEMIO_OWNED_POLL_EXPORT: &str = "semio_owned_poll_v1";
 pub const SEMIO_OWNED_ADMIT_ACTOR_CONTEXT_EXPORT:&str="semio_owned_admit_actor_context_v1";
 
 pub const SEMIO_OWNED_CLOSE_ACTOR_CONTEXT_EXPORT:&str="semio_owned_close_actor_context_v1";
+
+pub const SEMIO_OWNED_CLOSE_ACTOR_OUTPUT_EXPORT:&str="semio_owned_close_actor_output_v1";
 
 /// 🤝️ The owned twin of `reactor.channel-version`: the guest's compiled app-channel version, which a host admits before any frame.
 pub const SEMIO_OWNED_CHANNEL_VERSION_EXPORT: &str = "semio_owned_channel_version_v1";
@@ -80,6 +89,12 @@ pub enum OwnedSemioExport {
     ChannelVersion,
     CancelJob,
     StartJob,
+    AdmitActorInput,
+    PublishActorFailure,
+    ReadActorFailure,
+    BorrowActorFailure,
+    AcknowledgeActorFailureChunk,
+    AcknowledgeActorFailure,
     StepJob,
     ReadJobOutput,
     AcknowledgeJobOutput,
@@ -89,6 +104,7 @@ pub enum OwnedSemioExport {
     Poll,
     AdmitActorContext,
     CloseActorContext,
+    CloseActorOutput,
     PackSchemaHash,
     Genesis,
     PrintMirror,
@@ -104,7 +120,9 @@ pub enum OwnedSemioExport {
 }
 
 impl OwnedSemioExport {
-    pub const ALL: [Self; 29] = [
+    /// 📏️ The largest authored scalar export carries its three-scalar prefix and nineteen-scalar authority.
+    pub const MAX_SCALAR_ARGUMENTS:usize=22;
+    pub const ALL: [Self; 36] = [
         Self::Allocate,
         Self::Deallocate,
         Self::Checkpoint,
@@ -113,6 +131,12 @@ impl OwnedSemioExport {
         Self::ChannelVersion,
         Self::CancelJob,
         Self::StartJob,
+        Self::AdmitActorInput,
+        Self::PublishActorFailure,
+        Self::ReadActorFailure,
+        Self::BorrowActorFailure,
+        Self::AcknowledgeActorFailureChunk,
+        Self::AcknowledgeActorFailure,
         Self::StepJob,
         Self::ReadJobOutput,
         Self::AcknowledgeJobOutput,
@@ -122,6 +146,7 @@ impl OwnedSemioExport {
         Self::Poll,
         Self::AdmitActorContext,
         Self::CloseActorContext,
+        Self::CloseActorOutput,
         Self::PackSchemaHash,
         Self::Genesis,
         Self::PrintMirror,
@@ -146,6 +171,12 @@ impl OwnedSemioExport {
             Self::ChannelVersion => SEMIO_OWNED_CHANNEL_VERSION_EXPORT,
             Self::CancelJob => SEMIO_OWNED_CANCEL_JOB_EXPORT,
             Self::StartJob => SEMIO_OWNED_START_JOB_EXPORT,
+            Self::AdmitActorInput => SEMIO_OWNED_ADMIT_ACTOR_INPUT_EXPORT,
+            Self::PublishActorFailure => SEMIO_OWNED_PUBLISH_ACTOR_FAILURE_EXPORT,
+            Self::ReadActorFailure => SEMIO_OWNED_READ_ACTOR_FAILURE_EXPORT,
+            Self::BorrowActorFailure => SEMIO_OWNED_BORROW_ACTOR_FAILURE_EXPORT,
+            Self::AcknowledgeActorFailureChunk => SEMIO_OWNED_ACKNOWLEDGE_ACTOR_FAILURE_CHUNK_EXPORT,
+            Self::AcknowledgeActorFailure => SEMIO_OWNED_ACKNOWLEDGE_ACTOR_FAILURE_EXPORT,
             Self::StepJob => SEMIO_OWNED_STEP_JOB_EXPORT,
             Self::ReadJobOutput => SEMIO_OWNED_READ_JOB_OUTPUT_EXPORT,
             Self::AcknowledgeJobOutput => SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_EXPORT,
@@ -155,6 +186,7 @@ impl OwnedSemioExport {
             Self::Poll => SEMIO_OWNED_POLL_EXPORT,
             Self::AdmitActorContext=>SEMIO_OWNED_ADMIT_ACTOR_CONTEXT_EXPORT,
             Self::CloseActorContext=>SEMIO_OWNED_CLOSE_ACTOR_CONTEXT_EXPORT,
+            Self::CloseActorOutput=>SEMIO_OWNED_CLOSE_ACTOR_OUTPUT_EXPORT,
             Self::PackSchemaHash => SEMIO_OWNED_PACK_SCHEMA_HASH_EXPORT,
             Self::Genesis => SEMIO_OWNED_GENESIS_EXPORT,
             Self::PrintMirror => SEMIO_OWNED_PRINT_MIRROR_EXPORT,
@@ -175,13 +207,14 @@ impl OwnedSemioExport {
         match self {
             Self::Allocate => FunctionType { parameters: vec![ValueType::I32], results: vec![ValueType::I32] },
             Self::Deallocate => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![] },
-            Self::Checkpoint | Self::Describe | Self::ChannelVersion => FunctionType { parameters: vec![], results: vec![ValueType::I64] },
-            Self::StepJob | Self::ReadJobOutput | Self::AcknowledgeJobOutput | Self::CancelJob => FunctionType{parameters:vec![ValueType::I64;20],results:vec![ValueType::I64]},
+            Self::ChannelVersion => FunctionType { parameters: vec![], results: vec![ValueType::I32] },
+            Self::StartJob | Self::PublishActorFailure | Self::ReadActorFailure | Self::AcknowledgeActorFailure | Self::StepJob | Self::ReadJobOutput | Self::AcknowledgeJobOutput | Self::CancelJob => FunctionType{parameters:vec![ValueType::I64;20],results:vec![ValueType::I64]},
             Self::CloseJobs => FunctionType{parameters:vec![ValueType::I64;19],results:vec![ValueType::I64]},
-            Self::BorrowJobOutput=>FunctionType{parameters:vec![ValueType::I64;5],results:vec![ValueType::I64]},
-            Self::AcknowledgeJobOutputChunk=>FunctionType{parameters:vec![ValueType::I64;22],results:vec![ValueType::I64]},
-            Self::Restore | Self::StartJob | Self::Poll | Self::AdmitActorContext | Self::CloseActorContext | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport | Self::SqliteRetirement | Self::SqliteClose | Self::SqliteTakeFile | Self::SqliteTakePayload => {
-                FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![ValueType::I64] }
+            Self::BorrowJobOutput | Self::BorrowActorFailure=>FunctionType{parameters:vec![ValueType::I64;5],results:vec![ValueType::I64]},
+            Self::AcknowledgeJobOutputChunk | Self::AcknowledgeActorFailureChunk=>FunctionType{parameters:vec![ValueType::I64;22],results:vec![ValueType::I64]},
+            Self::AdmitActorInput=>FunctionType{parameters:[vec![ValueType::I32,ValueType::I32],vec![ValueType::I64;19]].concat(),results:vec![ValueType::I64]},
+            Self::Checkpoint | Self::Describe | Self::Restore | Self::Poll | Self::AdmitActorContext | Self::CloseActorContext | Self::CloseActorOutput | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport | Self::SqliteRetirement | Self::SqliteClose | Self::SqliteTakeFile | Self::SqliteTakePayload => {
+                FunctionType { parameters: vec![ValueType::I64;19], results: vec![ValueType::I64] }
             }
         }
     }

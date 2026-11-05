@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "refusal": "lowpoly.paint.invalid-texture",
+  "cases": [
+    {
+      "id": "empty-white",
+      "bytes": 0,
+      "valid": true
+    },
+    {
+      "id": "full-canvas",
+      "bytes": 262144,
+      "valid": true
+    },
+    {
+      "id": "partial-pixel",
+      "bytes": 3,
+      "valid": false
+    },
+    {
+      "id": "tiny-layer",
+      "bytes": 8,
+      "valid": false
+    },
+    {
+      "id": "other-square",
+      "bytes": 256,
+      "valid": false
+    },
+    {
+      "id": "missing-pixel",
+      "bytes": 262140,
+      "valid": false
+    },
+    {
+      "id": "extra-pixel",
+      "bytes": 262148,
+      "valid": false
+    },
+    {
+      "id": "1024-square",
+      "bytes": 4194304,
+      "valid": false
+    }
+  ],
+  "atomicCase": {
+    "earlierLayers": [],
+    "laterInvalidBytes": 3,
+    "expectedCode": "lowpoly.paint.invalid-texture",
+    "expectedChanged": false
+  }
+}

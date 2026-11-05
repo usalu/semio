@@ -1,0 +1,11 @@
+{
+ "app":{"id":"test.document@1/*#editor","modes":[{"id":"edit"}],"windowKinds":[{"id":"canvas"}]},
+ "binding":{"sessionId":"actual-session","principal":"agent:test","artifactId":"created-document","pluginId":"test","windowId":"caller-created-window"},
+ "cases":[
+  {"preferences":{"appId":"test.document@1/*#editor","modeId":"edit","windowKindId":"canvas","locale":"en","terminology":"native"},"expected":true},
+  {"preferences":{"appId":"test.document@1/*#editor","modeId":"edit","windowKindId":"canvas","locale":"de","terminology":"reuse"},"expected":true},
+  {"preferences":{"appId":"test.document@1/*#editor","modeId":"foreign","windowKindId":"canvas","locale":"en","terminology":"native"},"expected":false},
+  {"preferences":{"appId":"test.document@1/*#editor","modeId":"edit","windowKindId":"foreign","locale":"en","terminology":"native"},"expected":false},
+  {"preferences":{"appId":"test.document@1/*#editor","modeId":"edit","windowKindId":"canvas","locale":"fr","terminology":"native"},"expected":false}
+ ]
+}

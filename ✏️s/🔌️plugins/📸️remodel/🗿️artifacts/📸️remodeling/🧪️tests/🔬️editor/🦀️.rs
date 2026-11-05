@@ -39,6 +39,12 @@ pub mod editor {
                 mod tests;
             }
             #[path = "."]
+            pub mod export_qc_report {
+                #[cfg(test)]
+                #[path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧾️export-qc-report/🧪️tests/🔬️unit/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
             pub mod import_video_frame_payload {
                 #[cfg(test)]
                 #[path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📼️import-video-frame-payload/🧪️tests/🔬️unit/🦀️.rs"]

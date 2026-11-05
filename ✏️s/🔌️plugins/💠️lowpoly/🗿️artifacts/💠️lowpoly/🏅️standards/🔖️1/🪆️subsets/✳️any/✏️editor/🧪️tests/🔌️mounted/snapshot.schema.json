@@ -1,0 +1,67 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "controller",
+    "commands",
+    "recipe",
+    "limits",
+    "expected",
+    "label"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "controller": {
+      "const": "s.lowpoly.lowpoly@1/*#editor"
+    },
+    "commands": {
+      "const": [
+        "importSnapshotJson",
+        "replaceSnapshotJson"
+      ]
+    },
+    "recipe": {
+      "const": {
+        "width": 256,
+        "height": 256,
+        "rgba": [
+          17,
+          34,
+          51,
+          255
+        ],
+        "object": {
+          "id": "color",
+          "name": "Canonical Color"
+        }
+      }
+    },
+    "limits": {
+      "const": {
+        "jsonBytes": 2097152,
+        "framingBytes": 32,
+        "jsonCommandBytes": 2097184,
+        "importFactoryBytes": 2101280,
+        "ordinaryBytes": 16384
+      }
+    },
+    "expected": {
+      "const": {
+        "jsonBytes": 349838,
+        "pixelBytes": 262144,
+        "base64Bytes": 349528,
+        "loadEffects": 1,
+        "historyChanges": 0
+      }
+    },
+    "label": {
+      "const": {
+        "en": "Snapshot JSON",
+        "de": "Snapshot-JSON"
+      }
+    }
+  }
+}

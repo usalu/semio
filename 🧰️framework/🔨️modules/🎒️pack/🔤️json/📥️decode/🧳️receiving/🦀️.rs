@@ -8,7 +8,6 @@ use std::{mem::{ManuallyDrop,size_of},sync::Arc};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum Phase{Header,Parse,Source,Shell,Receive,TakeReceived,CloseReceived,Authority,TypedSource,TypedProjection,CanonicalProjection,CanonicalBirth,Canonical,Ready}
 
-/// 🛡️ The installed wire projection determines canonical operation bytes; its original decoder ledger remains fixed.
 pub struct OriginalJsonReceiving<M:NativeReceive<DslValue>+Sync>{
  ledger:u64,recipient:Option<u64>,header:&'static[u8],pub wire:ManuallyDrop<Option<RetainedOwnedProjection<Vec<u8>>>>,
  parser:ManuallyDrop<Option<JsonGrammarCursor<DslValue>>>,parsed:ManuallyDrop<Option<DslValue>>,
@@ -24,14 +23,11 @@ fn header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),dept
 fn close_header<T>()->RetirementDemand{let _=std::marker::PhantomData::<T>;RetirementDemand{depth:1,..Default::default()}}
 fn phase(mut d:RetirementDemand)->Result<RetirementDemand,ValueError>{d.copy_bytes=d.copy_bytes.checked_add(size_of::<Phase>()).ok_or_else(||invalid("original JSON receiving extent overflow"))?;Ok(d)}
 impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
- /// 📐️ Captures only original wire custody, codec source and issuer aliases before reading any bytes.
  pub fn constructor_demand()->RetirementDemand{header::<Self>()}
- /// 🎟️ A denied constructor hands the same wire projection back without decoding or materialization.
  pub fn admit(wire:RetainedOwnedProjection<Vec<u8>>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,header:&'static[u8],source:for<'a>fn(&'a M)->&'a dyn ArtifactCanonicalJsonTree,control:&NativeDecodeControl<'_>,g:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,RetainedOwnedProjection<Vec<u8>>)>{
   let d=Self::constructor_demand();if !retained_clone_grant_admits(g,d){return Err((invalid("original JSON receiving shell was not funded"),wire));}
   Ok((Self{ledger:control.ledger_identity(),recipient:control.retirement_recipient_identity(),header,wire:ManuallyDrop::new(Some(wire)),parser:ManuallyDrop::new(Some(JsonGrammarCursor::new(JsonMemberPolicy::Reject))),parsed:ManuallyDrop::new(None),parsed_source:ManuallyDrop::new(None),source_admission:ManuallyDrop::new(None),typed_admission:ManuallyDrop::new(None),receiver:ManuallyDrop::new(None),typed:ManuallyDrop::new(None),authority:ManuallyDrop::new(None),typed_source:ManuallyDrop::new(None),output:ManuallyDrop::new(None),canonical_projection:ManuallyDrop::new(None),canonical:ManuallyDrop::new(None),factory:ManuallyDrop::new(Some(Arc::clone(factory))),factory_close:None,error:ManuallyDrop::new(None),retirement:Default::default(),source,offset:header.len(),phase:Phase::Header,closing:false,faulted:false,taking_owned:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
  }
- /// 📏️ The next physical frontier is quoted from the same original parser, receiver or canonical source.
  pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing{return self.close_demands(body);}if self.faulted{return Err(invalid("faulted original JSON receiving requires cleanup"));}
   phase(match self.phase{
@@ -50,7 +46,6 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
    Phase::Ready=>header::<Option<RetainedOwnedProjection<M>>>(),
   })
  }
- /// ⏯️ Each granted action preserves the same decode ledger and original byte source.
  pub fn advance(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->RetainedWorkOutcome{let mut work=0;let result=self.advance_turn(control,body,g,&mut work);RetainedWorkOutcome{result,work}}
  fn advance_turn(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,ValueError>{
   if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original JSON receiving changed its decoder ledger"));}
@@ -74,13 +69,10 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   };
   p.copied_items=p.copied_items.max(1);p.copied_bytes=p.copied_bytes.checked_add(size_of::<Phase>()).ok_or_else(||invalid("original JSON receiving receipt overflow"))?;semio_framework_value::retained_clone::admit_retained_clone_progress(g,p,"original JSON receiving")?;Ok(if self.ready(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})
  }
- /// 📤️ The returned native operation projection keeps its original typed source and issuer alive.
  pub fn take(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>>{let result=self.take_ready(g);let work=u64::from(matches!(result,Ok(Some(_))));RetainedWorkOutcome{result,work}}
  fn take_ready(&mut self,g:RetainedCloneGrant)->Result<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>,ValueError>{if !self.ready(){return Ok(None);}let d=header::<Option<RetainedOwnedProjection<M>>>();if !retained_clone_grant_admits(g,d){return Ok(None);}let output=self.output.take().ok_or_else(||invalid("original JSON receiving output already transferred"))?;self.begin_close();Ok(Some((output,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
- /// 🫴️ The same unique handoff continues after its first funded alias-close step.
  pub fn owned_handoff_pending(&self)->bool{self.taking_owned&&!self.closing&&!self.faulted}
  pub fn ready(&self)->bool{!self.taking_owned&&!self.closing&&!self.faulted&&self.phase==Phase::Ready&&self.output.is_some()}
- /// 📐️ Quotes one unique original handoff action after canonical validation, preserving all wire cleanup owners.
  pub fn take_owned_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing||self.faulted||self.phase!=Phase::Ready||(!self.taking_owned&&self.output.is_none()){return Err(invalid("original JSON owned handoff requires its completed canonical output"))}
   if !self.taking_owned{return Ok(header::<bool>())}
@@ -91,7 +83,6 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   if self.authority.is_some(){return Ok(RetirementDemand{copy_bytes:FactoryOwnedSourceAuthority::<M>::transfer_copy_byte_demand()+size_of::<Option<M>>(),depth:1,..Default::default()})}
   Err(invalid("original JSON owned handoff lost its unique authority"))
  }
- /// 📤️ Transfers the same uniquely retained native value while retaining its parser, bytes and actual issuer for closure.
  pub fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->RetainedWorkOutcome{let mut work=0;let result=self.take_owned_turn(output,control,body,g,&mut work);RetainedWorkOutcome{result,work}}
  fn take_owned_turn(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,ValueError>{
   if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original JSON owned handoff changed its decoder ledger"))}if output.is_some(){return Err(invalid("original JSON owned handoff destination is occupied"))}
@@ -105,7 +96,6 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   let authority=self.authority.take().ok_or_else(||invalid("original JSON owned handoff requires its unique authority"))?;match authority.take_original(g){Ok((value,factory,mut p))=>{*output=Some(value);self.factory_close=Some(FactoryAuthority::new(factory));self.closing=true;p.copied_bytes+=size_of::<Option<M>>();Ok(RetainedCloneStep::Complete(p))},Err((error,authority))=>{*self.authority=Some(authority);Err(error)}}
  }
 
- /// 📏️ Moving the actual received value closes canonical and projection aliases before unique source transfer.
  pub fn take_original_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing||self.faulted||self.phase!=Phase::Ready||self.closing{return Err(invalid("original JSON owned output is not available"));}
   if !self.taking_owned{return Ok(header::<bool>());}
@@ -116,7 +106,6 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   if self.authority.is_some(){return Ok(RetirementDemand{copy_bytes:FactoryOwnedSourceAuthority::<M>::transfer_copy_byte_demand()+2*size_of::<Option<FactoryOwnedSourceAuthority<M>>>()+size_of::<bool>()*2,depth:1,..Default::default()});}
   Err(invalid("original JSON owned output lost its source authority"))
  }
- /// 📤️ Returns the same received operation and exact installed issuer without a second payload clone.
  pub fn take_original(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->RetainedWorkOutcome<(RetainedCloneStep,Option<(M,Arc<dyn ArtifactOwnedValueRetirementFactory<M>>)>)>{let mut work=0;let result=self.take_original_turn(control,body,g,&mut work);RetainedWorkOutcome{result,work}}
  fn take_original_turn(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant,work:&mut u64)->Result<(RetainedCloneStep,Option<(M,Arc<dyn ArtifactOwnedValueRetirementFactory<M>>)>),ValueError>{
   if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original JSON owned transfer changed its decoder ledger"));}let d=self.take_original_demand(body)?;if !retained_clone_grant_admits(g,d){return Ok((RetainedCloneStep::Progress(Default::default()),None));}control.checkpoint()?;*work=1;control.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?;}
@@ -129,9 +118,7 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   let authority=self.authority.take().ok_or_else(||invalid("original JSON owned authority vanished"))?;match authority.take_original(g){Ok((value,factory,mut p))=>{self.closing=true;self.begin_close();p.copied_bytes=d.copy_bytes;Ok((RetainedCloneStep::Complete(p),Some((value,factory))))},Err((error,authority))=>{*self.authority=Some(authority);Err(error)}}
  }
 
- /// 🛑️ Cancellation retains parser, typed result, canonical cursor and every original source alias.
  pub fn begin_close(&mut self){self.closing=true;if let Some(receiver)=self.receiver.as_mut(){receiver.begin_close();}if let Some(canonical)=self.canonical.as_mut(){canonical.begin_close();}}
- /// 📪️ Cleanup quotes its defining typed owners instead of retiring payloads through a cold fallback.
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<DslValue>(false,&None,body);}
   if let Some(admission)=self.typed_admission.as_ref(){return admission.next_return_demand();}

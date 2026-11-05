@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-plugin-host-codec"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Source-owned pure plugin codec calls, declared receiving reservations and output custody."
+
+[package.metadata.semio]
+role = "product"
+id = "os-plugin-host-codec"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-actor = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-plugin-host-post-turn-relay = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-plugin-host-wake = { path = "../../../../🔔️wake/📦️packages/🦀️rust" }
+semio-framework-plugin-host-guest-runtime = { path = "../../../../🎭️guest-runtime/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-trace = { workspace = true }

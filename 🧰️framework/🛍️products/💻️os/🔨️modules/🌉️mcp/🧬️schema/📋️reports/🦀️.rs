@@ -91,6 +91,31 @@ pub struct InvocationReport {
     pub undo_token: Option<String>,
     pub postconditions: Vec<String>,
     pub replayed: bool,
+    #[schemars(schema_with = "nullable_untrusted_output_schema")]
+    #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
+    pub untrusted: serde_json::Value,
+}
+
+fn nullable_untrusted_output_schema(_: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    serde_json::from_value(serde_json::json!({ "anyOf": [capability_output_shape(), { "type": "null" }] })).expect("owned untrusted output schema")
+}
+
+fn capability_output_shape() -> serde_json::Value {
+    let document: serde_json::Value = serde_json::from_str(include_str!("../🛡️untrusted-content-schemas/🧬️schema/capability-output.json")).expect("owned capability output contract");
+    document["$defs"]["Envelope"].clone()
+}
+
+fn prepared_action_preview_schema(_: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    serde_json::from_value(serde_json::json!({
+        "type": "object",
+        "properties": {
+            "opsCount": { "type": "object", "properties": { "document": { "type": "integer", "minimum": 0 }, "config": { "type": "integer", "minimum": 0 }, "draft": { "type": "integer", "minimum": 0 }, "childOpBytes": { "type": "integer", "minimum": 0 } }, "required": ["document", "config", "draft", "childOpBytes"], "additionalProperties": false },
+            "warnings": { "type": "array", "items": { "type": "string" } },
+            "untrusted": { "anyOf": [capability_output_shape(), { "type": "null" }] }
+        },
+        "required": ["opsCount", "warnings", "untrusted"],
+        "additionalProperties": false
+    })).expect("owned prepared preview schema")
 }
 
 //#endregion 🔖️InvocationReport
@@ -110,6 +135,7 @@ pub struct PreparedActionReport {
     pub capability_id: String,
     pub expected_revision: Option<RevisionStamp>,
     #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
+    #[schemars(schema_with = "prepared_action_preview_schema")]
     pub preview: serde_json::Value,
     pub expires_at_ms: u64,
 }

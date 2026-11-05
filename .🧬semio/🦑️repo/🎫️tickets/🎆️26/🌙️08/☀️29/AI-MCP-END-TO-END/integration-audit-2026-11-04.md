@@ -1,0 +1,32 @@
+# MCP Producer and Consumer Integration Audit
+
+Date: 2026-11-04. Read-only audit of repository-owned implementations; no compiler invoked.
+
+## Cargo ingress cannot replace artifact publication
+
+The current repo cargo launcher executes Cargo into its admitted shared lane or isolated compiler target. In library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts, lines 195–209, execute runs the compiler and consumeExecution returns the status for streaming commands; captured commands invoke their supplied consumer. There is no publication marker, publishedCargoArtifactDirectoryV1 call, or staging call in this launcher. Thus repo cargo --store=shared --configuration=prototype -- build -p semio-framework-os-mcp --bin semio-os-mcp may compile the same executable target, but does not produce the published artifact consumed by canonical MCP startup. Isolated mode also retires the private target at settlement. It cannot safely unblock published readiness by itself.
+
+The proper producer remains @semio-tech/framework-os-mcp-rs:build: its BuildScript invokes buildAdmittedCargoArtifactsV1 with the absolute MCP crate Cargo.toml, selected package and binary, and semio-os-mcp.sources.json. The neutral withCargoArtifactPlanV1 defaults its output to publishedCargoArtifactDirectoryV1(storage.backing.root, absolute manifest, mode), and captureCargoArtifacts stages exact captured outputs with ownership and sources evidence. Publication keys are SHA256 of the resolved absolute manifest, shortened to 20 hex digits, followed by prototype or release. A root Cargo.toml ingress command is not the same publication owner as the MCP crate Cargo.toml even if package selection names that crate. Raw target copying or an executable override would bypass this producer authority.
+
+## Consumers and mismatches
+
+- withPublishedMcpClientSessionV1 selects the exact MCP crate Cargo.toml and Original buildMode, then uses withRepositoryPublishedCargoExecutableV1. This reader holds compiler backing and shared artifact lease, validates the exact marker owner and inventory, hashes executable bytes, and rechecks through terminal callback settlement. Its manifest and mode align with the normal BuildScript.
+- TypeScript :test selects the same crate manifest by joining its package root to ../🦀️rust/Cargo.toml and uses the current build mode. It retains compiler-store custody but calculates an executable path and exports SEMIO_OS_MCP_BIN. It does not use the stronger exact published reader or hold its shared artifact lease across Vitest. Concurrent artifact republishing can therefore race this consumer despite retained compiler image lifetime.
+- :test-canonical-stdio runs the officially installed frontend, then requests forwarded native readiness. Startup servePublishedMcpStdioV1 computes the same MCP crate manifest using MCP_ARTIFACT_REL plus ../../Cargo.toml, selects the authored prototype default unless an environment mode is present, and retains the store lifetime. This route similarly lacks the exact shared artifact reader lease. Startup freshness checks use the sources record from the producer.
+- The normal build target correctly advertises .🧾️store/build.json, while binary-gate fixture default paths, resolveMcpBinaryPath defaults, and several docstrings still describe source-tree dist/build. Actual store consumers explicitly select the published path, so those older defaults are misleading and remain hazardous for direct requireMcpBinary callers.
+- Release BuildScript explicitly requests output dist/build-release and then checks/signs the source-tree path. The neutral producer now requires every output under the issued backing, so this release route conflicts with current ownership. Its project output declaration also names source-tree dist/build-release.
+- resolveBuiltMcpBinaryPath still defaults to debug while repository configuration uses prototype. CanonicalPairCheckScript calls buildMcpBinary, which calls runCargo then immediately stats this default debug path. This is not the current published artifact route and can fail even after a successful admitted prototype compile.
+
+## Recommendation
+
+Resume the existing artifact build after fixing native compilation. If global source admission blocks the source-owner target, repair or narrow the repository-owned planning path while retaining its actual Original invocation, MCP crate manifest, mode, admitted compiler backing, captured compiler provenance, and exact publication. Plain repo cargo build is useful for obtaining compiler diagnostics or warming the correct lane, but is not publication evidence.
+
+## Real-binary artifact roundtrip review
+
+Reviewed MCP/🧪️tests/🔄️end-to-end/🟦️.ts and its workflow schema. The new case invokes actual create, open, validate, snapshot, job_get, resource reads, duplicate rejection, process close and reopen. It validates each selected success shape with the in-house validator and AJV and parses MCP envelopes using SDK schemas. Native snapshot, canonical validation, and appliedEditIds resource fields match the inspected workspace implementations. No definite runtime field mismatch was found in this narrow audit.
+
+The workflow response definitions are not closed: Created, Opened, Snapshot, Validated and nested untrusted/content all omit additionalProperties:false. AJV is constructed with strict:false. This checks required success facts but does not prove exact result schemas or reject unexpected fields. Validated already returns untrusted diagnostics in the native implementation, so adding closed objects requires explicitly declaring real native fields rather than merely flipping the keyword. Snapshot untrusted should validate the canonical provenance and notice shape as well. The reopened snapshot validates only payload equality, not its workflow shape or resource provenance.
+
+The fixture command remains meaningful despite these schema limits: it proves native process persistence across two real process lifetimes once executed successfully. The test holds the original compiler store via its owning :test route, but shares the artifact publication race identified above.
+
+The existing direct script producer is repo <absolute MCP crate 📜️script.ts> build. This can avoid graph task dispatch only if admitted through the current root script birth and actual issued Original; injecting a forged invocation is invalid. It uses the same BuildScript and publication owner as :build.

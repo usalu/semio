@@ -38,3 +38,5 @@ mod typed_copy;
 mod typed_compare;
 #[path="🧬️schema/🦀️.rs"]
 pub mod schema_metadata;
+
+#[cfg(test)]#[path="🛬️receive/🦀️.rs"]mod native_receiving_tests;

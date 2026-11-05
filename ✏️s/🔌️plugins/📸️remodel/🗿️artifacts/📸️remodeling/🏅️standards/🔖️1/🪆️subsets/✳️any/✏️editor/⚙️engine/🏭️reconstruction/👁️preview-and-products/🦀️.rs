@@ -234,7 +234,7 @@ impl ReconstructionEngine {
     /// 🕸️ The finished, watertight-guaranteed `MeshData`, once [`EngineStatus::Done`] — consumes it (a
     /// second call returns `None`), mirroring `crate::editor::remodeling::engine::mesh::MeshPipeline::result`'s own take-once shape
     /// at the product-extraction boundary.
-    pub fn take_mesh(&mut self) -> Option<semio_framework::MeshData> {
+    pub fn take_mesh(&mut self) -> Option<semio_framework_mesh_engine::MeshData> {
         self.mesh_data.take()
     }
 

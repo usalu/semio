@@ -161,10 +161,7 @@ pub(super) fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, opera
     }
 }
 
-/// 🩺️ A guest fault, spoken in the guest's own words. `unreachable executed` from a
-/// `panic = "abort"` component IS a Rust panic, and the panic message it printed a moment earlier is
-/// the only thing that names the failing frame — so the retained tail of guest stderr travels with
-/// the trap instead of being thrown away with the instance.
+/// 🩺️ Reports bounded guest diagnostics with the interpreter fault.
 fn owned_fault_text(state: &OwnedGuestInstance, error: &str) -> String {
     let printed = String::from_utf8_lossy(&state.diagnostics);
     let printed = printed.trim();

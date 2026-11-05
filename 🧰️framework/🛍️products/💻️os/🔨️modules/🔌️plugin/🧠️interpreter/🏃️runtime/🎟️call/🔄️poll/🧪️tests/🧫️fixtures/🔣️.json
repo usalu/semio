@@ -1,0 +1,57 @@
+{
+  "budget": {
+    "retained": {
+      "operation": 71,
+      "generation": 3,
+      "epoch": 19,
+      "work": {
+        "clockBinding": 1,
+        "absoluteDeadlineUs": 1000000,
+        "fuel": 1000
+      },
+      "grant": {
+        "maximumItems": 8,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 8192,
+        "maximumReleaseBytes": 8192,
+        "maximumDepth": 8
+      }
+    },
+    "retainedPolicy": {
+      "maximumItems": 8,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 8192,
+      "maximumReleaseBytes": 8192,
+      "maximumDepth": 8
+    },
+    "workFuel": 100,
+    "fuel": 100,
+    "deadlineUs": 1000000,
+    "maxEffects": 8,
+    "maxPatchBytes": 4096,
+    "maxFrames": 8
+  },
+  "cases": [
+    {
+      "events": [],
+      "valid": true
+    },
+    {
+      "events": [
+        {
+          "surfaceHidden": {
+            "surface": "窗口 🪟"
+          }
+        }
+      ],
+      "valid": true
+    },
+    {
+      "events": [
+        "wake",
+        "wake"
+      ],
+      "valid": false
+    }
+  ]
+}

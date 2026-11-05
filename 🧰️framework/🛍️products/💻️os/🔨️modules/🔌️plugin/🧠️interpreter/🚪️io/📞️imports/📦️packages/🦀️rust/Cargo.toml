@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-plugin-interpreter-imports"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Source-owned host import services for the repository interpreter"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-interpreter-imports"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin-interpreter = { workspace = true }
+semio-framework-plugin-guest-contract = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+
+[dev-dependencies]
+serde_json.workspace = true
+wit-parser = "=0.252.0"

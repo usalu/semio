@@ -21,6 +21,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-manifest-address = { path = "../../../🛂️manifest/🧭️address/📦️packages/🦀️rust" }
 semio-framework-kernel-history = { path = "../../📜️history/📦️packages/🦀️rust" }
 semio-framework-kernel-identity = { path = "../../🪪️identity/📦️packages/🦀️rust" }
 semio-framework-kernel-media-jobs = { path = "../../🎞️media-jobs/📦️packages/🦀️rust" }

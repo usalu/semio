@@ -1,0 +1,9 @@
+{
+  "request": { "seq": "17", "instanceId": "inst-1", "command": { "version": 1, "kind": "readHistory" } },
+  "response": {
+    "version": 1,
+    "kind": "error",
+    "code": "plugin.unavailable",
+    "message": "this shell has no live artifact route mounted — it renders the agent surface but does not execute artifact commands; resolve a headless context (`--folder`/`--hub`) for mutations"
+  }
+}

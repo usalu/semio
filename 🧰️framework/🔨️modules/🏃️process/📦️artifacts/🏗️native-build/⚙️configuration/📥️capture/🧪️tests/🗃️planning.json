@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "maximumElapsedMilliseconds": 30000,
+  "planningMaximumBytes": 134217728,
+  "ordinaryCaptureMaximumBytes": 16777216,
+  "large": {
+    "paddingBytes": 16777217,
+    "chunkBytes": 65537,
+    "label": "🧱️ Größe"
+  },
+  "failures": [
+    {
+      "id": "stale-lock",
+      "stderr": "error: cannot update the lock file /fixture/Cargo.lock because --locked was passed to prevent this\n",
+      "status": 17,
+      "stale": true
+    },
+    {
+      "id": "ordinary-failure",
+      "stderr": "error: fixture compiler refused\n",
+      "status": 7,
+      "stale": false
+    }
+  ],
+  "refusal": {
+    "maximumBytes": 1024,
+    "bytes": 2048
+  },
+  "invalidMaximumBytes": 134217729,
+  "controlRefusal": {
+    "reason": "owned-command-failure",
+    "abortAtPublication": 2,
+    "preserveIdentity": true
+  }
+}

@@ -83,7 +83,7 @@ fn empty_catalog() -> Arc<Catalog> {
 #[tokio::test]
 async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     let dir = store::test_support::tempdir().expect("tempdir");
-    let agent = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:writer".to_string(), Vec::new(), empty_catalog()).expect("agent opens");
+    let agent = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:writer".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("agent opens");
     let shell_host = store::sync::ArtifactHost::new(workspace_worker_pool());
     let shell_channels = shell_host
         .open(store::sync::ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
@@ -204,7 +204,7 @@ fn plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired()
         return;
     }
     let dir = store::test_support::tempdir().expect("tempdir");
-    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:mutation-test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:mutation-test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let mut channel = match workspace.open_artifact_channel("note") {
         Ok(channel) => channel,
         Err(error) => {
@@ -213,7 +213,7 @@ fn plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired()
         }
     };
 
-    let pure = channel.exchange(0, vec![AppCommand::PureCommand { capability_id: "note.editor.noop".to_string(), input: serde_json::json!({}) }]);
+    let pure = channel.exchange(0, vec![AppCommand::PureCommand {  capability_id: "note.editor.noop".to_string(), input: serde_json::json!({}), view_state: None }]);
     println!("[W3] real PureCommand round trip: {pure:?}");
     assert!(pure.as_ref().err().map(|fault| fault.code.as_str()) != Some("channel.not-wired"), "PureCommand must be a real round trip, not the old host-side short-circuit: {pure:?}");
 
@@ -280,7 +280,7 @@ fn a_real_app_command_is_answered_over_the_shell_message_lane_not_the_respond_la
         return;
     }
     let dir = store::test_support::tempdir().expect("tempdir");
-    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:command-response-test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:command-response-test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let mut channel = workspace.open_artifact_channel("note").expect("a real channel to `note`");
 
     let read = channel.exchange(0, vec![AppCommand::ReadArtifact]);
@@ -325,7 +325,7 @@ fn attempt_plugin_activation_against_a_real_note_wasm_when_available() {
         return;
     }
     let dir = store::test_support::tempdir().expect("tempdir");
-    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:activation-test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:activation-test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     match workspace.attempt_plugin_activation("note") {
         Ok(outcome) => {
             println!("[P7] note activation: app_id={} actor={:?} turn_status={} effects={} fuel_used={}", outcome.app_id, outcome.actor, outcome.turn_status, outcome.effects_emitted, outcome.fuel_used);
@@ -437,13 +437,13 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
         return;
     };
     let dir = store::test_support::tempdir().expect("tempdir");
-    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:two-phase-test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:two-phase-test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let mut channel = workspace.open_artifact_channel("note").expect("a real channel to `note`");
     let input = serde_json::json!({ "kind": "text", "x": 40, "y": 40 });
 
     let baseline = document_witness(&mut channel, 0);
     assert_eq!(history_stamp(&mut channel, 0), "0@", "a freshly opened `note` has no recorded command yet");
-    let prepared = channel.exchange(0, vec![AppCommand::PureCommand { capability_id: capability_id.clone(), input: input.clone() }]);
+    let prepared = channel.exchange(0, vec![AppCommand::PureCommand {  capability_id: capability_id.clone(), input: input.clone(), view_state: None }]);
     println!("[WR4] prepare {capability_id}: {prepared:?}");
     let ops = match prepared.expect("the guest previews its own verb").into_iter().next() {
         Some(AppFrame::Emit { ops, .. }) => ops,
@@ -489,7 +489,7 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
     );
 
     let settled = document_witness(&mut channel, 0);
-    let abandoned = channel.exchange(0, vec![AppCommand::PureCommand { capability_id: capability_id.clone(), input }]).expect("a second preview answers");
+    let abandoned = channel.exchange(0, vec![AppCommand::PureCommand {  capability_id: capability_id.clone(), input, view_state: None }]).expect("a second preview answers");
     println!("[WR4] abandoned prepare: {abandoned:?}");
     let after_abandon = document_witness(&mut channel, 0);
     assert_eq!(settled, after_abandon, "A PREPARED HANDLE THAT IS NEVER INVOKED LEFT AN EFFECT: the document moved from {settled} to {after_abandon}");
@@ -538,12 +538,12 @@ fn a_long_history_document_loads_through_polls_and_a_cancel_restores_the_previou
         return;
     };
     let dir = store::test_support::tempdir().expect("tempdir");
-    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:stepped-load-law".to_string(), Vec::new(), empty_catalog()).expect("opens");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:stepped-load-law".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let mut channel = workspace.open_artifact_channel("note").expect("a real channel to `note`");
     let started = std::time::Instant::now();
     for index in 0..LONG_HISTORY_TRANSACTIONS {
         let input = serde_json::json!({ "kind": "text", "x": 40 + index, "y": 40 + index });
-        let ops = match channel.exchange(0, vec![AppCommand::PureCommand { capability_id: capability_id.clone(), input }]).expect("the guest previews addBlock").into_iter().next() {
+        let ops = match channel.exchange(0, vec![AppCommand::PureCommand {  capability_id: capability_id.clone(), input, view_state: None }]).expect("the guest previews addBlock").into_iter().next() {
             Some(AppFrame::Emit { ops, .. }) => ops,
             other => panic!("PureCommand must answer Emit, received {other:?}"),
         };
@@ -564,7 +564,7 @@ fn a_long_history_document_loads_through_polls_and_a_cancel_restores_the_previou
     let observer = Arc::clone(&reports);
     let scope = ActivationScope::new(semio_framework_async::CancelToken::root_now(), move |phase, fraction| observer.lock().expect("reports").push((phase, fraction)));
     let loading = std::time::Instant::now();
-    channel.load_session_document(1, "stepped-load-law", &pack, &spr, &scope).expect("the long document loads through the stepped archive load");
+    channel.load_session_document(1, "stepped-load-law", &pack, &spr, None, &scope).expect("the long document loads through the stepped archive load");
     let fractions = loading_fractions(&reports);
     println!("[S3-LOAD] loaded in {:?} over {} polled statuses: {fractions:?}", loading.elapsed(), fractions.len());
     assert!(fractions.len() >= 2 && fractions[0] < 1.0, "a long history folds over several polls, not inside the first one: {fractions:?}");
@@ -583,14 +583,14 @@ fn a_long_history_document_loads_through_polls_and_a_cancel_restores_the_previou
             cancel.cancel_now();
         }
     });
-    let refusal = channel.load_session_document(2, "stepped-load-law", &pack, &spr, &scope).expect_err("a cancel at the first polled status stops the load");
+    let refusal = channel.load_session_document(2, "stepped-load-law", &pack, &spr, None, &scope).expect_err("a cancel at the first polled status stops the load");
     let fractions = loading_fractions(&cancelled_reports);
     println!("[S3-LOAD] cancelled after {fractions:?}: {}: {}", refusal.code, refusal.message);
     assert!(fractions.first().is_some_and(|fraction| *fraction < 1.0), "the cancel landed before the load completed: {fractions:?}");
     assert_eq!(refusal.code, ACTIVATION_CANCELLED_FAULT_CODE, "{}", refusal.message);
     assert_eq!(document_witness(&mut channel, 2), previous, "a cancelled load leaves the previous document with zero trace");
     assert_eq!(history_stamp(&mut channel, 2), "0@", "a cancelled load leaves no history row");
-    channel.load_session_document(2, "stepped-load-law", &pack, &spr, &ActivationScope::detached()).expect("the cancelled operation was acknowledged, so the next load is admitted");
+    channel.load_session_document(2, "stepped-load-law", &pack, &spr, None, &ActivationScope::detached()).expect("the cancelled operation was acknowledged, so the next load is admitted");
     assert_eq!(history_stamp(&mut channel, 2), source_head, "the reloaded head is the source head");
 }
 

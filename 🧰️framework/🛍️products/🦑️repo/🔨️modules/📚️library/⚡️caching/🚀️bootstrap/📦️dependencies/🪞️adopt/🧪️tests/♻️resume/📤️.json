@@ -1,0 +1,80 @@
+[
+  {
+    "mode": "completed",
+    "accepted": true,
+    "finalAccepted": true,
+    "canceled": false
+  },
+  {
+    "mode": "root-missing",
+    "accepted": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "mode": "root-retarget",
+    "accepted": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "mode": "projected-root",
+    "accepted": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "mode": "projected-subpath",
+    "accepted": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "mode": "projected-node-modules",
+    "accepted": true,
+    "finalAccepted": true,
+    "canceled": false
+  },
+  {
+    "mode": "retarget-race",
+    "accepted": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "mode": "provider-facts",
+    "accepted": true,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "mode": "immutable-input",
+    "accepted": true,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "mode": "unrelated-file-body",
+    "accepted": true,
+    "finalAccepted": true,
+    "canceled": false
+  },
+  {
+    "mode": "canceled",
+    "accepted": false,
+    "finalAccepted": false,
+    "canceled": true
+  },
+  {
+    "mode": "root-file",
+    "accepted": false,
+    "finalAccepted": false,
+    "canceled": false
+  },
+  {
+    "mode": "projected-node-modules-descendant",
+    "accepted": true,
+    "finalAccepted": true,
+    "canceled": false
+  }
+]

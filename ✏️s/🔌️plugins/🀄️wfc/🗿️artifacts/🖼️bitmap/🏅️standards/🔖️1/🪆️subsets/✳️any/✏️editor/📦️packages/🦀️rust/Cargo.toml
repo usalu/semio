@@ -15,7 +15,11 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = ["semio-s-artifact-wfc-bitmap-inferences/testkit"]
+
 [dependencies]
+semio-s-artifact-wfc-bitmap-pin-solution = { path = "../../🎮️commands/📌️pin-solution/📦️packages/🦀️rust" }
 machine = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
@@ -51,6 +55,8 @@ semio-s-artifact-wfc-bitmap-transient = { path = "../../🫧️transient/📦️
 semio-s-plugin-wfc-engine = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-wfc-bitmap-inferences = { path = "../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" , features = ["testkit"] }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

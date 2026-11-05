@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "framework.job.headless.capture.frontiers.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageBytes",
+    "length",
+    "modulus",
+    "copyBytes",
+    "expected",
+    "cases"
+  ],
+  "properties": {
+    "pageBytes": {
+      "const": 16384
+    },
+    "length": {
+      "const": 16401
+    },
+    "modulus": {
+      "const": 251
+    },
+    "copyBytes": {
+      "const": 257
+    },
+    "expected": {
+      "const": {
+        "pages": 2,
+        "copyTurns": 65,
+        "advanceTurns": 67,
+        "checksum": 2043030
+      }
+    },
+    "cases": {
+      "const": [
+        "copy",
+        "capacityDenied",
+        "releaseDenied",
+        "foreignPayload",
+        "foreignCaller",
+        "cancelledCopy",
+        "allocationRefusal",
+        "absentPayload"
+      ]
+    }
+  }
+}

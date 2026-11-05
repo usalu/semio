@@ -1,0 +1,28 @@
+# Lowpoly Browser Portability and Acceptance Audit
+
+Read-only source review on 2026-11-04. Only this report is written. No builds, browser launches, dependency preparation, infrastructure edits or git mutations were performed.
+
+## Concrete Source Issue
+
+The official program matrix in 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧮️program-matrix/🟦️.ts:585 launches Chromium with unconditional --use-angle=metal. The sibling 🧪️tests/⏯️tool-run-matrix/🟦️.ts does the same and adds unsafe-WebGPU and ignore-blocklist flags. Metal is a macOS backend; these commands cannot establish native Windows/Linux portability as authored. Neither launch exposes an argument/backend option. Changing only CLI flags cannot repair this. A production fix should centralize browser-launch policy behind the existing tooling boundary and exercise the policy for Windows, macOS and Linux; native Chromium default backend is the suitable first baseline. This is a source finding, not an observed runtime failure.
+
+The official matrix otherwise already uses host-specific Meta/Control chords, discovers actual catalog editor/viewer IDs, waits for plugin installation, checks rendered bodies and pointer hit-testing, stages addPrimitive for lowpoly, and judges mutation/undo/redo against history plus exact edit counts. Program matrix fixtures pin lowpoly to addPrimitive, with no lowpoly-specific staged arguments. It does not cover UV, host IO, paint or retained-document reload.
+
+## Usable Official Surface
+
+@semio-tech/framework-os-dev/testing/program-matrix explicitly exports awaitBeacon, dismissIntroduction, seatLocale, readShell, witness, unfoldActionsRail, fillStagedArgument, mutateUndoRedo, clickUncovered and windowIds. This is the existing public interface for a ticket harness; importing private module paths or copying the matrix is unnecessary. The third-party browser owns hit-testing, while the shell history/check-in ledger provides mutation witnesses. The full registered program-matrix target becomes the editor/viewer smoke gate after the launch policy issue is resolved. Require two lowpoly roles, not merely a nonzero total, in both en and de runs.
+
+The existing ticket lowpoly-browser.mjs already uses Playwright persistent context without Metal flags, contains profile/temp/download/trace paths beneath the generated directory, and permits a registry-supplied Chromium executable. It is portable in launch shape, but intentionally labels its scope boot-observation and renderedGeometryVerified false. Use it as the immediate post-serve DOM discovery probe. Its current success predicate now rejects failed requests/responses, contrary to the older requirements-audit.md observation; that prior issue is fixed. Canvas presence still does not prove visible geometry.
+
+## Acceptance Sequence After Setup
+
+1. Start the declared lowpoly React prototype with the generated catalog. Run the retained probe against that exact URL. Inspect screenshot plus semantic model measures before accepting rendering.
+2. Use the public matrix helpers from the ticket harness and retain the existing platform-neutral persistent launch. Discover editor and viewer IDs from __semioOsCatalogProbe rather than inventing app IDs. Open editor, addPrimitive, verify actual geometry/model counts, then mutate/undo/redo. Open viewer, verify the same kind renders and exposes no mutating action path.
+3. Switch the actual shell locale through seatLocale for en and de; browser locale alone is insufficient. Assert localized action/history/paint labels after each switch. Repeat critical editor/viewer flow for both.
+4. Exercise edit and paint modes and both model/UV windows. Manifest explicitly registers the paint UV window and paint layout. Use markUvSeam and unwrapActive on a selected object, then assert displayed UV islands/coordinates and visible paint changes from brush/fill. Confirm one undoable paint gesture and visual/state reversal/reapplication. Do not count invoking an action or a second blank canvas as UV acceptance.
+5. Invoke loadMeshRequest through the visible host picker and importMeshFile completion, using Playwright filechooser/setInputFiles where the browser host exposes its input. Export through exportMesh for OBJ/PLY/STL using the actual host save/download surface and independently parse the resulting bytes. The manifest hides importMeshFile from the palette, so direct dispatch of it would bypass the host acceptance requirement. Register chooser/download listeners before clicking. If a native File System Access picker is used, inspect the host bridge and use its supported browser test boundary; do not claim a synthetic command payload proves picker wiring.
+6. Capture geometry and paint state, commit/persist through the shell as required, reload the same origin in the same persistent profile, await readiness, reopen the same document and verify geometry, layers and painted appearance. Official matrix reboot/reloadEvery only resets its census between rows; it is not a retained-document persistence assertion. A clean new context cannot prove retained profile persistence.
+
+## Next Useful Action
+
+After the existing producer publishes dependencies and setup is ready, run the declared native lowpoly test target and catalog prerequisites, then the retained platform-neutral probe. Extend that ticket harness with the public matrix helpers and explicit journeys above, or fix shared launch policy before executing the official matrix. Keep generated evidence within the ticket generated folder and preserve this audit. None of the browser journeys is established by this source review.

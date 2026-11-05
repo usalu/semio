@@ -3,10 +3,7 @@
 use super::*;
 
 impl ActorRunner {
-    /// 📬️ A mailbox, readiness or close wake targets whichever turn is current: it carries no
-    /// generation, so a turn that completes between the sender's read and its request cannot
-    /// turn it into a stale wake (the actor then idled with a queued command, ticket 26/09/23
-    /// `📓️wp-h6.md`).
+    /// 📬️ A mailbox, readiness or close wake targets whichever turn is current: it carries no See [design notes](README.md).
     pub(super) fn schedule(self: &Arc<Self>) {
         if self.complete.load(std::sync::atomic::Ordering::Acquire) || self.terminal.load(std::sync::atomic::Ordering::Acquire) {
             return;
@@ -74,9 +71,7 @@ impl ActorRunner {
         });
     }
 
-    /// 🏃️ TurnFault retains the future in `terminal_turn`. Do not `enqueue` a drain job:
-    /// against a shut-down pool that would mint a second `Pool(Shutdown)` terminal_job
-    /// grant and leak mailbox ownership (one-owner-per-grant). Host `close_one` drains.
+    /// 🏃️ TurnFault retains the future in `terminal_turn`. Do not `enqueue` a drain job: See [design notes](README.md).
     pub(super) fn run_job(self: Arc<Self>) {
         if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
             self.close_one_terminal_owner();
@@ -315,14 +310,7 @@ impl ActorRunner {
     }
 }
 
-/// 🔌️ The one platform I/O reactor every native document actor polls its hub socket against: a
-/// current-thread Tokio runtime whose only thread (`semio-document-io`) parks on the I/O and time
-/// drivers, created on first use and never shut down, like `db_storage_driver_runtime`. Actors keep
-/// running on the `WorkerPool` and only enter this handle while polled. It used to be whatever
-/// runtime the spawning thread happened to be inside; a native wgpu shell spawns from a plain
-/// thread, so the first hub dial panicked with `there is no reactor running` and the document
-/// socket never left `Connecting` (ticket 26/09/23 slice WG8, `hub-live-collaboration-check` run 1).
-/// `None` only when the operating system refuses the reactor, which the dial then reports as a fault.
+/// 🔌️ The one platform I/O reactor every native document actor polls its hub socket against: a See [design notes](README.md).
 pub(super) fn document_socket_io_reactor() -> Option<tokio::runtime::Handle> {
     static REACTOR: std::sync::OnceLock<Option<tokio::runtime::Handle>> = std::sync::OnceLock::new();
     REACTOR

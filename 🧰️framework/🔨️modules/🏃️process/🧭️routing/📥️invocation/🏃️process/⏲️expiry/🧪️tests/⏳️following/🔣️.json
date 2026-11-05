@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "idleMilliseconds": 300,
+  "maximumMilliseconds": 5000,
+  "pulses": [
+    0,
+    100,
+    200,
+    300,
+    400,
+    500,
+    600,
+    700
+  ],
+  "finiteOriginalMilliseconds": 450,
+  "requestedMilliseconds": 200,
+  "realChild": {
+    "idleMilliseconds": 1000,
+    "maximumMilliseconds": 10000,
+    "pulseMilliseconds": 100,
+    "pulses": 16,
+    "reprojectAfterMilliseconds": 1150
+  },
+  "abortMessage": "exact renewable descendant abort"
+}

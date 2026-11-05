@@ -103,6 +103,10 @@ path = "../../📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs
 name = "lowpoly_options_gumball"
 path = "../../🛠️options/🧲️gumball/🧪️tests/🔬️unit/🦀️.rs"
 
+[[test]]
+name = "lowpoly_editor_progress"
+path = "../../🧪️tests/📶️progress/🦀️.rs"
+
 [dependencies]
 semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
@@ -116,11 +120,14 @@ semio-plugin = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-tool-machine = { workspace = true }
 semio-ui-locale = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-commands = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-config = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-engine = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-examples = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-kit = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-model-diff = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-modes = { workspace = true }
@@ -130,6 +137,8 @@ semio-s-artifact-lowpoly-lowpoly-options = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-panels = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-presence = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-view = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
@@ -146,3 +155,5 @@ semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

@@ -79,7 +79,7 @@ impl Default for LowpolyTransform {
 /// 🖌️ One paint layer of an object: compositing metadata plus its persisted RGBA pixel buffer.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase",validate = "crate::paint_texture::validate_layer",validate_controlled = "crate::paint_texture::validate_layer_controlled")]
 pub struct LowpolyPaintLayer {
     pub name: String,
     pub visible: bool,
@@ -96,15 +96,18 @@ impl LowpolyPaintLayer {
 
     /// 🎨️ The layer's pixels with the sparse empty form materialised as the opaque-white default —
     /// what every in-place brush/fill/diff path must start from (a stamp into an empty `Vec` panics).
-    pub fn materialized_pixels(&self) -> Vec<u8> {
-        if self.pixels.is_empty() { empty_paint_pixels() } else { self.pixels.clone() }
+    pub fn validate_pixels(&self)->Result<(),crate::paint_texture::PaintTextureError>{crate::paint_texture::validate_paint_pixels(&self.pixels)}
+
+    pub fn materialized_pixels(&self) -> Result<Vec<u8>,crate::paint_texture::PaintTextureError> {
+        self.validate_pixels()?;
+        Ok(if self.pixels.is_empty() { empty_paint_pixels() } else { self.pixels.clone() })
     }
 
     /// 🎨️ Drops a never-painted buffer back to the sparse empty form (ticket 26/08/29/LOWPOLY-END-TO-END,
     /// 2026-09-17): a full 1024² layer is 4 MiB, four times the store's one-item cap, so every
     /// `addPrimitive` was refused. An empty `pixels` IS the opaque-white default everywhere it is read.
     pub fn compacted(mut self) -> Self {
-        if !self.pixels.is_empty() && self.pixels.iter().all(|byte| *byte == 255) {
+        if self.pixels.len()==crate::paint_texture::LOWPOLY_PAINT_TEXTURE_BYTES && self.pixels.iter().all(|byte| *byte == 255) {
             self.pixels = Vec::new();
         }
         self
@@ -250,7 +253,7 @@ pub const LOWPOLY_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Diale
 /// builder chain so the app's `🔖️Manifest` region can stitch it in as a single passthrough.
 pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
     semio_plugin::ArtifactKindSpec {
-        id: "3d.lowpoly".into(),
+        id: LOWPOLY_DIALECT.artifact_kind.into(),
         label: semio_ui_locale::LocalizedLabel::native("3D Lowpoly", "3D-Lowpoly"),
         source_format: "lowpoly.fixture".into(),
         component_kind: "lowpoly".into(),
@@ -279,4 +282,8 @@ pub fn snapshot_leaves() -> semio_framework_schema_registry::FacetLeaves {
     #[cfg(not(target_arch = "wasm32"))]
     semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: "" }
+}
+
+impl LowpolySnapshot{
+    pub fn validate_paint_pixels(&self)->Result<(),crate::paint_texture::PaintTextureError>{for object in &self.objects{for layer in &object.paint_layers{layer.validate_pixels()?;}}Ok(())}
 }

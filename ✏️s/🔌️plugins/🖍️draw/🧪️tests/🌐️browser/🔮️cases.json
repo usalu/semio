@@ -1,0 +1,102 @@
+{
+  "schema": "semio.draw.pdf-oracle.v1",
+  "cases": [
+    {
+      "name": "same PDF",
+      "relation": "same",
+      "left": {
+        "rectangles": [
+          [
+            10,
+            10,
+            30,
+            30
+          ]
+        ],
+        "title": "A"
+      },
+      "right": {
+        "rectangles": [
+          [
+            10,
+            10,
+            30,
+            30
+          ]
+        ],
+        "title": "A"
+      }
+    },
+    {
+      "name": "metadata only",
+      "relation": "same",
+      "left": {
+        "rectangles": [
+          [
+            10,
+            10,
+            30,
+            30
+          ]
+        ],
+        "title": "A"
+      },
+      "right": {
+        "rectangles": [
+          [
+            10,
+            10,
+            30,
+            30
+          ]
+        ],
+        "title": "B"
+      }
+    },
+    {
+      "name": "edited rectangle",
+      "relation": "different",
+      "left": {
+        "rectangles": [
+          [
+            10,
+            10,
+            30,
+            30
+          ]
+        ],
+        "title": "A"
+      },
+      "right": {
+        "rectangles": [
+          [
+            10,
+            10,
+            30,
+            30
+          ],
+          [
+            60,
+            60,
+            20,
+            20
+          ]
+        ],
+        "title": "A"
+      }
+    },
+    {
+      "name": "empty page",
+      "relation": "refuse",
+      "left": {
+        "rectangles": [],
+        "title": "A"
+      }
+    },
+    {
+      "name": "malformed document",
+      "relation": "refuse",
+      "malformed": true
+    }
+  ]
+}

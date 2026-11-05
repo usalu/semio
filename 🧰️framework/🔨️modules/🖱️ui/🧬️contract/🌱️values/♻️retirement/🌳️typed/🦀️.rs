@@ -6,7 +6,7 @@ use crate::*;
 //#region 🧭️FixedTraversal
 pub const UI_TYPED_RETIREMENT_DEPTH: usize = 16;
 
-#[derive(Default)]
+#[derive(Default,semio_framework_value::RetireOwned)]
 pub struct UiTypedRetirementCursor {
     path: [u8; UI_TYPED_RETIREMENT_DEPTH],
     value: Option<UiValueRetirement>,

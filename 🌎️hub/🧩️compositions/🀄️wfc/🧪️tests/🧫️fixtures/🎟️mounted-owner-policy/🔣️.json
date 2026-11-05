@@ -1,0 +1,16 @@
+{
+  "contract": "semio.wfc.mounted-owner-policy/v1",
+  "grant": {
+    "maximumItems": 32,
+    "maximumCopyBytes": 32768,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "retirement": {
+    "pinCapacity": 262144,
+    "minimumBackingBytes": 1048577,
+    "maximumBackingBytes": 16777216,
+    "maximumTurns": 128
+  }
+}

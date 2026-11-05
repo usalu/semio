@@ -34,7 +34,7 @@ fn evolve_finds_a_solution_and_tracks_evaluated_count() {
     let scorer = ScoreFn { f: |a: &[PatternId]| a.iter().filter(|&&p| p == PatternId(0)).count() as f64 };
     let evolve_config = EvolveConfig { population_size: 4, generations: 3, elite_count: 2 };
 
-    let result = evolve(1, evolve_config, &scorer, |seed| match search::solve(&model, &topo, &config, seed, None, &[]) {
+    let result = evolve(1, evolve_config, &scorer, |seed| match search::solve(&model, &topo, &config, seed, None, &[]).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => Some(sol.assignment),
         _ => None,
     });
@@ -51,7 +51,7 @@ fn evolve_prefers_higher_scores_across_generations() {
     let scorer = ScoreFn { f: |a: &[PatternId]| a.iter().filter(|&&p| p == PatternId(0)).count() as f64 };
     let evolve_config = EvolveConfig { population_size: 6, generations: 10, elite_count: 3 };
 
-    let result = evolve(7, evolve_config, &scorer, |seed| match search::solve(&model, &topo, &config, seed, None, &[]) {
+    let result = evolve(7, evolve_config, &scorer, |seed| match search::solve(&model, &topo, &config, seed, None, &[]).expect("original search and teardown complete") {
         SolveOutcome::Solved(sol) => Some(sol.assignment),
         _ => None,
     });

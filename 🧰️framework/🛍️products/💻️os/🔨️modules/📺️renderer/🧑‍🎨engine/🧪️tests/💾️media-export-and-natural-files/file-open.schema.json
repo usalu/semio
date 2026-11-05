@@ -1,0 +1,71 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "accept",
+    "readAs",
+    "multiple",
+    "terminalEvents",
+    "files"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "accept": {
+      "const": ".obj,.ply,.stl"
+    },
+    "readAs": {
+      "const": "dataUrl"
+    },
+    "multiple": {
+      "const": true
+    },
+    "terminalEvents": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "cancel",
+          "empty",
+          "clickFailure"
+        ]
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "type",
+          "text",
+          "contents"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string"
+          },
+          "contents": {
+            "type": "string",
+            "pattern": "^data:"
+          }
+        }
+      }
+    }
+  }
+}

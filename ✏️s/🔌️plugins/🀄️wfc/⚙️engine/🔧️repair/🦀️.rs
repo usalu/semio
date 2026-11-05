@@ -9,8 +9,7 @@
 use crate::constraint::AdjacencyView;
 use crate::ids::{NodeId, PatternId};
 use crate::model::CompiledModel;
-use crate::outcome::SolveOutcome;
-use crate::search::{self, SearchConfig};
+use crate::search::{self, SearchConfig,SearchResult};
 use crate::topology::Topology;
 
 // #region 🔖️Halo
@@ -57,7 +56,7 @@ pub fn halo(adjacency: &AdjacencyView, centers: &[NodeId], radius: usize) -> Vec
 /// `previous_assignment` must have one entry per node (as produced by a prior `Solved` outcome on
 /// this same model/topology).
 #[allow(clippy::too_many_arguments)]
-pub fn repair_region<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, adjacency: &AdjacencyView, previous_assignment: &[PatternId], centers: &[NodeId], radius: usize, config: &SearchConfig, seed: u64) -> SolveOutcome {
+pub fn repair_region<T: Topology + Clone + Send + 'static>(model: &CompiledModel, topo: &T, adjacency: &AdjacencyView, previous_assignment: &[PatternId], centers: &[NodeId], radius: usize, config: &SearchConfig, seed: u64) -> SearchResult<T> {
     let region = halo(adjacency, centers, radius);
     let mut in_region = vec![false; adjacency.node_count()];
     for &n in &region {

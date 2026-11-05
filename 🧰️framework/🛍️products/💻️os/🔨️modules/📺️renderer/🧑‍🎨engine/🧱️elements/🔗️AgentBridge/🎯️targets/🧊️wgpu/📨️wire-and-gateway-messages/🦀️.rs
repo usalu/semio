@@ -299,10 +299,8 @@ impl GatewayToShell {
 //#endregion 🔖️GatewayToShell
 
 //#region 🔖️ShellToGateway
-/// 📨️ Shell→Gateway frames this shell actually produces. The SSOT's enum has eleven variants
-/// (`ShellState`/`ShellStatePatch`/`Instances`/`AppFrames` carry the React mirror's snapshots); the
-/// wgpu shell publishes none of those four yet, so encoding them here would be dead wire with no
-/// producer — their tags (`1`,`2`,`3`,`4`) stay reserved and unread.
+/// 📨️ Shell→Gateway frames this shell produces. Snapshot tags `1`, `2`, `3` remain unmodelled;
+/// `AppFrames` carries a correlated artifact-route refusal when no live owner is mounted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ShellToGateway {
     Hello {
@@ -311,6 +309,11 @@ pub enum ShellToGateway {
         shell_session_id: String,
         principal_actor: String,
         flags: BridgeFlags,
+    },
+    AppFrames {
+        in_reply_to: u64,
+        instance_id: String,
+        frames: Vec<Vec<u8>>,
     },
     ShellCommandResult {
         in_reply_to: u64,
@@ -345,6 +348,15 @@ impl ShellToGateway {
                 wire::write_string(&mut buf, shell_session_id);
                 wire::write_string(&mut buf, principal_actor);
                 wire::write_u8(&mut buf, flags.to_bits());
+            }
+            ShellToGateway::AppFrames { in_reply_to, instance_id, frames } => {
+                wire::write_u8(&mut buf, 4);
+                wire::write_u64(&mut buf, *in_reply_to);
+                wire::write_string(&mut buf, instance_id);
+                wire::write_u32(&mut buf, frames.len() as u32);
+                for frame in frames {
+                    wire::write_bytes(&mut buf, frame);
+                }
             }
             ShellToGateway::ShellCommandResult { in_reply_to, ok, fault } => {
                 wire::write_u8(&mut buf, 5);
@@ -385,6 +397,16 @@ impl ShellToGateway {
                 principal_actor: reader.read_string()?,
                 flags: BridgeFlags::from_bits(reader.read_u8()?),
             },
+            4 => {
+                let in_reply_to = reader.read_u64()?;
+                let instance_id = reader.read_string()?;
+                let count = reader.read_u32()?;
+                let mut frames = Vec::new();
+                for _ in 0..count {
+                    frames.push(reader.read_bytes()?);
+                }
+                ShellToGateway::AppFrames { in_reply_to, instance_id, frames }
+            }
             5 => ShellToGateway::ShellCommandResult { in_reply_to: reader.read_u64()?, ok: reader.read_bool()?, fault: reader.read_option_string()? },
             6 => ShellToGateway::Approval { approval_id: reader.read_string()?, decision: ApprovalDecision::from_tag(reader.read_u8()?)?, note: reader.read_option_string()? },
             7 => ShellToGateway::Ping,

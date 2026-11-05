@@ -4,6 +4,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[path = "🩹️patch/🦀️.rs"]
 mod patch_receipt;
 pub use patch_receipt::{ActorUiPatchReceipt, ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES};
+#[path="🛬️receive/🦀️.rs"]mod native_receiving;
 
 pub const ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES: usize = 44;
 pub(crate) const REQUEST_SEQUENCE_MAXIMUM: u64 = 9_007_199_254_740_991;

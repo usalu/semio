@@ -251,17 +251,17 @@
     {
       "id": "previous-app-channel-version",
       "change": "protocol",
-      "appChannelVersion": 22,
+      "appChannelVersion": 23,
       "valid": false
     },
     {
       "id": "future-app-channel-version",
       "change": "protocol",
-      "appChannelVersion": 24,
+      "appChannelVersion": 26,
       "valid": false
     }
   ],
   "executionProtocol": {
-    "appChannelVersion": 23
+    "appChannelVersion": 25
   }
 }

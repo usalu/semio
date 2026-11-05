@@ -1,0 +1,22 @@
+{
+  "pageBytes": 16384,
+  "length": 16401,
+  "modulus": 251,
+  "copyBytes": 257,
+  "expected": {
+    "pages": 2,
+    "copyTurns": 65,
+    "advanceTurns": 67,
+    "checksum": 2043030
+  },
+  "cases": [
+    "copy",
+    "capacityDenied",
+    "releaseDenied",
+    "foreignPayload",
+    "foreignCaller",
+    "cancelledCopy",
+    "allocationRefusal",
+    "absentPayload"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "initialUtility": "brush",
+  "terminalUtility": "eyedropper",
+  "point": [
+    0.3,
+    0.5
+  ],
+  "cases": [
+    {
+      "phase": "abort",
+      "reason": "blur",
+      "mutations": 0,
+      "samples": 0
+    },
+    {
+      "phase": "commit",
+      "reason": null,
+      "mutations": 1,
+      "samples": 1
+    }
+  ]
+}

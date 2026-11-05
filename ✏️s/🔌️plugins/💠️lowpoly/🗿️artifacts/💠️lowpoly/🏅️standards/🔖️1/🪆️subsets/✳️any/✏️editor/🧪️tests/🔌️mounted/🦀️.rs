@@ -103,7 +103,40 @@ fn object(app: &Mounted, id: &str) -> LowpolyObject {
 }
 
 fn face_count(object: &LowpolyObject) -> usize {
-    semio_framework_3d::mesh::HalfedgeMesh::from_json(&object.mesh_content).expect("persisted mesh content parses").face_count()
+    object.mesh_state.as_ref().expect("persisted managed mesh").clone().into_mesh().expect("managed mesh loads").face_count()
+}
+
+/// 💾️ The mounted edit survives the owning codecs and independent JSON parser, then undo and redo restore exact geometry.
+#[semio_framework_async_macros::async_test]
+async fn managed_edit_persistence_and_history_follow_the_neutral_contract() {
+    let contract: serde_json::Value = serde_json::from_str(include_str!("workflows.json")).expect("journey contract");
+    let id = contract["objectId"].as_str().unwrap();
+    let mut app = mounted();
+    let before = object(&app, id);
+    act(&mut app, "interactionSelect", select(&[("face", contract["faceId"].as_str().unwrap())])).await;
+    act(&mut app, contract["action"].as_str().unwrap(), contract["arguments"].clone()).await;
+    let snapshot = app.0.snapshot().expect("edited snapshot");
+    let edited = object(&app, id);
+    let packed = LowpolySnapshot::decode_pack(&snapshot.encode_pack()).expect("persisted pack reloads");
+    let json = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_encode(&snapshot);
+    let oracle: serde_json::Value = serde_json::from_str(&json).expect("independent JSON parser");
+    let oracle_json = serde_json::to_string(&oracle).expect("independent JSON writer");
+    let reloaded: LowpolySnapshot = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_decode(&oracle_json).expect("independent JSON reloads");
+    let loaded = semio_s_artifact_lowpoly_lowpoly_view::build_doc(&packed, &LowpolyConfig::default(), &LowpolyScratch::default()).expect("persisted geometry opens with fresh scratch");
+    assert_eq!(loaded.snapshot().objects[0].mesh_state, edited.mesh_state);
+    act(&mut app, "undo", serde_json::json!({})).await;
+    let undone = object(&app, id);
+    act(&mut app, "redo", serde_json::json!({})).await;
+    let redone = object(&app, id);
+    let observed = serde_json::json!({
+        "geometryChanged": edited.mesh_state != before.mesh_state,
+        "literalSourceChanged": edited.mesh_content != before.mesh_content,
+        "packRoundtripEqual": packed == snapshot,
+        "jsonOracleRoundtripEqual": reloaded == snapshot,
+        "undoRestoresGeometry": undone.mesh_state == before.mesh_state,
+        "redoRestoresGeometry": redone.mesh_state == edited.mesh_state
+    });
+    assert_eq!(observed, contract["expect"]);
 }
 
 /// ✂️ Face pick → extrude → undo → extrude again: geometry lives in the document, so undo restores the
@@ -115,7 +148,7 @@ fn face_count(object: &LowpolyObject) -> usize {
 async fn face_pick_extrude_undo_and_extrude_again() {
     let mut app = mounted();
     let before = object(&app, "obj-1");
-    assert!(!before.mesh_content.is_empty(), "the boot mesh persists its mesh content");
+    assert!(before.mesh_state.is_some(), "the boot mesh persists managed geometry");
     let boot_faces = face_count(&before);
     assert!(boot_faces > 6, "concrete forest boot mesh: {boot_faces}");
     act(&mut app, "interactionSelect", select(&[("face", "lowpoly-document.obj-1.face.0")])).await;
@@ -138,6 +171,7 @@ async fn face_pick_extrude_undo_and_extrude_again() {
 #[semio_framework_async_macros::async_test]
 async fn add_primitive_pick_translate_and_camera() {
     let mut app = mounted();
+    let untouched = object(&app, "obj-1");
     act(&mut app, "addPrimitive", serde_json::json!({ "kind": "cylinder" })).await;
     let snapshot = app.0.snapshot().expect("snapshot");
     assert_eq!(snapshot.objects.len(), 2, "addPrimitive creates an object");
@@ -145,8 +179,10 @@ async fn add_primitive_pick_translate_and_camera() {
     let before = object(&app, &id);
     act(&mut app, "interactionSelect", select(&[("object", &semio_s_artifact_lowpoly_lowpoly_view::document_object_row_id(&id))])).await;
     act(&mut app, "translateSelection", serde_json::json!({ "mode": "mesh", "ids": [semio_s_artifact_lowpoly_lowpoly_view::document_object_row_id(&id)], "dx": 1.0, "dy": 0.0, "dz": 0.0 })).await;
-    assert_ne!(object(&app, &id).mesh_content, before.mesh_content, "the picked object moved");
-    assert_eq!(object(&app, "obj-1").mesh_content, object(&app, "obj-1").mesh_content);
+    let moved = object(&app, &id);
+    assert_ne!(moved.mesh_state, before.mesh_state, "the picked object moved");
+    assert_eq!(moved.mesh_content, before.mesh_content, "an edit preserves literal source text");
+    assert_eq!(object(&app, "obj-1"), untouched, "the unpicked object stays unchanged");
     act(&mut app, "setCamera", serde_json::json!({ "windowId": "lowpoly-main", "camera": { "position": [3.0, 2.0, 5.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0 } })).await;
 }
 
@@ -170,9 +206,9 @@ async fn gumball_rotate_scale_and_face_translate_land_through_the_host_shape() {
     act(&mut app, "undo", serde_json::json!({})).await;
     assert_eq!(object(&app, "obj-1").mesh, before.mesh, "undo pops the rotate as one edit");
     act(&mut app, "interactionSelect", select(&[("face", "lowpoly-document.obj-1.face.0")])).await;
-    let mesh_before = semio_framework_3d::mesh::HalfedgeMesh::from_json(&object(&app, "obj-1").mesh_content).expect("mesh");
+    let mesh_before = object(&app, "obj-1").mesh_state.expect("managed mesh").into_mesh().expect("mesh");
     act(&mut app, "translateSelection", serde_json::json!({ "mode": "face", "ids": [row, "lowpoly-document.obj-1.face.0"], "dx": 0.0, "dy": 0.0, "dz": 2.0 })).await;
-    let mesh_after = semio_framework_3d::mesh::HalfedgeMesh::from_json(&object(&app, "obj-1").mesh_content).expect("mesh");
+    let mesh_after = object(&app, "obj-1").mesh_state.expect("managed mesh").into_mesh().expect("mesh");
     assert_eq!(mesh_after.face_count(), mesh_before.face_count(), "a face translate keeps the topology");
     let moved = (0..mesh_before.vertex_count() as u32).filter(|index| {
         let a = mesh_before.vertex_position(semio_framework_3d::mesh::VertexId(*index)).expect("position");
@@ -188,18 +224,18 @@ async fn gumball_rotate_scale_and_face_translate_land_through_the_host_shape() {
 #[semio_framework_async_macros::async_test]
 async fn a_host_paint_drag_is_one_edit_and_a_blurred_drag_is_none() {
     let mut app = mounted();
-    let before = object(&app, "obj-1").paint_layers[0].materialized_pixels();
+    let before = object(&app, "obj-1").paint_layers[0].materialized_pixels().expect("canonical paint layer");
     let edits = crate::context::committed_edits(&mut app).await;
     act(&mut app, "paintAt", serde_json::json!({ "objectId": "obj-1", "u": 0.4, "v": 0.5, "phase": "stream" })).await;
     act(&mut app, "paintAt", serde_json::json!({ "objectId": "obj-1", "u": 0.45, "v": 0.5, "phase": "stream" })).await;
-    assert_eq!(object(&app, "obj-1").paint_layers[0].materialized_pixels(), before, "a streamed tick never reaches the document");
+    assert_eq!(object(&app, "obj-1").paint_layers[0].materialized_pixels().expect("canonical paint layer"), before, "a streamed tick never reaches the document");
     act(&mut app, "paintAt", serde_json::json!({ "phase": "commit" })).await;
-    assert_ne!(object(&app, "obj-1").paint_layers[0].materialized_pixels(), before, "the release paints the stroke");
+    assert_ne!(object(&app, "obj-1").paint_layers[0].materialized_pixels().expect("canonical paint layer"), before, "the release paints the stroke");
     assert_eq!(crate::context::committed_edits(&mut app).await, edits + 1, "one drag is one edit");
-    let painted = object(&app, "obj-1").paint_layers[0].materialized_pixels();
+    let painted = object(&app, "obj-1").paint_layers[0].materialized_pixels().expect("canonical paint layer");
     act(&mut app, "paintAt", serde_json::json!({ "objectId": "obj-1", "u": 0.6, "v": 0.5, "phase": "stream" })).await;
     act(&mut app, "paintAt", serde_json::json!({ "phase": "abort", "reason": "blur" })).await;
-    assert_eq!(object(&app, "obj-1").paint_layers[0].materialized_pixels(), painted, "a blurred drag paints nothing");
+    assert_eq!(object(&app, "obj-1").paint_layers[0].materialized_pixels().expect("canonical paint layer"), painted, "a blurred drag paints nothing");
     assert_eq!(crate::context::committed_edits(&mut app).await, edits + 1, "a blurred drag is no edit");
 }
 
@@ -221,7 +257,7 @@ async fn component_selection_reaches_the_model_scene() {
     let loaded = semio_s_artifact_lowpoly_lowpoly_view::build_doc(&snapshot, &config, &scratch).expect("document loads from persisted content");
     assert_eq!(world.granularity, "face");
     assert_eq!(world.active_object_id, "obj-1");
-    edit::windows::model::render(LowpolyView { snapshot: &snapshot, config: &config }, Some(&loaded), "move", &HashMap::new(), &world).expect("the model scene renders from persisted content");
+    edit::windows::model::render(LowpolyView { snapshot: &snapshot, config: &config }, Some(&loaded), "move", &HashMap::new(), &world, &LowpolyLabels::NATIVE_EN).expect("the model scene renders from persisted content");
 }
 
 /// 🔬️ Diagnostic twin: a transient-only threaded command (`snap` with nothing selected) before the first
@@ -250,3 +286,18 @@ async fn add_plane_primitive_commits() {
     act(&mut app, "addPrimitive", serde_json::json!({ "kind": "plane" })).await;
     assert_eq!(app.0.snapshot().expect("snapshot").objects.len(), 2);
 }
+
+#[path = "cancellation.rs"]
+mod cancellation;
+
+#[path = "import.rs"]
+mod import;
+
+#[path = "effects.rs"]
+mod effects;
+
+#[path = "export.rs"]
+mod export;
+
+#[path = "snapshot.rs"]
+mod snapshot;

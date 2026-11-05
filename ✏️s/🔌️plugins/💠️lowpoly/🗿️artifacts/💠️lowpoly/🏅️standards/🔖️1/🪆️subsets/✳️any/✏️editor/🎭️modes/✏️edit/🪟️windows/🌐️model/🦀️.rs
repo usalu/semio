@@ -246,7 +246,7 @@ fn world_instances_json(view: LowpolyView<'_>) -> String {
     semio_framework_pack_json::to_json_string(&instances)
 }
 
-pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>, selection: &LowpolyWorldSelection) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>, selection: &LowpolyWorldSelection, labels: &LowpolyLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let config = view.config;
     match loaded {
         Some(loaded) => {
@@ -261,7 +261,7 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_ut
             scene.domain_granularity_id = Some(MESH_GRANULARITY_OBJECT.into());
             scene_surface(LOWPOLY_PLAY_SURFACE_MAIN, semio_ui_contract::SurfaceKind::World3d, &scene)
         }
-        None => semio_plugin::built_text_node(semio_ui_locale::Label::data("Failed to load lowpoly document")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly main window failed-load text admission failed")),
+        None => semio_plugin::built_text_node(labels.failed_model.into()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly main window failed-load text admission failed")),
     }
 }
 //#endregion 🔖️Scene

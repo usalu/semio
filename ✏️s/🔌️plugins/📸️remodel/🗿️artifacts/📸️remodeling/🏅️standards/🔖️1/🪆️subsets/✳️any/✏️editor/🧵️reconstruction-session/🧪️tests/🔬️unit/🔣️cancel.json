@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "document": "checker",
+  "decisionsBeforeCancel": 1,
+  "turnsAfterCancel": 8,
+  "decisionsAfterCancel": 1,
+  "sceneRetainedAfterClose": false,
+  "engineRetainedAfterClose": false
+}

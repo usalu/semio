@@ -10,6 +10,7 @@ const COLD_PAIR_ID_MAXIMUM_BYTES: usize = 512;
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct ColdDocumentPairFrontier {
     pub document_id: String,
     pub head_edit_ordinal: u64,
@@ -21,6 +22,7 @@ pub struct ColdDocumentPairFrontier {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct ColdDocumentPairCursor {
     pub lifetime: ActorInstanceLifetime,
     pub transfer_generation: u64,
@@ -28,9 +30,13 @@ pub struct ColdDocumentPairCursor {
     pub page_count: u32,
 }
 
+semio_framework_value::artifact_retire_leaf!(ColdDocumentPairCursor);
+
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
+#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct ColdDocumentPairApplied {
     pub lifetime: ActorInstanceLifetime,
     pub transfer_generation: u64,
@@ -41,6 +47,8 @@ pub struct ColdDocumentPairApplied {
 #[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub enum ColdPairIngressStatus {
     #[default]
     Idle,

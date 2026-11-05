@@ -3,7 +3,7 @@
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
 use semio_framework_job_payload::{JobPayloadStream, RetainedJobPayload, RetainedPayloadBuilder};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{RetirementDemand, RetainedWorkOutcome, ValueError, ValueRefusalKind};
 
 #[derive(Clone, Copy)]
 pub enum Kind {
@@ -14,11 +14,8 @@ pub enum Kind {
 }
 
 /// 🧯️ Maps one child close turn onto the parent job's close vocabulary; a child never completes its parent.
-pub fn close_result(result: Result<RetainedCloneStep, ValueError>) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
-    Ok(match result {
-        Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-        Err(error) => return Err(error),
-    })
+pub fn close_result(turn: RetainedWorkOutcome) -> RetainedWorkOutcome<InteractiveJobCloseStep> {
+    RetainedWorkOutcome { result: turn.result.map(|step| InteractiveJobCloseStep::Pending { progress: step.progress() }), work: turn.work }
 }
 
 /// 🧳️ One publication owns its source bytes and the original payload headers it lends to the consumer.
@@ -32,6 +29,7 @@ pub struct Publication {
     state_cursor: usize,
     output_cursor: usize,
     delivered: bool,
+    retiring: bool,
 }
 
 impl Publication {
@@ -46,11 +44,12 @@ impl Publication {
             state_cursor: 0,
             output_cursor: 0,
             delivered: false,
+            retiring: false,
         })
     }
 
-    pub fn is_delivered(&self) -> bool {
-        self.delivered
+    pub fn needs_retirement(&self) -> bool {
+        self.delivered || self.retiring
     }
 
     /// 🚨️ Whether this publication already carries the operation's fault.
@@ -64,7 +63,7 @@ impl Publication {
     }
 
     /// ✍️ Advances one paid unit toward the lent outcome and reports it once the payload can be borrowed.
-    pub fn poll<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    pub fn poll<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         let kind = match self.kind {
             Kind::Preview => JobPublicationKind::Preview,
             Kind::Checkpoint(applied_progress) => JobPublicationKind::Checkpoint { applied_progress },
@@ -78,29 +77,35 @@ impl Publication {
         Ok(result)
     }
 
-    fn poll_commit<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn poll_commit<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if !self.state.is_initialized() {
-            self.state.advance_initialization(cx)?;
+            let turn=self.state.advance_initialization(cx);
+            semio_framework_job::receive_original_retained_work(cx, turn)?;
             return Ok(None);
         }
         if self.state_cursor < self.primary.len() {
-            self.state.append_original(cx, &self.primary, &mut self.state_cursor)?;
+            let turn=self.state.append_original(cx, &self.primary, &mut self.state_cursor);
+            semio_framework_job::receive_original_retained_work(cx, turn)?;
             return Ok(None);
         }
         if self.state.published().is_none() {
-            self.state.seal(cx)?;
+            let turn=self.state.seal(cx);
+            semio_framework_job::receive_original_retained_work(cx, turn)?;
             return Ok(None);
         }
         if !self.output.is_initialized() {
-            self.output.advance_initialization(cx)?;
+            let turn=self.output.advance_initialization(cx);
+            semio_framework_job::receive_original_retained_work(cx, turn)?;
             return Ok(None);
         }
         if self.output_cursor < self.secondary.len() {
-            self.output.append_original(cx, &self.secondary, &mut self.output_cursor)?;
+            let turn=self.output.append_original(cx, &self.secondary, &mut self.output_cursor);
+            semio_framework_job::receive_original_retained_work(cx, turn)?;
             return Ok(None);
         }
         if self.output.published().is_none() {
-            self.output.seal(cx)?;
+            let turn=self.output.seal(cx);
+            semio_framework_job::receive_original_retained_work(cx, turn)?;
             return Ok(None);
         }
         let result = JobOutcomeBorrow::admit_complete(cx, self.state.published(), self.output.published())?;
@@ -139,38 +144,46 @@ impl Publication {
         Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
-        let demand = match self.retirement_demands() {
-            Ok(demand) => demand,
-            Err(error) => return Err(error),
-        };
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
-            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
-        }
-        if !self.single.terminal_is_empty() {
-            return close_result(self.single.close_step(grant));
-        }
-        if !self.state.terminal_is_empty() {
-            return close_result(self.state.close_step_granted(grant));
-        }
-        if !self.output.terminal_is_empty() {
-            return close_result(self.output.close_step_granted(grant));
-        }
-        if self.primary.capacity() != 0 {
-            let released_bytes = self.primary.capacity();
-            self.primary = Vec::new();
-            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } });
-        }
-        if self.secondary.capacity() != 0 {
-            let released_bytes = self.secondary.capacity();
-            self.secondary = Vec::new();
-            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } });
-        }
-        if self.delivered {
-            self.delivered = false;
-            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
-        }
-        Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome<InteractiveJobCloseStep> {
+        let mut work=0;
+        let result=(|| {
+            let demand = match self.retirement_demands() {
+                Ok(demand) => demand,
+                Err(error) => return Err(error),
+            };
+            if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+            }
+            self.retiring = true;
+            if !self.single.terminal_is_empty() {
+                let turn=close_result(self.single.close_step(grant)); work=turn.work; return turn.result;
+            }
+            if !self.state.terminal_is_empty() {
+                let turn=close_result(self.state.close_step_granted(grant)); work=turn.work; return turn.result;
+            }
+            if !self.output.terminal_is_empty() {
+                let turn=close_result(self.output.close_step_granted(grant)); work=turn.work; return turn.result;
+            }
+            if self.primary.capacity() != 0 {
+                work=1;
+                let released_bytes = self.primary.capacity();
+                self.primary = Vec::new();
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } });
+            }
+            if self.secondary.capacity() != 0 {
+                work=1;
+                let released_bytes = self.secondary.capacity();
+                self.secondary = Vec::new();
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } });
+            }
+            if self.delivered {
+                work=1;
+                self.delivered = false;
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+            }
+            Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
+        })();
+        RetainedWorkOutcome { result, work }
     }
 
     pub fn terminal_is_empty(&self) -> bool {

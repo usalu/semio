@@ -186,7 +186,7 @@ fn same_adjacency(left: (&str, &str), right: (&str, &str)) -> bool {
 /// the picker offers exactly `crate::examples::sources()`, so an unknown id is a real fault, not a
 /// silent blank document.
 pub fn wfc2d_example_document(example_id: &str) -> Option<Wfc2dSnapshot> {
-    match example_id {
+    match if example_id.is_empty() { crate::examples::two_room_corridor::ID } else { example_id } {
         crate::examples::two_room_corridor::ID => Some(crate::examples::two_room_corridor::document()),
         crate::examples::wall_roof_facade_strip::ID => Some(crate::examples::wall_roof_facade_strip::document()),
         crate::examples::hex_ring::ID => Some(crate::examples::hex_ring::document()),

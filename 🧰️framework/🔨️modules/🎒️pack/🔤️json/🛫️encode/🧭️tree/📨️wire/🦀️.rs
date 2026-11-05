@@ -8,14 +8,10 @@ fn header()->RetirementDemand{RetirementDemand{depth:1,..Default::default()}}
 fn progress()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 fn refuses(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
 fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
-/// 🧾️ Physical receipt accompanies every optional output, including denied or metadata-only turns.
 pub struct ArtifactCanonicalJsonTreeWireStep{pub output:Option<Vec<u8>>,pub progress:RetainedCloneProgress}
-/// 🧳️ The same typed root is measured and written without a value projection or payload clone.
 pub struct ArtifactCanonicalJsonTreeWireCursor<T:Tree+RetireOwned>{original:ManuallyDrop<Option<T>>,original_close:ManuallyDrop<Option<ControlledRetirement<T>>>,admission:ManuallyDrop<Option<RetainedCloneSourceAdmission<T,T>>>,#[doc(hidden)] pub source:ManuallyDrop<Option<RetainedCloneSource<T>>>,projection:ManuallyDrop<Option<RetainedOwnedProjection<dyn Tree>>>,tree:ManuallyDrop<Option<ArtifactCanonicalJsonTreeCursor>>,#[doc(hidden)] pub wire:ManuallyDrop<Vec<u8>>,scratch:[u8;64],#[doc(hidden)] pub length:usize,written:usize,#[doc(hidden)] pub phase:u8,#[doc(hidden)] pub closing:bool,last_turn_work:u64}
 impl<T:Tree+RetireOwned> ArtifactCanonicalJsonTreeWireCursor<T>{
- /// 📥️ Transfers only an existing source header into inline custody; no backing is allocated here.
  pub fn new(original:T)->Self{Self{original:ManuallyDrop::new(Some(original)),original_close:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),source:ManuallyDrop::new(None),projection:ManuallyDrop::new(None),tree:ManuallyDrop::new(None),wire:ManuallyDrop::new(Vec::new()),scratch:[0;64],length:0,written:0,phase:0,closing:false,last_turn_work:0}}
- /// 🫴️ Borrows the exact typed source while its original authority remains live.
  pub fn original(&self)->Option<&T>{self.original.as_ref().or_else(||self.admission.as_ref().and_then(RetainedCloneSourceAdmission::original_authority)).or_else(||self.source.as_ref().and_then(|source|source.try_borrow().ok().map(|loan|loan.get())))}
  pub fn last_turn_work(&self)->u64{self.last_turn_work}
  pub fn output_bytes_written(&self)->usize{self.written}
@@ -50,7 +46,6 @@ impl<T:Tree+RetireOwned> ArtifactCanonicalJsonTreeWireCursor<T>{
   if self.original.is_some(){return Ok(header())}
   Ok(RetirementDemand{release_bytes:self.wire.capacity(),depth:usize::from(self.wire.capacity()!=0),..Default::default()})
  }
- /// 📏️ Quotes the identical next selected body, allocator, alias or full-close event.
  pub fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing{return self.close_demands(body)}
   Ok(match self.phase{
@@ -87,7 +82,6 @@ impl<T:Tree+RetireOwned> ArtifactCanonicalJsonTreeWireCursor<T>{
    _=>{self.last_turn_work=0;Ok(none(Default::default()))},
   }
  }
- /// ✍️ Performs one bounded event; any refusal leaves every remaining original owner available for paid close.
  pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<ArtifactCanonicalJsonTreeWireStep,ValueError>{self.last_turn_work=0;let result=self.advance_one(grant);if result.is_err(){self.begin_close()}result}
  fn close_one(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,grant);self.last_turn_work=turn.work;if let Some((original,()))=returned{*self.original=Some(original);}if admission.terminal_is_empty(){self.admission.take();}return turn.result.map(|step|step.progress())}
@@ -99,7 +93,6 @@ impl<T:Tree+RetireOwned> ArtifactCanonicalJsonTreeWireCursor<T>{
   if let Some(original)=self.original.take(){*self.original_close=Some(ControlledRetirement::retain(original));return Ok(progress())}
   if self.wire.capacity()!=0{let bytes=self.wire.capacity();drop(std::mem::take(&mut*self.wire));return Ok(RetainedCloneProgress{released_bytes:bytes,..progress()})}self.last_turn_work=0;Ok(Default::default())
  }
- /// ♻️ Closes the exact aliases, typed body and partial wire backing under the supplied actual grant.
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.last_turn_work=0;self.begin_close();if self.terminal_is_empty()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(Default::default())}let demand=self.close_demands(grant.maximum_copy_bytes).map_err(|error|{self.last_turn_work=1;error})?;if !permits(grant,demand){return Ok(Default::default())}self.close_one(grant)}
 }
 impl<T:Tree+RetireOwned> Drop for ArtifactCanonicalJsonTreeWireCursor<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original canonical wire dropped before complete paid source and partial output closure")}}

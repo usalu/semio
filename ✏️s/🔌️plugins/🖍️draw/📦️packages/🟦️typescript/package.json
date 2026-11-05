@@ -8,11 +8,15 @@
   "private": true,
   "scripts": {
     "test": "repo run @semio-tech/draw-js:test",
+    "browser-acceptance": "repo run @semio-tech/draw-js:browser-acceptance",
     "utility-action-policy": "repo run @semio-tech/draw-js:utility-action-policy"
   },
   "dependencies": {},
   "devDependencies": {
     "ajv": "8.20.0",
+    "playwright": "^1.57.0",
+    "pdfjs-dist": "^5.4.296",
+    "@napi-rs/canvas": "^1.0.2",
     "typescript": "^5.9.3",
     "@semio-tech/framework": "workspace:*",
     "scheduler": "0.28.0"

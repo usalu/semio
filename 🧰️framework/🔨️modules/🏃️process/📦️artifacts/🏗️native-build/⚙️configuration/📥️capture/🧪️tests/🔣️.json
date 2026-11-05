@@ -1,0 +1,170 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "empty-object",
+      "text": "{}",
+      "accepted": true,
+      "value": {}
+    },
+    {
+      "id": "compact-object",
+      "text": "{\"build\":{\"rustflags\":[\"-Zthreads=1\"],\"jobs\":1}}",
+      "accepted": true,
+      "value": {
+        "build": {
+          "rustflags": [
+            "-Zthreads=1"
+          ],
+          "jobs": 1
+        }
+      }
+    },
+    {
+      "id": "pretty-object",
+      "text": "{\n  \"build\": {\n    \"rustflags\": [\n      \"-Zthreads=1\"\n    ],\n    \"jobs\": 1\n  }\n}",
+      "accepted": true,
+      "value": {
+        "build": {
+          "rustflags": [
+            "-Zthreads=1"
+          ],
+          "jobs": 1
+        }
+      }
+    },
+    {
+      "id": "crlf-object",
+      "text": "{\r\n  \"build\": {\r\n    \"rustflags\": [\r\n      \"-Zthreads=1\"\r\n    ],\r\n    \"jobs\": 1\r\n  }\r\n}",
+      "accepted": true,
+      "value": {
+        "build": {
+          "rustflags": [
+            "-Zthreads=1"
+          ],
+          "jobs": 1
+        }
+      }
+    },
+    {
+      "id": "surrounding-whitespace",
+      "text": " \t\r\n{}\r\n\t ",
+      "accepted": true,
+      "value": {}
+    },
+    {
+      "id": "pretty-empty-object",
+      "text": "{\n}",
+      "accepted": true,
+      "value": {}
+    },
+    {
+      "id": "nested-json-values",
+      "text": "{\"values\":[null,true,false,4,\"x\",{}]}",
+      "accepted": true,
+      "value": {
+        "values": [
+          null,
+          true,
+          false,
+          4,
+          "x",
+          {}
+        ]
+      }
+    },
+    {
+      "id": "escaped-newline-unicode",
+      "text": "{\"label\":\"λ\\nsecond\"}",
+      "accepted": true,
+      "value": {
+        "label": "λ\nsecond"
+      }
+    },
+    {
+      "id": "empty-capture",
+      "text": "",
+      "accepted": false
+    },
+    {
+      "id": "whitespace-only",
+      "text": " \t\r\n",
+      "accepted": false
+    },
+    {
+      "id": "null",
+      "text": "null",
+      "accepted": false
+    },
+    {
+      "id": "array",
+      "text": "[]",
+      "accepted": false
+    },
+    {
+      "id": "object-array",
+      "text": "[{}]",
+      "accepted": false
+    },
+    {
+      "id": "number",
+      "text": "0",
+      "accepted": false
+    },
+    {
+      "id": "boolean",
+      "text": "false",
+      "accepted": false
+    },
+    {
+      "id": "string",
+      "text": "\"configuration\"",
+      "accepted": false
+    },
+    {
+      "id": "truncated",
+      "text": "{\"token\":\"redacted\"",
+      "accepted": false
+    },
+    {
+      "id": "trailing-comma",
+      "text": "{\"jobs\":1,}",
+      "accepted": false
+    },
+    {
+      "id": "jsonl",
+      "text": "{}\n{}",
+      "accepted": false
+    },
+    {
+      "id": "concatenated-objects",
+      "text": "{}{}",
+      "accepted": false
+    },
+    {
+      "id": "leading-junk",
+      "text": "progress\n{}",
+      "accepted": false
+    },
+    {
+      "id": "trailing-junk",
+      "text": "{}\nprogress",
+      "accepted": false
+    },
+    {
+      "id": "comment",
+      "text": "/* configuration */{}",
+      "accepted": false
+    },
+    {
+      "id": "bom",
+      "text": "﻿{}",
+      "accepted": false
+    },
+    {
+      "id": "trailing-nul",
+      "text": "{}\u0000",
+      "accepted": false
+    }
+  ]
+}

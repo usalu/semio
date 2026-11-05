@@ -1,0 +1,3 @@
+/** 🎟️ The portable donor bytes have independent JSON and SQLite witnesses. */
+import{test,expect}from"bun:test";import{Database}from"bun:sqlite";import Ajv from"ajv";import fixture from"./law.json";import schema from"./schema.json";
+test("original unit donor preserves UTF8 and its original Source lifetime",()=>{expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);expect(JSON.stringify(fixture.value)).toBe(fixture.wire);const db=new Database(":memory:");try{expect(db.query("SELECT length(CAST(? AS BLOB)) AS bytes,json_extract(?,'$') AS value").get(fixture.wire,fixture.wire)).toEqual({bytes:fixture.wireBytes,value:fixture.value});}finally{db.close()}});

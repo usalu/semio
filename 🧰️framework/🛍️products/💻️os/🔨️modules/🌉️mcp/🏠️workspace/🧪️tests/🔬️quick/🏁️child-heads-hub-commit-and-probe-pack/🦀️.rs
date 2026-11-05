@@ -50,11 +50,7 @@ fn isolated_compile_worker_entry() {
     std::process::exit(i32::from(result.is_err()));
 }
 
-/// 📮️ A hub commit is acknowledged only by a status the document actor reports AFTER the relay: a live
-/// link, nothing pending and an acknowledged head. A stale acknowledgement from before the relay, a
-/// link in backoff and a link that expired all answer `acknowledged: false` with the link state and
-/// the last coded fault, so `action_invoke` reverts the edit and answers `hub.relay-unacknowledged`, never an unqualified success.
-/// Measured 2026-09-26 on hub 7800: 1 of 3 agent commits answered SUCCEEDED while the hub head never moved.
+/// 📮️ Hub commit acknowledgement requires a document actor status newer than its relayed batch.
 #[test]
 fn a_hub_commit_is_acknowledged_only_by_a_live_status_reported_after_its_relay() {
     let head = semio_os_kernel::os_directory::EditedArtifactFrontierV1 { document_id: "doc".to_string(), head_edit_ordinal: 1, head_edit_id: "edit".to_string(), last_commit_seq: 1, chain_sha256: "0".repeat(64) };

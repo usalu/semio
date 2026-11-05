@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.wfc.bitmap` document and all eleven typed mutations, in Python, at `../../../../../🧪️tests/🧩️mutate-bitmap-1/🐍️.py`. It is written from `../🧬️schema/📸️snapshot/🔣️.json` (the six members), from the eleven per-kind payload schemas under `../🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json`, and from the twelve committed `(before, mutation, diff, outcome, after)` quintets, which are the only statement of four things this carrier does not share with any sibling artifact. FIRST, the pixel buffer is RFC 4648 standard base64 of one palette index per pixel, row-major — not an inline integer array — so every pixel assertion the reference makes it must make through its own base64 decoder, written from the RFC rather than transliterated. SECOND, this subset tags its mutations EXTERNALLY: a payload is `{\"ChangeSeed\": {…}}`, a PascalCase variant name as the single key. THIRD, `add-palette-color` INSERTS at an index and renumbers every pixel and pin at or above it, and `remove-palette-color` is its exact inverse — which is why removing a colour that is still painted or pinned is FATAL rather than a silent repaint, and why neither can be modelled as an append/pop pair. FOURTH, `resize-output` CASCADES: a pin outside the new extent is removed and the removal is announced with an info-level `mutation.cascade`, so a vector that declares the code must have moved the pin lane as well as the output lane. A THIRD-PARTY ORACLE WAS DECLINED, not merely absent, and the reason is concrete: the published overlapping-model WFC implementations compute a COLLAPSE from a PNG and hand back another PNG — none of them carries the problem statement as a document, none reads a palette-indexed base64 carrier, and none exposes the mutation vocabulary that is what these vectors actually specify. The SOLVE itself is deliberately outside this capability: it is an inference, it is covered by `semio-s-plugin-wfc-engine`'s own 301 tests and by this subset's deterministic-seed and contradiction tests, and pinning a seeded collapse into a committed vector would freeze a sampler, not a specification. ALL ELEVEN KINDS ARE ADJUDICATED AND NONE IS REFUSED. CEILING, stated rather than implied: the SUBJECT half does not link this subset's own codec — `🦀️.rs` beside the reference replays the committed vectors — so today the comparison establishes that an independent implementation of the specification computes the committed after-snapshots, which is a real check of the vectors, but not yet our codec against a second producer.",
+      "rationale": "An independent Python implementation of all thirteen bitmap document mutations, authored from the snapshot and payload schemas. It replays fourteen committed before/mutation/diff/outcome/after vectors, computes its own inverse and checks declared mutation lanes. PinSolution validates the complete row-major output, and RestorePins preserves the exact prior sequence. The solver remains an independent inference capability; document mutation semantics are validated here.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -44,9 +44,9 @@
         },
         "subjectImplementationLanguage": "rust",
         "secondImplementationLanguage": "python",
-        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/🔣️.json; ../🧬️schema/🧫️fixtures/🧬️mutations",
+        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/🔣️.json; ../🧪️tests/🧫️fixtures/🧬️mutations",
         "fixtureCoverage": {
-          "vectors": 12,
+          "vectors": 14,
           "capabilitiesCovered": [
             "wfc-bitmap-1-mutate"
           ]
@@ -71,7 +71,9 @@
         "change-model",
         "pin-pixel",
         "unpin-pixel",
-        "paint-input-stroke"
+        "paint-input-stroke",
+        "pin-solution",
+        "restore-pins"
       ],
       "vectors": [
         {
@@ -198,6 +200,28 @@
               "directoryName": "⚠️clips"
             }
           ]
+        },
+        {
+          "mutationId": "pin-solution",
+          "sourceMutationDirectoryName": "📌️pin-solution",
+          "mutationDirectoryName": "📌️pin-solution",
+          "scenarios": [
+            {
+              "id": "keeps-the-complete-output-as-one-event",
+              "directoryName": "📌️keeps"
+            }
+          ]
+        },
+        {
+          "mutationId": "restore-pins",
+          "sourceMutationDirectoryName": "↩️restore-pins",
+          "mutationDirectoryName": "↩️restore-pins",
+          "scenarios": [
+            {
+              "id": "restores-the-exact-prior-pin-sequence",
+              "directoryName": "↩️restores"
+            }
+          ]
         }
       ]
     }
@@ -214,7 +238,7 @@
         {
           "id": "add-palette-color",
           "capability": "wfc-bitmap-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -234,7 +258,7 @@
         {
           "id": "change-model",
           "capability": "wfc-bitmap-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -255,7 +279,7 @@
         {
           "id": "change-palette-color",
           "capability": "wfc-bitmap-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -276,7 +300,7 @@
         {
           "id": "change-seed",
           "capability": "wfc-bitmap-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op"
@@ -296,7 +320,7 @@
         {
           "id": "paint-input-stroke",
           "capability": "wfc-bitmap-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -317,7 +341,7 @@
         {
           "id": "pin-pixel",
           "capability": "wfc-bitmap-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -338,7 +362,7 @@
         {
           "id": "remove-palette-color",
           "capability": "wfc-bitmap-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -358,7 +382,7 @@
         {
           "id": "resize-input",
           "capability": "wfc-bitmap-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -379,7 +403,7 @@
         {
           "id": "resize-output",
           "capability": "wfc-bitmap-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -400,7 +424,7 @@
         {
           "id": "set-input-pixels",
           "capability": "wfc-bitmap-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -421,7 +445,7 @@
         {
           "id": "unpin-pixel",
           "capability": "wfc-bitmap-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -430,6 +454,48 @@
             "operation": "unpin-pixel",
             "bridgeVersion": 1,
             "variant": "UnpinPixel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "pin-solution",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "pin-solution",
+            "bridgeVersion": 1,
+            "variant": "PinSolution"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "restore-pins",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "restore-pins",
+            "bridgeVersion": 1,
+            "variant": "RestorePins"
           },
           "oracleRequirements": [
             {

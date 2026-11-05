@@ -159,8 +159,6 @@ pub mod editor {
         pub mod commands {
             #[path = "../../../../../../../../✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs"]
             pub mod set_active_example;
-            #[path = "../../../../../../../../✏️editor/🎮️commands/📌️pin-solution/🦀️.rs"]
-            pub mod pin_solution;
         }
     }
 }

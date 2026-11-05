@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "arbitrary-bytes",
+      "mime": "image/png",
+      "base64": "bm90IGFuIGltYWdl",
+      "frames": 0
+    },
+    {
+      "id": "truncated-png",
+      "mime": "image/png",
+      "base64": "iVBORw0KGgo=",
+      "frames": 0
+    },
+    {
+      "id": "invalid-base64",
+      "mime": "image/png",
+      "base64": "!!!",
+      "frames": 0
+    },
+    {
+      "id": "text-payload",
+      "mime": "text/plain",
+      "base64": "bm90IGFuIGltYWdl",
+      "frames": 0
+    },
+    {
+      "id": "zero-width-png",
+      "mime": "image/png",
+      "base64": "iVBORw0KGgoAAAANSUhEUgAAAAAAAAABCAYAAADw16+3AAAACUlEQVR4nGMAAAABAAFe/335AAAAAElFTkSuQmCC",
+      "frames": 0
+    },
+    {
+      "id": "truncated-jpeg",
+      "mime": "image/jpeg",
+      "base64": "/9j/",
+      "frames": 0
+    }
+  ],
+  "appendCases": [
+    {
+      "id": "removed-first-frame",
+      "frameIndices": [
+        1
+      ],
+      "assetIndices": [
+        0,
+        1
+      ],
+      "nextIndex": 2
+    },
+    {
+      "id": "orphaned-asset",
+      "frameIndices": [
+        0
+      ],
+      "assetIndices": [
+        0,
+        1,
+        2
+      ],
+      "nextIndex": 3
+    },
+    {
+      "id": "new-stream-with-orphan-assets",
+      "frameIndices": [],
+      "assetIndices": [
+        0,
+        1
+      ],
+      "existingStream": false,
+      "nextIndex": 2
+    },
+    {
+      "id": "exhausted-indices",
+      "frameIndices": [
+        4294967295
+      ],
+      "assetIndices": [],
+      "nextIndex": null
+    }
+  ],
+  "jpeg": {
+    "width": 2,
+    "height": 3,
+    "quality": 90,
+    "rgba": [
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255
+    ],
+    "mime": "image/jpeg",
+    "luma": [
+      255,
+      255,
+      255,
+      255,
+      255,
+      255
+    ]
+  }
+}

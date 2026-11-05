@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "s.wfc.completed-preview.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "done",
+          "discarded",
+          "assigned",
+          "traced",
+          "expected",
+          "showDiscard"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "done": {
+            "type": "boolean"
+          },
+          "discarded": {
+            "type": "boolean"
+          },
+          "assigned": {
+            "const": 0
+          },
+          "traced": {
+            "const": 1
+          },
+          "expected": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "showDiscard": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

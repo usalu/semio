@@ -55,3 +55,7 @@ pub mod workspace {
 pub use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 pub use semio_os_mcp_workspace::headless_workspace_state::{HeadlessWorkspace};
 pub use crate::entrypoint::run_mcp_entrypoint;
+
+/** 🏛️ Shares the explicitly authored host policy across native facade laws. */
+#[cfg(test)]
+pub(crate) fn test_host_driver_policy()->semio_framework_plugin_host::GuestRelayDriverPolicy{serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy")}

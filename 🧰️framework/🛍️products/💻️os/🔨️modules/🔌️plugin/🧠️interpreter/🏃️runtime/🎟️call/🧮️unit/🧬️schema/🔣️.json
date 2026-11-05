@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Byte Unit Call Cases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "phase",
+          "event",
+          "next",
+          "valid"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "phase": {
+            "enum": [
+              "allocate",
+              "copy",
+              "call",
+              "borrow",
+              "release",
+              "complete",
+              "abort"
+            ]
+          },
+          "event": {
+            "enum": [
+              "allocated",
+              "copied",
+              "returned",
+              "acknowledged",
+              "released",
+              "cancelled"
+            ]
+          },
+          "next": {
+            "enum": [
+              "allocate",
+              "copy",
+              "call",
+              "borrow",
+              "release",
+              "complete",
+              "abort"
+            ]
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

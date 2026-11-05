@@ -1,0 +1,9 @@
+# Continuation 4
+
+Previous goal turn made source progress and launched a genuine native validation. All three Sol subagents then failed with the service usage limit (reported retry Nov11,2026 16:12). Their completed source is retained. Main chat continues; no model substitution, quota bypass or duplicate compiler request was attempted.
+
+Corrected the mounted cancellation test timing from independent audit: render current operation before advancing maintenance/publication, verify the same enabled control survives stale-generation rejection, check unchanged snapshot and committed mutation count, then cancel exact original identity. Renamed the neutral history-count observation to committedEditsUnchanged to avoid claiming whole history equality. Scoped whitespace check passes.
+
+Native session67153 passed capacity and build-source admission; current live handle has reached cargo:build-entry / cargo:workspace-selection while source.served remains the outer stage. No compiler/test body has completed yet. Keep polling this session rather than restarting on observation timeouts. A bounded algorithm-work investigation was interrupted by the subagent service limit before a report or source correction; monolithic reducer limitation in runtime.md remains unresolved. Browser journey plan was retained; no current live UI run exists. Goal and ticket remain open.
+
+Latest verified wait: native67153 remains live at outer source.served after680s, following Cargo scheduler planning/source admission; periodic cargo:build-entry resource-directory-admission activity continues. No terminal outcome, Rust compilation result or test body result has appeared. Partial diagnostic log/state is under generated and is not a complete transcript. Re-poll67153 on continuation, never restart because observation elapsed.

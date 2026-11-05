@@ -1,8 +1,8 @@
 //! 🧊️ WFC `wfc-3d-preview` window — the SOLVED assembly, on `SurfaceKind::World3d`.
 //!
-//! The solve is an inference, so nothing this window draws is persisted: the assignment arrives
-//! through the app transient (`Wfc3dTransient`), which the editor refreshes from
-//! `crate::inferences::solve_assignments`. The window itself is read-only.
+//! The read-only window projects authored pins and revision-bound `Wfc3dTransient` assignments.
+//! The fill job publishes live progress and commits the completed transient for the current source;
+//! rendering never starts a solve. See [`crate::editor::wfc3d::transient::Wfc3dTransient`].
 //!
 //! Instancing contract (`📓️explore-editor-window-and-media-patterns.md` §6.4): `meshes_json` is the
 //! SMALL catalogue — one entry per distinct TILE, whatever the slot count — and `instances_json` is
@@ -213,7 +213,7 @@ fn instance_record(slot: &Slot3d, mesh_id: &str, label: &str) -> Value {
 /// an unsolved slot is omitted from the lane, not drawn as a placeholder. A solved slot whose tile has
 /// no resolvable geometry borrows the shared placeholder mesh so it still has a body.
 fn solved_instance(document: &Wfc3dSnapshot, transient: &Wfc3dTransient, slot: &Slot3d) -> Option<Value> {
-    let tile_id = assigned_tile(transient, &slot.id)?;
+    let tile_id = assigned_tile(transient, &slot.id).or(slot.pinned_tile_id.as_deref())?;
     let tile = document.tiles.iter().find(|entry| entry.id == tile_id)?;
     let mesh_id = if tile_geometry(tile).is_some() { tile_mesh_id(&tile.id) } else { WFC_3D_PLACEHOLDER_MESH.to_string() };
     Some(instance_record(slot, &mesh_id, &format!("{} · {}", slot.id, tile.id)))
@@ -275,7 +275,7 @@ pub fn camera_json(document: &Wfc3dSnapshot, zoom: f64) -> String {
 pub fn live_fill_payload(tool_run: Option<&ToolRunView>) -> Option<Wfc3dFillTickPayload> {
     let run = tool_run.filter(|run| run.tool_id == fill::TOOL_ID && !run.state.is_terminal())?;
     let bytes = run.payload.as_ref()?;
-    fill::decode_fill_payload(bytes)
+    fill::decode_fill_payload(bytes).filter(|payload| crate::editor::wfc3d::transient::source_matches(&payload.source_revision, Some(&run.identity.base_revision)))
 }
 
 pub fn render(document: &Wfc3dSnapshot, transient: &Wfc3dTransient, zoom: f64) -> UiAssemblyResult<BuiltNode> {

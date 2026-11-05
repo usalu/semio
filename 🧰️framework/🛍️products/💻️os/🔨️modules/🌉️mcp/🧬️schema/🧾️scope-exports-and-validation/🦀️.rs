@@ -10,7 +10,7 @@ const LEAVES: FacetLeaves = FacetLeaves { rust: concat!(include_str!("../🦀️
 /// 🏷️ `$defs` of `🔣️.json`, which `🧪️Tests::the_json_mirror_publishes_exactly_the_registry_exports`
 /// pins to [`schemas`]; `🧪️Tests::the_scope_export_declaration_matches_the_registry` pins this list to
 /// the same set, so a new registry entry cannot be published without being resolvable.
-const EXPORTS: [SchemaExport; 75] = [
+const EXPORTS: [SchemaExport; 73] = [
     SchemaExport { id: "ActionInvokeInput", leaves: LEAVES },
     SchemaExport { id: "ArtifactInferenceBudgetV1", leaves: LEAVES },
     SchemaExport { id: "ArtifactInferenceCacheModeV1", leaves: LEAVES },
@@ -53,9 +53,7 @@ const EXPORTS: [SchemaExport; 75] = [
     SchemaExport { id: "InferenceJobOutput", leaves: LEAVES },
     SchemaExport { id: "InferenceListInput", leaves: LEAVES },
     SchemaExport { id: "InferenceListOutput", leaves: LEAVES },
-    SchemaExport { id: "InferenceRetainedAuthority", leaves: LEAVES },
-    SchemaExport { id: "InferenceRetainedTurnInput", leaves: LEAVES },
-    SchemaExport { id: "InferenceOriginalWork", leaves: LEAVES },
+    SchemaExport { id: "InferenceRetainedPolicy", leaves: LEAVES },
     SchemaExport { id: "InferenceRunInput", leaves: LEAVES },
     SchemaExport { id: "InferenceRunOutput", leaves: LEAVES },
     SchemaExport { id: "InferenceSubmitInput", leaves: LEAVES },

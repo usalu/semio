@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"agent":"semio-mcp-runtime-laws","command":["test","--manifest-path","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust/Cargo.toml","--lib"],"configuration":"prototype","store":"shared","language":"en"}}

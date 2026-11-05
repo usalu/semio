@@ -1,0 +1,30 @@
+{
+  "schema": "os.agent.probe/v1",
+  "cases": [
+    {
+      "id": "valid-object",
+      "pack": "{\"n\":1}",
+      "valid": true
+    },
+    {
+      "id": "valid-array",
+      "pack": "[1,2]",
+      "valid": true
+    },
+    {
+      "id": "truncated-object",
+      "pack": "{",
+      "valid": false
+    },
+    {
+      "id": "invalid-json",
+      "pack": "broken",
+      "valid": false
+    },
+    {
+      "id": "nonfinite-number",
+      "pack": "NaN",
+      "valid": false
+    }
+  ]
+}

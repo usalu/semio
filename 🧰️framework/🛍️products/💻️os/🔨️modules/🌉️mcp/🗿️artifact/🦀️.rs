@@ -1,29 +1,6 @@
-//! 🗿️ `artifact_create|open|validate|export|snapshot` — ticket 26/08/29/AI-MCP-END-TO-END packet
-//! W4, closing 5 of the 9 `DECLARED_STUB_TOOL_NAMES` at `🦀️.rs:244`. Every tool is always
-//! registered (present in `tools/list` unconditionally); only the RESULT of a call degrades across
-//! the module-wide 3-tier contract (`📓️status.md` "Progressive-enhancement contract"): (1) no
-//! `HeadlessWorkspace` bound → a retryable `PLUGIN_UNAVAILABLE` naming `--folder`/`--hub`; (2) a
-//! workspace is bound but names zero registered plugins (`require_workspace_has_a_plugin`) → the
-//! same real, retryable `PLUGIN_UNAVAILABLE`; (3) fully bound → a real answer built ONLY from
-//! `🏠️workspace`'s own public API — this file duplicates none of its logic. Generic over artifact
-//! kind throughout: no plugin id is ever hardcoded — `open`/`create`/`validate`/`snapshot` need no
-//! specific plugin at all (ticket 26/08/29/AI-MCP-END-TO-END packet W8, `📓️w8-capability-routing.md`);
-//! `artifact_export` alone needs one, resolved by `require_resolvable_export_plugin`, honest about
-//! the one thing it cannot yet do — see that fn's own doc.
-//!
-//! 🆕️📤️ `artifact_create`'s `kind` and `artifact_export` are both routed for real (ticket 26/09/18
-//! slice A1, closing `📓️g7-mcp-agent-and-collaboration-audit.md` §6 P1.4/P1.5): `kind` is validated
-//! against the artifact kinds the INSTALLED plugins declare
-//! ([`HeadlessWorkspace::installed_artifact_kinds`]) and, for a real plugin kind, the artifact is
-//! seeded from that plugin's own freshly-opened document (`AppCommand::ReadArtifact`) and persisted
-//! under its real schema id — which is also what finally gives `artifact_export` an artifact → plugin
-//! mapping. `artifact_export` then drives the owning app's own media OUT port
-//! (`AppCommand::ExportMedia` → the guest's stepped archive load + `MediaOut`, the identical sequence `🏃️run`'s
-//! workflow executor uses) and returns the guest's own bytes, never a synthesized export.
-//!
-//! 🚧️ **Known, honest gap** (not fabricated, not hidden): `artifact_validate` still forwards the real
-//! "the wire protocol has no validate query command yet" gap `read_artifact_resource`'s `validation`
-//! arm answers with — never a hardcoded `{"valid": true}`.
+//! 🗿️ Artifact tools read, create, validate, snapshot and export workspace documents.
+//! Canonical pair reads and the owned probe codec do not require a plugin capability.
+//! Validation uses the document owner codec; exports use the owning app media-out port.
 
 use std::sync::Arc;
 use semio_os_mcp_capabilities::capability_declarations::artifact_capabilities;
@@ -44,20 +21,6 @@ use semio_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 /// 🥉️ Tier 1: no workspace bound at all — retryable, names exactly what binding closes the gap.
 fn require_workspace(workspace: &Option<Arc<HeadlessWorkspace>>) -> Result<&Arc<HeadlessWorkspace>, GatewayError> {
     workspace.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "no workspace is bound to this session — start the gateway with --folder <dir> or --hub <url> --space <id> to use artifact tools").retryable())
-}
-
-/// 🥈️ Tier 2, for `artifact_open`/`create`/`validate`/`snapshot`: at least one plugin must be
-/// registered for there to be anything to act against. The OLD gate here (`resolve_default_plugin_id`,
-/// deleted by ticket 26/08/29/AI-MCP-END-TO-END packet W8, `📓️w8-capability-routing.md`) demanded
-/// EXACTLY one — a single-plugin-workspace artifact of the pre-routing era, not a real requirement of
-/// these four handlers: none of them route through a specific plugin's `ArtifactChannel` at all (they
-/// read/write this workspace's own generic, schema-agnostic probe documents — `🏠️workspace`'s own
-/// module doc), so two-or-more registered plugins is no longer inherently blocking.
-fn require_workspace_has_a_plugin(workspace: &HeadlessWorkspace) -> Result<(), GatewayError> {
-    if workspace.catalog_plugin_ids().is_empty() {
-        return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "no plugin-owned capability is registered in this workspace's catalog — nothing for artifact tools to act against").retryable());
-    }
-    Ok(())
 }
 
 /// 🥈️ `artifact_export` alone needs a SPECIFIC plugin id (to read its committed `export_formats`
@@ -157,6 +120,7 @@ fn session_document_report(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str
     let write_path = match (&binding.backbone, &binding.backbone_blocked_by) {
         (Some(_), _) => "open".to_string(),
         (None, Some(reason)) => reason.clone(),
+        (None, None) if matches!(workspace.origin(), semio_framework_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin::Folder { .. }) => "folder-event-log".to_string(),
         (None, None) => "this document has no open document actor".to_string(),
     };
     #[cfg(target_arch = "wasm32")]
@@ -192,9 +156,6 @@ fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: 
         Ok(workspace) => workspace,
         Err(error) => return CallToolResult::tool_error(&error),
     };
-    if let Err(error) = require_workspace_has_a_plugin(workspace) {
-        return CallToolResult::tool_error(&error);
-    }
     match workspace.authenticated_probe_document_is_known(&artifact_id) {
         Ok(true) => {
             if let Err(error) = ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, semio_framework_value::DslValue::Null)) {
@@ -204,7 +165,7 @@ fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: 
         Ok(false) => {}
         Err(error) => return CallToolResult::tool_error(&error),
     }
-    match workspace.read_artifact_bytes(&artifact_id) {
+    match workspace.read_open_artifact_bytes(&artifact_id) {
         Err(error) => CallToolResult::tool_error(&error),
         Ok(None) => CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}"))),
         Ok(Some((pack, spr))) => {
@@ -215,13 +176,14 @@ fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: 
             if bound {
                 workspace.await_hub_session_document_live(&artifact_id);
             }
+            let folder_bound = match workspace.bind_folder_session_document(&artifact_id, &pack, &spr) { Ok(bound) => bound, Err(error) => return CallToolResult::tool_error(&error) };
             let structured = serde_json::json!({
                 "artifactId": artifact_id,
                 "kind": resolve_artifact_schema_id(workspace, &artifact_id),
                 "artifactKind": resolve_artifact_kind_id(workspace, &artifact_id),
                 "revision": resolve_artifact_revision(workspace, &artifact_id),
                 "sizeBytes": pack.len() + spr.len(),
-                "sessionDocument": bound.then(|| session_document_report(workspace, &artifact_id)).flatten(),
+                "sessionDocument": (bound || folder_bound).then(|| session_document_report(workspace, &artifact_id)).flatten(),
             });
             CallToolResult::ok(vec![ContentBlock::Text { text: format!("opened {artifact_id}") }], Some(structured))
         }
@@ -241,9 +203,6 @@ fn artifact_create_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
         Ok(workspace) => workspace,
         Err(error) => return CallToolResult::tool_error(&error),
     };
-    if let Err(error) = require_workspace_has_a_plugin(workspace) {
-        return CallToolResult::tool_error(&error);
-    }
     match workspace.workspace_artifact_ids() {
         Err(error) => return CallToolResult::tool_error(&error),
         Ok(existing) if existing.iter().any(|id| id == &artifact_id) => {
@@ -256,7 +215,8 @@ fn artifact_create_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
             Ok(kinds) => kinds,
             Err(error) => return CallToolResult::tool_error(&error),
         };
-        let Some(declared) = installed.iter().find(|row| row.schema == kind) else {
+        let declared = match HeadlessWorkspace::declared_artifact_owner(&kind, &installed) { Ok(value) => value, Err(error) => return CallToolResult::tool_error(&error) };
+        let Some(declared) = declared.as_ref() else {
             let known: Vec<&str> = std::iter::once(PROBE_SCHEMA).chain(installed.iter().map(|row| row.schema.as_str())).collect();
             return CallToolResult::tool_error(
                 &GatewayError::new(GatewayErrorCode::InputInvalid, format!("no installed plugin declares artifact kind `{kind}`"))
@@ -332,15 +292,25 @@ fn artifact_validate_handler(workspace: &Option<Arc<HeadlessWorkspace>>, argumen
         Ok(workspace) => workspace,
         Err(error) => return CallToolResult::tool_error(&error),
     };
-    if let Err(error) = require_workspace_has_a_plugin(workspace) {
-        return CallToolResult::tool_error(&error);
-    }
-    match workspace.read_resource(&format!("semio://artifact/{artifact_id}/validation")) {
-        Ok(contents) => {
-            let structured = contents.first().and_then(|content| content.text.as_deref()).and_then(|text| serde_json::from_str(text).ok()).unwrap_or_else(|| serde_json::json!({}));
-            CallToolResult::ok(vec![ContentBlock::Text { text: format!("validated {artifact_id}") }], Some(structured))
+    let jobs = job_registry();
+    let job_id = jobs.begin("artifact.validate");
+    let cancel = semio_framework_async::CancelToken::root_now();
+    let hook = cancel.clone();
+    jobs.bind_cancel(&job_id, move || hook.cancel_now());
+    let reporter = job_id.clone();
+    let scope = ActivationScope::new(cancel, move |phase, fraction| {
+        job_registry().report_progress(&reporter, phase.at(fraction), Some(format!("validating: {}", phase.id())));
+    });
+    match workspace.validate_artifact_cancellably(&artifact_id, scope) {
+        Ok(mut structured) => {
+            structured["jobId"] = serde_json::json!(job_id);
+            jobs.succeed(&job_id, structured.clone());
+            CallToolResult::ok(vec![ContentBlock::Text { text: format!("canonical pair validation of {artifact_id}: {}", structured["valid"]) }], Some(structured))
         }
-        Err(error) => CallToolResult::tool_error(&error),
+        Err(error) => {
+            if jobs.is_cancel_requested(&job_id) { jobs.mark_cancelled(&job_id); } else { jobs.fail(&job_id, error.clone()); }
+            CallToolResult::tool_error(&error)
+        }
     }
 }
 
@@ -353,9 +323,6 @@ fn artifact_snapshot_handler(workspace: &Option<Arc<HeadlessWorkspace>>, argumen
         Ok(workspace) => workspace,
         Err(error) => return CallToolResult::tool_error(&error),
     };
-    if let Err(error) = require_workspace_has_a_plugin(workspace) {
-        return CallToolResult::tool_error(&error);
-    }
     if let Some(requested) = arguments.get("revision") {
         let requested_stamp: Option<RevisionStamp> = serde_json::from_value(requested.clone()).ok();
         let current = resolve_artifact_revision(workspace, &artifact_id);

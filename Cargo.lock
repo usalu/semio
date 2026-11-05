@@ -5669,6 +5669,7 @@ dependencies = [
  "semio-framework-kernel-identity",
  "semio-framework-kernel-media-jobs",
  "semio-framework-kernel-ui",
+ "semio-framework-manifest-address",
  "semio-framework-manifest-media",
  "semio-framework-manifest-view-model",
  "semio-framework-pack",
@@ -8952,6 +8953,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-os-mcp-bridge",
  "semio-framework-os-mcp-bridge-codec",
+ "semio-framework-os-mcp-capabilities",
  "semio-framework-os-mcp-catalog",
  "semio-framework-os-mcp-foundation",
  "semio-framework-os-mcp-port",
@@ -16976,6 +16978,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin-abi",
  "semio-framework-trace",
+ "semio-framework-ui-contract",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde",
@@ -16999,6 +17002,7 @@ dependencies = [
  "semio-framework-os-vcs",
  "semio-framework-pack-json",
  "semio-framework-plugin-guest-contract",
+ "semio-framework-plugin-host-codec",
  "semio-framework-plugin-host-engine",
  "semio-framework-plugin-host-guest-runtime",
  "semio-framework-plugin-host-operation",
@@ -17018,6 +17022,20 @@ dependencies = [
  "serde",
  "serde_json",
  "wasmtime",
+]
+
+[[package]]
+name = "semio-framework-plugin-host-codec"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor",
+ "semio-framework-job",
+ "semio-framework-plugin-host-guest-runtime",
+ "semio-framework-plugin-host-post-turn-relay",
+ "semio-framework-plugin-host-wake",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "serde_json",
 ]
 
 [[package]]
@@ -17171,6 +17189,7 @@ dependencies = [
  "semio-framework-plugin-host-engine",
  "semio-framework-plugin-host-guest-runtime",
  "semio-framework-plugin-host-shard",
+ "semio-framework-plugin-host-source-json",
  "semio-framework-plugin-host-wake",
  "semio-framework-trace",
  "semio-framework-value",
@@ -17267,6 +17286,18 @@ dependencies = [
  "semio-framework-plugin-host-process-transport",
  "semio-framework-plugin-host-shard",
  "semio-framework-test-fixtures",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-plugin-host-source-json"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor",
+ "semio-framework-job",
+ "semio-framework-pack-json",
  "semio-framework-trace",
  "semio-framework-value",
  "serde_json",
@@ -17990,6 +18021,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-interpreter-imports"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin-guest-contract",
+ "semio-framework-plugin-interpreter",
+ "semio-framework-value",
+ "serde_json",
+ "wit-parser 0.252.0",
+]
+
+[[package]]
 name = "semio-framework-plugin-interpreter-runtime"
 version = "0.1.0"
 dependencies = [
@@ -18006,6 +18050,7 @@ dependencies = [
  "semio-framework-plugin-guest-contract",
  "semio-framework-plugin-host-operation",
  "semio-framework-plugin-interpreter",
+ "semio-framework-plugin-interpreter-imports",
  "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
@@ -22570,6 +22615,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-ui-contract-budget",
  "semio-framework-value",
+ "semio-framework-value-native-decoding",
  "serde",
 ]
 
@@ -23642,6 +23688,7 @@ name = "semio-framework-value-native-owned"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
+ "semio-framework-value-derive",
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-default",

@@ -120,7 +120,11 @@ pub fn render_body(
     config: &Wfc2dConfig,
     transient: &Wfc2dTransient,
     tool_run: Option<&semio_plugin::ToolRunView>,
+    revision: Option<[u8;32]>,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+    let empty = Wfc2dTransient::default();
+    let transient = if crate::editor::wfc2d::transient::source_matches(&transient.source_revision, revision.as_ref()) { transient } else { &empty };
+    let tool_run = tool_run.filter(|run| revision.is_some_and(|revision| run.identity.base_revision == revision));
     match body_key {
         graph::WFC_GRAPH_BODY => {
             let camera = graph::GraphCamera { x: config.camera_x, y: config.camera_y, zoom: config.camera_zoom };
@@ -351,7 +355,7 @@ impl ArtifactEditor for Wfc2dEditor {
         artifact_schema: "s.wfc.wfc2d",
         factory: "Wfc2dRetainedCommandJobFactory",
         factory_type: Wfc2dRetainedCommandJobFactory,
-        contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(WFC_2D_RETAINED_RAW_BYTES, WFC_2D_RETAINED_WORK_ITEMS, 1, WFC_2D_RETAINED_OUTPUT_BYTES, 7_500),
         tools: [
             "change-seed", "create-slot", "delete-slot", "move-slot", "resize-slot", "connect-slots", "disconnect-slots", "pin-slot", "unpin-slot",
             "create-tile", "delete-tile", "change-tile-weight", "change-tile-media", "create-rule", "delete-rule",
@@ -376,7 +380,7 @@ impl ArtifactEditor for Wfc2dEditor {
     /// Every host request goes through `render_with_request_context` below, which does carry the
     /// lane; this exists for callers that have no request context to offer.
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        render_body(body_key, doc.snapshot, cfg.snapshot, &Wfc2dTransient::default(), None)
+        render_body(body_key, doc.snapshot, cfg.snapshot, &Wfc2dTransient::default(), None, None)
     }
 
     /// 🫧️ The HOST-FACING render: the framework hands the app-local transient store in here, so this
@@ -411,6 +415,6 @@ pub fn render_with_transient(
     cfg: &ConfigView<'_, Wfc2dConfig>,
     transient: &semio_plugin::TransientView<'_, Wfc2dTransient>,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-    render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot, doc.tool_run())
+    render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot, doc.tool_run(), doc.render_operation_ref().map(|operation| operation.canonical_base_revision))
 }
 //#endregion 🔖️Editor

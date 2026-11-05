@@ -1,5 +1,22 @@
 /// 📬️ Snapshot exchange laws: copy, cut, export and import of the document, the segmented download budget and the leftover routes.
 
+/// 🛂️ Portable imports refuse foreign identities before replacing the document.
+#[semio_framework_async_macros::async_test]
+async fn import_snapshot_acceptance_matches_portable_corpus_and_independent_json_parser() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🎮️commands/🧊️document/📥️import-snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("portable corpus");
+    let mut app = app().await;
+    for row in corpus["cases"].as_array().expect("cases") {
+        let payload = &row["payload"];
+        let expected = row["accepted"].as_bool().expect("acceptance");
+        let oracle = matches!(payload["schema"].as_str(), Some("puzzle.3d" | "puzzle.3d.scene.v1")) && payload.get("objects").is_none_or(serde_json::Value::is_array);
+        assert_eq!(oracle, expected, "independent parser: {}", row["name"]);
+        let before = projection_of(&app);
+        let (_, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": serde_json::to_string(payload).expect("payload") })), None).await;
+        assert_eq!(loads_in(&settled), usize::from(expected), "{}", row["name"]);
+        if !expected { assert_eq!(projection_of(&app), before, "refused import preserves the document"); }
+    }
+}
+
 //#region 🩹️CheckedDefects
 /// 📋️ Wave W-Y: copy then paste clones the selection with new ids as one Mutation edit.
 #[semio_framework_async_macros::async_test]

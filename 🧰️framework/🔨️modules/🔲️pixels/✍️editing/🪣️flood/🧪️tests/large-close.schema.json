@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "width",
+    "height",
+    "seed",
+    "uniform",
+    "maximumAllocationTurns",
+    "maximumWork",
+    "maximumCloseTurns",
+    "grant",
+    "expected",
+    "accounting"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "width": {
+      "const": 1024
+    },
+    "height": {
+      "const": 1024
+    },
+    "seed": {
+      "const": [
+        0,
+        0
+      ]
+    },
+    "uniform": {
+      "const": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    "maximumWork": {
+      "const": 1
+    },
+    "maximumCloseTurns": {
+      "const": 771
+    },
+    "grant": {
+      "const": {
+        "maximumItems": 32,
+        "maximumCopyBytes": 32768,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 4096
+      }
+    },
+    "expected": {
+      "const": {
+        "closed": true,
+        "unpublished": true,
+        "retainedBytes": 6297600,
+        "releasedBytes": 6297600
+      }
+    },
+    "maximumAllocationTurns": {
+      "const": 772
+    },
+    "accounting": {
+      "const": "typescript-logical"
+    }
+  }
+}

@@ -38,20 +38,6 @@ pub(super) const INFERENCE_ALLOCATION_BYTES: u64 = 1 << 20;
 #[cfg(not(target_arch = "wasm32"))]
 pub(super) const INFERENCE_RECURSION_DEPTH: u32 = 4;
 
-/// 💡️ The budget the INFERENCE lane's own guest runs under. An 8 ms interpreter slice
-/// exists to keep a UI frame responsive; the inference lane has no frame to keep — it activates its
-/// own guest (`INFERENCE_ACTOR_ORDINAL`) and `ArtifactInferenceRouter` drives the cold `semio.infer`
-/// job to completion inside ONE call this crate cannot resume from the outside, so an 8 ms epoch
-/// deadline made every real declared inference answer `epoch deadline exceeded` (measured
-/// 2026-09-19 against an installed owner service). Still a hard ceiling:
-/// a runaway guest is stopped, just on a headless job's own time scale. `fuel` is disarmed for the
-/// same reason the two budgets below disarm it: under the compiled runtime a fuel yield is as
-/// unresumable as an epoch cut, so the time ceiling is the only one worth arming.
-#[cfg(not(target_arch = "wasm32"))]
-pub(super) fn headless_inference_budget() -> semio_framework::kernel::Budget {
-    headless_budget(30_000_000)
-}
-
 /// 🎬️ The budget a COLD OPEN turn runs under. A ceiling, not a slice: under the compiled runtime a
 /// turn is atomic — an epoch deadline cut leaves the component instance mid-call and every later
 /// call answers `cannot enter component instance` — so this number is the point at which the guest

@@ -7,7 +7,7 @@ use crate::{schema::snapshot::TileMedia3d, schema::snapshot::Wfc3dSnapshot};
 use semio_plugin::SurfaceKind;
 use serde_json::json;
 use crate::editor::wfc3d::modes::edit::windows::preview::*;
-use crate::editor::wfc3d::transient::solved_transient;
+use crate::editor::wfc3d::transient::testing::solved_preview;
 use serde_json::Value;
 
 fn document() -> Wfc3dSnapshot {
@@ -33,7 +33,7 @@ fn the_window_declares_a_world3d_surface_and_authors_nothing() {
 #[test]
 fn the_mesh_catalogue_is_per_tile_and_the_instance_lane_is_per_solved_slot() {
     let document = document();
-    let transient = solved_transient(&document);
+    let transient = solved_preview(&document);
     let meshes = array(&meshes_json(&document));
     let instances = array(&instances_json(&document, &transient));
     assert_eq!(meshes.len(), document.tiles.len() + 1, "one entry per tile plus the shared placeholder");
@@ -44,7 +44,7 @@ fn the_mesh_catalogue_is_per_tile_and_the_instance_lane_is_per_solved_slot() {
 #[test]
 fn every_instance_references_a_mesh_the_catalogue_declares() {
     let document = document();
-    let transient = solved_transient(&document);
+    let transient = solved_preview(&document);
     let ids: Vec<String> = array(&meshes_json(&document)).iter().map(|mesh| mesh["id"].as_str().unwrap_or_default().to_string()).collect();
     for instance in array(&instances_json(&document, &transient)) {
         let mesh = instance["meshId"].as_str().unwrap_or_default().to_string();
@@ -57,7 +57,7 @@ fn every_instance_references_a_mesh_the_catalogue_declares() {
 #[test]
 fn an_instance_carries_its_own_slots_box() {
     let document = document();
-    let transient = solved_transient(&document);
+    let transient = solved_preview(&document);
     let instances = array(&instances_json(&document, &transient));
     let cantilever = instances.iter().find(|instance| instance["id"] == "cantilever").expect("the cantilever is placed");
     assert_eq!(cantilever["position"], serde_json::json!([1.5, 3.0, 0.0]));
@@ -71,7 +71,7 @@ fn an_instance_carries_its_own_slots_box() {
 fn an_unsatisfiable_document_places_no_instances_and_says_so() {
     let mut document = document();
     document.rules.clear();
-    let transient = solved_transient(&document);
+    let transient = solved_preview(&document);
     assert!(transient.contradiction, "clearing every rule leaves an allow-list that admits nothing");
     assert!(array(&instances_json(&document, &transient)).is_empty(), "an unsolved slot is omitted, never placeholder-drawn");
     let delta: Value = serde_json::from_str(&instances_delta_json(&document, &transient)).expect("delta json");
@@ -89,7 +89,7 @@ fn a_solved_slot_whose_tile_has_no_geometry_borrows_the_placeholder() {
     for tile in &mut document.tiles {
         tile.media = TileMedia3d::Mesh { positions: Vec::new(), indices: Vec::new(), color: None };
     }
-    let transient = solved_transient(&document);
+    let transient = solved_preview(&document);
     let instances = array(&instances_json(&document, &transient));
     assert_eq!(instances.len(), transient.assignments.len());
     assert!(instances.iter().all(|instance| instance["meshId"] == WFC_3D_PLACEHOLDER_MESH));
@@ -99,7 +99,7 @@ fn a_solved_slot_whose_tile_has_no_geometry_borrows_the_placeholder() {
 #[test]
 fn the_delta_lane_agrees_with_the_authoritative_instance_set() {
     let document = document();
-    let transient = solved_transient(&document);
+    let transient = solved_preview(&document);
     let delta: Value = serde_json::from_str(&instances_delta_json(&document, &transient)).expect("delta json");
     assert_eq!(delta["count"].as_u64().expect("count"), transient.assignments.len() as u64);
     assert_eq!(delta["changed"].as_array().expect("changed").len(), transient.assignments.len());
@@ -115,7 +115,7 @@ fn the_camera_frames_what_the_document_actually_holds() {
 #[test]
 fn the_status_line_says_what_the_solve_concluded() {
     let document = document();
-    let status: Value = serde_json::from_str(&status_json(&document, &solved_transient(&document))).expect("status json");
+    let status: Value = serde_json::from_str(&status_json(&document, &solved_preview(&document))).expect("status json");
     let message = status["message"].as_str().expect("a message");
     assert!(message.len() <= 256, "a window's owned text is capacity-bounded");
     assert!(!message.is_empty());
@@ -124,7 +124,7 @@ fn the_status_line_says_what_the_solve_concluded() {
 #[test]
 fn the_window_renders_a_non_empty_surface_for_every_example() {
     for document in [crate::examples::two_room_corridor::snapshot(), crate::examples::wall_roof_facade_strip::snapshot(), crate::examples::tower_stack::snapshot()] {
-        let transient = solved_transient(&document);
+        let transient = solved_preview(&document);
         let built = render(&document, &transient, 1.0).expect("the preview surface assembles");
         assert!(!format!("{built:?}").is_empty());
     }
@@ -172,7 +172,7 @@ fn a_partial_fill_preview_differs_from_empty_and_finished() {
     let document = crate::examples::tower_stack::snapshot();
     let oracle = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("tower-stack solves");
     let empty = instances_json(&document, &Wfc3dTransient::default());
-    let finished_transient = Wfc3dTransient {
+    let finished_transient = Wfc3dTransient { source_revision: Vec::new(),
         assignments: oracle
             .assignments
             .iter()
@@ -189,7 +189,7 @@ fn a_partial_fill_preview_differs_from_empty_and_finished() {
         }
         assignments.insert(slot_id.clone(), Some(tile_id.clone()));
     }
-    let partial = Wfc3dFillTickPayload { assignments, contradiction: false, done: false , trace: Vec::new() };
+    let partial = Wfc3dFillTickPayload { source_revision: Vec::new(), assignments, contradiction: false, done: false , trace: Vec::new() };
     assert!(partial.decided_count() > 0 && partial.decided_count() < oracle.assignments.len());
     let mid = instances_json(&document, &partial.into_transient());
     assert_ne!(mid, empty, "a partial board must not look empty");

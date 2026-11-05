@@ -2280,7 +2280,7 @@
         "durability": "intent-capsule-parent-before-exchange-receipt-capsule-parent-before-result",
         "unknownDisplaced": "retain-and-refuse-without-rollback",
         "windows": "held-source-no-replace-move-before-binding-under-domain-ex",
-        "receiver": "original-root-frame-only",
+        "receiver": "original-root-or-issued-root-family-path-frame-only",
         "identityTransition": "same-seven-fields-except-nondecreasing-ctime-after-own-exchange",
         "combinedExpectations": "shares-existing-binding-counter",
         "descendantPathUnits": "capsule-p-no-longer-than-source-basename",
@@ -5186,6 +5186,78 @@
           "pattern": "^[a-f0-9]{64}$"
         }
       }
+    },
+    "RelativeRootFamilyPreservationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "publish",
+            "retain",
+            "ordinary-child",
+            "nested-issued-path",
+            "path-bound",
+            "cancelled",
+            "posix-root-backslash-bound"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          }
+        }
+      }
+    },
+    "RelativeRootFamilyPreservationCases": {
+      "const": [
+        {
+          "effect": "publish",
+          "accepted": true
+        },
+        {
+          "effect": "retain",
+          "accepted": true
+        },
+        {
+          "effect": "ordinary-child",
+          "accepted": false
+        },
+        {
+          "effect": "nested-issued-path",
+          "accepted": false
+        },
+        {
+          "effect": "path-bound",
+          "accepted": false
+        },
+        {
+          "effect": "cancelled",
+          "accepted": false
+        },
+        {
+          "effect": "posix-root-backslash-bound",
+          "accepted": false,
+          "platforms": [
+            "darwin",
+            "linux"
+          ]
+        }
+      ]
     }
   },
   "$ref": "#/definitions/Protocol"

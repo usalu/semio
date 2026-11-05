@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "value": "🧬️ earlier queue owner",
+  "vectors": [
+    {
+      "name": "windows-sharing",
+      "platform": "win32",
+      "errors": [
+        "EPERM",
+        "EPERM"
+      ],
+      "expected": "value",
+      "attempts": 3,
+      "pauses": [
+        10,
+        40
+      ]
+    },
+    {
+      "name": "windows-retired",
+      "platform": "win32",
+      "errors": [
+        "EPERM",
+        "ENOENT"
+      ],
+      "expected": "missing",
+      "attempts": 2,
+      "pauses": [
+        10
+      ]
+    },
+    {
+      "name": "persistent-denial",
+      "platform": "win32",
+      "errors": [
+        "EPERM",
+        "EPERM",
+        "EPERM",
+        "EPERM",
+        "EPERM"
+      ],
+      "expected": "error",
+      "attempts": 5,
+      "pauses": [
+        10,
+        40,
+        160,
+        640
+      ]
+    },
+    {
+      "name": "posix-denial",
+      "platform": "linux",
+      "errors": [
+        "EPERM"
+      ],
+      "expected": "error",
+      "attempts": 1,
+      "pauses": []
+    },
+    {
+      "name": "io-refusal",
+      "platform": "win32",
+      "errors": [
+        "EIO"
+      ],
+      "expected": "error",
+      "attempts": 1,
+      "pauses": []
+    },
+    {
+      "name": "interrupted",
+      "platform": "darwin",
+      "errors": [
+        "EINTR"
+      ],
+      "expected": "value",
+      "attempts": 2,
+      "pauses": [
+        10
+      ]
+    }
+  ],
+  "controlRefusal": {
+    "code": "EPERM",
+    "stages": [
+      {
+        "stage": "before-read",
+        "reads": 0,
+        "sleeps": 0
+      },
+      {
+        "stage": "after-failure",
+        "reads": 1,
+        "sleeps": 0
+      },
+      {
+        "stage": "after-success",
+        "reads": 1,
+        "sleeps": 0
+      },
+      {
+        "stage": "during-wait",
+        "reads": 1,
+        "sleeps": 1
+      }
+    ]
+  },
+  "unknownFailures": [
+    null,
+    false,
+    17,
+    "foreign failure"
+  ]
+}

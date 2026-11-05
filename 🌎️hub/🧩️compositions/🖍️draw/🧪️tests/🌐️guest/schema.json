@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scenarios"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "appId",
+          "actor",
+          "expectedStatus"
+        ],
+        "properties": {
+          "appId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "actor": {
+            "enum": [
+              "editor",
+              "viewer"
+            ]
+          },
+          "expectedStatus": {
+            "const": "idle"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "actor": {
+                  "const": "editor"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "appId": {
+                  "const": "s.draw.drawing@1/*#editor"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "actor": {
+                  "const": "viewer"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "appId": {
+                  "const": "s.draw.drawing@1/*#viewer"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "actor"
+            ],
+            "properties": {
+              "actor": {
+                "const": "editor"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "actor"
+            ],
+            "properties": {
+              "actor": {
+                "const": "viewer"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

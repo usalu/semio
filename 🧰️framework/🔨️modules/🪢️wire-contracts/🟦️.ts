@@ -83,7 +83,7 @@ export type DocumentArchiveLoadStatus = { readonly operation: number; readonly s
 /** 🎞️ Exact authority of one revision-scoped resumable media export. */
 export type MediaExportHandle = { readonly app_instance_id: number; readonly parent_document_id: string; readonly operation_id: bigint; readonly base_revision: bigint; readonly generation: bigint };
 export type MediaExportState = "running" | "complete" | "cancelled" | "failed";
-export type MediaExportStatus = { readonly handle: MediaExportHandle; readonly state: MediaExportState; readonly applied_progress: bigint; readonly checkpoint_available: boolean; readonly mime_type: string; readonly total_bytes: bigint; readonly detail: string };
+export type MediaExportStatus = { readonly handle: MediaExportHandle; readonly state: MediaExportState; readonly applied_progress: bigint; readonly checkpoint_available: boolean; readonly mime_type: string; readonly total_bytes: bigint; readonly detail: string; readonly descriptor: readonly number[] };
 export type AppDocumentIdentity = { readonly app_instance_id: number; readonly parent_document_id: string | null; readonly base_revision: bigint };
 
 export type AppCommandValue =

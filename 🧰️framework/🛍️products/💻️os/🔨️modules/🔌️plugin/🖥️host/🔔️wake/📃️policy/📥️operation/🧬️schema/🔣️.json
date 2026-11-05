@@ -1,0 +1,840 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "caps",
+    "cases",
+    "refusals",
+    "turnTrace"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "caps": {
+      "type": "object",
+      "required": [
+        "turnFuel",
+        "operationFuel",
+        "turnExecutionFuel",
+        "operationExecutionFuel",
+        "maximumTurnMicroseconds",
+        "maxEffects",
+        "maxPatchBytes",
+        "maxFrames",
+        "admission",
+        "drive",
+        "wake",
+        "operation",
+        "cleanup",
+        "transit",
+        "infrastructure",
+        "maximumLifetimeMicroseconds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "turnFuel": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operationFuel": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "turnExecutionFuel": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operationExecutionFuel": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumTurnMicroseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxEffects": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxPatchBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxFrames": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "admission": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumCopyBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "drive": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumCopyBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "wake": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumCopyBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "operation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumCopyBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "cleanup": {
+          "type": "object",
+          "required": [
+            "retained",
+            "workFuel",
+            "executionFuel",
+            "maximumMicroseconds"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "retained": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumCapacityBytes",
+                "maximumReleaseBytes",
+                "maximumDepth"
+              ],
+              "properties": {
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumCopyBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumReleaseBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumDepth": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "workFuel": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "executionFuel": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumMicroseconds": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "transit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "retained",
+            "workFuel"
+          ],
+          "properties": {
+            "retained": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumCapacityBytes",
+                "maximumReleaseBytes",
+                "maximumDepth"
+              ],
+              "properties": {
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumCopyBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumReleaseBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumDepth": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "workFuel": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "infrastructure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "retained",
+            "workFuel"
+          ],
+          "properties": {
+            "retained": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumCapacityBytes",
+                "maximumReleaseBytes",
+                "maximumDepth"
+              ],
+              "properties": {
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumCopyBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumReleaseBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumDepth": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "workFuel": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "maximumLifetimeMicroseconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "request",
+          "valid"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          },
+          "request": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "workUnits",
+              "maximumElapsedMicroseconds",
+              "retained"
+            ],
+            "properties": {
+              "workUnits": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "maximumElapsedMicroseconds": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "retained": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "maximumItems",
+                  "maximumCopyBytes",
+                  "maximumCapacityBytes",
+                  "maximumReleaseBytes",
+                  "maximumDepth"
+                ],
+                "properties": {
+                  "maximumItems": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumCopyBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumCapacityBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumReleaseBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumDepth": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "turnFuel",
+              "operationFuel",
+              "turnExecutionFuel",
+              "operationExecutionFuel",
+              "maximumTurnMicroseconds",
+              "maxEffects",
+              "maxPatchBytes",
+              "maxFrames",
+              "admission",
+              "drive",
+              "wake",
+              "operation",
+              "cleanup",
+              "transit",
+              "infrastructure",
+              "maximumLifetimeMicroseconds"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "turnFuel": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "operationFuel": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "turnExecutionFuel": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "operationExecutionFuel": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "maximumTurnMicroseconds": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "maxEffects": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "maxPatchBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "maxFrames": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "admission": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "maximumItems",
+                  "maximumCopyBytes",
+                  "maximumCapacityBytes",
+                  "maximumReleaseBytes",
+                  "maximumDepth"
+                ],
+                "properties": {
+                  "maximumItems": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumCopyBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumCapacityBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumReleaseBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumDepth": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "drive": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "maximumItems",
+                  "maximumCopyBytes",
+                  "maximumCapacityBytes",
+                  "maximumReleaseBytes",
+                  "maximumDepth"
+                ],
+                "properties": {
+                  "maximumItems": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumCopyBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumCapacityBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumReleaseBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumDepth": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "wake": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "maximumItems",
+                  "maximumCopyBytes",
+                  "maximumCapacityBytes",
+                  "maximumReleaseBytes",
+                  "maximumDepth"
+                ],
+                "properties": {
+                  "maximumItems": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumCopyBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumCapacityBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumReleaseBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumDepth": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "operation": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "maximumItems",
+                  "maximumCopyBytes",
+                  "maximumCapacityBytes",
+                  "maximumReleaseBytes",
+                  "maximumDepth"
+                ],
+                "properties": {
+                  "maximumItems": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumCopyBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumCapacityBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumReleaseBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximumDepth": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "cleanup": {
+                "type": "object",
+                "required": [
+                  "retained",
+                  "workFuel",
+                  "executionFuel",
+                  "maximumMicroseconds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "retained": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "maximumItems",
+                      "maximumCopyBytes",
+                      "maximumCapacityBytes",
+                      "maximumReleaseBytes",
+                      "maximumDepth"
+                    ],
+                    "properties": {
+                      "maximumItems": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumCopyBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumCapacityBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumReleaseBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumDepth": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  },
+                  "workFuel": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "executionFuel": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "maximumMicroseconds": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              "transit": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "retained",
+                  "workFuel"
+                ],
+                "properties": {
+                  "retained": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "maximumItems",
+                      "maximumCopyBytes",
+                      "maximumCapacityBytes",
+                      "maximumReleaseBytes",
+                      "maximumDepth"
+                    ],
+                    "properties": {
+                      "maximumItems": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumCopyBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumCapacityBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumReleaseBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumDepth": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  },
+                  "workFuel": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              "infrastructure": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "retained",
+                  "workFuel"
+                ],
+                "properties": {
+                  "retained": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "maximumItems",
+                      "maximumCopyBytes",
+                      "maximumCapacityBytes",
+                      "maximumReleaseBytes",
+                      "maximumDepth"
+                    ],
+                    "properties": {
+                      "maximumItems": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumCopyBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumCapacityBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumReleaseBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "maximumDepth": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  },
+                  "workFuel": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              "maximumLifetimeMicroseconds": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "field"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "field": {
+            "enum": [
+              "missing",
+              "maximumCapacityBytes",
+              "workFuel"
+            ]
+          }
+        }
+      }
+    },
+    "turnTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumTurnMicroseconds",
+        "requestedLifetimeMicroseconds",
+        "now",
+        "absoluteDeadlineMicroseconds",
+        "callbackDeadlinesMicroseconds"
+      ],
+      "properties": {
+        "maximumTurnMicroseconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "requestedLifetimeMicroseconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "now": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "absoluteDeadlineMicroseconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "callbackDeadlinesMicroseconds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

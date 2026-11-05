@@ -18,12 +18,11 @@ macro_rules! __semio_actor_exports {
                 $ensure();
                 $crate::__async::poll::resolve_ready($crate::reactor::stage_cold_pair_page(page)).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
             }
-            async fn admit_actor_context(input: $crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnInput,retained_policy:$crate::component::wasip2::exports::semio::framework::reactor::RetainedGrant) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorAdmissionCall {
-                $ensure();
-                $crate::reactor::original_actor_context::exports::admit_wit(input,retained_policy)
+            async fn admit_actor_context(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorAdmissionCall {
+                $crate::reactor::original_actor_context::exports::admit_wit(budget,|_|{$ensure();Ok(())})
             }
-            async fn close_actor_context(input: $crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnInput,retained_policy:$crate::component::wasip2::exports::semio::framework::reactor::RetainedGrant) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorContextCloseCall {
-                $crate::reactor::original_actor_context::exports::close_wit(input,retained_policy)
+            async fn close_actor_context(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorContextCloseCall {
+                $crate::reactor::original_actor_context::exports::close_wit(budget)
             }
             async fn poll(
                 events: Vec<$crate::component::wasip2::exports::semio::framework::reactor::Event>,
@@ -232,15 +231,15 @@ macro_rules! __semio_owned_core_exports {
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
         pub unsafe extern "C" fn semio_owned_dealloc_v1(pointer: u32, length: u32) {
+            if $crate::reactor::original_actor_context::exports::release_resident_receipt(pointer,length){return}
             unsafe { $crate::owned_abi::deallocate(pointer, length) };
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
         pub unsafe extern "C" fn semio_owned_admit_actor_context_v1(pointer: u32, length: u32) -> u64 {
             let input = unsafe { $crate::owned_abi::take_actor_admission_input(pointer, length) };
-            $ensure();
             match input {
-                Ok((input,policy)) => $crate::reactor::original_actor_context::exports::admit_owned(input,policy),
+                Ok(budget) => $crate::reactor::original_actor_context::exports::admit_owned(budget,|_|{$ensure();Ok(())}),
                 Err(kind) => $crate::operation_authority::owned_result::encode_refusal(kind),
             }
         }
@@ -249,7 +248,7 @@ macro_rules! __semio_owned_core_exports {
         pub unsafe extern "C" fn semio_owned_close_actor_context_v1(pointer: u32, length: u32) -> u64 {
             let input = unsafe { $crate::owned_abi::take_actor_admission_input(pointer, length) };
             match input {
-                Ok((input,policy)) => $crate::reactor::original_actor_context::exports::close_owned(input,policy),
+                Ok(budget) => $crate::reactor::original_actor_context::exports::close_owned(budget),
                 Err(kind) => $crate::operation_authority::owned_result::encode_refusal(kind),
             }
         }
@@ -261,6 +260,14 @@ macro_rules! __semio_owned_core_exports {
             match input {
                 Ok(input) => $runtime.with(|runtime| $crate::reactor::original_actor_context::exports::poll_owned(runtime, input)),
                 Err(kind) => $crate::operation_authority::owned_result::encode_refusal(kind),
+            }
+        }
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+        #[unsafe(no_mangle)]
+        pub unsafe extern "C" fn semio_owned_close_turn_output_v1(pointer:u32,length:u32)->u64{
+            match unsafe{$crate::owned_abi::take_actor_output_close_input(pointer,length)}{
+                Ok(budget)=>$crate::reactor::original_actor_context::exports::close_turn_output_owned(budget),
+                Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind),
             }
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -330,8 +337,8 @@ macro_rules! __semio_owned_core_exports {
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub extern "C" fn semio_owned_channel_version_v1() -> u64 {
-            $crate::owned_abi::return_json(&$crate::component::wasip2::channel_version())
+        pub extern "C" fn semio_owned_channel_version_v1() -> u32 {
+            $crate::component::wasip2::channel_version()
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]

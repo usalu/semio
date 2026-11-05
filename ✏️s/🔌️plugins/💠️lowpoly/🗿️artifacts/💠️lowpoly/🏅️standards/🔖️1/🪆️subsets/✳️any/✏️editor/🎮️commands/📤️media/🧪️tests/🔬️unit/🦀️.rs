@@ -15,7 +15,7 @@ use crate::context::{app, committed_edits, dispatch};
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
 
 fn faces(snapshot: &LowpolySnapshot) -> usize {
-    snapshot.objects.iter().filter(|object| !object.mesh_content.is_empty()).map(|object| semio_framework_3d::mesh::HalfedgeMesh::from_json(&object.mesh_content).expect("mesh content parses").face_count()).sum()
+    snapshot.objects.iter().map(|object| object.mesh_state.as_ref().expect("persisted managed mesh").clone().into_mesh().expect("managed mesh loads").face_count()).sum()
 }
 
 /// 📤️ Every supported format exports the live document as a text download, and each export

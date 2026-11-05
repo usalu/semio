@@ -11,11 +11,13 @@ pub use component::{ArtifactSession, RuntimeMetricsPublisher, SessionLanePack, d
 pub use component::{activation, package_assets};
 pub use semio_framework_actor::{PackageHash, PackageId};
 pub use semio_plugin_guest_contract::original_actor_context;
+pub use semio_plugin_interpreter_runtime::OwnedRuntime;
 pub use semio_plugin_host_engine::{IsolatedCompileTarget, SharedEngineConfig, compile_component_isolated, compiled_cache_scratch_path, default_compiled_cache_root};
 pub use semio_plugin_host_guest_runtime::{CompiledHandle, GuestActorOpening, GuestInstance, GuestRuntime, GuestRuntimes, GUEST_CODEC_BUDGET, self_issued_budget, OwnedComponentDocumentCodec, PackageRef, WasmtimeRuntime, retryable_lifecycle_turn};
-pub use semio_plugin_host_post_turn_relay::{GuestRelayWakeAuthority, PluginInstanceHandle};
+pub use semio_plugin_host_post_turn_relay::{GuestRelayWakeAuthority, PluginInstanceHandle, GuestRelayNativeHome, GuestRelayOutput, GuestRelayOutputHome, SourceJsonEncoder, OriginalJobBudgetJson, GuestRelayFaultHome, GuestRelayFault, GuestRelayResult, GuestRelayNativeOrigin, GuestRelayNativeResolver, GuestRelayNativeState, NativeInstanceHome, NativeInstanceRetirement};
+pub use semio_framework_plugin_host_codec::GuestCodecOperationIssuer;
 pub use semio_plugin_host_routers::{AppRouter, ArtifactInferenceRouter, ArtifactMutationRouter, HostMutationInputs, HostMutationRosterEntry, HostTransactionCoordinator, InstanceDirectory, IoRouter, OpeningResolver, PluginGraph, TransactionError, TransactionMember, TransactionOutcome};
-pub use semio_plugin_host_wake::{GuestRelayDriverPolicy, GuestRelayWakeDriver};
+pub use semio_plugin_host_wake::{GuestRelayDriverPolicy, GuestRelayWakeDriver, GuestRelayOperationCaps, GuestRelayOperationRequest, GuestRelayGuestSubloan, GuestRelayGuestPurpose, GuestRelayOperationReserve, GuestRelayOperationTransit, GuestRelayOperationInfrastructure, GuestRelayAdmissionCall, GuestRelayAdmissionFailure};
 
 pub mod shard {
     pub use semio_plugin_host_shard::{OriginalShardIdentity, OriginalShardIdentityIssuer, ShardFrame, ShardIdentityPolicy, ShardOutcome, grant, native_identity_issuer, to_actor_turn_result};

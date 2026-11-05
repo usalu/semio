@@ -172,8 +172,8 @@ pub fn commits_with_nothing_relayed(frames: Vec<AppFrame>) -> Vec<AppFrame> {
     frames
         .into_iter()
         .map(|frame| match frame {
-            AppFrame::TransactionCommitted { txn_id, edit_id, relay: None } => {
-                AppFrame::TransactionCommitted { txn_id, edit_id, relay: Some(HubRelayOutcome { acknowledged: false, detail: "the guest committed without publishing an envelope for the hub".to_string(), refused: None }) }
+            AppFrame::TransactionCommitted { txn_id, edit_id, relay: None, output } => {
+                AppFrame::TransactionCommitted { txn_id, edit_id, relay: Some(HubRelayOutcome { acknowledged: false, detail: "the guest committed without publishing an envelope for the hub".to_string(), refused: None }), output }
             }
             other => other,
         })

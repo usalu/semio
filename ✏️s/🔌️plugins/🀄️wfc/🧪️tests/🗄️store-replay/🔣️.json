@@ -1,0 +1,74 @@
+{
+  "schema": "semio.wfc.store-replay/v1",
+  "cases": [
+    {
+      "artifact": "bitmap",
+      "example": "rooms-16",
+      "expected": {
+        "seed": 99,
+        "pin": {
+          "x": 0,
+          "y": 0,
+          "color": 1
+        },
+        "geometry": {
+          "width": 5,
+          "height": 4,
+          "periodic": true
+        }
+      }
+    },
+    {
+      "artifact": "wfc2d",
+      "example": "two-room-corridor",
+      "expected": {
+        "seed": 99,
+        "pin": {
+          "slotId": "room-a",
+          "tileId": "room"
+        },
+        "geometry": {
+          "slotId": "room-a",
+          "x": 7.0,
+          "y": 9.0,
+          "width": 2.0,
+          "height": 2.0
+        }
+      }
+    },
+    {
+      "artifact": "grid2d",
+      "example": "pipes",
+      "expected": {
+        "seed": 99,
+        "pin": {
+          "x": 1,
+          "y": 0,
+          "tileId": "pipe-h"
+        },
+        "geometry": {
+          "width": 6,
+          "height": 6
+        }
+      }
+    },
+    {
+      "artifact": "grid3d",
+      "example": "blocks",
+      "expected": {
+        "seed": 99,
+        "pin": {
+          "x": 1,
+          "y": 0,
+          "z": 0,
+          "tileId": "wall"
+        },
+        "geometry": {
+          "width": 4,
+          "height": 3,
+          "depth": 4
+        }
+      }
+    }
+  ]
+}

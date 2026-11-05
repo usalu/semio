@@ -189,7 +189,7 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             protocol::write_varint_u64(&mut out, *in_reply_to);
             write_media_export_handle(&mut out, handle);
         }
-        AppFrame::MediaExportStatus { in_reply_to, handle, state, applied_progress, checkpoint_available, mime_type, total_bytes, detail } => {
+        AppFrame::MediaExportStatus { in_reply_to, handle, state, applied_progress, checkpoint_available, mime_type, total_bytes, detail, descriptor } => {
             out.push(29);
             protocol::write_varint_u64(&mut out, *in_reply_to);
             write_media_export_handle(&mut out, handle);
@@ -199,6 +199,7 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             protocol::write_str(&mut out, mime_type);
             protocol::write_varint_u64(&mut out, *total_bytes);
             protocol::write_str(&mut out, detail);
+            protocol::write_bytes(&mut out, descriptor);
         }
         AppFrame::MediaExportChunk { in_reply_to, handle, data, terminal } => {
             out.push(30);
@@ -338,7 +339,8 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, protocol::Protoc
             let mime_type = protocol::read_str(bytes, &mut pos)?;
             let total_bytes = protocol::read_varint_u64(bytes, &mut pos)?;
             let detail = protocol::read_str(bytes, &mut pos)?;
-            AppFrame::MediaExportStatus { in_reply_to, handle, state, applied_progress, checkpoint_available, mime_type, total_bytes, detail }
+            let descriptor = protocol::read_bytes(bytes, &mut pos)?;
+            AppFrame::MediaExportStatus { in_reply_to, handle, state, applied_progress, checkpoint_available, mime_type, total_bytes, detail, descriptor }
         }
         30 => AppFrame::MediaExportChunk {
             in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?,

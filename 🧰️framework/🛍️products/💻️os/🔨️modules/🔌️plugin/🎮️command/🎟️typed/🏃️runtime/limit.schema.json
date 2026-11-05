@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "payloadBytes",
+    "maximumBytes",
+    "ordinaryBytes",
+    "count",
+    "invalidMaximumKinds"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "payloadBytes": {
+      "const": 70000
+    },
+    "maximumBytes": {
+      "const": 70128
+    },
+    "ordinaryBytes": {
+      "const": 65536
+    },
+    "count": {
+      "const": 7
+    },
+    "invalidMaximumKinds": {
+      "const": [
+        "zero",
+        "usizeMaximum"
+      ]
+    }
+  }
+}

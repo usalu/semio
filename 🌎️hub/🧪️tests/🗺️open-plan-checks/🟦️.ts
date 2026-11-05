@@ -63,7 +63,7 @@ function documentOpenDescriptorEncoding(descriptor: Record<string, any>): Buffer
   return Buffer.concat([Buffer.from("semio.document-descriptor.digest.v1\0"), ...fields.map(documentOpenLengthPrefix)]);
 }
 
-function documentOpenCatalogEncoding(rows: readonly Record<string, any>[]): Buffer {
+export function documentOpenCatalogEncoding(rows: readonly Record<string, any>[]): Buffer {
   if (rows.length === 0 || rows.length > 1_024) throw new Error("document-open oracle invalid catalog size");
   const rowCount = Buffer.alloc(4);
   rowCount.writeUInt32BE(rows.length);

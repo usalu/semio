@@ -96,6 +96,7 @@ pub struct HostedArtifactKind {
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive)]
 pub enum MediaClass {
     TwoD,
     ThreeD,
@@ -113,6 +114,7 @@ pub enum MediaClass {
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive)]
 pub enum MediaForm {
     Any,
     Vector,
@@ -138,6 +140,7 @@ pub enum MediaForm {
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct MediaType {
     pub class: MediaClass,
     pub form: MediaForm,

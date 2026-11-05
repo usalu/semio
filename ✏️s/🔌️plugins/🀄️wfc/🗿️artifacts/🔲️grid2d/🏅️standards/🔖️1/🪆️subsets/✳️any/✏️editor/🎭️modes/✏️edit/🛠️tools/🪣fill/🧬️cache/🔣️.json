@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/fill-cache.json",
+  "title": "Grid2dCachedSolve",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceRevision",
+    "commit"
+  ],
+  "properties": {
+    "sourceRevision": {
+      "type": "array",
+      "minItems": 32,
+      "maxItems": 32,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "commit": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/inference.json"
+    }
+  }
+}

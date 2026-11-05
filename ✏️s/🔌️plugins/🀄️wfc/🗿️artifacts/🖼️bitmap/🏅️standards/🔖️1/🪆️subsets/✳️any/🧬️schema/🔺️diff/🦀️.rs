@@ -7,6 +7,10 @@ use crate::standards::v1::subsets::any::schema::snapshot::write_region;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
+#[path = "🧳️retained.rs"]
+mod retained;
+pub use retained::BitmapApply;
+
 //#region 🔖️Rows
 /// 📍️ The canonical position a new row of a list lands at in the after list.
 pub trait BitmapRow: Clone + PartialEq {

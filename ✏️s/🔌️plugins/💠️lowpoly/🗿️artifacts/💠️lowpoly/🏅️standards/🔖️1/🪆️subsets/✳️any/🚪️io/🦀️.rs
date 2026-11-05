@@ -469,8 +469,8 @@ pub mod io_registry {
 //#region 🕸️MeshGeometry
 /// 🕸️ Shared real-geometry plumbing for the OBJ/STL/PLY leaves (ticket
 /// 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS): building `LowpolyObject`s from polygon
-/// soups on import, and flattening each object's persisted `mesh_content` into world-space polygons
-/// (scale → semantic Euler-degree XYZ rotation → translation) on
+/// soups on import, and flattening each object's current mesh into world-space polygons
+/// (scale → intrinsic XYZ Euler-degree rotation → translation) on
 /// export.
 pub mod mesh_geometry {
     use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::managed_mesh_child_handle, managed_mesh::LowpolyMeshState, snapshot::LowpolyObject, snapshot::LowpolyPaintLayer, snapshot::LowpolySnapshot, snapshot::LowpolyTransform, snapshot::LOWPOLY_DOCUMENT_SCHEMA};
@@ -578,21 +578,24 @@ pub mod mesh_geometry {
         pub faces: Vec<Vec<u32>>,
     }
 
-    /// 📤 Every object with non-empty `mesh_content`, transformed into world space.
+    /// 📤 Current managed geometry, or independently authored source when unmanaged, in world space.
     pub fn world_parts(format: &str, snapshot: &LowpolySnapshot) -> Result<Vec<WorldPart>, semio_framework_diagnostic::TextError> {
         let mut parts = Vec::new();
         for object in &snapshot.objects {
-            if object.mesh_content.trim().is_empty() {
-                continue;
-            }
-            let mesh = HalfedgeMesh::from_json(&object.mesh_content).map_err(|e| text_error(format!("lowpoly->{format}: object '{}' has unreadable mesh content: {e:?}", object.name)))?;
+            let mesh = match &object.mesh_state {
+                Some(state) => state.clone().into_mesh().map_err(|e| text_error(format!("lowpoly->{format}: object '{}' has invalid managed mesh: {e:?}", object.name)))?,
+                None if object.mesh_content.trim().is_empty() => continue,
+                None => HalfedgeMesh::from_json(&object.mesh_content).map_err(|e| text_error(format!("lowpoly->{format}: object '{}' has unreadable mesh content: {e:?}", object.name)))?,
+            };
             let mut part = WorldPart { name: object.name.clone(), ..Default::default() };
+            let reflected = object.transform.scale.into_iter().map(f64::from).product::<f64>() < 0.0;
             for vertex in 0..mesh.vertex_count() {
                 let local = mesh.vertex_position(VertexId(vertex as u32)).map_err(|e| text_error(format!("lowpoly->{format}: vertex {vertex}: {e:?}")))?;
                 part.positions.push(apply_transform(&object.transform, local.0));
             }
             for face in 0..mesh.face_count() {
-                let ids = mesh.face_vertex_ids(FaceId(face as u32)).map_err(|e| text_error(format!("lowpoly->{format}: face {face}: {e:?}")))?;
+                let mut ids = mesh.face_vertex_ids(FaceId(face as u32)).map_err(|e| text_error(format!("lowpoly->{format}: face {face}: {e:?}")))?;
+                if reflected { ids.reverse(); }
                 if ids.len() >= 3 {
                     part.faces.push(ids.into_iter().map(|id| id.0).collect());
                 }

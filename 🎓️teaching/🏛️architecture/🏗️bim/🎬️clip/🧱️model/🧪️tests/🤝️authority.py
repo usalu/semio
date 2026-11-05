@@ -169,3 +169,27 @@ class StructuralAuthority(unittest.TestCase):
                         self.assertAlmostEqual(oracle,depth,delta=1e-13)
                     if row.get("cancelled_before_work"):
                         with self.assertRaises(InterruptedError):api._slab_geometry_entry({},slab,cancel=lambda:True)
+
+    def test_roof_gravel_window_705_is_exactly_occupied(self):
+        """🎟️ Require declared owners to fill RES-FIN-ROOF-GRAVEL-SL-R-705 with no residual volume."""
+        import numpy as np
+        from scipy.spatial import ConvexHull, QhullError
+        model=api.load_model();slab=api._find(model,"SL-R");tag="RES-FIN-ROOF-GRAVEL-SL-R-705"
+        reserve=next(row for row in slab["geometry"]["finish_voids"] if row["tag"]==tag)
+        slab["geometry"]["finish_voids"]=[]
+        host=api._slab_geometry_uncached(model,slab,exact=True)["finish_parts"]
+        low,high=min(part["z0"] for part in host),max(part["z1"] for part in host)
+        bounds=api._native_material_cells({"outline":api._expand(model,reserve["outline"]),"z0":low,"z1":high,"material":"MAT-ROOF-FINISH","role":"extent"})
+        expected=[cell for part in host for boundary in bounds for cell in api._reference_material_parts(part,[],[boundary])]
+        slab["geometry"]["finish_voids"]=[reserve]
+        _owned,shared=api._finish_reservations(model,slab,host,exact=True)
+        reserved=api._native_parts_exact_volume(shared);target=api._native_parts_exact_volume(expected)
+        self.assertEqual(reserved,target)
+        self.assertGreater(reserved,0)
+        self.assertIn("FIN-ROOF-GRAVEL",{part["owner"] for part in shared})
+        oracle=0.
+        for part in shared:
+            points=np.asarray([[float(c) for c in point] for point in api.part_vertices(part)],dtype=float)
+            try: oracle+=ConvexHull(points).volume
+            except QhullError: self.assertLess(api._native_parts_exact_volume([part]),10**-12)
+        self.assertAlmostEqual(oracle,float(reserved),delta=1e-9)

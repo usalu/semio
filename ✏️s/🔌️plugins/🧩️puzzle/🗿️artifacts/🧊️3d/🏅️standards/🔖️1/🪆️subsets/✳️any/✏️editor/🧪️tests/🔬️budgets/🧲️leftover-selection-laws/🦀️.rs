@@ -42,7 +42,7 @@ async fn gumball_scale_on_locked_volume_refuses_without_edit() {
 #[test]
 fn leftover_copy_paste_clones_selected_object() {
     let mut scene_snapshot = empty_scene_snapshot();
-    scene_snapshot.objects.push(Puzzle3dObject {
+    scene_snapshot.objects.push(Puzzle3dObject { anchor: Default::default(),
         id: "seed-left-001".into(),
         label: Some("seed".into()),
         object_kind: Some("Object".into()),
@@ -84,7 +84,7 @@ fn leftover_copy_paste_clones_selected_object() {
 #[test]
 fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
     let mut scene_snapshot = empty_scene_snapshot();
-    scene_snapshot.objects.push(Puzzle3dObject {
+    scene_snapshot.objects.push(Puzzle3dObject { anchor: Default::default(),
         id: "seed-left-001".into(),
         label: Some("seed".into()),
         object_kind: Some("Object".into()),
@@ -92,7 +92,7 @@ fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
         orientation: None,
         scale: None,
         mesh_url: None,
-        vortices: vec![Puzzle3dVortex {
+        vortices: vec![Puzzle3dVortex { label: None,
             id: "5de35caa-0f02-43d7-ae74-aa730efd3386".into(),
             vortex_kind: None,
             position: [0.0, 0.0, 0.0],

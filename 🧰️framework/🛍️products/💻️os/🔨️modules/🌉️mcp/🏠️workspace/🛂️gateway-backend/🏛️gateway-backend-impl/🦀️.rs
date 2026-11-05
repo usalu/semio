@@ -3,9 +3,9 @@
 use super::*;
 
 impl GatewayBackend for HeadlessWorkspace {
-    fn resolve_context(&self, principal: &str) -> Result<ContextSummary, GatewayError> {
+    fn resolve_context(&self, principal: &str, locale: &str) -> Result<ContextSummary, GatewayError> {
         let active_artifact_id = self.workspace_artifact_ids()?.into_iter().next();
-        Ok(resolve_context(&self.catalog.current(), self.session_id.clone(), principal, self.scopes.clone(), active_artifact_id, "en"))
+        Ok(resolve_context(&self.catalog.current(), self.session_id.clone(), principal, self.scopes.clone(), active_artifact_id, locale))
     }
 
     fn search_capabilities(&self, query: &str) -> Result<Vec<SearchHit>, GatewayError> {
@@ -66,7 +66,7 @@ impl GatewayBackend for HeadlessWorkspace {
     /// resolved handle back when `prepare_action` minted it from `plugin_instance_slot` — so the
     /// correct plugin routing already travels with the handle, not through this parameter.
     fn invoke_action(&self, prepared_handle: &str, idempotency_key: Option<&str>) -> Result<InvocationReport, GatewayError> {
-        let request = InvokeRequest { prepared_handle: Some(prepared_handle.to_string()), capability_id: None, input: None, expected_revision: None, idempotency_key: idempotency_key.map(str::to_string), approval_handle: None };
+        let request = InvokeRequest { prepared_handle: Some(prepared_handle.to_string()), capability_id: None, input: None, expected_revision: None, idempotency_key: idempotency_key.map(str::to_string), approval_handle: None, context: None };
         self.action_adapter()?.invoke(&self.catalog.current(), &self.agent_principal(), &SessionHandle(self.session_id.clone()), request, 0, now_ms())
     }
 

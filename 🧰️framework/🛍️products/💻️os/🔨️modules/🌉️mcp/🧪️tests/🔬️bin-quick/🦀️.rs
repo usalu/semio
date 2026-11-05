@@ -1,21 +1,21 @@
 //! 🧱️ Entrypoint_quick of the runtime crate: Gateway runtime, entrypoint and facade.
 
-use crate::entrypoint::{parse_http_args, parse_stdio_args, protected_credential_environment_name};
+use crate::entrypoint::{parse_host_operation_policy, parse_http_args, parse_stdio_args, protected_credential_environment_name};
 use crate::root::HubOptions;
 use semio_os_mcp_foundation::agent_credential::AgentCredentialSource;
 use semio_os_mcp_port::policy::AutoApprovePolicy;
 
 #[test]
 fn authenticated_hub_workspace_cli_contains_no_hub_credential_carrier() {
-    let stdio = parse_stdio_args(&mut ["--hub", "http://127.0.0.1:8787", "--space", "space-a"].into_iter().map(str::to_string)).unwrap();
+    let stdio = parse_test_stdio_args(&mut ["--hub", "http://127.0.0.1:8787", "--space", "space-a"].into_iter().map(str::to_string)).unwrap();
     assert_eq!(stdio.hub, Some(HubOptions { base_url: "http://127.0.0.1:8787".into(), space_id: "space-a".into(), credential: None }));
-    assert!(parse_stdio_args(&mut ["--hub", "http://127.0.0.1:8787", "--space", "space-a", "--token", "forbidden"].into_iter().map(str::to_string)).is_err());
+    assert!(parse_test_stdio_args(&mut ["--hub", "http://127.0.0.1:8787", "--space", "space-a", "--token", "forbidden"].into_iter().map(str::to_string)).is_err());
 
-    let options = parse_http_args(&mut ["--hub", "http://127.0.0.1:8787", "--space", "space-a"].into_iter().map(str::to_string)).unwrap();
+    let options = parse_test_http_args(&mut ["--hub", "http://127.0.0.1:8787", "--space", "space-a"].into_iter().map(str::to_string)).unwrap();
     let hub = options.hub.expect("authenticated hub binding");
     assert_eq!(hub, HubOptions { base_url: "http://127.0.0.1:8787".into(), space_id: "space-a".into(), credential: None });
-    assert!(parse_http_args(&mut ["--token", "forbidden"].into_iter().map(str::to_string)).is_err());
-    assert!(parse_http_args(&mut ["--bridge-token-file", "forbidden"].into_iter().map(str::to_string)).is_err());
+    assert!(parse_test_http_args(&mut ["--token", "forbidden"].into_iter().map(str::to_string)).is_err());
+    assert!(parse_test_http_args(&mut ["--bridge-token-file", "forbidden"].into_iter().map(str::to_string)).is_err());
 }
 
 /// 🤖️ The delegated-agent flags carry a LOCATION, never a secret: `--credential-file` is the only
@@ -25,14 +25,14 @@ fn authenticated_hub_workspace_cli_contains_no_hub_credential_carrier() {
 /// 🔢️ `http` mode does not use stdio for MCP framing, so descriptor 0 is admissible there.
 #[test]
 fn the_delegated_agent_credential_is_a_path_and_never_a_secret_in_argv() {
-    let stdio = parse_stdio_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-file", "/home/ada/.semio/agent.json"].into_iter().map(str::to_string)).unwrap();
+    let stdio = parse_test_stdio_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-file", "/home/ada/.semio/agent.json"].into_iter().map(str::to_string)).unwrap();
     assert_eq!(
         stdio.hub,
         Some(HubOptions { base_url: "http://127.0.0.1:7501".into(), space_id: "space-a".into(), credential: Some(AgentCredentialSource::File("/home/ada/.semio/agent.json".into())) })
     );
     assert!(format!("{:?}", stdio.hub).contains("agent.json"), "the path is printable — it is not the secret");
 
-    let http = parse_http_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "5"].into_iter().map(str::to_string)).unwrap();
+    let http = parse_test_http_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "5"].into_iter().map(str::to_string)).unwrap();
     assert_eq!(http.hub.expect("hub binding").credential, Some(AgentCredentialSource::Descriptor(5)));
 
     for refused in [
@@ -43,11 +43,11 @@ fn the_delegated_agent_credential_is_a_path_and_never_a_secret_in_argv() {
         vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "0"],
         vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "not-a-number"],
     ] {
-        assert!(parse_stdio_args(&mut refused.clone().into_iter().map(str::to_string)).is_err(), "{refused:?} must be refused");
+        assert!(parse_test_stdio_args(&mut refused.clone().into_iter().map(str::to_string)).is_err(), "{refused:?} must be refused");
     }
 
-    assert!(parse_http_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "0"].into_iter().map(str::to_string)).is_ok());
-    assert!(parse_http_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "3"].into_iter().map(str::to_string)).is_err());
+    assert!(parse_test_http_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "0"].into_iter().map(str::to_string)).is_ok());
+    assert!(parse_test_http_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "3"].into_iter().map(str::to_string)).is_err());
 }
 
 #[test]
@@ -74,33 +74,84 @@ fn the_process_entry_seal_rejects_hub_carriers_and_admits_host_harness_variables
     }
 }
 
-//#region 🔖️AutoApprove
+
+fn policy_path() -> String {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧪️tests/🧫️fixtures/host-driver-policy.json").to_string_lossy().into_owned()
+}
+
+fn parse_test_stdio_args(argv: &mut impl Iterator<Item = String>) -> Result<crate::root::StdioOptions, String> {
+    parse_stdio_args(&mut ["--host-driver-policy".to_string(), policy_path(), "--operation-policy".to_string(), policy_path().replace("host-driver-policy.json","host-operation-policy.json")].into_iter().chain(argv))
+}
+
+fn parse_test_http_args(argv: &mut impl Iterator<Item = String>) -> Result<crate::root::HttpOptions, String> {
+    parse_http_args(&mut ["--host-driver-policy".to_string(), policy_path(), "--operation-policy".to_string(), policy_path().replace("host-driver-policy.json","host-operation-policy.json")].into_iter().chain(argv))
+}
+
+#[test]
+fn the_host_policy_is_explicit_and_matches_the_independent_json_decoder() {
+    assert!(parse_stdio_args(&mut std::iter::empty()).unwrap_err().contains("--host-driver-policy is required"));
+    assert!(parse_http_args(&mut std::iter::empty()).unwrap_err().contains("--host-driver-policy is required"));
+    let expected: semio_framework_plugin_host::GuestRelayDriverPolicy = serde_json::from_str(include_str!("../🧫️fixtures/host-driver-policy.json")).unwrap();
+    let options = parse_test_stdio_args(&mut std::iter::empty()).unwrap();
+    assert_eq!(options.host_driver_policy, expected);
+    assert_eq!(parse_test_http_args(&mut std::iter::empty()).unwrap().host_driver_policy, expected);
+}
+
 
 // 🎫️ slice M4 (audit §6 P0.2 item 4): `AutoApprovePolicy` existed as a type with no way to reach it
 // from the command line, so every live server hardcoded `Never` and a destructive capability was
 // permanently unapprovable. These assert the real argv surface.
 #[test]
 fn auto_approve_reaches_both_transports_from_argv() {
-    let stdio = parse_stdio_args(&mut ["--auto-approve", "readonly"].into_iter().map(str::to_string)).unwrap();
+    let stdio = parse_test_stdio_args(&mut ["--auto-approve", "readonly"].into_iter().map(str::to_string)).unwrap();
     assert_eq!(stdio.auto_approve, AutoApprovePolicy::ReadonlyOnly);
-    let http = parse_http_args(&mut ["--auto-approve", "all"].into_iter().map(str::to_string)).unwrap();
+    let http = parse_test_http_args(&mut ["--auto-approve", "all"].into_iter().map(str::to_string)).unwrap();
     assert_eq!(http.auto_approve, AutoApprovePolicy::All);
 }
 
 #[test]
 fn auto_approve_defaults_to_never_and_rejects_an_unknown_policy() {
-    assert_eq!(parse_stdio_args(&mut std::iter::empty()).unwrap().auto_approve, AutoApprovePolicy::Never);
-    assert_eq!(parse_http_args(&mut std::iter::empty()).unwrap().auto_approve, AutoApprovePolicy::Never);
-    let rejected = parse_stdio_args(&mut ["--auto-approve", "sometimes"].into_iter().map(str::to_string)).unwrap_err();
+    assert_eq!(parse_test_stdio_args(&mut std::iter::empty()).unwrap().auto_approve, AutoApprovePolicy::Never);
+    assert_eq!(parse_test_http_args(&mut std::iter::empty()).unwrap().auto_approve, AutoApprovePolicy::Never);
+    let rejected = parse_test_stdio_args(&mut ["--auto-approve", "sometimes"].into_iter().map(str::to_string)).unwrap_err();
     assert!(rejected.contains("never|readonly|all"), "an unknown policy is an argv error, never a silent downgrade: {rejected}");
-    assert!(parse_stdio_args(&mut ["--auto-approve"].into_iter().map(str::to_string)).is_err());
+    assert!(parse_test_stdio_args(&mut ["--auto-approve"].into_iter().map(str::to_string)).is_err());
 }
 
 #[test]
 fn the_stdio_bridge_can_be_opted_out_of_but_is_on_by_default() {
-    assert!(!parse_stdio_args(&mut std::iter::empty()).unwrap().no_bridge);
-    assert!(parse_stdio_args(&mut ["--no-bridge"].into_iter().map(str::to_string)).unwrap().no_bridge);
-    assert!(parse_http_args(&mut ["--no-bridge"].into_iter().map(str::to_string)).is_err(), "--no-bridge is stdio-only: http always serves /bridge on its own socket");
+    assert!(!parse_test_stdio_args(&mut std::iter::empty()).unwrap().no_bridge);
+    assert!(parse_test_stdio_args(&mut ["--no-bridge"].into_iter().map(str::to_string)).unwrap().no_bridge);
+    assert!(parse_test_http_args(&mut ["--no-bridge"].into_iter().map(str::to_string)).is_err(), "--no-bridge is stdio-only: http always serves /bridge on its own socket");
 }
 
-//#endregion 🔖️AutoApprove
+
+#[test]
+fn invalid_original_host_authority_is_refused_before_serving() {
+    let mut policy: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/host-driver-policy.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/host-policy-admission.json")).unwrap();
+    for case in cases["refusals"].as_array().unwrap() {
+        let field = case["field"].as_str().unwrap();
+        let original = policy["root"][field].clone();
+        policy["root"][field] = case["value"].clone();
+        assert_eq!(crate::entrypoint::parse_host_driver_policy(&policy.to_string()).is_ok(), case["accepted"].as_bool().unwrap(), "{field}");
+        policy["root"][field] = original;
+    }
+}
+
+#[test]
+fn inference_cleanup_policy_is_explicit_and_matches_the_json_oracle(){
+    let text=include_str!("../🧫️fixtures/host-operation-policy.json");
+    let value:serde_json::Value=serde_json::from_str(text).unwrap();
+    let actual=parse_host_operation_policy(text).unwrap();
+    assert_eq!(serde_json::to_value(actual).unwrap(),value);
+    for pointer in ["/scope","/cleanup/workFuel","/cleanup/executionFuel","/cleanup/maximumMicroseconds","/cleanup/retained/maximumItems","/transit/workFuel","/transit/retained/maximumItems"]{
+        let mut invalid=value.clone();*invalid.pointer_mut(pointer).unwrap()=serde_json::Value::Null;
+        assert!(parse_host_operation_policy(&invalid.to_string()).is_err(),"{pointer}");
+    }
+    for pointer in ["","/cleanup","/cleanup/retained","/transit","/transit/retained"]{
+        let mut invalid=value.clone();invalid.pointer_mut(pointer).unwrap().as_object_mut().unwrap().insert("unknownAuthority".into(),serde_json::json!(1));
+        assert!(parse_host_operation_policy(&invalid.to_string()).is_err(),"{pointer}");
+    }
+    assert!(parse_stdio_args(&mut ["--host-driver-policy".into(),policy_path()].into_iter()).unwrap_err().contains("--operation-policy is required"));
+}

@@ -57,7 +57,7 @@ test("owned interpreter selects all six original WIT job exports", () => {
       expect(all.match(new RegExp("\\bSelf::" + row.variant + "\\b", "g"))?.length).toBe(1);
       const arm = typeArms.find(node => new RegExp("\\bSelf::" + row.variant + "\\b").test(node.text))!.text.replace(/\s+/gu, "");
       const parameters = row.parameters[0] === "i32" ? "ValueType::I32,ValueType::I32" : "ValueType::I64;" + row.parameters.length;
-      expect(arm).toContain("parameters:vec![" + parameters + "],results:vec![ValueType::I64]");
+      expect(arm).toContain(row.parameters.length===21?"parameters:[vec![ValueType::I32,ValueType::I32],vec![ValueType::I64;19]].concat(),results:vec![ValueType::I64]":"parameters:vec![" + parameters + "],results:vec![ValueType::I64]");
     }
   } finally { db.close(); runtimeTree.delete(); tree.delete(); }
 });
@@ -107,7 +107,7 @@ test("owned result decoder preserves the original current fixed actor receipt", 
     expect(db.query("select length(?) as extent,hex(substr(?,1,4)) as magic").get(bytes, bytes)).toEqual({ extent: receipt.extent, magic: "53414333" });
     const decoder = tree.rootNode.namedChildren.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === "decode_owned_result")!;
     const body = decoder.childForFieldName("body")!.text;
-    expect(body.indexOf('bytes.starts_with(b"SAC2")')).toBeGreaterThanOrEqual(0);
+    expect(body.indexOf('bytes.starts_with(b"SAC3")')).toBeGreaterThanOrEqual(0);
     expect(body.indexOf("OriginalActorFixedReceipt::read(bytes)")).toBeLessThan(body.indexOf("serde_json::from_slice(bytes)"));
     expect(body).toContain("TurnFault::ActorCall");
   } finally { db.close(); tree.delete(); }

@@ -129,7 +129,7 @@ export async function registerDocumentPackWireAdapterTests(vitest: PluginRuntime
         const { decodeAppCommand } = await import("@semio-tech/framework-os");
         const fixture = await loadChannelMediaExportWireFixture();
         const authority = { app_instance_id: fixture.handle.appInstanceId, parent_document_id: fixture.handle.parentDocumentId, operation_id: BigInt(fixture.handle.operationId), base_revision: BigInt(fixture.handle.baseRevision), generation: BigInt(fixture.handle.generation) };
-        const status = { handle: authority, state: "running" as const, applied_progress: 2n, checkpoint_available: true, mime_type: "audio/mpeg", total_bytes: 3n, detail: "" };
+        const status = { handle: authority, state: "running" as const, applied_progress: 2n, checkpoint_available: true, descriptor: [], mime_type: "audio/mpeg", total_bytes: 3n, detail: "" };
         const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
         const commands: import("@semio-tech/framework-os").AppCommandValue[] = [];
         let replyHandle = authority;

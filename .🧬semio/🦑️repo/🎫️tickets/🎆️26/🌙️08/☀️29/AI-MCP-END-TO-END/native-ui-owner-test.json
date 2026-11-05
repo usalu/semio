@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","-p","semio-framework-ui-contract-text","-p","semio-framework-ui-contract-values","--lib","ui_"],"configuration":"prototype","store":"shared","parallelism":2,"language":"en","agent":"semio-mcp-ui-owner-laws"}}

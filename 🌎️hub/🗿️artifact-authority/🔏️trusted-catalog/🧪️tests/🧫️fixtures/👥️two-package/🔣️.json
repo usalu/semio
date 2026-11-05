@@ -69,7 +69,7 @@
         "version": "1.2.3",
         "role": "plugin",
         "executionProtocol": {
-          "appChannelVersion": 23
+          "appChannelVersion": 25
         },
         "dependencies": [
           {
@@ -179,7 +179,7 @@
         "version": "1.0.0",
         "role": "plugin",
         "executionProtocol": {
-          "appChannelVersion": 23
+          "appChannelVersion": 25
         },
         "dependencies": [],
         "component": {

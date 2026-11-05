@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {"name":"equal","opcode":70,"args":[7,7],"expected":1},
+    {"name":"unsigned order","opcode":73,"args":[-1,1],"expected":0},
+    {"name":"leading zeros","opcode":103,"args":[255],"expected":24},
+    {"name":"signed division","opcode":109,"args":[8,3],"expected":2},
+    {"name":"signed remainder overflow","opcode":111,"args":[-2147483648,-1],"expected":0},
+    {"name":"and","opcode":113,"args":[13,7],"expected":5},
+    {"name":"masked shift","opcode":116,"args":[3,33],"expected":6},
+    {"name":"unsigned shift","opcode":118,"args":[-1,1],"expected":2147483647},
+    {"name":"rotate","opcode":119,"args":[-2147483648,1],"expected":1},
+    {"name":"zero division","opcode":109,"args":[8,0],"trap":true}
+  ]
+}

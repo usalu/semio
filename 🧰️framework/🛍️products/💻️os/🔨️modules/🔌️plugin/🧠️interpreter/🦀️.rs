@@ -20,6 +20,11 @@ pub const INTERPRETER_SOURCE: &str = concat!(
     include_str!("🧮️numeric-execution/🦀️.rs"),
     include_str!("🔢️numeric-semantics/🦀️.rs"),
     include_str!("📸️checkpoint-codec/🦀️.rs"),
+    include_str!("🏗️instance/🦀️.rs"),
+    include_str!("🏗️instance/▶️invocation/🦀️.rs"),
+    include_str!("🏗️instance/▶️invocation/🧭️control/🦀️.rs"),
+    include_str!("🏗️instance/▶️invocation/💾️memory/🦀️.rs"),
+    include_str!("🏗️instance/▶️invocation/📞️host/🦀️.rs"),
 );
 
 /// 🧮️ The heap witness the crate's allocation laws read through `semio_framework_trace::observe_heap_allocations_on_this_thread`.
@@ -40,7 +45,7 @@ pub use component_artifact::{ComponentArtifact, ComponentLimits, ComponentSectio
 
 #[path = "🔌️owned-semio-boundary/🦀️.rs"]
 mod owned_semio_boundary;
-pub use owned_semio_boundary::{OwnedSemioArtifact, OwnedSemioCheckpointLayout, OwnedSemioExport, OwnedSemioInstance, SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_CHUNK_EXPORT, SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_EXPORT, SEMIO_OWNED_ADMIT_ACTOR_CONTEXT_EXPORT, SEMIO_OWNED_ALLOC_EXPORT, SEMIO_OWNED_APPLY_OPS_EXPORT, SEMIO_OWNED_BORROW_JOB_OUTPUT_EXPORT, SEMIO_OWNED_CANCEL_JOB_EXPORT, SEMIO_OWNED_CHANNEL_VERSION_EXPORT, SEMIO_OWNED_CHECKPOINT_EXPORT, SEMIO_OWNED_CLOSE_ACTOR_CONTEXT_EXPORT, SEMIO_OWNED_CLOSE_JOBS_EXPORT, SEMIO_OWNED_DEALLOC_EXPORT, SEMIO_OWNED_DESCRIBE_EXPORT, SEMIO_OWNED_GENESIS_EXPORT, SEMIO_OWNED_PACK_SCHEMA_HASH_EXPORT, SEMIO_OWNED_POLL_EXPORT, SEMIO_OWNED_PRINT_MIRROR_EXPORT, SEMIO_OWNED_READ_JOB_OUTPUT_EXPORT, SEMIO_OWNED_REPLAY_ENVELOPES_EXPORT, SEMIO_OWNED_RESTORE_EXPORT, SEMIO_OWNED_SQLITE_CLOSE_EXPORT, SEMIO_OWNED_SQLITE_EXPORT_EXPORT, SEMIO_OWNED_SQLITE_IMPORT_EXPORT, SEMIO_OWNED_SQLITE_RETIREMENT_EXPORT, SEMIO_OWNED_SQLITE_SCHEMA_EXPORT, SEMIO_OWNED_SQLITE_TAKE_FILE_EXPORT, SEMIO_OWNED_SQLITE_TAKE_PAYLOAD_EXPORT, SEMIO_OWNED_START_JOB_EXPORT, SEMIO_OWNED_STEP_JOB_EXPORT};
+pub use owned_semio_boundary::{SEMIO_OWNED_ADMIT_ACTOR_INPUT_EXPORT,SEMIO_OWNED_PUBLISH_ACTOR_FAILURE_EXPORT,SEMIO_OWNED_READ_ACTOR_FAILURE_EXPORT,SEMIO_OWNED_BORROW_ACTOR_FAILURE_EXPORT,SEMIO_OWNED_ACKNOWLEDGE_ACTOR_FAILURE_CHUNK_EXPORT,SEMIO_OWNED_ACKNOWLEDGE_ACTOR_FAILURE_EXPORT,OwnedSemioArtifact, OwnedSemioCheckpointLayout, OwnedSemioExport, OwnedSemioInstance, SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_CHUNK_EXPORT, SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_EXPORT, SEMIO_OWNED_ADMIT_ACTOR_CONTEXT_EXPORT, SEMIO_OWNED_ALLOC_EXPORT, SEMIO_OWNED_APPLY_OPS_EXPORT, SEMIO_OWNED_BORROW_JOB_OUTPUT_EXPORT, SEMIO_OWNED_CANCEL_JOB_EXPORT, SEMIO_OWNED_CHANNEL_VERSION_EXPORT, SEMIO_OWNED_CHECKPOINT_EXPORT, SEMIO_OWNED_CLOSE_ACTOR_CONTEXT_EXPORT, SEMIO_OWNED_CLOSE_ACTOR_OUTPUT_EXPORT, SEMIO_OWNED_CLOSE_JOBS_EXPORT, SEMIO_OWNED_DEALLOC_EXPORT, SEMIO_OWNED_DESCRIBE_EXPORT, SEMIO_OWNED_GENESIS_EXPORT, SEMIO_OWNED_PACK_SCHEMA_HASH_EXPORT, SEMIO_OWNED_POLL_EXPORT, SEMIO_OWNED_PRINT_MIRROR_EXPORT, SEMIO_OWNED_READ_JOB_OUTPUT_EXPORT, SEMIO_OWNED_REPLAY_ENVELOPES_EXPORT, SEMIO_OWNED_RESTORE_EXPORT, SEMIO_OWNED_SQLITE_CLOSE_EXPORT, SEMIO_OWNED_SQLITE_EXPORT_EXPORT, SEMIO_OWNED_SQLITE_IMPORT_EXPORT, SEMIO_OWNED_SQLITE_RETIREMENT_EXPORT, SEMIO_OWNED_SQLITE_SCHEMA_EXPORT, SEMIO_OWNED_SQLITE_TAKE_FILE_EXPORT, SEMIO_OWNED_SQLITE_TAKE_PAYLOAD_EXPORT, SEMIO_OWNED_START_JOB_EXPORT, SEMIO_OWNED_STEP_JOB_EXPORT};
 
 #[path = "🔎️binary-decoder-and-module-parser/🦀️.rs"]
 mod binary_decoder_and_module_parser;
@@ -64,7 +69,7 @@ mod memory_and_bulk_execution;
 
 #[path = "🧮️numeric-execution/🦀️.rs"]
 mod numeric_execution;
-use numeric_execution::{execute_numeric, map_top};
+use numeric_execution::{execute_numeric,execute_numeric_fixed,numeric_arity,NumericError,map_top};
 
 #[path = "🔢️numeric-semantics/🦀️.rs"]
 mod numeric_semantics;
@@ -75,7 +80,7 @@ mod checkpoint_codec;
 
 #[path="🏗️instance/🦀️.rs"]
 mod original_instance_opening;
-pub use original_instance_opening::{CoreInstanceOpening,CoreOriginalInvocationCall,CoreOriginalInvocationStatus};
+pub use original_instance_opening::{CoreInstanceOpening,CoreOriginalInvocationCall,CoreOriginalInvocationStatus,CoreOriginalHostCall};
 
 //#region 💾️CheckpointCodec
 

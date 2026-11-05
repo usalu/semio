@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "id": "admitted-final",
+      "width": 1,
+      "height": 1,
+      "contradiction": false,
+      "cancelled": false,
+      "admitted": true,
+      "commit": true
+    },
+    {
+      "id": "bounded-wire-refusal",
+      "width": 512,
+      "height": 512,
+      "contradiction": false,
+      "cancelled": false,
+      "admitted": false,
+      "commit": false
+    },
+    {
+      "id": "cancelled-final",
+      "width": 1,
+      "height": 1,
+      "contradiction": false,
+      "cancelled": true,
+      "admitted": false,
+      "commit": false
+    },
+    {
+      "id": "contradiction-final",
+      "width": 1,
+      "height": 1,
+      "contradiction": true,
+      "cancelled": false,
+      "admitted": true,
+      "commit": false
+    }
+  ]
+}

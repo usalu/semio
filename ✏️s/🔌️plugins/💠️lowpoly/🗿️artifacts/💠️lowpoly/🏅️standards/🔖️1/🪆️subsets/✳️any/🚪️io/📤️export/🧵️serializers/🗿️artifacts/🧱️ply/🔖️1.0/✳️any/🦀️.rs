@@ -3,7 +3,7 @@
 //! Real ASCII PLY export through `engine::encode_ply`: a `vertex` element (`float x/y/z`, world
 //! space — scale → Euler-degree rotation → translation) and a `face` element
 //! (`list uchar int vertex_indices`, widened to a `uint` count past 255 corners) holding every
-//! object's original n-gons, concatenated. Objects with empty `mesh_content` contribute nothing.
+//! object's current mesh n-gons, concatenated. Objects without geometry contribute nothing.
 //!
 //! 🔖 `IoFidelity::Lossy`: geometry survives with n-gons kept; object boundaries, names and paint
 //! do not.

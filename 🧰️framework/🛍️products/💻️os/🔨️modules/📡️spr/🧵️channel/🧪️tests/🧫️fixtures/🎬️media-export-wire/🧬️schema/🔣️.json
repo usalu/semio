@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["channelVersion", "handle", "commands", "frames"],
+  "properties": {
+    "channelVersion": { "const": 25 },
+    "handle": { "type": "object" },
+    "commands": { "type": "object" },
+    "frames": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "object",
+          "required": ["fields", "bytes", "hex"],
+          "properties": {
+            "fields": {
+              "type": "object",
+              "required": ["descriptor"],
+              "properties": { "descriptor": { "$ref": "#/$defs/bytes" } }
+            },
+            "bytes": { "$ref": "#/$defs/bytes" },
+            "hex": { "type": "string", "pattern": "^([0-9a-f]{2})*$" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": { "bytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } } }
+}

@@ -24,6 +24,20 @@ fn fixture(kind: &str) -> serde_json::Value {
     fixtures().into_iter().find(|entry| entry.get("kind").and_then(serde_json::Value::as_str) == Some(kind)).unwrap_or_else(|| panic!("fixture `{kind}` exists")).get("payload").cloned().expect("every fixture row carries a payload")
 }
 
+#[test]
+fn command_result_payloads_preserve_guest_json_and_presence() {
+    let rows: Vec<serde_json::Value> = serde_json::from_str(fixture_text!("../../../🐚️channel/🧪️tests/🧫️fixtures/📦️command-results/🔣️.json")).expect("neutral result corpus");
+    for row in rows {
+        let payload = &row["payload"];
+        let expected = payload.get("output").cloned();
+        let actual = match decode_app_frame(payload).expect("real shell payload decoder") {
+            AppFrame::Emit { output, .. } | AppFrame::TransactionCommitted { output, .. } => output,
+            other => panic!("unexpected command result {other:?}"),
+        };
+        assert_eq!(actual, expected);
+    }
+}
+
 fn empty_catalog() -> std::sync::Arc<Catalog> {
     std::sync::Arc::new(Catalog { hash: "empty".to_string(), entries: Vec::new() })
 }
@@ -53,7 +67,7 @@ fn base64_refuses_malformed_text_instead_of_guessing() {
 fn every_gateway_to_shell_command_encodes_to_its_shared_fixture() {
     assert_eq!(encode_app_command(&AppCommand::ReadHistory), fixture("readHistory"));
     assert_eq!(encode_app_command(&AppCommand::ReadArtifact), fixture("readArtifact"));
-    assert_eq!(encode_app_command(&AppCommand::PureCommand { capability_id: "note.note.appendParagraph".to_string(), input: serde_json::json!({ "text": "hello" }) }), fixture("pureCommand"));
+    assert_eq!(encode_app_command(&AppCommand::PureCommand {  capability_id: "note.note.appendParagraph".to_string(), input: serde_json::json!({ "text": "hello" }), view_state: None }), fixture("pureCommand"));
     assert_eq!(
         encode_app_command(&AppCommand::TransactionPrepare { txn_id: "txn_1".to_string(), ops: PreparedOps { document: vec![vec![1, 2, 3]], config: Vec::new(), draft: Vec::new(), children: Vec::new() }, origin: agent_origin() }),
         fixture("transactionPrepare")
@@ -68,9 +82,9 @@ fn every_gateway_to_shell_command_encodes_to_its_shared_fixture() {
 #[test]
 fn every_shell_to_gateway_frame_decodes_from_its_shared_fixture() {
     assert_eq!(decode_app_frame(&fixture("historySnapshot")), Ok(AppFrame::HistorySnapshot(RevisionStamp { artifact_id: "note-1".to_string(), head_edit_id: "edit_7".to_string(), cursor: "7".to_string() })));
-    assert_eq!(decode_app_frame(&fixture("emit")), Ok(AppFrame::Emit { ops: PreparedOps { document: vec![vec![1, 2, 3]], config: Vec::new(), draft: Vec::new(), children: Vec::new() }, warnings: Vec::new() }));
+    assert_eq!(decode_app_frame(&fixture("emit")), Ok(AppFrame::Emit { ops: PreparedOps { document: vec![vec![1, 2, 3]], config: Vec::new(), draft: Vec::new(), children: Vec::new() }, warnings: Vec::new(), output: None }));
     assert_eq!(decode_app_frame(&fixture("transactionPrepared")), Ok(AppFrame::TransactionPrepared { txn_id: "txn_1".to_string() }));
-    assert_eq!(decode_app_frame(&fixture("transactionCommitted")), Ok(AppFrame::TransactionCommitted { txn_id: "txn_1".to_string(), edit_id: "edit_8".to_string(), relay: None }));
+    assert_eq!(decode_app_frame(&fixture("transactionCommitted")), Ok(AppFrame::TransactionCommitted { txn_id: "txn_1".to_string(), edit_id: "edit_8".to_string(), relay: None, output: None }));
     assert_eq!(decode_app_frame(&fixture("transactionRolledBack")), Ok(AppFrame::TransactionRolledBack { txn_id: "txn_1".to_string() }));
     assert_eq!(decode_app_frame(&fixture("transactionUndone")), Ok(AppFrame::TransactionUndone { group_id: "edit_8".to_string() }));
     assert_eq!(decode_app_frame(&fixture("transactionRedone")), Ok(AppFrame::TransactionRedone { group_id: "edit_8".to_string() }));
@@ -300,7 +314,7 @@ fn an_ambiguous_artifact_handle_is_refused_by_name_with_its_candidates() {
 fn inference_never_travels_the_shell_route() {
     let binding = std::sync::Arc::new(SessionChannelBinding::new(None));
     let mut channel = ShellArtifactChannel::new(binding, empty_catalog());
-    let fault = channel.exchange(0, vec![AppCommand::Infer(InferCommand{plugin_id:"neutral".into(),artifact_kind:"test.neutral.record".into(),inference_schema:"test.neutral.record.compute".into(),turn:semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1671,absolute_deadline_us:1000000,fuel:64},grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2},revision:7,cancellation_id:"original shell refusal cancellation".into(),work_units:11,maximum_elapsed_milliseconds:13,canonical_payload:Vec::new(),artifact_id:String::new(),artifact_document:None,cancel:InferenceCancel::default()})]).expect_err("inference is refused");
+    let fault = channel.exchange(0, vec![AppCommand::Infer(InferCommand{plugin_id:"neutral".into(),artifact_kind:"test.neutral.record".into(),inference_schema:"test.neutral.record.compute".into(),document_generation:3,retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2},revision:7,cancellation_id:"original shell refusal cancellation".into(),work_units:11,maximum_elapsed_milliseconds:13,canonical_payload:Vec::new(),artifact_id:String::new(),artifact_document:None,cancel:InferenceCancel::default()})]).expect_err("inference is refused");
     assert_eq!(fault.code, "plugin.unavailable");
     assert!(fault.message.contains("inference"), "{}", fault.message);
 }
@@ -312,4 +326,44 @@ fn the_port_contract_of_one_command_per_exchange_is_enforced_here_too() {
     let fault = channel.exchange(0, vec![AppCommand::ReadHistory, AppCommand::ReadArtifact]).expect_err("two commands");
     assert_eq!(fault.code, "channel.not-wired");
     assert!(fault.message.contains("exactly one command"), "{}", fault.message);
+}
+
+#[test]
+fn explicit_targets_follow_the_neutral_owned_instance_corpus() {
+    let cases: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🎯️target/🔣️.json")).expect("neutral target corpus");
+    let base = semio_framework_os_mcp_capabilities::core_capabilities::gateway_only_catalog();
+    let mut capability = base.entries[0].clone();
+    capability.owner = semio_framework_os_mcp_catalog::catalog::CapabilityOwner::Plugin { plugin_id: "test".into(), app_id: Some("editor".into()), window_kind_id: None, mode_id: None, label: None };
+    let capability_id = capability.id.as_str().to_string();
+    let catalog = std::sync::Arc::new(Catalog { hash: "target-corpus".into(), entries: vec![capability] });
+    let handle = std::sync::Arc::new(BridgeHandle::new());
+    let (connection, _receiver) = handle.register();
+    handle.record_hello(connection, BridgeFlags { relay_app_commands: true, shared_backbone: false, elicit: false });
+    let entries = cases["entries"].as_array().unwrap().iter().map(|entry| BridgeInstanceRef {
+        plugin_id: entry["pluginId"].as_str().unwrap().into(), app_id: entry["appId"].as_str().unwrap().into(),
+        instance_id: entry["instanceId"].as_str().unwrap().into(), artifact_ref: entry["artifactRef"].as_str().unwrap().into(),
+        window_ids: entry["windowIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().into()).collect(),
+    }).collect();
+    handle.record(connection, ShellToGateway::Instances { entries });
+    let slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
+    slot.set(std::sync::Arc::clone(&handle)).ok();
+    let binding = std::sync::Arc::new(SessionChannelBinding::new(Some(slot)));
+    let mut channel = ShellArtifactChannel::new(binding, catalog);
+    for (index, row) in cases["selectionCases"].as_array().unwrap().iter().enumerate() {
+        let instance = 0x8000_0000 + index as u32;
+        let target = serde_json::from_value(row["target"].clone()).expect("typed target");
+        let result = channel.select_target(instance, &capability_id, &target);
+        match row["selected"].as_str() {
+            Some(expected) => {
+                let resolved = result.expect("owned unique target");
+                let entry = cases["entries"].as_array().unwrap().iter().find(|entry| entry["instanceId"] == expected).unwrap();
+                assert_eq!(resolved.instance_id.as_deref(), Some(expected));
+                assert_eq!(resolved.artifact_ref.as_deref(), entry["artifactRef"].as_str());
+                assert_eq!(resolved.plugin_id.as_deref(), entry["pluginId"].as_str());
+                assert_eq!(resolved.app_id.as_deref(), entry["appId"].as_str());
+                assert_eq!(channel.bound.lock().unwrap().get(&instance).map(String::as_str), Some(expected));
+            }
+            None => assert!(result.is_err(), "ambiguous or foreign target must fail"),
+        }
+    }
 }

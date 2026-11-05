@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "shortMilliseconds",
+    "longMilliseconds",
+    "delayMilliseconds",
+    "delayReads",
+    "expectedStaleAuthorizations"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "fixture:control-dag-freshness"
+    },
+    "shortMilliseconds": {
+      "const": 60
+    },
+    "longMilliseconds": {
+      "const": 60000
+    },
+    "delayMilliseconds": {
+      "const": 90
+    },
+    "delayReads": {
+      "const": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "expectedStaleAuthorizations": {
+      "const": 0
+    }
+  }
+}

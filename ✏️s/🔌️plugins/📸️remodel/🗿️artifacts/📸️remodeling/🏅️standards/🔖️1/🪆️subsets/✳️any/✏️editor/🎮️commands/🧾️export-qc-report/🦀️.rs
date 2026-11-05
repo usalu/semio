@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct ExportQcReport {}
 
 pub fn handle(_payload: &ExportQcReport, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
-    let qc = doc.snapshot.results.qc.as_ref().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("remodeling.qc-report.missing"), "Run the quality check before exporting its report."))?;
+    let Some(qc) = doc.snapshot.results.qc.as_ref() else { return Ok(Emit::default()) };
     let data = serde_json::to_string_pretty(qc).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("remodeling.qc-report.encode"), format!("The quality report could not be written: {error}")))?;
     Ok(Emit::effect(Effect::DownloadMediaExport { filename: "remodeling-qc-report.json".into(), mime_type: "application/json".into(), data, encoding: None }))
 }

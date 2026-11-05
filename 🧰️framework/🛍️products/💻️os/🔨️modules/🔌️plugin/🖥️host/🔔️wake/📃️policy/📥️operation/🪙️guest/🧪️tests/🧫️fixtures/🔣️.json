@@ -1,0 +1,246 @@
+{
+  "total": [
+    100,
+    10000,
+    10000,
+    10000,
+    1000
+  ],
+  "cleanup": [
+    10,
+    1000,
+    1000,
+    1000,
+    100
+  ],
+  "transit": [
+    10,
+    1000,
+    1000,
+    1000,
+    100
+  ],
+  "hold": [
+    20,
+    2000,
+    2000,
+    2000,
+    200
+  ],
+  "cases": [
+    {
+      "id": "guest-held",
+      "observed": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "forfeited": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "held": true,
+      "expected": [
+        60,
+        6000,
+        6000,
+        6000,
+        600
+      ]
+    },
+    {
+      "id": "actual-receipt",
+      "observed": [
+        5,
+        500,
+        500,
+        500,
+        50
+      ],
+      "forfeited": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "held": false,
+      "expected": [
+        75,
+        7500,
+        7500,
+        7500,
+        750
+      ]
+    },
+    {
+      "id": "producer-forfeit",
+      "observed": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "forfeited": [
+        20,
+        2000,
+        2000,
+        2000,
+        200
+      ],
+      "held": false,
+      "expected": [
+        60,
+        6000,
+        6000,
+        6000,
+        600
+      ]
+    },
+    {
+      "id": "separate-cumulative-debits",
+      "observed": [
+        5,
+        500,
+        500,
+        500,
+        50
+      ],
+      "forfeited": [
+        20,
+        2000,
+        2000,
+        2000,
+        200
+      ],
+      "held": false,
+      "expected": [
+        55,
+        5500,
+        5500,
+        5500,
+        550
+      ]
+    }
+  ],
+  "purposes": {
+    "semantic": [
+      10,
+      1000,
+      1000,
+      1000,
+      100
+    ],
+    "infrastructure": [
+      20,
+      2000,
+      2000,
+      2000,
+      200
+    ],
+    "cases": [
+      {
+        "id": "boot",
+        "purpose": "infrastructure",
+        "semanticSpent": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "infrastructureSpent": [
+          5,
+          500,
+          500,
+          500,
+          50
+        ],
+        "expectedHeader": [
+          25,
+          2500,
+          2500,
+          2500,
+          250
+        ],
+        "expectedScope": [
+          15,
+          1500,
+          1500,
+          1500,
+          150
+        ]
+      },
+      {
+        "id": "client-after-boot",
+        "purpose": "semantic",
+        "semanticSpent": [
+          2,
+          200,
+          200,
+          200,
+          20
+        ],
+        "infrastructureSpent": [
+          5,
+          500,
+          500,
+          500,
+          50
+        ],
+        "expectedHeader": [
+          23,
+          2300,
+          2300,
+          2300,
+          230
+        ],
+        "expectedScope": [
+          8,
+          800,
+          800,
+          800,
+          80
+        ]
+      },
+      {
+        "id": "close-after-client",
+        "purpose": "infrastructure",
+        "semanticSpent": [
+          2,
+          200,
+          200,
+          200,
+          20
+        ],
+        "infrastructureSpent": [
+          5,
+          500,
+          500,
+          500,
+          50
+        ],
+        "expectedHeader": [
+          23,
+          2300,
+          2300,
+          2300,
+          230
+        ],
+        "expectedScope": [
+          15,
+          1500,
+          1500,
+          1500,
+          150
+        ]
+      }
+    ]
+  }
+}

@@ -1,27 +1,15 @@
-/** 🧪️ End-to-end suite (ticket `26/08/29/AI-MCP-END-TO-END`) — the gate that proves the gateway is
- * actually finished, by driving the REAL `semio-os-mcp` binary over stdio with raw JSON-RPC.
- *
- * The three sibling suites prove the *protocol* (dual-era handshake, SDK conformance, stdio
- * hygiene). This one proves the *surface and its semantics*:
- *
- * 1. every one of the 28 tools is present, and none of them is a stub any more;
- * 2. `prompts/list` is non-empty and bilingual;
- * 3. `resources/list` + `resources/templates/list` advertise the artifact, inference, UI and job
- *    families regardless of how the server was bound;
- * 4. **progressive enhancement** — with no `--folder`/`--hub`, every workspace-backed tool answers a
- *    structured, RETRYABLE `PLUGIN_UNAVAILABLE` that names the missing binding, never a protocol
- *    error and never fabricated data;
- * 5. with `--folder <tmp>` bound, the same calls stop reporting a missing workspace — the tier
- *    actually changes behaviour rather than merely being described;
- * 6. the catalog is compiled from the real installed plugin registry, not a note/cad fixture.
- *
- * The package test gate builds and requires the binary before Vitest starts. */
+/** 🧪️ Drives the published semio MCP binary over real stdio, checking protocol inventory, binding refusals, explicit languages and a persisted canonical artifact roundtrip. */
 import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import Ajv from "ajv/dist/2020.js";
+import { CallToolResultSchema, ReadResourceResultSchema } from "@modelcontextprotocol/sdk/types.js";
+import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import workflowSchema from "./🧬️schema/🔣️.json" with { type: "json" };
+import workflow from "./🧫️fixtures/🔣️.json" with { type: "json" };
+import { repoTestArtifactEnvironment } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 
 const repoRoot = findWorkspaceRoot();
 const bin = requireMcpBinary(repoRoot);
@@ -100,21 +88,75 @@ describe("semio-os-mcp — end to end", () => {
    * descriptor on disk and is far slower than any steady-state call. Every later call on the same
    * connection keeps the ordinary timeout, so a genuinely hung server still fails fast. */
   const openServer = async (args: readonly string[] = ["stdio"]): Promise<RawMcpProcess> => {
-    const proc = spawnRawMcp(bin, args);
+    const proc = spawnRawMcp(bin, args, { ...process.env, SEMIO_PLUGIN_CATALOG: undefined });
     procs.push(proc);
     proc.writeRaw(JSON.stringify({ jsonrpc: "2.0", id: DISCOVER_ID, method: "server/discover", params: {} }));
-    const discovered = JSON.parse(await proc.nextLine(CATALOG_COMPILE_TIMEOUT_MS)) as { id: number | string | null; error?: unknown };
+    const discovered = JSON.parse(await proc.nextLine(CATALOG_COMPILE_TIMEOUT_MS)) as { id: number | string | null; error?: unknown; result?: { resultType?: string; serverInfo?: { name?: string; version?: string } } };
     expect(discovered.id, "the first stdout line is the discovery answer").toBe(DISCOVER_ID);
     expect(discovered.error, `server/discover failed: ${JSON.stringify(discovered.error)}`).toBeUndefined();
+    expect(discovered.result?.resultType).toBe("complete");
+    expect(discovered.result?.serverInfo?.name).toBe("semio");
+    expect(discovered.result?.serverInfo?.version).toBeTruthy();
+    expect(discovered.result?.serverInfo?.version).not.toBe("warming");
     return proc;
   };
 
   /** 📁️ A throwaway space directory for the `--folder` (headless) tier. */
   const freshFolder = (): string => {
-    const folder = mkdtempSync(join(tmpdir(), "semio-os-mcp-e2e-"));
+    const folder = mkdtempSync(join(repoTestArtifactEnvironment(repoRoot, "mcp-e2e").SEMIO_TEST_ARTIFACT_DIR!, "mcp-e2e-"));
     folders.push(folder);
     return folder;
   };
+
+  it("creates, reads, validates and reopens an actual persisted artifact without a plugin catalog", async () => {
+    const oracle = new Ajv({ strict: false, allErrors: true });
+    expect(validateJsonSchemaSubset(workflowSchema, workflow)).toEqual([]);
+    expect(oracle.validate(workflowSchema, workflow), JSON.stringify(oracle.errors)).toBe(true);
+    const folder = freshFolder();
+    const proc = await openServer(["stdio", "--folder", folder, "--scopes", "workspace.read,artifact.write"]);
+    const call = async (name: string, arguments_: Record<string, unknown>, shape?: keyof typeof workflowSchema.$defs) => {
+      const response = await proc.request("tools/call", { name, arguments: arguments_ });
+      expect(response.error).toBeUndefined();
+      const result = CallToolResultSchema.parse(response.result);
+      expect(result.isError, JSON.stringify(result)).not.toBe(true);
+      expect(result.structuredContent).toBeDefined();
+      const value = result.structuredContent!;
+      if (shape) {
+        expect(validateJsonSchemaSubset(workflowSchema.$defs[shape], value)).toEqual([]);
+        expect(oracle.validate(workflowSchema.$defs[shape], value), JSON.stringify(oracle.errors)).toBe(true);
+        expect(value.artifactId).toBe(workflow.artifactId);
+      }
+      return value;
+    };
+    const created = await call("artifact_create", { artifactId: workflow.artifactId, kind: workflow.kind, initial: workflow.initial }, "Created");
+    await call("artifact_open", { artifactId: workflow.artifactId }, "Opened");
+    await call("artifact_validate", { artifactId: workflow.artifactId }, "Validated");
+    const snapshot = await call("artifact_snapshot", { artifactId: workflow.artifactId }, "Snapshot");
+    const content = (snapshot.untrusted as { content: { packBase64: string; sprBase64: string } }).content;
+    expect(Buffer.from(content.packBase64, "base64").length).toBe(snapshot.packBytes);
+    expect(Buffer.from(content.sprBase64, "base64").length).toBe(snapshot.sprBytes);
+    const job = await call("job_get", { jobId: created.jobId });
+    expect(job.status).toBe("SUCCEEDED");
+    const resource = await proc.request("resources/read", { uri: `semio://artifact/${workflow.artifactId}` });
+    expect(resource.error).toBeUndefined();
+    const document = ReadResourceResultSchema.parse(resource.result).contents[0];
+    expect(document && "text" in document).toBe(true);
+    expect(JSON.parse((document as { text: string }).text)).toEqual(snapshot);
+    const history = await proc.request("resources/read", { uri: `semio://artifact/${workflow.artifactId}/history` });
+    expect(history.error).toBeUndefined();
+    const timeline = ReadResourceResultSchema.parse(history.result).contents[0] as { text: string };
+    expect(Array.isArray(JSON.parse(timeline.text).appliedEditIds)).toBe(true);
+    const duplicate = await proc.request("tools/call", { name: "artifact_create", arguments: { artifactId: workflow.artifactId, kind: workflow.kind } });
+    expect(duplicate.error).toBeUndefined();
+    expect(CallToolResultSchema.parse(duplicate.result).isError).toBe(true);
+    await proc.close();
+    const reopened = await openServer(["stdio", "--folder", folder, "--scopes", "workspace.read"]);
+    const persisted = await reopened.request("tools/call", { name: "artifact_snapshot", arguments: { artifactId: workflow.artifactId } });
+    expect(persisted.error).toBeUndefined();
+    const persistedResult = CallToolResultSchema.parse(persisted.result);
+    expect(persistedResult.isError, JSON.stringify(persistedResult)).not.toBe(true);
+    expect((persistedResult.structuredContent?.untrusted as { content: unknown }).content).toEqual(content);
+  });
 
   //#region 🔖️Surface
   it("tools/list is the full 28-tool gateway surface", async () => {
@@ -125,7 +167,7 @@ describe("semio-os-mcp — end to end", () => {
     expect(names).toEqual([...GATEWAY_TOOL_NAMES].sort());
   });
 
-  it("no tool describes itself as unimplemented — the stub era is over", async () => {
+  it("tool descriptions declare their gateway surface", async () => {
     const proc = await openServer();
     const { tools } = (await proc.request("tools/list", {})).result as ToolListResult;
     for (const tool of tools) {
@@ -236,9 +278,9 @@ describe("semio-os-mcp — end to end", () => {
   //#endregion 🔖️ProgressiveEnhancement
 
   //#region 🔖️PluginIndependence
-  it("the catalog is compiled from the installed plugin registry, not a hardcoded note/cad fixture", async () => {
+  it("context resolution reports the bound catalog identity", async () => {
     const proc = await openServer();
-    const response = await proc.request("tools/call", { name: "context_resolve", arguments: { principal: "agent:local" } });
+    const response = await proc.request("tools/call", { name: "context_resolve", arguments: { principal: "agent:local", locale: "en" } });
     expect(response.error).toBeUndefined();
     const structured = (response.result as CallToolResult).structuredContent ?? {};
     expect(structured.catalogHash, "context_resolve must report a real catalog hash").toBeTruthy();

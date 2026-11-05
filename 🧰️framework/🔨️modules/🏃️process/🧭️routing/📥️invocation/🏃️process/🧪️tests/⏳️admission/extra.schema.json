@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owners",
+    "followingMaximumMilliseconds",
+    "parentMaximumMilliseconds",
+    "renewable",
+    "expiryWaitMilliseconds",
+    "expected"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owners": {
+      "const": {
+        "first": "fixture:dag-extra-first",
+        "second": "fixture:dag-extra-second",
+        "renewable": "fixture:dag-extra-renewable"
+      }
+    },
+    "followingMaximumMilliseconds": {
+      "const": 1500
+    },
+    "parentMaximumMilliseconds": {
+      "const": 60000
+    },
+    "renewable": {
+      "const": {
+        "idleMilliseconds": 80,
+        "maximumMilliseconds": 5000
+      }
+    },
+    "expiryWaitMilliseconds": {
+      "const": 120
+    },
+    "expected": {
+      "const": {
+        "reachableControls": 3,
+        "expiryName": "ProgressDeadlineExpired",
+        "expiryReason": "idle"
+      }
+    }
+  }
+}

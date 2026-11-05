@@ -100,37 +100,24 @@ export function requestBackboneFolderPath(): Promise<string | null> {
   });
 }
 
-export function requestFileOpen(accept: string, readAs?: string, multiple?: boolean): Promise<readonly { contents: string; name: string }[]> {
-  if (typeof document === "undefined") return Promise.resolve([]);
-  return new Promise((resolve) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = accept;
-    if (multiple) input.multiple = true;
-    input.onchange = async () => {
-      const files = input.files ? Array.from(input.files) : [];
-      if (files.length === 0) {
-        resolve([]);
-        return;
-      }
-      const opened: { contents: string; name: string }[] = [];
-      for (const file of files) {
-        if (readAs === "dataUrl") {
-          const contents = await new Promise<string | null>((resolveFile) => {
-            const reader = new FileReader();
-            reader.onload = () => resolveFile(typeof reader.result === "string" ? reader.result : null);
-            reader.onerror = () => resolveFile(null);
-            reader.readAsDataURL(file);
-          });
-          if (contents !== null) opened.push({ contents, name: file.name });
-          continue;
-        }
-        opened.push({ contents: await file.text(), name: file.name });
-      }
-      resolve(opened);
-    };
-    input.click();
-  });
+/** 📂️ Reads files from {@link requestFileSelectionV1}; chooser cancellation settles before any file read. */
+export async function requestFileOpen(accept: string, readAs?: string, multiple?: boolean): Promise<readonly { contents: string; name: string }[]> {
+  const files = await requestFileSelectionV1(accept, multiple);
+  const opened: { contents: string; name: string }[] = [];
+  for (const file of files) {
+    if (readAs === "dataUrl") {
+      const contents = await new Promise<string | null>((resolveFile) => {
+        const reader = new FileReader();
+        reader.onload = () => resolveFile(typeof reader.result === "string" ? reader.result : null);
+        reader.onerror = reader.onabort = () => resolveFile(null);
+        try { reader.readAsDataURL(file); } catch { resolveFile(null); }
+      });
+      if (contents !== null) opened.push({ contents, name: file.name });
+    } else {
+      opened.push({ contents: await file.text(), name: file.name });
+    }
+  }
+  return opened;
 }
 
 /** 📏️ Maximum browser-owned natural-file buffer admitted before native codec admission. */

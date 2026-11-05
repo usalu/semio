@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "parentMilliseconds",
+    "narrowMilliseconds",
+    "childMilliseconds",
+    "waitMilliseconds",
+    "activeMilliseconds",
+    "toleranceMilliseconds",
+    "model"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "parentMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2000
+    },
+    "narrowMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2000
+    },
+    "childMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2000
+    },
+    "waitMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2000
+    },
+    "activeMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2000
+    },
+    "toleranceMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2000
+    },
+    "model": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wall",
+          "monotonic",
+          "wait",
+          "expected"
+        ],
+        "properties": {
+          "wall": {
+            "type": "integer"
+          },
+          "monotonic": {
+            "type": "integer"
+          },
+          "wait": {
+            "type": "integer"
+          },
+          "expected": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "warm",
+      "change": false,
+      "abort": false,
+      "oversize": false,
+      "reads": 0,
+      "refuses": false
+    },
+    {
+      "id": "changed-source",
+      "change": true,
+      "abort": false,
+      "oversize": false,
+      "reads": 1,
+      "refuses": false
+    },
+    {
+      "id": "changed-oversize",
+      "change": true,
+      "abort": false,
+      "oversize": true,
+      "reads": 1,
+      "refuses": true
+    },
+    {
+      "id": "cancelled-warm",
+      "change": false,
+      "abort": true,
+      "oversize": false,
+      "reads": 0,
+      "refuses": true
+    }
+  ]
+}

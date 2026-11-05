@@ -12,6 +12,8 @@ pub struct OriginalNativeDecodePolicy{pub maximum_owned_bytes:usize}
 /// 🧾️ The actual bounded producer returns its unchanged supplied grant, physical receipt and raw work.
 pub struct OriginalNativeDecodeIssued<T,E=ValueError>{pub value:Result<T,E>,pub grant:RetainedCloneGrant,pub progress:RetainedCloneProgress,pub work:u64}
 /// 🧳️ A receiving refusal stays beside the original outcome without destroying either source.
+#[derive(semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value",send_only)]
 pub struct OriginalNativeDecodeOutcome<T,E=ValueError>{pub value:Result<T,E>,pub progress:RetainedCloneProgress,pub work:u64,pub reported_work:u64,pub observed_native_work:u64,pub receiving_refusal:Option<OriginalTurnFailure>}
 
 struct ActualTurn<'a,'source>{actual:UnsafeCell<&'a mut StepContext<'source>>,reserved:UnsafeCell<usize>,borrowed:AtomicBool}

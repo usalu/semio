@@ -782,6 +782,10 @@ pub struct UiTurnPatches {
     cursor: usize,
 }
 
+#[path="♻️retirement/🦀️.rs"]
+mod original_retirement;
+#[path="🛬️receive/🦀️.rs"]mod native_receiving;
+
 impl Default for UiTurnPatches {
     fn default() -> Self {
         Self { entries: std::array::from_fn(|_| UiTurnPatchEntry::default()), length: 0, cursor: 0 }

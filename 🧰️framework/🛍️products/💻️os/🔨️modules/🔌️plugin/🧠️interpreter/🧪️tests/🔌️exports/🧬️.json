@@ -64,8 +64,26 @@
             },
             "parameters": {
               "const": [
-                "i32",
-                "i32"
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
               ]
             }
           }
@@ -319,8 +337,8 @@
     },
     "helpers": {
       "type": "array",
-      "minItems": 2,
-      "maxItems": 2,
+      "minItems": 8,
+      "maxItems": 8,
       "prefixItems": [
         {
           "type": "object",
@@ -375,6 +393,264 @@
               "const": [
                 "i64",
                 "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "AdmitActorInput"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_ADMIT_ACTOR_INPUT_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_admit_actor_input_v1"
+            },
+            "parameters": {
+              "const": [
+                "i32",
+                "i32",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "PublishActorFailure"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_PUBLISH_ACTOR_FAILURE_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_publish_actor_failure_v1"
+            },
+            "parameters": {
+              "const": [
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "ReadActorFailure"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_READ_ACTOR_FAILURE_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_read_actor_failure_v1"
+            },
+            "parameters": {
+              "const": [
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "BorrowActorFailure"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_BORROW_ACTOR_FAILURE_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_borrow_actor_failure_v1"
+            },
+            "parameters": {
+              "const": [
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "AcknowledgeActorFailureChunk"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_ACKNOWLEDGE_ACTOR_FAILURE_CHUNK_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_acknowledge_actor_failure_chunk_v1"
+            },
+            "parameters": {
+              "const": [
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "AcknowledgeActorFailure"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_ACKNOWLEDGE_ACTOR_FAILURE_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_acknowledge_actor_failure_v1"
+            },
+            "parameters": {
+              "const": [
                 "i64",
                 "i64",
                 "i64",

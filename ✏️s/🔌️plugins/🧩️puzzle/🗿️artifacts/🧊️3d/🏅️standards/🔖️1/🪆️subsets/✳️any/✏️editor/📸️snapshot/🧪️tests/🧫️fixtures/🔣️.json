@@ -1,0 +1,15 @@
+{
+  "schema": "puzzle.3d",
+  "domain": "architecture",
+  "objects": [
+    {
+      "id": "assembly",
+      "label": "Assembly",
+      "anchor": "derived",
+      "origin": [1, 2, 3],
+      "scale": [2, 3, 4],
+      "vortices": [{ "id": "port", "label": "Named Port", "position": [4, 5, 6] }]
+    }
+  ],
+  "attractions": [{ "id": "joint", "attracting": "assembly:port", "attracted": "assembly:port", "x": 12.5, "y": -7.25 }]
+}

@@ -5,6 +5,12 @@
 semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the lowpoly mesh editor; one field per label makes every locale combination compile-checked.
     pub struct LowpolyLabels {
+        failed_model: native_en "Failed to load lowpoly document", native_de "Lowpoly-Dokument konnte nicht geladen werden", reuse_en "Failed to load lowpoly document", reuse_de "Lowpoly-Dokument konnte nicht geladen werden";
+        failed_uv: native_en "Failed to load UV canvas", native_de "UV-Leinwand konnte nicht geladen werden", reuse_en "Failed to load UV canvas", reuse_de "UV-Leinwand konnte nicht geladen werden";
+        command_placeholder: native_en "Enter a mesh command", native_de "Netzbefehl eingeben", reuse_en "Enter a mesh command", reuse_de "Netzbefehl eingeben";
+        eraser: native_en "Eraser", native_de "Radierer", reuse_en "Eraser", reuse_de "Radierer";
+        fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
+        eyedropper: native_en "Eyedropper", native_de "Pipette", reuse_en "Eyedropper", reuse_de "Pipette";
         meshes: native_en "Meshes", native_de "Netze", reuse_en "Meshes", reuse_de "Netze";
         primitives: native_en "Primitives", native_de "Primitive", reuse_en "Primitives", reuse_de "Primitive";
         paint_layers: native_en "Paint Layers", native_de "Malebenen", reuse_en "Paint Layers", reuse_de "Malebenen";

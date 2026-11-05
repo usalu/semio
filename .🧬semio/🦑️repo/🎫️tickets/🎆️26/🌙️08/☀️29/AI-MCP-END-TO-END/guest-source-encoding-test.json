@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"agent":"semio-mcp-source-encoding","command":["test","-p","semio-framework-job-context","--features","testkit","--test","original-source-native-encoding"],"configuration":"prototype","store":"shared","language":"en"}}

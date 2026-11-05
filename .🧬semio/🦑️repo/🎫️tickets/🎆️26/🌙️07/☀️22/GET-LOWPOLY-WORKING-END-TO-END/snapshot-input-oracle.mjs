@@ -1,0 +1,31 @@
+
+/** 📥️ Independent byte/schema expectations for the explicitly supported painted snapshot recipe. */
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import Ajv from "ajv";
+const prefix="✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/";
+const owner=prefix+"✏️editor/🧪️tests/🔌️mounted/";
+const fixture=JSON.parse(fs.readFileSync(owner+"snapshot.json","utf8"));
+const schema=JSON.parse(fs.readFileSync(owner+"snapshot.schema.json","utf8"));
+const validate=new Ajv({strict:true}).compile(schema);
+assert.ok(validate(fixture),JSON.stringify(validate.errors));
+const recipe=fixture.recipe,pixels=Buffer.alloc(recipe.width*recipe.height*4);
+for(let offset=0;offset<pixels.length;offset+=4)pixels.set(recipe.rgba,offset);
+assert.ok(new Ajv({strict:true}).validate(JSON.parse(fs.readFileSync(prefix+"🧬️schema/🎨️texture/🔣️.json","utf8")),[...pixels]));
+const snapshot={schema:"lowpoly.document",objects:[{...recipe.object,transform:{position:[0,0,0],rotation:[0,0,0],scale:[1,1,1]},smoothShading:false,mesh:null,paintLayers:[{name:"Color",visible:true,opacity:1,blendMode:"normal",pixels:pixels.toString("base64")}],meshContent:"",meshState:null}]};
+const json=JSON.stringify(snapshot),bytes=Buffer.byteLength(json,"utf8");
+assert.equal(bytes,fixture.expected.jsonBytes);
+assert.equal(pixels.length,fixture.expected.pixelBytes);
+assert.equal(snapshot.objects[0].paintLayers[0].pixels.length,fixture.expected.base64Bytes);
+assert.ok(bytes>fixture.limits.ordinaryBytes&&bytes<fixture.limits.jsonBytes);
+const maximum=json+" ".repeat(fixture.limits.jsonBytes-bytes);
+assert.equal(Buffer.byteLength(maximum,"utf8"),fixture.limits.jsonBytes);
+assert.deepEqual(JSON.parse(maximum),snapshot);
+const over=maximum+" ";
+assert.equal(Buffer.byteLength(over,"utf8"),fixture.limits.jsonBytes+1);
+assert.deepEqual(JSON.parse(over),snapshot);
+assert.equal(Buffer.byteLength("é".repeat(fixture.limits.jsonBytes/2),"utf8"),fixture.limits.jsonBytes);
+assert.equal(fixture.limits.jsonCommandBytes,fixture.limits.jsonBytes+fixture.limits.framingBytes);
+assert.ok(fixture.limits.jsonCommandBytes<=fixture.limits.importFactoryBytes);
+assert.deepEqual(Buffer.from(snapshot.objects[0].paintLayers[0].pixels,"base64"),pixels);
+console.log("[DEBUG] "+JSON.stringify({scope:"independent-byte-schema-expectations",nativeExecuted:false,commands:fixture.commands,bytes,maximumBytes:fixture.limits.jsonBytes,justOverBytes:Buffer.byteLength(over),pixelBytes:pixels.length,sourcePreserved:true}));

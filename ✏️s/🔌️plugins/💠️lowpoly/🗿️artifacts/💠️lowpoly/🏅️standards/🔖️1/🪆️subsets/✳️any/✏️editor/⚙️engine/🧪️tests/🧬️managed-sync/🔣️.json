@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "primitive": "box",
+  "translation": [
+    1,
+    0,
+    0
+  ],
+  "expected": {
+    "literalSource": "",
+    "persistsManagedGeometry": true
+  }
+}

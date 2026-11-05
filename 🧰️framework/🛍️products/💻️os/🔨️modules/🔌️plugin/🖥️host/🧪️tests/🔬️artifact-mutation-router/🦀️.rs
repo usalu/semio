@@ -79,7 +79,7 @@ async fn mock_handle(actor: RuntimeActorId) -> (Arc<MockGuestRuntime>, Arc<Plugi
     let budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
     let compiled = mock.compile(&PackageRef { package: PackageId("mutplan".to_string()), hash: PackageHash([7u8; 32]) }, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
-    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_original_input(),test_relay_wake_authority()).await);
+    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), compiled.clone(),instance,test_relay_wake_authority()).await);
     (mock, handle)
 }
 

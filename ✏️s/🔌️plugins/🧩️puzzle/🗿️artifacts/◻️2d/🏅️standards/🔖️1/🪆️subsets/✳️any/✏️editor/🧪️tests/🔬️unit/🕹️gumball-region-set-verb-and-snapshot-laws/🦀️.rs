@@ -243,3 +243,22 @@ fn snapshot_import_requires_the_explicit_payload_contract() {
         }
     }
 }
+
+/// 🛡️ Invalid imported documents notify through the mounted command route without replacing the board or recording an edit.
+#[semio_framework_async_macros::async_test]
+async fn invalid_snapshot_import_keeps_the_live_board_and_its_history() {
+    let vectors: Value = semio_framework_pack_json::from_json_str(fixture_text!("../../../../🎮️commands/🧊️document/📥️import-snapshot/🧪️tests/🧫️fixtures/📄️payload-input/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable import cases");
+    let mut app = app_with_registry();
+    dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("seed a live document");
+    let before = fixture_of(&app);
+    for case in vectors["cases"].as_array().expect("input cases").iter().filter(|case| case["accepted"].as_bool() == Some(false) && case["args"]["payload"].as_object().is_some()) {
+        let result = dispatch(&mut app, "importSnapshot", Some(&case["args"]), None).expect("invalid import reports a notice");
+        assert_eq!(committed_edits(&result), 0, "invalid input records no edit: {case:?}");
+        assert!(!result.requested_effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })), "invalid input cannot replace the document: {case:?}");
+        assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })), "invalid input explains the refusal: {case:?}");
+        assert_eq!(fixture_of(&app), before, "the live document survives refusal: {case:?}");
+    }
+    dispatch(&mut app, "undo", None, None).expect("the seeded edit remains undoable");
+    assert!(board_snapshot_nodes(&fixture_of(&app)).is_empty());
+    close_app(&mut app);
+}

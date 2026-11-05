@@ -1,16 +1,7 @@
 /// 🗂️ Guest document codec: the guest-backed codec refusals, the unregistered route and the two operations the WIT does not carry.
 
-//#region 🗂️GuestDocumentCodec
 
-/// 🗂️ ticket 26/09/18 slice M10: `store::os_store::serialization::ArtifactCodec`'s four operations are bare, non-capturing
-/// `fn` pointers, so a guest-backed codec's thunks resolve their route out of a process-global
-/// table. With NO route registered every one of them must refuse in a typed, countable way — a
-/// thunk that answered anything at all with no component behind it would be fabricating a document.
-///
-/// 🧭️ Reads the live table rather than clearing it: registration is process-global and another
-/// test in this binary may legitimately hold a route. The assertion is on the SHAPE of the
-/// refusal and on the count it reports, both of which hold for any candidate list that cannot
-/// print these bytes — and `b"not-a-pack"` is a pair no real component prints.
+/// 🗂️ Guest codec thunks resolve registered components; invalid bytes produce typed refusals without clearing shared routes.
 #[tokio::test]
 async fn a_guest_backed_codec_with_no_registered_route_refuses_and_counts_its_candidates() {
     let refused = guest_print_mirror(b"not-a-pack", b"not-an-spr").await.expect_err("no component prints bytes that are not a pack");
@@ -48,4 +39,3 @@ async fn a_guest_backed_codec_refuses_the_two_operations_the_wit_does_not_export
     assert!(message.contains("prints whole pairs, not single edits"), "{message}");
 }
 
-//#endregion 🗂️GuestDocumentCodec

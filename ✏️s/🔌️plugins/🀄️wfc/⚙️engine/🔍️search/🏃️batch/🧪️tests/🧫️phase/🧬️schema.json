@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.wfc.search.supervision-phase",
+  "type": "object",
+  "required": [
+    "fuel",
+    "turns"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "fuel": {
+      "const": 1
+    },
+    "turns": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "yielded",
+          "yieldNext"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "yielded": {
+            "type": "boolean"
+          },
+          "yieldNext": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

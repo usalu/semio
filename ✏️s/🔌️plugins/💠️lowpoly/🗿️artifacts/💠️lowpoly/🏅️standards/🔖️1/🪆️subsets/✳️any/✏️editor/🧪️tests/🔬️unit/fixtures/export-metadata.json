@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "actions": [
+    {
+      "id": "exportMesh",
+      "kind": "shell",
+      "destructive": false,
+      "approval": "never"
+    }
+  ]
+}

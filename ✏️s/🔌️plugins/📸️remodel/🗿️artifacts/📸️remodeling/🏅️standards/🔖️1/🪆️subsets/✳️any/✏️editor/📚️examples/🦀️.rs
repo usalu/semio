@@ -11,8 +11,8 @@ use semio_ui_locale::LocalizedLabel;
 
 //#region 🔖️Registry
 /// 📚️ One registered example: the id the `setActiveExample` action carries, the committed text, and the
-/// picker chrome. `text` is `.dsl.semio` document text for a document example and `.cmd.semio` replay
-/// text for a session example — [`REMODELING_EXAMPLE_BOOT_ID`] names the one that boots the editor.
+/// picker chrome. Every committed `.dsl.semio` snapshot loads through the same document codec;
+/// [`REMODELING_EXAMPLE_BOOT_ID`] names the one that boots the editor.
 pub struct RemodelingExample {
     pub id: &'static str,
     pub text: &'static str,

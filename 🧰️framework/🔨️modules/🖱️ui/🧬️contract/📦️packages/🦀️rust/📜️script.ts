@@ -7,7 +7,7 @@ import type {ScriptInvocation} from "../../../../🏃️process/📦️packages/
 import { configuredExactCargoLawPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runOwnedCommand,resolveTypescriptCompilerV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
 import { readCargoTestPolicyV1, runAdmittedExactCargoLawsV1 as runExactCargoLaws, runAdmittedCargoCommandV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -24,7 +24,7 @@ import { fileURLToPath } from "node:url";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { seedGeneratedFile } from "../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 
-import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter,scriptInvocationBudget } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { testBuiltTreeRetirementFixture } from "../../🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 import { fixedListStorageSelfTests } from "../../🧪️tests/🔬️fixed-list-storage/🟦️.ts";
@@ -152,7 +152,9 @@ if (isMainModuleV1(import.meta.url)) {
   /** 🌱️ Validates the complete semantic contract's direct canonical Value ownership. */
 class OwnershipScript extends BundleScript {async run(args:string[]):Promise<void>{if(args.length)throw new Error("Expected test-ownership");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw new Error("Finite original UI ownership budget required");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🧬️ownership/🧪️tests/🟦️.ts")],this.repoRoot,"ui:ownership",remaining,{signal:this.invocation.control.signal});}}
 
-const router = new ScriptRouter(import.meta.dirname).register("test-ownership",OwnershipScript)
+/** 🛬️ Checks the full original UI receiving corpus against independent JSON validators. */
+class OriginalSourceScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw new Error("UI receiving source laws accept no arguments");const tests=["../../🧪️tests/🛬️receive/🟦️.ts","../../🖼️presentation/🛬️receive/🟦️.ts"].map(p=>resolve(this.root,p));for(const command of[[resolveTypescriptCompilerV1(this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun,node",...tests],["test",...tests]])await runOwnedCommand(process.execPath,command,this.repoRoot,"ui:original-receiving:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});}}
+const router = new ScriptRouter(import.meta.dirname).register("test-original-source",OriginalSourceScript).register("test-ownership",OwnershipScript)
     .register("test", TestScript)
     .register("built-tree-retirement-check", BuiltTreeRetirementScript)
     .register("conformance", ConformanceScript)

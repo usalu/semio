@@ -11,7 +11,7 @@ use semio_plugin::ConfigView;
 use semio_plugin::Emit;
 use semio_plugin::Fault;
 use semio_plugin::InteractiveJobClassification;
-use crate::editor::wfc2d::{create_wfc2d_editor, Wfc2dEditor, Wfc2dEditorCommand};
+use crate::editor::wfc2d::{create_wfc2d_editor, wfc2d_example_document, Wfc2dEditor, Wfc2dEditorCommand};
 use crate::editor::wfc2d::Wfc2dRetainedCommandJobFactory;
 use crate::editor::wfc2d::config::Wfc2dConfig;
 use crate::editor::wfc2d::modes::edit::windows::{graph, preview};
@@ -92,7 +92,7 @@ fn both_windows_render_for_every_example() {
     let transient = crate::editor::wfc2d::transient::Wfc2dTransient::default();
     for document in crate::examples::documents() {
         for body in [graph::WFC_GRAPH_BODY, preview::WFC_2D_PREVIEW_BODY] {
-            crate::editor::wfc2d::render_body(body, &document, &config, &transient, None).expect("window renders");
+            crate::editor::wfc2d::render_body(body, &document, &config, &transient, None, None).expect("window renders");
         }
     }
 }
@@ -116,16 +116,18 @@ fn commands_round_trip_through_their_binary_codec() {
 /// one path layer per solved slot, the unsolved one carries none.
 /// 🔎️ `ComponentTree` is `Debug` but not `PartialEq`, so the two renders are compared by their
 /// debug projection — enough to prove the lane is read, and it fails loudly if it ever is not.
-#[test]
-fn the_host_render_path_paints_the_solved_assignment() {
+#[semio_framework_async_macros::async_test]
+async fn the_host_render_path_paints_the_solved_assignment() {
     use crate::editor::wfc2d::transient::{Wfc2dAssignment, Wfc2dTransient};
     let document = crate::examples::two_room_corridor::document();
     let config = Wfc2dConfig::default();
     let history = semio_plugin::HistoryView::empty();
-    let doc = semio_plugin::ArtifactView::new(&document, &history);
+    let context = semio_plugin::AppRenderOperationContext { app_instance_id: 1, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(1), canonical_base_revision: [1;32], mounted_policy: semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT };
+    let doc = semio_plugin::ArtifactView::with_render_context(&document, &history, semio_plugin::ChildContentView::EMPTY, context, "wfc2d", None).await;
+    assert!(doc.operation_optional().is_none());
     let cfg = semio_plugin::ConfigView { snapshot: &config, window: None };
 
-    let solved = Wfc2dTransient {
+    let solved = Wfc2dTransient { source_revision: vec![1;32],
         assignments: vec![
             Wfc2dAssignment { slot_id: "corridor".into(), tile_id: "corridor".into() },
             Wfc2dAssignment { slot_id: "room-a".into(), tile_id: "room".into() },
@@ -139,6 +141,12 @@ fn the_host_render_path_paints_the_solved_assignment() {
     let unsolved = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_plugin::TransientView { snapshot: &empty, window: None }).expect("the host render path renders unsolved too");
     assert_ne!(format!("{painted:?}"), format!("{unsolved:?}"), "the transient lane never reached the preview window: a solved board rendered identically to an unsolved one");
 
+    let changed = semio_plugin::ArtifactView::with_render_context(&document, &history, semio_plugin::ChildContentView::EMPTY, semio_plugin::AppRenderOperationContext { canonical_base_revision: [2;32], ..context }, "wfc2d", None).await;
+    let stale = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &changed, &cfg, &semio_plugin::TransientView { snapshot: &solved, window: None }).unwrap();
+    assert_eq!(serde_json::to_value(&stale.root).unwrap(), serde_json::to_value(&unsolved.root).unwrap());
+    let unbound = semio_plugin::ArtifactView::new(&document, &history);
+    let hidden = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &unbound, &cfg, &semio_plugin::TransientView { snapshot: &solved, window: None }).unwrap();
+    assert_eq!(serde_json::to_value(&hidden.root).unwrap(), serde_json::to_value(&unsolved.root).unwrap());
     let solved_layers = preview::preview_layers_json(&document, &solved, None);
     let unsolved_layers = preview::preview_layers_json(&document, &empty, None);
     for slot in &document.slots {
@@ -153,7 +161,7 @@ fn the_host_render_path_paints_bitmap_tiles_as_pixels() {
     use crate::editor::wfc2d::transient::{Wfc2dAssignment, Wfc2dTransient};
     let document = crate::examples::terrain_ring::document();
     let tile = document.tiles[0].id.clone();
-    let transient = Wfc2dTransient { assignments: document.slots.iter().map(|slot| Wfc2dAssignment { slot_id: slot.id.clone(), tile_id: tile.clone() }).collect(), contradiction: false };
+    let transient = Wfc2dTransient { source_revision: Vec::new(), assignments: document.slots.iter().map(|slot| Wfc2dAssignment { slot_id: slot.id.clone(), tile_id: tile.clone() }).collect(), contradiction: false };
     let layers = preview::preview_layers_json(&document, &transient, None);
     assert!(layers.contains("\"kind\":\"image\""), "a bitmap tile must paint an image layer, not a labelled rect");
     assert!(layers.contains("data:image/png;base64,"), "a bitmap tile must carry a real png data url");
@@ -284,12 +292,13 @@ fn a_verb_against_an_unknown_id_is_refused_by_name() {
 
 /// 🏁 The solve the preview paints is the artifact's OWN inference, run to completion.
 #[test]
-fn the_solve_verb_answers_a_transient_assignment() {
+fn the_fill_payload_converts_a_real_transient_assignment() {
     let document = crate::examples::two_room_corridor::document();
-    let mutations = crate::editor::wfc2d::solve_transient(&document).expect("the boot example solves");
+    let commit = crate::inferences::solve_with_clock(&document, semio_framework_job::logical_now_us).expect("test-only inference oracle");
+    let mutations = crate::editor::wfc2d::modes::edit::tools::fill::payload_from_commit(&document, &commit).set_solve_mutations();
     assert_eq!(mutations.len(), 1, "one solve is one transient publication");
     let crate::editor::wfc2d::transient::Wfc2dTransientMutation::SetSolve(solve) = &mutations[0];
-    let transient = crate::editor::wfc2d::transient::Wfc2dTransient { assignments: solve.assignments.clone(), contradiction: solve.contradiction };
+    let transient = crate::editor::wfc2d::transient::Wfc2dTransient { source_revision: Vec::new(), assignments: solve.assignments.clone(), contradiction: solve.contradiction };
     assert!(!transient.contradiction, "the boot example is satisfiable");
     assert_eq!(transient.assignments.len(), document.slots.len(), "every slot is assigned");
     for row in &transient.assignments {
@@ -367,3 +376,87 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
 }
 
 semio_plugin::history_edit_acceptance_law!("wfc", Wfc2dEditor, || semio_plugin::App { definition: create_wfc2d_editor(), examples: Vec::new() }, "../..");
+
+/// 🎬️ The shared picker contract loads the boot document when its selection is cleared.
+#[test]
+fn the_example_picker_obeys_the_language_neutral_selection_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️example-selection/🔣️.json")).expect("selection contract");
+    let artifact = fixture["artifacts"].as_array().unwrap().iter().find(|row| row["id"] == "wfc2d").unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let input = case["input"].as_str().unwrap_or_else(|| artifact["examples"][case["exampleIndex"].as_u64().unwrap() as usize].as_str().unwrap());
+        let actual = wfc2d_example_document(input);
+        let expected = match case["select"].as_str().unwrap() {
+            "default" => Some(crate::examples::two_room_corridor::document()),
+            "named" => Some(crate::examples::wall_roof_facade_strip::document()),
+            _ => None,
+        };
+        assert_eq!(actual, expected, "{}", case["id"]);
+    }
+    let examples = [
+        (crate::examples::two_room_corridor::ID, crate::examples::two_room_corridor::document()),
+        (crate::examples::wall_roof_facade_strip::ID, crate::examples::wall_roof_facade_strip::document()),
+        (crate::examples::hex_ring::ID, crate::examples::hex_ring::document()),
+        (crate::examples::terrain_ring::ID, crate::examples::terrain_ring::document()),
+    ];
+    let expected_ids: Vec<_> = examples.iter().map(|(id, _)| *id).collect();
+    let fixture_ids: Vec<_> = artifact["examples"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect();
+    assert_eq!(fixture_ids, expected_ids);
+    for (id, expected) in examples {
+        assert_eq!(wfc2d_example_document(id), Some(expected), "{id}");
+    }
+}
+
+/// ⏯️ The actual mounted adapter fences live fill payloads with both run and render identities.
+#[semio_framework_async_macros::async_test]
+async fn mounted_live_fill_obeys_the_portable_revision_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️preview-revisions/🔣️.json")).unwrap();
+    let document = crate::examples::two_room_corridor::document();
+    let history = semio_plugin::HistoryView::empty();
+    let config = Wfc2dConfig::default();
+    let cfg = semio_plugin::ConfigView { snapshot: &config, window: None };
+    let empty = crate::editor::wfc2d::transient::Wfc2dTransient::default();
+    let lane = semio_plugin::TransientView { snapshot: &empty, window: None };
+    for case in fixture["cases"].as_array().unwrap() {
+        let source: Vec<u8> = serde_json::from_value(case["sourceRevision"].clone()).unwrap();
+        let revision: Option<[u8;32]> = serde_json::from_value(case["currentRevision"].clone()).unwrap();
+        let doc = match revision {
+            Some(revision) => semio_plugin::ArtifactView::with_render_context(&document, &history, semio_plugin::ChildContentView::EMPTY, semio_plugin::AppRenderOperationContext { app_instance_id: 1, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(1), canonical_base_revision: revision, mounted_policy: semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT }, "wfc2d", None).await,
+            None => semio_plugin::ArtifactView::new(&document, &history),
+        };
+        let baseline = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &lane).unwrap();
+        let payload = crate::editor::wfc2d::modes::edit::tools::fill::Wfc2dFillTickPayload { source_revision: source.clone(), assignments: document.slots.iter().map(|slot| (slot.id.clone(), Some(document.tiles[0].id.clone()))).collect(), contradiction: false, done: false, trace: Vec::new() };
+        let identity = semio_framework_tool_run::ToolRunIdentity::new(semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 9 }, source.try_into().unwrap_or([9;32]));
+        let mut run = semio_plugin::ToolRunView::new("fill", identity, semio_framework_tool_run::ToolRunState::Running);
+        run.payload = Some(crate::editor::wfc2d::modes::edit::tools::fill::encode_fill_payload(&payload).into());
+        let doc = doc.with_tool_run(Some(run));
+        let actual = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &lane).unwrap();
+        let different = serde_json::to_value(&actual.root).unwrap() != serde_json::to_value(&baseline.root).unwrap();
+        assert_eq!(different, case["visible"].as_bool().unwrap(), "{}", case["id"]);
+    }
+}
+
+/// 🏁️ Complete remains a live run state, but its final assignments override every historical trace.
+#[test]
+fn completed_live_preview_uses_authoritative_assignments_and_partial_preview_keeps_trace() {
+    use crate::editor::wfc2d::modes::edit::tools::fill::{self, Wfc2dFillTickPayload, Wfc2dFillTraceEvent};
+    use crate::editor::wfc2d::transient::{Wfc2dAssignment, Wfc2dTransient};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️completed-preview/🔣️.json")).unwrap();
+    let document = crate::examples::two_room_corridor::document();
+    let config = Wfc2dConfig::default();
+    let revision = [7;32];
+    for case in fixture["cases"].as_array().unwrap() {
+        let tile = |field: &str| document.tiles[case[field].as_u64().unwrap() as usize].id.clone();
+        let slot = document.slots[0].id.clone();
+        let done = case["done"].as_bool().unwrap();
+        let payload = Wfc2dFillTickPayload { source_revision: revision.to_vec(), assignments: [(slot.clone(), Some(tile("assigned")))].into_iter().collect(), done, trace: vec![Wfc2dFillTraceEvent { slot_id: slot.clone(), tile_id: tile("traced"), discarded: case["discarded"].as_bool().unwrap() }], ..Default::default() };
+        let state = if done { semio_framework_tool_run::ToolRunState::Complete } else { semio_framework_tool_run::ToolRunState::Running };
+        assert!(!state.is_terminal());
+        let identity = semio_framework_tool_run::ToolRunIdentity::new(semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 9 }, revision);
+        let mut run = semio_plugin::ToolRunView::new("fill", identity, state);
+        run.payload = Some(fill::encode_fill_payload(&payload).into());
+        let expected = Wfc2dTransient { source_revision: revision.to_vec(), assignments: vec![Wfc2dAssignment { slot_id: slot, tile_id: tile("expected") }], ..Default::default() };
+        let actual = crate::editor::wfc2d::render_body(preview::WFC_2D_PREVIEW_BODY, &document, &config, &Wfc2dTransient::default(), Some(&run), Some(revision)).unwrap();
+        let baseline = crate::editor::wfc2d::render_body(preview::WFC_2D_PREVIEW_BODY, &document, &config, &expected, None, Some(revision)).unwrap();
+        assert_eq!(serde_json::to_value(&actual.root).unwrap(), serde_json::to_value(&baseline.root).unwrap(), "{}", case["id"]);
+    }
+}

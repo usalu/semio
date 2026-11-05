@@ -6,7 +6,7 @@ use crate::editor::bitmap::modes::edit::tools::fill::{self as fill_tool, BitmapF
 use crate::editor::bitmap::modes::edit::windows::output::config::BitmapOutputWindowConfig;
 use crate::editor::bitmap::transient::BitmapTransient;
 use crate::schema::snapshot::{BitmapColor};
-use crate::standards::v1::subsets::any::io::text::snapshot::{decode_base64};
+use crate::standards::v1::subsets::any::io::text::snapshot::{decode_base64, encode_base64};
 use crate::BitmapSnapshot;
 use semio_plugin::scene_surface;
 use semio_plugin::ActionArgDef;
@@ -49,8 +49,9 @@ pub fn definition() -> WindowKindDefinition {
         capabilities: Vec::new(),
     };
     definition.actions.extend([
+        ActionDefinition::bounded_catalog("pin-preview", LocalizedLabel::native("Pin Solution", "Lösung anheften"), ActionKind::Mutation),
         ActionDefinition::bounded_catalog("solve", LocalizedLabel::native("Solve", "Berechnen"), ActionKind::Mutation),
-        ActionDefinition::bounded_catalog("commit-fill-solve", LocalizedLabel::native("Commit Fill Solve", "Füllen übernehmen"), ActionKind::Mutation),
+        ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("commit-fill-solve", LocalizedLabel::native("Commit Fill Solve", "Füllen übernehmen"), ActionKind::Mutation) },
         ActionDefinition {
             args: vec![
                 ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")).required().default_value(&24.0),
@@ -87,8 +88,8 @@ pub fn definition() -> WindowKindDefinition {
 /// 🎬️ Encodes the inferred bitmap behind the semantic surface contract. A live fill payload wins over
 /// the finished SetSolve cache. A cached solve whose extent no longer matches the document's own
 /// output spec is DISCARDED rather than reshaped.
-pub fn render(document: &BitmapSnapshot, transient: &BitmapTransient, config: &BitmapOutputWindowConfig, tool_run: Option<&ToolRunView>) -> UiAssemblyResult<BuiltNode> {
-    let scene = Canvas2dScene::base(0.0, 0.0, config.zoom, render_layers_fingerprint(document, transient, config, tool_run));
+pub fn render(document: &BitmapSnapshot, transient: &BitmapTransient, config: &BitmapOutputWindowConfig, tool_run: Option<&ToolRunView>, current_revision: Option<[u8; 32]>) -> UiAssemblyResult<BuiltNode> {
+    let scene = Canvas2dScene::base(0.0, 0.0, config.zoom, render_layers_fingerprint(document, transient, config, tool_run, current_revision));
     scene_surface(SURFACE_ID, ContractSurfaceKind::Canvas2d, &scene)
 }
 
@@ -121,22 +122,24 @@ pub fn layers_from_fill_payload(document: &BitmapSnapshot, payload: &BitmapFillP
         }
     }
     let mut markers = pins.to_vec();
-    let mut undone = vec![false; cells];
-    for event in &payload.trace {
-        let index = event.index as usize;
-        if index >= cells {
-            continue;
+    if !payload.done {
+        let mut undone = vec![false; cells];
+        for event in &payload.trace {
+            let index = event.index as usize;
+            if index >= cells {
+                continue;
+            }
+            if event.color <= u32::from(u8::MAX) {
+                painted[index] = event.color as u8;
+            }
+            undone[index] = event.discarded;
         }
-        if event.color <= u32::from(u8::MAX) {
-            painted[index] = event.color as u8;
-        }
-        undone[index] = event.discarded;
-    }
-    for (index, discarded) in undone.iter().enumerate() {
-        if *discarded {
-            let x = index as u32 % payload.width;
-            let y = index as u32 / payload.width;
-            markers.push(crate::schema::snapshot::BitmapPinnedPixel { x, y, color: u32::from(discard) });
+        for (index, discarded) in undone.iter().enumerate() {
+            if *discarded {
+                let x = index as u32 % payload.width;
+                let y = index as u32 / payload.width;
+                markers.push(crate::schema::snapshot::BitmapPinnedPixel { x, y, color: u32::from(discard) });
+            }
         }
     }
     crate::bitmap_layers_json("out", payload.width, payload.height, &palette, &painted, &markers)
@@ -155,17 +158,40 @@ pub fn contradiction_layers(document: &BitmapSnapshot, pins: &[crate::schema::sn
     layers
 }
 
+/// 🧷️ Reconstructs a complete authored output without treating holes or conflicting pins as pixels.
+fn complete_pinned_indices(document: &BitmapSnapshot) -> Option<Vec<u8>> {
+    let width = document.output.width as usize;
+    let count = width.checked_mul(document.output.height as usize)?;
+    if count == 0 || document.pinned.len() != count {
+        return None;
+    }
+    let mut indices = vec![0; count];
+    let mut seen = vec![false; count];
+    for pin in &document.pinned {
+        if pin.x >= document.output.width || pin.y >= document.output.height || pin.color as usize >= document.input.palette.len() {
+            return None;
+        }
+        let index = pin.y as usize * width + pin.x as usize;
+        if seen[index] {
+            return None;
+        }
+        seen[index] = true;
+        indices[index] = u8::try_from(pin.color).ok()?;
+    }
+    Some(indices)
+}
+
 /// 🧪 Layer JSON fingerprint used by tests to tell empty, partial and finished paints apart.
-pub fn render_layers_fingerprint(document: &BitmapSnapshot, transient: &BitmapTransient, config: &BitmapOutputWindowConfig, tool_run: Option<&ToolRunView>) -> String {
+pub fn render_layers_fingerprint(document: &BitmapSnapshot, transient: &BitmapTransient, config: &BitmapOutputWindowConfig, tool_run: Option<&ToolRunView>, current_revision: Option<[u8; 32]>) -> String {
     let pins: &[crate::schema::snapshot::BitmapPinnedPixel] = if config.show_pins { &document.pinned } else { &[] };
-    if let Some(payload) = live_fill_payload(tool_run) {
+    if let Some(payload) = live_fill_payload(tool_run.filter(|run| current_revision == Some(run.identity.base_revision))) {
         return layers_from_fill_payload(document, &payload, pins);
     }
-    if transient.contradiction && transient.output_width == document.output.width && transient.output_height == document.output.height && transient.output_pixels.is_none() {
+    let fresh = current_revision.is_some_and(|revision| transient.source_revision == encode_base64(&revision)) && transient.output_width == document.output.width && transient.output_height == document.output.height;
+    if fresh && transient.contradiction && transient.output_pixels.is_none() {
         return contradiction_layers(document, pins);
     }
-    let fresh = transient.output_width == document.output.width && transient.output_height == document.output.height;
-    let indices = if fresh { transient.output_pixels.as_deref().and_then(decode_base64).unwrap_or_default() } else { Vec::new() };
+    let indices = if fresh { transient.output_pixels.as_deref().and_then(decode_base64) } else { None }.or_else(|| complete_pinned_indices(document)).unwrap_or_default();
     crate::bitmap_layers_json("out", document.output.width, document.output.height, &document.input.palette, &indices, pins)
 }
 //#endregion 🔖️Render

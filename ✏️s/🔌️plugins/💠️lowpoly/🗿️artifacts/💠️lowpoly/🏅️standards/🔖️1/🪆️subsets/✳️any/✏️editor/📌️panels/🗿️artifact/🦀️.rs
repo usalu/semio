@@ -12,7 +12,7 @@
 use semio_s_artifact_lowpoly_lowpoly_engine::LowpolyDocument;
 use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
 use semio_s_artifact_lowpoly_lowpoly_view::{document_object_row_id, document_target_row_id, resolve_active_object_id, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
-use semio_s_artifact_lowpoly_lowpoly_kit::{ui_label, ui_value_list, ui_value_map, ui_value_number, LOWPOLY_PLAY_CONTROLLER_ID};
+use semio_s_artifact_lowpoly_lowpoly_kit::{ui_label, ui_value_list, ui_value_map, ui_value_number, lowpoly_controller_id};
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyObject;
 use semio_plugin::plugin_app_close_prelude::{BuiltNode, RowActionPlacement};
 use semio_plugin::{Buildable, HasBase};
@@ -94,7 +94,7 @@ fn component_groups(object: &LowpolyObject, doc: &LowpolyDocument, labels: &Lowp
 /// so it survives the domain migration untouched.
 fn with_flip_normal(item: ui::TreeItemBuilder, id: u32, labels: &LowpolyLabels) -> UiAssemblyResult<ui::TreeItemBuilder> {
     let face_ids = ui_value_list([ui_value_number(f64::from(id))])?;
-    let target = row_target(LOWPOLY_PLAY_CONTROLLER_ID, Some(ui_value_map([("faceIds", face_ids)])?), None)?;
+    let target = row_target(lowpoly_controller_id(), Some(ui_value_map([("faceIds", face_ids)])?), None)?;
     item.target(target).try_row_action(row_action("flip-vertical", labels.flip_normal.as_str(), "flipFaces", RowActionPlacement::Menu)?).map_err(|_| admission("lowpoly face row action admission failed"))
 }
 
@@ -132,7 +132,7 @@ pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabe
     let active_id = resolve_active_object_id(view.snapshot, view.config);
     PanelTreeBuilder::new("lowpoly-play-document")?
         .window_section(windows, "lowpoly-play-document.meshes", Some(ui_label(labels.meshes.as_str())?), true, &view.snapshot.objects, |object| object_row(object, doc, &active_id, labels, windows))?
-        .interaction_domain(LOWPOLY_PLAY_CONTROLLER_ID, MESH_INTERACTION_DOMAIN)?
+        .interaction_domain(lowpoly_controller_id(), MESH_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render

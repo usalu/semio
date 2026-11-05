@@ -1,0 +1,33 @@
+{
+  "cuts": [
+    0,
+    1,
+    3,
+    10,
+    1024
+  ],
+  "cases": [
+    {
+      "family": "transparent",
+      "input": 0,
+      "accepted": true
+    },
+    {
+      "family": "transparent",
+      "input": 71,
+      "accepted": true
+    },
+    {
+      "family": "transparent",
+      "input": -1,
+      "accepted": false
+    },
+    {
+      "family": "transparent",
+      "input": [
+        71
+      ],
+      "accepted": false
+    }
+  ]
+}

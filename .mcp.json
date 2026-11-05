@@ -20,10 +20,14 @@
         "os",
         "--catalog",
         "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated",
+        "--catalog-target",
+        "@semio-tech/s-dev-composition:generate",
         "--folder",
         ".🧬semio/🔗space/os-mcp",
         "--scopes",
-        "workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"
+        "workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write",
+        "--operation-policy",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/💡️host-operation-policy.json"
       ]
     }
   }

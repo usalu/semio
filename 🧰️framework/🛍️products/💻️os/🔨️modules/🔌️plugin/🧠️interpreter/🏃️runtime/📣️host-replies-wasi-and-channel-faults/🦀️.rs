@@ -140,13 +140,7 @@ fn write_owned_zeroes(actor: &mut OwnedSemioInstance, pointer: i32, length: usiz
     write_owned_memory(actor, pointer, &vec![0; length]).map_err(turn_fault_host)
 }
 
-/// 🩺️ Retains what the owned guest writes to `wasi:cli/stdout`/`stderr`, bounded by
-/// [`GUEST_DIAGNOSTICS_CAPACITY_BYTES`]. The owned shim used to answer `output-stream.write` with a
-/// zeroed result and DISCARD the bytes, so a guest panic — which `panic = "abort"` prints to stderr
-/// immediately before its `unreachable` — reached the host as the bare text `wasm trap: unreachable
-/// executed` and nothing else. That is what made ticket 26/09/18 slice TC3c's `codec.genesis` trap
-/// undiagnosable from the outside: the guest had already said exactly what was wrong. The wasmtime
-/// path has kept this since [`guest_wasi_ctx`]; this is the owned interpreter's half of it.
+/// 🩺️ Retains guest stdout/stderr in the declared diagnostic capacity.
 fn retain_owned_guest_diagnostics(state: &mut OwnedGuestInstance, pointer: i32, length: i32) -> Result<(), PluginHostError> {
     let start = pointer as u32 as usize;
     let length = length as u32 as usize;
@@ -184,7 +178,7 @@ pub(super) fn admit_owned_channel(state: &mut OwnedGuestInstance) -> Result<(), 
 
 /// 📥️ Preserves current fixed actor receipts before decoding an owned JSON result and its typed guest fault.
 pub fn decode_owned_result<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, TurnFault> {
-    if bytes.starts_with(b"SAC2") {
+    if bytes.starts_with(b"SAC3") {
         let original = original_actor_context::OriginalActorFixedReceipt::read(bytes).map_err(identity_turn_fault)?;
         return Err(TurnFault::ActorCall(original));
     }

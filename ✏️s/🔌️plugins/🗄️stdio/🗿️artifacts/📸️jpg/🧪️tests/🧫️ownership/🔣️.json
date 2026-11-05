@@ -1,0 +1,42 @@
+{
+  "schema": "stdio.jpg.component-ownership/v1",
+  "vocabulary": {
+    "package": "semio-s-artifact-stdio-jpg-schema-2",
+    "forbiddenModules": [
+      "editor",
+      "viewer"
+    ],
+    "runtimeOwners": [
+      "semio-s-artifact-stdio-jpg-schema",
+      "semio-s-artifact-stdio-jpg-inferences",
+      "semio-s-artifact-stdio-jpg-mutations"
+    ]
+  },
+  "authoring": {
+    "package": "semio-s-artifact-stdio-jpg-io-registry",
+    "editors": [
+      "jpg_any",
+      "jpg_baseline"
+    ],
+    "viewers": [
+      "jpg_any",
+      "jpg_baseline"
+    ],
+    "frameWindows": 4,
+    "maximumSourceBytes": 16384
+  },
+  "ordinaryBoundary": {
+    "maxSourceFiles": 32,
+    "maxSourceBytes": 262144,
+    "maxActiveLines": 4000
+  },
+  "mutationTestOwner": {
+    "package": "semio-s-artifact-stdio-jpg-mutations",
+    "directCodecLaws": [
+      "change-jfif-header",
+      "remove-other-segment",
+      "insert-other-segment",
+      "replace-pixels"
+    ]
+  }
+}

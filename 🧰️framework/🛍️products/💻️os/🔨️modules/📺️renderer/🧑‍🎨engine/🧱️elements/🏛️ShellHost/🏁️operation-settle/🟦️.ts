@@ -59,7 +59,8 @@ const exactU64HexV1 = (value: bigint): string => value.toString(16).padStart(16,
 
 /** ⏹️ Builds the framework cancellation gesture with the original controller, provenance and exact operation authority. */
 export function typedOperationCancellationActionV1(origin: ShellInputActionV1, operation: StartedTypedOperationV1): ShellInputActionV1 {
-  return { ...origin, action: CANCEL_TYPED_OPERATION_ACTION_ID_V1, args: { operationId: exactU64HexV1(operation.operation), generation: exactU64HexV1(operation.generationValue) } };
+  const { commandAddress, ...action } = origin;
+  return { ...action, action: CANCEL_TYPED_OPERATION_ACTION_ID_V1, args: { operationId: exactU64HexV1(operation.operation), generation: exactU64HexV1(operation.generationValue) } };
 }
 
 /** 🔒️ Refuses a coincident operation id after its admitting program or document owner retired. */

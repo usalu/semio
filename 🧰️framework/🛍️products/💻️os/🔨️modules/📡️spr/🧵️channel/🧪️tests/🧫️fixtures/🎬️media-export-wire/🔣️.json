@@ -1,6 +1,6 @@
 {
   "$schema": "./🧬️schema/🔣️.json",
-  "channelVersion": 23,
+  "channelVersion": 25,
   "u64Encoding": "unsigned LEB128; JSON model values are canonical unsigned decimal strings",
   "handle": {
     "appInstanceId": 42,
@@ -381,7 +381,12 @@
         "checkpointAvailable": true,
         "mimeType": "video/mp4",
         "totalBytes": "9007199254740997",
-        "detail": ""
+        "detail": "",
+        "descriptor": [
+          1,
+          2,
+          255
+        ]
       },
       "bytes": [
         29,
@@ -449,9 +454,13 @@
         128,
         128,
         16,
-        0
+        0,
+        3,
+        1,
+        2,
+        255
       ],
-      "hex": "1d82808080808080102a06646f632dceb183808080808080108180808080808010ffffffffffffffffff010180200109766964656f2f6d7034858080808080801000"
+      "hex": "1d82808080808080102a06646f632dceb183808080808080108180808080808010ffffffffffffffffff010180200109766964656f2f6d7034858080808080801000030102ff"
     },
     "chunk": {
       "fields": {

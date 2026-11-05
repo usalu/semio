@@ -145,12 +145,48 @@ fn action_args(action_id: &str) -> Vec<ActionArgDef> {
     let coordinate = |id: &'static str, label: &'static str| ActionArgDef::number(id, LocalizedLabel::native(label, label)).required().default_value(&0.0);
     let cell = || vec![coordinate("x", "X"), coordinate("y", "Y"), coordinate("z", "Z")];
     let tile = || ActionArgDef::text("tileId", LocalizedLabel::native("Tile", "Kachel")).required();
+    let rgba = || [("r", "Red", "Rot"), ("g", "Green", "Grün"), ("b", "Blue", "Blau"), ("a", "Alpha", "Alpha")].into_iter().map(|(id, en, de)| ActionArgDef::with_schema(id, LocalizedLabel::native(en, de), semio_framework::ArgSchema::number(Some(0.0), Some(255.0), Some(1.0), true)).default_value(&255u32)).collect::<Vec<_>>();
     match action_id {
         "changeSeed" => vec![ActionArgDef::number("seed", LocalizedLabel::native("Seed", "Seed")).required().default_value(&0.0)],
         "resizeGrid" => vec![
             ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")).required().default_value(&1.0),
             ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")).required().default_value(&1.0),
             ActionArgDef::number("depth", LocalizedLabel::native("Depth", "Tiefe")).required().default_value(&1.0),
+        ],
+        "changeCellSizes" => vec![
+            ActionArgDef::select("axis", LocalizedLabel::native("Axis", "Achse"), ["x", "y", "z"].into_iter().map(|axis| ActionArgOption::new(axis, LocalizedLabel::native(axis, axis))).collect()).required().default_value(&"x"),
+            ActionArgDef::with_schema("sizes", LocalizedLabel::native("Cell Sizes", "Zellgrößen"), semio_framework::ArgSchema::Array { items: Box::new(semio_framework::ArgSchema::number(Some(0.0), None, None, false)), min_items: Some(1), max_items: None }).required(),
+        ],
+        "changePeriodicity" => [("periodicX", "Wrap X", "X umlaufend"), ("periodicY", "Wrap Y", "Y umlaufend"), ("periodicZ", "Wrap Z", "Z umlaufend")].into_iter().map(|(id, en, de)| ActionArgDef::toggle(id, LocalizedLabel::native(en, de)).default_value(&false)).collect(),
+        "createTile" => {
+            let mut args = vec![
+                ActionArgDef::text("id", LocalizedLabel::native("Id", "Id")).required(),
+                ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")),
+                ActionArgDef::number("weight", LocalizedLabel::native("Weight", "Gewicht")).required().default_value(&1.0),
+            ];
+            args.extend(rgba());
+            args
+        }
+        "deleteTile" | "deleteRule" => vec![ActionArgDef::text("id", LocalizedLabel::native("Id", "Id")).required()],
+        "changeTileWeight" => vec![tile(), ActionArgDef::number("weight", LocalizedLabel::native("Weight", "Gewicht")).required().default_value(&1.0)],
+        "changeTileColor" => {
+            let mut args = vec![tile()];
+            args.extend(rgba());
+            args
+        }
+        "createRule" => vec![
+            ActionArgDef::text("id", LocalizedLabel::native("Id", "Id")).required(),
+            ActionArgDef::text("tileAId", LocalizedLabel::native("Tile A", "Kachel A")).required(),
+            ActionArgDef::text("tileBId", LocalizedLabel::native("Tile B", "Kachel B")).required(),
+            ActionArgDef::select("direction", LocalizedLabel::native("Direction", "Richtung"), [("RIGHT", "Right", "Rechts"), ("LEFT", "Left", "Links"), ("BACK", "Back", "Hinten"), ("FRONT", "Front", "Vorne"), ("TOP", "Top", "Oben"), ("BOTTOM", "Bottom", "Unten")].into_iter().map(|(token, en, de)| ActionArgOption::new(token, LocalizedLabel::native(en, de))).collect()).required().default_value(&"RIGHT"),
+            ActionArgDef::toggle("allowed", LocalizedLabel::native("Allowed", "Erlaubt")).default_value(&true),
+        ],
+        "setCamera" => vec![
+            coordinate("x", "X"), coordinate("y", "Y"), coordinate("z", "Z"),
+            ActionArgDef::number("targetX", LocalizedLabel::native("Target X", "Ziel X")).required().default_value(&0.0),
+            ActionArgDef::number("targetY", LocalizedLabel::native("Target Y", "Ziel Y")).required().default_value(&0.0),
+            ActionArgDef::number("targetZ", LocalizedLabel::native("Target Z", "Ziel Z")).required().default_value(&0.0),
+            ActionArgDef::number("zoom", LocalizedLabel::native("Zoom", "Zoom")).required().default_value(&1.0),
         ],
         "setActiveTile" => vec![tile()],
         "pickCell" => vec![ActionArgDef::text("cellId", LocalizedLabel::native("Cell", "Zelle")).required()],

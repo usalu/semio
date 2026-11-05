@@ -27,7 +27,7 @@ fn every_slot_paints_even_unsolved() {
 #[test]
 fn a_solved_slot_paints_its_tile_media() {
     let document = crate::examples::two_room_corridor::document();
-    let transient = Wfc2dTransient { assignments: vec![Wfc2dAssignment { slot_id: "room-a".into(), tile_id: "room".into() }], contradiction: false };
+    let transient = Wfc2dTransient { source_revision: Vec::new(), assignments: vec![Wfc2dAssignment { slot_id: "room-a".into(), tile_id: "room".into() }], contradiction: false };
     let layers = preview_layers_json(&document, &transient, None);
     assert!(layers.contains("tile-room-a-room-0"), "the solved tile's path layer is missing");
     let fit = preview_fit(&document);
@@ -74,7 +74,7 @@ fn a_partial_fill_preview_differs_from_empty_and_finished() {
     let document = crate::examples::hex_ring::document();
     let oracle = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("hex-ring solves");
     let empty = preview_layers_json(&document, &Wfc2dTransient::default(), None);
-    let finished_transient = Wfc2dTransient {
+    let finished_transient = Wfc2dTransient { source_revision: Vec::new(),
         assignments: oracle.assignments.iter().map(|(slot_id, tile_id)| Wfc2dAssignment { slot_id: slot_id.clone(), tile_id: tile_id.clone() }).collect(),
         contradiction: oracle.contradiction,
     };
@@ -87,7 +87,7 @@ fn a_partial_fill_preview_differs_from_empty_and_finished() {
         }
         assignments.insert(slot_id.clone(), Some(tile_id.clone()));
     }
-    let partial = Wfc2dFillTickPayload { assignments, contradiction: false, done: false , trace: Vec::new() };
+    let partial = Wfc2dFillTickPayload { source_revision: Vec::new(), assignments, contradiction: false, done: false , trace: Vec::new() };
     assert!(partial.decided_count() > 0 && partial.decided_count() < oracle.assignments.len());
     let mid = preview_layers_json(&document, &Wfc2dTransient::default(), Some(&partial));
     assert_ne!(mid, empty, "a partial board must not look empty");

@@ -1,0 +1,1 @@
+import {resolve} from "node:path";import {pathToFileURL} from "node:url";const {verifyPickerExamples}=await import(pathToFileURL(resolve("✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🧪️tests/🧩️picker/🟦️.ts")).href);console.log(JSON.stringify(verifyPickerExamples()));

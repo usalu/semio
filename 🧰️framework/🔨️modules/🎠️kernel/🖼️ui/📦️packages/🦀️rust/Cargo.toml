@@ -29,5 +29,6 @@ semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/�
 serde = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

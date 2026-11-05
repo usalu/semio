@@ -28,3 +28,5 @@ testkit = ["semio-framework-pixels-codecs/testkit"]
 [dev-dependencies]
 serde_json = { workspace = true }
 semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
+
+semio-framework-value-testing-allocator = { path = "../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

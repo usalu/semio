@@ -29,7 +29,7 @@ impl HeadlessWorkspace {
     /// and any caller that already knows exactly which plugin it wants (never duplicated).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn open_artifact_channel(&self, plugin_id: &str) -> Result<PluginArtifactChannel, GatewayError> {
-        open_plugin_artifact_channel(self.plugin_components().as_ref(), plugin_id, None, &self.actor_label(), self.host_driver_policy)
+        open_plugin_artifact_channel(self.plugin_components().as_ref(), plugin_id, None, &self.actor_label(), self.host_driver_policy, self.operation_policy)
     }
 
     /// 🐚️ Publishes this session's channel decision into the workspace. Called once, by
@@ -57,7 +57,7 @@ impl HeadlessWorkspace {
                 return Ok(ArtifactChannels::ShellDirect(ShellArtifactChannel::new(Arc::clone(binding), Arc::clone(catalog)).for_plugin(plugin_id)));
             }
         }
-        Ok(ArtifactChannels::Plugin(open_plugin_artifact_channel_scoped(self.plugin_components().as_ref(), plugin_id, app_id, &self.actor_label(), scope, self.host_driver_policy)?))
+        Ok(ArtifactChannels::Plugin(open_plugin_artifact_channel_scoped(self.plugin_components().as_ref(), plugin_id, app_id, &self.actor_label(), scope, self.host_driver_policy, self.operation_policy)?))
     }
 
     /// 🔌️ Binds the root-owned `ActionAdapter` once, before the server serves. Idempotent: a second
@@ -71,9 +71,9 @@ impl HeadlessWorkspace {
     /// the one a committed `action_invoke` mutated. `None` when no adapter is bound (a bare
     /// workspace in a unit test) or when this workspace's catalog gives the plugin no instance slot.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn read_live_session_artifact_bytes(&self, plugin_id: &str, app_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
+    pub(crate) fn read_live_session_artifact_bytes(&self, artifact_id: &str, plugin_id: &str, app_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         let Some(actions) = self.root_actions.get() else { return Ok(None) };
-        let Some(instance) = app_instance_slot(&self.catalog.current(), plugin_id, app_id) else { return Ok(None) };
+        let Some(instance) = actions.artifact_instance(artifact_id, plugin_id, app_id)? else { return Ok(None) };
         actions.read_session_artifact(instance).map(Some)
     }
 
@@ -85,7 +85,7 @@ impl HeadlessWorkspace {
     pub fn bind_artifact_document(&self, artifact_id: &str, scope: &ActivationScope) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         if let Some(binding) = self.plugin_artifact_binding(artifact_id) {
             let shell_owned = self.shell_route.get().is_some_and(|(route, _)| route.resolve() == ChannelKind::Shell);
-            if let (false, Some(actions), Some(instance)) = (shell_owned, self.root_actions.get(), app_instance_slot(&self.catalog.current(), &binding.plugin_id, &binding.app_id)) {
+            if let (false, Some(actions), Some(instance)) = (shell_owned, self.root_actions.get(), self.root_actions.get().map(|actions| actions.artifact_instance(artifact_id, &binding.plugin_id, &binding.app_id)).transpose()?.flatten()) {
                 actions.activate_session(instance, scope)?;
             }
         }
@@ -174,7 +174,7 @@ impl HeadlessWorkspace {
                 load_plugin_registry(&repo_root)?.into_iter().filter_map(|entry| load_package_descriptor(&entry.owner_root).ok()).collect()
             }
         };
-        let mut kinds: std::collections::BTreeMap<String, InstalledArtifactKind> = std::collections::BTreeMap::new();
+        let mut kinds: std::collections::BTreeMap<(String, String, String), InstalledArtifactKind> = std::collections::BTreeMap::new();
         for descriptor in &descriptors {
             for app in &descriptor.manifest.apps {
                 if app.role != semio_framework::AppRole::Editor {
@@ -187,7 +187,7 @@ impl HeadlessWorkspace {
                     .chain(app.artifact_kinds.iter().map(|kind| kind.schema.clone()))
                     .filter(|schema| !schema.is_empty())
                 {
-                    kinds.entry(schema.clone()).or_insert_with(|| InstalledArtifactKind {
+                    kinds.entry((schema.clone(), descriptor.manifest.plugin_id.clone(), app.id.clone())).or_insert_with(|| InstalledArtifactKind {
                         schema,
                         plugin_id: descriptor.manifest.plugin_id.clone(),
                         app_id: app.id.clone(),
@@ -198,6 +198,40 @@ impl HeadlessWorkspace {
             }
         }
         Ok(kinds.into_values().collect())
+    }
+
+
+    /// 🪪️ Resolves declared ownership without selecting an arbitrary matching app.
+    pub fn declared_artifact_owner(schema: &str, kinds: &[InstalledArtifactKind]) -> Result<Option<InstalledArtifactKind>, GatewayError> {
+        let owners: std::collections::BTreeSet<_> = kinds.iter().filter(|kind| kind.schema == schema).map(|kind| (&kind.plugin_id, &kind.app_id)).collect();
+        if owners.len() > 1 { return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, format!("schema {schema} has multiple installed owners"))); }
+        Ok(kinds.iter().find(|kind| kind.schema == schema).cloned())
+    }
+
+
+    /// 📜️ The actual owner SPR selects the persisted schema, independently of its requested kind alias.
+    pub fn canonical_artifact_owner(spr: &[u8], kinds: &[InstalledArtifactKind]) -> Result<InstalledArtifactKind, GatewayError> {
+        let schema = semio_framework_async::block_on(store::os_store::codec_registry::lane_schema_from_spr(spr)).ok_or_else(|| GatewayError::new(GatewayErrorCode::InputInvalid, "owner history has no schema identity"))?;
+        Self::declared_artifact_owner(&schema, kinds)?.ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("schema {schema} has no installed owner")))
+    }
+
+    /// 📂️ Reopens a persisted pair only through its exact declared schema owner.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn bind_folder_session_document(&self, artifact_id: &str, pack: &[u8], spr: &[u8]) -> Result<bool, GatewayError> {
+        if !matches!(self.origin, WorkspaceOrigin::Folder { .. }) { return Ok(false); }
+        let schema = semio_framework_async::block_on(store::os_store::codec_registry::lane_schema_from_spr(spr)).ok_or_else(|| GatewayError::new(GatewayErrorCode::InputInvalid, "persisted artifact has no schema identity"))?;
+        if schema == PROBE_SCHEMA { return Ok(false); }
+        let kind = Self::declared_artifact_owner(&schema, &self.installed_artifact_kinds()?)?.ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("persisted schema {schema} has no installed owner")))?;
+        let WorkspaceOrigin::Folder { path } = &self.origin else { unreachable!() };
+        let snapshot = semio_framework_async::block_on(store::sync::FolderEventLogStorage::new(path.clone()).read_snapshot(artifact_id)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?.ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, "folder artifact disappeared"))?;
+        if snapshot.0 != pack || snapshot.1 != spr { return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "folder artifact changed while reopening")); }
+        self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), PluginArtifactBinding {
+            schema, plugin_id: kind.plugin_id.clone(), app_id: kind.app_id.clone(), surface_id: None,
+            archive: snapshot.2.map(Arc::new),
+            document: Some(Arc::new(SessionDocumentPair { pack: pack.to_vec(), spr: spr.to_vec() })), backbone: None,
+            backbone_blocked_by: None, relayed: Arc::default(), relay: Arc::default(), used: hub_link_tick(),
+        });
+        Ok(true)
     }
 
     /// 🗂️ The plugin binding this workspace minted for `artifact_id`, if any — see

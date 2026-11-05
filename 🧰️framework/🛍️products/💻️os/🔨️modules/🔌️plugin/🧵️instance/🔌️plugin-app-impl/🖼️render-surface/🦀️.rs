@@ -146,9 +146,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         match original_render_result{Ok(tree)=>Ok(tree),Err(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(failure))=>self.pending.retain_render_failure(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(failure), cx),Err(source)=>self.pending.retain_render_failure(source, cx)}
     }
 
-    /// 🕹️ Same materialize-before-destructure shape the `render`/`window_measures`/`context_menu`
-    /// paths use: `interaction_hover`/`peer_presence` are read-only here, so an owned snapshot
-    /// avoids aliasing the `&mut self` field-wise destructure below.
+    /// 🕹️ Snapshots read-only interaction state before borrowing the mutable render components.
     pub(super) async fn window_engagements(&mut self, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
         if self.render_ctx().refresh_cache().await.is_err() {
             return HashMap::new();
@@ -264,22 +262,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         A::tool_measures(&doc, &cfg, view_state).await
     }
 
-    /// 🔒️ The app instance's RETAINED operation owner, handed to the poll for the same
-    /// reason `render_with_request_context` gets it: window-scoped background work an app
-    /// arms from here is latched on state only that owner holds, and a poll that cannot see
-    /// it re-arms an already-pending chain once per refresh
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    ///
-    /// ⏯️ The poll sees the LIVE RUN, exactly as the four render and measure passes above do.
-    /// `ArtifactApp::pending_effects` is where a surface starts a run once its work is owed and
-    /// finalizes a complete one, and that whole ladder is written over `doc.tool_run()` — handed a
-    /// view that always answered `None` it could only ever read "no run": the generation3d preview
-    /// run started, ticked, completed and was never finalized, so the next `toolRunStart` a gesture
-    /// asked for was a no-op against a run the framework still held and the 3d preview stopped
-    /// re-evaluating for the rest of the session
-    /// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`, contract §3.7). The document itself
-    /// stays the COMMITTED snapshot: a poll decides about work over what has landed, never over a
-    /// run's own provisional overlay.
+    /// 🔒️ Polls the retained operation owner and live run against the committed document snapshot.
     pub(super)  async fn pending_effects(&mut self,view:Option<&ViewModel>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Vec<Effect>,Fault>{
         if cx.should_yield(){return Ok(Vec::new())}
         self.render_ctx().refresh_cache().await?;
@@ -295,9 +278,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         Ok(self.stores.stamp_polled_load_document_effects(effects))
     }
 
-    /// 🗂️ Every context menu is organized (D2 of the grouped-context-menu mechanism design) at this
-    /// single funnel — a raw-vec emitter is grouped for free, and an emitter that already built its own
-    /// `Menu::group(...)` rows is never re-flattened (`organize_context_menu` is idempotent on already-organized input).
+    /// 🗂️ Applies the idempotent context-menu organizer at the common emission boundary.
     pub(super) async fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewModel) -> Vec<ContextMenuItemSpec> {
         if self.render_ctx().refresh_cache().await.is_err() {
             return Vec::new();

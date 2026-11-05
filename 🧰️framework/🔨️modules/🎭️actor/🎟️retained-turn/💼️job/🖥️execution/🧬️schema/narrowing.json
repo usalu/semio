@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "issued",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "issued": {
+      "type": "object",
+      "required": [
+        "input",
+        "fuel",
+        "deadlineUs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "type": "object"
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deadlineUs": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "actual",
+          "valid"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "actual": {
+            "type": "object",
+            "required": [
+              "input",
+              "fuel",
+              "deadlineUs"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "input": {
+                "type": "object"
+              },
+              "fuel": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "deadlineUs": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

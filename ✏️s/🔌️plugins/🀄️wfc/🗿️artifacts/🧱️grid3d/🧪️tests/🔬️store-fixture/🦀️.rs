@@ -48,3 +48,34 @@ fn undoing_the_whole_sequence_returns_the_document_to_the_committed_example() {
     }
     assert_eq!(document, base, "the whole edit ladder is point-invertible");
 }
+
+
+#[semio_framework_async_macros::async_test]
+async fn authored_seed_and_pins_survive_actual_pack_spr_replay() {
+    let corpus: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔌️plugins/🀄️wfc/🧪️tests/🗄️store-replay/🔣️.json")).expect("portable replay corpus");
+    assert_eq!(corpus["schema"], "semio.wfc.store-replay/v1");
+    let case = corpus["cases"].as_array().expect("replay cases").iter().find(|case| case["artifact"] == "grid3d").expect("artifact replay case");
+    let document = crate::examples::blocks::snapshot();
+    assert_eq!(case["example"], "blocks");
+    assert_ne!(document.seed, 99);
+    assert!(!document.pinned.iter().any(|pin| pin.x == 1 && pin.y == 0 && pin.z == 0));
+    let schema = document.schema.clone();
+    let envelope = store::os_store::document_materialize::create_document_envelope(&schema, "grid3d", document, None, &store::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = store::ArtifactStore::<Grid3dSnapshot, crate::mutations::Grid3dMutation>::new::<store::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("replay store opens");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Grid3dSnapshot, crate::mutations::Grid3dMutation>().expect("funded replay owners")).unwrap_or_else(|(error, _)| panic!("replay owners refused: {error}"));
+    for mutation in [crate::mutations::change_seed(99), crate::mutations::pin_cell(Grid3dPinnedCell { x: 1, y: 0, z: 0, tile_id: "wall".into() })] {
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("authored edit applies");
+    }
+    let observed = store.snapshot().expect("edited replay projection");
+    let pin = observed.pinned.iter().find(|pin| pin.x == 1 && pin.y == 0 && pin.z == 0).expect("authored pin");
+    let projection = serde_json::json!({ "seed": observed.seed, "pin": { "x": pin.x, "y": pin.y, "z": pin.z, "tileId": pin.tile_id }, "geometry": { "width": observed.width, "height": observed.height, "depth": observed.depth } });
+    assert_eq!(projection, case["expected"]);
+    store::os_store::test_support::assert_document_text_round_trip(&store).await;
+    store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    let mut turns = 0;
+    while !store.close_owned_terminal_is_empty() {
+        store.close_owned_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("replay store closes through original owners");
+        turns += 1;
+        assert!(turns < 100_000, "replay store retirement terminates");
+    }
+}

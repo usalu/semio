@@ -1,4 +1,4 @@
-import {renameSync,unlinkSync} from "node:fs";
+import {readFileSync,renameSync,unlinkSync} from "node:fs";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 const policy=schema.definitions.Policy.const;
@@ -47,5 +47,25 @@ export async function settleLeaseFileV1<T>(operation:()=>T,ports:Pick<LeaseFileP
    const pause=policy.pausesMilliseconds[attempt];if(pause===undefined)return{settled:false,error};
    await ports.sleep(pause,signal);
   }
+ }
+}
+
+/** 📜️ Reads one exact queue ticket through bounded sharing races; a persistent refusal never becomes an absent predecessor. */
+export type LeaseQueueReadPortsV1=Pick<LeaseFilePortsV1,"platform"|"sleep">&Readonly<{read(path:string):string}>;
+const leaseQueueReadPortsV1:LeaseQueueReadPortsV1=Object.freeze({...leaseFilePortsV1,read:(path:string)=>readFileSync(path,"utf8")});
+
+/** 🔒️ Retains the same signal and caller check around each physical read; only released names count as absent. */
+export async function readLeaseQueueTicketV1(path:string,signal:AbortSignal,check:()=>void,ports:LeaseQueueReadPortsV1=leaseQueueReadPortsV1):Promise<string|undefined>{
+ for(let attempt=0;;attempt++){
+  signal.throwIfAborted();check();let value:string;
+  try{value=ports.read(path);}
+  catch(error){
+   signal.throwIfAborted();check();const code=(error as NodeJS.ErrnoException|null|undefined)?.code;
+   if(code==="ENOENT")return undefined;
+   if(code!=="EINTR"&&!leaseFileBusyV1(error,ports.platform))throw error;
+   const pause=policy.pausesMilliseconds[attempt];if(pause===undefined)throw error;
+   await ports.sleep(pause,signal);continue;
+  }
+  signal.throwIfAborted();check();return value;
  }
 }

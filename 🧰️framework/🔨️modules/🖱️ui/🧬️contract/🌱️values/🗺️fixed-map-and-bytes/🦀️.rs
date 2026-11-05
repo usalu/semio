@@ -1,6 +1,8 @@
 //! 🗺️ Fixed map and bytes: the `UiFixedMap` keyed by bounded text and the `UiFixedBytes` byte buffer with their serde and value conversions. See [`super`].
 
 use super::*;
+#[path="🛬️receive/🦀️.rs"]mod receive;
+#[cfg(test)]pub(crate)use receive::tests::run as check_native_receiving;
 
 #[derive(Debug, PartialEq)]
 pub struct UiFixedMap<V> {

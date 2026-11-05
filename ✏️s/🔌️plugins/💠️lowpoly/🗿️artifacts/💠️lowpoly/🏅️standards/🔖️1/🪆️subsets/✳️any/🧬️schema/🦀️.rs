@@ -5,6 +5,10 @@ extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+#[path = "🎨️texture/🦀️.rs"]
+pub mod paint_texture;
+use paint_texture::{PaintTextureError,validate_compute_pixels};
+
 //#region 🧩️Modules
 #[path = "🕸️mesh/🦀️.rs"]
 pub mod managed_mesh;
@@ -169,7 +173,8 @@ pub fn mesh_from_document_value(document: &semio_framework_value::DslValue) -> R
 /// 🎨️ Alpha-composites an object's paint layers into one RGBA buffer (bottom to top). Relocated
 /// from `⚙️engine/🎨️paint` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a pure
 /// pixel-buffer algorithm, not engine behaviour.
-pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
+pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Result<Vec<u8>,PaintTextureError> {
+    for layer in layers { layer.validate_pixels()?; }
     let mut out = vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4];
     for layer in layers.iter() {
         if !layer.visible {
@@ -183,36 +188,38 @@ pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
             layer.pixels.as_slice()
         };
         let opacity = layer.opacity.clamp(0.0, 1.0);
-        for (dst, src) in out.chunks_mut(4).zip(pixels.chunks(4)) {
-            let sa = (src.get(3).copied().unwrap_or(255) as f32 / 255.0) * opacity;
+        for (dst, src) in out.chunks_exact_mut(4).zip(pixels.chunks_exact(4)) {
+            let sa = (src[3] as f32 / 255.0) * opacity;
             let da = dst[3] as f32 / 255.0;
             let out_a = sa + da * (1.0 - sa);
             if out_a < 1e-6 {
                 continue;
             }
             for (c, dst_c) in dst.iter_mut().enumerate().take(3) {
-                let sc = src.get(c).copied().unwrap_or(0) as f32 / 255.0;
+                let sc = src[c] as f32 / 255.0;
                 let dc = *dst_c as f32 / 255.0;
                 *dst_c = ((sc * sa + dc * da * (1.0 - sa)) / out_a * 255.0).round().clamp(0.0, 255.0) as u8;
             }
             dst[3] = (out_a * 255.0).round().clamp(0.0, 255.0) as u8;
         }
     }
-    out
+    Ok(out)
 }
 
 /// 🖌️ Stamps a soft round brush (or eraser) into a raw RGBA buffer of the paint texture's size in place. Shared by
 /// the app's compute session and the `apply-paint-stroke` leaf. Relocated from `⚙️engine/🎨️paint`.
 #[allow(clippy::too_many_arguments, reason = "one brush stamp per call site; a params struct would only move the same 8 fields around for this single leaf fn")]
-pub fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) {
+pub fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) -> Result<(),PaintTextureError> {
+    validate_compute_pixels(pixels)?;
     stamp_brush_on(pixels, LOWPOLY_PAINT_TEXTURE_SIZE, u, v, radius, color, hardness, opacity, eraser);
+    Ok(())
 }
 
 /// 🖌️ [`stamp_brush`] on a square RGBA buffer `side` pixels wide: the dab lands at UV `(u, v)` (v up), every pixel
 /// within `radius` gets the brush colour and gains `falloff · opacity` alpha (an eraser loses it instead), the falloff
 /// running from `1` at the centre to `hardness` at the rim.
 #[allow(clippy::too_many_arguments, reason = "one brush stamp per call site; a params struct would only move the same 9 fields around for this single leaf fn")]
-pub fn stamp_brush_on(pixels: &mut [u8], side: usize, u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) {
+fn stamp_brush_on(pixels: &mut [u8], side: usize, u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) {
     let size = side as f32;
     let cx = (u.clamp(0.0, 1.0) * (size - 1.0)).round() as i32;
     let cy = ((1.0 - v.clamp(0.0, 1.0)) * (size - 1.0)).round() as i32;
@@ -249,7 +256,8 @@ pub fn stamp_brush_on(pixels: &mut [u8], side: usize, u: f32, v: f32, radius: f3
 
 /// 🪣️ Flood-fills a contiguous same-color region of a raw RGBA buffer in place. Relocated from
 /// `⚙️engine/🎨️paint`.
-pub fn flood_fill(pixels: &mut [u8], u: f32, v: f32, color: [u8; 4]) {
+pub fn flood_fill(pixels: &mut [u8], u: f32, v: f32, color: [u8; 4]) -> Result<(),PaintTextureError> {
+    validate_compute_pixels(pixels)?;
     let size = LOWPOLY_PAINT_TEXTURE_SIZE;
     let sx = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
     let sy = (((1.0 - v.clamp(0.0, 1.0)) * (size as f32 - 1.0)).round() as usize).min(size - 1);
@@ -282,15 +290,17 @@ pub fn flood_fill(pixels: &mut [u8], u: f32, v: f32, color: [u8; 4]) {
             stack.push((x, y + 1));
         }
     }
+    Ok(())
 }
 
 /// 💧️ Reads one RGBA sample from a composited buffer at UV. Relocated from `⚙️engine/🎨️paint`.
-pub fn sample_pixel_from(composite: &[u8], u: f32, v: f32) -> [u8; 4] {
+pub fn sample_pixel_from(composite: &[u8], u: f32, v: f32) -> Result<[u8;4],PaintTextureError> {
+    validate_compute_pixels(composite)?;
     let size = LOWPOLY_PAINT_TEXTURE_SIZE;
     let x = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
     let y = (((1.0 - v.clamp(0.0, 1.0)) * (size as f32 - 1.0)).round() as usize).min(size - 1);
     let offset = (y * size + x) * 4;
-    [composite[offset], composite[offset + 1], composite[offset + 2], composite[offset + 3]]
+    Ok([composite[offset], composite[offset + 1], composite[offset + 2], composite[offset + 3]])
 }
 
 /// 🧮️ Coalesces a `before`/`after` layer-buffer pair into the minimal contiguous pixel runs

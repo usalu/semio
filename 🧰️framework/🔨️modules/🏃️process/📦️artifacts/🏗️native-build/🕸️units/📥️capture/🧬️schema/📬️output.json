@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cargo Planning Stream Limits",
+  "definitions": {
+    "Limits": {
+      "const": {
+        "maximumBytes": 134217728,
+        "maximumLines": 65536,
+        "diagnosticMaximumBytes": 65536
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "maximumTurns": 100000,
+  "allocationCases": [
+    {"id":"no-change", "extraCapacityBytes":0, "expectedSeed":0, "expectedPixels":[0,1], "expectedPaletteR":[0,255]},
+    {"id":"seed-only", "seed":19, "extraCapacityBytes":0, "expectedSeed":19, "expectedPixels":[0,1], "expectedPaletteR":[0,255]},
+    {"id":"pixels-only", "pixels":[1,0], "extraCapacityBytes":2, "expectedSeed":0, "expectedPixels":[1,0], "expectedPaletteR":[0,255]},
+    {"id":"palette-only", "paletteR":7, "extraCapacityBytes":32, "expectedSeed":0, "expectedPixels":[0,1], "expectedPaletteR":[7,255]}
+  ],
+  "malformedInputSize": [4294967295,4294967295],
+  "cases": [
+    { "id": "replace-pins-preserves-target-order", "basePins": [[1,0,1],[0,0,0]], "afterPins": [[0,0,1],[1,0,0]], "expectedPixels": [0,1], "admitted": true },
+    { "id": "restore-pins-preserves-prior-order", "basePins": [[0,0,1],[1,0,0]], "afterPins": [[1,0,1],[0,0,0]], "expectedPixels": [0,1], "admitted": true },
+    { "id": "duplicate-target-refuses-without-writing", "basePins": [[1,0,1]], "afterPins": [[0,0,1],[0,0,0]], "expectedPixels": [0,1], "admitted": false },
+    { "id": "late-invalid-region-refuses-without-writing", "basePins": [[1,0,1]], "afterPins": [[0,0,0]], "writes": [{"x":0,"y":0,"width":1,"height":1,"pixels":[1]},{"x":2,"y":0,"width":1,"height":1,"pixels":[0]}], "expectedPixels": [0,1], "admitted": false },
+    { "id": "ordered-region-writes", "basePins": [], "afterPins": [[1,0,0]], "writes": [{"x":0,"y":0,"width":2,"height":1,"pixels":[1,0]}], "expectedPixels": [1,0], "admitted": true }
+  ]
+}

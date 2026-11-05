@@ -1,0 +1,23 @@
+//! 🩹️ Original operation receivers fund the directory, each one-operation page and each exact donor placement separately.
+use super::*;
+use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,native_decoding::{NativeReceive,owned::{NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,tree::{NativeValueSource,NativeSequenceCollection,NativeSequenceReceiver,fixed,receipt,invalid}}},retirement::{RetireOwned,RetirementCursor},retained_clone::retained_clone_grant_admits};
+type OriginalPages=(Vec<Vec<UiPatchOp>>,UiTypedRetirementCursor);
+impl RetireOwned for UiPatchOps{
+ fn retirement(self)->Box<dyn RetirementCursor>{(self.storage.pages,self.retirement).retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{(Vec::<Vec<UiPatchOp>>::new(),UiTypedRetirementCursor::empty()).retirement_birth_bytes()}
+ fn controlled_retirement_supported()->bool{OriginalPages::controlled_retirement_supported()}
+}
+impl NativeSequenceCollection<UiPatchOp> for UiPatchOps{
+ type Storage=Self;
+ fn storage_demand(count:usize)->Result<RetirementDemand,ValueError>{if count>UI_DOCUMENT_PATCH_OPS{return Err(invalid())}Ok(fixed(size_of::<Self>()))}
+ fn admit_storage(output:&mut Option<Self>,count:usize,_:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,semio_framework_value::OriginalReceivingPrimary>{let mut work=0;let result=(||{let d=Self::storage_demand(count)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if output.is_some(){return Err(invalid().into())}work=1;*output=Some(Self::default());Ok(RetainedCloneStep::Complete(receipt(d)))})();RetainedWorkOutcome{result,work}}
+ fn reserve_demand(storage:&Self,index:usize)->Result<Option<RetirementDemand>,ValueError>{if storage.len()!=index{return Err(invalid())}if storage.has_reserved_slot(){return Ok(None)}let bytes=storage.next_allocation_bytes().map_err(|reason|ValueError::literal(ValueRefusalKind::OwnershipLimit,reason))?;Ok(Some(RetirementDemand{capacity_bytes:bytes,..fixed(size_of::<PatchPages>()+size_of::<Vec<UiPatchOp>>())}))}
+ fn reserve_step(storage:&mut Self,index:usize,g:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress>{let mut work=0;let result=(||{let Some(d)=Self::reserve_demand(storage,index)?else{return Ok(Default::default())};if !retained_clone_grant_admits(g,d){return Ok(Default::default())}work=1;match storage.try_reserve_one(d.capacity_bytes){Ok(bytes)=>Ok(RetainedCloneProgress{retained_capacity_bytes:bytes,..receipt(RetirementDemand{capacity_bytes:0,..d})}),Err(error)=>Err(ValueError::literal(ValueRefusalKind::AllocationFailed,error.reason).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..receipt(RetirementDemand{capacity_bytes:0,..d})}))}})();RetainedWorkOutcome{result,work}}
+ fn push_copy_bytes(_:&Self,_:usize)->Result<usize,ValueError>{Ok(size_of::<UiPatchOp>()+size_of::<usize>())}
+ fn push_step(storage:&mut Self,index:usize,input:&mut Option<UiPatchOp>,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<RetainedCloneProgress>>{let mut work=0;let result=(||{let d=fixed(Self::push_copy_bytes(storage,index)?);if !retained_clone_grant_admits(g,d){return Ok(None)}if storage.len()!=index||!storage.has_reserved_slot()||input.is_none(){return Err(invalid())}work=1;let bytes=storage.try_push_reserved(input,size_of::<UiPatchOp>()).map_err(|reason|ValueError::literal(ValueRefusalKind::InvariantViolated,reason).with_retained_progress(receipt(d)))?;if bytes==0{return Err(invalid().with_retained_progress(receipt(d)))}Ok(Some(receipt(d)))})();RetainedWorkOutcome{result,work}}
+ fn finish_copy_bytes(_:&Self)->Result<usize,ValueError>{Ok(size_of::<Self>())}
+ fn finish(storage:Self)->Self{storage}
+}
+impl<I:NativeValueSource+?Sized> NativeReceive<I> for UiPatchOps{type Receiver=NativeSequenceReceiver<I,UiPatchOp,Self>;fn receiver()->Self::Receiver{Self::Receiver::new()}}
+impl NativeDefaultValue for UiPatchOps{fn default_demand()->RetirementDemand{fixed(size_of::<Self>())}fn admit_default(output:&mut Option<Self>,g:RetainedCloneGrant)->RetainedWorkOutcome{let d=Self::default_demand();if output.is_some(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some(Self::default());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}}}
+impl NativeDefault for UiPatchOps{type Cursor=NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{Self::Cursor::new()}}

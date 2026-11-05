@@ -29,12 +29,12 @@ semio-s-artifact-remodel-remodeling-reconstruct = { workspace = true }
 semio-s-artifact-remodel-remodeling-video = { workspace = true }
 
 [dev-dependencies]
+semio-framework-mesh-engine = { workspace = true }
 semio-s-artifact-remodel-remodeling-images = { workspace = true, features = ["testkit"] }
 geometry = { workspace = true }
 number = { workspace = true }
 pack = { workspace = true }
 png = "0.17.16"
-semio-framework = { workspace = true }
 semio-s-artifact-remodel-remodeling-algebra = { workspace = true }
 semio-s-artifact-remodel-remodeling-editor-kit = { workspace = true }
 semio-s-artifact-remodel-remodeling-examples = { workspace = true }

@@ -19,7 +19,7 @@ import { type JobPlacement } from "./🛠️spawned-job/🟦️.ts";
 export type Effect =
   | "requestSync"
   | { readonly openWindow: { readonly req: number; readonly kind: string; readonly params: unknown } }
-  | { readonly closeWindow: { readonly window: number } }
+  | { readonly closeWindow: { readonly window: string } }
   | { readonly notify: { readonly message: string } }
   | { readonly navigate: { readonly uri: string } }
   /** 📂️ Replaces the active app instance's document with pack+spr bytes — host-owned

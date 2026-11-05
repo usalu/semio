@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "result",
+    "grant",
+    "states"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "result": {
+      "type": "object"
+    },
+    "grant": {
+      "type": "object"
+    },
+    "states": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "event",
+          "held"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "event": {
+            "enum": [
+              "publish",
+              "deniedClose",
+              "foreignClose",
+              "fundedClose"
+            ]
+          },
+          "held": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

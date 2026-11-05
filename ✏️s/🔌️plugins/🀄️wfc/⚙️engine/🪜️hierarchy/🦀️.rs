@@ -21,7 +21,13 @@
 use crate::ids::{NodeId, PatternId};
 use crate::model::CompiledModel;
 use crate::outcome::{Solution, SolveOutcome};
-use crate::search::{self, SearchConfig};
+use crate::search::{self, SearchConfig,SearchFailure};
+
+/// 🧳️ Keeps the failing layer and its original search owner available to its caller.
+pub enum HierarchyFailure<MT:Topology+Clone+Send+'static,CT:Topology+Clone+Send+'static> { Macro(SearchFailure<MT>),Child {node:NodeId,failure:SearchFailure<CT>} }
+impl<MT:Topology+Clone+Send+'static,CT:Topology+Clone+Send+'static> std::fmt::Debug for HierarchyFailure<MT,CT> {
+    fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result {match self {Self::Macro(failure)=>f.debug_tuple("Macro").field(failure).finish(),Self::Child {node,failure}=>f.debug_struct("Child").field("node",node).field("failure",failure).finish()}}
+}
 use crate::topology::Topology;
 
 // #region 🔖️Outcome
@@ -62,14 +68,14 @@ fn child_seed(macro_seed: u64, node: NodeId) -> u64 {
 /// generated hierarchy usually isn't useful to a caller that hasn't decided its own fallback
 /// policy yet.
 #[allow(dead_code)] // exercised today only by this module's own tests; see HierarchyOutcome's note
-pub fn solve_hierarchy<MT, CT>(macro_model: &CompiledModel, macro_topo: &MT, macro_config: &SearchConfig, macro_seed: u64, child_model_for: impl Fn(NodeId, PatternId) -> (CompiledModel, CT, SearchConfig)) -> HierarchyOutcome
+pub fn solve_hierarchy<MT, CT>(macro_model: &CompiledModel, macro_topo: &MT, macro_config: &SearchConfig, macro_seed: u64, child_model_for: impl Fn(NodeId, PatternId) -> (CompiledModel, CT, SearchConfig)) -> Result<HierarchyOutcome,HierarchyFailure<MT,CT>>
 where
-    MT: Topology + Clone + Send,
-    CT: Topology + Clone + Send,
+    MT: Topology + Clone + Send + 'static,
+    CT: Topology + Clone + Send + 'static,
 {
-    let macro_solution = match search::solve(macro_model, macro_topo, macro_config, macro_seed, None, &[]) {
+    let macro_solution = match search::solve(macro_model, macro_topo, macro_config, macro_seed, None, &[]).map_err(HierarchyFailure::Macro)? {
         SolveOutcome::Solved(sol) => sol,
-        _ => return HierarchyOutcome::MacroUnsatisfiable,
+        _ => return Ok(HierarchyOutcome::MacroUnsatisfiable),
     };
 
     let mut children = Vec::with_capacity(macro_solution.assignment.len());
@@ -77,12 +83,12 @@ where
         let node = NodeId::from_index(i);
         let (child_model, child_topo, child_config) = child_model_for(node, pattern);
         let seed = child_seed(macro_seed, node);
-        match search::solve(&child_model, &child_topo, &child_config, seed, None, &[]) {
+        match search::solve(&child_model, &child_topo, &child_config, seed, None, &[]).map_err(|failure|HierarchyFailure::Child {node,failure})? {
             SolveOutcome::Solved(sol) => children.push(sol),
-            _ => return HierarchyOutcome::ChildFailed { node },
+            _ => return Ok(HierarchyOutcome::ChildFailed { node }),
         }
     }
-    HierarchyOutcome::Solved { macro_solution, children }
+    Ok(HierarchyOutcome::Solved { macro_solution, children })
 }
 // #endregion 🔖️Solve
 

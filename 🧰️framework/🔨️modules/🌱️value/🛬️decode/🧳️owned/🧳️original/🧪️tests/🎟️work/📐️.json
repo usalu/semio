@@ -1,9 +1,1 @@
-{
-  "items": 100000,
-  "fuel": 100000,
-  "copyBytes": 33554432,
-  "capacityBytes": 33554432,
-  "releaseBytes": 33554432,
-  "depth": 64,
-  "constructionGrantsPerTurn": 1
-}
+{"items":100000,"fuel":100000,"copyBytes":33554432,"capacityBytes":33554432,"releaseBytes":33554432,"depth":64,"constructionGrantsPerTurn":1}

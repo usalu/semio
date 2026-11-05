@@ -41,7 +41,6 @@ impl ArtifactCanonicalJsonText<'_> {
     }
 }
 
-/// 🔡️ Projects one canonical JSON escape byte without materializing an escaped string.
 pub fn canonical_escaped_byte(byte:u8,index:usize)->Option<u8> {
     match byte {
         b'"'|b'\\'=>[b'\\',byte].get(index).copied(),
@@ -50,7 +49,6 @@ pub fn canonical_escaped_byte(byte:u8,index:usize)->Option<u8> {
         _=>(index==0).then_some(byte),
     }
 }
-/// 🔣️ Writes the same escape projection into a caller-owned six-byte scratch cell.
 pub fn canonical_escape(byte:u8,escape:&mut[u8;6])->usize {
     let mut count=0;
     while let Some(value)=canonical_escaped_byte(byte,count){escape[count]=value;count+=1;}

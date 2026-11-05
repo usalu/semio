@@ -65,7 +65,7 @@ interface effects {
 
   /// 🧬️ W0: payload half of `artifact-read-effect`, see `blob-load-params`.
   record artifact-read-params {
-    doc: u64,
+    doc: string,
     lane: string,
   }
   record artifact-read-effect {
@@ -74,7 +74,7 @@ interface effects {
   }
   /// 🧬️ W0: payload half of `artifact-write-effect`, see `blob-load-params`.
   record artifact-write-params {
-    doc: u64,
+    doc: string,
     lane: string,
     ops: pack,
   }
@@ -164,7 +164,7 @@ interface effects {
     params: open-window-params,
   }
   record close-window-effect {
-    window: u64,
+    window: string,
   }
   /// 🧬️ W0: payload half of `dispatch-action-effect`, see `blob-load-params`.
   record dispatch-action-params {

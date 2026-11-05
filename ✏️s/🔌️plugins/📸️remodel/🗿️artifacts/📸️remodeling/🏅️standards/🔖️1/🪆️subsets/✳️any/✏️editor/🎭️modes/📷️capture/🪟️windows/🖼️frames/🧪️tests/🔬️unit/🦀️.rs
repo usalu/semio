@@ -25,11 +25,11 @@ async fn an_unset_frame_cursor_falls_back_to_the_first_stream_and_frame() {
     let beyond = frames_layers_json(&scene, &RemodelingFrameCursor { stream_id: Some(stream.id.clone()), frame_index: u32::MAX });
     assert!(beyond.contains(&format!("\"id\":\"{}\"", first.asset_id)), "a frame the stream lacks falls back to its first frame");
     assert_eq!(frames_layers_json(&scene, &RemodelingFrameCursor { stream_id: Some("missing-stream".into()), frame_index: 0 }), "[]", "a cursor naming a stream the document lacks stays empty");
-    assert!(render_body(&mut app, REMODELING_PLAY_BODY_FRAMES).await.contains(REMODELING_PLAY_SURFACE_FRAMES));
+    assert!(render_body(&mut app, REMODELING_PLAY_BODY_FRAMES).await.contains("remodeling.play.frames"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn renders_a_canvas_2d_surface() {
     let mut app = app().await;
-    assert!(render_body(&mut app, REMODELING_PLAY_BODY_FRAMES).await.contains(REMODELING_PLAY_SURFACE_FRAMES));
+    assert!(render_body(&mut app, REMODELING_PLAY_BODY_FRAMES).await.contains("remodeling.play.frames"));
 }

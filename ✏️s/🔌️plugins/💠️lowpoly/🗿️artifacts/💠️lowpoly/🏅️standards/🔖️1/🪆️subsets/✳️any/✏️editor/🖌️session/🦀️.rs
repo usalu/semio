@@ -256,7 +256,7 @@ impl LowpolyScratch {
         }
         let mut textures = HashMap::new();
         for object in &projection.objects {
-            let composite = composite_layer_pixels(&object.paint_layers);
+            let Ok(composite) = composite_layer_pixels(&object.paint_layers) else { continue };
             if let Ok(png_bytes) = encode_rgba_png(&composite, LOWPOLY_PAINT_TEXTURE_SIZE as u32, LOWPOLY_PAINT_TEXTURE_SIZE as u32) {
                 textures.insert(object.id.clone(), base64_codec::base64_standard_encode(png_bytes));
             }

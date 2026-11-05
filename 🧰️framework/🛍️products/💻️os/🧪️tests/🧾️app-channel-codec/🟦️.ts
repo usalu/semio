@@ -34,7 +34,7 @@ describe("resumable media export wire", () => {
         const seq = BigInt(index + 2);
         const pending = operation === "poll" ? client.pollMediaExport(handle) : operation === "cancel" ? client.cancelMediaExport(handle) : client.takeMediaExportChunk(handle);
         expect(sent.at(-1)).toEqual({ [operation === "poll" ? "PollMediaExport" : operation === "cancel" ? "CancelMediaExport" : "TakeMediaExportChunk"]: { seq, handle } });
-        const frame: AppFrameValue = operation === "chunk" ? { MediaExportChunk: { in_reply_to: seq, handle, data: [], terminal: true } } : operation === "cancel" ? { Done: { in_reply_to: Number(seq) } } : { MediaExportStatus: { in_reply_to: seq, handle, state: "running", applied_progress: 2n, checkpoint_available: false, mime_type: "", total_bytes: 0n, detail: "" } };
+        const frame: AppFrameValue = operation === "chunk" ? { MediaExportChunk: { in_reply_to: seq, handle, data: [], terminal: true } } : operation === "cancel" ? { Done: { in_reply_to: Number(seq) } } : { MediaExportStatus: { in_reply_to: seq, handle, state: "running", applied_progress: 2n, checkpoint_available: false, descriptor: [], mime_type: "", total_bytes: 0n, detail: "" } };
         broadcast.push({ instanceId: 7, frames: [encodeAppFrame(frame)] });
         expect(await pending).toEqual([frame]);
       }
@@ -68,8 +68,8 @@ describe("resumable media export wire", () => {
     for (const name of ["submitted", "status", "chunk", "terminalChunk"]) {
       const row = fixture.frames[name], value = row.fields, in_reply_to = BigInt(value.inReplyTo);
       const state = ["running", "complete", "cancelled", "failed"].indexOf(value.state);
-      const frame = name === "submitted" ? { MediaExportSubmitted: { in_reply_to, handle } } : name === "status" ? { MediaExportStatus: { in_reply_to, handle, state: value.state, applied_progress: BigInt(value.appliedProgress), checkpoint_available: value.checkpointAvailable, mime_type: value.mimeType, total_bytes: BigInt(value.totalBytes), detail: value.detail } } : { MediaExportChunk: { in_reply_to, handle, data: value.data, terminal: value.terminal } };
-      const tail = name === "submitted" ? [] : name === "status" ? [state, ...u64(BigInt(value.appliedProgress)), Number(value.checkpointAvailable), ...string(value.mimeType), ...u64(BigInt(value.totalBytes)), ...string(value.detail)] : [...u64(BigInt(value.data.length)), ...value.data, Number(value.terminal)];
+      const frame = name === "submitted" ? { MediaExportSubmitted: { in_reply_to, handle } } : name === "status" ? { MediaExportStatus: { in_reply_to, handle, state: value.state, applied_progress: BigInt(value.appliedProgress), checkpoint_available: value.checkpointAvailable, descriptor: value.descriptor, mime_type: value.mimeType, total_bytes: BigInt(value.totalBytes), detail: value.detail } } : { MediaExportChunk: { in_reply_to, handle, data: value.data, terminal: value.terminal } };
+      const tail = name === "submitted" ? [] : name === "status" ? [state, ...u64(BigInt(value.appliedProgress)), Number(value.checkpointAvailable), ...string(value.mimeType), ...u64(BigInt(value.totalBytes)), ...string(value.detail), ...u64(BigInt(value.descriptor.length)), ...value.descriptor] : [...u64(BigInt(value.data.length)), ...value.data, Number(value.terminal)];
       expect([name === "submitted" ? 28 : name === "status" ? 29 : 30, ...u64(in_reply_to), ...handleBytes, ...tail]).toEqual(row.bytes);
       expect([...encodeAppFrame(frame as AppFrameValue)]).toEqual(row.bytes);
       expect(decodeAppFrame(Uint8Array.from(row.bytes))).toEqual(frame);
@@ -84,7 +84,7 @@ describe("resumable media export wire", () => {
     ];
     const frames = [
       { MediaExportSubmitted: { in_reply_to: 1n, handle } },
-      ...(["running", "complete", "cancelled", "failed"] as const).map((state) => ({ MediaExportStatus: { in_reply_to: 2n, handle, state, applied_progress: 9007199254740997n, checkpoint_available: true, mime_type: "audio/mpeg", total_bytes: 9007199254740999n, detail: "Status" } })),
+      ...(["running", "complete", "cancelled", "failed"] as const).map((state) => ({ MediaExportStatus: { in_reply_to: 2n, handle, state, applied_progress: 9007199254740997n, checkpoint_available: true, descriptor: [], mime_type: "audio/mpeg", total_bytes: 9007199254740999n, detail: "Status" } })),
       { MediaExportChunk: { in_reply_to: 4n, handle, data: [0, 128, 255], terminal: false } },
       { MediaExportChunk: { in_reply_to: 5n, handle, data: [], terminal: true } },
     ];

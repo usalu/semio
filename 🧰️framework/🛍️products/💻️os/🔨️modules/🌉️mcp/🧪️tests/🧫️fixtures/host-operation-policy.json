@@ -1,0 +1,25 @@
+{
+  "scope": "per-operation",
+  "cleanup": {
+    "retained": {
+      "maximumItems": 32768,
+      "maximumCopyBytes": 16777216,
+      "maximumCapacityBytes": 67108864,
+      "maximumReleaseBytes": 536870912,
+      "maximumDepth": 64
+    },
+    "workFuel": 1000000,
+    "executionFuel": 10000000,
+    "maximumMicroseconds": 500000
+  },
+  "transit": {
+    "retained": {
+      "maximumItems": 65536,
+      "maximumCopyBytes": 16777216,
+      "maximumCapacityBytes": 67108864,
+      "maximumReleaseBytes": 67108864,
+      "maximumDepth": 64
+    },
+    "workFuel": 10000000
+  }
+}

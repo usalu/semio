@@ -14,6 +14,7 @@ import { viewerReadOnlyNoticeText } from "../../../../🛠️ShellHelpers/🏷�
 import { browserActorActionRefusalReasonV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";
 import { startedTypedOperationV1, typedOperationCancellationActionV1 } from "../../../🏁️operation-settle/🟦️.ts";
 import { encodeWindowActionInvocation, windowActionInvocation } from "../../../📨️window-invocation/🟦️.ts";
+import { invokeProgramInputV1, programInputResultV1, settledProgramOutputV1 } from "../../../📨️program-invocation/🟦️.ts";
 import { OBSERVED_INTERACTION_ACTION_IDS } from "../../../🎬️tutorial-recorder/🟦️.tsx";
 import type { ShellCoreAfterShellUriAndDocuments } from "../../../🗄️shell-uri-documents/🟦️.ts";
 import type { PluginWasmHandle } from "../../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
@@ -98,7 +99,7 @@ export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwn
   const releaseActionWork = sessionWorkRef.current.begin(targetSession.pluginId, targetSession.instanceId, "typed-operation");
   const releaseSourceWork = holdSourceRevision(core, targetSession, plugin);
   try {
-    const response = await plugin.handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision), dispatchViewState, { order: causalOrderKeyV1(entry.provenance) });
+    const response = await invokeProgramInputV1(plugin, targetSession.instanceId, action, () => encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision), dispatchViewState, { order: causalOrderKeyV1(entry.provenance) });
     const startedOperation = startedTypedOperationV1(response.output);
     releaseSourceWork?.admit(startedOperation?.operation);
     if (startedOperation !== undefined && isCurrentEffectOwner(actionOwner)) lifecycle?.started({
@@ -116,14 +117,14 @@ export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwn
     if (navbarExample !== undefined) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
     const needsHistoryRefresh = historyRefreshNeededV1(action.action, response.historyPatch);
     if (!isCurrentEffectOwner(actionOwner)) {
-      await awaitOperationSettle(targetSession.instanceId, startedOperation?.operation);
+      const completion = await awaitOperationSettle(targetSession.instanceId, startedOperation?.operation);
       if (needsHistoryRefresh) refreshHistorySnapshot({ pluginId: targetSession.pluginId, instanceId: targetSession.instanceId });
-      return applied();
+      return programInputResultV1(applied(), settledProgramOutputV1(response.output, startedOperation !== undefined, completion));
     }
     await applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope), actionOwner);
     const completion = await awaitOperationSettle(targetSession.instanceId, startedOperation?.operation);
     if (needsHistoryRefresh) refreshHistorySnapshot({ pluginId: targetSession.pluginId, instanceId: targetSession.instanceId });
-    return applied(completion === null ? undefined : inputCommitReceiptV1(completion.operation, completion.revision));
+    return programInputResultV1(applied(completion === null ? undefined : inputCommitReceiptV1(completion.operation, completion.revision)), settledProgramOutputV1(response.output, startedOperation !== undefined, completion));
   } catch (actionError) {
     let outcome: InputOutcomeV1;
     const diagnostic = actionError instanceof SemioFaultError ? inputDiagnosticV1(actionError.fault) : undefined;

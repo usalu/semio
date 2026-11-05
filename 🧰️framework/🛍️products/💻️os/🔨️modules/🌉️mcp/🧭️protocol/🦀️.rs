@@ -862,7 +862,7 @@ impl PromptRegistry for InMemoryPromptRegistry {
 // variants live in) closes it into an enum instead of `Box<dyn GatewayBackend>`.
 #[dyn_enum]
 pub trait GatewayBackend: Send + Sync {
-    fn resolve_context(&self, principal: &str) -> Result<ContextSummary, GatewayError>;
+    fn resolve_context(&self, principal: &str, locale: &str) -> Result<ContextSummary, GatewayError>;
     fn search_capabilities(&self, query: &str) -> Result<Vec<SearchHit>, GatewayError>;
     fn describe_capabilities(&self, capability_id: &str) -> Result<serde_json::Value, GatewayError>;
     fn prepare_action(&self, capability_id: &str, input: serde_json::Value, expected_revision: Option<RevisionStamp>) -> Result<PreparedActionReport, GatewayError>;
@@ -880,7 +880,7 @@ fn plugin_unavailable(what: &str) -> GatewayError {
 }
 
 impl GatewayBackend for NullBackend {
-    fn resolve_context(&self, _principal: &str) -> Result<ContextSummary, GatewayError> {
+    fn resolve_context(&self, _principal: &str, _locale: &str) -> Result<ContextSummary, GatewayError> {
         Err(plugin_unavailable("resolve_context"))
     }
 

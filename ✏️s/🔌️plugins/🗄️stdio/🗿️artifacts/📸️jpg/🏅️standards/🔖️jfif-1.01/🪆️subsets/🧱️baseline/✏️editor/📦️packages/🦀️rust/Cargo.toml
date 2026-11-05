@@ -4,7 +4,7 @@ name = "semio-s-artifact-stdio-jpg-io-registry"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Component crate of semio-s-artifact-stdio-jpg: io-registry"
+description = "JPEG editor/viewer authoring and artifact composition assembly"
 
 [package.metadata.semio]
 role = "library"
@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-ui-contract = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-2d-compute = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }

@@ -15,7 +15,7 @@ use semio_os_mcp_foundation::clock::now_ms;
 use semio_os_mcp_foundation::errors::GatewayErrorCode;
 use semio_os_mcp_hub_remote::remote::{AuthorizedDescriptorSnapshot, HubRemoteBinding};
 use semio_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
-use semio_os_mcp_port::channel_port::{AppCommand, AppFrame, ArtifactChannel, ArtifactDocumentBinding, HUB_EDIT_UNBOUND_FAULT_CODE, InferCommand, InferenceCancel, VIEWER_READ_ONLY_FAULT_CODE};
+use semio_os_mcp_port::channel_port::{AppCommand, AppFrame, ArtifactChannel, ArtifactDocumentBinding, Fault, HUB_EDIT_UNBOUND_FAULT_CODE, InferCommand, InferenceCancel, VIEWER_READ_ONLY_FAULT_CODE};
 use semio_os_mcp_port::policy::AgentPrincipal;
 use semio_os_mcp_probe_document::probe_document::{PROBE_PACK_SCHEMA_HASH, PROBE_SCHEMA, PROBE_SURFACE_ID, ProbeDiff, ProbeMutation, ProbeSnapshot, probe_record_spec};
 use semio_os_mcp_routing::hub_relay::{HUB_SESSION_LIVE_LINK_LIMIT, HubInbound, HubInboundPlan, HubLinkClose, HubRelay, SessionDocumentPair, carries_hub_inbound, document_link_terminal_code, hub_link_tick, hub_links_to_close, plan_hub_inbound, route_session_artifact};
@@ -31,7 +31,7 @@ use semio_os_mcp_plugin_runtime::artifact_app_frames::{bind_inference_document, 
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_plugin_runtime::guest_document_codec::{agent_presence_moment, agent_presence_peer, guest_apply_ops_binary, guest_compile_dsl, guest_edit_text_from_envelope, guest_print_mirror};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_os_mcp_plugin_runtime::plugin_artifact_channel::{PendingExchange, PendingExchangeRegistry, PendingResponsePage, VIEW_STATE_OMITTED_WARNING, begin_closing_abandoned_exchange, headless_agent_ops};
+use semio_os_mcp_plugin_runtime::plugin_artifact_channel::{PluginArtifactChannel, PendingExchange, PendingExchangeRegistry, PendingResponsePage, VIEW_STATE_OMITTED_WARNING, begin_closing_abandoned_exchange, headless_agent_ops};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_port::channel_port::{AGENT_LANE_UNCARRIED_FAULT_CODE, PreparedOps};
 #[cfg(not(target_arch = "wasm32"))]

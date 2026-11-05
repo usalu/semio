@@ -1,0 +1,55 @@
+semio remodeling.remodeling.dsl v1
+schema=remodeling.scene id=remodeling assets={
+}
+durable-artifacts={
+}
+calibration {
+  cameras [id:TEXT label:TEXT model:TEXT fx:NUM fy:NUM cx:NUM cy:NUM skew:NUM distortion:TUPLE rms-reprojection-px:NUM locked:BOOL] {
+    demo-left "Left Capture Camera" brownConrady 600 600 320 240 0 0,0,0,0,0 0.5 true
+    demo-right "Right Capture Camera" brownConrady 600 600 320 240 0 0,0,0,0,0 0.5 true
+  }
+  rig [camera-id:TEXT rotation-wxyz:TUPLE translation-m:CRD] {
+  }
+}
+params {
+  ingest {
+    frame-sample-stride=1 max-frames=48 downscale-long-edge-px=640 min-sharpness=0.25
+  }
+  feature {
+    detector=orb target-count=1200 octaves=4 edge-threshold=10
+  }
+  matching {
+    matcher=brute-force ratio-test=0.75 cross-check=true sequential-window=4 max-pairs-per-frame=8 loop-closure=true
+  }
+  sfm {
+    ransac-iterations=1000 ransac-threshold-px=2 min-track-length=2 ba-max-iterations=25 robust-loss=huber huber-delta-px=1.5
+  }
+  dense {
+    resolution=low window-radius-px=2 min-view-consistency=2 confidence-threshold=0.5 max-points=20000
+  }
+  mesh {
+    tsdf-voxel-size-mm=25mm tsdf-truncation-mm=100mm decimate-target-triangles=5000 smoothing-iterations=1 texture-enabled=false texture-size=512 guarantee-watertight=true hole-fill-max-boundary-verts=512 self-intersection-check=false
+  }
+  motion {
+    enabled=true max-tracks=32 track-window-px=15 min-track-quality=0.25 min-track-length-frames=3
+  }
+  geo {
+    enabled=false gsd-m=0.05000000074505806m dsm-cell-m=0.10000000149011612m dtm-filter-radius-m=2m ortho-max-px=4096
+  }
+}
+results {
+  mesh {
+    source=placeholder
+    mesh {
+      child_id=remodeling-mesh-constant-box target { artifact-id="remodeling-mesh-constant:box" artifact-kind="s.stdio.semio" standard="v1" subset="mesh" }
+    }
+  }
+  tracks [id:TEXT length:UINT class:ENUM mean-speed-m-s:QTY] {
+  }
+}
+streams [id:TEXT name:TEXT kind:ENUM camera-id:TEXT sync-offset-ms:NUM fps-hint:NUM frames:TABLE source:BLOCK] {
+  left-capture "Left Capture" image-sequence demo-left 0 24 [] _
+  right-capture "Right Capture" video demo-right 125 24 [] _
+}
+gcps [id:TEXT name:TEXT world-position:CRD observations:TABLE] {
+}

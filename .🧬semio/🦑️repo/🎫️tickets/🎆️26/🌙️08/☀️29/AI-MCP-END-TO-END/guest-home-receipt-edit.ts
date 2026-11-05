@@ -1,0 +1,3 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";
+const file="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🏠️native/🦀️.rs";
+let source=readFileSync(file,"utf8");const before="let reply=runtime.advance_original_actor_step(opening,compiled,execution,cx)?;call.execution=reply.execution;";if(source.split(before).length!==2)throw Error("expected one actual startup advance");source=source.replace(before,"if execution.is_some(){call.execution=None;}let reply=runtime.advance_original_actor_step(opening,compiled,execution,cx)?;call.execution=reply.execution;");const temp=import.meta.dirname+"/🗑️generated/guest-home-receipt-edit.rs";writeFileSync(temp,source);renameSync(temp,file);

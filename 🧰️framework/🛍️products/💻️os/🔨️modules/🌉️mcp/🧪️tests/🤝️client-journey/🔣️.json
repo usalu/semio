@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "cases": [
+    {"name":"Current Explicit Publication","catalog":true,"plugin":true,"component":"prototype","matching":true,"expected":true},
+    {"name":"Missing Explicit Publication","catalog":false,"plugin":true,"component":"prototype","matching":true,"expected":false},
+    {"name":"Foreign Publication Owner","catalog":true,"plugin":false,"component":"prototype","matching":true,"expected":false},
+    {"name":"Stale Component","catalog":true,"plugin":true,"component":"prototype","matching":false,"expected":false},
+    {"name":"Other Build Mode","catalog":true,"plugin":true,"component":"release","matching":true,"expected":false}
+  ]
+}

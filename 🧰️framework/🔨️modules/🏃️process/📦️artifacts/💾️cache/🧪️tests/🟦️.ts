@@ -524,3 +524,51 @@ test("neutral Core exact selected capsule cardinality and refusal metadata remai
  const files=guards(4),positive={status:0 as number|null,signal:null as string|null,reason:"exit",stdout:wire(files),stderr:""},variants=[{...positive,status:1},{...positive,signal:"SIGTERM"},{...positive,reason:"cancelled"},{...positive,stderr:"notice é😀 ".repeat(100)},{...positive,stdout:positive.stdout.slice(0,-1)}];for(const observation of variants){let refusal:any;try{inspect(observation,{selection:"exact-files",pid:71,files});throw Error("Expected selected observation refusal");}catch(error){if(!(error instanceof Error))throw error;const prefix="Complete selected Native descriptor inventory required ";expect(error.message.startsWith(prefix)).toBe(true);refusal=JSON.parse(error.message.slice(prefix.length));}expect(diagnosticValid(refusal)).toBe(true);const oracle=db.query("SELECT length(cast(?1 AS blob)) stdoutBytes,length(cast(?2 AS blob)) stderrBytes,lower(hex(substr(cast(?1 AS blob),-8))) endingHex,substr(?2,1,256) stderrPreview").get(observation.stdout,observation.stderr)as{stdoutBytes:number;stderrBytes:number;endingHex:string;stderrPreview:string};for(const key of Object.keys(oracle))expect(refusal[key]).toBe(oracle[key as keyof typeof oracle]);expect(refusal.guardCount).toBe(4);expect(refusal.maximumGuards).toBe(5);expect(refusal.expectedPid).toBe(71);}
  }finally{db.close();}
 });
+
+/** 🧭️ Preserves ordinary payloads only from original roots or authenticated issued family paths. */
+test("neutral Core root-family preservation actual native custody and inode oracle", async () => withBuildTestInvocationV1(async original => {
+ const api = await import("@semio-tech/framework-filesystem/observation/descriptor"), fs = await import("node:fs/promises"), paths = await import("node:path"), routing = await import("../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
+ const contract = JSON.parse(readFileSync(new URL("../../../../📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json", import.meta.url), "utf8")), validate = new Ajv({ strict: true }).compile(contract.definitions.RelativeRootFamilyPreservationCase);
+ for (const row of contract.definitions.RelativeRootFamilyPreservationCases.const) {
+  expect(validate(row), row.effect).toBe(true);
+  if (row.platforms && !row.platforms.includes(process.platform)) continue;
+  const boundCase = row.effect === "path-bound" || row.effect === "posix-root-backslash-bound";
+  const base = await fs.mkdtemp(paths.join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "gp-")), name = row.effect === "posix-root-backslash-bound" ? "d".repeat(244 - base.length - 2) + "\\" : boundCase ? "d".repeat(244 - base.length - 1) : "d", childPath = paths.join(base, name), sourceParent = row.effect === "nested-issued-path" ? paths.join(childPath, "e") : childPath, source = paths.join(sourceParent, "node_modules"), target = paths.join(base, "t"), payload = "ordinary opaque retained payload";
+  const stop = new AbortController(), marker = Object.freeze({ cancelled: row.effect }), control = routing.createIssuedResourceControlV1(original, "filesystem:root-family:" + row.effect, 0, stop.signal), baseline = api.artifactDescriptorCustodyV1();
+  let peak = baseline.active, accepted = true, result: any, failure: unknown;
+  const check = () => { routing.requireIssuedResourceControlV1(control); checkResourceLeaseControl(control); peak = Math.max(peak, api.artifactDescriptorCustodyV1().active); };
+  try {
+   await fs.mkdir(sourceParent, { recursive: true }); await fs.mkdir(target);
+   if (!boundCase) await fs.writeFile(source, payload);
+   const before = boundCase ? null : await fs.lstat(source, { bigint: true });
+   try {
+    await api.withArtifactRelativeDirectoryV1(row.effect === "posix-root-backslash-bound" ? childPath : base, check, async root => {
+     const execute = async (parent: import("@semio-tech/framework-filesystem/observation/descriptor").ArtifactRelativeDirectoryV1) => {
+      if (row.effect === "cancelled") stop.abort(marker);
+      const expected = await parent.capturePreservation("node_modules");
+      result = row.effect === "retain" ? await parent.retainPreservation(expected, "native issued family retention") : await parent.publishPreserving(expected, { kind: "directory", path: target }, "native issued family publication");
+     };
+     if (row.effect === "posix-root-backslash-bound") return execute(root);
+     const identity = await root.entry(name); expect(identity?.kind).toBe("directory");
+     if (row.effect === "ordinary-child") await root.withDirectory(name, execute);
+     else if (row.effect === "nested-issued-path") await root.withDirectory(name, async child => { const nested = await child.entry("e"); await child.withDirectoryPath([{ name: "e", identity: nested! }], execute); });
+     else await root.withDirectoryPath([{ name, identity: identity! }], execute);
+    });
+   } catch (error) { accepted = false; failure = error; }
+   if (row.effect === "posix-root-backslash-bound") expect(String(failure)).toContain("Bounded original preservation expectation required");
+   expect(accepted, row.effect + ": " + String(failure)).toBe(row.accepted);
+   expect(api.artifactDescriptorCustodyV1()).toEqual(baseline);
+   expect(peak).toBeLessThanOrEqual(api.artifactDescriptorProtocolV1().maximumOwners);
+   if (row.effect === "cancelled") expect(Object.is(failure, marker)).toBe(true);
+   if (!accepted) { if (before) expect(await fs.readFile(source, "utf8")).toBe(payload); continue; }
+   const retained = paths.join(sourceParent, result.retained.capsule, "p"), after = await fs.lstat(retained, { bigint: true });
+   expect(after.dev).toBe(before!.dev); expect(after.ino).toBe(before!.ino); expect(await fs.readFile(retained, "utf8")).toBe(payload);
+   expect((await fs.readdir(paths.dirname(retained))).sort()).toEqual(["i", "p", "r"]);
+   if (row.effect === "retain") expect(await fs.lstat(source).then(() => false, () => true)).toBe(true);
+   else expect(await fs.realpath(source)).toBe(await fs.realpath(target));
+   const oracle = await captureOwnedCommandResultV1(testPythonV1() ?? "python3", ["-c", "import os,sys,json; p=sys.argv[1]; s=os.lstat(p); print(json.dumps(dict(dev=str(s.st_dev),ino=str(s.st_ino),payload=open(p).read())))", retained], process.cwd(), { control, output: { maximumBytes: 2048, maximumLines: 2 } });
+   expect(oracle.status).toBe(0); expect(JSON.parse(oracle.stdout)).toEqual({ dev: String(after.dev), ino: String(after.ino), payload });
+   console.log("[DATA] Generic root-family preservation " + JSON.stringify({ effect: row.effect, peak, restored: true, inodeOracle: true }));
+  } finally { await fs.rm(base, { recursive: true, force: true }); }
+ }
+}));

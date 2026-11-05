@@ -448,8 +448,8 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
             K::BlobWrite { req: semio_framework::kernel::RequestId(inner.req), media_type: decode_json(&inner.params.media_type).await.unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }), bytes: inner.params.bytes }
         }
         E::HttpRequest(inner) => K::HttpRequest { req: semio_framework::kernel::RequestId(inner.req), method: inner.params.method, url: inner.params.url, headers: inner.params.headers, body: inner.params.body, stream: inner.params.streaming },
-        E::ArtifactRead(inner) => K::DocumentRead { req: semio_framework::kernel::RequestId(inner.req), doc: semio_framework::kernel::ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane },
-        E::ArtifactWrite(inner) => K::DocumentWrite { req: semio_framework::kernel::RequestId(inner.req), doc: semio_framework::kernel::ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane, ops: inner.params.ops },
+        E::ArtifactRead(inner) => K::DocumentRead { req: semio_framework::kernel::RequestId(inner.req), doc: inner.params.doc.parse::<semio_framework::kernel::ArtifactHandle>().map_err(|error|error.to_string())?, lane: inner.params.lane },
+        E::ArtifactWrite(inner) => K::DocumentWrite { req: semio_framework::kernel::RequestId(inner.req), doc: inner.params.doc.parse::<semio_framework::kernel::ArtifactHandle>().map_err(|error|error.to_string())?, lane: inner.params.lane, ops: inner.params.ops },
         E::LinkResolve(inner) => K::LinkResolve { req: semio_framework::kernel::RequestId(inner.req), link: String::from_utf8_lossy(&inner.link).into_owned() },
         E::RegistryQuery(inner) => K::RegistryQuery { req: semio_framework::kernel::RequestId(inner.req), kind: inner.params.kind, filter: decode_dsl(&inner.params.filter).await },
         E::IoCompose(inner) => K::IoCompose { req: semio_framework::kernel::RequestId(inner.req), key: String::from_utf8_lossy(&inner.params.key).into_owned(), sources: decode_json(&inner.params.sources).await.unwrap_or_default() },
@@ -459,7 +459,7 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
         E::OpenWindow(inner) => {
             K::OpenWindow { req: semio_framework::kernel::RequestId(inner.req), kind: semio_framework::kernel::WindowKindId(inner.params.kind), params: decode_dsl(&inner.params.params).await.unwrap_or(semio_framework::DslValue::Null) }
         }
-        E::CloseWindow(inner) => K::CloseWindow { window: semio_framework::kernel::WindowHandle(inner.window as u128) },
+        E::CloseWindow(inner) => K::CloseWindow { window: inner.window.parse::<semio_framework::kernel::WindowHandle>().map_err(|error|error.to_string())? },
         E::DispatchAction(inner) => {
             let args = match inner.params.args {
                 Some(bytes) => decode_dsl(&bytes).await,
@@ -823,7 +823,8 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             call.guard.disarm();
             return Err(fault_bytes("capability-revoked", "artifact-read cancelled before dispatch").await);
         }
-        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::DocumentRead { doc: params.doc as u128, lane: params.lane }, "artifact-read").await;
+        let doc=match params.doc.parse::<semio_framework::kernel::ArtifactHandle>(){Ok(doc)=>doc.0,Err(_)=>{call.guard.disarm();return Err(fault_bytes("invalid-value","artifact-read requires its canonical decimal u128 document identity").await)}};
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::DocumentRead { doc, lane: params.lane }, "artifact-read").await;
         call.guard.disarm();
         result
     }
@@ -834,7 +835,8 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             call.guard.disarm();
             return Err(fault_bytes("capability-revoked", "document-write cancelled before dispatch").await);
         }
-        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::DocumentWrite { doc: params.doc as u128, lane: params.lane, ops: params.ops }, "artifact-write").await;
+        let doc=match params.doc.parse::<semio_framework::kernel::ArtifactHandle>(){Ok(doc)=>doc.0,Err(_)=>{call.guard.disarm();return Err(fault_bytes("invalid-value","artifact-write requires its canonical decimal u128 document identity").await)}};
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::DocumentWrite { doc, lane: params.lane, ops: params.ops }, "artifact-write").await;
         call.guard.disarm();
         result
     }

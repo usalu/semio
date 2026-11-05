@@ -1,0 +1,37 @@
+[
+  {
+    "name": "success",
+    "bodyFails": false,
+    "closeFails": false,
+    "same": false,
+    "errors": 0
+  },
+  {
+    "name": "body",
+    "bodyFails": true,
+    "closeFails": false,
+    "same": false,
+    "errors": 1
+  },
+  {
+    "name": "close",
+    "bodyFails": false,
+    "closeFails": true,
+    "same": false,
+    "errors": 1
+  },
+  {
+    "name": "same-stop",
+    "bodyFails": true,
+    "closeFails": true,
+    "same": true,
+    "errors": 1
+  },
+  {
+    "name": "real-cleanup-failure",
+    "bodyFails": true,
+    "closeFails": true,
+    "same": false,
+    "errors": 2
+  }
+]

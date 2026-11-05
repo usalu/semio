@@ -1,0 +1,145 @@
+[
+  {
+    "name": "run-request-data",
+    "shape": "InferenceRunInput",
+    "input": {
+      "documentGeneration": 0,
+      "revision": 0,
+      "cancellationId": "neutral-request",
+      "workUnits": 256,
+      "maximumElapsedMilliseconds": 10000,
+      "retainedPolicy": {
+        "maximumItems": 128,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 262144,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 32
+      },
+      "artifactKind": "test.record",
+      "inferenceSchema": "test.compute",
+      "artifactId": "record-a"
+    },
+    "valid": true
+  },
+  {
+    "name": "submit-explicit-service",
+    "shape": "InferenceSubmitInput",
+    "input": {
+      "documentGeneration": 0,
+      "revision": 0,
+      "cancellationId": "neutral-request",
+      "workUnits": 256,
+      "maximumElapsedMilliseconds": 10000,
+      "retainedPolicy": {
+        "maximumItems": 128,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 262144,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 32
+      },
+      "documentId": "record-a",
+      "inferenceSchema": "test.compute",
+      "pluginId": "test",
+      "payload": {
+        "choice": 1
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "raw-private-turn-refused",
+    "shape": "InferenceRunInput",
+    "input": {
+      "documentGeneration": 0,
+      "revision": 0,
+      "cancellationId": "neutral-request",
+      "workUnits": 256,
+      "maximumElapsedMilliseconds": 10000,
+      "retainedPolicy": {
+        "maximumItems": 128,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 262144,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 32
+      },
+      "artifactKind": "test.record",
+      "inferenceSchema": "test.compute",
+      "artifactId": "record-a",
+      "turn": {
+        "operation": 71,
+        "epoch": 1,
+        "clockBinding": 1871
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "missing-document-generation",
+    "shape": "InferenceRunInput",
+    "input": {
+      "revision": 0,
+      "cancellationId": "neutral-request",
+      "workUnits": 256,
+      "maximumElapsedMilliseconds": 10000,
+      "retainedPolicy": {
+        "maximumItems": 128,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 262144,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 32
+      },
+      "artifactKind": "test.record",
+      "inferenceSchema": "test.compute",
+      "artifactId": "record-a"
+    },
+    "valid": false
+  },
+  {
+    "name": "private-clock-refused",
+    "shape": "InferenceSubmitInput",
+    "input": {
+      "documentGeneration": 0,
+      "revision": 0,
+      "cancellationId": "neutral-request",
+      "workUnits": 256,
+      "maximumElapsedMilliseconds": 10000,
+      "retainedPolicy": {
+        "maximumItems": 128,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 262144,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 32
+      },
+      "documentId": "record-a",
+      "inferenceSchema": "test.compute",
+      "pluginId": "test",
+      "payload": {
+        "choice": 1
+      },
+      "absoluteDeadlineUs": 9007199254740000
+    },
+    "valid": false
+  },
+  {
+    "name": "negative-requested-time",
+    "shape": "InferenceRunInput",
+    "input": {
+      "documentGeneration": 0,
+      "revision": 0,
+      "cancellationId": "neutral-request",
+      "workUnits": 256,
+      "maximumElapsedMilliseconds": -1,
+      "retainedPolicy": {
+        "maximumItems": 128,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 262144,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 32
+      },
+      "artifactKind": "test.record",
+      "inferenceSchema": "test.compute",
+      "artifactId": "record-a"
+    },
+    "valid": false
+  }
+]

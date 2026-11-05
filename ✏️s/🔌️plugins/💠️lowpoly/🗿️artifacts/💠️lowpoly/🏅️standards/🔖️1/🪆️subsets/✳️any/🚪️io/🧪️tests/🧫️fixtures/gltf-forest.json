@@ -1,0 +1,360 @@
+{
+  "meshCount": 1,
+  "cases": [
+    {
+      "id": "mesh-only-entity-library",
+      "nodes": [],
+      "scenes": [],
+      "scene": null,
+      "valid": true,
+      "objects": 1
+    },
+    {
+      "id": "entity-library-rooted-instance-and-unused-definition",
+      "meshCount": 2,
+      "nodes": [
+        {
+          "mesh": 0,
+          "translation": [
+            2,
+            3,
+            4
+          ]
+        }
+      ],
+      "scenes": [],
+      "scene": null,
+      "valid": true,
+      "objects": 2,
+      "expectedObjectPositions": [
+        [
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            3,
+            4
+          ],
+          [
+            2,
+            4,
+            4
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "selected-scene-excludes-unused-definition",
+      "meshCount": 2,
+      "nodes": [
+        {
+          "mesh": 0
+        }
+      ],
+      "scenes": [
+        [
+          0
+        ]
+      ],
+      "scene": 0,
+      "valid": true,
+      "objects": 1
+    },
+    {
+      "id": "valid-rooted-instances",
+      "nodes": [
+        {
+          "mesh": 0
+        },
+        {
+          "mesh": 0
+        }
+      ],
+      "scenes": [],
+      "scene": null,
+      "valid": true,
+      "objects": 2
+    },
+    {
+      "id": "valid-selected-multi-scene-shared-root",
+      "nodes": [
+        {
+          "children": [
+            1,
+            2
+          ]
+        },
+        {
+          "mesh": 0
+        },
+        {
+          "mesh": 0
+        },
+        {
+          "mesh": 0
+        }
+      ],
+      "scenes": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          3
+        ]
+      ],
+      "scene": 1,
+      "valid": true,
+      "objects": 2
+    },
+    {
+      "id": "rooted-mesh-with-orphan-cycle",
+      "nodes": [
+        {
+          "mesh": 0
+        },
+        {
+          "children": [
+            2
+          ]
+        },
+        {
+          "children": [
+            1
+          ]
+        }
+      ],
+      "scenes": [],
+      "scene": null,
+      "valid": false,
+      "error": "cycle"
+    },
+    {
+      "id": "selected-mesh-with-orphan-cycle",
+      "nodes": [
+        {
+          "mesh": 0
+        },
+        {
+          "children": [
+            2
+          ]
+        },
+        {
+          "children": [
+            1
+          ]
+        }
+      ],
+      "scenes": [
+        [
+          0
+        ]
+      ],
+      "scene": 0,
+      "valid": false,
+      "error": "cycle"
+    },
+    {
+      "id": "unused-child-index-out-of-range",
+      "nodes": [
+        {
+          "mesh": 0
+        },
+        {
+          "children": [
+            99
+          ]
+        }
+      ],
+      "scenes": [
+        [
+          0
+        ]
+      ],
+      "scene": 0,
+      "valid": false,
+      "error": "node index",
+      "externalReject": true
+    },
+    {
+      "id": "multiple-parents",
+      "nodes": [
+        {
+          "mesh": 0,
+          "children": [
+            2
+          ]
+        },
+        {
+          "children": [
+            2
+          ]
+        },
+        {}
+      ],
+      "scenes": [],
+      "scene": null,
+      "valid": false,
+      "error": "multiple parents"
+    },
+    {
+      "id": "duplicate-child",
+      "nodes": [
+        {
+          "mesh": 0,
+          "children": [
+            1,
+            1
+          ]
+        },
+        {}
+      ],
+      "scenes": [],
+      "scene": null,
+      "valid": false,
+      "error": "multiple parents"
+    },
+    {
+      "id": "scene-root-has-parent",
+      "nodes": [
+        {
+          "children": [
+            1
+          ]
+        },
+        {
+          "mesh": 0
+        }
+      ],
+      "scenes": [
+        [
+          1
+        ]
+      ],
+      "scene": 0,
+      "valid": false,
+      "error": "scene root"
+    },
+    {
+      "id": "duplicate-scene-root",
+      "nodes": [
+        {
+          "mesh": 0
+        }
+      ],
+      "scenes": [
+        [
+          0,
+          0
+        ]
+      ],
+      "scene": 0,
+      "valid": false,
+      "error": "scene root"
+    },
+    {
+      "id": "unused-mesh-index-out-of-range",
+      "nodes": [
+        {
+          "mesh": 0
+        },
+        {
+          "mesh": 99
+        }
+      ],
+      "scenes": [
+        [
+          0
+        ]
+      ],
+      "scene": 0,
+      "valid": false,
+      "error": "mesh index",
+      "externalReject": true
+    },
+    {
+      "id": "scene-root-index-out-of-range",
+      "nodes": [
+        {
+          "mesh": 0
+        }
+      ],
+      "scenes": [
+        [
+          0
+        ],
+        [
+          99
+        ]
+      ],
+      "scene": 0,
+      "valid": false,
+      "error": "scene root",
+      "externalReject": true
+    },
+    {
+      "id": "default-scene-index-out-of-range",
+      "nodes": [
+        {
+          "mesh": 0
+        }
+      ],
+      "scenes": [
+        [
+          0
+        ]
+      ],
+      "scene": 99,
+      "valid": false,
+      "error": "scene index",
+      "externalReject": true
+    }
+  ],
+  "positions": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0
+    ]
+  ],
+  "faces": [
+    [
+      0,
+      1,
+      2
+    ]
+  ]
+}

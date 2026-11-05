@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "s.wfc.grid2d.fill.completion.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "solveJson",
+    "sourceRevision"
+  ],
+  "properties": {
+    "solveJson": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceRevision": {
+      "type": "array",
+      "minItems": 32,
+      "maxItems": 32,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    }
+  }
+}

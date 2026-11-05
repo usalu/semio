@@ -1,0 +1,203 @@
+{
+  "workCases": [
+    {
+      "width": 2,
+      "height": 2,
+      "items": 2
+    },
+    {
+      "width": 65,
+      "height": 64,
+      "items": 2
+    },
+    {
+      "width": 512,
+      "height": 512,
+      "items": 2
+    },
+    {
+      "width": 0,
+      "height": 2,
+      "items": null
+    },
+    {
+      "width": 513,
+      "height": 2,
+      "items": null
+    }
+  ],
+  "cases": [
+    {
+      "id": "fresh",
+      "pixels": "AAEBAA==",
+      "contradiction": false,
+      "width": 2,
+      "height": 2,
+      "sourceRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "currentRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "operations": [
+        {
+          "PinSolution": {
+            "pins": [
+              {
+                "x": 0,
+                "y": 0,
+                "color": 0
+              },
+              {
+                "x": 1,
+                "y": 0,
+                "color": 1
+              },
+              {
+                "x": 0,
+                "y": 1,
+                "color": 1
+              },
+              {
+                "x": 1,
+                "y": 1,
+                "color": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing",
+      "pixels": null,
+      "contradiction": false,
+      "width": 2,
+      "height": 2,
+      "sourceRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "currentRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "fault": "wfc.bitmap.preview.unavailable"
+    },
+    {
+      "id": "empty",
+      "pixels": "",
+      "contradiction": false,
+      "width": 2,
+      "height": 2,
+      "sourceRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "currentRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "fault": "wfc.bitmap.preview.unavailable"
+    },
+    {
+      "id": "contradiction",
+      "pixels": "AAEBAA==",
+      "contradiction": true,
+      "width": 2,
+      "height": 2,
+      "sourceRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "currentRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "fault": "wfc.bitmap.solution.contradiction"
+    },
+    {
+      "id": "foreign-width",
+      "pixels": "AAEBAA==",
+      "contradiction": false,
+      "width": 3,
+      "height": 2,
+      "sourceRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "currentRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "fault": "wfc.bitmap.preview.extent"
+    },
+    {
+      "id": "foreign-height",
+      "pixels": "AAEBAA==",
+      "contradiction": false,
+      "width": 2,
+      "height": 3,
+      "sourceRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "currentRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "fault": "wfc.bitmap.preview.extent"
+    },
+    {
+      "id": "stale",
+      "pixels": "AAEBAA==",
+      "contradiction": false,
+      "width": 2,
+      "height": 2,
+      "sourceRevision": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=",
+      "currentRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "fault": "wfc.bitmap.preview.stale"
+    },
+    {
+      "id": "noncanonical-revision-padding",
+      "pixels": "AAEBAA==",
+      "contradiction": false,
+      "width": 2,
+      "height": 2,
+      "sourceRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB=",
+      "currentRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "fault": "wfc.bitmap.preview.stale"
+    },
+    {
+      "id": "extra-revision-byte",
+      "pixels": "AAEBAA==",
+      "contradiction": false,
+      "width": 2,
+      "height": 2,
+      "sourceRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "currentRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "fault": "wfc.bitmap.preview.stale"
+    },
+    {
+      "id": "malformed-pixels",
+      "pixels": "not base64!",
+      "contradiction": false,
+      "width": 2,
+      "height": 2,
+      "sourceRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "currentRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "fault": "wfc.bitmap.solution.pixels-invalid"
+    },
+    {
+      "id": "unknown-palette-color",
+      "pixels": "/wAAAA==",
+      "contradiction": false,
+      "width": 2,
+      "height": 2,
+      "sourceRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "currentRevision": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "fault": "wfc.bitmap.palette.unknown-color"
+    }
+  ],
+  "cursorCases": [
+    {
+      "id": "bounded-completion",
+      "width": 65,
+      "height": 64,
+      "paletteSequence": [
+        0,
+        1
+      ],
+      "complete": true
+    },
+    {
+      "id": "schema-limit-cancel",
+      "width": 512,
+      "height": 512,
+      "paletteSequence": [
+        0,
+        1
+      ],
+      "complete": false
+    },
+    {
+      "id": "canonicalize-prior-order",
+      "width": 2,
+      "height": 2,
+      "paletteSequence": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "beforeReversed": true,
+      "complete": true
+    }
+  ]
+}

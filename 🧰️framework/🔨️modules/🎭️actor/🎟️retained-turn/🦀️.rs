@@ -1,15 +1,15 @@
 //! 🎟️ Original operation identity and retained currencies survive every native and component turn.
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
 use semio_framework_value_derive::{FromValue,ToValue};
-#[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue)]
+#[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue,semio_framework_value::NativeReceive)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-#[value(crate="::semio_framework_value",rename_all="camelCase")]
+#[value(crate="::semio_framework_value",rename_all="camelCase",deny_unknown_fields)]
 pub struct OriginalActorTurnWork{pub clock_binding:u64,pub absolute_deadline_us:u64,pub fuel:u64}
 semio_framework_value::artifact_retire_leaf!(OriginalActorTurnWork);
 /// 🪙️ The issuer's actual bounded semantic view stays separate from its total source authority.
-#[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue)]
+#[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue,semio_framework_value::NativeReceive)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-#[value(crate="::semio_framework_value",rename_all="camelCase")]
+#[value(crate="::semio_framework_value",rename_all="camelCase",deny_unknown_fields)]
 pub struct OriginalActorTurnLoan{pub retained_policy:RetainedCloneGrant,pub work_fuel:u64,pub deadline_us:u64}
 semio_framework_value::artifact_retire_leaf!(OriginalActorTurnLoan);
 impl OriginalActorTurnLoan{
@@ -20,15 +20,16 @@ impl OriginalActorTurnLoan{
  pub async fn pack_decode(bytes:&[u8],pos:&mut usize)->Result<Self,semio_framework_actor_pack::PackError>{Ok(Self{retained_policy:pack_decode_grant(bytes,pos).await?,work_fuel:semio_framework_actor_pack::read_u64(bytes,pos,"OriginalTurnLoan::work-fuel").await?,deadline_us:semio_framework_actor_pack::read_u64(bytes,pos,"OriginalTurnLoan::deadline-us").await?})}
 }
 
-#[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue)]
+#[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue,semio_framework_value::NativeReceive)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-#[value(crate="::semio_framework_value",rename_all="camelCase")]
+#[value(crate="::semio_framework_value",rename_all="camelCase",deny_unknown_fields)]
 pub struct RetainedTurnInput{pub operation:u64,pub generation:u64,pub epoch:u64,pub work:OriginalActorTurnWork,pub grant:RetainedCloneGrant}
 semio_framework_value::artifact_retire_leaf!(RetainedTurnInput);
-#[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue)]
+#[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue,semio_framework_value::NativeReceive)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-#[value(crate="::semio_framework_value",rename_all="camelCase")]
+#[value(crate="::semio_framework_value",rename_all="camelCase",deny_unknown_fields)]
 pub struct RetainedTurnReceipt{pub input:RetainedTurnInput,pub spent:RetainedCloneProgress,pub work_units_spent:u64,pub remaining:RetainedCloneGrant,pub remaining_fuel:u64}
+semio_framework_value::artifact_retire_leaf!(RetainedTurnReceipt);
 impl RetainedTurnInput{
  pub fn borrow_original(cx:&semio_framework_job::StepContext<'_>)->Result<Self,ValueError>{cx.original_source_parent()?;let original=Self{operation:cx.operation().0,generation:cx.generation().0,epoch:cx.original_source_epoch().ok_or_else(||refusal("original actor input requires its actual issued epoch"))?,work:OriginalActorTurnWork{clock_binding:cx.original_clock_binding().ok_or_else(||refusal("original actor input requires its bound issuer clock"))?,absolute_deadline_us:cx.original_absolute_deadline_us(),fuel:cx.original_total_fuel_remaining()},grant:cx.original_total_retained_grant()};original.validate()?;Ok(original)}
  pub fn validate(&self)->Result<(),ValueError>{if self.operation==0||self.generation==0||self.epoch==0||self.work.clock_binding==0||self.work.absolute_deadline_us==0{return Err(refusal("original retained turn requires operation, generation, epoch and original finite clock/deadline"))}Ok(())}

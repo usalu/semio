@@ -10,7 +10,9 @@
     "copyCuts",
     "expectedVm",
     "noBudgetContext",
-    "maximumArguments"
+    "maximumArguments",
+    "budgetArguments",
+    "prefixArguments"
   ],
   "properties": {
     "version": {
@@ -45,7 +47,13 @@
       "const": true
     },
     "maximumArguments": {
+      "const": 22
+    },
+    "budgetArguments": {
       "const": 19
+    },
+    "prefixArguments": {
+      "const": 3
     }
   }
 }

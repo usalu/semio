@@ -1,0 +1,1419 @@
+{
+  "version": 1,
+  "cancelPrefixes": [
+    0,
+    1,
+    2,
+    5,
+    13
+  ],
+  "stock": {
+    "items": 100000,
+    "copyBytes": 16777216,
+    "capacityBytes": 16777216,
+    "releaseBytes": 16777216,
+    "depth": 64,
+    "fuel": 100000
+  },
+  "definitions": {
+    "Variant": {
+      "type": "string",
+      "enum": [
+        "solid",
+        "outline",
+        "ghost",
+        "plain"
+      ]
+    },
+    "SizeToken": {
+      "type": "string",
+      "enum": [
+        "xs",
+        "sm",
+        "md",
+        "lg",
+        "xl"
+      ]
+    },
+    "Density": {
+      "type": "string",
+      "enum": [
+        "compact",
+        "standard",
+        "touch"
+      ]
+    },
+    "Tone": {
+      "type": "string",
+      "enum": [
+        "neutral",
+        "primary",
+        "secondary",
+        "tertiary",
+        "info",
+        "success",
+        "warning",
+        "danger"
+      ]
+    },
+    "Emphasis": {
+      "type": "string",
+      "enum": [
+        "subtle",
+        "regular",
+        "strong"
+      ]
+    },
+    "Liveness": {
+      "type": "string",
+      "enum": [
+        "off",
+        "polite",
+        "assertive"
+      ]
+    },
+    "UiRevision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "UiNodeId": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "SurfaceId": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "Activity": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "loading",
+        "idle",
+        "finished"
+      ]
+    },
+    "SpaceToken": {
+      "type": "string",
+      "enum": [
+        "none",
+        "xs",
+        "sm",
+        "md",
+        "lg",
+        "xl",
+        "xxl"
+      ]
+    },
+    "Axis": {
+      "type": "string",
+      "enum": [
+        "horizontal",
+        "vertical"
+      ]
+    },
+    "Align": {
+      "type": "string",
+      "enum": [
+        "start",
+        "center",
+        "end",
+        "stretch",
+        "baseline"
+      ]
+    },
+    "Justify": {
+      "type": "string",
+      "enum": [
+        "start",
+        "center",
+        "end",
+        "spaceBetween",
+        "spaceAround",
+        "spaceEvenly"
+      ]
+    },
+    "ScrollAxes": {
+      "type": "string",
+      "enum": [
+        "none",
+        "horizontal",
+        "vertical",
+        "both"
+      ]
+    },
+    "Anchor": {
+      "type": "string",
+      "enum": [
+        "topStart",
+        "top",
+        "topEnd",
+        "start",
+        "center",
+        "end",
+        "bottomStart",
+        "bottom",
+        "bottomEnd"
+      ]
+    },
+    "TransitionHint": {
+      "type": "string",
+      "enum": [
+        "introducing",
+        "celebrating"
+      ]
+    },
+    "StyleSpec": {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "solid",
+            "outline",
+            "ghost",
+            "plain"
+          ]
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "xs",
+            "sm",
+            "md",
+            "lg",
+            "xl"
+          ]
+        },
+        "density": {
+          "type": "string",
+          "enum": [
+            "compact",
+            "standard",
+            "touch"
+          ]
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "neutral",
+            "primary",
+            "secondary",
+            "tertiary",
+            "info",
+            "success",
+            "warning",
+            "danger"
+          ]
+        },
+        "emphasis": {
+          "type": "string",
+          "enum": [
+            "subtle",
+            "regular",
+            "strong"
+          ]
+        }
+      }
+    },
+    "AccessibilitySpec": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "live": {
+          "type": "string",
+          "enum": [
+            "off",
+            "polite",
+            "assertive"
+          ]
+        },
+        "shortcut": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "hidden": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Label": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "Trigger": {
+      "type": "string",
+      "enum": [
+        "activate",
+        "change",
+        "commit",
+        "delta",
+        "drop",
+        "submit",
+        "abort",
+        "repeatLast",
+        "hoverPreview"
+      ]
+    },
+    "ActionId": {
+      "type": "object",
+      "required": [
+        "scope",
+        "name",
+        "version"
+      ],
+      "properties": {
+        "scope": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "ActionBinding": {
+      "type": "object",
+      "required": [
+        "trigger",
+        "action"
+      ],
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "enum": [
+            "activate",
+            "change",
+            "commit",
+            "delta",
+            "drop",
+            "submit",
+            "abort",
+            "repeatLast",
+            "hoverPreview"
+          ]
+        },
+        "action": {
+          "type": "object",
+          "required": [
+            "scope",
+            "name",
+            "version"
+          ],
+          "properties": {
+            "scope": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "name": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          }
+        },
+        "args": {},
+        "capability": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "MenuRef": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "args": {}
+      }
+    },
+    "UiIntent": {
+      "type": "object",
+      "required": [
+        "surface",
+        "revision",
+        "node",
+        "nodeKey",
+        "trigger",
+        "action",
+        "seq"
+      ],
+      "properties": {
+        "surface": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "node": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "nodeKey": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "trigger": {
+          "type": "string",
+          "enum": [
+            "activate",
+            "change",
+            "commit",
+            "delta",
+            "drop",
+            "submit",
+            "abort",
+            "repeatLast",
+            "hoverPreview"
+          ]
+        },
+        "action": {
+          "type": "object",
+          "required": [
+            "scope",
+            "name",
+            "version"
+          ],
+          "properties": {
+            "scope": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "name": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          }
+        },
+        "args": {},
+        "input": {},
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "UiPublicationRevision": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4]|18446744073709551615)$"
+    },
+    "WindowLayout": {
+      "type": "object",
+      "required": [
+        "root"
+      ],
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/node"
+        }
+      },
+      "$defs": {
+        "node": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "windowKindId"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "window"
+                },
+                "windowKindId": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "instanceId": {
+                  "type": "string"
+                },
+                "templateId": {
+                  "type": "string"
+                },
+                "corner": {
+                  "enum": [
+                    "topLeft",
+                    "topRight",
+                    "bottomLeft",
+                    "bottomRight"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "children"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "stack"
+                },
+                "size": {
+                  "type": "number"
+                },
+                "activeWindowKindId": {
+                  "type": "string"
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/node"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "axis",
+                "children"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "split"
+                },
+                "axis": {
+                  "type": "string",
+                  "enum": [
+                    "horizontal",
+                    "vertical"
+                  ]
+                },
+                "size": {
+                  "type": "number"
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/node"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "family": "Variant",
+      "wire": "\"solid\"",
+      "accepted": true
+    },
+    {
+      "family": "Variant",
+      "wire": "\"outline\"",
+      "accepted": true
+    },
+    {
+      "family": "Variant",
+      "wire": "\"ghost\"",
+      "accepted": true
+    },
+    {
+      "family": "Variant",
+      "wire": "\"plain\"",
+      "accepted": true
+    },
+    {
+      "family": "Variant",
+      "wire": "\"Unknown\"",
+      "accepted": false
+    },
+    {
+      "family": "Variant",
+      "wire": "\"SOLID\"",
+      "accepted": false
+    },
+    {
+      "family": "Variant",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Variant",
+      "wire": "0",
+      "accepted": false
+    },
+    {
+      "family": "Variant",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "SizeToken",
+      "wire": "\"xs\"",
+      "accepted": true
+    },
+    {
+      "family": "SizeToken",
+      "wire": "\"sm\"",
+      "accepted": true
+    },
+    {
+      "family": "SizeToken",
+      "wire": "\"md\"",
+      "accepted": true
+    },
+    {
+      "family": "SizeToken",
+      "wire": "\"lg\"",
+      "accepted": true
+    },
+    {
+      "family": "SizeToken",
+      "wire": "\"xl\"",
+      "accepted": true
+    },
+    {
+      "family": "SizeToken",
+      "wire": "\"Unknown\"",
+      "accepted": false
+    },
+    {
+      "family": "SizeToken",
+      "wire": "\"SOLID\"",
+      "accepted": false
+    },
+    {
+      "family": "SizeToken",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "SizeToken",
+      "wire": "0",
+      "accepted": false
+    },
+    {
+      "family": "SizeToken",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "Density",
+      "wire": "\"compact\"",
+      "accepted": true
+    },
+    {
+      "family": "Density",
+      "wire": "\"standard\"",
+      "accepted": true
+    },
+    {
+      "family": "Density",
+      "wire": "\"touch\"",
+      "accepted": true
+    },
+    {
+      "family": "Density",
+      "wire": "\"Unknown\"",
+      "accepted": false
+    },
+    {
+      "family": "Density",
+      "wire": "\"SOLID\"",
+      "accepted": false
+    },
+    {
+      "family": "Density",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Density",
+      "wire": "0",
+      "accepted": false
+    },
+    {
+      "family": "Density",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "Tone",
+      "wire": "\"neutral\"",
+      "accepted": true
+    },
+    {
+      "family": "Tone",
+      "wire": "\"primary\"",
+      "accepted": true
+    },
+    {
+      "family": "Tone",
+      "wire": "\"secondary\"",
+      "accepted": true
+    },
+    {
+      "family": "Tone",
+      "wire": "\"tertiary\"",
+      "accepted": true
+    },
+    {
+      "family": "Tone",
+      "wire": "\"info\"",
+      "accepted": true
+    },
+    {
+      "family": "Tone",
+      "wire": "\"success\"",
+      "accepted": true
+    },
+    {
+      "family": "Tone",
+      "wire": "\"warning\"",
+      "accepted": true
+    },
+    {
+      "family": "Tone",
+      "wire": "\"danger\"",
+      "accepted": true
+    },
+    {
+      "family": "Tone",
+      "wire": "\"Unknown\"",
+      "accepted": false
+    },
+    {
+      "family": "Tone",
+      "wire": "\"SOLID\"",
+      "accepted": false
+    },
+    {
+      "family": "Tone",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Tone",
+      "wire": "0",
+      "accepted": false
+    },
+    {
+      "family": "Tone",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "Emphasis",
+      "wire": "\"subtle\"",
+      "accepted": true
+    },
+    {
+      "family": "Emphasis",
+      "wire": "\"regular\"",
+      "accepted": true
+    },
+    {
+      "family": "Emphasis",
+      "wire": "\"strong\"",
+      "accepted": true
+    },
+    {
+      "family": "Emphasis",
+      "wire": "\"Unknown\"",
+      "accepted": false
+    },
+    {
+      "family": "Emphasis",
+      "wire": "\"SOLID\"",
+      "accepted": false
+    },
+    {
+      "family": "Emphasis",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Emphasis",
+      "wire": "0",
+      "accepted": false
+    },
+    {
+      "family": "Emphasis",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "Liveness",
+      "wire": "\"off\"",
+      "accepted": true
+    },
+    {
+      "family": "Liveness",
+      "wire": "\"polite\"",
+      "accepted": true
+    },
+    {
+      "family": "Liveness",
+      "wire": "\"assertive\"",
+      "accepted": true
+    },
+    {
+      "family": "Liveness",
+      "wire": "\"Unknown\"",
+      "accepted": false
+    },
+    {
+      "family": "Liveness",
+      "wire": "\"SOLID\"",
+      "accepted": false
+    },
+    {
+      "family": "Liveness",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Liveness",
+      "wire": "0",
+      "accepted": false
+    },
+    {
+      "family": "Liveness",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "UiNodeId",
+      "wire": "0",
+      "accepted": true
+    },
+    {
+      "family": "UiNodeId",
+      "wire": "1",
+      "accepted": true
+    },
+    {
+      "family": "UiNodeId",
+      "wire": "9007199254740991",
+      "accepted": true
+    },
+    {
+      "family": "UiNodeId",
+      "wire": "-1",
+      "accepted": false
+    },
+    {
+      "family": "UiNodeId",
+      "wire": "0.5",
+      "accepted": false
+    },
+    {
+      "family": "UiNodeId",
+      "wire": "\"1\"",
+      "accepted": false
+    },
+    {
+      "family": "UiRevision",
+      "wire": "0",
+      "accepted": true
+    },
+    {
+      "family": "UiRevision",
+      "wire": "1",
+      "accepted": true
+    },
+    {
+      "family": "UiRevision",
+      "wire": "9007199254740991",
+      "accepted": true
+    },
+    {
+      "family": "UiRevision",
+      "wire": "-1",
+      "accepted": false
+    },
+    {
+      "family": "UiRevision",
+      "wire": "0.5",
+      "accepted": false
+    },
+    {
+      "family": "UiRevision",
+      "wire": "\"1\"",
+      "accepted": false
+    },
+    {
+      "family": "SurfaceId",
+      "wire": "\"\"",
+      "accepted": true
+    },
+    {
+      "family": "SurfaceId",
+      "wire": "\"note.play.navigator\"",
+      "accepted": true
+    },
+    {
+      "family": "SurfaceId",
+      "wire": "\"äö😀\"",
+      "accepted": true
+    },
+    {
+      "family": "SurfaceId",
+      "wire": "12",
+      "accepted": false
+    },
+    {
+      "family": "SurfaceId",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Activity",
+      "wire": "\"waiting\"",
+      "accepted": true
+    },
+    {
+      "family": "Activity",
+      "wire": "\"loading\"",
+      "accepted": true
+    },
+    {
+      "family": "Activity",
+      "wire": "\"idle\"",
+      "accepted": true
+    },
+    {
+      "family": "Activity",
+      "wire": "\"finished\"",
+      "accepted": true
+    },
+    {
+      "family": "Activity",
+      "wire": "\"UNKNOWN\"",
+      "accepted": false
+    },
+    {
+      "family": "Activity",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Activity",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "SpaceToken",
+      "wire": "\"none\"",
+      "accepted": true
+    },
+    {
+      "family": "SpaceToken",
+      "wire": "\"xs\"",
+      "accepted": true
+    },
+    {
+      "family": "SpaceToken",
+      "wire": "\"sm\"",
+      "accepted": true
+    },
+    {
+      "family": "SpaceToken",
+      "wire": "\"md\"",
+      "accepted": true
+    },
+    {
+      "family": "SpaceToken",
+      "wire": "\"lg\"",
+      "accepted": true
+    },
+    {
+      "family": "SpaceToken",
+      "wire": "\"xl\"",
+      "accepted": true
+    },
+    {
+      "family": "SpaceToken",
+      "wire": "\"xxl\"",
+      "accepted": true
+    },
+    {
+      "family": "SpaceToken",
+      "wire": "\"UNKNOWN\"",
+      "accepted": false
+    },
+    {
+      "family": "SpaceToken",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "SpaceToken",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "Axis",
+      "wire": "\"horizontal\"",
+      "accepted": true
+    },
+    {
+      "family": "Axis",
+      "wire": "\"vertical\"",
+      "accepted": true
+    },
+    {
+      "family": "Axis",
+      "wire": "\"UNKNOWN\"",
+      "accepted": false
+    },
+    {
+      "family": "Axis",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Axis",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "Align",
+      "wire": "\"start\"",
+      "accepted": true
+    },
+    {
+      "family": "Align",
+      "wire": "\"center\"",
+      "accepted": true
+    },
+    {
+      "family": "Align",
+      "wire": "\"end\"",
+      "accepted": true
+    },
+    {
+      "family": "Align",
+      "wire": "\"stretch\"",
+      "accepted": true
+    },
+    {
+      "family": "Align",
+      "wire": "\"baseline\"",
+      "accepted": true
+    },
+    {
+      "family": "Align",
+      "wire": "\"UNKNOWN\"",
+      "accepted": false
+    },
+    {
+      "family": "Align",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Align",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "Justify",
+      "wire": "\"start\"",
+      "accepted": true
+    },
+    {
+      "family": "Justify",
+      "wire": "\"center\"",
+      "accepted": true
+    },
+    {
+      "family": "Justify",
+      "wire": "\"end\"",
+      "accepted": true
+    },
+    {
+      "family": "Justify",
+      "wire": "\"spaceBetween\"",
+      "accepted": true
+    },
+    {
+      "family": "Justify",
+      "wire": "\"spaceAround\"",
+      "accepted": true
+    },
+    {
+      "family": "Justify",
+      "wire": "\"spaceEvenly\"",
+      "accepted": true
+    },
+    {
+      "family": "Justify",
+      "wire": "\"UNKNOWN\"",
+      "accepted": false
+    },
+    {
+      "family": "Justify",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Justify",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "ScrollAxes",
+      "wire": "\"none\"",
+      "accepted": true
+    },
+    {
+      "family": "ScrollAxes",
+      "wire": "\"horizontal\"",
+      "accepted": true
+    },
+    {
+      "family": "ScrollAxes",
+      "wire": "\"vertical\"",
+      "accepted": true
+    },
+    {
+      "family": "ScrollAxes",
+      "wire": "\"both\"",
+      "accepted": true
+    },
+    {
+      "family": "ScrollAxes",
+      "wire": "\"UNKNOWN\"",
+      "accepted": false
+    },
+    {
+      "family": "ScrollAxes",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "ScrollAxes",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "Anchor",
+      "wire": "\"topStart\"",
+      "accepted": true
+    },
+    {
+      "family": "Anchor",
+      "wire": "\"top\"",
+      "accepted": true
+    },
+    {
+      "family": "Anchor",
+      "wire": "\"topEnd\"",
+      "accepted": true
+    },
+    {
+      "family": "Anchor",
+      "wire": "\"start\"",
+      "accepted": true
+    },
+    {
+      "family": "Anchor",
+      "wire": "\"center\"",
+      "accepted": true
+    },
+    {
+      "family": "Anchor",
+      "wire": "\"end\"",
+      "accepted": true
+    },
+    {
+      "family": "Anchor",
+      "wire": "\"bottomStart\"",
+      "accepted": true
+    },
+    {
+      "family": "Anchor",
+      "wire": "\"bottom\"",
+      "accepted": true
+    },
+    {
+      "family": "Anchor",
+      "wire": "\"bottomEnd\"",
+      "accepted": true
+    },
+    {
+      "family": "Anchor",
+      "wire": "\"UNKNOWN\"",
+      "accepted": false
+    },
+    {
+      "family": "Anchor",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Anchor",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "TransitionHint",
+      "wire": "\"introducing\"",
+      "accepted": true
+    },
+    {
+      "family": "TransitionHint",
+      "wire": "\"celebrating\"",
+      "accepted": true
+    },
+    {
+      "family": "TransitionHint",
+      "wire": "\"UNKNOWN\"",
+      "accepted": false
+    },
+    {
+      "family": "TransitionHint",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "TransitionHint",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "StyleSpec",
+      "wire": "{}",
+      "accepted": true
+    },
+    {
+      "family": "StyleSpec",
+      "wire": "{\"tone\":\"danger\",\"density\":\"touch\"}",
+      "accepted": true
+    },
+    {
+      "family": "StyleSpec",
+      "wire": "{\"variant\":\"alien\"}",
+      "accepted": false
+    },
+    {
+      "family": "StyleSpec",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "AccessibilitySpec",
+      "wire": "{}",
+      "accepted": true
+    },
+    {
+      "family": "AccessibilitySpec",
+      "wire": "{\"label\":\"Bereit\",\"live\":\"polite\",\"shortcut\":\"Ctrl+S\"}",
+      "accepted": true
+    },
+    {
+      "family": "AccessibilitySpec",
+      "wire": "{\"live\":\"loud\"}",
+      "accepted": false
+    },
+    {
+      "family": "AccessibilitySpec",
+      "wire": "false",
+      "accepted": false
+    },
+    {
+      "family": "Label",
+      "wire": "\"\"",
+      "accepted": true
+    },
+    {
+      "family": "Label",
+      "wire": "\"Sichtbarkeit\"",
+      "accepted": true
+    },
+    {
+      "family": "Label",
+      "wire": "null",
+      "accepted": false
+    },
+    {
+      "family": "Trigger",
+      "wire": "\"activate\"",
+      "accepted": true
+    },
+    {
+      "family": "Trigger",
+      "wire": "\"hoverPreview\"",
+      "accepted": true
+    },
+    {
+      "family": "Trigger",
+      "wire": "\"repeatLast\"",
+      "accepted": true
+    },
+    {
+      "family": "Trigger",
+      "wire": "\"click\"",
+      "accepted": false
+    },
+    {
+      "family": "ActionId",
+      "wire": "{\"scope\":\"note\",\"name\":\"textReplace\",\"version\":1}",
+      "accepted": true
+    },
+    {
+      "family": "ActionId",
+      "wire": "{\"scope\":\"note\",\"name\":\"textReplace\",\"version\":65536}",
+      "accepted": false
+    },
+    {
+      "family": "ActionId",
+      "wire": "{\"scope\":\"note\",\"name\":\"x\"}",
+      "accepted": false
+    },
+    {
+      "family": "ActionBinding",
+      "wire": "{\"trigger\":\"commit\",\"action\":{\"scope\":\"note\",\"name\":\"textReplace\",\"version\":1}}",
+      "accepted": true
+    },
+    {
+      "family": "ActionBinding",
+      "wire": "{\"trigger\":\"delta\",\"action\":{\"scope\":\"note\",\"name\":\"textReplace\",\"version\":1},\"args\":2,\"capability\":\"can.edit\"}",
+      "accepted": true
+    },
+    {
+      "family": "ActionBinding",
+      "wire": "{\"trigger\":\"unknown\",\"action\":{\"scope\":\"note\",\"name\":\"textReplace\",\"version\":1}}",
+      "accepted": false
+    },
+    {
+      "family": "MenuRef",
+      "wire": "{\"id\":\"main\"}",
+      "accepted": true
+    },
+    {
+      "family": "MenuRef",
+      "wire": "{\"id\":\"main\",\"args\":true}",
+      "accepted": true
+    },
+    {
+      "family": "MenuRef",
+      "wire": "{}",
+      "accepted": false
+    },
+    {
+      "family": "UiIntent",
+      "wire": "{\"surface\":\"note.play.editor\",\"revision\":2,\"node\":7,\"nodeKey\":\"editor\",\"trigger\":\"commit\",\"action\":{\"scope\":\"note\",\"name\":\"textReplace\",\"version\":1},\"seq\":3}",
+      "accepted": true
+    },
+    {
+      "family": "UiIntent",
+      "wire": "{\"surface\":\"note.play.editor\",\"revision\":2,\"node\":7,\"nodeKey\":\"editor\",\"trigger\":\"commit\",\"action\":{\"scope\":\"note\",\"name\":\"textReplace\",\"version\":1},\"seq\":3,\"args\":12,\"input\":false}",
+      "accepted": true
+    },
+    {
+      "family": "UiIntent",
+      "wire": "{\"surface\":\"note.play.editor\",\"revision\":2,\"node\":7,\"nodeKey\":\"editor\",\"trigger\":\"click\",\"action\":{\"scope\":\"note\",\"name\":\"textReplace\",\"version\":1},\"seq\":3}",
+      "accepted": false
+    },
+    {
+      "family": "UiPublicationRevision",
+      "wire": "\"0\"",
+      "accepted": true
+    },
+    {
+      "family": "UiPublicationRevision",
+      "wire": "\"1\"",
+      "accepted": true
+    },
+    {
+      "family": "UiPublicationRevision",
+      "wire": "\"18446744073709551615\"",
+      "accepted": true
+    },
+    {
+      "family": "UiPublicationRevision",
+      "wire": "\"18446744073709551616\"",
+      "accepted": false
+    },
+    {
+      "family": "UiPublicationRevision",
+      "wire": "\"01\"",
+      "accepted": false
+    },
+    {
+      "family": "UiPublicationRevision",
+      "wire": "\"\"",
+      "accepted": false
+    },
+    {
+      "family": "UiPublicationRevision",
+      "wire": "\"-1\"",
+      "accepted": false
+    },
+    {
+      "family": "UiPublicationRevision",
+      "wire": "0",
+      "accepted": false
+    },
+    {
+      "family": "UiPublicationRevision",
+      "wire": "1",
+      "accepted": false
+    },
+    {
+      "family": "WindowLayout",
+      "wire": "{\"root\":{\"kind\":\"split\",\"axis\":\"horizontal\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"editor\",\"instanceId\":\"w1\",\"title\":\"Editor\",\"corner\":\"topRight\"},{\"kind\":\"stack\",\"activeWindowKindId\":\"inspector\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"inspector\",\"templateId\":\"t\"}]}]}}",
+      "accepted": true
+    },
+    {
+      "family": "WindowLayout",
+      "wire": "{\"root\":{\"kind\":\"stack\",\"children\":[]}}",
+      "accepted": true
+    },
+    {
+      "family": "WindowLayout",
+      "wire": "{\"root\":{\"kind\":\"window\"}}",
+      "accepted": false
+    },
+    {
+      "family": "WindowLayout",
+      "wire": "{\"root\":{\"kind\":\"split\",\"axis\":\"diagonal\",\"children\":[]}}",
+      "accepted": false
+    }
+  ]
+}

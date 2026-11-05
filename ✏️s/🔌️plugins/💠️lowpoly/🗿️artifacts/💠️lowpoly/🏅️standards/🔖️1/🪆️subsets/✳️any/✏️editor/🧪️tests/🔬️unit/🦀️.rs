@@ -8,6 +8,11 @@ extern crate semio_os_kernel as store;
 mod context;
 
 use semio_s_artifact_lowpoly_lowpoly_editor::*;
+#[path = "../🧰️support/commands.rs"]
+mod command_fixture;
+use command_fixture::every_command;
+use semio_s_artifact_lowpoly_lowpoly_modes as edit;
+use semio_s_artifact_lowpoly_lowpoly_panels::{document::LOWPOLY_PLAY_BODY_ARTIFACT, catalogue::LOWPOLY_PLAY_BODY_CATALOGUE, inspection::LOWPOLY_PLAY_BODY_INSPECTION, layers::LOWPOLY_PLAY_BODY_LAYERS};
 use semio_s_artifact_lowpoly_lowpoly_commands::{paint::LowpolyPaintTick, paint::lowpoly_paint_tick};
 use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::lowpoly_paint_drive;
 use semio_s_artifact_lowpoly_lowpoly_mut_paint::{apply_paint_stroke::ApplyPaintStroke, edit_paint_layer::EditPaintLayer};
@@ -113,14 +118,15 @@ fn retained_route_partition_and_publication_are_exact() {
     let declared = LowpolyCommand::TOOL_JOB_IDS.len();
     let all = every_command();
     let mut partition = LOWPOLY_MIGRATED_TOOL_IDS.to_vec();
+    partition.extend(LOWPOLY_IMPORT_TOOL_IDS);
     partition.sort_unstable();
     partition.dedup();
     assert_eq!(partition.len(), declared, "every generated command id is Migrated");
     assert_eq!(all.len(), partition.len());
     assert!(all.iter().all(|command| partition.binary_search(&command.command_id()).is_ok()));
-    assert!(LOWPOLY_MIGRATED_TOOL_IDS.iter().all(|tool_id| lowpoly_command_disposition(tool_id).is_some()));
+    assert!(LOWPOLY_MIGRATED_TOOL_IDS.iter().chain(LOWPOLY_IMPORT_TOOL_IDS).all(|tool_id| lowpoly_command_disposition(tool_id).is_some()));
     assert_eq!(<LowpolyPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), declared);
-    assert_eq!(<LowpolyCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.len(), declared);
+    assert_eq!(<LowpolyCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.len() + <LowpolyImportJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.len(), declared);
     assert_eq!(lowpoly_contract().shape, ToolExecutionShape::Resumable);
     assert_eq!(lowpoly_contract().cancellation, ToolCancellationPolicy::PerOperation);
     assert_eq!((lowpoly_contract().checkpoint_every_steps, lowpoly_contract().progress_every_steps), (1, 1));
@@ -141,7 +147,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     assert!(matches!(
         uninterrupted
             .step(&semio_plugin::retained_command::ArtifactCommandInputs {
-                snapshot_owner: None, command: &command,
+                snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,
@@ -162,7 +168,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     assert!(matches!(
         replayed
             .step(&semio_plugin::retained_command::ArtifactCommandInputs {
-                snapshot_owner: None, command: &command,
+                snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,
@@ -177,7 +183,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     assert!(matches!(
         replayed
             .step(&semio_plugin::retained_command::ArtifactCommandInputs {
-                snapshot_owner: None, command: &command,
+                snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,
@@ -192,12 +198,12 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     let drifted = AppOperationContext { generation: operation.generation + 1, ..operation.clone() };
     let mut rejected = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
     assert!(rejected
-        .step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
+        .step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&drifted), command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
         .is_err());
     let drifted_context = retained_context(LowpolyTransient::default(), 20);
     assert!(rejected
         .step(&semio_plugin::retained_command::ArtifactCommandInputs {
-            snapshot_owner: None, command: &command,
+            snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
             snapshot: &snapshot,
             config: &config,
             history: &history,
@@ -210,7 +216,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     assert!(matches!(
         rejected
             .step(&semio_plugin::retained_command::ArtifactCommandInputs {
-                snapshot_owner: None, command: &command,
+                snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,
@@ -268,7 +274,7 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
             let mut refused = false;
             loop {
                 let started = std::time::Instant::now();
-                let step = work.step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None,
+                let step = work.step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation),
                     command: &command,
                     snapshot: &snapshot,
                     config: &config,
@@ -301,7 +307,6 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
         assert!(best < INTERACTIVE_TURN_CEILING, "{tool_id} turn exceeded {INTERACTIVE_TURN_CEILING:?} on every attempt: best {best:?}");
     }
 }
-
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
 /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
@@ -335,58 +340,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 }
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-pub(super) fn every_command() -> Vec<LowpolyCommand> {
-    vec![
-        LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("box".into()) }),
-        LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some("\"Renamed\"".into()) }),
-        LowpolyCommand::Extrude(extrude::Extrude { extrude_distance: Some(0.25) }),
-        LowpolyCommand::Inset(inset::Inset { inset_amount: Some(0.1) }),
-        LowpolyCommand::Bevel(bevel::Bevel { bevel_amount: Some(0.05), bevel_segments: Some(1) }),
-        LowpolyCommand::LoopCut(loop_cut::LoopCut { loop_cuts: Some(1) }),
-        LowpolyCommand::Subdivide(subdivide::Subdivide {}),
-        LowpolyCommand::Triangulate(triangulate::Triangulate {}),
-        LowpolyCommand::Mirror(mirror::Mirror { axis: Some("x".into()) }),
-        LowpolyCommand::Decimate(decimate::Decimate { decimate_ratio: Some(0.5) }),
-        LowpolyCommand::FlipFaces(flip_faces::FlipFaces { face_ids: vec![0] }),
-        LowpolyCommand::Merge(merge::Merge {}),
-        LowpolyCommand::Dissolve(dissolve::Dissolve {}),
-        LowpolyCommand::Snap(snap::Snap {}),
-        LowpolyCommand::ToggleSmooth(toggle_smooth::ToggleSmooth {}),
-        LowpolyCommand::UnwrapActive(unwrap_active::UnwrapActive {}),
-        LowpolyCommand::MarkUvSeam(mark_uv_seam::MarkUvSeam { seam: Some(true), edge_ids: Some(vec![0]) }),
-        LowpolyCommand::ClearSeam(clear_seam::ClearSeam {}),
-        LowpolyCommand::TranslateSelection(translate_selection::TranslateSelection { dx: 1.0, dy: 0.0, dz: 0.0 }),
-        LowpolyCommand::RotateSelection(rotate_selection::RotateSelection { ax: 0.0, ay: 1.0, az: 0.0, angle: 45.0 }),
-        LowpolyCommand::ScaleSelection(scale_selection::ScaleSelection { sx: 1.0, sy: 1.0, sz: 1.0 }),
-        LowpolyCommand::AddPaintLayer(add_paint_layer::AddPaintLayer { object_id: None, name: Some("Detail".into()) }),
-        LowpolyCommand::PaintFill(paint_fill::PaintFill { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }),
-        LowpolyCommand::FillBucket(fill_bucket::FillBucket { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }),
-        LowpolyCommand::ImportSnapshotJson(set_snapshot_json::ImportSnapshotJson { json: "{}".into() }),
-        LowpolyCommand::ReplaceSnapshotJson(replace_snapshot_json::ReplaceSnapshotJson { json: "{}".into() }),
-        LowpolyCommand::ExportMesh(export_mesh::ExportMesh { format: "obj".into() }),
-        LowpolyCommand::LoadMeshRequest(load_mesh_request::LoadMeshRequest {}),
-        LowpolyCommand::ImportMeshFile(import_mesh_file::ImportMeshFile { name: "quad.obj".into(), payload: "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n".into() }),
-        LowpolyCommand::DeleteSelection(delete_selection::DeleteSelection {}),
-        LowpolyCommand::DuplicateObject(duplicate_object::DuplicateObject { object_id: None }),
-        LowpolyCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("extrude".into()) }),
-        LowpolyCommand::SetActiveObject(set_active_object::SetActiveObject { object_id: "obj-1".into() }),
-        LowpolyCommand::SetActivePaintLayer(set_active_paint_layer::SetActivePaintLayer { layer_index: 0 }),
-        LowpolyCommand::SetUtilityParam(set_utility_param::SetUtilityParam { key: "brushSize".into(), value_json: "20".into() }),
-        LowpolyCommand::EngagementInput(engagement_input::EngagementInput { value: "ext".into() }),
-        LowpolyCommand::ToggleShowEdges(toggle_show_edges::ToggleShowEdges {}),
-        LowpolyCommand::ToggleSun(toggle_sun::ToggleSun {}),
-        LowpolyCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 45.0 }),
-        LowpolyCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 35.0 }),
-        LowpolyCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 0.8 }),
-        LowpolyCommand::SetCamera(set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }),
-        LowpolyCommand::PaintSample(paint_sample::PaintSample { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }),
-        LowpolyCommand::PaintStroke(paint_stroke::PaintStroke { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None, phase: None, reason: None }),
-        LowpolyCommand::PaintAt(paint_at::PaintAt { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None, phase: None, reason: None }),
-        LowpolyCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { object_id: None, u: None, v: None, x: Some(0.0), y: Some(0.0) }),
-        LowpolyCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { object_id: None, u: None, v: None, x: Some(1.0), y: Some(1.0), samples: None }),
-        LowpolyCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: Some(false) }),
-    ]
-}
 //#endregion 🔖️CommandSurface
 
 //#region 🔖️ManifestSanity
@@ -402,7 +355,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     for body in [LOWPOLY_PLAY_BODY_ARTIFACT, LOWPOLY_PLAY_BODY_CATALOGUE, LOWPOLY_PLAY_BODY_INSPECTION, LOWPOLY_PLAY_BODY_LAYERS] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
-    assert!(json.contains("3d.lowpoly"), "artifact kind missing from the manifest");
+    assert!(json.contains("s.lowpoly.lowpoly"), "artifact kind missing from the manifest");
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" domain is declared and
@@ -517,3 +470,58 @@ async fn registry_wired_app_dispatches_add_primitive() {
     assert_eq!(a.snapshot().expect("projection").objects.len(), 2);
 }
 //#endregion 🔖️ContextMenuRegistry
+
+#[semio_framework_async_macros::async_test]
+async fn every_registered_failed_load_body_uses_the_requested_locale() {
+    use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
+    use semio_framework_ui_locale::{Locale, Terminology};
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../../🎭️modes/✏️edit/🧪️tests/🔬️unit/locales.json")).expect("neutral locale cases");
+    let mut snapshot = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    snapshot.objects[0].mesh_state = None;
+    snapshot.objects[0].mesh_content = "invalid mesh source".into();
+    let config = LowpolyConfig::default();
+    assert!(semio_s_artifact_lowpoly_lowpoly_view::build_doc(&snapshot, &config, &LowpolyScratch::default()).is_none(), "fixture must force failed-load branches");
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&snapshot, &history);
+    let cfg = ConfigView { snapshot: &config, window: None };
+    fn has_text(value: &serde_json::Value, expected: &str) -> bool {
+        match value {
+            serde_json::Value::String(text) => text == expected,
+            serde_json::Value::Array(items) => items.iter().any(|item| has_text(item, expected)),
+            serde_json::Value::Object(fields) => fields.values().any(|item| has_text(item, expected)),
+            _ => false,
+        }
+    }
+    for case in contract["cases"].as_array().expect("cases").iter().take(2) {
+        let locale = match case["locale"].as_str().unwrap() { "en" => Locale::En, "de" => Locale::De, _ => panic!("explicit supported locale") };
+        for (body, expected) in [
+            (edit::windows::model::LOWPOLY_PLAY_BODY_MAIN, case["expect"]["failedModel"].as_str().unwrap()),
+            (paint_mode::windows::uv::LOWPOLY_PLAY_BODY_UV, case["expect"]["failedUv"].as_str().unwrap()),
+            (LOWPOLY_PLAY_BODY_ARTIFACT, case["expect"]["failedModel"].as_str().unwrap()),
+        ] {
+            let tree = LowpolyPlayApp::render(body, &doc, &cfg, &semio_framework_plugin::ViewModel::new(locale, Terminology::Native)).expect("failure renders");
+            let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("project and retire exact tree");
+            let projected: serde_json::Value = serde_json::from_str(&json).expect("independent failure-tree parser");
+            assert!(has_text(&projected, expected), "{body} must render requested locale: {projected}");
+        }
+    }
+}
+
+/// 📤️ Export publishes a shell download without destructive content or approval semantics.
+#[test]
+fn export_mesh_manifest_preserves_non_destructive_shell_policy() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("fixtures/export-metadata.json")).unwrap();
+    let definition = create_lowpoly_app();
+    for row in fixture["actions"].as_array().unwrap() {
+        let id = row["id"].as_str().unwrap();
+        let actions: Vec<_> = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).filter(|action| action.id == id).collect();
+        assert!(!actions.is_empty(), "the public manifest must declare {id}");
+        let kind: semio_framework::ActionKind = serde_json::from_value(row["kind"].clone()).unwrap();
+        let approval: semio_framework::ApprovalMode = serde_json::from_value(row["approval"].clone()).unwrap();
+        for action in actions {
+            assert_eq!(action.kind, kind, "{id} must remain a shell-only operation");
+            assert_eq!(action.semantics.effects.destructive, row["destructive"].as_bool().unwrap(), "{id} must preserve user content");
+            assert_eq!(action.semantics.policy.approval, approval, "{id} must not request destructive approval");
+        }
+    }
+}

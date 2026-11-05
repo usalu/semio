@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-plugin-host-source-json"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Source-bound resumable JSON encoding and scoped actor budget views."
+
+[package.metadata.semio]
+role = "product"
+id = "os-plugin-host-source-json"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-actor = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }

@@ -1,3 +1,4 @@
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
 use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::add_stream::*;
 use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::media;
 use crate::editor::remodeling::unit_tests::context::{app_with_registry, dispatch, render_json};

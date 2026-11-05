@@ -1,11 +1,4 @@
-//! 🌉️ Semio OS MCP gateway library root — dual-era JSON-RPC/MCP protocol core over stdio + Streamable
-//! HTTP (packets `P1a-protocol-core` + `P1b-http-handles-bridge`). Downstream packets (P2 catalog, P6
-//! actions/policy) implement `crate::{ToolRegistry, ResourceRegistry, PromptRegistry,
-//! GatewayBackend}` against the real plugin host; THIS crate has zero dependency on it
-//! (`📓️design-decisions.md` D8, P1a's brief §2.6 — verified by the absence of
-//! `semio-framework*`/plugin/channel/actor deps in this module's own `Cargo.toml`). Every public item
-//! from the `⚠️errors`/`🧬️schema`/`🧭️protocol`/`🚚️transport`/`🎫️handles`/`📒️audit`/`🧵️bridge` facets
-//! is re-exported flat at this crate root for ergonomic downstream use.
+//! 🌉️ Catalog-backed OS MCP gateway over stdio and Streamable HTTP.
 
 use semio_os_mcp_bridge::session::AgentConversation;
 use semio_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
@@ -46,7 +39,6 @@ use semio_os_mcp_hub_remote::remote::exchange_delegated_session_v1;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_routing::routing_and_shell_routed::capability_instance_slot;
 
-//#region 🔖️Tools
 
 fn parse_capability_kind(raw: &str) -> Option<CapabilityKind> {
     match raw.to_ascii_lowercase().as_str() {
@@ -75,10 +67,7 @@ fn search_filters_from_arguments(arguments: &serde_json::Value) -> SearchFilters
     }
 }
 
-/// 📄️ `capabilities.search`'s page size — the client's `limit`, clamped to `[1, SEARCH_PAGE_MAX]`,
-/// defaulting to `SEARCH_PAGE_DEFAULT`. A client that asks for 500 hits gets 100 and a `nextCursor`,
-/// never a silently truncated 20 (the pre-M5a behavior: a hardcoded `.take(20)` with no `total`, so
-/// a caller could not tell a 20-hit answer from a 400-hit catalog).
+/// 📄️ Requested page size clamped to the declared minimum and maximum.
 const SEARCH_PAGE_DEFAULT: usize = 20;
 
 const SEARCH_PAGE_MAX: usize = 100;
@@ -87,9 +76,7 @@ fn search_page_size(arguments: &serde_json::Value) -> usize {
     arguments.get("limit").and_then(serde_json::Value::as_u64).map(|limit| (limit as usize).clamp(1, SEARCH_PAGE_MAX)).unwrap_or(SEARCH_PAGE_DEFAULT)
 }
 
-/// 📄️ An opaque cursor is this result set's zero-based offset — opaque to the client by contract,
-/// a decimal offset by implementation. A malformed cursor starts from the beginning rather than
-/// erroring: a page boundary is never worth failing a discovery call over.
+/// 📄️ Decimal result offset; malformed cursors restart at the first page.
 fn search_offset(arguments: &serde_json::Value) -> usize {
     arguments.get("cursor").and_then(serde_json::Value::as_str).and_then(|cursor| cursor.parse::<usize>().ok()).unwrap_or(0)
 }
@@ -116,20 +103,23 @@ fn capabilities_describe_handler(catalog: &Catalog, arguments: serde_json::Value
     }
 }
 
+fn caller_locale(arguments: &serde_json::Value) -> Result<&str, GatewayError> {
+    match arguments.get("locale").and_then(serde_json::Value::as_str) {
+        Some(locale @ ("en" | "de")) => Ok(locale),
+        _ => Err(GatewayError::new(GatewayErrorCode::InputInvalid, "locale must explicitly name en or de")),
+    }
+}
+
 fn context_resolve_handler(catalog: &Catalog, counter: &std::sync::atomic::AtomicU64, arguments: serde_json::Value) -> CallToolResult {
     let principal = arguments.get("principal").and_then(serde_json::Value::as_str).unwrap_or("agent:local").to_string();
-    let locale = arguments.get("locale").and_then(serde_json::Value::as_str).unwrap_or("en").to_string();
+    let locale = match caller_locale(&arguments) { Ok(locale) => locale, Err(error) => return CallToolResult::tool_error(&error) };
     let count = counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     let session_id = mint_session_id(&principal, count);
-    let summary = resolve_context(catalog, session_id, &principal, Vec::new(), None, &locale);
+    let summary = resolve_context(catalog, session_id, &principal, Vec::new(), None, locale);
     CallToolResult::ok(vec![ContentBlock::Text { text: format!("session {} resolved", summary.session_id) }], Some(serde_json::to_value(&summary).unwrap_or(serde_json::Value::Null)))
 }
 
-/// 🎯️ Every MCP tool name this gateway serves, in `tools/list` order — the stable surface
-/// `📋️master.md` §"MCP tool names" names. Ticket 26/08/29/AI-MCP-END-TO-END closed the last 9
-/// stubs (`artifact.*`, `job.*`, `ui.*`), so this is now purely a census: there is no such thing
-/// as a declared-but-unimplemented tool here any more. A tool's PRESENCE never depends on which
-/// progressive-enhancement tier the server is running in; only a call's RESULT does.
+/// 🎯️ The complete public gateway tool census in tools/list order.
 pub const GATEWAY_TOOL_NAMES: [&str; 28] = [
     "capabilities_search",
     "capabilities_describe",
@@ -161,9 +151,7 @@ pub const GATEWAY_TOOL_NAMES: [&str; 28] = [
     "job_cancel",
 ];
 
-//#endregion 🔖️Tools
 
-//#region 🔖️MutationProtocolTools
 
 /// 🕐️ Wall-clock milliseconds — every `ActionAdapter`/`HandleTable` call takes `now_ms` explicitly
 /// (testability), this is the ONE call site that reads the real clock for the live server.
@@ -171,9 +159,7 @@ fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64
 }
 
-/// 🪪️ Every mutation-protocol tool call runs as this one fixed session, until a later packet makes
-/// `McpServer` connection/session-aware (`📓️terra-P1b-report.md` §7.2 already documents this as a
-/// P1b-only simplification every downstream facet inherits, not something this packet narrows).
+/// 🪪️ The gateway connection's mutation-protocol handle namespace.
 pub(crate) const DEFAULT_SESSION_ID: &str = "sess_default";
 
 pub(crate) fn default_session() -> SessionHandle {
@@ -184,11 +170,7 @@ fn parse_revision_stamp(value: &serde_json::Value) -> Option<RevisionStamp> {
     serde_json::from_value(value.clone()).ok()
 }
 
-/// 🎯️ The `instance` slot the mutation-protocol adapter must address for `capability_id` — the
-/// SAME derivation `RoutingArtifactChannel` decodes an instance back with, so `prepare`'s leading
-/// capability-less `ReadHistory` lands on the capability's own plugin instead of whichever plugin
-/// sorts first in the catalog. `None`/unknown keeps the historical `0`, which is exactly the
-/// single-plugin case where the first slot IS the right one.
+/// 🎯️ Decodes the capability owner's catalog route before a capability-less history read.
 #[cfg(not(target_arch = "wasm32"))]
 fn action_instance_slot(catalog: &Catalog, capability_id: Option<&str>) -> u32 {
     capability_id.and_then(|id| capability_instance_slot(catalog, id)).unwrap_or(0)
@@ -199,21 +181,49 @@ fn action_instance_slot(_catalog: &Catalog, _capability_id: Option<&str>) -> u32
     0
 }
 
+fn action_caller_context(arguments: &serde_json::Value) -> Result<Option<semio_framework::ViewModel>, GatewayError> {
+    let context: Option<semio_framework::ViewModel> = arguments.get("context").cloned().map(serde_json::from_value).transpose().map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid caller context: {error}")))?;
+    if let Some(target) = arguments.get("target") {
+        for (selector, actual) in [("windowId", context.as_ref().and_then(|context| context.window_id.as_deref())), ("modeId", context.as_ref().and_then(|context| context.active_mode_id.as_deref()))] {
+            if target.get(selector).and_then(serde_json::Value::as_str).is_some_and(|requested| Some(requested) != actual) {
+                return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("target {selector} requires the identical explicit caller context")));
+            }
+        }
+    }
+    Ok(context)
+}
+
+fn action_target_instance(catalog: &Catalog, actions: &ActionAdapter, principal: &AgentPrincipal, capability_id: &str, arguments: &serde_json::Value) -> Result<u32, GatewayError> {
+    match arguments.get("target") {
+        Some(target) => {
+            let target = serde_json::from_value(target.clone()).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid action target: {error}")))?;
+            actions.target_instance(catalog, principal, capability_id, &target)
+        }
+        None => Ok(action_instance_slot(catalog, Some(capability_id))),
+    }
+}
+
 fn action_prepare_handler(catalog: &Catalog, actions: &ActionAdapter, principal: &AgentPrincipal, arguments: serde_json::Value) -> CallToolResult {
     let capability_id = match arguments.get("capabilityId").and_then(serde_json::Value::as_str) {
         Some(id) => id,
         None => return CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::InputInvalid, "capabilityId is required")),
     };
     let input = arguments.get("input").cloned().unwrap_or_else(|| serde_json::json!({}));
-    let instance = action_instance_slot(catalog, Some(capability_id));
-    match actions.prepare(catalog, principal, &default_session(), capability_id, input, instance, now_ms()) {
+    let context = match action_caller_context(&arguments) { Ok(context) => context, Err(error) => return CallToolResult::tool_error(&error) };
+    let instance = match action_target_instance(catalog, actions, principal, capability_id, &arguments) { Ok(instance) => instance, Err(error) => return CallToolResult::tool_error(&error) };
+    match actions.prepare_in_context(catalog, principal, &default_session(), capability_id, input, instance, context, now_ms()) {
         Ok(report) => CallToolResult::ok(vec![ContentBlock::Text { text: format!("prepared {}", report.prepared_handle) }], Some(serde_json::to_value(&report).unwrap_or(serde_json::Value::Null))),
         Err(error) => CallToolResult::tool_error(&error),
     }
 }
 
 fn action_invoke_handler(catalog: &Catalog, actions: &ActionAdapter, principal: &AgentPrincipal, arguments: serde_json::Value) -> CallToolResult {
+    if arguments.get("preparedActionHandle").is_some() && ["target", "context", "capabilityId", "input"].iter().any(|key| arguments.get(key).is_some()) {
+        return CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::InputInvalid, "prepared actions retain their target, input and context; invoke the handle without overrides"));
+    }
+    let context = match action_caller_context(&arguments) { Ok(context) => context, Err(error) => return CallToolResult::tool_error(&error) };
     let request = InvokeRequest {
+        context,
         prepared_handle: arguments.get("preparedActionHandle").and_then(serde_json::Value::as_str).map(str::to_string),
         capability_id: arguments.get("capabilityId").and_then(serde_json::Value::as_str).map(str::to_string),
         input: arguments.get("input").cloned(),
@@ -221,7 +231,10 @@ fn action_invoke_handler(catalog: &Catalog, actions: &ActionAdapter, principal: 
         idempotency_key: arguments.get("idempotencyKey").and_then(serde_json::Value::as_str).map(str::to_string),
         approval_handle: arguments.get("approvalHandle").and_then(serde_json::Value::as_str).map(str::to_string),
     };
-    let instance = action_instance_slot(catalog, request.capability_id.as_deref());
+    let instance = match request.capability_id.as_deref() {
+        Some(capability_id) => match action_target_instance(catalog, actions, principal, capability_id, &arguments) { Ok(instance) => instance, Err(error) => return CallToolResult::tool_error(&error) },
+        None => 0,
+    };
     match actions.invoke(catalog, principal, &default_session(), request, instance, now_ms()) {
         Ok(report) => CallToolResult::ok(vec![ContentBlock::Text { text: format!("invocation {} {:?}", report.invocation_id, report.status) }], Some(serde_json::to_value(&report).unwrap_or(serde_json::Value::Null))),
         Err(error) => CallToolResult::tool_error(&error),
@@ -291,23 +304,7 @@ fn history_redo_handler(actions: &ActionAdapter, arguments: serde_json::Value) -
     }
 }
 
-/// 🏗️ Builds the real `ToolRegistry` this crate serves — 28 tools, none of them a stub: the 3 core
-/// gateway tools, the 8 mutation-protocol tools (`P6-actions-policy`, backed by `actions`/
-/// `principal`), the 5 `🗿️artifact` tools, the 2 `💡️inference` discovery tools, the 4 `💡️inference`
-/// job tools (`inference_submit`/`inference_events`/`inference_cancel`/`inference_approve`, over any
-/// declared service, guest- or hub-executed), the 4 `🖥️ui` tools (`ui_focus`/`ui_reveal`/`job_get`/`job_cancel`) and
-/// `conversation_reply` (the agent's own free-text turn, ticket 26/09/18 slice AC1). Ticket
-/// 26/08/29/AI-MCP-END-TO-END retired the last of these stubs entirely.
-///
-/// `workspace` and `bridge` carry the progressive-enhancement tier: a tool's PRESENCE in
-/// `tools/list` never depends on either being bound — only a call's RESULT does, as a structured,
-/// retryable `PLUGIN_UNAVAILABLE` naming exactly which binding is missing.
-///
-/// 💬️ Cloned up front: `principal` is moved into the inference job tools further down, and the
-/// conversation tool is the only other one that gates on it.
-///
-/// 💬️ The agent's own voice. Registered from the SAME principal the mutation tools are gated on,
-/// because it is the one UI tool a scope decides.
+/// 🏗️ Registers catalog discovery, workspace, actions, inference and UI tools on their owned adapters.
 pub fn build_tool_registry(
     catalog: std::sync::Arc<Catalog>,
     actions: std::sync::Arc<ActionAdapter>,
@@ -396,29 +393,19 @@ pub fn build_tool_registry(
     registry
 }
 
-//#region 🔖️GatewayRuntime
 
-/// 🔌️ Everything a live gateway binds LATE, after the tool registry already exists: the `/bridge`
-/// slot a shell attaches through, the server→client request channel an `elicitation`-capable client
-/// is asked through, and the launch-time `--auto-approve` policy. One struct rather than three more
-/// positional parameters, because all three travel together through every constructor and every one
-/// of them is absent in the ordinary test tier (`GatewayRuntime::default()`).
+/// 🔌️ Late-bound bridge, elicitation and principal-scoped runtime services.
 #[derive(Clone, Default)]
 pub struct GatewayRuntime {
     pub bridge: Option<BridgeSlot>,
     pub elicitation: Option<ElicitationSlot>,
     pub auto_approve: AutoApprovePolicy,
-    /// 🐚️ The session's artifact-channel decision (shell vs. headless), shared by the channel that
-    /// executes it and the `context_resolve` handler that reports it. `None` in the ordinary test
-    /// tier and on every gateway that never built a shell-routed channel — `channel_binding()`
-    /// mints a headless-only one on demand so `context_resolve` always has an answer.
+    /// 🐚️ Sticky session channel shared by context resolution and artifact dispatch.
     pub channel_binding: Option<std::sync::Arc<SessionChannelBinding>>,
 }
 
 impl GatewayRuntime {
-    /// 🐚️ The binding this runtime reports and routes through — the one it was built with, or a
-    /// fresh one over this runtime's own bridge slot (which decides `headless` whenever no shell
-    /// with `relayAppCommands` is attached).
+    /// 🐚️ Returns the runtime's binding or creates one from its bridge.
     pub fn channel_binding(&self) -> std::sync::Arc<SessionChannelBinding> {
         match &self.channel_binding {
             Some(binding) => std::sync::Arc::clone(binding),
@@ -426,31 +413,19 @@ impl GatewayRuntime {
         }
     }
 
-    /// ⛩️ The approval resolution chain this runtime can offer a parked approval — always built,
-    /// even with both lanes empty, so `ActionAdapter` answers "nobody could be asked, here is why"
-    /// rather than the older "APPROVAL_REQUIRED" with no explanation at all.
+    /// ⛩️ Approval channels available to parked actions, ordered by runtime policy.
     fn approval_coordinator(&self) -> std::sync::Arc<ApprovalCoordinator> {
         std::sync::Arc::new(ApprovalCoordinator::new(self.elicitation.clone(), self.bridge.clone()))
     }
 }
 
-//#endregion 🔖️GatewayRuntime
 
-/// 🏗️ Assembles the real `McpServer`: the catalog-backed + action-adapter-backed tool registry, the
-/// catalog-backed resource registry, an empty prompt registry (unowned by this packet), and
-/// `NullBackend` (`GatewayBackend` itself — the resource/context seam — still has no real
-/// implementation; P7's headless workspace is that, `ArtifactChannel` here is a narrower, disjoint
-/// port scoped to the mutation protocol only). `channel` is boxed so the live binary and every test
-/// can supply either `UnboundArtifactChannel` (no `--folder`/`--hub`) or the real routing channel
-/// with zero change to this function's body beyond the argument passed in.
+/// 🏗️ Builds the gateway with an explicit principal and owned artifact channel.
 pub fn build_server_with_principal(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, channel: Box<ArtifactChannels>, runtime: GatewayRuntime) -> McpServer {
     build_server_from_catalog(std::sync::Arc::new(build_catalog()), principal, audit, channel, runtime)
 }
 
-/// 🗂️ [`build_server_with_principal`] with the catalog injected rather than discovered. The live
-/// binary always discovers (`build_catalog`); a test that asserts against a KNOWN capability census
-/// injects `🧫️note_and_cad_source()`'s compiled catalog instead, so its assertions never depend on
-/// which plugins happen to be installed in the tree it runs from.
+/// 🗂️ Builds the same server over an explicitly supplied catalog.
 pub fn build_server_from_catalog(catalog: std::sync::Arc<Catalog>, principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, channel: Box<ArtifactChannels>, runtime: GatewayRuntime) -> McpServer {
     let handles = std::sync::Arc::new(HandleTable::new());
     let idempotency = std::sync::Arc::new(IdempotencyStore::new());
@@ -464,9 +439,7 @@ pub fn build_server_from_catalog(catalog: std::sync::Arc<Catalog>, principal: Ag
     publishing_agent_conversation(server, runtime.bridge, &label)
 }
 
-/// 💬️ Publishes this server's real `tools/call` traffic onto the shell bridge, when there IS a
-/// bridge. Factored out because both server constructors need the identical two lines, and because
-/// "no bridge slot" must stay a silent, ordinary tier rather than a branch each caller re-invents.
+/// 💬️ Publishes actual tool traffic to the attached shell bridge.
 fn publishing_agent_conversation(server: McpServer, bridge: Option<BridgeSlot>, label: &str) -> McpServer {
     match bridge {
         Some(slot) => server.publishing_conversation_to(std::sync::Arc::new(AgentConversation::new(slot, label))),
@@ -474,19 +447,7 @@ fn publishing_agent_conversation(server: McpServer, bridge: Option<BridgeSlot>, 
     }
 }
 
-/// 🏠️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace:
-/// additive twin of [`build_server_with_principal`] that plugs a real `GatewayBackend` in (a real
-/// `HeadlessWorkspace`, via its `Arc<HeadlessWorkspace>: GatewayBackend` delegation
-/// impl) instead of `NullBackend`, and overrides the `context_resolve` tool to answer from that SAME
-/// live workspace instead of the backend-independent handler `build_tool_registry` wires by default
-/// — everything else (catalog compile, the mutation-protocol tools, the action adapter) is the exact
-/// same shared construction, called through unchanged. A separate function rather than a new
-/// parameter on `build_server_with_principal` itself: that function's 3-argument shape has live
-/// callers in this same in-flight packet's own tests (`P6-actions-policy`) this packet must not
-/// disturb mid-flight.
-///
-/// 🗿️ The workspace reads this adapter's own guest instances back for `artifact_snapshot`, so a
-/// snapshot shows the document as the agent just left it rather than as it was created.
+/// 🏠️ Builds the same gateway over a real workspace backend and its catalog.
 pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, workspace: std::sync::Arc<HeadlessWorkspace>, channel: Box<ArtifactChannels>, runtime: GatewayRuntime) -> McpServer {
     let catalog = workspace.discovery_catalog().unwrap_or_else(|_| gateway_only_catalog());
     let handles = std::sync::Arc::new(HandleTable::new());
@@ -503,9 +464,7 @@ pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::
     publishing_agent_conversation(server, runtime.bridge, &label)
 }
 
-/// 🔄 Rebuilds the discovery projection for every list/call observation. A Hub binding that is
-/// refreshing or revoked gets only gateway-owned tools; installed plugin descriptors are never a
-/// fallback. Folder workspaces retain their installed catalog.
+/// 🔄️ Refreshes discovery from current authorized descriptors for every observation.
 struct WorkspaceToolRegistry {
     pub(crate) workspace: std::sync::Arc<HeadlessWorkspace>,
     actions: std::sync::Arc<ActionAdapter>,
@@ -572,41 +531,29 @@ fn workspace_tool_catalog_meta(workspace: &HeadlessWorkspace) -> Option<serde_js
     }))
 }
 
-/// 🔁️ `InMemoryToolRegistry::register` overwrites an existing entry by name (`HashMap::insert`) —
-/// re-registering `context_resolve` here replaces `build_tool_registry`'s backend-independent
-/// handler with one that answers from the real, live workspace (real open artifacts, real
-/// `catalog_hash`, real `active_artifact_id`) — never a fabricated session.
-///
-/// 🐚️ THIS is where a session's document owner is chosen — once, and reported in the
-/// same breath. `SessionChannelBinding::resolve` is sticky, so the `channel` a client
-/// reads here is the channel every later `action_invoke`/`history_undo` on this
-/// session executes through.
+/// 🔁️ Replaces context resolution with this workspace's sticky channel and authorized live catalog.
 fn registry_override_context_resolve(tools: &mut InMemoryToolRegistry, context_tool: Tool, workspace: std::sync::Arc<HeadlessWorkspace>, principal_id: String, channel_binding: std::sync::Arc<SessionChannelBinding>) {
     tools
-        .register(context_tool, move |_arguments| match workspace.resolve_context(&principal_id) {
+        .register(context_tool, move |arguments| {
+            let locale = match caller_locale(&arguments) { Ok(locale) => locale, Err(error) => return CallToolResult::tool_error(&error) };
+            match workspace.resolve_context(&principal_id, locale) {
             Ok(mut summary) => {
                 summary.channel = channel_binding.resolve().label().to_string();
                 CallToolResult::ok(vec![ContentBlock::Text { text: format!("session {} resolved on the {} channel", summary.session_id, summary.channel) }], Some(serde_json::to_value(&summary).unwrap_or(serde_json::Value::Null)))
             }
             Err(error) => CallToolResult::tool_error(&error),
-        })
+        }})
         .expect("context_resolve is a valid tool name");
 }
 
-//#endregion 🔖️MutationProtocolTools
 
-//#region 🔖️WorkspaceOptions
 
-/// 🏠️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace:
-/// `--hub <url> --space <id>` — the second binding shape `📋️master.md` §2.1 names
-/// alongside `--folder`. Shared by `StdioOptions`/`HttpOptions` rather than duplicated per mode.
+/// 🏠️ Authorized hub binding supplied by the gateway launch options.
 #[derive(Clone, Default, PartialEq, Eq)]
 pub struct HubOptions {
     pub base_url: String,
     pub space_id: String,
-    /// 🤖️ Where this process reads its **delegated agent credential**, when it is an agent rather
-    /// than a `dev s` child. `None` keeps the pre-existing behaviour: authenticate with the
-    /// inherited fd-3 local-bootstrap envelope, i.e. as the human who launched the session.
+    /// 🤖️ Agent credential source; absent uses the inherited human bootstrap envelope.
     pub credential: Option<AgentCredentialSource>,
 }
 
@@ -616,10 +563,7 @@ impl std::fmt::Debug for HubOptions {
     }
 }
 
-/// ⏳️ How many times the hub workspace open is re-attempted while the hub itself says "retry", and
-/// the fixed step between attempts. The bound is what makes this a retry rather than a wait: a hub
-/// that stays mid-refresh for longer than `HUB_OPEN_RETRY_ATTEMPTS × HUB_OPEN_RETRY_STEP_MS` still
-/// fails, with the hub's own last message, instead of hanging a client's `initialize` forever.
+/// ⏳️ Maximum retries and interval for transient hub authority refreshes.
 pub(crate) const HUB_OPEN_RETRY_ATTEMPTS: u32 = 6;
 
 const HUB_OPEN_RETRY_STEP_MS: u64 = 500;
@@ -631,11 +575,11 @@ const HUB_OPEN_RETRY_STEP_MS: u64 = 500;
 /// `PluginUnavailable: authenticated hub descriptor index is refreshing; retry after authority
 /// refresh`, exit 1, before `initialize`). A non-retryable error — a bad credential, a space the
 /// principal is not a member of, a version boundary — is returned on its first occurrence untouched.
-fn open_hub_workspace_with_retry(hub: &HubOptions, credential: std::sync::Arc<semio_os_kernel::os_directory::client::LocalHubCredential>, principal: &AgentPrincipal, host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy) -> Result<HeadlessWorkspace, GatewayError> {
+fn open_hub_workspace_with_retry(hub: &HubOptions, credential: std::sync::Arc<semio_os_kernel::os_directory::client::LocalHubCredential>, principal: &AgentPrincipal, host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy, operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy) -> Result<HeadlessWorkspace, GatewayError> {
     let scopes: Vec<String> = principal.scopes.iter().map(|scope| scope.0.clone()).collect();
     let mut attempts_made = 0;
     loop {
-        match HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), credential.clone(), principal.id.clone(), scopes.clone(), host_driver_policy) {
+        match HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), credential.clone(), principal.id.clone(), scopes.clone(), host_driver_policy, operation_policy) {
             Ok(workspace) => return Ok(workspace),
             Err(error) => match hub_open_retry_backoff_ms(&error, attempts_made) {
                 Some(backoff_ms) => {
@@ -649,10 +593,7 @@ fn open_hub_workspace_with_retry(hub: &HubOptions, credential: std::sync::Arc<se
     }
 }
 
-/// ⏳️ How long to wait before re-attempting a hub open, or `None` when this failure must be
-/// returned instead — the whole retry decision as one pure predicate, so its bound is a law rather
-/// than a loop a reader has to simulate. Only the hub's OWN `retryable` marking is retried; the
-/// backoff grows linearly so the attempts spread rather than hammer, and it ends.
+/// ⏳️ Returns the next retry delay only for a retryable failure within the attempt budget.
 pub fn hub_open_retry_backoff_ms(error: &GatewayError, attempts_made: u32) -> Option<u64> {
     if !error.retryable || attempts_made >= HUB_OPEN_RETRY_ATTEMPTS {
         return None;
@@ -692,12 +633,12 @@ pub fn hub_open_retry_backoff_ms(error: &GatewayError, attempts_made: u32) -> Op
 /// 🐚️ The artifact-level verbs (`artifact_create`, `artifact_export`) open a channel of their own
 /// inside the workspace; publishing the binding there is what keeps a `shell` session from having
 /// two document owners (`📓️lb1…` §7.3 step 1).
-fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime, host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy) -> Result<(McpServer, String), GatewayError> {
+fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime, host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy, operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy) -> Result<(McpServer, String), GatewayError> {
     let origin_label;
     let workspace = if let Some(folder) = folder {
         origin_label = format!("folder {folder}");
         let catalog = std::sync::Arc::new(build_catalog());
-        std::sync::Arc::new(HeadlessWorkspace::open_folder(std::path::PathBuf::from(folder), principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog, host_driver_policy)?)
+        std::sync::Arc::new(HeadlessWorkspace::open_folder(std::path::PathBuf::from(folder), principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog, host_driver_policy, operation_policy)?)
     } else if let Some(hub) = hub {
         origin_label = format!("hub {}/{}", hub.base_url, hub.space_id);
         let mut adopted: Option<(String, String)> = None;
@@ -723,7 +664,7 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
             principal.id = agent_principal_id;
             principal.label = agent_label;
         }
-        std::sync::Arc::new(open_hub_workspace_with_retry(hub, credential, &principal, host_driver_policy)?)
+        std::sync::Arc::new(open_hub_workspace_with_retry(hub, credential, &principal, host_driver_policy, operation_policy)?)
     } else {
         let principal_id = principal.id.clone();
         return Ok((build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Unbound(UnboundArtifactChannel)), runtime), principal_id));
@@ -738,38 +679,23 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
     Ok((build_server_with_workspace(principal, audit, workspace, channel, runtime), principal_id))
 }
 
-//#endregion 🔖️WorkspaceOptions
 
-//#region 🔖️StdioEntrypoint
 
-/// ⚙️ Options `🏗️bootstrap/🦀️.rs`'s `stdio` subcommand parses off argv (`semio-os-mcp stdio [--folder <dir>]
-/// [--hub <url> --space <id>] [--principal <id>] [--scopes a,b] [--auto-approve never|readonly|all]
-/// [--no-bridge]`).
+/// ⚙️ Explicit stdio workspace, principal, audit and bridge launch options.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StdioOptions {
     pub host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy,
+    pub operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy,
     pub folder: Option<String>,
     pub hub: Option<HubOptions>,
     pub principal: Option<String>,
     pub scopes: Vec<String>,
     pub auto_approve: AutoApprovePolicy,
-    /// 🚫️ Opts out of the loopback `/bridge` listener entirely — for a client that wants a pure,
-    /// socket-free stdio process. Without it, stdio serving attaches to a live os session exactly
-    /// like `http` mode does (`🛰️rendezvous`).
+    /// 🚫️ Disables the local bridge listener for an isolated stdio gateway.
     pub no_bridge: bool,
 }
 
-/// 🌉️ Starts the loopback `/bridge` listener a stdio gateway attaches a live os session through. Its `🛰️rendezvous` offer is
-/// published once the workspace is open ([`publish_stdio_bridge_offer`]), because only then is the principal it offers
-/// known — a delegated agent's `agent:<delegation id>`, the key a shell's human-owned delegation list is matched on. A shell
-/// polls for offers (`useDiscoveredAgentBridgeConfig`), so a `dev s` started after the client launched this gateway still
-/// dials it: the order in which a person opens their MCP client and their shell is never a manual step. Returns `None`
-/// only when the user opted out (`--no-bridge`) or when nothing can be bound; every bridge-dependent tool then answers the
-/// typed `bridge_not_running_error`, and with a bridge but no shell yet, `no_shell_attached_error`.
-///
-/// The listener is bridge-ONLY: this process's MCP surface is stdin/stdout, so `/mcp` on that socket
-/// is genuinely absent (404). Admission is a per-process proof published only through the owner-only
-/// offer file — a stdio gateway inherits no hub fd-3 credential and must never fabricate one.
+/// 🌉️ Starts the loopback bridge immediately; publishes its authenticated offer after the workspace opens.
 fn start_stdio_bridge(options: &StdioOptions, bridge_slot: &BridgeSlot) -> Option<StdioBridgeListener> {
     if options.no_bridge {
         return None;
@@ -791,9 +717,7 @@ struct StdioBridgeListener {
     proof: String,
 }
 
-/// 📤️ Publishes `listener`'s offer for exactly the shells `scope` admits, as `principal_id` (ticket 26/09/23, G12 session
-/// 14c: an unscoped offer reached every live os session of the machine and another person's shell attached to a hub
-/// agent's gateway). A publication that fails cancels the listener rather than leaving an unreachable socket open.
+/// 📤️ Publishes the listener's principal-scoped authenticated bridge offer.
 fn publish_stdio_bridge_offer(listener: StdioBridgeListener, principal_id: String, scope: BridgeOfferScope) -> Option<StdioBridgeAttachment> {
     let StdioBridgeListener { run, proof } = listener;
     let offered_to = match &scope {
@@ -829,11 +753,7 @@ fn publish_stdio_bridge_offer(listener: StdioBridgeListener, principal_id: Strin
     }
 }
 
-/// 🧷️ Keeps the bridge-only listener and its published offer alive for exactly as long as stdio
-/// serving runs — dropping it removes the offer file and cancels the listener. The offer is also
-/// withdrawn the moment the listener's run completes on its own (a failed or closed listener), so no
-/// shell is ever pointed at a gateway that can no longer serve it. Dropping it withdraws the offer
-/// on the dropping thread itself: the process may exit before the completion watcher wakes.
+/// 🧷️ Retains the bridge listener and removes its offer when stdio serving ends.
 struct StdioBridgeAttachment {
     run: HttpTransportRun,
     offer: std::sync::Arc<std::sync::Mutex<Option<PublishedBridgeOffer>>>,
@@ -846,19 +766,7 @@ impl Drop for StdioBridgeAttachment {
     }
 }
 
-/// 🚪️ Boots the real [`McpServer`] and serves it over the REAL process stdin/stdout/stderr until the
-/// client closes stdin (EOF) or a hard io error occurs. `bin.rs`'s entire `stdio` mode is this one
-/// call — all logic lives here, in the lib, per P1a's brief §2.5. `options.principal`/`options.scopes`
-/// (packet `P6-actions-policy`) build the real `AgentPrincipal` the mutation-protocol tools enforce;
-/// `options.folder`/`options.hub` (packet `P7-headless-workspace`) open a real workspace instead of
-/// `NullBackend`/`UnboundArtifactChannel` — the audit lane writes to `~/.semio/agent/audit` (D7:
-/// local folder lane from day one). `options.auto_approve` carries the parsed `--auto-approve
-/// never|readonly|all` policy; `Never` stays the default.
-///
-/// 📤️ The server→client notification lane: `resources/updated` for a subscribed artifact,
-/// `resources/list_changed` for a changed roster, `progress` for a `_meta.progressToken` call.
-/// It rides the same single-owner `StdioLines` channel the elicitation request does, so a
-/// notification emitted from inside a tool call reaches the client mid-call.
+/// 🚪️ Serves real stdio until EOF or an I/O failure, recording diagnostics only on stderr.
 pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "stdio agent", &options.scopes, None);
     if principal.scopes.is_empty() {
@@ -872,7 +780,7 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     let elicitation: ElicitationSlot = std::sync::Arc::new(std::sync::OnceLock::new());
     let listener = start_stdio_bridge(&options, &bridge_slot);
     let runtime = GatewayRuntime { bridge: listener.as_ref().map(|_| bridge_slot.clone()), elicitation: Some(elicitation.clone()), auto_approve: options.auto_approve, channel_binding: None };
-    let (server, principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime, options.host_driver_policy)?;
+    let (server, principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime, options.host_driver_policy, options.operation_policy)?;
     let scope = options.hub.as_ref().map_or(BridgeOfferScope::Local, |hub| BridgeOfferScope::Hub { hub_origin: hub.base_url.clone(), space_id: hub.space_id.clone() });
     let attachment = listener.and_then(|listener| publish_stdio_bridge_offer(listener, principal_id, scope));
     let features = server.client_features();
@@ -886,17 +794,13 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     result
 }
 
-//#endregion 🔖️StdioEntrypoint
 
-//#region 🔖️HttpEntrypoint
 
-/// ⚙️ Options `🏗️bootstrap/🦀️.rs`'s `http` subcommand parses off argv (`semio-os-mcp http [--port <p>]
-/// [--bind <addr>] [--folder <dir>] [--hub <url> --space <id>] [--principal <id>] [--scopes a,b]
-/// [--audit-dir <dir>] [--allow-origin <origin>]…`). HTTP and bridge admission are both authorized
-/// by the protected process-entry credential and never by argv, URL, environment, or disk state.
+/// ⚙️ Explicit HTTP listener, workspace, principal, audit and runtime options.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HttpOptions {
     pub host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy,
+    pub operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy,
     pub port: u16,
     pub bind: String,
     pub folder: Option<String>,
@@ -908,19 +812,14 @@ pub struct HttpOptions {
     pub auto_approve: AutoApprovePolicy,
 }
 
-/// 🚪️ Boots the retained nonblocking [`HttpTransport`] (Streamable HTTP, dual-era, `/mcp` +
-/// `/bridge` on the SAME socket) bound to `bind:port`, serving until cancellation or process exit —
-/// [`run_stdio`]. Fails fast (before binding a socket) if the audit directory cannot be created, so a
-/// misconfigured `--audit-dir` surfaces immediately rather than on the first audit write a later
-/// packet wires in. The logged bridge URL is credential-free; callers receive the admission proof
-/// only through the supervisor-owned in-memory boundary.
+/// 🌐️ Serves MCP and its bridge on the same retained HTTP transport until cancellation.
 pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     let audit_dir = options.audit_dir.clone().map(std::path::PathBuf::from).unwrap_or_else(default_audit_dir);
     let audit: std::sync::Arc<AuditSinks> = std::sync::Arc::new(AuditSinks::File(FileAuditSink::new(audit_dir)?));
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "http agent", &options.scopes, None);
     let bridge_slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
     let runtime = GatewayRuntime { bridge: Some(bridge_slot.clone()), elicitation: None, auto_approve: options.auto_approve, channel_binding: None };
-    let (server, _principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime, options.host_driver_policy)?;
+    let (server, _principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime, options.host_driver_policy, options.operation_policy)?;
     let bind_ip: std::net::IpAddr = options.bind.parse().map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid --bind address `{}`: {error}", options.bind)))?;
     let credential = semio_os_kernel::os_directory::identity::claimed_local_hub_credential("mcp")
         .ok_or_else(|| GatewayError::new(GatewayErrorCode::PermissionDenied, "HTTP mode requires a protected process-entry MCP credential"))?;
@@ -932,10 +831,5 @@ pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     transport.start(server)?.wait()
 }
 
-//#endregion 🔖️HttpEntrypoint
 
-//#region 🔖️Facets
-//#endregion 🔖️Facets
 
-//#region 🧪️Tests
-//#endregion 🧪️Tests

@@ -13,6 +13,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct TableProps {
     /// 🏷️ The table's accessible name — what assistive technology announces on entering it.
     pub label: Label,
@@ -48,14 +49,18 @@ pub struct TableProps {
 /// documents.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct TableRowProps {
     /// 📝️ The row's cells, positional to the table's `columns`.
     pub cells: crate::UiFixedList<crate::UiText>,
     /// 🔘️ Row-scoped actions, rendered in the table's trailing actions column.
     #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    #[value(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     pub row_actions: crate::UiFixedList<RowAction>,
     /// 🎯️ The one target `row_actions` and the activation fire on — present exactly when either is.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub target: Option<RowTarget>,
 }
 
@@ -69,6 +74,7 @@ impl TableRowProps {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct ImageProps {
     pub src: crate::UiText,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -84,6 +90,8 @@ pub struct ImageProps {
 // exception, see `UiValue`'s own docstring in `🎬️action.rs`.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct ExtensionProps {
     pub extension: crate::UiText,
     /// ⚠️ Decision: `crate::UiValue` is referenced, not defined, here. The packet brief's explicit
@@ -109,7 +117,9 @@ pub struct ExtensionProps {
 // notes above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
+#[value(tag = "type", rename_all = "camelCase")]
 #[expect(clippy::large_enum_variant, reason = "Typed copy and retirement account for inline component bytes; boxing variants would require separate allocation credits.")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum Component {
     Container(ContainerProps),
     Text(TextProps),

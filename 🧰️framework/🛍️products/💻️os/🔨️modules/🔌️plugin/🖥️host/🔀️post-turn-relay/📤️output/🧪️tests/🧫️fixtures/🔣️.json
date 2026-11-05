@@ -1,0 +1,43 @@
+{
+  "bytes": [
+    0,
+    1,
+    13,
+    34,
+    255
+  ],
+  "pages": [
+    {
+      "offset": 0,
+      "bytes": [
+        0,
+        1
+      ]
+    },
+    {
+      "offset": 2,
+      "bytes": [
+        13
+      ]
+    },
+    {
+      "offset": 3,
+      "bytes": [
+        34,
+        255
+      ]
+    }
+  ],
+  "expectedHex": "00010d22ff",
+  "denied": {
+    "copyBytes": 0,
+    "releaseBytes": 0
+  },
+  "maximumPayloadBytes": 4194304,
+  "fault": {
+    "primary": "invalid-value",
+    "receipt": "invariant-violated",
+    "settlement": "work-limit",
+    "expectedCauses": 3
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": "../../../../../../..",
+    "paths": {
+      "@semio-tech/framework-hash": [
+        "🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+      ]
+    }
+  }
+}

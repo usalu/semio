@@ -5767,7 +5767,8 @@
             "subset-ready",
             "ordinary-after-one",
             "diagnostic-frozen",
-            "diagnostic-undefined"
+            "diagnostic-undefined",
+            "unready-recovery"
           ]
         },
         "accepted": {
@@ -6495,6 +6496,147 @@
         },
         "observation": {
           "$ref": "#/$defs/SingletonObservation"
+        }
+      }
+    },
+    "SourceFenceDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "section",
+        "index",
+        "path",
+        "fields"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "current-store-source-fence-mismatch"
+        },
+        "section": {
+          "enum": [
+            "endpoint",
+            "parent",
+            "ancestor"
+          ]
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "count",
+              "path",
+              "kind",
+              "target",
+              "stamp",
+              "dev",
+              "ino",
+              "mode",
+              "nlink",
+              "size",
+              "mtimeNs",
+              "ctimeNs"
+            ]
+          }
+        }
+      }
+    },
+    "SourceDirectoryPairCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "style",
+        "target",
+        "parent",
+        "device",
+        "base",
+        "shared",
+        "canceled"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "style": {
+          "enum": [
+            "posix",
+            "win32"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "parent": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "device": {
+          "enum": [
+            "same",
+            "split",
+            "linked"
+          ]
+        },
+        "base": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "shared": {
+          "type": "boolean"
+        },
+        "canceled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SourceDirectoryPairNativeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accepted",
+        "mutate"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "siblings",
+            "parent-ancestor",
+            "target-ancestor",
+            "same",
+            "target-race",
+            "parent-race",
+            "cancel"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "mutate": {
+          "type": "boolean"
         }
       }
     }

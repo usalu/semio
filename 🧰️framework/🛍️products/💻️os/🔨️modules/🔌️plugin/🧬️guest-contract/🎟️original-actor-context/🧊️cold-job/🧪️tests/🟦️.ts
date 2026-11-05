@@ -1,0 +1,6 @@
+import{test,expect}from"bun:test";
+import Ajv from"ajv";
+import{Database}from"bun:sqlite";
+import fixture from"./🧫️fixtures/🔣️.json"with{type:"json"};
+import schema from"../🧬️schema/🔣️.json"with{type:"json"};
+test("cold job pages are contiguous and closed only after their declared extent is received",()=>{expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{for(const row of fixture.cases){const chunks=row.steps.filter(step=>step.event==="chunk"||step.event==="failure-chunk");let received=0;for(const chunk of chunks){const next=(db.query("SELECT ?=? AS contiguous").get((chunk as{offset:number}).offset,received)as{contiguous:number}).contiguous;expect(Boolean(next),row.id).toBe(chunk.next!=="refused");if(next)received+=(chunk as{length:number}).length;}const declared=row.steps.find(step=>step.event==="done"||step.event==="failed"||step.event==="failure-published")as{length:number}|undefined;if(row.steps.some(step=>step.event==="output-closed"||step.event==="failure-output-closed")){const final=row.steps.find(step=>step.event==="output-closed"||step.event==="failure-output-closed")!;expect(received===declared?.length,row.id).toBe(final.next!=="refused");}}}finally{db.close();}});

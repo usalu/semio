@@ -1,0 +1,20 @@
+{
+  "schema": "s.wfc.grid2d.dispatch-envelope.v1",
+  "width": 64,
+  "height": 64,
+  "tileId": "tile",
+  "cacheBytes": 60306,
+  "argsBytes": 68607,
+  "tickCases": [
+    {
+      "cells": 100,
+      "idBytes": 1024,
+      "complete": true
+    },
+    {
+      "cells": 300,
+      "idBytes": 1024,
+      "complete": false
+    }
+  ]
+}

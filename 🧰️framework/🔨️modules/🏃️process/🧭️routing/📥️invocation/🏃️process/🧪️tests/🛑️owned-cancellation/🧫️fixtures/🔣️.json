@@ -1,0 +1,56 @@
+[
+  {
+    "name": "owned-stop",
+    "fault": "cancel",
+    "parentCancelled": false,
+    "status": "cancelled",
+    "parentLive": true,
+    "beforeStart": false,
+    "callback": true
+  },
+  {
+    "name": "other-failure-during-stop",
+    "fault": "other",
+    "parentCancelled": false,
+    "status": "failed",
+    "parentLive": false,
+    "beforeStart": false,
+    "callback": true
+  },
+  {
+    "name": "cleanup-failure-during-stop",
+    "fault": "aggregate",
+    "parentCancelled": false,
+    "status": "failed",
+    "parentLive": false,
+    "beforeStart": false,
+    "callback": true
+  },
+  {
+    "name": "parent-stop",
+    "fault": "cancel",
+    "parentCancelled": true,
+    "status": "failed",
+    "parentLive": false,
+    "beforeStart": false,
+    "callback": true
+  },
+  {
+    "name": "already-owned-stop",
+    "fault": "cancel",
+    "parentCancelled": false,
+    "status": "cancelled",
+    "parentLive": true,
+    "beforeStart": true,
+    "callback": false
+  },
+  {
+    "name": "already-parent-stop",
+    "fault": "cancel",
+    "parentCancelled": true,
+    "status": "failed",
+    "parentLive": false,
+    "beforeStart": true,
+    "callback": false
+  }
+]

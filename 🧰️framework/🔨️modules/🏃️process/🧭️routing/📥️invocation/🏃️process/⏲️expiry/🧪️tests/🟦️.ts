@@ -1,3 +1,4 @@
+import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
@@ -7,7 +8,8 @@ import{captureOwnedCommandResultV1}from"../../../../../🎛️owned-execution/�
 import corpus from"./🔣️.json";
 import schema from"../🧬️schema/🔣️.json";
 const selected=process.env.SEMIO_CONTROL_EXPIRY_CASE;
-if(selected===undefined)test("neutral finite issued controls interrupt actual signals and retire their timers",async()=>receiveScriptProcessInvocation(process.env,async invocation=>{
+if(selected===undefined)declareBuildTestEnvelopeV1({owner:"test:routing-owners",maximumElapsedMilliseconds:300000,capabilities:{}});
+if(selected===undefined)test("neutral finite issued controls interrupt actual signals and retire their timers",async()=>withBuildTestInvocationV1(async invocation=>{
  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);const db=new Database(":memory:"),control=createIssuedResourceControlV1(invocation,"test:actual-control-expiry-children",30000);
  try{for(const[index,row]of corpus.cases.entries()){const result=await captureOwnedCommandResultV1(process.execPath,["test",import.meta.path],process.cwd(),{control,env:{...process.env,SEMIO_CONTROL_EXPIRY_CASE:String(index)},output:{maximumBytes:32768,maximumLines:256}});expect(result.status,result.stdout+result.stderr).toBe(0);const records=result.stdout.split(/\r?\n/u).filter(line=>line.startsWith("actual-control-expiry:"));expect(records).toHaveLength(1);const actual=JSON.parse(records[0]!.slice("actual-control-expiry:".length))as{aborted:boolean;inherited:boolean;rejected:boolean;retired:boolean;preserved:boolean};const oracle=db.query("SELECT CASE WHEN ? IN ('requested','inherited','ancestor','cancelled','draining') THEN 1 ELSE 0 END AS aborted, CASE WHEN ? = 0 THEN 1 ELSE 0 END AS inherited").get(row.kind,row.requestedMilliseconds)as{aborted:number;inherited:number};expect(actual.aborted).toBe(Boolean(oracle.aborted));expect(actual.aborted).toBe(row.expectedAborted);expect(actual.inherited).toBe(Boolean(oracle.inherited));expect(actual.inherited).toBe(row.expectedInherited);expect(actual.rejected).toBe(row.expectedRejected);expect(actual.retired).toBe(true);expect(actual.preserved).toBe(true);}
  }finally{db.close();}

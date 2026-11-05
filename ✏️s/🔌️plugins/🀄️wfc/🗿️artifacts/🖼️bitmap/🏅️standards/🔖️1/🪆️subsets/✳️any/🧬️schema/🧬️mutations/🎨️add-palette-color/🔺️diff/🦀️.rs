@@ -5,6 +5,9 @@ use crate::diff::{BitmapDiff, BitmapInputPatch, BitmapInputWrite, BitmapPaletteD
 use crate::schema::snapshot::{pin_key, BitmapSnapshot, BITMAP_MAX_PALETTE};
 
 pub fn diff(payload: &super::AddPaletteColor, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
+    if [payload.color.r,payload.color.g,payload.color.b,payload.color.a].into_iter().any(|channel|channel>255) {
+        return protocol::MutationOutcome::fatal("mutation.invariant","Palette colour channels must be between 0 and 255.",["palette".to_string()]);
+    }
     if payload.index > base.input.palette.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Palette index {} is past the end of a {}-entry palette.", payload.index, base.input.palette.len()), ["palette".to_string()]);
     }

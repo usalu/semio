@@ -9,8 +9,12 @@ use crate::editor::grid2d::modes::edit::windows::preview::*;
 use crate::editor::grid2d::window::Grid2dWindowConfig;
 use crate::host::inferences::solve_with_clock;
 
+fn cached_json(commit: Grid2dInferenceCommit) -> String {
+    semio_framework_pack_json::to_json_string(&crate::editor::grid2d::modes::edit::tools::fill::Grid2dCachedSolve { source_revision: vec![0; 32], commit })
+}
+
 fn layers(document: &Grid2dSnapshot, config: &Grid2dWindowConfig) -> Vec<Value> {
-    serde_json::from_str(&layers_json(document, cached_commit(document, config).as_ref())).expect("layers are real json")
+    serde_json::from_str(&layers_json(document, cached_commit(document, config, Some([0; 32])).as_ref())).expect("layers are real json")
 }
 
 #[test]
@@ -34,7 +38,7 @@ fn an_unsolved_pane_draws_one_outline_per_unmasked_cell() {
 fn a_solved_vector_pane_draws_one_path_layer_per_connector() {
     let document = crate::examples::grid2d::pipes::document();
     let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the example solves");
-    let config = Grid2dWindowConfig { solve_json: semio_framework_pack_json::to_json_string(&commit), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: cached_json(commit), ..Default::default() };
     let rendered = layers(&document, &config);
     assert!(!rendered.is_empty());
     assert!(rendered.iter().any(|layer| layer.get("segments").is_some()), "a vector tile must reach the canvas as a real path");
@@ -53,7 +57,7 @@ fn a_solved_vector_pane_draws_one_path_layer_per_connector() {
 fn a_solved_bitmap_pane_stays_inside_the_surface_budget() {
     let document = crate::examples::grid2d::terrain::document();
     let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the example solves");
-    let config = Grid2dWindowConfig { solve_json: semio_framework_pack_json::to_json_string(&commit), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: cached_json(commit), ..Default::default() };
     let rendered = layers(&document, &config);
     assert_eq!(rendered.len(), 64, "64 assigned cells, one swatch each — the 1 024-rect form overflows the surface");
     assert!(rendered.iter().all(|layer| layer["color"].as_str().is_some_and(|color| color.starts_with('#'))), "a bounds layer's colour must be a css hex or the host falls back to a hue ramp");
@@ -72,7 +76,7 @@ fn a_small_bitmap_board_still_draws_one_rect_per_pixel() {
     document.pinned.retain(|cell| cell.x < 2 && cell.y < 2);
     document.masked.retain(|cell| cell.x < 2 && cell.y < 2);
     let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the trimmed example solves");
-    let config = Grid2dWindowConfig { solve_json: semio_framework_pack_json::to_json_string(&commit), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: cached_json(commit), ..Default::default() };
     assert_eq!(layers(&document, &config).len(), 4 * 16, "4 cells × a 4×4 bitmap each");
 }
 
@@ -80,7 +84,7 @@ fn a_small_bitmap_board_still_draws_one_rect_per_pixel() {
 fn a_cached_commit_that_contradicts_falls_back_to_the_bare_grid() {
     let document = crate::examples::grid2d::pipes::document();
     let contradicted = Grid2dInferenceCommit { assignments: Vec::new(), contradiction: true, entropy: Vec::new() };
-    let config = Grid2dWindowConfig { solve_json: semio_framework_pack_json::to_json_string(&contradicted), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: cached_json(contradicted), ..Default::default() };
     assert_eq!(layers(&document, &config).len(), 35);
 }
 
@@ -88,8 +92,8 @@ fn a_cached_commit_that_contradicts_falls_back_to_the_bare_grid() {
 fn a_malformed_cache_is_ignored_rather_than_failing_the_render() {
     let document = crate::examples::grid2d::pipes::document();
     let config = Grid2dWindowConfig { solve_json: "not json".into(), ..Default::default() };
-    assert!(cached_commit(&document, &config).is_none());
-    render(&document, &config, None).expect("the pane still renders");
+    assert!(cached_commit(&document, &config, Some([0; 32])).is_none());
+    render(&document, &config, None, Some([0; 32])).expect("the pane still renders");
     assert!(layers(&document, &config).len() > 1, "a malformed cache falls back to the bare grid, not to nothing");
 }
 
@@ -101,9 +105,9 @@ fn a_cache_from_another_document_is_dropped_rather_than_painted() {
     let pipes = crate::examples::grid2d::pipes::document();
     let terrain = crate::examples::grid2d::terrain::document();
     let solved = solve_with_clock(&pipes, semio_framework_job::logical_now_us).expect("pipes solves");
-    let config = Grid2dWindowConfig { solve_json: semio_framework_pack_json::to_json_string(&solved), ..Default::default() };
-    assert!(cached_commit(&pipes, &config).is_some(), "its own document keeps the cache");
-    assert!(cached_commit(&terrain, &config).is_none(), "a foreign document drops it");
+    let config = Grid2dWindowConfig { solve_json: cached_json(solved), ..Default::default() };
+    assert!(cached_commit(&pipes, &config, Some([0; 32])).is_some(), "its own document keeps the cache");
+    assert!(cached_commit(&terrain, &config, Some([1; 32])).is_none(), "a foreign document drops it");
     let painted = layers(&terrain, &config);
     assert!(painted.iter().all(|layer| layer["name"].is_null()), "the fallback grid carries no tile labels: {painted:?}");
 }
@@ -112,8 +116,8 @@ fn a_cache_from_another_document_is_dropped_rather_than_painted() {
 fn the_rendered_surface_is_non_empty_for_every_example() {
     for source in crate::examples::grid2d::sources() {
         let document = <Grid2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&source.document()).expect("example parses");
-        render(&document, &Grid2dWindowConfig::default(), None).unwrap_or_else(|error| panic!("{}: the preview pane must render: {error:?}", source.id()));
-        assert!(scene(&document, &Grid2dWindowConfig::default(), None).layers_json.len() > 64, "{}: the canvas carries no layers", source.id());
+        render(&document, &Grid2dWindowConfig::default(), None, Some([0; 32])).unwrap_or_else(|error| panic!("{}: the preview pane must render: {error:?}", source.id()));
+        assert!(scene(&document, &Grid2dWindowConfig::default(), None, Some([0; 32])).layers_json.len() > 64, "{}: the canvas carries no layers", source.id());
     }
 }
 
@@ -129,4 +133,45 @@ fn a_partial_fill_preview_differs_from_empty_and_finished() {
     let mid = layers_json(&document, Some(&partial));
     assert_ne!(mid, empty, "a partial board must not look empty");
     assert_ne!(mid, finished, "a partial board must not look finished");
+}
+
+#[test]
+fn cached_and_live_previews_obey_the_portable_source_revision_contract() {
+    use crate::editor::grid2d::modes::edit::tools::fill::{Grid2dCachedSolve, Grid2dFillPayload, Grid2dFillCell};
+    use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunState};
+    let cases: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🧪️tests/🧫️preview-revisions/🔣️.json")).expect("revision cases");
+    let document = crate::examples::grid2d::pipes::document();
+    for case in cases["cases"].as_array().expect("cases") {
+        let source_revision: Vec<u8> = serde_json::from_value(case["sourceRevision"].clone()).expect("source");
+        let current: Option<[u8; 32]> = serde_json::from_value(case["currentRevision"].clone()).expect("current");
+        let commit = Grid2dInferenceCommit { assignments: vec![(0, 0, document.tiles[0].id.clone())], contradiction: false, entropy: Vec::new() };
+        let cache = Grid2dCachedSolve { source_revision: source_revision.clone(), commit };
+        let config = Grid2dWindowConfig { solve_json: semio_framework_pack_json::to_json_string(&cache), ..Default::default() };
+        let visible = case["visible"].as_bool().expect("visibility");
+        assert_eq!(cached_commit(&document, &config, current).is_some(), visible, "cache {}", case["id"]);
+        if let Ok(source) = <[u8; 32]>::try_from(source_revision.as_slice()) {
+            let mut run = semio_framework_plugin::ToolRunView::new("fill", ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 9 }, source), ToolRunState::Running);
+            run.payload = Some(Grid2dFillPayload { assignments: vec![Grid2dFillCell { x: 0, y: 0, tile_id: Some(document.tiles[0].id.clone()) }], ..Default::default() }.encode().into());
+            assert_eq!(live_fill_payload(Some(&run), current).is_some(), visible, "live {}", case["id"]);
+        }
+    }
+}
+
+#[test]
+fn completed_assignments_override_trace_history_through_the_live_run_adapter() {
+    use crate::editor::grid2d::modes::edit::tools::fill::{Grid2dFillCell, Grid2dFillPayload, Grid2dFillTraceEvent};
+    use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunState};
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🧪️tests/🧫️completed-preview/🔣️.json")).expect("completed preview cases");
+    let document = crate::examples::grid2d::pipes::document();
+    for case in fixture["cases"].as_array().expect("cases") {
+        let assigned = case["assigned"].as_u64().unwrap() as usize;
+        let traced = case["traced"].as_u64().unwrap() as usize;
+        let expected = case["expected"].as_u64().unwrap() as usize;
+        let done = case["done"].as_bool().unwrap();
+        let payload = Grid2dFillPayload { assignments: vec![Grid2dFillCell { x: 0, y: 0, tile_id: Some(document.tiles[assigned].id.clone()) }], done, trace: vec![Grid2dFillTraceEvent { x: 0, y: 0, tile_id: document.tiles[traced].id.clone(), discarded: case["discarded"].as_bool().unwrap() }], ..Default::default() };
+        let mut run = semio_framework_plugin::ToolRunView::new("fill", ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32]), if done { ToolRunState::Complete } else { ToolRunState::Running });
+        run.payload = Some(payload.encode().into());
+        let painted = paint_commit(&document, &Grid2dWindowConfig::default(), Some(&run), Some([0; 32])).expect("live assignment");
+        assert_eq!(painted.assignments, vec![(0, 0, document.tiles[expected].id.clone())], "{}", case["id"]);
+    }
 }

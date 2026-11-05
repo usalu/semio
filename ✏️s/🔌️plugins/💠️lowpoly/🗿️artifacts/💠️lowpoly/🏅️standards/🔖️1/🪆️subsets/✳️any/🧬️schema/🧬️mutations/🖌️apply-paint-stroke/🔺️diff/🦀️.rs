@@ -20,9 +20,7 @@ pub fn diff(payload: &ApplyPaintStroke, base: &LowpolySnapshot) -> protocol::Mut
     if payload.layer_index >= object.paint_layers.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Paint layer {} does not exist on object \"{}\".", payload.layer_index, payload.object_id), [payload.object_id.clone()]);
     }
-    let Some(runs) = payload.runs(base) else {
-        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Paint layer {} of object \"{}\" is not a square RGBA texture.", payload.layer_index, payload.object_id), [payload.object_id.clone()]);
-    };
+    let runs=match payload.runs(base){Ok(Some(runs))=>runs,Ok(None)=>return protocol::MutationOutcome::empty(),Err(error)=>return protocol::MutationOutcome::fatal("lowpoly.paint.invalid-texture",error.to_string(),[payload.object_id.clone()])};
     if runs.is_empty() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The stroke changes no pixel of layer {} of object \"{}\".", payload.layer_index, payload.object_id));
     }

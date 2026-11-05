@@ -58,26 +58,26 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
  if(!settings)return(await run(environment.SEMIO_UNIT_CACHE_INNER?JSON.parse(environment.SEMIO_UNIT_CACHE_INNER):["rustc"],argv,environment,false)).status;
  const args=expandRustcArgumentsV1(argv,cwd),unit=parseRustcUnitV1(args),bypass=rustcBypassV1(unit,args),crate=unit.crateName||"-";
  const event=(kind:UnitEventV1["kind"],key:string|null,milliseconds:number,waitedMs=0,reason?:string)=>emitUnitEventV1(settings.root,{lane:settings.lane,kind,crate,key,milliseconds,waitedMs,...(reason?{reason}:{})});
- const compile=async(compileArgs:readonly string[],capture:boolean):Promise<Outcome>=>{
+ const compile=async(capture:boolean):Promise<Outcome>=>{
   let slot:ClaimV1|undefined;
   if(settings.slots>0&&unit.source.endsWith(".rs")){slot=await acquireSlotV1(settings.root,settings.slots,{onWait:waited=>event("slot-wait",null,0,waited)});}
-  try{return await run(settings.inner,compileArgs,environment,capture);}finally{slot?.release();}
+  try{return await run(settings.inner,argv,environment,capture);}finally{slot?.release();}
  };
  const started=Date.now();
  if(bypass){
-  const outcome=await compile(args,false);
+  const outcome=await compile(false);
   if(unit.source.endsWith(".rs"))event("bypass",null,Date.now()-started,0,bypass);
   return outcome.status;
  }
  const focused=unit.incremental!==undefined&&settings.focus.has(environment.CARGO_PKG_NAME??"");
- if(focused){const outcome=await compile(args,false);event("incremental",null,Date.now()-started);return outcome.status;}
+ if(focused){const outcome=await compile(false);event("incremental",null,Date.now()-started);return outcome.status;}
  let key:string,parts="";
  const digests=new Map<string,string>();
  try{
   const sourceSha=digestFileV1(resolve(cwd,unit.source),settings.stamps);if(sourceSha===null)throw Error("source");
   for(const row of unit.externs){if(row.path==="")continue;const sha=digestFileV1(resolve(cwd,row.path),settings.stamps);if(sha===null)throw Error("extern");digests.set(row.path,sha);}
   const keyInput={toolchain:toolchainIdentityV1(settings.root,settings.inner,environment),normalized:normalizeRustcArgumentsV1(args,digests,settings.laneRoot),sourceSha256:sourceSha,externs:unit.externs.map(row=>({name:row.flags+row.name,sha256:row.path===""?"builtin":digests.get(row.path)!})),environment:keyEnvironmentV1(environment,settings.laneRoot)};key=unitKeyV1(keyInput);parts=unitKeyPartsV1(keyInput);
- }catch{const outcome=await compile(args,false);event("bypass",null,Date.now()-started,0,"unreadable-input");return outcome.status;}
+ }catch{const outcome=await compile(false);event("bypass",null,Date.now()-started,0,"unreadable-input");return outcome.status;}
  const context={cwd,laneRoot:settings.laneRoot,environment,stampDirectory:settings.stamps},outDir=resolve(cwd,unit.outDir),shimming=isBuildScriptUnitV1(unit)&&buildScriptsEnabledV1(environment),facts=brokerOfV1(environment)?admitFactsV1(args,environment,cwd):undefined;
  const shim=(outputs:readonly string[]):void=>{if(!shimming)return;const artifact=outputs.find(path=>!path.endsWith(".d")&&!path.endsWith(".rmeta"));if(artifact)installBuildScriptShimV1(artifact);};
  const serve=async():Promise<boolean>=>{
@@ -94,7 +94,7 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
  if(waited>50||!claim)event(claim?"lock-wait":"lock-timeout",key,0,waited);
  try{
   if(claim){try{if(await serve()){event("hit",key,Date.now()-started,waited,"after-wait");return 0;}}catch{}}
-  const compiled=Date.now(),outcome=await compile(args,true);
+  const compiled=Date.now(),outcome=await compile(true);
   if(outcome.status!==0){event("failed",key,Date.now()-compiled,waited);return outcome.status;}
   event("miss",key,Date.now()-compiled,waited,unit.incremental===undefined?parts:parts+" incremental:lane");
   const outputs=[...new Set([...artifactsOf(outcome.stderr),...artifactsOf(outcome.stdout)])].map(path=>resolve(cwd,path)).filter(path=>existsSync(path));

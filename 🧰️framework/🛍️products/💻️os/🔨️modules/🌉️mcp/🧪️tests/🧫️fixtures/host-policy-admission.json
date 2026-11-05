@@ -1,0 +1,45 @@
+{
+  "required": true,
+  "refusals": [
+    {
+      "field": "operation",
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "field": "generation",
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "field": "turnFuel",
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "field": "operationFuel",
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "field": "turnExecutionFuel",
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "field": "operationExecutionFuel",
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "field": "maximumTurnMicroseconds",
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "field": "maximumLifetimeMicroseconds",
+      "value": 0,
+      "accepted": false
+    }
+  ]
+}

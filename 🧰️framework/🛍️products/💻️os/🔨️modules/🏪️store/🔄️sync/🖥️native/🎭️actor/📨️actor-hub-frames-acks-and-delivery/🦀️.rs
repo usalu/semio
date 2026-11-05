@@ -4,9 +4,7 @@ use super::*;
 
 impl ArtifactActor {
     //#region 🔖️Hub
-    /// 🪙️ Command-lane credit-based flow control: no client-side backpressure
-    /// implemented this wave (scope is frame plumbing, not congestion control) —
-    /// accepted and ignored.
+    /// 🪙️ Command-lane credit-based flow control: no client-side backpressure See [design notes](README.md).
     pub(super) async fn on_hub_frame(&mut self, frame: ServerFrame) {
         match frame {
             ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
@@ -133,10 +131,7 @@ impl ArtifactActor {
         }
     }
 
-    /// 📮️ Resolves one outbound `Commands` batch's terminal `Applied` stage: `Accepted`
-    /// just clears the pending batch; `Transformed`/`Rejected` both roll back the speculative
-    /// local head first (via {@link rollback_envelope}, replayed as remote operations), and
-    /// `Transformed` then delivers the semio_hub's replacement envelope the same way.
+    /// 📮️ Resolves one outbound `Commands` batch's terminal `Applied` stage: `Accepted` See [design notes](README.md).
     pub async fn handle_ack(&mut self, batch_id: u64, stages: Vec<AckStage>) {
         for stage in stages {
             let AckStage::Applied { outcome } = stage else { continue };
@@ -272,17 +267,12 @@ impl ArtifactActor {
         true
     }
 
-    /// 🗃️ Publishes a replaced recursive archive. An external rewrite that LOST events cannot be
-    /// expressed as new events, so it is a document replacement: the host reloads the store from
-    /// the archive by replaying its events — nothing is pushed into (or merged by) the live store.
+    /// 🗃️ Publishes a replaced recursive archive. An external rewrite that LOST events cannot be See [design notes](README.md).
     pub(super) async fn deliver_archive(&mut self, bytes: Vec<u8>) {
         self.emit(ArtifactEvent::DocumentArchiveReplaced { archive: bytes });
     }
 
-    /// 🚫️async: E1 pure sync body — `broadcast::Sender::send` never suspends. Declaring this
-    /// `async fn` forced `&ArtifactActor` to live across an await, which demanded
-    /// `ArtifactActor: Sync` from every `!Sync` field it owns (the folder watcher's `Receiver`,
-    /// `connect_future`, the codec table's `dyn Fn`) and made the whole actor turn non-`Send`.
+    /// 🚫️async: E1 pure sync body — `broadcast::Sender::send` never suspends. Declaring this See [design notes](README.md).
     pub(super) fn emit(&self, event: ArtifactEvent) {
         let _ = self.events.send(event);
     }

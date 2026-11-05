@@ -1,0 +1,359 @@
+{
+  "version": 1,
+  "actions": {
+    "create-tile": [
+      "id",
+      "weight"
+    ],
+    "delete-tile": [
+      "id"
+    ],
+    "change-tile-weight": [
+      "id",
+      "weight"
+    ],
+    "change-tile-media": [
+      "id",
+      "mediaJson"
+    ],
+    "create-rule": [
+      "id",
+      "tileAId",
+      "tileBId",
+      "direction",
+      "allowed"
+    ],
+    "delete-rule": [
+      "id"
+    ],
+    "resize-grid": [
+      "width",
+      "height"
+    ],
+    "change-cell-size": [
+      "cellWidth",
+      "cellHeight"
+    ],
+    "change-periodicity": [
+      "periodicX",
+      "periodicY"
+    ],
+    "change-seed": [
+      "seed"
+    ],
+    "pin-cell": [
+      "x",
+      "y",
+      "tileId"
+    ],
+    "unpin-cell": [
+      "x",
+      "y"
+    ],
+    "mask-cell": [
+      "x",
+      "y"
+    ],
+    "unmask-cell": [
+      "x",
+      "y"
+    ],
+    "pick-cell": [
+      "x",
+      "y"
+    ],
+    "setActiveExample": [
+      "exampleId"
+    ],
+    "set-active-tile": [
+      "tileId"
+    ],
+    "set-camera": [
+      "x",
+      "y",
+      "zoom"
+    ],
+    "set-grid-visible": [
+      "visible"
+    ],
+    "set-grid-snap-enabled": [
+      "enabled"
+    ],
+    "set-grid-factor": [
+      "factor"
+    ]
+  },
+  "cases": [
+    {
+      "action": "create-tile",
+      "args": {
+        "id": "new-tile",
+        "weight": 2.5
+      },
+      "command": {
+        "CreateTile": {
+          "id": "new-tile",
+          "label": null,
+          "weight": 2.5
+        }
+      }
+    },
+    {
+      "action": "delete-tile",
+      "args": {
+        "id": "tile-a"
+      },
+      "command": {
+        "DeleteTile": {
+          "id": "tile-a"
+        }
+      }
+    },
+    {
+      "action": "change-tile-weight",
+      "args": {
+        "id": "tile-a",
+        "weight": 3.5
+      },
+      "command": {
+        "ChangeTileWeight": {
+          "id": "tile-a",
+          "weight": 3.5
+        }
+      }
+    },
+    {
+      "action": "change-tile-media",
+      "args": {
+        "id": "tile-a",
+        "mediaJson": "null"
+      },
+      "command": {
+        "ChangeTileMedia": {
+          "id": "tile-a",
+          "media_json": "null"
+        }
+      }
+    },
+    {
+      "action": "create-rule",
+      "args": {
+        "id": "rule-a",
+        "tileAId": "tile-a",
+        "tileBId": "tile-b",
+        "direction": "RIGHT",
+        "allowed": false
+      },
+      "command": {
+        "CreateRule": {
+          "id": "rule-a",
+          "tile_a_id": "tile-a",
+          "tile_b_id": "tile-b",
+          "direction": "RIGHT",
+          "allowed": false
+        }
+      }
+    },
+    {
+      "action": "delete-rule",
+      "args": {
+        "id": "rule-a"
+      },
+      "command": {
+        "DeleteRule": {
+          "id": "rule-a"
+        }
+      }
+    },
+    {
+      "action": "resize-grid",
+      "args": {
+        "width": 23,
+        "height": 17
+      },
+      "command": {
+        "ResizeGrid": {
+          "width": 23,
+          "height": 17
+        }
+      }
+    },
+    {
+      "action": "change-cell-size",
+      "args": {
+        "cellWidth": 2.5,
+        "cellHeight": 3.5
+      },
+      "command": {
+        "ChangeCellSize": {
+          "cell_width": 2.5,
+          "cell_height": 3.5
+        }
+      }
+    },
+    {
+      "action": "change-periodicity",
+      "args": {
+        "periodicX": true,
+        "periodicY": false
+      },
+      "command": {
+        "ChangePeriodicity": {
+          "periodic_x": true,
+          "periodic_y": false
+        }
+      }
+    },
+    {
+      "action": "change-seed",
+      "args": {
+        "seed": 73
+      },
+      "command": {
+        "ChangeSeed": {
+          "seed": 73
+        }
+      }
+    },
+    {
+      "action": "pin-cell",
+      "args": {
+        "x": 3,
+        "y": 4,
+        "tileId": "tile-b"
+      },
+      "command": {
+        "PinCell": {
+          "x": 3,
+          "y": 4,
+          "tile_id": "tile-b"
+        }
+      }
+    },
+    {
+      "action": "unpin-cell",
+      "args": {
+        "x": 3,
+        "y": 4
+      },
+      "command": {
+        "UnpinCell": {
+          "x": 3,
+          "y": 4
+        }
+      }
+    },
+    {
+      "action": "mask-cell",
+      "args": {
+        "x": 3,
+        "y": 4
+      },
+      "command": {
+        "MaskCell": {
+          "x": 3,
+          "y": 4
+        }
+      }
+    },
+    {
+      "action": "unmask-cell",
+      "args": {
+        "x": 3,
+        "y": 4
+      },
+      "command": {
+        "UnmaskCell": {
+          "x": 3,
+          "y": 4
+        }
+      }
+    },
+    {
+      "action": "pick-cell",
+      "args": {
+        "x": 3,
+        "y": 4
+      },
+      "command": {
+        "PickCell": {
+          "x": 3,
+          "y": 4
+        }
+      }
+    },
+    {
+      "action": "setActiveExample",
+      "args": {
+        "exampleId": "terrain"
+      },
+      "command": {
+        "SetActiveExample": {
+          "example_id": "terrain"
+        }
+      }
+    },
+    {
+      "action": "set-active-tile",
+      "args": {
+        "tileId": "tile-b"
+      },
+      "command": {
+        "SetActiveTile": {
+          "tile_id": "tile-b"
+        }
+      }
+    },
+    {
+      "action": "set-camera",
+      "args": {
+        "x": 2.5,
+        "y": 3.5,
+        "zoom": 4.5
+      },
+      "command": {
+        "SetCamera": {
+          "x": 2.5,
+          "y": 3.5,
+          "zoom": 4.5
+        }
+      }
+    },
+    {
+      "action": "set-grid-visible",
+      "args": {
+        "visible": false
+      },
+      "command": {
+        "SetGridVisible": {
+          "visible": false
+        }
+      }
+    },
+    {
+      "action": "set-grid-snap-enabled",
+      "args": {
+        "enabled": false
+      },
+      "command": {
+        "SetGridSnapEnabled": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "action": "set-grid-factor",
+      "args": {
+        "factor": 2.5
+      },
+      "command": {
+        "SetGridFactor": {
+          "factor": 2.5
+        }
+      }
+    }
+  ],
+  "internalActions": [
+    "commit-fill"
+  ]
+}

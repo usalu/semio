@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","-p","semio-framework-os-store-sync-native","--lib","folder_durability"],"configuration":"prototype","store":"shared","parallelism":2,"language":"en","agent":"semio-mcp-folder-laws"}}

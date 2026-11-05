@@ -4,29 +4,62 @@
   "title": "Wfc2d fill tick payload",
   "type": "object",
   "additionalProperties": false,
-  "required": ["assignments", "contradiction", "done"],
+  "required": [
+    "assignments",
+    "contradiction",
+    "done",
+    "sourceRevision"
+  ],
   "properties": {
     "assignments": {
       "type": "object",
       "description": "Slot id to tile id when decided, or null when still open.",
       "additionalProperties": {
-        "type": ["string", "null"]
+        "type": [
+          "string",
+          "null"
+        ]
       }
     },
-    "contradiction": { "type": "boolean" },
-    "done": { "type": "boolean" },
+    "contradiction": {
+      "type": "boolean"
+    },
+    "done": {
+      "type": "boolean"
+    },
     "trace": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["slotId", "tileId", "discarded"],
+        "required": [
+          "slotId",
+          "tileId",
+          "discarded"
+        ],
         "properties": {
-          "slotId": { "type": "string", "minLength": 1 },
-          "tileId": { "type": "string", "minLength": 1 },
-          "discarded": { "type": "boolean" }
+          "slotId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tileId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "discarded": {
+            "type": "boolean"
+          }
         }
       }
+    },
+    "sourceRevision": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "maxItems": 32
     }
   }
 }

@@ -4,6 +4,9 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83d\udd8d\ufe0fdraw/**/*.rs",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🖍️draw/🧩️component/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🌐️guest/*.json",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🌐️guest/*.ts",
       "{projectRoot}/**/*"
     ]
   },
@@ -16,7 +19,9 @@
         "forwardAllArgs": true
       },
       "outputs": [],
-      "cache": true
+      "cache": true,
+      "dependsOn": [{"projects":["semio-hub-draw-component"],"target":"component"}],
+      "inputs": ["default","^default",{"dependentTasksOutputFiles":"**/*"}]
     },
     "guest-instance-check": {
       "executor": "repo:script",

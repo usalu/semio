@@ -3,21 +3,16 @@ use super::NativeRecordKey;
 use crate::{NativeDecodeControl,OriginalReceivingPrimary,RetainedWorkOutcome,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneRef,retained_clone_grant_admits},owned::tree::{NativeValueSource,fixed,receipt,invalid}};
 use semio_framework_value_persistent::list::{PagedList,PagedListError};
 use std::mem::{ManuallyDrop,size_of};
-/// 🧩️ A pure borrowed descriptor selects one leaf or one nested schema table.
 #[derive(Clone,Copy)]pub struct NativeSchemaLeaf{pub name:&'static str,pub ordinal:u32}
 #[derive(Clone,Copy)]pub enum NativeRecordSchema{Leaf(NativeSchemaLeaf),Flatten{fields:fn(usize)->Option<NativeRecordSchema>,count:usize},Union{fields:fn(usize)->Option<NativeRecordSchema>,count:usize},Skip}
-/// 🔑️ One declared original accessor selects the genuinely borrowed key without speculative error probes.
 #[derive(Clone,Copy)]pub enum NativeSchemaKeySource{Record(usize),Text,VariantTag,EnumOrdinal,RecordName(usize),RecordText(usize)}
-/// 🪪️ Ambiguity preserves the same duplicate-schema refusal without scanning unnecessary later leaves.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]pub enum NativeFieldMatch{Missing,Field(usize),Ambiguous}
 #[derive(Clone,Copy)]struct SchemaFrame{fields:fn(usize)->Option<NativeRecordSchema>,count:usize,index:usize,root:Option<usize>,role:u8,before:NativeFieldMatch,best:NativeFieldMatch}
 #[derive(Clone,Copy)]enum Key{Name(*const str),Ordinal(u32)}
 fn combined(left:NativeFieldMatch,right:NativeFieldMatch)->NativeFieldMatch{match(left,right){(NativeFieldMatch::Missing,right)=>right,(left,NativeFieldMatch::Missing)=>left,_=>NativeFieldMatch::Ambiguous}}
 fn alternative(left:NativeFieldMatch,right:NativeFieldMatch)->NativeFieldMatch{match(left,right){(NativeFieldMatch::Ambiguous,_)|(_,NativeFieldMatch::Ambiguous)=>NativeFieldMatch::Ambiguous,(NativeFieldMatch::Missing,right)=>right,(left,_)=>left}}
 fn page<T>(r:Result<T,PagedListError>)->Result<T,ValueError>{r.map_err(|e|ValueError::literal(ValueRefusalKind::OwnershipLimit,e.reason))}
-/// 🎟️ Stack pages, original binding and current comparison remain resident across all denied or cancelled turns.
 pub struct NativeRecordMatcher<I:NativeValueSource+?Sized>{binding:Option<RetainedCloneBinding>,frames:ManuallyDrop<PagedList<SchemaFrame,{usize::MAX}>>,pending:Option<SchemaFrame>,key:Option<Key>,leaf:Option<NativeSchemaLeaf>,leaf_root:usize,offset:usize,key_source:NativeSchemaKeySource,fields:fn(usize)->Option<NativeRecordSchema>,count:usize,matched:NativeFieldMatch,done:bool,closing:bool,input:std::marker::PhantomData<fn(&I)>}
-/// 🧵️ The only raw key pointer borrows a Sync original kept alive by the same genuine binding; all stack mutations remain exclusively owned.
 unsafe impl<I:NativeValueSource+?Sized>Send for NativeRecordMatcher<I>{}
 impl<I:NativeValueSource+?Sized>NativeRecordMatcher<I>{
  pub fn new(fields:fn(usize)->Option<NativeRecordSchema>,count:usize,key_source:NativeSchemaKeySource)->Self{Self{binding:None,frames:ManuallyDrop::new(PagedList::new()),pending:None,key:None,leaf:None,leaf_root:0,offset:0,key_source,fields,count,matched:NativeFieldMatch::Missing,done:false,closing:false,input:std::marker::PhantomData}}
@@ -31,7 +26,6 @@ impl<I:NativeValueSource+?Sized>NativeRecordMatcher<I>{
   else{self.done=true;}
   own=receipt(fixed(0));let step=if self.done{RetainedCloneStep::Complete(own)}else{RetainedCloneStep::Progress(own)};own=Default::default();Ok(step)
  })();let result=result.map_err(|error|{let moved=error.retained_progress().saturating_add(own);error.with_retained_progress(moved)});RetainedWorkOutcome{result,work}}
- /// 🧮️ Several real schema probes spend the same remaining physical grant and publish one independent-work outcome.
  pub fn advance(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{
   if self.done{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
   let mut progress=RetainedCloneProgress::default();let mut work=0;let mut left=g;let mut actions=0;

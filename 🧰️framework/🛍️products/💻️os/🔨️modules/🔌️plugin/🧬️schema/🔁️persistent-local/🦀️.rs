@@ -178,13 +178,16 @@ pub mod owned_abi {
     }
 
     /// 🌱️ The owned actor admission port never creates dynamic diagnostic prose on malformed input.
-    pub unsafe fn take_actor_admission_input(pointer:u32,length:u32)->Result<(semio_framework::kernel::RetainedTurnInput,semio_framework_value::RetainedCloneGrant),semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
+    pub unsafe fn take_actor_admission_input(pointer:u32,length:u32)->Result<semio_framework::kernel::OriginalJobBudget,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
 
     /// 📥️ Retains the original job source and budget without an error-text carrier.
     pub unsafe fn take_actor_start_job_input(pointer:u32,length:u32)->Result<StartJobInput,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
 
     /// 📬️ Retains the original declared poll fields without an error-text carrier.
     pub unsafe fn take_actor_poll_input(pointer:u32,length:u32)->Result<PollInput,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
+
+    /// 🧹️ Reads the same original job budget for one explicit resident turn-output retirement slice.
+    pub unsafe fn take_actor_output_close_input(pointer:u32,length:u32)->Result<semio_framework::kernel::OriginalJobBudget,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
 
     pub fn return_json<T: Serialize>(value: &T) -> u64 {
         match serde_json::to_vec(value) {

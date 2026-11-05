@@ -55,7 +55,7 @@ fn every_command_round_trips_its_binary_op() {
         let bytes = protocol::OpBinary::encode_op(&command).expect("command encodes");
         assert_eq!(<BitmapEditorCommand as protocol::OpBinary>::decode_op(&bytes).expect("command decodes"), command);
     }
-    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::CommitFillSolve { pixels: String::new(), contradiction: false, width: 1, height: 1 }, stroke(&[(1, 2), (3, 4)], Some(1), Some("stream")), stroke(&[], None, Some("abort")), BitmapEditorCommand::SetActiveColor { index: 1 }] {
+    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::PinPreview, BitmapEditorCommand::CommitFillSolve { pixels: String::new(), contradiction: false, width: 1, height: 1, source_revision: encode_base64(&[0; 32]) }, stroke(&[(1, 2), (3, 4)], Some(1), Some("stream")), stroke(&[], None, Some("abort")), BitmapEditorCommand::SetActiveColor { index: 1 }] {
         let bytes = protocol::OpBinary::encode_op(&command).expect("command encodes");
         assert_eq!(<BitmapEditorCommand as protocol::OpBinary>::decode_op(&bytes).expect("command decodes"), command);
     }
@@ -72,7 +72,7 @@ fn stroke(points: &[(u32, u32)], color: Option<u32>, phase: Option<&str>) -> Bit
 fn every_mutation_kind_is_reachable_from_a_window() {
     let declared: Vec<String> = create_bitmap_editor().window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone())).collect();
     for kind in crate::mutations::KINDS {
-        let verb = if *kind == "paint-input-stroke" { "paint-stroke" } else { kind };
+        let verb = match *kind { "paint-input-stroke" => "paint-stroke", "restore-pins" => "pin-preview", _ => kind };
         assert!(declared.iter().any(|action| action == verb), "mutation '{kind}' is not reachable from any window action");
     }
     for verb in ["set-active-color", "solve", "paint-stroke"] {
@@ -86,7 +86,7 @@ fn every_typed_command_dispatches_to_the_mutation_it_names() {
         let mutation = BitmapEditor::command_mutation(&command).unwrap_or_else(|| panic!("command '{kind}' maps to a mutation"));
         assert_eq!(protocol::SemanticMutation::semantics(&mutation).kind, kind);
     }
-    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::CommitFillSolve { pixels: String::new(), contradiction: false, width: 1, height: 1 }, stroke(&[(0, 0)], None, None), BitmapEditorCommand::SetActiveColor { index: 0 }] {
+    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::PinPreview, BitmapEditorCommand::CommitFillSolve { pixels: String::new(), contradiction: false, width: 1, height: 1, source_revision: encode_base64(&[0; 32]) }, stroke(&[(0, 0)], None, None), BitmapEditorCommand::SetActiveColor { index: 0 }] {
         assert!(BitmapEditor::command_mutation(&command).is_none(), "a non-document verb emits no artifact mutation");
     }
 }
@@ -136,11 +136,11 @@ fn the_brush_verb_and_utility_are_declared_and_answered() {
 #[test]
 fn the_bridge_reads_stroke_points_in_both_spellings_and_refuses_garbage() {
     let objects = semio_framework_value::DslValue::from(&serde_json::json!({ "points": [{ "x": 1, "y": 2 }, { "x": 3, "y": 4 }], "color": 1 }));
-    assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some((objects).clone()), None).expect("objects bridge"), stroke(&[(1, 2), (3, 4)], Some(1), None));
+    assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", &mut Some((objects).clone()), &mut None).expect("objects bridge"), stroke(&[(1, 2), (3, 4)], Some(1), None));
     let pairs = semio_framework_value::DslValue::from(&serde_json::json!({ "points": [[1, 2], [3, 4]], "phase": "stream" }));
-    assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some((pairs).clone()), None).expect("pairs bridge"), stroke(&[(1, 2), (3, 4)], None, Some("stream")));
+    assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", &mut Some((pairs).clone()), &mut None).expect("pairs bridge"), stroke(&[(1, 2), (3, 4)], None, Some("stream")));
     for garbage in [serde_json::json!({ "points": [[1.5, 2]] }), serde_json::json!({ "points": [[-1, 2]] }), serde_json::json!({ "points": [[1]] }), serde_json::json!({ "points": "1,2" })] {
-        assert!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some((semio_framework_value::DslValue::from(&garbage)).clone()), None).is_err(), "{garbage} must be refused");
+        assert!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", &mut Some((semio_framework_value::DslValue::from(&garbage)).clone()), &mut None).is_err(), "{garbage} must be refused");
     }
 }
 //#endregion 🖌️Gesture
@@ -153,7 +153,7 @@ fn the_bridge_reads_stroke_points_in_both_spellings_and_refuses_garbage() {
 #[test]
 fn the_solve_transient_prints_and_packs_its_own_envelope() {
     use crate::editor::bitmap::transient::BitmapTransient;
-    let transient = BitmapTransient { output_pixels: Some(encode_base64(&[0, 1, 2, 1])), contradiction: false, output_width: 2, output_height: 2 };
+    let transient = BitmapTransient { output_pixels: Some(encode_base64(&[0, 1, 2, 1])), contradiction: false, output_width: 2, output_height: 2 , source_revision: encode_base64(&[0; 32]) };
     let text = <BitmapTransient as pack::snapshot::ArtifactDsl>::print_dsl(&transient);
     assert!(text.starts_with("semio wfc.bitmaptransient.dsl v1"), "unexpected transient preamble: {:?}", text.lines().next());
     assert_eq!(<BitmapTransient as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("the transient parses back"), transient);
@@ -164,10 +164,11 @@ fn the_solve_transient_prints_and_packs_its_own_envelope() {
 /// 🫧️ The `Solve` verb's own transient write really carries a collapse — not a uniform square, not a
 /// contradiction — for the boot example. This is the payload the output window renders.
 #[test]
-fn the_solve_command_publishes_a_real_collapse_on_the_transient_lane() {
-    use crate::editor::bitmap::transient::BitmapTransientMutation;
+fn the_fill_payload_converts_a_real_collapse_on_the_transient_lane() {
     let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    let BitmapTransientMutation::SetSolve(solve) = BitmapEditor::solve_transient(&snapshot).expect("the boot example's solve runs");
+    let commit = crate::inferences::solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("test-only inference oracle");
+    let assignments: Vec<_> = commit.pixels.iter().copied().enumerate().collect();
+    let solve = crate::editor::bitmap::modes::edit::tools::fill::payload_from_assignment(snapshot.output.width, snapshot.output.height, &assignments, commit.contradiction, true).to_set_solve();
     assert!(!solve.contradiction, "the boot example must collapse");
     assert_eq!((solve.output_width, solve.output_height), (snapshot.output.width, snapshot.output.height));
     let pixels = crate::standards::v1::subsets::any::io::text::snapshot::decode_base64(solve.output_pixels.as_deref().expect("a solved output")).expect("the commit decodes");
@@ -181,10 +182,10 @@ fn the_solve_command_publishes_a_real_collapse_on_the_transient_lane() {
 #[test]
 fn every_declared_action_bridges_to_the_command_it_names() {
     for action in BITMAP_TOOL_IDS {
-        let command = <BitmapEditor as ArtifactEditor>::command_from_action(action, None, None).unwrap_or_else(|error| panic!("action '{action}' does not bridge: {}", error.message));
+        let command = <BitmapEditor as ArtifactEditor>::command_from_action(action, &mut None, &mut None).unwrap_or_else(|error| panic!("action '{action}' does not bridge: {}", error.message));
         assert_eq!(bitmap_command_id(&command), *action, "action '{action}' bridged to the wrong command");
     }
-    assert!(<BitmapEditor as ArtifactEditor>::command_from_action("no-such-action", None, None).is_err());
+    assert!(<BitmapEditor as ArtifactEditor>::command_from_action("no-such-action", &mut None, &mut None).is_err());
 }
 
 /// 🧾️ The retained roster is ONE list spelled in four places — the command channel's `TOOL_JOB_IDS`,
@@ -249,7 +250,7 @@ fn solve_starts_the_fill_run_instead_of_writing_set_solve() {
     use semio_plugin::{AppOperationContext, Effect, HistoryView};
     let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let history = HistoryView::empty();
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "wfc-bitmap-fill".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], authoring_seed: "authoring-seed-test".into() };
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "wfc-bitmap-fill".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], retained: semio_framework_plugin::artifact_app_laws::fixture_retained_turn().grant, authoring_seed: "authoring-seed-test".into() };
     let config = NoConfig {};
     let emit = BitmapEditor::dispatch(&BitmapEditorCommand::Solve, &ArtifactView::with_operation(&snapshot, &history, operation), &ConfigView { snapshot: &config, window: None }, None).expect("solve dispatches");
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID)));
@@ -264,21 +265,21 @@ fn a_partial_fill_render_differs_from_empty_and_finished() {
     use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunState};
 
     let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    let empty = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None);
+    let empty = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None, Some([0; 32]));
     let finished_pixels = crate::inferences::solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("oracle");
     let finished = BitmapTransient {
         output_pixels: if finished_pixels.contradiction { None } else { Some(crate::standards::v1::subsets::any::io::text::snapshot::encode_base64(&finished_pixels.pixels)) },
         contradiction: finished_pixels.contradiction,
         output_width: snapshot.output.width,
-        output_height: snapshot.output.height,
+        output_height: snapshot.output.height, source_revision: encode_base64(&[0; 32]),
     };
-    let finished_layers = output::render_layers_fingerprint(&snapshot, &finished, &BitmapOutputWindowConfig::default(), None);
+    let finished_layers = output::render_layers_fingerprint(&snapshot, &finished, &BitmapOutputWindowConfig::default(), None, Some([0; 32]));
     assert_ne!(empty, finished_layers);
 
     let partial = payload_from_assignment(snapshot.output.width, snapshot.output.height, &[(0, 1)], false, false);
     let mut run = ToolRunView::new(fill_tool::TOOL_ID, ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 3 }, [0; 32]), ToolRunState::Running);
     run.payload = Some(partial.encode_json().into_bytes().into());
-    let partial_layers = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), Some(&run));
+    let partial_layers = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), Some(&run), Some([0; 32]));
     assert_ne!(partial_layers, empty);
     assert_ne!(partial_layers, finished_layers);
 }
@@ -288,9 +289,9 @@ fn a_contradiction_transient_paints_a_distinct_overlay() {
     use crate::editor::bitmap::modes::edit::windows::output::{self, config::BitmapOutputWindowConfig};
     use crate::editor::bitmap::transient::BitmapTransient;
     let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    let empty = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None);
-    let contradiction = BitmapTransient { output_pixels: None, contradiction: true, output_width: snapshot.output.width, output_height: snapshot.output.height };
-    let layers = output::render_layers_fingerprint(&snapshot, &contradiction, &BitmapOutputWindowConfig::default(), None);
+    let empty = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None, Some([0; 32]));
+    let contradiction = BitmapTransient { output_pixels: None, contradiction: true, output_width: snapshot.output.width, output_height: snapshot.output.height , source_revision: encode_base64(&[0; 32]) };
+    let layers = output::render_layers_fingerprint(&snapshot, &contradiction, &BitmapOutputWindowConfig::default(), None, Some([0; 32]));
     assert!(layers.contains("out-contradiction"));
     assert_ne!(layers, empty);
 }
@@ -320,3 +321,26 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
 }
 
 semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::bitmap::BitmapEditor, || semio_plugin::App { definition: crate::editor::bitmap::create_bitmap_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+
+
+/// 🎬️ Bitmap selection follows the shared picker cases without an unknown-id fallback.
+#[test]
+fn the_example_picker_obeys_the_language_neutral_selection_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️example-selection/🔣️.json")).expect("selection contract");
+    let artifact = fixture["artifacts"].as_array().unwrap().iter().find(|row| row["id"] == "bitmap").unwrap();
+    let snapshot = BitmapSnapshot::reference_scene();
+    let history = semio_plugin::HistoryView::empty();
+    let document = ArtifactView::new(&snapshot, &history);
+    for case in fixture["cases"].as_array().unwrap() {
+        let input = case["input"].as_str().unwrap_or_else(|| artifact["examples"][case["exampleIndex"].as_u64().unwrap() as usize].as_str().unwrap());
+        let result = set_active_example::handle(&set_active_example::SetActiveExample { example_id: input.to_string() }, &document).expect("picker handles");
+        if case["select"] == "refuse" {
+            assert!(result.effects.is_empty(), "{}", case["id"]);
+        } else {
+            let [semio_framework::kernel::Effect::LoadDocument { pack, .. }] = result.effects.as_slice() else { panic!("one default document load") };
+            let loaded = <BitmapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("loaded snapshot");
+            let expected = if case["select"] == "default" { crate::examples::rooms_16::snapshot() } else { crate::examples::flowers_24::snapshot() };
+            assert_eq!(loaded, expected, "{}", case["id"]);
+        }
+    }
+}

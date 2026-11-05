@@ -226,7 +226,7 @@ pub(super) fn tiny_engine_params(half: f64, radius: f64) -> EngineParams {
     params
 }
 
-pub(super) fn run_to_done(engine: &mut ReconstructionEngine, budget: usize) -> semio_framework::MeshData {
+pub(super) fn run_to_done(engine: &mut ReconstructionEngine, budget: usize) -> semio_framework_mesh_engine::MeshData {
     loop {
         match engine.advance(budget) {
             EngineStatus::Working { .. } => {}

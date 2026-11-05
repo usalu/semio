@@ -32,7 +32,7 @@ pub fn diff(payload: &super::PaintInputStroke, base: &BitmapSnapshot) -> protoco
     let outcome = protocol::MutationOutcome::new(BitmapDiff { input: BitmapInputPatch { writes: vec![BitmapInputWrite::Region { region: BitmapPixelRegion { x, y, width, height, pixels: region.to_vec() } }], ..Default::default() }, ..Default::default() });
     let total = stroke_cells(&payload.points).len();
     if inside.len() < total {
-        return outcome.warning("mutation.partial", format!("{} of {total} stroke cells lie outside the {}×{} input sample and are skipped.", total - inside.len(), base.input.width, base.input.height));
+        return outcome.warning("mutation.partial", format!("Stroke cells outside the {}×{} input sample are skipped.", base.input.width, base.input.height));
     }
     outcome
 }

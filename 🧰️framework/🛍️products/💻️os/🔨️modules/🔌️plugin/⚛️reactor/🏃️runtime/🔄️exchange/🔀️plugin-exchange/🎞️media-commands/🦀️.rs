@@ -45,7 +45,10 @@ pub(super) async fn arm_poll_media_export(
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::PollMediaExport { seq, handle } = command else { unreachable!("arm_poll_media_export is dispatched only for its own command") };
     let handle = media_export_handle_from_wire(handle);
-    if let Some(status)=owner.take_media_status(){frames.push(protocol::AppFrame::MediaExportStatus{in_reply_to:seq,handle:media_export_handle_into_wire(handle),state:protocol::MediaExportStateWire::Complete,applied_progress:status.total_bytes,checkpoint_available:false,mime_type:status.mime_type,total_bytes:status.total_bytes,detail:String::new()});}else{
+    if let Some(status)=owner.take_media_status(){
+        let descriptor=semio_framework_plugin_decl_app::MediaArtifactDescriptor{edge_id:None,port_id:Some(status.port),kind_id:None,media_type:Some(status.media_type),wire:semio_framework::MediaWireFormat::Binary{format_kind:status.schema},blob_hash:None};
+        frames.push(protocol::AppFrame::MediaExportStatus{in_reply_to:seq,handle:media_export_handle_into_wire(handle),state:protocol::MediaExportStateWire::Complete,applied_progress:status.total_bytes,checkpoint_available:false,mime_type:status.mime_type,total_bytes:status.total_bytes,detail:String::new(),descriptor:encode_wire_serialized(&descriptor)});
+    }else{
     match owner.take_media_poll().expect("original media poll is retained before command donation") {
         ArtifactMediaExportPoll::Running { applied_progress, checkpoint_available } => frames.push(protocol::AppFrame::MediaExportStatus {
             in_reply_to: seq,
@@ -56,6 +59,7 @@ pub(super) async fn arm_poll_media_export(
             mime_type: String::new(),
             total_bytes: 0,
             detail: String::new(),
+            descriptor: Vec::new(),
         }),
         ArtifactMediaExportPoll::Complete(_) => unreachable!("terminal result donates only to its original download registry before decoded command consumption"),
         ArtifactMediaExportPoll::Cancelled => frames.push(protocol::AppFrame::MediaExportStatus {
@@ -67,6 +71,7 @@ pub(super) async fn arm_poll_media_export(
             mime_type: String::new(),
             total_bytes: 0,
             detail: String::new(),
+            descriptor: Vec::new(),
         }),
         ArtifactMediaExportPoll::Failed(detail) => frames.push(protocol::AppFrame::MediaExportStatus {
             in_reply_to: seq,
@@ -77,6 +82,7 @@ pub(super) async fn arm_poll_media_export(
             mime_type: String::new(),
             total_bytes: 0,
             detail,
+            descriptor: Vec::new(),
         }),
     }
 }

@@ -14,6 +14,7 @@ pub use semio_ui_contract_values::*;
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct ActionId {
     pub scope: UiText,
     pub name: UiText,
@@ -45,6 +46,7 @@ impl fmt::Display for ActionId {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum Trigger {
     #[default]
     Activate,
@@ -66,6 +68,8 @@ pub enum Trigger {
 // `UiValue: ToValue`, which is exactly the forbidden conversion.
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct ActionBinding {
     pub trigger: Trigger,
     pub action: ActionId,
@@ -96,6 +100,8 @@ impl ActionBinding {
 // 🌱️ No `ToValue`/`FromValue` here — same `UiValue` exception as `ActionBinding` above.
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct MenuRef {
     pub id: UiText,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -121,6 +127,8 @@ impl MenuRef {
 // 🌱️ No `ToValue`/`FromValue` here — same `UiValue` exception as `ActionBinding` above (`args`/`input`).
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct UiIntent {
     pub surface: crate::SurfaceId,
     pub revision: crate::UiRevision,

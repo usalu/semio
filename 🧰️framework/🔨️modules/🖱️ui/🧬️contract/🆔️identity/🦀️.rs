@@ -7,6 +7,7 @@ use semio_ui_contract_text::UiText;
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(crate = "::semio_framework_value", transparent)]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct SurfaceId(pub UiText);
 
 impl AsRef<str> for SurfaceId {
@@ -42,6 +43,7 @@ impl<'a> TryFrom<&'a str> for SurfaceId {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(crate = "::semio_framework_value", transparent)]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct UiNodeId(pub u64);
 
 /// 📸️ A snapshot's wire revision — advances by one per accepted [`UiPatch`]; a patch whose
@@ -49,6 +51,7 @@ pub struct UiNodeId(pub u64);
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(crate = "::semio_framework_value", transparent)]
+#[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct UiRevision(pub u64);
 
 impl UiRevision {

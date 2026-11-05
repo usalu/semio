@@ -6,6 +6,10 @@ import { resolve } from "node:path";
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
 export async function runOwnedVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args: string[]): Promise<void> {
+  if (args.length === 1 && args[0] === "import-acceptance") {
+    await runArtifactRustPackagesTests(["semio-s-artifact-puzzle-3d-editor"], context.repoRoot, ["--offline", "--test", "editor-budgets", "--", "import_snapshot_acceptance_matches_portable_corpus_and_independent_json_parser", "--nocapture"], context.invocation);
+    return;
+  }
   if(args[0]==="original-fill-fixture"&&(args.length===1||args.length===2&&args[1]==="native")){runCmd("bun",["test",resolve(context.repoRoot,"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🎟️caller/🧪️tests/🟦️.ts")],{cwd:context.repoRoot});if(args[1]==="native")await runArtifactRustPackagesTests(["semio-s-artifact-puzzle-3d-editor-session"],context.repoRoot,["--offline","--test","precompute-fill","--","--nocapture"],context.invocation);return;}
   if (args.length === 1 && args[0] === "original-work-construction") {
     runCmd("bun", ["test", resolve(context.repoRoot, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🎬️action/🧪️tests/🟦️.ts"), resolve(context.repoRoot, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🟦️.ts")], { cwd: context.repoRoot });

@@ -130,7 +130,8 @@ pub struct Wfc2dInferenceJob {
     pub(crate) commit: Wfc2dInferenceCommit,
     pub(crate) commit_bytes: Vec<u8>,
     pub(crate) commit_cursor: usize,
-    pub(crate) output: Option<semio_framework_job_payload::RetainedJobPayloadWriter>,
+    pub(crate) commit_encoded: bool,
+    pub(crate) output: Option<semio_framework_job_payload::RetainedPayloadBuilder>,
     pub(crate) preview_units: u64,
     pub(crate) last_preview_ms: Option<u64>,
     pub(crate) publication: Option<Box<semio_s_plugin_wfc_engine::job::Publication>>,
@@ -177,7 +178,8 @@ impl Wfc2dInferenceJob {
             commit: Wfc2dInferenceCommit::default(),
             commit_bytes: Vec::new(),
             commit_cursor: 0,
-            output: Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput)),
+            commit_encoded: false,
+            output: Some(semio_framework_job_payload::RetainedPayloadBuilder::new(semio_framework_job_payload::JobPayloadStream::CommitOutput)),
             preview_units: 0,
             last_preview_ms: None,
             publication: None,
@@ -436,6 +438,7 @@ pub(crate) enum Wfc2dInferenceJobRun {
     Staged,
     StepRestore,
     StepChild,
+    StepOutput,
 }
 
 /// 🤝️ Which retained owner produced the outcome currently on loan.
@@ -504,9 +507,7 @@ impl Wfc2dInferenceJob {
                 Wfc2dInferenceStage::Restore => {
                     if self.restore_done {
                         self.child = self.restore.as_mut().expect("restore job").take_job();
-                        if let Some(mut restore) = self.restore.take() {
-                            semio_s_plugin_wfc_engine::job::close_job(&mut restore);
-                        }
+                        if let Some(restore) = self.restore.as_mut() { restore.begin_close(); }
                         self.restore_done = false;
                         self.stage = Wfc2dInferenceStage::Solve;
                         return self.stage_preview(context);
@@ -524,30 +525,7 @@ impl Wfc2dInferenceJob {
                         return self.stage_fault(error.into_bytes());
                     }
                 }
-                Wfc2dInferenceStage::EncodeCommit => {
-                    let bytes = std::mem::take(&mut self.commit_bytes);
-                    let mut cursor = self.commit_cursor;
-                    let written = self.output.as_mut().map(|writer| writer.write_slice_page(context, &bytes, &mut cursor));
-                    self.commit_cursor = cursor;
-                    self.commit_bytes = bytes;
-                    match written {
-                        Some(Ok(true)) => {
-                            let output = match self.output.take().expect("wfc2d output writer").finish() {
-                                Ok(output) => output,
-                                Err(mut writer) => {
-                                    writer.begin_close();
-                                    self.output = Some(writer);
-                                    return Wfc2dInferenceJobRun::Yield;
-                                }
-                            };
-                            self.stage = Wfc2dInferenceStage::Complete;
-                            self.output_payload = Some(output);
-                            return Wfc2dInferenceJobRun::Yield;
-                        }
-                        Some(Ok(false)) => return Wfc2dInferenceJobRun::Yield,
-                        Some(Err(_)) | None => return self.stage_fault(b"wfc2d-inference-output-admission-exceeded".to_vec()),
-                    }
-                }
+                Wfc2dInferenceStage::EncodeCommit => return Wfc2dInferenceJobRun::StepOutput,
                 Wfc2dInferenceStage::Complete => unreachable!("complete returns immediately"),
             }
             context.consume_fuel(1);
@@ -565,13 +543,34 @@ impl Wfc2dInferenceJob {
     }
 
     /// 🤝️ Closes the lent preview or fault turn by turn from the next step's own wallet.
-    fn retire_delivered<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
-        let publication = self.publication.as_mut().expect("a delivered inference publication is staged");
-        let step = match publication.close_step(context.retained_grant()) { Ok(step) => step, Err(error) => { context.consume_retained(error.retained_progress())?; return Err(error) } };
-        context.consume_retained(step.progress())?;
-        if publication.terminal_is_empty() {
-            self.publication = None;
+    fn encode_output(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_job::receive_original_retained_work;
+        let output = self.output.as_mut().expect("owned output builder");
+        if !output.is_initialized() { let turn = output.advance_initialization(context); receive_original_retained_work(context, turn)?; return Ok(()); }
+        if !self.commit_encoded {
+            let turn = output.append_original(context, &self.commit_bytes, &mut self.commit_cursor);
+            receive_original_retained_work(context, turn)?;
+            self.commit_encoded = self.commit_cursor == self.commit_bytes.len();
+            return Ok(());
         }
+        if self.commit_bytes.capacity() != 0 {
+            semio_framework_job::close_original_granted_step(context, |grant| {
+                let released_bytes = self.commit_bytes.capacity();
+                if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < released_bytes { return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }
+                self.commit_bytes = Vec::new();
+                semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } }), work: 1 }
+            })?;
+            return Ok(());
+        }
+        if output.published().is_none() { let turn = output.seal(context); receive_original_retained_work(context, turn)?; return Ok(()); }
+        let turn = output.take_finished(&mut self.output_payload, context.retained_grant());
+        receive_original_retained_work(context, turn)?;
+        if self.output_payload.is_some() { self.stage = Wfc2dInferenceStage::Complete; }
+        Ok(())
+    }
+
+    fn retire_delivered<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        semio_s_plugin_wfc_engine::job::close_publication_step(&mut self.publication, context)?;
         Ok(None)
     }
 
@@ -581,9 +580,7 @@ impl Wfc2dInferenceJob {
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "inference close depth overflow"))?;
             Ok(demand)
         };
-        if let Some(publication) = self.publication.as_ref() {
-            return publication.retirement_demands();
-        }
+        if self.publication.is_some() { return semio_s_plugin_wfc_engine::job::publication_retirement_demands(&self.publication); }
         if let Some(output) = self.output.as_ref() {
             return if output.terminal_is_empty() { Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }) } else { nested(output.retirement_demands()?) };
         }
@@ -591,24 +588,27 @@ impl Wfc2dInferenceJob {
             return if payload.terminal_is_empty() { Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }) } else { nested(payload.retirement_demands()?) };
         }
         if let Some(restore) = self.restore.as_ref() {
+            if restore.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: restore.next_close_copy_byte_demand()?, capacity_bytes: restore.next_close_capacity_byte_demand(0)?, release_bytes: restore.next_close_release_byte_demand()?, depth: restore.next_close_depth_demand()?.saturating_add(1) });
         }
         if let Some(child) = self.child.as_ref() {
+            if child.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: child.next_close_copy_byte_demand()?, capacity_bytes: child.next_close_capacity_byte_demand(0)?, release_bytes: child.next_close_release_byte_demand()?, depth: child.next_close_depth_demand()?.saturating_add(1) });
         }
+        if self.commit_bytes.capacity() != 0 { return Ok(semio_framework_value::RetirementDemand { release_bytes: self.commit_bytes.capacity(), depth: 1, ..Default::default() }); }
         Ok(semio_framework_value::RetirementDemand::default())
     }
 }
 
 impl Wfc2dInferenceJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_job::JobOutcomeBorrow;
-        if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {
+        if self.publication.as_ref().is_some_and(|publication| publication.needs_retirement()) {
             return self.retire_delivered(context);
         }
         if context.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(context);
+            return Ok(JobOutcomeBorrow::admit_cancelled(context)?);
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             self.stage_fault(b"stale-wfc2d-inference-operation".to_vec());
@@ -618,11 +618,11 @@ impl Wfc2dInferenceJob {
             return self.publication.as_mut().expect("a staged inference publication").poll(context);
         }
         if self.output_payload.is_some() {
-            return JobOutcomeBorrow::admit_complete(context, self.child.as_ref().and_then(|child| child.commit_state()), self.output_payload.as_ref());
+            return Ok(JobOutcomeBorrow::admit_complete(context, self.child.as_ref().and_then(|child| child.commit_state()), self.output_payload.as_ref())?);
         }
         match self.run(context) {
             Wfc2dInferenceJobRun::Yield | Wfc2dInferenceJobRun::Staged => Ok(None),
-            Wfc2dInferenceJobRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
+            Wfc2dInferenceJobRun::Cancelled => Ok(JobOutcomeBorrow::admit_cancelled(context)?),
             Wfc2dInferenceJobRun::StepRestore => {
                 let result = self.restore.as_mut().expect("restore job").step_value(context)?;
                 if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
@@ -632,13 +632,14 @@ impl Wfc2dInferenceJob {
                 self.lent = Wfc2dInferenceJobLent::Restore;
                 Ok(result)
             }
+            Wfc2dInferenceJobRun::StepOutput => { self.encode_output(context)?; Ok(None) }
             Wfc2dInferenceJobRun::StepChild => {
                 let result = self.child.as_mut().expect("WFC child").step_value(context)?;
                 let end = if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
                     Some(InferenceChildEnd::Complete)
                 } else {
                     if let Some(JobOutcomeBorrow::Fault { detail, .. }) = &result {
-            if semio_s_plugin_wfc_engine::job::payload_bytes(detail) == b"wfc-unsatisfiable" {
+            if semio_s_plugin_wfc_engine::job::payload_equals(detail, b"wfc-unsatisfiable") {
                 Some(InferenceChildEnd::Unsatisfiable)
             } else {
                 None
@@ -659,7 +660,7 @@ impl Wfc2dInferenceJob {
 }
 
 impl InteractiveJob for Wfc2dInferenceJob {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self, context:&mut semio_framework_job::StepContext<'_>, _claim:&mut semio_framework_job::OriginalJobReturnClaim)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         use semio_framework_job::JobOutcomeKind;
@@ -683,9 +684,6 @@ impl InteractiveJob for Wfc2dInferenceJob {
         if let Some(child) = self.child.as_mut() {
             child.begin_close();
         }
-        if let Some(output) = self.output.as_mut() {
-            output.begin_close();
-        }
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
@@ -703,57 +701,55 @@ impl InteractiveJob for Wfc2dInferenceJob {
             }
             let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
             let child_grant = semio_framework_job::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-            if let Some(publication) = self.publication.as_mut() {
-                let step = publication.close_step(grant)?;
-                if publication.terminal_is_empty() {
-                    self.publication = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
+            if self.publication.is_some() {
+                let step = semio_s_plugin_wfc_engine::job::close_publication_step(&mut self.publication, cx)?;
+                return Ok(match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
             }
             if let Some(output) = self.output.as_mut() {
                 if output.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.output = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return Ok(match output.close_step(child_grant) {
-                    Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                    Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
-                });
+                let step = semio_framework_job::receive_original_retained_work(cx, output.close_step_granted(child_grant))?;
+                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(payload) = self.output_payload.as_mut() {
                 if payload.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.output_payload = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return Ok(match payload.close_step(child_grant) {
-                    Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                    Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
-                });
+                let step = semio_framework_job::receive_original_retained_work(cx, payload.close_step(child_grant))?;
+                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(restore) = self.restore.as_mut() {
-                let step = cx.with_retained_loan(child_grant, |same| restore.close_step(same))?;
                 if restore.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.restore = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
+                    return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
+                let step = cx.with_retained_loan(child_grant, |same| restore.close_step(same))?;
                 return Ok(match step {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
                     step => step,
                 });
             }
             if let Some(child) = self.child.as_mut() {
-                let step = cx.with_retained_loan(child_grant, |same| child.close_step(same))?;
                 if child.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.child = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
+                    return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
+                let step = cx.with_retained_loan(child_grant, |same| child.close_step(same))?;
                 return Ok(match step {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
                     step => step,
                 });
+            }
+            if self.commit_bytes.capacity() != 0 {
+                let released_bytes = self.commit_bytes.capacity(); cx.consume_fuel(1); self.commit_bytes = Vec::new();
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { released_bytes, ..one } });
             }
             Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
         })
@@ -778,7 +774,7 @@ impl InteractiveJob for Wfc2dInferenceJob {
     /// 🚪️ Ownership ONLY — deliberately NOT gated on a closing flag: the retained session calls `begin_close`
     /// itself, and a flag-gated predicate would spin its own close ladder forever.
     fn terminal_is_empty(&self) -> bool {
-        self.publication.is_none() && self.output.is_none() && self.output_payload.is_none() && self.restore.is_none() && self.child.is_none()
+        self.publication.is_none() && self.output.is_none() && self.output_payload.is_none() && self.restore.is_none() && self.child.is_none() && self.commit_bytes.capacity() == 0
     }
 }
 
@@ -828,21 +824,32 @@ pub fn register_wfc2d_inference_factory(bus: &semio_framework::ActionBus) -> Res
 }
 
 /// 🏁 Explicit headless adapter over the same complete parent job the public factory hands out.
-pub fn solve_with_job(snapshot: &Wfc2dSnapshot) -> Result<Wfc2dInferenceCommit, String> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn solve_with_job(snapshot: &Wfc2dSnapshot) -> Result<Wfc2dInferenceCommit, semio_s_plugin_wfc_engine::job::HeadlessFailure<Wfc2dInferenceJob, Wfc2dInferenceCommit>> {
     solve_with_clock(snapshot, semio_framework_job::default_now_us)
 }
 
 /// 🧮️ The same headless adapter driven by an injected clock, so correctness laws run on
 /// [`semio_framework_job::logical_now_us`] and never on a descheduled thread's wall clock.
-pub fn solve_with_clock(snapshot: &Wfc2dSnapshot, now_us: fn() -> Option<u64>) -> Result<Wfc2dInferenceCommit, String> {
-    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
-    let job = Wfc2dInferenceJob::new(operation, Wfc2dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
-    semio_s_plugin_wfc_engine::job::run_headless(
+#[cfg(any(test, feature = "testkit"))]
+pub fn solve_with_clock(snapshot: &Wfc2dSnapshot, now_us: fn() -> Option<u64>) -> Result<Wfc2dInferenceCommit, semio_s_plugin_wfc_engine::job::HeadlessFailure<Wfc2dInferenceJob, Wfc2dInferenceCommit>> {
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(1), snapshot.seed);
+    let job = Wfc2dInferenceJob::new(operation, Wfc2dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None }).map_err(semio_s_plugin_wfc_engine::job::HeadlessFailure::rejected)?;
+    semio_s_plugin_wfc_engine::job::run_headless_supervised(
         job,
         operation,
         now_us,
-        semio_s_plugin_wfc_engine::job::HeadlessSite { site: "wfc2d.wfc.inference.headless", label: "wfc2d-inference-headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000 },
-        |_job, output| {
+        semio_s_plugin_wfc_engine::job::HeadlessSite { site: "wfc2d.wfc.inference.headless", label: "wfc2d-inference-headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000,
+            retained_stock: semio_framework_job::RetainedCloneGrant { maximum_items: 16_000_000, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 256 },
+            lifetime_fuel: 100_000_000, lifetime_budget_us: 60_000_000,
+        },
+        |_job| None,
+        |_job, outcome| {
+            let output = match outcome {
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Complete(bytes) => bytes,
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Fault(bytes) => return Err(String::from_utf8_lossy(bytes).into_owned()),
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Cancelled => return Err("wfc2d-inference-cancelled".into()),
+            };
             std::str::from_utf8(output)
                 .map_err(|error| format!("wfc2d-invalid-commit:{error}"))
                 .and_then(|text| crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value::<Wfc2dInferenceCommit>(text).map_err(|error| format!("wfc2d-invalid-commit:{error}")))
@@ -850,52 +857,9 @@ pub fn solve_with_clock(snapshot: &Wfc2dSnapshot, now_us: fn() -> Option<u64>) -
     )
 }
 
-impl store::InferredField<Wfc2dSnapshot> for Wfc2dSolve {
-    type Dependency = Vec<u8>;
-    type Key = String;
-    type Value = Wfc2dSolveResult;
 
-    const FIELD_ID: &'static str = "s.wfc.wfc2d.inference.solve";
-    const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
-        &["seed", "slots", "edges", "tiles", "rules"]
-    }
-    fn plan(_snapshot: &Wfc2dSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
-        vec![store::InferenceStep { key: "wfc2d".to_string(), parents: Vec::new() }]
-    }
-    fn dep_input(snapshot: &Wfc2dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(snapshot).into_bytes()
-    }
-    fn compute(snapshot: &Wfc2dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        match solve_with_job(snapshot) {
-            Ok(solution) if !solution.contradiction => Wfc2dSolveResult::Solved { assignments: solution.assignments },
-            _ => Wfc2dSolveResult::Unsolved,
-        }
-    }
-}
 
-impl store::InferredField<Wfc2dSnapshot> for Wfc2dContradiction {
-    type Dependency = Vec<u8>;
-    type Key = String;
-    type Value = bool;
-
-    const FIELD_ID: &'static str = "s.wfc.wfc2d.inference.contradiction";
-    const SCHEMA_VERSION: u32 = 1;
-
-    fn reads() -> &'static [&'static str] {
-        &["seed", "slots", "edges", "tiles", "rules"]
-    }
-    fn plan(_snapshot: &Wfc2dSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
-        vec![store::InferenceStep { key: "wfc2d".to_string(), parents: Vec::new() }]
-    }
-    fn dep_input(snapshot: &Wfc2dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(snapshot).into_bytes()
-    }
-    fn compute(snapshot: &Wfc2dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        solve_with_job(snapshot).map_or(true, |commit| commit.contradiction)
-    }
-}
 
 impl store::InferredField<Wfc2dSnapshot> for Wfc2dEntropy {
     type Dependency = Vec<u8>;

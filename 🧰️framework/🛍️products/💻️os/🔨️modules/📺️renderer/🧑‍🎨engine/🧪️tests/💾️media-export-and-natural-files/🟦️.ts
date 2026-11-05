@@ -1,9 +1,11 @@
+import fileOpenLifecycleFixture from "./file-open.json";
 /** 💾 Media export download and natural file codecs. */
 import {
   DOWNLOAD_MEDIA_EXPORT_REVOKE_MS,
   downloadMediaExport,
   readBlobBytesBoundedV1,
   requestFileSelectionV1,
+  requestFileOpen,
   mediaExportEncodingText
 } from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import {
@@ -178,5 +180,57 @@ describe("framework renderer hosts", () => {
     expect(await retrySelection).toEqual([retryFile]);
     retryCreateElement.mockRestore();
     retryClick.mockRestore();
+  });
+
+  it("settles and retires the custom Lowpoly picker on every empty terminal path", async () => {
+    for (const terminal of fileOpenLifecycleFixture.terminalEvents) {
+      const picker = document.createElement("input");
+      const createElement = vi.spyOn(document, "createElement").mockReturnValueOnce(picker);
+      const click = vi.spyOn(picker, "click").mockImplementation(() => {
+        if (terminal === "clickFailure") throw new Error("fixture picker unavailable");
+      });
+      const remove = vi.spyOn(picker, "remove");
+      try {
+        const opened = requestFileOpen(fileOpenLifecycleFixture.accept, fileOpenLifecycleFixture.readAs, fileOpenLifecycleFixture.multiple);
+        if (terminal !== "clickFailure") picker.dispatchEvent(new Event(terminal === "empty" ? "change" : "cancel"));
+        const observed = await Promise.race([
+          opened.then(files => ({ kind: "settled", files })),
+          new Promise(resolve => setTimeout(() => resolve({ kind: "pending" }), 0)),
+        ]);
+        expect(observed).toEqual({ kind: "settled", files: [] });
+        expect(picker.onchange).toBeNull();
+        expect(picker.oncancel).toBeNull();
+        expect(remove).toHaveBeenCalledOnce();
+        picker.dispatchEvent(new Event("cancel"));
+        expect(remove).toHaveBeenCalledOnce();
+      } finally {
+        createElement.mockRestore();
+        click.mockRestore();
+        remove.mockRestore();
+      }
+    }
+  });
+
+  it("keeps selected custom files ordered with exact names and dataURLs", async () => {
+    const picker = document.createElement("input");
+    const files = fileOpenLifecycleFixture.files.map(file => new File([file.text], file.name, { type: file.type }));
+    Object.defineProperty(picker, "files", { configurable: true, value: files });
+    const createElement = vi.spyOn(document, "createElement").mockReturnValueOnce(picker);
+    const click = vi.spyOn(picker, "click").mockImplementation(() => {});
+    const remove = vi.spyOn(picker, "remove");
+    try {
+      const opened = requestFileOpen(fileOpenLifecycleFixture.accept, fileOpenLifecycleFixture.readAs, fileOpenLifecycleFixture.multiple);
+      expect(picker.accept).toBe(fileOpenLifecycleFixture.accept);
+      expect(picker.multiple).toBe(fileOpenLifecycleFixture.multiple);
+      picker.dispatchEvent(new Event("change"));
+      expect(await opened).toEqual(fileOpenLifecycleFixture.files.map(({ name, contents }) => ({ name, contents })));
+      expect(picker.onchange).toBeNull();
+      expect(picker.oncancel).toBeNull();
+      expect(remove).toHaveBeenCalledOnce();
+    } finally {
+      createElement.mockRestore();
+      click.mockRestore();
+      remove.mockRestore();
+    }
   });
 });

@@ -1,0 +1,616 @@
+{
+  "version": 1,
+  "kinds": [
+    {
+      "variant": "PinSolution",
+      "kind": "pin-solution",
+      "tag": 11
+    },
+    {
+      "variant": "RestorePins",
+      "kind": "restore-pins",
+      "tag": 12
+    }
+  ],
+  "cases": [
+    {
+      "id": "empty-payload",
+      "payload": {
+        "pins": []
+      },
+      "valid": true
+    },
+    {
+      "id": "bounded-rows",
+      "payload": {
+        "pins": [
+          {
+            "x": 0,
+            "y": 0,
+            "color": 1
+          },
+          {
+            "x": 511,
+            "y": 511,
+            "color": 255
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "id": "missing-pins",
+      "payload": {},
+      "valid": false
+    },
+    {
+      "id": "non-array",
+      "payload": {
+        "pins": null
+      },
+      "valid": false
+    },
+    {
+      "id": "extra-field",
+      "payload": {
+        "pins": [],
+        "extra": true
+      },
+      "valid": false
+    },
+    {
+      "id": "negative-column",
+      "payload": {
+        "pins": [
+          {
+            "x": -1,
+            "y": 0,
+            "color": 0
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "oversized-column",
+      "payload": {
+        "pins": [
+          {
+            "x": 512,
+            "y": 0,
+            "color": 0
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "fractional-row",
+      "payload": {
+        "pins": [
+          {
+            "x": 0,
+            "y": 0.5,
+            "color": 0
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "unknown-byte",
+      "payload": {
+        "pins": [
+          {
+            "x": 0,
+            "y": 0,
+            "color": 256
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "extra-pin-field",
+      "payload": {
+        "pins": [
+          {
+            "x": 0,
+            "y": 0,
+            "color": 0,
+            "extra": true
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "capacity",
+      "repeat": 262145,
+      "payload": {
+        "x": 0,
+        "y": 0,
+        "color": 0
+      },
+      "valid": false
+    }
+  ],
+  "wireCases": [
+    {
+      "id": "two-columns",
+      "xs": [
+        0,
+        1
+      ],
+      "ys": [
+        0,
+        0
+      ],
+      "colors": [
+        1,
+        0
+      ],
+      "valid": true,
+      "pins": [
+        {
+          "x": 0,
+          "y": 0,
+          "color": 1
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "color": 0
+        }
+      ]
+    },
+    {
+      "id": "empty-columns",
+      "xs": [],
+      "ys": [],
+      "colors": [],
+      "valid": true,
+      "pins": []
+    },
+    {
+      "id": "short-y",
+      "xs": [
+        0
+      ],
+      "ys": [],
+      "colors": [
+        1
+      ],
+      "valid": false
+    },
+    {
+      "id": "short-color",
+      "xs": [
+        0
+      ],
+      "ys": [
+        0
+      ],
+      "colors": [],
+      "valid": false
+    }
+  ],
+  "document": {
+    "schema": "s.wfc.bitmap",
+    "seed": 7,
+    "input": {
+      "width": 2,
+      "height": 2,
+      "palette": [
+        {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 255
+        },
+        {
+          "r": 255,
+          "g": 255,
+          "b": 255,
+          "a": 255
+        }
+      ],
+      "pixels": "AAEBAA=="
+    },
+    "output": {
+      "width": 2,
+      "height": 2,
+      "periodic": false
+    },
+    "model": {
+      "patternSize": 2,
+      "symmetry": 1,
+      "periodicInput": true
+    },
+    "pinned": []
+  },
+  "semanticCases": [
+    {
+      "id": "complete-event",
+      "beforePins": [
+        {
+          "x": 1,
+          "y": 1,
+          "color": 1
+        }
+      ],
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "afterPins": [
+        {
+          "x": 0,
+          "y": 0,
+          "color": 0
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "color": 1
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "color": 1
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "color": 0
+        }
+      ],
+      "messages": []
+    },
+    {
+      "id": "idempotent-event",
+      "beforePins": [
+        {
+          "x": 0,
+          "y": 0,
+          "color": 0
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "color": 1
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "color": 1
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "color": 0
+        }
+      ],
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "afterPins": [
+        {
+          "x": 0,
+          "y": 0,
+          "color": 0
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "color": 1
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "color": 1
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "color": 0
+        }
+      ],
+      "messages": [
+        "mutation.no-op"
+      ]
+    },
+    {
+      "id": "partial-event",
+      "beforePins": [],
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            }
+          ]
+        }
+      },
+      "fault": "mutation.invariant"
+    },
+    {
+      "id": "unordered-complete-event",
+      "beforePins": [],
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 1,
+              "y": 1,
+              "color": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "fault": "mutation.invariant"
+    },
+    {
+      "id": "duplicate-restore",
+      "beforePins": [
+        {
+          "x": 0,
+          "y": 0,
+          "color": 0
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "color": 1
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "color": 1
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "color": 0
+        }
+      ],
+      "mutation": {
+        "RestorePins": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "color": 1
+            }
+          ]
+        }
+      },
+      "fault": "mutation.invariant"
+    },
+    {
+      "id": "unknown-palette-index",
+      "beforePins": [],
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 2
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "fault": "mutation.invariant"
+    },
+    {
+      "id": "exact-prior-order",
+      "beforePins": [
+        {
+          "x": 0,
+          "y": 0,
+          "color": 0
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "color": 1
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "color": 1
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "color": 0
+        }
+      ],
+      "mutation": {
+        "RestorePins": {
+          "pins": [
+            {
+              "x": 1,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "afterPins": [
+        {
+          "x": 1,
+          "y": 1,
+          "color": 1
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "color": 0
+        }
+      ],
+      "messages": []
+    },
+    {
+      "id": "empty-prior-assignment",
+      "beforePins": [
+        {
+          "x": 0,
+          "y": 0,
+          "color": 0
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "color": 1
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "color": 1
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "color": 0
+        }
+      ],
+      "mutation": {
+        "RestorePins": {
+          "pins": []
+        }
+      },
+      "afterPins": [],
+      "messages": []
+    },
+    {
+      "id": "duplicate-complete-event",
+      "beforePins": [],
+      "mutation": {
+        "PinSolution": {
+          "pins": [
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "color": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "color": 1
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "color": 0
+            }
+          ]
+        }
+      },
+      "fault": "mutation.invariant"
+    }
+  ]
+}

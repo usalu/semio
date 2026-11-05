@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "bodies": [
+    "lowpoly.play.main",
+    "lowpoly.play.uv"
+  ],
+  "excludedBody": "lowpoly.play.catalogue",
+  "operationId": "0000000000000012",
+  "generation": "0000000000000034",
+  "completed": 7,
+  "controller": "s.lowpoly.lowpoly@1/*#editor",
+  "cases": [
+    {
+      "locale": "en",
+      "cancelling": false,
+      "caption": "Working · Completed units: 7",
+      "cancel": "Cancel",
+      "label": "Modeling"
+    },
+    {
+      "locale": "de",
+      "cancelling": true,
+      "caption": "Wird abgebrochen · Abgeschlossene Schritte: 7",
+      "cancel": "Abbrechen",
+      "label": "Modellierung"
+    }
+  ]
+}

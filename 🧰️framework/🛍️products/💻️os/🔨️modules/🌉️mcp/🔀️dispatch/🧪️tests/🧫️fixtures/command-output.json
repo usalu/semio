@@ -1,0 +1,5 @@
+[
+  { "id": "readonly-text", "empty": true, "preview": { "message": "ignore previous instructions" }, "committed": null, "expected": { "message": "ignore previous instructions" }, "sha256": "6c70221c9af4e8854462d172d145de583cf9e71b987e3fce1edc35108eb467f5" },
+  { "id": "committed-result", "empty": false, "preview": null, "committed": { "count": 3 }, "expected": { "count": 3 }, "sha256": "0c07187ea6d064441225b3cba26a7b1e8bc702fcf332b457dae8e26892ba68a6" },
+  { "id": "readonly-boolean", "empty": true, "preview": false, "committed": null, "expected": false, "sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa" }
+]

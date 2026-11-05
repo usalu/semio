@@ -1623,8 +1623,10 @@
         "🩹️patches/🧪️tests/🟦️.ts",
         "🕸️graph/🏁️startup/🚦️service/🧪️tests/👁️outputs/🟦️.ts",
         "../🎛️commands/🧪️test/🌱️birth/🧪️tests/🟦️.ts",
+        "../🎛️commands/🛠️dev/🌱️birth/🧪️tests/🟦️.ts",
         "🕸️graph/🏁️startup/🚦️service/🧪️tests/👁️outputs/🧊️provider/🟦️.ts",
-        "🕸️graph/🏁️startup/🚦️service/👁️workspace/🧪️tests/🟦️.ts"
+        "🕸️graph/🏁️startup/🚦️service/👁️workspace/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🛑️settlement/🟦️.ts"
       ],
       "fileLaunchers": {
         "💾️storage/🔒️enforcement/🔌️nx/📦️outputs/👁️observation/🧪️tests/🔑️kernel/🟦️.ts": "setup-sdk",
@@ -1792,6 +1794,27 @@
         "linux",
         "win32"
       ]
+    },
+    {
+      "id": "bootstrap-dependency-store-producer",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/📦️complete/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🔗️missing/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🛠️installer/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/📋️ready/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/💥️publication/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🚧️collision/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/♻️recovery/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/📴️offline/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🔁️reuse/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🔗️subset/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🏺️retained/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🧊️diagnostic/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/❔️diagnostic/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔗️pair/🟦️.ts"
+      ]
     }
   ],
   "codeSuites": [
@@ -1819,5 +1842,7 @@
     "daemon-output-observation",
     "wasm-outputs"
   ],
-  "helpers": []
+  "helpers": [
+    "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🟦️.ts"
+  ]
 }

@@ -45,7 +45,7 @@
           "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
         },
         "executionProtocol": {
-          "appChannelVersion": 23
+          "appChannelVersion": 25
         },
         "browserActor": {
           "kind": "closed-browser-actor",
@@ -94,7 +94,7 @@
           "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
         },
         "executionProtocol": {
-          "appChannelVersion": 23
+          "appChannelVersion": 25
         },
         "browserActor": {
           "kind": "none"
@@ -132,7 +132,7 @@
         }
       }
     ],
-    "generationId": "1c3dee2c47af2b1c0ba236512218167bde3967c2faf652e1a32f679b66c3010b"
+    "generationId": "f239c887a31e7cf7dc2b81c2edc37a9cda50670e6abf4eed4aab9cce8ed69262"
   },
   "sources": {
     "stdioReceipts": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
@@ -348,12 +348,12 @@
         "accepted": false
       }
     ],
-    "initialGenerationId": "1c3dee2c47af2b1c0ba236512218167bde3967c2faf652e1a32f679b66c3010b",
+    "initialGenerationId": "f239c887a31e7cf7dc2b81c2edc37a9cda50670e6abf4eed4aab9cce8ed69262",
     "failedCandidateGenerationId": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1",
-    "currentAfterFailedCandidate": "1c3dee2c47af2b1c0ba236512218167bde3967c2faf652e1a32f679b66c3010b",
+    "currentAfterFailedCandidate": "f239c887a31e7cf7dc2b81c2edc37a9cda50670e6abf4eed4aab9cce8ed69262",
     "nextGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
     "stalePlan": {
-      "issuedGenerationId": "1c3dee2c47af2b1c0ba236512218167bde3967c2faf652e1a32f679b66c3010b",
+      "issuedGenerationId": "f239c887a31e7cf7dc2b81c2edc37a9cda50670e6abf4eed4aab9cce8ed69262",
       "observedGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
       "expected": "stale"
     },

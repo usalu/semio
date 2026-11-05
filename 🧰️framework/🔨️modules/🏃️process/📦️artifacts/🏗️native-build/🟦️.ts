@@ -28,7 +28,7 @@ import { cargoProvenanceConsoleSinkV1, nativeBuildDiagnosticLinesV1 } from "./�
 import {acquireCargoTargetRecipeV1,cargoTargetRecipeEnvironmentV1,type CargoTargetRecipeV1,type CargoTargetRecipeLeaseV1} from "./🎯️recipe/🟦️.ts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "./💾️storage/🟦️.ts";
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,type CargoCompilerPlanningPortV1} from "./🕸️units/📥️capture/🟦️.ts";
-import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1,type CargoSourceAdmissionPortV1} from "./📥️source/🎟️admission/🟦️.ts";
+import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1,type CargoSourceAdmissionPortV1,type CargoSourceAdmissionMemoV1} from "./📥️source/🎟️admission/🟦️.ts";
 import {requireNativeStoragePathV1} from "./💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import { chmodSync, closeSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep, isAbsolute, normalize } from "node:path";
@@ -236,8 +236,13 @@ export function cargoObservationOutputV1(value:unknown,buildDirectory:string):st
  return directory;
 }
 
-export type CargoArtifactBuildOptionsV1 = { readonly withCargoInputs?:CargoCompilerInputsPortV1; readonly consume:(capture:CapturedCargoArtifactsV1)=>Promise<void>;readonly maximumObservationBytes:number;readonly retainCompilationBytes?:number;readonly control: CompilerAdmissionControl; readonly storage:NativeStorageReservationV1; readonly sourceBoundary:CargoSourceBoundaryPolicyV1; readonly planningPort?:CargoCompilerPlanningPortV1; readonly sourcePort?:CargoSourceAdmissionPortV1; readonly observationOutput?: CargoObservationOutputV1; readonly command?: "build" | "rustc"; readonly deliverables?: readonly string[]; readonly output?: string; readonly sourcesRecord?: string; readonly validate?: (files: ReadonlyMap<string, string>) => void; readonly environment?: Readonly<Record<string,string|undefined>>; readonly commandPort?: Readonly<{ command: string; args: readonly string[]; compilerIdentity:string; toolchainIdentity:string }>; readonly provenance?: (receiptPath: string) => void };
+export type CargoArtifactBuildOptionsV1 = { readonly withCargoInputs?:CargoCompilerInputsPortV1; readonly consume:(capture:CapturedCargoArtifactsV1)=>Promise<void>;readonly maximumObservationBytes:number;readonly retainCompilationBytes?:number;readonly control: CompilerAdmissionControl; readonly storage:NativeStorageReservationV1; readonly sourceBoundary:CargoSourceBoundaryPolicyV1; readonly planningPort?:CargoCompilerPlanningPortV1; readonly sourcePort?:CargoSourceAdmissionPortV1; readonly sourceMemo?:CargoSourceAdmissionMemoV1; readonly observationOutput?: CargoObservationOutputV1; readonly command?: "build" | "rustc"; readonly deliverables?: readonly string[]; readonly output?: string; readonly diagnostic?:(line:string)=>void; readonly sourcesRecord?: string; readonly validate?: (files: ReadonlyMap<string, string>) => void; readonly environment?: Readonly<Record<string,string|undefined>>; readonly commandPort?: Readonly<{ command: string; args: readonly string[]; compilerIdentity:string; toolchainIdentity:string }>; readonly provenance?: (receiptPath: string) => void };
 
+
+/** 📣️ Sends artifact observations through the caller-owned diagnostic lane. */
+function writeCargoArtifactDiagnosticV1(options:Pick<CargoArtifactBuildOptionsV1,"diagnostic">,line:string):void{
+ if(options.diagnostic)options.diagnostic(line);else process.stdout.write(line+"\n");
+}
 
 declare const capturedCargoBrand:unique symbol;
 export type CapturedCargoArtifactsV1=Readonly<{readonly[capturedCargoBrand]:true}>;
@@ -267,7 +272,7 @@ async function withCompletedCargoArtifactCaptureV1(owner:string,files:ReadonlyMa
 
 /** 🧭️ Observes the original compiler recipe while leaving source freshness validation to every Cargo run. */
 async function cargoArtifactTargetRecipeV1(manifest:string,args:readonly string[],policy:CargoArtifactBuildPolicyV1,options:CargoArtifactBuildOptionsV1):Promise<Readonly<{recipe:CargoTargetRecipeV1;recheck:()=>Promise<void>}>>{
- const control=options.control,environment=options.environment??process.env,port=options.commandPort,compilerIdentity=port?.compilerIdentity??await captureOwnedCommandV1("cargo",["--version","--verbose"],policy.cwd,{control,env:environment}),toolchainIdentity=port?.toolchainIdentity??await captureOwnedCommandV1("rustc",["--version","--verbose"],policy.cwd,{control,env:environment}),physical=new CurrentPhysicalOwnerV1(policy.cwd,cargoProvenancePhysicalControlV1({cancelled:()=>control.signal.aborted,remainingMs:()=>checkResourceLeaseControl(control),onProgress:cargoProvenanceProgressSinkV1(cargoProvenanceConsoleSinkV1("recipe"))})),paths=new Set<string>([manifest]);
+ const control=options.control,environment=options.environment??process.env,port=options.commandPort,compilerIdentity=port?.compilerIdentity??await captureOwnedCommandV1("cargo",["--version","--verbose"],policy.cwd,{control,env:environment}),toolchainIdentity=port?.toolchainIdentity??await captureOwnedCommandV1("rustc",["--version","--verbose"],policy.cwd,{control,env:environment}),physical=new CurrentPhysicalOwnerV1(policy.cwd,cargoProvenancePhysicalControlV1({cancelled:()=>control.signal.aborted,remainingMs:()=>checkResourceLeaseControl(control),onProgress:cargoProvenanceProgressSinkV1(cargoProvenanceConsoleSinkV1("recipe",environment,line=>writeCargoArtifactDiagnosticV1(options,line)))})),paths=new Set<string>([manifest]);
  if(policy.compilerConfiguration)paths.add(policy.compilerConfiguration);for(let root of[policy.cwd,dirname(manifest)])for(;;){for(const name of["Cargo.toml","Cargo.lock",".cargo/config.toml",".cargo/config","rust-toolchain.toml","rust-toolchain"])paths.add(join(root,name));const parent=dirname(root);if(parent===root)break;root=parent;}const cargoHome=resolve(environment.CARGO_HOME??join(homedir(),".cargo"));for(const name of["config.toml","config"])paths.add(join(cargoHome,name));
  const inputs=[];for(const path of[...paths].sort()){checkResourceLeaseControl(control);inputs.push({path,sha256:await physical.digest(path)??null});await control.publish({resource:"cargo-target-recipe-inputs",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}const declared=cargoTargetRecipeEnvironmentV1(environment);
  return{recipe:{version:1,cwd:policy.cwd,manifest,command:port?.command??"cargo",args:[...(port?.args??[]),options.command??"build","--locked","--manifest-path",manifest,...args],buildDirectory:policy.buildDirectory,compilerIdentity:compilerIdentity.trim(),toolchainIdentity:toolchainIdentity.trim(),inputs,environment:declared},recheck:()=>physical.recheck()};
@@ -300,7 +305,7 @@ export async function withCargoArtifactPlanV1<T>(manifest:string,args:string[],p
   return retryOnConcurrentEditV1("build",async()=>{
     const planning=await captureCargoCompilationGraphV1({workspaceRoot:policy.cwd,cwd:policy.cwd,program:"cargo",prefix:[],args:[options.command??"build","--locked","--manifest-path",manifest,...args],environment:options.environment??process.env,maximumOutputBytes:134217728},control,options.planningPort??actualCargoCompilerPlanningPortV1());
     await requireCargoSelectedPathEnvelopeControlledV1(policy.buildDirectory,planning.units,control);
-     await admitCargoSourceBoundariesV1(planning,policy.cwd,options.sourceBoundary,control,options.sourcePort??actualCargoSourceAdmissionPortV1(options.environment??process.env,policy.cwd,storage));await storage.recheck();
+     await admitCargoSourceBoundariesV1(planning,policy.cwd,options.sourceBoundary,control,options.sourcePort??actualCargoSourceAdmissionPortV1(options.environment??process.env,policy.cwd,storage),options.sourceMemo);await storage.recheck();
     const recipe=await cargoArtifactTargetRecipeV1(manifest,args,policy,options);
     const facts=await captureCargoArtifactPlanFactsV1(planning,recipe.recipe,policy.mode,process.platform as CargoArtifactPlanFactsV1["platform"],control,options.maximumObservationBytes),identity=cargoArtifactPlanIdentityV1(facts);let live=true,accepting=true,produced=false;
     const pending=new Set<Promise<unknown>>(),failures:unknown[]=[];
@@ -310,7 +315,7 @@ export async function withCargoArtifactPlanV1<T>(manifest:string,args:string[],p
       const task=withIssuedResourceOperationV1(control,async()=>{await Promise.resolve();if(!admitted)throw Error("Live bounded Cargo artifact plan task required");check();return operation();});
       if(admitted){pending.add(task);void task.then(()=>pending.delete(task),error=>{pending.delete(task);failures.push(error);});}return task;
     };
-    const recheck=async()=>{check();await recipe.recheck();const current=await captureCargoCompilationGraphV1({workspaceRoot:policy.cwd,cwd:policy.cwd,program:"cargo",prefix:[],args:[options.command??"build","--locked","--manifest-path",manifest,...args],environment:options.environment??process.env,maximumOutputBytes:134217728},control,options.planningPort??actualCargoCompilerPlanningPortV1());await requireCargoSelectedPathEnvelopeControlledV1(policy.buildDirectory,current.units,control);await admitCargoSourceBoundariesV1(current,policy.cwd,options.sourceBoundary,control,options.sourcePort??actualCargoSourceAdmissionPortV1(options.environment??process.env,policy.cwd,storage));const observed=await captureCargoArtifactPlanFactsV1(current,recipe.recipe,policy.mode,facts.platform,control,options.maximumObservationBytes);if(cargoArtifactPlanIdentityV1(observed)!==identity)throw concurrentEditV1("input",manifest,"Admitted Cargo artifact plan Source changed","build");check();};
+    const recheck=async()=>{check();await recipe.recheck();const current=await captureCargoCompilationGraphV1({workspaceRoot:policy.cwd,cwd:policy.cwd,program:"cargo",prefix:[],args:[options.command??"build","--locked","--manifest-path",manifest,...args],environment:options.environment??process.env,maximumOutputBytes:134217728},control,options.planningPort??actualCargoCompilerPlanningPortV1());await requireCargoSelectedPathEnvelopeControlledV1(policy.buildDirectory,current.units,control);await admitCargoSourceBoundariesV1(current,policy.cwd,options.sourceBoundary,control,options.sourcePort??actualCargoSourceAdmissionPortV1(options.environment??process.env,policy.cwd,storage),options.sourceMemo);const observed=await captureCargoArtifactPlanFactsV1(current,recipe.recipe,policy.mode,facts.platform,control,options.maximumObservationBytes);if(cargoArtifactPlanIdentityV1(observed)!==identity)throw concurrentEditV1("input",manifest,"Admitted Cargo artifact plan Source changed","build");check();};
     const plan:CargoArtifactPlanV1=Object.freeze({facts,identity,execution:Object.freeze({manifest:recipe.recipe.manifest,buildDirectory:recipe.recipe.buildDirectory}),recheck:()=>track(recheck),produce:()=>{
       if(produced)return track(async()=>{throw Error("Cargo artifact plan producer already consumed");});produced=true;
       return track(async()=>{actual.requireProduction();let lease:CargoTargetRecipeLeaseV1|undefined;try{
@@ -931,10 +936,10 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
           try {
             message = JSON.parse(line);
           } catch {
-            process.stdout.write(line + "\n");
+            writeCargoArtifactDiagnosticV1(options,line);
             continue;
           }
-          if ((message.reason === "compiler-artifact" || message.reason === "build-script-executed") && (options.environment ?? process.env).SEMIO_TEST_ARTIFACT_DIR) process.stdout.write(line + "\n");
+          if ((message.reason === "compiler-artifact" || message.reason === "build-script-executed") && (options.environment ?? process.env).SEMIO_TEST_ARTIFACT_DIR) writeCargoArtifactDiagnosticV1(options,line);
           if (message.reason === "build-script-executed") buildScripts.push(message);
           if (message.reason === "compiler-artifact") units.push({ message,evidence:{version:1,kind:"discovery",paths:[],producer:null} });
           if (message.reason !== "compiler-artifact" || message.target?.kind?.includes("custom-build")) continue;
@@ -1005,7 +1010,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
     checkResourceLeaseControl(options.control);
     await stageArtifacts(staging, owner, files, { control: options.control, signal: options.control.signal, leaseDirectory: policy.leaseDirectory });
     checkResourceLeaseControl(options.control);
-    for (const line of nativeBuildDiagnosticLinesV1("staged", { count: files.size, directory: relative(policy.cwd, staging).split(sep).join("/") })) console.log(line);
+    for (const line of nativeBuildDiagnosticLinesV1("staged", { count: files.size, directory: relative(policy.cwd, staging).split(sep).join("/") })) writeCargoArtifactDiagnosticV1(options,line);
     const receipt=await observeCompleted();await withCompletedCargoArtifactCaptureV1(owner,files,stagedNames,receipt,options,completedCompilation);
   } catch(error){primaryFailed=true;primaryFailure=error;}
   finally {
@@ -1014,7 +1019,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   }
   if(primaryFailed)throw primaryFailure;
   async function observeCompleted():Promise<string>{
-    if(!status)throw Error("Actual Cargo compiler terminal observation required");observationAttempted=true;const physicalOwner=()=>new CurrentPhysicalOwnerV1(policy.cwd,cargoProvenancePhysicalControlV1({cancelled:()=>options.control.signal.aborted,remainingMs:()=>checkResourceLeaseControl(options.control),onProgress:cargoProvenanceProgressSinkV1(cargoProvenanceConsoleSinkV1("provenance"))})),receipt=join(provenanceRoot??join(policy.buildDirectory,"semio-cargo-provenance"),`cargo-unit-provenance-${basename(capture)}.json`);
+    if(!status)throw Error("Actual Cargo compiler terminal observation required");observationAttempted=true;const physicalOwner=()=>new CurrentPhysicalOwnerV1(policy.cwd,cargoProvenancePhysicalControlV1({cancelled:()=>options.control.signal.aborted,remainingMs:()=>checkResourceLeaseControl(options.control),onProgress:cargoProvenanceProgressSinkV1(cargoProvenanceConsoleSinkV1("provenance",options.environment??process.env,line=>writeCargoArtifactDiagnosticV1(options,line)))})),receipt=join(provenanceRoot??join(policy.buildDirectory,"semio-cargo-provenance"),`cargo-unit-provenance-${basename(capture)}.json`);
     const invocation={manifest:path,cwd:policy.cwd,command:commandPort.command,args:[...commandPort.args,options.command??"build","--locked","--manifest-path",path,...cargoArgs,"--message-format=json-render-diagnostics",...compilerArgs],buildDirectory:policy.buildDirectory,builtAtMs,status:await status,cancelled,units,buildScripts},stagedPaths=new Map([...stagedNames].filter(([,key])=>files.has(key)).map(([path,key])=>[path,join(staging,key)])),cargoHome=resolve(options.environment!.CARGO_HOME!),churn={signal:options.control.signal};
     if(options.retainCompilationBytes!==undefined&&invocation.status===0&&!cancelled)completedCompilation=await retryOnConcurrentEditV1("snapshot",async attempt=>{const physical=physicalOwner(),directory=join(capture,"q",String(attempt)),custody=sharedProvenanceCustodyV1(policy.cwd,()=>physical.control),session=new CargoProvenanceSessionV1(custody,{workspace:policy.cwd,mode:policy.mode,buildDirectory:policy.buildDirectory,targetDirectory,cargoHome,directory,maximumBytes:options.retainCompilationBytes!,storage:options.storage,control:options.control});try{const staged=await session.write(receipt,invocation,stagedPaths,cargoHome,options.control);await session.close();return await session.completedSnapshot(staged);}catch(error){try{await session.discard();}catch{}rmSync(directory,{recursive:true,force:true});throw error;}},churn);
     else await writeCompletedCargoInvocationProvenanceV1(receipt,invocation,stagedPaths,cargoHome,physicalOwner,churn);options.provenance?.(receipt);return receipt;

@@ -37,6 +37,7 @@ semio-s-artifact-puzzle-3d-mutations = { workspace = true }
 semio-s-artifact-puzzle-3d-mutations-object = { workspace = true }
 
 [dev-dependencies]
+serde_json = { workspace = true }
 serde = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

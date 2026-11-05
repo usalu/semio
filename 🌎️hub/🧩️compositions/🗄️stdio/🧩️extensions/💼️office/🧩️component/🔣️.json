@@ -46816,7 +46816,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 23
+    "appChannelVersion": 24
   },
   "quotas": {},
   "contributions": {

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "controller": "s.lowpoly.lowpoly@1/*#editor",
+  "actions": [
+    {
+      "id": "importSnapshotJson",
+      "inPalette": true,
+      "args": [
+        {
+          "id": "json",
+          "kind": "string",
+          "required": true,
+          "label": {
+            "en": "Snapshot JSON",
+            "de": "Snapshot-JSON"
+          }
+        }
+      ]
+    },
+    {
+      "id": "replaceSnapshotJson",
+      "inPalette": true,
+      "args": [
+        {
+          "id": "json",
+          "kind": "string",
+          "required": true,
+          "label": {
+            "en": "Snapshot JSON",
+            "de": "Snapshot-JSON"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -37,8 +37,11 @@ impl Wfc3dInferenceJob {
             child: None,
             child_commit: None,
             assignments: BTreeMap::new(),
-            output: Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput)),
-            rejected_output_page: None,
+            output: Some(semio_framework_job_payload::RetainedPayloadBuilder::new(semio_framework_job_payload::JobPayloadStream::CommitOutput)),
+            output_chunk: None,
+            output_cursor: 0,
+            output_next: 0,
+            output_complete: false,
             output_started: false,
             encoded_entries: 0,
             encode_total: 0,
@@ -283,38 +286,47 @@ impl Wfc3dInferenceJob {
     /// detail then cannot be admitted either, so the job dies as a `StepOutcome::Fault` carrying an
     /// EMPTY page. Measured here: with `fuel_per_step` above `1` and the encode stage looping, every
     /// solve in this artifact failed exactly that way.
-    pub(crate) fn encode_one(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, String> {
-        let source = self.rejected_output_page.take().unwrap_or_default();
-        let writer = self.output.as_mut().ok_or("wfc3d-output-writer-missing")?;
-        let mut page = match context.admit_payload_page(writer, source) {
-            Ok(page) => page,
-            Err(rejected) => {
-                self.rejected_output_page = Some(rejected.into_source());
-                return Err("wfc3d-inference-output-admission-exceeded".into());
-            }
-        };
-        if !self.output_started {
-            page.write(br#"{"assignments":{"#).map_err(|_| "wfc3d-inference-output-page")?;
-            page.commit();
-            self.output_started = true;
-            return Ok(false);
+    pub(crate) fn encode_one(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_job::receive_original_retained_work;
+        if !self.output.as_ref().expect("output builder").is_initialized() {
+            let turn = self.output.as_mut().unwrap().advance_initialization(context); receive_original_retained_work(context, turn)?; return Ok(());
         }
-        if let Some((slot, tile)) = self.assignments.pop_first() {
+        if let Some(chunk) = self.output_chunk.as_ref() {
+            if self.output_cursor < chunk.len() {
+                let turn = self.output.as_mut().unwrap().append_original(context, chunk, &mut self.output_cursor);
+                receive_original_retained_work(context, turn)?; return Ok(());
+            }
+            semio_framework_job::close_original_granted_step(context, |grant| {
+                let released_bytes = self.output_chunk.as_ref().unwrap().capacity();
+                if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < released_bytes { return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }
+                self.output_chunk = None;
+                match self.output_next { 0 => self.output_started = true, 1 => self.encoded_entries += 1, _ => self.output_complete = true }
+                semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } }), work: 1 }
+            })?;
+            return Ok(());
+        }
+        if self.output_complete {
+            let output = self.output.as_mut().unwrap();
+            if output.published().is_none() { let turn = output.seal(context); receive_original_retained_work(context, turn)?; return Ok(()); }
+            let turn = output.take_finished(&mut self.output_payload, context.retained_grant()); receive_original_retained_work(context, turn)?;
+            if self.output_payload.is_some() { self.stage = Wfc3dInferenceStage::Complete; }
+            return Ok(());
+        }
+        let grant = context.retained_grant();
+        if context.should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_capacity_bytes < 32768 { return Ok(()); }
+        let (chunk, next) = if !self.output_started { (br#"{"assignments":{"#.to_vec(), 0) }
+        else if let Some((slot, tile)) = self.assignments.pop_first() {
             let slot = crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(&slot);
             let tile = crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(&tile);
-            if self.encoded_entries != 0 {
-                page.write(b",").map_err(|_| "wfc3d-inference-output-page")?;
-            }
-            page.write(slot.as_bytes()).and_then(|_| page.write(b":")).and_then(|_| page.write(tile.as_bytes())).map_err(|_| "wfc3d-inference-output-page")?;
-            page.commit();
-            self.encoded_entries += 1;
-            return Ok(false);
-        }
-        page.write(b"}}").map_err(|_| "wfc3d-inference-output-page")?;
-        page.commit();
-        self.stage = Wfc3dInferenceStage::Complete;
-        Ok(true)
+            (format!("{}{}:{}", if self.encoded_entries == 0 { "" } else { "," }, slot, tile).into_bytes(), 1)
+        } else { (b"}}".to_vec(), 2) };
+        self.output_chunk = Some(chunk); self.output_cursor = 0; self.output_next = next;
+        let capacity = self.output_chunk.as_ref().unwrap().capacity();
+        context.consume_fuel(1);
+        context.consume_retained(semio_framework_job::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: capacity, ..Default::default() })?;
+        Ok(())
     }
+
 }
 
 impl Wfc3dInferenceJob {
@@ -371,6 +383,7 @@ pub(crate) enum Wfc3dInferenceJobRun {
     Staged,
     StepRestore,
     StepChild,
+    StepOutput,
 }
 
 /// 🤝️ Which retained owner produced the outcome currently on loan.

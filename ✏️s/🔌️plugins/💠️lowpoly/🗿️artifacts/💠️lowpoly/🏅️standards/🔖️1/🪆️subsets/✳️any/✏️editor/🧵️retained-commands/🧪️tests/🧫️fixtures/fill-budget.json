@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "action": "paintFill",
+  "objectId": "obj-1",
+  "textureSize": 256,
+  "startUv": [
+    0,
+    1
+  ],
+  "background": [
+    255,
+    255,
+    255,
+    255
+  ],
+  "color": [
+    17,
+    34,
+    51,
+    255
+  ],
+  "turn": {
+    "fuel": 256,
+    "maximumItems": 32,
+    "maximumCopyBytes": 32768,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 4096
+  },
+  "maximumTurns": 4096,
+  "minimumProgressTurns": 256,
+  "minimumPaidWork": 65536,
+  "expected": {
+    "publishedMutations": 1,
+    "changedPixels": 65536,
+    "channelSums": [
+      1114112,
+      2228224,
+      3342336,
+      16711680
+    ]
+  }
+}

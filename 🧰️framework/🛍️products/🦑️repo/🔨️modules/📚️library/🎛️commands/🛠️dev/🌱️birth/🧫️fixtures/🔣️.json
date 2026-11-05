@@ -1,0 +1,12 @@
+[
+  { "id": "canonical", "argv": ["dev", "mcp", "stdio", "os"], "targets": ["@semio-tech/framework-os-mcp-rs:build"], "rejected": false },
+  { "id": "composition", "argv": ["dev", "mcp", "stdio", "os", "--catalog", "catalog", "--catalog-target", "@semio-tech/s-dev-composition:generate"], "targets": ["@semio-tech/framework-os-mcp-rs:build", "@semio-tech/s-dev-composition:generate"], "rejected": false },
+  { "id": "help", "argv": ["dev", "mcp", "stdio", "os", "--help"], "targets": null, "rejected": false },
+  { "id": "repo-server", "argv": ["mcp"], "targets": null, "rejected": false },
+  { "id": "other-product", "argv": ["dev", "s"], "targets": null, "rejected": false },
+  { "id": "incomplete", "argv": ["dev", "mcp", "stdio"], "targets": null, "rejected": false },
+  { "id": "missing-target", "argv": ["dev", "mcp", "stdio", "os", "--catalog-target"], "targets": null, "rejected": true },
+  { "id": "duplicate-target", "argv": ["dev", "mcp", "stdio", "os", "--catalog-target", "p:generate", "--catalog-target", "q:generate"], "targets": null, "rejected": true },
+  { "id": "target-option", "argv": ["dev", "mcp", "stdio", "os", "--catalog-target", "--helpful"], "targets": null, "rejected": true },
+  { "id": "invalid-target", "argv": ["dev", "mcp", "stdio", "os", "--catalog-target", "generate"], "targets": null, "rejected": true }
+]

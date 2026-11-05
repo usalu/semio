@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/restore-pins/schema.json",
+  "title": "RestorePins",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pins"
+  ],
+  "properties": {
+    "pins": {
+      "type": "array",
+      "maxItems": 262144,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "x",
+          "y",
+          "color"
+        ],
+        "properties": {
+          "x": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 511
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 511
+          },
+          "color": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  },
+  "x-semio-inverse-rows": {
+    "fixed": 1
+  }
+}

@@ -237,3 +237,67 @@ pub fn instance_source() -> String {
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
     //#endregion 🧪️SharedFrameworkActionRouteTests
+
+    #[semio_framework_async_macros::async_test]
+    async fn typed_cancellation_projection_obeys_the_neutral_contract() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("cancellation.json")).unwrap();
+        let proofs = TestApp::<false>::bounded_first_step_tool_proofs();
+        assert!(!proofs.is_empty());
+        let mut builder = App::builder(proofs[0].controller_id, LocalizedLabel::data("Cancellation")).await
+            .window_kind("main", LocalizedLabel::data("Main"), "fixture.main", SurfaceKind::Canvas2d, IconName::AppWindow).await
+            .mode("edit", LocalizedLabel::data("Edit"), "pencil").await;
+        for proof in &proofs {
+            builder = builder.mutation(proof.tool_id, LocalizedLabel::data(proof.tool_id)).await;
+        }
+        let mut base = App::from_builder(builder.interactive_jobs(InteractiveJobClassification::Migrated).await).await.definition;
+        base.io.artifact_schema = TestApp::<false>::DOCUMENT_SCHEMA.into();
+        for case in fixture["cases"].as_array().unwrap() {
+            let mut definition = base.clone();
+            let mut rows = proofs.clone();
+            let mut action = definition.actions.iter().find(|action| action.id == proofs[0].tool_id).unwrap().clone();
+            action.semantics.execution.cancellable = case["initial"].as_bool().unwrap();
+            if case["proof"] == "absent-unrelated" { action.id = "unrelated".into(); }
+            let id = action.id.clone();
+            if case["surface"] == "window" { definition.window_kinds[0].actions.push(action); }
+            else if case["surface"] == "command" || case["surface"] == "mode-command" {
+                let mut command = CommandDefinition::bounded_catalog(&id, LocalizedLabel::data(&id), "fixture", ActionKind::Mutation);
+                command.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+                command.semantics.execution.cancellable = case["initial"].as_bool().unwrap();
+                if case["surface"] == "command" { definition.commands.push(command); }
+                else { definition.modes[0].commands.push(command); }
+            } else { definition.actions.retain(|candidate| candidate.id != id); definition.actions.push(action); }
+            match case["proof"].as_str().unwrap() {
+                "wrong-owner" => rows[0].owner = semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness::of::<CopyDrawApp>(),
+                "wrong-schema" => rows[0].artifact_schema = "wrong.schema",
+                "wrong-controller" => rows[0].controller_id = "foreign.controller",
+                "wrong-registry-controller" => definition.controller_id = "foreign.controller".into(),
+                "registry-less" => {
+                    definition.window_kinds.clear();
+                    definition.commands.clear();
+                    definition.modes.clear();
+                    definition.interactions.clear();
+                    definition.controller_id.clear();
+                    assert!(AppActionRegistry::from_definition(&definition).is_registry_less());
+                },
+                "duplicate" => rows.push(rows[0]),
+                "missing-migrated" => { rows.remove(0); },
+                "exact" | "absent-unrelated" => {},
+                other => panic!("unknown cancellation proof case {other}"),
+            }
+            let before = serde_json::to_value(&definition).unwrap();
+            let result = semio_framework_plugin_decl_registry::declarations::project_tool_cancellation::<TestApp<false>>(&mut definition, &rows);
+            if case["outcome"] == "refused" {
+                assert!(result.is_err(), "{case}");
+                assert_eq!(serde_json::to_value(&definition).unwrap(), before, "refusal must be atomic");
+            } else {
+                result.unwrap();
+                let actual = match case["surface"].as_str().unwrap() {
+                    "window" => definition.window_kinds[0].actions.iter().find(|action| action.id == id).unwrap().semantics.execution.cancellable,
+                    "command" => definition.commands.iter().find(|command| command.id == id).unwrap().semantics.execution.cancellable,
+                    "mode-command" => definition.modes[0].commands.iter().find(|command| command.id == id).unwrap().semantics.execution.cancellable,
+                    _ => definition.actions.iter().find(|action| action.id == id).unwrap().semantics.execution.cancellable,
+                };
+                assert_eq!(actual, case["expected"].as_bool().unwrap(), "{case}");
+            }
+        }
+    }

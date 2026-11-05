@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "lines": [
+    "compiler diagnostic",
+    "{\"reason\":\"compiler-artifact\"}",
+    "staged native publication"
+  ],
+  "stdout": [],
+  "stderr": [
+    "compiler diagnostic",
+    "{\"reason\":\"compiler-artifact\"}",
+    "staged native publication"
+  ]
+}

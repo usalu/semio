@@ -3,13 +3,14 @@
 use super::*;
 
 impl HeadlessWorkspace {
-    pub fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Self {
+    pub fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Self {
         ensure_probe_codec_registered();
         let session_id = mint_session_id(&principal, 0);
         Self {
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             test_discovery:None,
             host_driver_policy,
+            operation_policy,
             artifact_host: store::sync::ArtifactHost::new(workspace_worker_pool()),
             origin,
             principal,
@@ -39,17 +40,17 @@ impl HeadlessWorkspace {
         Ok(())
     }
 
-    pub fn open_folder(path: PathBuf, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
+    pub fn open_folder(path: PathBuf, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Result<Self, GatewayError> {
         if !path.is_dir() {
             std::fs::create_dir_all(&path).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("--folder `{}` does not exist and could not be created: {error}", path.display())))?;
         }
         Self::reject_repository_root_workspace(&path)?;
-        Ok(Self::new(WorkspaceOrigin::Folder { path }, principal, scopes, catalog, host_driver_policy))
+        Ok(Self::new(WorkspaceOrigin::Folder { path }, principal, scopes, catalog, host_driver_policy, operation_policy))
     }
 
     /// 🧩️ A hub-bound workspace runs the HUB's components, never a build tree that happens to
     /// sit on the same disk: the hub is the authority over what code opens its documents.
-    pub fn open_hub(base_url: String, space_id: String, credential: Arc<LocalHubCredential>, principal: String, scopes: Vec<String>, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
+    pub fn open_hub(base_url: String, space_id: String, credential: Arc<LocalHubCredential>, principal: String, scopes: Vec<String>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Result<Self, GatewayError> {
         remote::validate_hub_origin(&base_url, &space_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -57,7 +58,7 @@ impl HeadlessWorkspace {
             binding.await_settled(remote::HUB_AUTHORITY_SETTLE_WAIT_MS);
             let catalog = WorkspaceCatalog::following(Arc::clone(&binding))?;
             let driver = Arc::new(driver);
-            let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id }, principal, scopes, catalog.current(), host_driver_policy);
+            let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id }, principal, scopes, catalog.current(), host_driver_policy, operation_policy);
             workspace.catalog = Arc::new(catalog);
             workspace.repo_root = None;
             workspace.plugin_components = Some(PluginComponentSource::Hub(Arc::new(HubPluginComponents::new(Arc::clone(&binding), Arc::clone(&driver)))));
@@ -97,7 +98,7 @@ impl HeadlessWorkspace {
     /// 📚 Package descriptors used for capability and inference discovery. Hub mode reads only the
     /// authenticated retained snapshot; folder mode may use the installed registry.
     pub fn discovery_descriptors(&self) -> Result<Vec<semio_framework::PackageDescriptor>, GatewayError> {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if let Some(descriptors)=&self.test_discovery {let owners=self.catalog_plugin_ids();return Ok(descriptors.iter().filter(|entry|owners.contains(&entry.manifest.plugin_id)).cloned().collect());}
         match &self.origin {
             WorkspaceOrigin::Hub { .. } => Ok(self.verified_hub_catalog_selections()?.selections.iter().map(|selection| selection.descriptor.clone()).collect()),
@@ -122,12 +123,7 @@ impl HeadlessWorkspace {
         }
     }
 
-    /// 🗿️ A hub document of another schema is not an ERROR, it is simply not a probe document.
-    /// This used to answer a retryable `PLUGIN_UNAVAILABLE` naming the probe schema, which made
-    /// `artifact_open` of EVERY real hub document fail before it ever reached
-    /// [`Self::read_artifact_bytes`] — measured live on hub 7631 against a `gis.map` document
-    /// (ticket 26/09/18 slice M8, `📓️m8-mcp-agent-third-participant.md` §2.3 row 4). The
-    /// predicate's own name is the contract: it answers whether the probe lane owns this id.
+    /// 🗿️ A hub document of another schema is not an ERROR, it is simply not a probe document. See [design notes](README.md).
     pub fn authenticated_probe_document_is_known(&self, artifact_id: &str) -> Result<bool, GatewayError> {
         if !matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
             return Ok(false);
@@ -143,19 +139,7 @@ impl HeadlessWorkspace {
         format!("agent:{}#{}", self.principal, self.session_id)
     }
 
-    /// 🗂️ Every document id currently known to this workspace: the union of (a) every id this
-    /// workspace has itself opened a live `ProbeStore` for (`self.open_probes` — populated
-    /// SYNCHRONOUSLY by `ensure_probe_artifact`, before this call can ever see it) and (b) whatever
-    /// is already durably persisted on disk (`FolderEventLogStorage`'s document events).
-    ///
-    /// 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): this used to
-    /// consult ONLY (b). `ArtifactHost::open`'s actor persists asynchronously on its own thread —
-    /// `ensure_probe_artifact`'s `dispatch`+`send` returns as soon as the LOCAL `ArtifactStore` has
-    /// applied the mutation, before the actor thread has necessarily flushed it to
-    /// `<folder>/.semio/events.semio`. A cold-disk-only reader therefore raced the actor and lost:
-    /// exactly `resolve_context_reports_the_open_probe_artifact_as_active`'s failure. (a) closes that
-    /// gap because it is the SAME map `ensure_probe_artifact` writes to, read under the same lock,
-    /// with no cross-thread hop in between.
+    /// 🗂️ Every document id currently known to this workspace: the union of (a) every id this See [design notes](README.md).
     pub fn workspace_artifact_ids(&self) -> Result<Vec<String>, GatewayError> {
         match &self.origin {
             WorkspaceOrigin::Folder { path } => {
@@ -174,26 +158,18 @@ impl HeadlessWorkspace {
         }
     }
 
-    /// 📖️ One document's real pack+spr bytes, read from whoever OWNS that document right now:
-    /// the LIVE in-memory `ProbeStore` snapshot (`ArtifactStore::snapshot_pack`, real bytes, no
-    /// cross-thread wait) when this workspace has one open for `artifact_id`; the session's own
-    /// channel when this session resolved `shell` and `artifact_id` is one this gateway bound to a
-    /// plugin ([`read_session_artifact_bytes`] — the store the human is editing); else a cold
-    /// `FolderEventLogStorage` read (host-opaque either way — no codec, no interpretation). `None`
-    /// for a hub binding with no live store open, or a folder id with neither an open store nor a
-    /// persisted row. Same race fix as `workspace_artifact_ids` — see that method's own doc.
-    ///
-    /// 🧊️ The middle lane is the law `artifact_snapshot` was missing: `create_plugin_artifact`
-    /// seeds the folder event log from ONE `ReadArtifact` at create time, so every later read of
-    /// that row answers the bytes as they were when the agent opened the document. Measured
-    /// 2026-09-20 (AP1, `🗑️generated/ap1-shell-route-probe.txt`): an `addBlock` invocation moved the
-    /// live head from `cursor 0` to `cursor 1, headEditId "apply"` and `artifact_snapshot` answered
-    /// a byte-identical 688-char pack on both sides of it. A snapshot that cannot show the change
-    /// the agent just made is worse than no snapshot, so a session-owned document is re-read from
-    /// its owner and the frozen row is never consulted for it.
-    ///
-    /// 🧊️ Headless lane: the live guest instance the mutation went to, never the row frozen
-    /// at create time — see [`Self::read_live_session_artifact_bytes`].
+    /// 📖️ One document's real pack+spr bytes, read from whoever OWNS that document right now: See [design notes](README.md).
+
+    /// 📂️ Explicit folder reopen reads durable custody rather than a stale live alias.
+    pub fn read_open_artifact_bytes(&self, artifact_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
+        if let WorkspaceOrigin::Folder { path } = &self.origin {
+            if !self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(artifact_id) {
+                return semio_framework_async::block_on(store::sync::FolderEventLogStorage::new(path.clone()).read(artifact_id)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()));
+            }
+        }
+        self.read_artifact_bytes(artifact_id)
+    }
+
     pub fn read_artifact_bytes(&self, artifact_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         if let Some(probe_store) = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
             let files = ::semio_framework_async::poll::resolve_ready(probe_store.snapshot_pack()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
@@ -201,12 +177,13 @@ impl HeadlessWorkspace {
         }
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(binding) = self.plugin_artifact_binding(artifact_id) {
+            if let Some(bytes) = self.read_live_session_artifact_bytes(artifact_id, &binding.plugin_id, &binding.app_id)? {
+                return Ok(Some(bytes));
+            }
             if let Some(bytes) = self.read_session_artifact_bytes(&binding.plugin_id)? {
                 return Ok(Some(bytes));
             }
-            if let Some(bytes) = self.read_live_session_artifact_bytes(&binding.plugin_id, &binding.app_id)? {
-                return Ok(Some(bytes));
-            }
+            if let Some(pair) = binding.document { return Ok(Some((pair.pack.clone(), pair.spr.clone()))); }
         }
         if matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
             let snapshot = self.hub_snapshot()?;

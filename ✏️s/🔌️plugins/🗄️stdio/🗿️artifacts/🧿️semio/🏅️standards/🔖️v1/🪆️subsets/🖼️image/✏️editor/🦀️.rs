@@ -167,6 +167,7 @@ impl ArtifactEditor for SemioImageEditor {
         vec![semio_s_artifact_stdio_semio_base_examples::examples::swatch::source()]
     }
     type Snapshot = SemioImageSnapshot;
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioImageSnapshot, "stdio.semio.image");
     type Mutation = SemioImageMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;

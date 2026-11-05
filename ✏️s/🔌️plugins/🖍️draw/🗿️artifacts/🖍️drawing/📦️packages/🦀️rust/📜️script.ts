@@ -1,8 +1,11 @@
+import { resolve } from "node:path";
+import { runOwnedCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { drawingNativeOptions } from "./📋️native/🟦️.ts";
 
 import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript as GraphPreviewScript, OwnerGraphWireCheckScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 📦️ draw drawing Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationEnvironment } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runOwnedVerifyScript, runInspectorSelectionActionsScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 /** 🧪️ Executes the contracts owned by this component. */
@@ -18,5 +21,16 @@ class InspectorSelectionActionsScript extends BundleScript {
     await runInspectorSelectionActionsScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
-const router = new ScriptRouter(import.meta.dir).register("test-inspector-selection-actions", InspectorSelectionActionsScript).register("graph-generate", GraphGenerateScript).register("preview-generated", GraphPreviewScript).register("graph-wire-check", OwnerGraphWireCheckScript).register("verify", OwnedVerifyScript);
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-draw-drawing", { testPackages: ["semio-s-artifact-draw-drawing", "semio-s-artifact-draw-drawing-editor-commands-tests", "semio-s-artifact-draw-drawing-editor-interaction-tests", "semio-s-artifact-draw-drawing-editor-tests", "semio-s-artifact-draw-drawing-host-tests", "semio-s-artifact-draw-drawing-model-tests", "semio-s-artifact-draw-drawing-scene-tests", "semio-s-artifact-draw-drawing-structure-tests", "semio-s-artifact-draw-drawing-style-tests", "semio-s-artifact-draw-drawing-transform-tests", "semio-s-artifact-draw-drawing-editor-tests-2"], commands: router, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+/** 🧪️ Verifies complete native owners against the current Cargo workspace and neutral independent oracles. */
+class NativeCoverageScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("Native coverage accepts no overrides");
+    const source = resolve(this.root, "📋️native/🟦️.ts"), tests = resolve(this.root, "📋️native/🧪️tests/🟦️.ts");
+    const options = { env: scriptInvocationEnvironment(this.invocation, process.env), signal: this.invocation.control.signal };
+    await runOwnedCommand(process.execPath, ["test", tests], this.repoRoot, "draw-native-coverage", 45000, options);
+    await runOwnedCommand(process.execPath, [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", source, tests], this.repoRoot, "draw-native-coverage-types", 45000, options);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("native-coverage", NativeCoverageScript).register("test-inspector-selection-actions", InspectorSelectionActionsScript).register("graph-generate", GraphGenerateScript).register("preview-generated", GraphPreviewScript).register("graph-wire-check", OwnerGraphWireCheckScript).register("verify", OwnedVerifyScript);
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-draw-drawing", { ...drawingNativeOptions, commands: router, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

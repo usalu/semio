@@ -40,12 +40,7 @@ impl OwnedCompiledGuest {
     }
 }
 
-/// 🧊️ A compiled guest's codec origin: its owned instance right after a first codec export assembled the plugin bundle
-/// (`__semio_ensure_plugin_runtime`: every artifact declared, every mutation roster, the built bundle) and completed.
-/// Measured on catalog B3 (H12, 2026-09-27): a fresh instance spends 521.5 M of a puzzle codec call's 524.7 M fuel on that
-/// assembly and the operation itself ≈ 3.2 M, and every codec call used to pay it on a throwaway instance. Each codec call
-/// now starts from a copy of this state, so every call still sees exactly the same guest — the assembled bundle and
-/// nothing another call did — and answers byte for byte what a fresh instance answers.
+/// 🧊️ Holds the initialized codec origin and its diagnostic prefix.
 pub(super) struct OwnedCodecOrigin {
     pub(super) actor: OwnedSemioInstance,
     pub(super) diagnostics: Vec<u8>,
@@ -68,10 +63,7 @@ pub(super) enum OwnedCodecOriginState {
     Ready(Arc<OwnedCodecOrigin>),
 }
 
-/// 🧊️ The codec origin of one compiled guest, assembled once, by the first codec call that needs it. A call that arrives
-/// while another assembles waits for that assembly instead of running a second one, relays its fuel as its own progress —
-/// a stall bound watching the waiter sees the assembly move, and sees it stop — and observes its own cancellation. An
-/// assembly that faults, is cancelled or panics leaves the origin absent, and the next call assembles it itself.
+/// 🧊️ Serializes construction and borrowing of one compiled codec origin.
 pub(super) struct OwnedCodecOriginCell {
     pub(super) state: Mutex<OwnedCodecOriginState>,
     pub(super) settled: std::sync::Condvar,

@@ -1,31 +1,24 @@
 //! 👓️ Borrowed JSON octets feed the existing retained grammar without source materialization.
 use super::JsonError;
 
-/// 🔣️ Binds the retained grammar to one exact immutable source borrow until result or retirement handoff.
 pub type JsonBorrowedParseCursor<'source,S> = JsonBorrowedCursor<'source,S,super::Value>;
 pub type JsonBorrowedDslCursor<'source,S> = JsonBorrowedCursor<'source,S,semio_framework_value::DslValue>;
 pub type JsonBorrowedCursor<'source,S,V>=JsonSourceCursor<&'source S,V>;
-/// 🪟️ Retains an immutable first-party source view by value alongside its original grammar owner.
 pub struct JsonSourceCursor<S:JsonReadSource+Copy,V:JsonParsedValue>{#[doc(hidden)] pub source:S,parser:super::JsonGrammarCursor<V>}
 impl<S:JsonReadSource+Copy,V:JsonParsedValue> JsonSourceCursor<S,V>{
-    /// 🛂️ Captures the complete original caller limits before any source read or destination allocation.
     pub fn new(source:S,policy:super::JsonMemberPolicy,limits:JsonReadLimits)->Result<Self,semio_framework_value::ValueError>{
         if source.byte_len()as u128>u128::from(limits.maximum_bytes){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"JSON complete source exceeds caller byte limit"));}
         let mut parser=super::JsonGrammarCursor::new(policy);parser.limits=limits;Ok(Self{source,parser})
     }
     pub fn source_ref(&self)->&S{&self.source}
-    /// 🪪️ Transfers the original immutable source identity with its native grammar owner.
     pub fn into_grammar(self)->(S,super::JsonGrammarCursor<V>){(self.source,self.parser)}
-    /// 🪆️ Restores the same source and grammar after a refused ownership handoff.
     pub fn from_grammar(source:S,parser:super::JsonGrammarCursor<V>)->Self{Self{source,parser}}
     pub fn position(&self)->usize{self.parser.position()}
     pub fn phase(&self)->&'static str{self.parser.phase()}
     pub fn normal_step_progress(&self)->super::RetainedCloneProgress{self.parser.normal_step_progress()}
-    /// ⏱️ Forwards the exact selected grammar work, including a refused operation.
     pub fn last_turn_work(&self)->u64{self.parser.last_turn_work()}
     pub fn normal_step_demands(&self)->Result<super::RetirementDemand,JsonError>{self.parser.normal_step_demands(&self.source)}
     pub fn step(&mut self,maximum_units:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:super::RetainedCloneGrant)->Result<Option<V>,JsonError>{self.parser.step_source(&self.source,maximum_units,control,grant,false)}
-    /// 🎟️ Admits the native grammar retirement frame before transferring its original owner.
     pub fn retirement_birth_bytes(&self)->usize{semio_framework_value::owned_retirement_birth_bytes::<super::JsonGrammarCursor<V>>()}
     pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Self)>{
         let Self{source,parser}=self;
@@ -36,7 +29,6 @@ impl<S:JsonReadSource+Copy,V:JsonParsedValue> JsonSourceCursor<S,V>{
 
 impl<'source,S:JsonReadSource+?Sized,V:JsonParsedValue> JsonSourceCursor<&'source S,V>{pub fn source(&self)->&'source S{self.source}}
 
-/// 📏️ One immutable finite source supplies original octets for every retained parse step.
 pub trait JsonReadSource {
     fn byte_len(&self)->usize;
     fn byte_at(&self,index:usize)->Option<u8>;
@@ -118,7 +110,6 @@ mod parsed_value_authority{
     impl Sealed for super::super::Value{}
     impl Sealed for semio_framework_value::DslValue{}
 }
-/// 🧬️ Closed first-party semantic destinations move each original admitted JSON cell exactly once.
 pub trait JsonParsedValue:parsed_value_authority::Sealed+semio_framework_value::retirement::RetireOwned{
     fn json_null()->Self;
     fn json_bool(value:bool)->Self;
@@ -144,7 +135,6 @@ impl JsonParsedValue for semio_framework_value::DslValue{
     fn json_object(values:Vec<(String,Self)>)->Self{Self::Object(values)}
 }
 
-/// 📖️ Original caller policy bounds the complete source, cumulative storage and each declared collection extent.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct JsonReadLimits{
     pub maximum_bytes:u64,

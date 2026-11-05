@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "inputHex",
+    "deniedCopyBytes",
+    "copyBytes",
+    "deniedReleaseBytes",
+    "executionFuelPerSlice",
+    "maximumSlices",
+    "expected",
+    "inputAdmission"
+  ],
+  "properties": {
+    "inputHex": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{2})+$"
+    },
+    "deniedCopyBytes": {
+      "const": 0
+    },
+    "copyBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "deniedReleaseBytes": {
+      "const": 0
+    },
+    "executionFuelPerSlice": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumSlices": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "donorRetainedOnDenied",
+        "donorMovedOnAdmission",
+        "outputRetainedBeforeAcknowledgement",
+        "inputCapacityRetainedOnDeniedRelease"
+      ],
+      "properties": {
+        "donorRetainedOnDenied": {
+          "const": true
+        },
+        "donorMovedOnAdmission": {
+          "const": true
+        },
+        "outputRetainedBeforeAcknowledgement": {
+          "const": true
+        },
+        "inputCapacityRetainedOnDeniedRelease": {
+          "const": true
+        }
+      }
+    },
+    "inputAdmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "budgetScalars",
+        "prefixScalars",
+        "callScalars",
+        "scalars",
+        "expectedSum"
+      ],
+      "properties": {
+        "budgetScalars": {
+          "const": 19
+        },
+        "prefixScalars": {
+          "const": 2
+        },
+        "callScalars": {
+          "const": 21
+        },
+        "scalars": {
+          "type": "array",
+          "minItems": 19,
+          "maxItems": 19,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "expectedSum": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

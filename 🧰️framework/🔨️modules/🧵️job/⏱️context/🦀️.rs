@@ -87,12 +87,15 @@ enum StepCancelReference<'a>{Owned(CancelToken),Borrowed(&'a CancelToken),Observ
 impl std::ops::Deref for StepCancelReference<'_>{type Target=CancelToken;fn deref(&self)->&Self::Target{match self{Self::Owned(original)=>original,Self::Borrowed(original)|Self::Observed(original)=>original}}}
 #[path="📸️capture/🦀️.rs"]
 mod original_caller_capture;
-pub use original_caller_capture::{OriginalCallerCapture,CapturedOriginalCaller,OriginalCallerIssuer,OriginalCallerTurn,OriginalCallerCloseReturn,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn};
+pub use original_caller_capture::{OriginalCallerCapture,CapturedOriginalCaller,OriginalCallerIssuer,OriginalCallerTurn,OriginalCallerCloseReturn,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeRecipientIdentity,OriginalNativeRetiredWitness};
 pub use semio_framework_job_receiving::OriginalJobDecodeOwner;
 //#endregion 📄️RetainedPayload
 
 #[path="📦️return/🪶️weak/🦀️.rs"]
 mod original_native_weak_return;
+
+#[path="🛫️encoding/🦀️.rs"]
+mod original_native_encoding;
 
 #[path="⏸️park/🦀️.rs"]
 mod original_owned_caller_turn;

@@ -12,6 +12,8 @@ type PinPixel { x: Int!, y: Int!, color: Int! }
 type UnpinPixel { x: Int!, y: Int! }
 type BitmapStrokePoint { x: Int!, y: Int! }
 type PaintInputStroke { points: [BitmapStrokePoint!]!, color: Int! }
+type PinSolution { pins: [BitmapPinnedPixel!]! }
+type RestorePins { pins: [BitmapPinnedPixel!]! }
 
 union BitmapMutation =
     ChangeSeed
@@ -25,3 +27,5 @@ union BitmapMutation =
   | PinPixel
   | UnpinPixel
   | PaintInputStroke
+  | PinSolution
+  | RestorePins

@@ -21,7 +21,7 @@ pub use semio_s_artifact_stdio_jpg_mutations::{JPG_ARTIFACT_SCHEMA_ID};
 
 pub use semio_s_artifact_stdio_jpg_operations::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub use semio_s_artifact_stdio_jpg_schema_2::{definition};
+pub use semio_s_artifact_stdio_jpg_io_registry::{definition};
 
 pub use semio_s_artifact_stdio_jpg_operations::{formats};
 
@@ -71,7 +71,7 @@ pub mod standards {
                 pub mod io {
                     pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::document::io::*;
 
-                    pub use semio_s_artifact_stdio_jpg_schema_2::standards::v_jfif_1_01::subsets::document::io::facets;
+                    pub use semio_s_artifact_stdio_jpg_io_registry::standards::v_jfif_1_01::subsets::document::io::facets;
                     #[path = "."]
                     pub mod binary {
                         #[path = "."]
@@ -93,8 +93,8 @@ pub mod standards {
                         pub use semio_s_artifact_stdio_jpg_operations::standards::v_jfif_1_01::subsets::document::io::text::inferences;
                     }
                     pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::document::io::sqlite;
-                    pub use semio_s_artifact_stdio_jpg_schema_2::standards::v_jfif_1_01::subsets::document::io::import;
-                    pub use semio_s_artifact_stdio_jpg_schema_2::standards::v_jfif_1_01::subsets::document::io::export;
+                    pub use semio_s_artifact_stdio_jpg_io_registry::standards::v_jfif_1_01::subsets::document::io::import;
+                    pub use semio_s_artifact_stdio_jpg_io_registry::standards::v_jfif_1_01::subsets::document::io::export;
                 }
             }
             #[path = "."]
@@ -125,7 +125,7 @@ pub use semio_s_artifact_stdio_jpg_operations::examples;
 pub mod editor {
     #[path = "."]
     pub mod jpg_any {
-        pub use semio_s_artifact_stdio_jpg_schema_2::editor::jpg_any::*;
+        pub use semio_s_artifact_stdio_jpg_io_registry::editor::jpg_any::*;
 
         pub use semio_s_artifact_stdio_jpg_operations::editor::jpg_any::edit_rules;
         pub use semio_s_artifact_stdio_jpg_operations::editor::jpg_any::presence;
@@ -134,9 +134,9 @@ pub mod editor {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                pub use semio_s_artifact_stdio_jpg_schema_2::editor::jpg_any::modes::edit::*;
+                pub use semio_s_artifact_stdio_jpg_io_registry::editor::jpg_any::modes::edit::*;
 
-                pub use semio_s_artifact_stdio_jpg_schema_2::editor::jpg_any::modes::edit::windows;
+                pub use semio_s_artifact_stdio_jpg_io_registry::editor::jpg_any::modes::edit::windows;
             }
         }
     }
@@ -150,9 +150,9 @@ pub mod editor {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                pub use semio_s_artifact_stdio_jpg_schema_2::editor::jpg_baseline::modes::edit::*;
+                pub use semio_s_artifact_stdio_jpg_io_registry::editor::jpg_baseline::modes::edit::*;
 
-                pub use semio_s_artifact_stdio_jpg_schema_2::editor::jpg_baseline::modes::edit::windows;
+                pub use semio_s_artifact_stdio_jpg_io_registry::editor::jpg_baseline::modes::edit::windows;
             }
         }
     }
@@ -162,7 +162,7 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod jpg_any {
-        pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_any::*;
+        pub use semio_s_artifact_stdio_jpg_io_registry::viewer::jpg_any::*;
 
         pub use semio_s_artifact_stdio_jpg_operations::viewer::jpg_any::presence;
         pub use semio_s_artifact_stdio_jpg_operations::viewer::jpg_any::config;
@@ -170,15 +170,15 @@ pub mod viewer {
         pub mod modes {
             #[path = "."]
             pub mod view {
-                pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_any::modes::view::*;
+                pub use semio_s_artifact_stdio_jpg_io_registry::viewer::jpg_any::modes::view::*;
 
-                pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_any::modes::view::windows;
+                pub use semio_s_artifact_stdio_jpg_io_registry::viewer::jpg_any::modes::view::windows;
             }
         }
     }
     #[path = "."]
     pub mod jpg_baseline {
-        pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_baseline::*;
+        pub use semio_s_artifact_stdio_jpg_io_registry::viewer::jpg_baseline::*;
 
         pub use semio_s_artifact_stdio_jpg_operations::viewer::jpg_baseline::presence;
         pub use semio_s_artifact_stdio_jpg_operations::viewer::jpg_baseline::config;
@@ -186,9 +186,9 @@ pub mod viewer {
         pub mod modes {
             #[path = "."]
             pub mod view {
-                pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_baseline::modes::view::*;
+                pub use semio_s_artifact_stdio_jpg_io_registry::viewer::jpg_baseline::modes::view::*;
 
-                pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_baseline::modes::view::windows;
+                pub use semio_s_artifact_stdio_jpg_io_registry::viewer::jpg_baseline::modes::view::windows;
             }
         }
     }

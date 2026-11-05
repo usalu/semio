@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "name": "typed", "payload": { "schema": "puzzle.3d", "objects": [] }, "accepted": true },
+    { "name": "scene", "payload": { "schema": "puzzle.3d.scene.v1", "objects": [] }, "accepted": true },
+    { "name": "foreign", "payload": { "schema": "puzzle.5d", "objects": [] }, "accepted": false },
+    { "name": "foreign-populated", "payload": { "schema": "puzzle.2d", "objects": [{ "id": "foreign" }] }, "accepted": false },
+    { "name": "missing-schema", "payload": { "objects": [] }, "accepted": false },
+    { "name": "empty-schema", "payload": { "schema": "", "objects": [] }, "accepted": false },
+    { "name": "wrong-objects", "payload": { "schema": "puzzle.3d", "objects": {} }, "accepted": false },
+    { "name": "missing-objects", "payload": { "schema": "puzzle.3d" }, "accepted": true }
+  ]
+}

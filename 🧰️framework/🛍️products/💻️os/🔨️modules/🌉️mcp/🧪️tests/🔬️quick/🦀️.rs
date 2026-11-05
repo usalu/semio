@@ -15,9 +15,7 @@ use semio_os_mcp_capabilities::source_builders::note_and_cad_source;
 #[cfg(test)]
 use semio_os_mcp_port::channel_port::MockArtifactChannel;
 
-/// 🧫️ The compiled note+cad fixture catalog — every test below asserting a KNOWN capability
-/// census injects THIS, never `build_catalog()`, whose whole job since ticket
-/// 26/08/29/AI-MCP-END-TO-END is to discover whichever plugins are really installed.
+/// 🧫️ fixture catalog.
 fn fixture_catalog() -> std::sync::Arc<Catalog> {
     std::sync::Arc::new(compile(&note_and_cad_source(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("the note+cad fixture always compiles"))
 }
@@ -34,8 +32,8 @@ fn fixture_server_granting(scopes: &[&str]) -> McpServer {
 }
 
 #[test]
-fn stdio_options_default_to_empty() {
-    let options = StdioOptions::default();
+fn explicitly_authorized_stdio_options_can_be_unbound() {
+    let options = StdioOptions { operation_policy:serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../🧫️fixtures/host-operation-policy.json")).unwrap()).unwrap(), host_driver_policy: crate::test_host_driver_policy(), folder: None, hub: None, principal: None, scopes: Vec::new(), auto_approve: AutoApprovePolicy::Never, no_bridge: false };
     assert!(options.folder.is_none());
     assert!(options.principal.is_none());
     assert!(options.scopes.is_empty());
@@ -63,16 +61,12 @@ fn p1b_facet_re_exports_are_reachable_from_the_crate_root_too() {
 
 #[test]
 fn http_options_round_trip_without_a_credential_carrier() {
-    let options = HttpOptions { port: 7401, bind: "127.0.0.1".to_string(), folder: None, hub: None, principal: None, scopes: vec![], audit_dir: None, allow_origin: vec![], auto_approve: AutoApprovePolicy::Never };
+    let options = HttpOptions { operation_policy:serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../🧫️fixtures/host-operation-policy.json")).unwrap()).unwrap(), host_driver_policy: crate::test_host_driver_policy(), port: 7401, bind: "127.0.0.1".to_string(), folder: None, hub: None, principal: None, scopes: vec![], audit_dir: None, allow_origin: vec![], auto_approve: AutoApprovePolicy::Never };
     assert_eq!(options.port, 7401);
     assert_eq!(options.bind, "127.0.0.1");
 }
 
-/// 🎯️ `tools/list` is 28 tools and every one of them is real: 3 core gateway + 8 mutation-protocol
-/// + 5 `🗿️artifact` + 3 `💡️inference` (discovery pair + the general `inference_run` execution route)
-/// + 4 hub-backed `💡️inference` jobs + 4 `🖥️ui` + `conversation_reply` (ticket 26/09/18 slice AC1,
-/// the agent's own free-text turn). Ticket 26/08/29/AI-MCP-END-TO-END retired the last stub, so
-/// there is no longer a "declared but unimplemented" bucket to assert against.
+/// 🎯️ tools list is the full real gateway surface.
 #[test]
 fn tools_list_is_the_full_real_gateway_surface() {
     let server = fixture_server();
@@ -83,9 +77,7 @@ fn tools_list_is_the_full_real_gateway_surface() {
     }
 }
 
-/// 🪜️ Progressive enhancement, tier 1: with no workspace bound, a workspace-backed tool is
-/// present in `tools/list` and answers a principal holding its scopes with a structured, RETRYABLE
-/// `PLUGIN_UNAVAILABLE` naming the binding it needs — never a protocol-level failure, never fabricated data.
+/// 🪜️ workspace backed tools degrade to a retryable plugin unavailable without a binding.
 #[test]
 fn workspace_backed_tools_degrade_to_a_retryable_plugin_unavailable_without_a_binding() {
     let server = fixture_server_granting(&["workspace.read", "artifact.write", "ui.control"]);
@@ -118,7 +110,7 @@ fn capabilities_describe_tool_call_returns_the_full_definition() {
 fn context_resolve_tool_call_returns_a_context_summary_with_the_catalog_hash() {
     let server = fixture_server();
     let catalog = fixture_catalog();
-    let result = server.tools.call("context_resolve", serde_json::json!({ "principal": "agent:local" })).expect("known tool name resolves");
+    let result = server.tools.call("context_resolve", serde_json::json!({ "principal": "agent:local", "locale": "en" })).expect("known tool name resolves");
     assert!(!result.is_error);
     assert_eq!(result.structured_content.unwrap()["catalogHash"], catalog.hash);
 }
@@ -130,8 +122,7 @@ fn every_gateway_tool_name_satisfies_the_tool_name_charset() {
     }
 }
 
-/// 🎯️ The census and the registry agree — no tool is registered that the census omits, and no
-/// census name is unregistered. This is what makes `GATEWAY_TOOL_NAMES` a fact, not a comment.
+/// 🎯️ the tool census matches the registry exactly.
 #[test]
 fn the_tool_census_matches_the_registry_exactly() {
     let server = fixture_server();
@@ -142,11 +133,8 @@ fn the_tool_census_matches_the_registry_exactly() {
     assert_eq!(registered, census);
 }
 
-//#region 🔖️MutationProtocolToolWiring
 
-/// 🎬️ The exact scenario the brief's §5 live transcript demonstrates, proven deterministically:
-/// a principal WITH `artifact.write` can `action_prepare` the cad demo capability and gets back a
-/// real `PreparedActionReport`.
+/// 🎬️ action prepare tool call returns a prepared action report for a granted scope.
 #[test]
 fn action_prepare_tool_call_returns_a_prepared_action_report_for_a_granted_scope() {
     let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &["artifact.write".to_string()], None);
@@ -158,10 +146,7 @@ fn action_prepare_tool_call_returns_a_prepared_action_report_for_a_granted_scope
     assert_eq!(structured["capabilityId"], "cad.editor.translateSelection");
 }
 
-/// 🎬️ The second half of the brief's §5 live transcript: a principal WITHOUT the required scope
-/// gets `PERMISSION_DENIED`, never a protocol-level failure.
-///
-/// no scopes granted
+/// 🎬️ action prepare tool call is permission denied for a scope the principal lacks.
 #[test]
 fn action_prepare_tool_call_is_permission_denied_for_a_scope_the_principal_lacks() {
     let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &[], None);
@@ -184,15 +169,9 @@ fn action_invoke_tool_call_commits_a_prepared_capability_end_to_end() {
     assert!(structured["undoToken"].as_str().unwrap().starts_with("undo_"));
 }
 
-//#endregion 🔖️MutationProtocolToolWiring
 
-//#region 🔖️HubOpenRetry
 
-/// ⏳️ A hub whose descriptor index is mid-refresh answers a RETRYABLE `PLUGIN_UNAVAILABLE`, and
-/// until ticket 26/09/18 slice M9 nothing retried it: the gateway process exited before
-/// `initialize` (measured live 2026-09-21, M8 §5.4(2)). The law pins the three things that make the
-/// repair a retry and not a hang — a non-retryable failure is never re-attempted, a retryable one is
-/// re-attempted a BOUNDED number of times, and the total wait is finite and small.
+/// ⏳️ a hub open retries only what the hub marks retryable and always terminates.
 #[test]
 fn a_hub_open_retries_only_what_the_hub_marks_retryable_and_always_terminates() {
     let refreshing = GatewayError::new(GatewayErrorCode::PluginUnavailable, "authenticated hub descriptor index is refreshing; retry after authority refresh").retryable();
@@ -210,4 +189,3 @@ fn a_hub_open_retries_only_what_the_hub_marks_retryable_and_always_terminates() 
     assert!(total <= 15_000, "a client's initialize is never held for longer than the bound, found {total} ms");
 }
 
-//#endregion 🔖️HubOpenRetry

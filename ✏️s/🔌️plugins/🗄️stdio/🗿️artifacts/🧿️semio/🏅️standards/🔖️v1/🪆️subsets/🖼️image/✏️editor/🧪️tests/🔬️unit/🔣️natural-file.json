@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "codec": {
+    "formatKind": "stdio.semio.image@v1",
+    "extension": ".semio",
+    "mediaType": "application/vnd.semio",
+    "binary": true
+  },
+  "snapshot": {
+    "schema": "stdio.semio.image",
+    "width": 1,
+    "height": 1,
+    "colorspace": "rgba",
+    "bitDepth": 8,
+    "frames": [
+      {
+        "delayMs": 0,
+        "rgba8": [
+          12,
+          34,
+          56,
+          255
+        ]
+      }
+    ],
+    "icc": null,
+    "metadata": [
+      {
+        "key": "Title",
+        "value": "🧱️ Größe"
+      }
+    ]
+  }
+}

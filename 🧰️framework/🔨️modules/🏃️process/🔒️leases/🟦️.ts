@@ -11,7 +11,7 @@ import type {AcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocatio
 import { appendFileSync, closeSync, lstatSync, openSync, statSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmdirSync, rmSync, statfsSync, unlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
-import {leaseDatabaseUnopenableBusyV1,leaseFileBusyV1,leaseFilePortsV1,leaseRemovalOptionsV1,leaseUnopenablePausesV1,settleLeaseFileV1,type LeaseFilePortsV1} from "./🪟️windows/🟦️.ts";
+import {readLeaseQueueTicketV1,leaseDatabaseUnopenableBusyV1,leaseFileBusyV1,leaseFilePortsV1,leaseRemovalOptionsV1,leaseUnopenablePausesV1,settleLeaseFileV1,type LeaseFilePortsV1} from "./🪟️windows/🟦️.ts";
 
 /** 🛑️ The refusal texts load when a refusal happens, never at startup: every entry that takes a lease stays inside its module budget. */
 const refuseProcessV1 = (...input: Parameters<typeof import("../📖️texts/🟦️.ts").refuseProcessV1>): ReturnType<typeof import("../📖️texts/🟦️.ts").refuseProcessV1> => (createRequire(import.meta.url)("../📖️texts/🟦️.ts") as typeof import("../📖️texts/🟦️.ts")).refuseProcessV1(...input);
@@ -481,9 +481,9 @@ function queueTicketRow(queue:string,name:string):QueueRow|undefined{
   return parseQueueTicketRow(name,text);
 }
 /** 🧮️ Reads one earlier ticket for the turn decision: a released ticket counts for nothing, a malformed one blocks like a young exclusive writer. */
-function queueAheadV1(queue:string,name:string,now:number):QueueTicketV1|undefined{
-  let text:string;try{text=readFileSync(join(queue,name),"utf8");}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}
-  const request=queueTicketRequest(name),row=parseQueueTicketRow(name,text);
+async function queueAheadV1(options:QueuedLeaseOptions,started:number,queue:string,name:string,now:number):Promise<QueueTicketV1|undefined>{
+  const request=queueTicketRequest(name),text=await readLeaseQueueTicketV1(join(queue,name),options.signal,()=>{remaining(options,started);},{platform:leaseFilePortsV1.platform,read:path=>readFileSync(path,"utf8"),sleep:(milliseconds,signal)=>waitForLeaseContinuation(options,started,()=>delay(milliseconds,undefined,{signal}))});
+  if(text===undefined)return undefined;const row=parseQueueTicketRow(name,text);
   return Object.freeze(row?{pid:row.pid,mode:row.mode,sharedCohort:row.sharedCohort,yielding:row.yielding,arrivedAtMs:leaseRealArrivalV1(row.priority,request.arrivedAtMs)}:{pid:request.pid,mode:"exclusive" as const,sharedCohort:false,yielding:false,arrivedAtMs:now});
 }
 function queueWaitInfo(options:QueuedLeaseOptions,queue:string,live:readonly string[],ticket:string,queued:number):QueueWaitInfo|undefined{
@@ -594,7 +594,8 @@ async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:s
       if(own>=0)live.push(ticket);
       remaining(options, started);
       const now=Date.now(),before=live.slice(0,live.indexOf(ticket)),requester={pid:process.pid,mode:options.mode,sharedCohort:options.sharedCohort===true,yielding:options.yielding===true,holdsShared:options.mode==="shared"&&before.length>0&&leaseOrderPolicyV1().fairness.reentrantShared!==false&&holdsSharedInProcessV1(resolve(options.directory),options.resource)},
-        ahead=await retryInterruptedFilesystemRead(options.signal,()=>before.map(name=>queueAheadV1(queue,name,now)).filter((row):row is QueueTicketV1=>row!==undefined),options.control);
+        ahead:QueueTicketV1[]=[];
+      for(const name of before){const row=await queueAheadV1(options,started,queue,name,now);if(row)ahead.push(row);}
       remaining(options, started);
       if (live.includes(ticket) && queueMayProceedV1(requester,ahead,now,writerPreferenceForResourceV1(leaseOrderPolicyV1().fairness,options.resource))) {
         const acquire = (): Promise<ResourceLease> => acquireResourceLeaseBody({ ...options, admissionPatienceMs: leaseOrderPolicyV1().gate.admissionPatienceMilliseconds, timeoutMs: options.timeoutMs === undefined ? undefined : Math.max(0, options.timeoutMs - (Date.now() - started)) });

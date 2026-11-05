@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↩️restore-pins",
+  "semanticKind": "restore-pins",
+  "displayName": "Restore Pins",
+  "emoji": "↩️",
+  "aggregateVariant": "RestorePins",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "restore-pins",
+  "binaryTag": 12,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ],
+  "editable": false
+}

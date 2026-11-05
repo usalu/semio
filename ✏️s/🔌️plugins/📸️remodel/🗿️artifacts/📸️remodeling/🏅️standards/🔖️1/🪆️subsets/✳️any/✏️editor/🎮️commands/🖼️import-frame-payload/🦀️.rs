@@ -64,7 +64,9 @@ fn file_frames(payload: &ImportFramePayload, scene: &RemodelingSnapshot) -> (Vec
             Err(message) => (Vec::new(), vec![Effect::Notify { message }]),
         },
         Some((mime, bytes)) => {
-            let (width, height) = decode_still_image(&mime, &bytes).map_or((0, 0), |image| (image.width, image.height));
+            let Ok(image) = decode_still_image(&mime, &bytes) else { return (Vec::new(), Vec::new()) };
+            if image.width == 0 || image.height == 0 { return (Vec::new(), Vec::new()) }
+            let (width, height) = (image.width, image.height);
             (vec![ImageAsset { mime, data: base64_codec::base64_standard_encode(&bytes), width, height }], Vec::new())
         }
         None => (Vec::new(), Vec::new()),

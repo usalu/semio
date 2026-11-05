@@ -12,10 +12,13 @@ use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::context::{act, app, dispatch, dispatch_refused, select, select_face};
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
-use semio_framework_3d::mesh::HalfedgeMesh;
+
+fn paint_json(object: &LowpolyObject) -> serde_json::Value {
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&object.paint_layers))).unwrap()
+}
 
 fn faces(object: &LowpolyObject) -> usize {
-    HalfedgeMesh::from_json(&object.mesh_content).expect("mesh content parses").face_count()
+    object.mesh_state.clone().expect("managed mesh state").into_mesh().expect("valid managed mesh").face_count()
 }
 
 /// 🗑️ Delete at face granularity removes exactly the picked face and undo brings it back.
@@ -54,15 +57,31 @@ async fn delete_selection_removes_a_selected_object_but_keeps_the_last() {
 #[semio_framework_async_macros::async_test]
 async fn duplicate_object_copies_geometry_beside_the_source() {
     let mut a = app().await;
-    let source = a.snapshot().expect("projection").objects[0].clone();
-    dispatch(&mut a, LowpolyCommand::DuplicateObject(duplicate_object::DuplicateObject { object_id: None })).await;
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧬️managed-duplicate/🔣️.json")).unwrap();
+    dispatch(&mut a, LowpolyCommand::AddPrimitive(semio_s_artifact_lowpoly_lowpoly_commands::add_primitive::AddPrimitive { kind: Some("box".into()) })).await;
+    let source = a.snapshot().expect("projection").objects[1].clone();
+    assert_eq!(source.mesh_content, contract["precondition"]["literalMeshContent"].as_str().unwrap());
+    assert!(source.mesh_state.is_some());
+    dispatch(&mut a, LowpolyCommand::DuplicateObject(duplicate_object::DuplicateObject { object_id: Some(source.id.clone()) })).await;
     let snapshot = a.snapshot().expect("projection");
-    assert_eq!(snapshot.objects.len(), 2);
-    let copy = &snapshot.objects[1];
+    assert_eq!(snapshot.objects.len(), contract["expected"]["objectCount"].as_u64().unwrap() as usize);
+    let copy = &snapshot.objects[2];
     assert_ne!(copy.id, source.id);
     assert_eq!(copy.name, format!("{} copy", source.name));
     assert_eq!(faces(copy), faces(&source));
     assert_eq!(copy.mesh_content, source.mesh_content);
-    assert_eq!(copy.transform.position[0], source.transform.position[0] + 1.0);
-    assert_eq!(copy.mesh, Some(semio_s_artifact_lowpoly_lowpoly_model::snapshot::mesh_child_handle(&copy.id, &copy.mesh_content)), "the copy's handle is its own");
+    assert_eq!(copy.mesh_state, source.mesh_state);
+    assert!(copy.mesh_content.is_empty(), "managed geometry is independent of literal source");
+    for axis in 0..3 {
+        assert_eq!(copy.transform.position[axis], source.transform.position[axis] + contract["expected"]["positionOffset"][axis].as_f64().unwrap() as f32);
+    }
+    assert_eq!(paint_json(copy), paint_json(&source));
+    assert_eq!(copy.mesh, Some(semio_s_artifact_lowpoly_lowpoly_model::snapshot::managed_mesh_child_handle(&copy.id, copy.mesh_state.as_ref().unwrap())), "the copy's handle is its own");
+    let copied = copy.clone();
+    act(&mut a, "undo", serde_json::json!({})).await;
+    assert_eq!(a.snapshot().unwrap().objects.len(), contract["expected"]["undoObjectCount"].as_u64().unwrap() as usize);
+    act(&mut a, "redo", serde_json::json!({})).await;
+    let restored = a.snapshot().unwrap();
+    assert_eq!(restored.objects.len(), contract["expected"]["redoObjectCount"].as_u64().unwrap() as usize);
+    assert_eq!(restored.objects[2], copied);
 }

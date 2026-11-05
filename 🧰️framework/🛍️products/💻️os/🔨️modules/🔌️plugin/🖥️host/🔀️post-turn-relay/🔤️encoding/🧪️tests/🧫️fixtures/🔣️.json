@@ -1,0 +1,44 @@
+{
+  "value": {
+    "bytes": [
+      0,
+      13,
+      34,
+      255
+    ],
+    "text": "Source\nµ🙂"
+  },
+  "expected": "{\"bytes\":[0,13,34,255],\"text\":\"Source\\nµ🙂\"}",
+  "maximumSlices": 2000,
+  "resumeCapacityBytes": 0,
+  "budget": {
+    "input": {
+      "operation": 71,
+      "generation": 3,
+      "epoch": 2,
+      "work": {
+        "clockBinding": 1871,
+        "absoluteDeadlineUs": 1000000,
+        "fuel": 300
+      },
+      "grant": {
+        "maximumItems": 100,
+        "maximumCopyBytes": 10000,
+        "maximumCapacityBytes": 10000,
+        "maximumReleaseBytes": 10000,
+        "maximumDepth": 64
+      }
+    },
+    "retainedPolicy": {
+      "maximumItems": 10,
+      "maximumCopyBytes": 1000,
+      "maximumCapacityBytes": 1000,
+      "maximumReleaseBytes": 1000,
+      "maximumDepth": 8
+    },
+    "fuel": 20,
+    "deadlineUs": 900000,
+    "cancelled": false
+  },
+  "expectedBudget": "{\"input\":{\"operation\":71,\"generation\":3,\"epoch\":2,\"work\":{\"clockBinding\":1871,\"absoluteDeadlineUs\":1000000,\"fuel\":300},\"grant\":{\"maximumItems\":100,\"maximumCopyBytes\":10000,\"maximumCapacityBytes\":10000,\"maximumReleaseBytes\":10000,\"maximumDepth\":64}},\"retainedPolicy\":{\"maximumItems\":10,\"maximumCopyBytes\":1000,\"maximumCapacityBytes\":1000,\"maximumReleaseBytes\":1000,\"maximumDepth\":8},\"fuel\":20,\"deadlineUs\":900000,\"cancelled\":false}"
+}

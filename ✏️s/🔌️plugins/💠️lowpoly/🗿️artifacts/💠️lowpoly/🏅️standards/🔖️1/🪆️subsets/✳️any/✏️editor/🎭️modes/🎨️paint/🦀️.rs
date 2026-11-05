@@ -3,7 +3,6 @@
 
 use crate::windows::model;
 use crate::editor::lowpoly::modes::paint::windows::uv;
-use semio_plugin::create_default_layout;
 use semio_plugin::create_named_layout;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
@@ -26,8 +25,8 @@ pub fn definition() -> ModeDefinition {
 pub fn layout() -> NamedLayout {
     create_named_layout(
         LOWPOLY_PLAY_LAYOUT_PAINT,
-        "Paint",
-        create_default_layout(&[model::LOWPOLY_PLAY_WINDOW_MAIN.into(), uv::LOWPOLY_PLAY_WINDOW_UV.into()], "row", Some(&[60.0, 40.0]), Some(&["Model".into(), "UV".into()])),
+        "Paint / Malen",
+        crate::lowpoly_layout(&[model::LOWPOLY_PLAY_WINDOW_MAIN, uv::LOWPOLY_PLAY_WINDOW_UV], &[60.0, 40.0]),
         "builtin",
         Some("paintbrush".into()),
         None,

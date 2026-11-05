@@ -1,14 +1,21 @@
 /** 🤝️ Specific pins of the os MCP client end-to-end journey: the one plugin, artifact kind, verb and inference service the journey dispatches against. The neutral driver (`🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts`) owns the journey; this layer owns which plugins it measures. */
 import type { McpClientE2ePinsV1 } from "@semio-tech/framework-os-mcp";
 
+const bitmap={schema:"s.wfc.bitmap",seed:1,input:{width:1,height:1,palette:[{r:0,g:0,b:0,a:255}],pixels:"AA=="},output:{width:1,height:1,periodic:false},model:{patternSize:2,symmetry:1,periodicInput:true},pinned:[]};
+
 /** 🎯️ A gate that picked its target from a fuzzy `capabilities_search` measured whichever plugin BM25 happened to rank first that day: the same journey read `animate` on 2026-09-20 18:00 and `energy` four hours later purely because 20 more descriptors became decodable in between, and `energy` has no compiled component at all. `🗒️note` is the plugin whose guest the two-phase prepare/apply law is proven against (the same `addBlock` verb), and its component is the smallest of the rebuilt set (64 MB against `🌍️gis`'s 202 MB, which is what wedged an earlier run behind a 240 s request wall). `🀄️wfc` declares five real inference services of its own and its component is staged and current, whereas `inference_list` taking `declared[0]` handed the gate `🌍️gis`, whose guest answers `inference instantiate: wasmtime: failed to convert function to given type`. */
 export const SPECIFIC_MCP_CLIENT_E2E_PINS_V1: McpClientE2ePinsV1 = {
   pluginId: "note",
   artifactKind: "s.note.note",
   capabilityId: "note.s.note.note@1/*#editor.addBlock",
+  caller:{appId:"s.note.note@1/*#editor",modeId:"edit",windowKindId:"note-composite",locale:"en",terminology:"native"},
   searchQuery: "add a block to the note",
   noChangeCapabilityId: "note.s.note.note@1/*#editor.duplicateSelection",
   inferencePluginId: "wfc",
   inferenceArtifactKind: "s.wfc.bitmap",
   inferenceSchema: "s.wfc.bitmap.solve",
+  inferenceInitial:bitmap,
+  inferenceCancellationInitial:{...bitmap,output:{width:64,height:64,periodic:false}},
+  inferenceExpectedOutput:{pixels:"AA==",contradiction:false,entropy:[0]},
+  inferenceLimits:{workUnits:1_000_000,maximumElapsedMilliseconds:30_000,retainedPolicy:{maximumItems:4096,maximumCopyBytes:1<<20,maximumCapacityBytes:1<<20,maximumReleaseBytes:1<<20,maximumDepth:128}},
 };

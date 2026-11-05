@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "id": "items-denied",
+      "items": 0,
+      "release": "header",
+      "removed": false,
+      "work": 0
+    },
+    {
+      "id": "release-denied",
+      "items": 1,
+      "release": "short",
+      "removed": false,
+      "work": 0
+    },
+    {
+      "id": "exact-header",
+      "items": 1,
+      "release": "header",
+      "removed": true,
+      "work": 1
+    }
+  ]
+}

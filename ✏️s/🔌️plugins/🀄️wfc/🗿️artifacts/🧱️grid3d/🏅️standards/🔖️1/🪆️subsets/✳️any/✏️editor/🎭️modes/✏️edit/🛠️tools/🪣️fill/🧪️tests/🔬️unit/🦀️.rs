@@ -1,4 +1,4 @@
-//! 🧪 Fill tool laws — definition, progressive payloads, abort, oracle parity, and the language-agnostic vector.
+use semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver;
 
 use crate::editor::grid3d::modes::edit::windows::preview;
 use semio_plugin::Fault;
@@ -8,7 +8,7 @@ use semio_framework_tool_run::{ToolRunIdentity, ToolRunTraceKind};
 use std::sync::Arc;
 use crate::editor::grid3d::modes::edit::tools::fill::*;
 use crate::host::inferences::solve_with_clock;
-use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, StepBudget};
+use semio_framework_job::Generation;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 
 static PARTIAL_VECTOR: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill/🧪️tests/🧫️fixtures/🎞️partial-tick.json"));
@@ -17,7 +17,6 @@ fn identity() -> ToolRunIdentity {
     ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [7; 32])
 }
 
-const TEST_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
 
 /// 🧭️ What one driven call of the fill run lent to its caller.
 #[derive(Debug)]
@@ -30,19 +29,14 @@ enum Stepped {
 }
 
 /// 🦶️ One fuel budget against a shared operation — the child `WfcJob` is bound to that operation for the whole run.
-fn drive_once(job: &mut Grid3dFillRunJob, operation: OperationId, generation: Generation, cancel: &semio_framework_job::CancelToken, sequence: &mut u64, fuel: u64) -> Stepped {
-    let now = semio_framework_job::default_now_us().expect("clock");
-    let budget = StepBudget::new(fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4, TEST_GRANT);
-    let mut receipt = semio_framework_job::RetainedCloneProgress::default();
-    let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(operation, generation, budget, cancel.clone(), sequence, &mut receipt);
-    let mut verdict = None;
-    match semio_framework_job::drive_step(job, &mut context, "wfc.grid3d.fill.run.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("fill step admission") {
+fn drive_once(job: &mut Grid3dFillRunJob, driver: &mut TestJobDriver, fuel: u64) -> Stepped {
+    driver.step(job, fuel, |outcome| match outcome {
         None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. } | semio_framework_job::JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Yield,
         Some(semio_framework_job::JobOutcomeBorrow::PreviewReady { payload, .. }) => Stepped::Tick((0..payload.page_count()).flat_map(|index| payload.page(index).expect("page").to_vec()).collect()),
         Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
         Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
         Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
-    }
+    })
 }
 
 fn tick_payload(outcome: Stepped) -> Option<Grid3dFillPayload> {
@@ -55,30 +49,7 @@ fn tick_payload(outcome: Stepped) -> Option<Grid3dFillPayload> {
     }
 }
 
-fn close(job: &mut Grid3dFillRunJob) {
-    job.begin_close();
-    for _ in 0..1_000_000 {
-        if job.terminal_is_empty() {
-            return;
-        }
-        let grant = semio_framework_job::RetainedCloneGrant {
-            maximum_items: 1,
-            maximum_copy_bytes: job.next_close_copy_byte_demand().expect("a locally owned fill quotes its copy demand"),
-            maximum_capacity_bytes: job.next_close_capacity_byte_demand(usize::MAX).expect("a locally owned fill quotes its capacity demand"),
-            maximum_release_bytes: job.next_close_release_byte_demand().expect("a locally owned fill quotes its release demand"),
-            maximum_depth: job.next_close_depth_demand().expect("a locally owned fill quotes its depth demand").max(1),
-        };
-        match semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn") {
-            InteractiveJobCloseStep::Complete { .. } => {
-                assert!(job.terminal_is_empty());
-                return;
-            }
-            InteractiveJobCloseStep::Pending { .. } => {}
-            InteractiveJobCloseStep::Blocked => panic!("fill close blocked or refused"),
-        }
-    }
-    panic!("fill close never completed");
-}
+
 
 #[test]
 fn the_tool_declares_the_read_only_grid3d_fill_run() {
@@ -106,22 +77,22 @@ fn the_language_agnostic_partial_vector_decodes_to_the_normative_shape() {
     assert!(payload.assignments[1].tile_id.is_none());
     let schema: serde_json::Value = serde_json::from_str(PAYLOAD_SCHEMA).expect("schema parses");
     assert_eq!(schema["$id"], "s.wfc.grid3d.fill.tick.v1");
-    assert_eq!(schema["required"], serde_json::json!(["assignments", "contradiction", "done"]));
+    assert_eq!(schema["required"], serde_json::json!(["assignments", "contradiction", "done", "sourceRevision"]));
 }
 
 #[test]
 fn stepping_publishes_a_strictly_increasing_partial_before_the_finish() {
-    preview::clear_fill_commit_for_test();
     let snapshot = Arc::new(crate::examples::blocks::snapshot());
     let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("blocks solves");
     let finished = oracle.assignments.len();
     assert!(finished > 2, "the fixture must leave room to collapse");
-    let mut job = Grid3dFillRunJob::new(identity(), snapshot, Some("fill-test".into()));
+    let port=semio_framework_plugin::ToolRunJobPort::default();
+    let mut job = Grid3dFillRunJob::new(identity(), snapshot, port.clone());
     let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(operation, generation);
     let mut partials = Vec::new();
     for _ in 0..500_000 {
-        let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, 1);
+        let outcome = drive_once(&mut job, &mut driver, 1);
         if let Some(payload) = tick_payload(outcome) {
             let decided = payload.decided_count();
             if payload.done {
@@ -134,7 +105,7 @@ fn stepping_publishes_a_strictly_increasing_partial_before_the_finish() {
                 assert_eq!(got, want);
                 assert!(partials.iter().any(|&count| count > 0 && count < finished), "need a decided count strictly between 0 and finished: {partials:?}");
                 assert!(partials.windows(2).any(|pair| pair[1] > pair[0]) || partials.iter().any(|&count| count > 0), "a later step must grow the decided count: {partials:?}");
-                close(&mut job);
+                driver.close(&mut job);
                 return;
             }
             if decided > 0 {
@@ -142,49 +113,49 @@ fn stepping_publishes_a_strictly_increasing_partial_before_the_finish() {
             }
         }
     }
-    close(&mut job);
+    driver.close(&mut job);
     panic!("fill never finished; partials={partials:?}");
 }
 
 #[test]
 fn aborting_mid_run_cancels_and_never_stores_residency() {
-    preview::clear_fill_commit_for_test();
     let snapshot = Arc::new(crate::examples::blocks::snapshot());
-    let mut job = Grid3dFillRunJob::new(identity(), snapshot, Some("fill-abort".into()));
+    let port=semio_framework_plugin::ToolRunJobPort::default();
+    let mut job = Grid3dFillRunJob::new(identity(), snapshot, port.clone());
     let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(operation, generation);
     let mut saw_partial = false;
     for _ in 0..500_000 {
-        let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, 1);
+        let outcome = drive_once(&mut job, &mut driver, 1);
         if let Some(payload) = tick_payload(outcome) {
             if payload.decided_count() > 0 && !payload.done {
                 saw_partial = true;
                 break;
             }
             if payload.done {
-                close(&mut job);
+                driver.close(&mut job);
                 panic!("finished before abort window");
             }
         }
     }
     assert!(saw_partial, "need a live partial before aborting");
     job.begin_close();
-    let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, 1);
+    let outcome = drive_once(&mut job, &mut driver, 1);
     assert!(matches!(outcome, Stepped::Cancelled), "closing mid-run must cancel: {outcome:?}");
-    assert!(preview::last_fill_commit().is_none(), "abort must not store residency");
-    close(&mut job);
+    assert!(!port.has_effects(), "abort must not publish a completed transient");
+    driver.close(&mut job);
 }
 
 #[test]
 fn the_final_payload_matches_solve_for_blocks() {
-    preview::clear_fill_commit_for_test();
     let snapshot = Arc::new(crate::examples::blocks::snapshot());
     let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("blocks solves");
-    let mut job = Grid3dFillRunJob::new(identity(), snapshot, Some("fill-oracle".into()));
+    let port=semio_framework_plugin::ToolRunJobPort::default();
+    let mut job = Grid3dFillRunJob::new(identity(), snapshot, port.clone());
     let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(operation, generation);
     for _ in 0..500_000 {
-        let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, 1);
+        let outcome = drive_once(&mut job, &mut driver, 1);
         if let Some(payload) = tick_payload(outcome) {
             if payload.done {
                 let mut got = payload.decided_assignments();
@@ -193,25 +164,27 @@ fn the_final_payload_matches_solve_for_blocks() {
                 want.sort_by_key(|row| (row.z, row.y, row.x));
                 assert_eq!(got, want);
                 assert_eq!(payload.contradiction, !oracle.satisfiable);
-                assert!(preview::last_fill_commit().is_some(), "completion stores residency");
-                close(&mut job);
+                assert!(port.has_effects(), "completion dispatches the instance-local transient commit");
+                assert_eq!(payload.source_revision, identity().base_revision);
+                driver.close(&mut job);
                 return;
             }
         }
     }
-    close(&mut job);
+    driver.close(&mut job);
     panic!("fill never produced a done payload");
 }
 
 #[test]
 fn a_full_lane_step_publishes_many_collapses_in_one_tick() {
     let snapshot = Arc::new(crate::examples::blocks::snapshot());
-    let mut job = Grid3dFillRunJob::new(identity(), snapshot, Some("fill-burst".into()));
+    let port=semio_framework_plugin::ToolRunJobPort::default();
+    let mut job = Grid3dFillRunJob::new(identity(), snapshot, port.clone());
     let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
-    let mut sequence = 0;
+    let mut driver = TestJobDriver::new(operation, generation);
     let mut bursts = Vec::new();
     for _ in 0..400 {
-        let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, semio_framework_job::INTERACTIVE_LANE_FUEL);
+        let outcome = drive_once(&mut job, &mut driver, semio_framework_job::INTERACTIVE_LANE_FUEL);
         if let Some(payload) = tick_payload(outcome) {
             bursts.push(payload);
         }
@@ -219,7 +192,7 @@ fn a_full_lane_step_publishes_many_collapses_in_one_tick() {
             break;
         }
     }
-    close(&mut job);
+    driver.close(&mut job);
     let best = bursts.iter().map(|payload| payload.trace.len()).max().unwrap_or(0);
     assert!(best > 1, "one host step must carry more than one collapse, best {best} across {} ticks", bursts.len());
 }

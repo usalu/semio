@@ -1,0 +1,288 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defs": {
+    "ExportOperationPolicy": {
+      "const": {
+        "maximumDurationMs": 300000,
+        "pollIntervalMs": 10,
+        "maximumDescriptorBytes": 16384
+      }
+    },
+    "DeferredPlan": {
+      "type": "object",
+      "required": [
+        "pluginId",
+        "appId",
+        "instanceId",
+        "windowKindId",
+        "deferredAction",
+        "args",
+        "invocationKind",
+        "modeId"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "instanceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "windowKindId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "deferredAction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "object"
+        },
+        "invocationKind": {
+          "enum": [
+            "action",
+            "appCommand",
+            "modeCommand",
+            "pluginCommand"
+          ]
+        },
+        "modeId": {
+          "type": "string"
+        },
+        "context": {
+          "title": "ResolvedPluginViewState",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "locale",
+            "terminology"
+          ],
+          "properties": {
+            "activeModeId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            },
+            "activeWindowKindId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            },
+            "activeUtilityId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            },
+            "activeToolId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            },
+            "windowId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            },
+            "focusedWindowId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            },
+            "panelJson": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "extensionInputJson": {
+              "description": "Ephemeral parameters of this embedded surface, owned by its parent. Never stored in the contributor document.",
+              "type": "string",
+              "maxLength": 65536
+            },
+            "sessionIdentity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "userId",
+                "displayName"
+              ],
+              "properties": {
+                "userId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                },
+                "displayName": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                }
+              }
+            },
+            "locale": {
+              "enum": [
+                "en",
+                "de"
+              ]
+            },
+            "terminology": {
+              "enum": [
+                "native",
+                "reuse"
+              ]
+            },
+            "activeUtilityByWindowId": {
+              "type": "object",
+              "maxProperties": 64,
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "windowInstances": {
+              "type": "array",
+              "maxItems": 64,
+              "uniqueItems": true,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "windowKindId"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                  },
+                  "windowKindId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                  }
+                }
+              }
+            },
+            "toolRunTraceCursorByWindowId": {
+              "type": "object",
+              "maxProperties": 64,
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+              },
+              "additionalProperties": {
+                "description": "The tool run trace cursor a window instance's renderer echoes: the next page it expects of run `run` at `generation` (tool-run schema ToolRunTraceCursor, run bounded to exact JavaScript integers).",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "run",
+                  "generation",
+                  "page"
+                ],
+                "properties": {
+                  "run": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "generation": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  },
+                  "page": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  }
+                }
+              }
+            },
+            "treeWindows": {
+              "description": "Every tree container the host holds open/window state for, flattened over all panel bodies — the one source of truth a guest materialises its tree rows from.",
+              "type": "array",
+              "maxItems": 128,
+              "items": {
+                "description": "One tree container's host-known state: whether the user opened or closed it (absent = the author's own default still stands) and the row window on screen, overscan included.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bodyKey",
+                  "nodeKey",
+                  "offset",
+                  "rows"
+                ],
+                "properties": {
+                  "bodyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                  },
+                  "nodeKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                  },
+                  "open": {
+                    "type": "boolean"
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  },
+                  "rows": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  }
+                }
+              }
+            },
+            "treeViewportRows": {
+              "description": "Rows the tallest visible panel body fits — the shared first-paint budget a guest spends over containers the host has not yet seen.",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          }
+        }
+      }
+    }
+  }
+}

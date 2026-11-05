@@ -1,0 +1,80 @@
+{
+  "schema": "lowpoly.localized-ui/v1",
+  "cases": [
+    {
+      "locale": "en",
+      "utility": "move",
+      "granularity": "face",
+      "count": 2,
+      "expect": {
+        "status": "Move · 2 Faces selected",
+        "placeholder": "Enter a mesh command",
+        "failedModel": "Failed to load lowpoly document",
+        "failedUv": "Failed to load UV canvas"
+      }
+    },
+    {
+      "locale": "de",
+      "utility": "move",
+      "granularity": "face",
+      "count": 2,
+      "expect": {
+        "status": "Verschieben · 2 Flächen ausgewählt",
+        "placeholder": "Netzbefehl eingeben",
+        "failedModel": "Lowpoly-Dokument konnte nicht geladen werden",
+        "failedUv": "UV-Leinwand konnte nicht geladen werden"
+      }
+    },
+    {
+      "locale": "en",
+      "utility": "move",
+      "granularity": "face",
+      "count": 0,
+      "expect": {
+        "status": "Move",
+        "placeholder": "Enter a mesh command",
+        "failedModel": "Failed to load lowpoly document",
+        "failedUv": "Failed to load UV canvas"
+      }
+    },
+    {
+      "locale": "en",
+      "utility": "move",
+      "granularity": "face",
+      "count": 1,
+      "expect": {
+        "status": "Move · 1 Face selected",
+        "placeholder": "Enter a mesh command",
+        "failedModel": "Failed to load lowpoly document",
+        "failedUv": "Failed to load UV canvas"
+      }
+    },
+    {
+      "locale": "de",
+      "utility": "move",
+      "granularity": "face",
+      "count": 0,
+      "expect": {
+        "status": "Verschieben",
+        "placeholder": "Netzbefehl eingeben",
+        "failedModel": "Lowpoly-Dokument konnte nicht geladen werden",
+        "failedUv": "UV-Leinwand konnte nicht geladen werden"
+      }
+    },
+    {
+      "locale": "de",
+      "utility": "move",
+      "granularity": "face",
+      "count": 1,
+      "expect": {
+        "status": "Verschieben · 1 Fläche ausgewählt",
+        "placeholder": "Netzbefehl eingeben",
+        "failedModel": "Lowpoly-Dokument konnte nicht geladen werden",
+        "failedUv": "UV-Leinwand konnte nicht geladen werden"
+      }
+    }
+  ],
+  "sharedPresetLabels": {
+    "paint": "Paint / Malen"
+  }
+}

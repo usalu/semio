@@ -1,4 +1,5 @@
 //! 🧬️ schema-2 of `semio-s-artifact-stdio-jpg` — a path-preserving carve of the artifact root mounts.
+//! 🧱️ Baseline JPEG vocabulary reuses the document schema and native conformance owner.
 
 #![allow(async_fn_in_trait)]
 
@@ -16,14 +17,52 @@ pub use semio_s_artifact_stdio_contract::mutation_from_payload_json;
 pub use semio_s_artifact_stdio_contract::mutation_inverse;
 pub use semio_s_artifact_stdio_contract::mutation_payload_json;
 pub use semio_s_artifact_stdio_contract::MutationRefusal;
+pub use semio_s_artifact_stdio_jpg_inferences::STDIO_JPG_DOCUMENT_SCHEMA;
 pub mod schema {
     pub use super::standards::v_jfif_1_01::subsets::document::schema::*;
 }
-pub use semio_s_artifact_stdio_jpg_operations::{ARTIFACT_DEFINITION_SCHEMA};
-pub use semio_s_artifact_stdio_jpg_inferences::{STDIO_JPG_DOCUMENT_SCHEMA};
-pub use semio_s_artifact_stdio_jpg_mutations::{JPG_ANY_DIALECT, JPG_BASELINE_DIALECT, native_codecs};
-pub use crate::editor::jpg_any::artifact_items_7::{definition};
-
-#[path = "🪞️mirror/🦀️.rs"]
-mod mirror;
-pub use mirror::*;
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v_jfif_1_01 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod document {
+                #[path = "."]
+                pub mod schema {
+                    pub use semio_s_artifact_stdio_jpg_schema::standards::v_jfif_1_01::subsets::document::schema::*;
+                    pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::document::schema::snapshot;
+                    #[path = "."]
+                    pub mod diff {
+                        pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::schema::diff::*;
+                        #[cfg(test)]
+                        #[path = "../../../../🧾️document/🧬️schema/🔺️diff/🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
+                        mod tests;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::schema::mutations::*;
+                        #[path = "."]
+                        pub mod replace_image {
+                            pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::schema::mutations::replace_image::*;
+                            #[cfg(test)]
+                            #[path = "../../../../🧾️document/🧬️schema/🧬️mutations/🖼️replace-image/🧪️tests/🦀️.rs"]
+                            mod tests;
+                        }
+                    }
+                    #[cfg(test)]
+                    #[path = "../../../../🧾️document/🧪️tests/🛡️mutation-regressions/🦀️.rs"]
+                    mod mutation_regressions;
+                }
+            }
+            pub mod baseline {
+                pub mod schema {
+                    pub use super::super::document::schema::*;
+                    pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::baseline::schema::conformance;
+                    pub use conformance::*;
+                }
+            }
+        }
+    }
+}

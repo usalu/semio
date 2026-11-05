@@ -299,8 +299,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 match result{Ok(result)=>original_configuration=result,Err(failure)=>original_media_failure=Some(failure.into())}original_configuration.is_none()
             },
             Some(protocol::AppCommand::PureCommand{command,head,..})=>{
-                let meta=ActionMeta{ expected_document_revision:None,actor:instance_actor(runtime,instance_id).await?.into(),instance_id,view_state:None};
-                let result=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;if !instance.app.original_command_frame_pending()&&!::semio_framework_async::poll::resolve_ready(instance.app.hydrate_pure_head(head,cx))?{return Ok(None)}let result=::semio_framework_async::poll::resolve_ready(instance.app.handle_command_frame(command,&meta,identity,cx))?;Ok(result.map(|result|(result,::semio_framework_async::poll::resolve_ready(instance.app.take_last_emit_wire()).unwrap_or_default())))}).await;
+                let actor=instance_actor(runtime,instance_id).await?;
+                let request:semio_framework::kernel::PureCommandRequest=decode_wire_serialized(command).await?;
+                let view_state=if let Some(view)=request.view_state{Some(view)}else{with_instances_original_mut(runtime,|list|Ok(find_instance(list,instance_id)?.surface_contexts.view().cloned())).await?};
+                let result:Result<Option<(semio_framework::kernel::InvocationResult,EmitWire)>,semio_framework_job::OriginalTurnFailure>=match request.invocation{
+                    semio_framework::kernel::PureInvocation::Command(invocation) if matches!(&invocation.address.owner,semio_framework::manifest::CommandOwnerAddress::Plugin{..})=>{
+                    let program=runtime.plugin.borrow();
+                    let program=program.as_ref().ok_or_else(||plugin_internal_fault("preview command plugin is unavailable"))?;
+                    let arguments=DslValue::Object(invocation.arguments.into_iter().collect());
+                    let result=program.handle_plugin_command(&semio_framework::manifest::CommandInvocationView{address:&invocation.address,arguments:&arguments},&ActionMeta{expected_document_revision:None,actor:actor.into(),instance_id,view_state})?;
+                    if !result.mutations.is_empty()||!result.requested_effects.is_empty()||!result.events.is_empty()||result.history_patch.is_some()||!result.inverse_group.mutations.is_empty()||!result.inverse_group.inverse_mutations.is_empty()||!result.inverse_group.member_edits.is_empty()||!matches!(result.ui_scope,semio_framework::kernel::UiDirtyScope::None){Err(Fault::new(FaultOrigin::Framework,FaultCode::new("plugin.unavailable"),"this plugin command requires the live shell command executor for its mutations, effects, events or view updates; attach its live shell and invoke through that owned command route").into())}else{Ok(Some((result,EmitWire::default())))}
+                },_=>{
+                    with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;let meta=ActionMeta{expected_document_revision:None,actor:actor.into(),instance_id,view_state};if !instance.app.original_command_frame_pending()&&!::semio_framework_async::poll::resolve_ready(instance.app.hydrate_pure_head(head,cx))?{return Ok(None)}let result=::semio_framework_async::poll::resolve_ready(instance.app.handle_command_frame(command,&meta,identity,cx))?;Ok(result.map(|result|(result,::semio_framework_async::poll::resolve_ready(instance.app.take_last_emit_wire()).unwrap_or_default())))}).await.map_err(semio_framework_job::OriginalTurnFailure::from)
+                }
+                };
                 match result{Ok(result)=>original_preview=result,Err(failure)=>original_media_failure=Some(failure.into())};original_preview.is_none()
             },
             _=>false,

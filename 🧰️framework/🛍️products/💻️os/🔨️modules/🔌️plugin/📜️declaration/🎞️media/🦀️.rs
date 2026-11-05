@@ -451,7 +451,7 @@ impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportHandl
 
 /// 📬️ A funded terminal publication owns its exact status metadata independently of the download.
 #[derive(semio_framework_value::RetireOwned)]
-pub struct ArtifactMediaExportPublishedStatus{pub mime_type:String,pub total_bytes:u64}
+pub struct ArtifactMediaExportPublishedStatus{pub mime_type:String,pub total_bytes:u64,pub port:String,pub schema:String,pub media_type:MediaType}
 
 /// 📡️ Result of advancing one submitted media export by at most one worker slice.
 #[derive(Clone, Debug,semio_framework_value::RetireOwned)]

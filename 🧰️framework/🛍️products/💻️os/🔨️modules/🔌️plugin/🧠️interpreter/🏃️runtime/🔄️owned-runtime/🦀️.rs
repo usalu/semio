@@ -26,7 +26,7 @@ impl OwnedRuntime {
             return Err(PluginHostError::Plugin("owned actor has an undriven start function".to_string()));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let mut state = OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(artifact), actor:Some(owned), original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        let mut state = OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(artifact), actor:Some(owned), original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None,original_unit:None,original_host:None, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
         admit_owned_channel(&mut state).map_err(turn_fault_host)?;
         Ok(state)
     }
@@ -73,17 +73,14 @@ impl OwnedRuntime {
         Ok(OwnedCodecOriginUse { origin, spent_fuel: fuel, reported_fuel: fuel })
     }
 
-    /// 🏗️ Admits a fresh instance's channel ([`admit_owned_channel`]: the codec decodes channel-versioned `.spr`, envelope
-    /// and native bytes), then runs `codec.pack-schema-hash` for [`OWNED_CODEC_ORIGIN_SCHEMA`] on it — every owned codec
-    /// export first assembles the plugin bundle — and keeps the instance it completed on. Its answer, a refusal, is read only
-    /// to know the export completed as the ABI says.
+    /// 🏗️ Opens one guest through actual channel admission.
     fn assemble_codec_origin(&self, owned: &OwnedCompiledGuest, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<OwnedCodecOrigin, TurnFault> {
         let actor = owned.artifact.instantiate().map_err(core_fault)?;
         if actor.startup_active() {
             return Err(TurnFault::Host(PluginHostError::Plugin("owned actor has an undriven start function".to_string())));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let mut state = OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(&owned.artifact), actor:Some(actor), original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        let mut state = OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(&owned.artifact), actor:Some(actor), original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None,original_unit:None,original_host:None, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
         admit_owned_channel(&mut state)?;
         let encoded = serde_json::to_vec(&OwnedCodecInput { artifact_schema: OWNED_CODEC_ORIGIN_SCHEMA, document_id: "", pack: &[], spr: &[], ops: &[] }).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(&mut state, OwnedOperation::PackSchemaHash, Some(encoded))?;
@@ -98,7 +95,7 @@ impl OwnedRuntime {
     /// 🧬️ A throwaway instance of `owned` in its codec origin's state.
     fn origin_instance(&self, owned: &OwnedCompiledGuest, origin: &OwnedCodecOrigin) -> OwnedGuestInstance {
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(&owned.artifact), actor:Some(origin.actor.clone()),original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None, pending: None, original_receipt: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id }
+        OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(&owned.artifact), actor:Some(origin.actor.clone()),original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None,original_unit:None,original_host:None, pending: None, original_receipt: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id }
     }
 
     /// 🧬️ A throwaway instance of `compiled` in its codec origin's state, for a caller that drives its own codec operation on
@@ -160,14 +157,7 @@ impl OwnedRuntime {
         self.describe_observed(compiled, budget, |_, _| {}).await
     }
 
-    /// 🌱️ Runs one of the component's pure `codec` functions on a throwaway instance. This is
-    /// the host half of ticket 26/09/18 slice TC3b: a headless server resolves a document kind's
-    /// schema fingerprint, its canonical empty document, its pair-validation mirror and its edit
-    /// apply from the component itself, so a package whose Rust codec the server does not link is
-    /// still fully creatable and editable. The instance is a copy of the compiled guest's codec
-    /// origin ([`OwnedCodecOrigin`]), created and dropped per call — nothing here observes or mutates
-    /// live actor state, and no call sees what another did. `budget.fuel` bounds the call including
-    /// the origin assembly it may run first; `progress` reports both as one count.
+    /// 🌱️ Invokes a component codec through its admitted compiled origin.
     pub(super) fn codec_call<T: serde::de::DeserializeOwned, I: serde::Serialize>(&self, compiled: &OwnedCompiledGuest, operation: OwnedOperation, input: &I, budget: Budget, mut progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<T, TurnFault> {
         let used = self.codec_origin(compiled, budget, &mut progress, cancellation)?;
         let state = &mut self.origin_instance(compiled, &used.origin);
@@ -208,10 +198,7 @@ impl OwnedRuntime {
         self.codec_pack_schema_hash_observed(compiled, artifact_schema, budget, |_, _| {}, &GuestCallCancellation::default()).await
     }
 
-    /// 🧬️ `codec.pack-schema-hash` with the same original deadline and fuel observations as [`Self::codec_genesis_observed`].
-    /// Catalog startup verifies every unlinked package through this call under
-    /// `OperationContext::stall_bounded`; without guest fuel reaching that context a 30 s quiet span
-    /// on a loaded machine looks like a wedged load (`trusted-catalog-load-stalled-before-it-finished`).
+    /// 🧬️ Observes the component pack schema hash under its supplied bounds.
     pub async fn codec_pack_schema_hash_observed(&self, compiled: &OwnedCompiledGuest, artifact_schema: &str, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<[u8; 32], TurnFault> {
         let bytes: Vec<u8> = self.codec_call(compiled, OwnedOperation::PackSchemaHash, &OwnedCodecInput { artifact_schema, document_id: "", pack: &[], spr: &[], ops: &[] }, budget, progress, Some(cancellation))?;
         <[u8; 32]>::try_from(bytes.as_slice()).map_err(|_| TurnFault::Trapped("guest pack schema hash is not 32 bytes".to_string()))
@@ -222,13 +209,7 @@ impl OwnedRuntime {
         self.codec_genesis_observed(compiled, artifact_schema, document_id, budget, |_, _| {}, &GuestCallCancellation::default()).await
     }
 
-    /// 📈️ `codec.genesis` with bounded fuel-progress observations, for a caller whose own bound is a
-    /// STALL bound. A hub creates a document on a detached task under
-    /// `OperationContext::stall_bounded`, and the guest call is the single longest thing that task
-    /// does — without the guest's fuel progress reaching it, the hub cannot tell an interpreter that
-    /// is stepping from one that is wedged, and has to pick between refusing honest work and never
-    /// refusing anything. The observations are the same ones `describe_observed` reports: one per
-    /// 25 M fuel or per 5 s, whichever comes first.
+    /// 📈️ Reports bounded progress while producing the component genesis document.
     pub async fn codec_genesis_observed(&self, compiled: &OwnedCompiledGuest, artifact_schema: &str, document_id: &str, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<GuestDocumentPair, TurnFault> {
         self.codec_call(compiled, OwnedOperation::Genesis, &OwnedCodecInput { artifact_schema, document_id, pack: &[], spr: &[], ops: &[] }, budget, progress, Some(cancellation))
     }

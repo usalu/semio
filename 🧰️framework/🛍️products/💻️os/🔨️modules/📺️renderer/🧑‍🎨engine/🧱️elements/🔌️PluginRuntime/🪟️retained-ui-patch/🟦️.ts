@@ -1,3 +1,4 @@
+import {canonicalDecimalHandle} from "../../../../../../../../🔨️modules/🎠️kernel/🪪️identity/🔢️handles/🟦️.ts";
 /** 🪟️ The retained per-actor UI document: patch application, snapshot, hash and built-node projection, and the wire-effect to friendly-`Effect` mapping.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
@@ -157,8 +158,11 @@ export function wireEffectToFriendly(effect: WireVariant): Effect | null {
       return { setActiveTool: { toolId: str("toolId") } };
     case "open-window":
       return { openWindow: { req: num("req"), kind: paramStr("kind"), params: paramPack("params") } };
-    case "close-window":
-      return { closeWindow: { window: num("window") } };
+    case "close-window": {
+      const window=canonicalDecimalHandle(val.window);
+      if(window===null)throw Error("close-window requires its canonical decimal u128 identity");
+      return {closeWindow:{window}};
+    }
     case "dispatch-action": {
       const action = paramStr("action");
       if (!action) {

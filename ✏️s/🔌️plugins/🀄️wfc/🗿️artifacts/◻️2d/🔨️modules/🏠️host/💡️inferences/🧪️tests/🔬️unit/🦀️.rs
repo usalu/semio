@@ -1,6 +1,8 @@
 //! 🧪️ The solve inference — determinism, the contradiction verdict and the entropy map.
 
-use crate::schema::inferences::{solve_relations, Wfc2dContradiction, Wfc2dSolve, Wfc2dSolveResult};
+use crate::host::inferences::{Wfc2dInferenceJob, Wfc2dInferenceRequest};
+use crate::standards::v1::subsets::any::schema::inferences::Wfc2dInferenceCommit;
+use crate::schema::inferences::{solve_relations };
 
 
 use crate::host::inferences::{solve_with_clock};
@@ -8,6 +10,15 @@ use crate::schema::snapshot::{Wfc2dRule, Wfc2dSnapshot};
 
 /// 🎲 One seed, one answer: two solves of the same document agree exactly. This is what makes the
 /// `DepHash` caching over the inferred fields sound.
+fn resumable_result(snapshot: &Wfc2dSnapshot) -> Result<Wfc2dInferenceCommit, String> {
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(1), snapshot.seed);
+    let mut job = Wfc2dInferenceJob::new(operation, Wfc2dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
+    let mut driver = semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::new(operation.operation, operation.generation);
+    let bytes = driver.completed_output(&mut job, 64, 2_000_000)?;
+    let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
+    crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value::<Wfc2dInferenceCommit>(text).map_err(|error| error.to_string())
+}
+
 #[test]
 fn a_seed_pins_the_solve() {
     let document = crate::examples::two_room_corridor::document();
@@ -79,16 +90,12 @@ fn the_hex_ring_solves() {
 
 /// 💡️ The `InferredField` façades agree with the job they both drive.
 #[test]
-fn inferred_fields_agree_with_the_job() {
-    use store::InferredField;
+fn resumable_job_and_headless_batch_publish_the_same_answer() {
     let document = crate::examples::two_room_corridor::document();
-    let key = "wfc2d".to_string();
-    let solved = Wfc2dSolve::compute(&document, &key, &[]);
-    match solved {
-        Wfc2dSolveResult::Solved { assignments } => assert_eq!(assignments, solve_with_clock(&document, semio_framework_job::logical_now_us).expect("solves").assignments),
-        Wfc2dSolveResult::Unsolved => panic!("the corridor spec is satisfiable"),
-    }
-    assert!(!Wfc2dContradiction::compute(&document, &key, &[]));
+    let stepped = resumable_result(&document).expect("resumable corridor completes");
+    let batch = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("headless corridor completes");
+    assert_eq!(stepped, batch);
+    assert!(!stepped.contradiction);
 }
 
 /// 🕳️ A document with no slots is trivially satisfiable and commits an empty assignment.

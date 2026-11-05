@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "owner": "fixture:open-wait-prefix",
+  "shortMilliseconds": 60,
+  "longMilliseconds": 60000,
+  "delayMilliseconds": 90,
+  "delayReads": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "expectedAuthorized": true
+}

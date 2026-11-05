@@ -1,3 +1,5 @@
+import { validatePaintPixels } from "./🎨️texture/🟦️";
+export * from "./🎨️texture/🟦️";
 /** 🧬️ Lowpoly artifact schema — every field with its state class. */
 import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 import { type Binary32 } from "@semio-tech/framework/value/ieee754";
@@ -130,7 +132,8 @@ export function parseLowpolyObject(value: unknown, at = "$"): LowpolyObject {
 /** 📐️ Exact three-component native binary32 vector. */
 export function parseLowpolyVector(value:unknown,at="$"):[Binary32,Binary32,Binary32]{const row=lowpolyLowpolyArtifactGuardArray(value,at,{minItems:3,maxItems:3});return[parseBinary32(row[0]),parseBinary32(row[1]),parseBinary32(row[2])];}
 /** 🎨️ Intrinsic persisted pixel octets, independent of any wire encoding. */
-export function parseLowpolyPixels(value:unknown):Uint8Array{if(!(value instanceof Uint8Array))throw Error("Lowpoly pixels require owned octets");return value.slice();}
+export function parseLowpolyPixels(value:unknown):Uint8Array{if(!(value instanceof Uint8Array))throw Error("Lowpoly pixels require owned octets");validatePaintPixels(value);
+    return value.slice();}
 export function parseLowpolyTransform(value: unknown, at = "$"): LowpolyTransform {
   const row = lowpolyLowpolyArtifactGuardObject(value, at);
   return {

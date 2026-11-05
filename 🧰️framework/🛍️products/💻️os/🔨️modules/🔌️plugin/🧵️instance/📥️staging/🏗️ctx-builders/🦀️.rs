@@ -120,9 +120,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         self.render_ref().rendered_config()
     }
 
-    /// 🕰️ The fixed maintenance stage the NEXT [`PluginApp::maintenance_step`] call will run.
-    /// A step-budget law reads this before each unit so an over-budget unit names its own stage
-    /// instead of the stale round-robin cursor an idle early return leaves behind.
+    /// 🕰️ Identifies the next maintenance unit before its budget is spent.
     pub fn next_maintenance_stage(&self) -> u8 {
         self.ladder_ref().next_maintenance_stage()
     }
@@ -138,9 +136,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         self.time_travel_ctx().apply_time_travel_action(action, args, meta, effects, identity, cx).await
     }
 
-    /// ⚖️ Applies one §2.5 action to the ledger and performs the transition's immediate effect. An action that
-    /// names no identity at all (neither `runId` nor `generation`, as a keyboard chord dispatches it) targets
-    /// the instance's live run at its generation of this dispatch; an identity it does name is checked as is.
+    /// ⚖️ Applies a ledger action; absent run identity addresses the live run, explicit identity is validated.
     pub async fn apply_tool_run_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<ToolRunActionOutcome, Fault> {
         self.tool_run_ctx().apply_tool_run_action(action, args, meta).await
     }

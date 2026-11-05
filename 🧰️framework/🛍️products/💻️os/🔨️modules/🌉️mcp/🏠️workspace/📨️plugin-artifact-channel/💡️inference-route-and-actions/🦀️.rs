@@ -5,19 +5,42 @@ use super::*;
 //#region 🔖️ArtifactChannel
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
-    /// 💡️ Opens (once) this plugin's real inference route: a fresh `GuestRuntimes` over the SAME
-    /// compiled component, one `PluginInstanceHandle`, and an `ArtifactInferenceRouter` registered
-    /// with the plugin's own declared roster — the same rows `🏃️run/🦀️.rs` builds
-    /// (`contributions.inference_services` chained with every
-    /// `artifact_contributions[].inferences`), written by the owned JSON codec. A plugin that declares no inference at all is a
-    /// typed refusal here rather than an empty registration that would fail later with a worse
-    /// message.
-    ///
-    /// 🐎️ The SAME runtime the command lane uses, not a second one: `self.compiled` carries a
-    /// `wasmtime::Component` that only its own `Engine` can instantiate. The inference lane is
-    /// still a SEPARATE guest instance on its own actor ordinal — `PluginInstanceHandle` takes
-    /// ownership of the instance it drives — it just shares the engine and the compiled code.
-    fn ensure_inference_route(&mut self) -> Result<&PluginInferenceRoute, Fault> {
+    /// 🏭️ Opens the actual compiled actor through synchronous slices of its retained lifetime source.
+    pub(super) fn open_original_instance(&mut self,actor:semio_framework_actor::ActorId,driver:&Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,scope:&ActivationScope)->Result<semio_framework_plugin_host::GuestInstance,Fault>{
+        use semio_framework_plugin_host::GuestRelayAdmissionCall;
+        if self.startup_custody.is_some()||self.startup_instance_custody.is_some()||self.startup_failure.is_some(){return Err(Self::not_wired("original startup","an earlier opening still owns its refused source"))}
+        scope.enter(ActivationPhase::OpeningGuest)?;
+        let runtime=Arc::clone(&self.runtime);
+        let compiled=self.compiled.clone();
+        let mut opening=None;
+        let begin=driver.dispatch_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:runtime.begin_original_actor_step(&compiled,actor,cx).map(|owner|{opening=owner;}),execution:None});
+        match begin{Ok(true) if opening.is_some()=>{},Ok(_)=>return Err(Self::budget_fault("original startup admission")),Err(error)=>{let fault=Self::not_wired("original startup admission",format!("{error:?}"));self.startup_failure=Some(error);if let Some(owner)=opening.take(){self.startup_custody=Some((owner,Arc::clone(driver)))}return Err(fault)}}
+        loop{
+            if let Err(mut fault)=scope.checkpoint(){
+                loop{
+                    let mut closed=false;
+                    let step=driver.dispatch_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:runtime.close_original_actor_step(&mut opening,&compiled,cx).map(|value|{closed=value;}),execution:None});
+                    match step{Ok(true) if closed=>return Err(fault),Ok(true)=>continue,Err(error)=>{fault.message=format!("{}; original startup cleanup refused: {error:?}",fault.message);self.startup_failure=Some(error);},Ok(false)=>{}}
+                    if let Some(owner)=opening.take(){self.startup_custody=Some((owner,Arc::clone(driver)))}
+                    return Err(fault)
+                }
+            }
+            if opening.as_ref().is_some_and(|owner|owner.ready()){
+                let mut instance=None;
+                let take=driver.dispatch_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:(||{let input=semio_framework_actor::RetainedTurnInput::borrow_original(cx)?;runtime.take_original_actor_step(&mut opening,&compiled,input,cx).map(|value|{instance=value;})})(),execution:None});
+                match take{Ok(true) if instance.is_some()=>return Ok(instance.take().expect("funded instance transfer")),Err(error)=>{let fault=Self::not_wired("original startup transfer",format!("{error:?}"));self.startup_failure=Some(error);if let Some(owner)=opening.take(){self.startup_custody=Some((owner,Arc::clone(driver)))}if let Some(instance)=instance.take(){self.startup_instance_custody=Some((instance,Arc::clone(driver)))}return Err(fault)},Ok(_)=>{}}
+            }else{
+                let execution=opening.as_ref().is_some_and(|owner|owner.requires_execution());
+                let advance=driver.dispatch_admission_step(execution,|execution,cx|match runtime.advance_original_actor_step(opening.as_mut().expect("retained startup"),&compiled,execution,cx){Ok(call)=>GuestRelayAdmissionCall{result:call.result.map(|_|()),execution:call.execution},Err(error)=>GuestRelayAdmissionCall{result:Err(error),execution:None}});
+                match advance{Ok(true)=>continue,Err(error)=>{let fault=Self::not_wired("original startup step",format!("{error:?}"));self.startup_failure=Some(error);if let Some(owner)=opening.take(){self.startup_custody=Some((owner,Arc::clone(driver)))}return Err(fault)},Ok(false)=>{}}
+            }
+            if let Some(owner)=opening.take(){self.startup_custody=Some((owner,Arc::clone(driver)))}
+            return Err(Self::budget_fault("original startup"))
+        }
+    }
+
+    /// 💡️ Registers the committed inference roster over a separate actual actor on this compiled runtime.
+    fn ensure_inference_route(&mut self,cancel:&semio_framework_async::CancelToken,funding:&semio_framework_plugin_host::GuestRelayWakeAuthority) -> Result<&PluginInferenceRoute, Fault> {
         if self.inference.is_none() {
             let roster: Vec<_> = self
                 .descriptor
@@ -32,35 +55,21 @@ impl PluginArtifactChannel {
             }
             let roster_bytes = semio_framework_pack_json::to_json_string(&roster).into_bytes();
             let actor = ::semio_framework_async::poll::resolve_ready(semio_framework_actor::ActorId::new(INFERENCE_ACTOR_ORDINAL, 0, 1, 0));
-            let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> =
-                self.descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
             let runtimes = Arc::clone(&self.runtime);
-            let budget = headless_inference_budget();
-            let instance = semio_framework_async::block_on(semio_plugin_host::GuestRuntime::instantiate(runtimes.as_ref(), &self.compiled, actor, &caps, &budget)).map_err(|error| Self::not_wired("inference instantiate", error))?;
-            let handle = Arc::new(semio_framework_async::block_on(semio_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&runtimes), instance,budget.retained,semio_plugin_host::GuestRelayWakeAuthority{drive_policy:self.host_driver_policy.drive,policy:self.host_driver_policy.wake,issuer:semio_framework_job_worker::admit_original_thread_worker_wake,receiver:self.host_driver.clone()})));
-            let router = semio_plugin_host::ArtifactInferenceRouter::new();
+            let driver=Arc::clone(&funding.receiver);
+            let instance=self.open_original_instance(actor,&driver,&ActivationScope::new(cancel.clone(),|_,_|{}))?;
+            let handle = Arc::new(semio_framework_async::block_on(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&runtimes), self.compiled.clone(), instance,funding.clone())));
+            let router = semio_framework_plugin_host::ArtifactInferenceRouter::new();
             semio_framework_async::block_on(router.register_plugin(&self.plugin_id, &self.descriptor.manifest.dependencies, handle, &roster_bytes)).map_err(|error| Self::not_wired("inference route registration", error))?;
             self.inference = Some(PluginInferenceRoute { router });
         }
         Ok(self.inference.as_ref().expect("inference route was just opened"))
     }
 
-    /// 💡️ Runs ONE declared inference through the real router — the general replacement for the old
-    /// blanket `channel.not-wired`. The router resolves the route, toposorts and injects
-    /// `dependsOn` results, drives the guest's `semio.infer` cold job, validates the guest's echo
-    /// field-for-field and re-checks commit freshness; this function only builds the request wire
-    /// and decodes the result, and reports whatever the router answers verbatim.
-    ///
-    /// 🗣️ The artifact schema's own canonical identity, exactly as the plugin committed it.
-    /// It is an `ArtifactIdentity`, which the guest validates with `ArtifactIdentity::parse`
-    /// (`🔌️plugin/🦀️.rs`, `validate_wire_request_resources`): dot-delimited segments of
-    /// `[a-z0-9_-]` only. The `<kind>@<schemaVersion>/*` form this used to send is the
-    /// CAPABILITY-id grammar, not an identity — `@`, `/` and `*` are all non-canonical
-    /// segment bytes, so every real inference died `artifact-inference.source-dialect:
-    /// identity "s.wfc.bitmap@1/*" has a non-canonical segment` before the guest ran a
-    /// single step (measured 2026-09-22, slice CE3). The version is not lost by dropping the
-    /// suffix: `artifact_schema_version` is its own field on this same request.
+    /// 🧠️ Runs the declared router with caller freshness data and a fresh finite native operation source.
     pub(crate) fn infer_real(&mut self, command: &InferCommand) -> Result<ArtifactInferenceResultV1, Fault> {
+        if self.inference.is_some(){return Err(Self::not_wired("inference route","the previous request still owns its guest route until funded retirement"))}
+        if self.operation_refusal.is_some(){return Err(Self::not_wired("inference operation","an earlier call retains its refused original cleanup source"))}
         let declared = self
             .descriptor
             .contributions
@@ -84,7 +93,7 @@ impl PluginArtifactChannel {
             algorithm_version: declared.algorithm_version,
             policy_version: declared.policy_version,
             revision: command.revision,
-            generation: command.turn.generation,
+            generation: command.document_generation,
             source_dialect: declared.artifact_schema.clone(),
             policy: Vec::new(),
             budgets: ArtifactInferenceBudgetV1 { allocation_bytes: INFERENCE_ALLOCATION_BYTES, work_units: command.work_units, recursion_depth: INFERENCE_RECURSION_DEPTH },
@@ -98,28 +107,37 @@ impl PluginArtifactChannel {
                 None => Vec::new(),
             },
         };
-        let request_bytes = semio_framework_pack_json::to_json_string(&request).into_bytes();
-        let route = self.ensure_inference_route()?;
-        let result_bytes = semio_framework_async::block_on(route.router.infer(&request_bytes, &command.cancel.0)).map_err(|error| Fault { code: "app.command.rejected".to_string(), message: format!("`{}` refused: {error}", request.inference_schema) })?;
+        let policy=self.operation_policy;
+        let reserve=policy.cleanup;
+        let caps=self.host_driver_policy.operation_caps(semio_framework_plugin_host::GuestRelayOperationReserve{retained:reserve.retained,work_fuel:reserve.work_fuel,execution_fuel:reserve.execution_fuel,maximum_microseconds:reserve.maximum_microseconds},semio_framework_plugin_host::GuestRelayOperationTransit{retained:policy.transit.retained,work_fuel:policy.transit.work_fuel},semio_framework_plugin_host::GuestRelayOperationInfrastructure{retained:policy.infrastructure.retained,work_fuel:policy.infrastructure.work_fuel});
+        let requested=semio_framework_plugin_host::GuestRelayOperationRequest{work_units:command.work_units,maximum_elapsed_microseconds:command.maximum_elapsed_milliseconds.saturating_mul(1000),retained:command.retained_policy};
+        let request_bytes=semio_framework_pack_json::to_json_string(&request).into_bytes();
+        let cancel=command.cancel.0.clone();
+        let driver=Arc::new(caps.issue(requested,semio_framework_job::default_now_us,Box::new(move||cancel.is_cancelled_now())).map_err(|error|Self::not_wired("inference operation admission",error))?);
+        let policy=match driver.policy(){Ok(policy)=>policy,Err(error)=>return self.settle_inference_operation(driver,Err(Self::not_wired("inference operation policy",error))).and_then(|_|unreachable!())};
+        let funding=semio_framework_plugin_host::GuestRelayWakeAuthority{drive_policy:policy.drive,policy:policy.wake,issuer:semio_framework_job_worker::admit_original_thread_worker_wake,receiver:Arc::clone(&driver)};
+        if let Err(error)=self.ensure_inference_route(&command.cancel.0,&funding){drop(funding);return self.settle_inference_operation(driver,Err(error)).and_then(|_|unreachable!())}
+        let route=self.inference.as_ref().expect("inference route was activated");
+        let result=semio_framework_async::block_on(route.router.infer(&request_bytes, &command.cancel.0, &funding)).map_err(|error|Fault{code:"app.command.rejected".into(),message:format!("inference refused: {error}")});
+        drop(funding);
+        let result_bytes=self.settle_inference_operation(driver,result)?;
         let result_text = std::str::from_utf8(&result_bytes).map_err(|error| Self::not_wired("decoding the inference result", error))?;
         semio_framework_pack_json::from_json_str(result_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Self::not_wired("decoding the inference result", error))
     }
 
-    /// 🎯️ The owner-qualified address a typed command frame needs, resolved out of the plugin's OWN
-    /// committed manifest rather than parsed out of the capability id's punctuation.
-    ///
-    /// 🗂️ The walk is `🗂️catalog`'s own `app_action_verbs` walk, in the same order and with the same
-    /// precedence, so the address this builds always names the window kind the catalog published the
-    /// verb under: window-kind declarations first, then APP-scope actions (`🗒️note` declares all 48
-    /// of its verbs this way) under the catalog's own `"*"` marker for "belongs to no particular
-    /// window". Recomputing the catalog's id (`{plugin}.{app}.{action}`) and comparing is what keeps
-    /// the two in step — an app id is itself a dotted canonical surface ref
-    /// (`s.draw.drawing@1/*#editor`), so splitting the id on `.` could never have recovered it.
-    ///
-    /// 🪟️ `window_instance_id` is the window kind's own id, which is exactly what the React shell's
-    /// `sessionWindowInstances` mints for a freshly opened app (`app.windowKinds.map(kind => ({id:
-    /// kind.id, …}))`) — an agent therefore addresses the very pane a human's first window is,
-    /// rather than a synthetic id no shell would ever produce.
+    /// 🪢️ A failed close retains the exact source and both body and cleanup failures.
+    fn settle_inference_operation(&mut self,driver:Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,result:Result<Vec<u8>,Fault>)->Result<Vec<u8>,Fault>{
+        match semio_framework_async::block_on(driver.close_operation()){
+            Ok(())=>result,
+            Err(error)=>{
+                let message=format!("inference cleanup refused: {error:?}; body: {:?}",result.as_ref().err());
+                self.operation_refusal=Some((driver,error,result.err()));
+                Err(Self::not_wired("inference operation retirement",message))
+            }
+        }
+    }
+
+    /// 🎯️ Resolves an action from its declared owner; PureCommandRequest binds the actual caller surface.
     pub(crate) fn addressed_action_invocation(&self, capability_id: &str, arguments: impl FnOnce() -> Result<std::collections::BTreeMap<String, semio_framework_value::DslValue>, String>) -> Result<semio_framework::manifest::ActionInvocation, Fault> {
         let plugin_id = self.plugin_id.as_str();
         let mut address: Option<semio_framework::manifest::ActionAddress> = None;
@@ -163,6 +181,43 @@ impl PluginArtifactChannel {
         })?;
         let arguments = arguments().map_err(|detail| Self::not_wired("PureCommand", detail))?;
         Ok(semio_framework::manifest::ActionInvocation { expected_document_revision:None, address, arguments })
+    }
+
+    /// ⌨️ Resolves commands through their committed app, mode or plugin declaration.
+    pub(crate) fn addressed_command_invocation(&self, capability_id: &str, arguments: std::collections::BTreeMap<String, semio_framework_value::DslValue>) -> Option<semio_framework::manifest::CommandInvocation> {
+        Self::command_invocation_in_manifest(&self.plugin_id, &self.descriptor.manifest, capability_id, arguments)
+    }
+
+    /// 🧾️ The declaration, rather than capability punctuation, determines a command owner.
+    pub(crate) fn command_invocation_in_manifest(plugin_id: &str, manifest: &semio_framework::manifest::PluginManifest, capability_id: &str, arguments: std::collections::BTreeMap<String, semio_framework_value::DslValue>) -> Option<semio_framework::manifest::CommandInvocation> {
+        use semio_framework::manifest::CommandInvocation;
+        for app in &manifest.apps {
+            for command in &app.commands {
+                if let Some(address) = Self::declared_command_address(plugin_id, Some(&app.id), None, &command.id, capability_id) {
+                    return Some(CommandInvocation { address, arguments });
+                }
+            }
+            for mode in &app.modes {
+                for command in &mode.commands {
+                    if let Some(address) = Self::declared_command_address(plugin_id, Some(&app.id), Some(&mode.id), &command.id, capability_id) {
+                        return Some(CommandInvocation { address, arguments });
+                    }
+                }
+            }
+        }
+        manifest.commands.iter().find_map(|command| Self::declared_command_address(plugin_id, None, None, &command.id, capability_id)).map(|address| CommandInvocation { address, arguments })
+    }
+
+    /// 🏷️ Projects one declaration into the catalog identity and structural command address.
+    pub fn declared_command_address(plugin_id: &str, app_id: Option<&str>, mode_id: Option<&str>, command_id: &str, capability_id: &str) -> Option<semio_framework::manifest::CommandAddress> {
+        use semio_framework::manifest::{CommandAddress, CommandOwnerAddress};
+        let (id, owner) = match (app_id, mode_id) {
+            (Some(app), Some(mode)) => (format!("{plugin_id}.{app}.mode.{mode}.{command_id}"), CommandOwnerAddress::Mode { plugin_id: plugin_id.into(), app_id: app.into(), mode_id: mode.into() }),
+            (Some(app), None) => (format!("{plugin_id}.{app}.cmd.{command_id}"), CommandOwnerAddress::App { plugin_id: plugin_id.into(), app_id: app.into() }),
+            (None, None) => (format!("{plugin_id}.cmd.{command_id}"), CommandOwnerAddress::Plugin { plugin_id: plugin_id.into() }),
+            (None, Some(_)) => return None,
+        };
+        (id == capability_id).then(|| CommandAddress { owner, command_id: command_id.into() })
     }
 
     pub(crate) fn not_wired(what: &str, detail: impl std::fmt::Display) -> Fault {

@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "description", "cases"],
+  "properties": {
+    "schema": { "const": "semio.os.shell-sync.sync-attach-target/v1" },
+    "description": { "type": "string" },
+    "cases": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "kind", "draft", "expected"],
+        "properties": {
+          "name": { "type": "string" },
+          "platform": { "enum": ["posix", "win32"] },
+          "kind": { "enum": ["file", "folder", "remote"] },
+          "draft": { "type": "string" },
+          "expected": {
+            "anyOf": [
+              { "type": "null" },
+              { "type": "object", "additionalProperties": false, "required": ["kind", "path"], "properties": { "kind": { "const": "folder" }, "path": { "type": "string", "minLength": 1 } } },
+              { "type": "object", "additionalProperties": false, "required": ["kind", "path", "folder"], "properties": { "kind": { "const": "file" }, "path": { "type": "string", "minLength": 1 }, "folder": { "type": "string", "minLength": 1 } } },
+              { "type": "object", "additionalProperties": false, "required": ["kind", "hostPort", "spaceId", "documentId"], "properties": { "kind": { "const": "remote" }, "hostPort": { "type": "string" }, "spaceId": { "type": "string" }, "documentId": { "type": ["string", "null"] } } }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

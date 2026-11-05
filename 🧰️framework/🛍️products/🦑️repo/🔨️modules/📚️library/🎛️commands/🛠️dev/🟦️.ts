@@ -1,10 +1,11 @@
-/** 🛠️ `dev` command family: Storybook, time-travel and the MCP launchers.
+import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+/** 🛠️ `dev` command family: Storybook, time-travel, storybook-static and the MCP launchers.
  * @see 📜️script.ts
  */
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { daemonBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
 import { resolveMcpBin } from "../../🚨️policy/🖥️cli/🟦️.ts";
-import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { Script, createIssuedResourceControlV1, createRequestedIssuedResourceControlV1, scriptInvocationEnvironment } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 
@@ -121,11 +122,25 @@ export class DevScript extends Script {
    * Streamable HTTP is the dashboard tool `tool:workspace/os-mcp-http` (build task `@semio-tech/framework-os-mcp-rs:dev`).
    * Extra argv passes straight through to the binary (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
   private async runMcpOs(extra: string[]): Promise<void> {
-    const { ensureMcpBinary, mcpBinaryIsStaged, serveWarmMcpStdio, takeMcpPluginCatalog, withMcpHostDriverPolicy } = await import("../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts");
-    const catalog = takeMcpPluginCatalog(extra, this.root);
-    const options = { cwd: this.root, ...daemonBudgetOpts(catalog.env) };
-    if (mcpBinaryIsStaged(this.root)) return runCmd(ensureMcpBinary(this.root), withMcpHostDriverPolicy(["stdio", ...catalog.args]), options);
-    process.exit(await serveWarmMcpStdio(this.root, catalog.args, { ...process.env, ...options.env }));
+    const { servePublishedMcpStdioV1, takeMcpPluginCatalog, stageMcpBinaryAsync, buildMcpArtifactV1, MCP_BINARY_TARGET } = await import("../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts");
+    const {withHandledScriptInvocationSignalV1} = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
+    const catalog = takeMcpPluginCatalog(extra, this.root), stopped = new AbortController();
+    const result = await withHandledScriptInvocationSignalV1(this.invocation,stopped.signal,async invocation=>{
+      const control = createIssuedResourceControlV1(invocation, "dev:mcp:stdio", 0);
+      const {projectOwnedBuildChildEnvironmentV1} = await import("../../🏗️build/📥️caller/📤️child/🟦️.ts");
+      const stage = async (target: string, progress: (line: string) => void, signal: AbortSignal): Promise<number> => {
+        if (target === MCP_BINARY_TARGET) {
+          progress("[semio-os-mcp] building the owned native publication");
+          await buildMcpArtifactV1(this.root,invocation,scriptCompilerAdmissionControlV1(invocation,"dev:mcp:build",0,signal),progress);
+          return 0;
+        }
+        const phase = createRequestedIssuedResourceControlV1(control,0,signal);
+        const environment = await projectOwnedBuildChildEnvironmentV1(this.root, ["run", target, "--output=stream"], invocation, phase);
+        return stageMcpBinaryAsync(this.root, progress, signal, target, environment);
+      };
+      return servePublishedMcpStdioV1(this.root, catalog.args, invocation, control, scriptInvocationEnvironment(invocation, { ...process.env, ...catalog.env }), catalog.target, stage,reason=>stopped.abort(reason));
+    });
+    process.exit(result.status==="completed"?result.value:0);
   }
 
   private runMcpStdioRepo(slugs: string[]): void {

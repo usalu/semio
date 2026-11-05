@@ -22,7 +22,7 @@ test("original startup slice expiry preserves its immutable source deadline",asy
  const law=await Bun.file(new URL("🧫️fixtures/🔣️.json",import.meta.url)).json(),row=law.startupDeadline;
  const db=new Database(":memory:");
  try {
-  expect(db.query("SELECT ?1+?2 AS original, (?3>=?4) AS sliceExpired, (?3<?5) AS sourceLive, (?6=?5) AS unchanged").get(row.initiatingNow,law.policy.maximumTurnMicroseconds,row.expiredNow,row.initiatingDeadline,row.originalDeadline,row.nextRootDeadline)).toEqual({original:1500,sliceExpired:1,sourceLive:1,unchanged:1});
+  expect(db.query("SELECT ?1+?2 AS original, (?3>=?4) AS sliceExpired, (?3<?5) AS sourceLive, (?6=?5) AS unchanged").get(row.initiatingNow,law.policy.maximumLifetimeMicroseconds,row.expiredNow,row.initiatingDeadline,row.originalDeadline,row.nextRootDeadline)).toEqual({original:1500,sliceExpired:1,sourceLive:1,unchanged:1});
   expect(row.expiredVmSpent).toBe(0);expect(row.nextVmSpent).toBe(2);
  }finally{db.close()}
  const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");

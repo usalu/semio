@@ -193,7 +193,7 @@ pub mod editor {
         #[path = "."]
         pub mod commands {
             pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::editor::bitmap::commands::set_active_example;
-            pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::editor::bitmap::commands::pin_solution;
+            pub use semio_s_artifact_wfc_bitmap_pin_solution as pin_solution;
         }
 
         #[path = "."]

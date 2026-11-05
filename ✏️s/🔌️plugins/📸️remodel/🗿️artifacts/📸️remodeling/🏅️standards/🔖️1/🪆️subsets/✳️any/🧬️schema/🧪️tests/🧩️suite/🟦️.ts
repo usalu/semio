@@ -17,6 +17,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import Ajv from "ajv";
 import {decodeRemodelingSnapshot, remodelingSnapshotToJsonText} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import {defaultRemodelingScene, type RemodelingSnapshot} from "../../📸️snapshot/🟦️.ts";
 import {applyRemodelingDiff, remodelingDiffLanes} from "../../🔺️diff/🟦️.ts";
@@ -217,7 +218,35 @@ describe("committed example assets", () => {
     expect({ ...parsed, results: { ...parsed.results, mesh: { ...parsed.results.mesh, mesh: null } } }).toEqual({ ...scene, results: { ...scene.results, mesh: { ...scene.results.mesh, mesh: null } } });
   });
 
-  it("ships a non-empty editor command asset", () => {
-    expect(readFileSync(join(subset, "✏️editor/📚️examples/🎬️demo-session/🖼️assets/🎮️.cmd.semio"), "utf8").length).toBeGreaterThan(8);
+  it("ships a distinct capture session snapshot", () => {
+    const session = remodelingSnapshotFromDslText(readFileSync(join(subset, "✏️editor/📚️examples/🎬️demo-session/🖼️assets/🗣️.dsl.semio"), "utf8"));
+    expect(session.streams.map(stream => stream.id)).toEqual(["left-capture", "right-capture"]);
+    expect(session.calibration.cameras).toHaveLength(2);
+    expect(decodeRemodelingSnapshot(JSON.parse(remodelingSnapshotToJsonText(session)))).toEqual(session);
+  });
+});
+
+/** 🧾️ The TypeScript snapshot and independent schema validator preserve the native QC export cases. */
+describe("QC export portable report", () => {
+  const editor = join(subset, "✏️editor");
+  const fixture = readJson(join(editor, "🎮️commands/🧾️export-qc-report/🧪️tests/🧫️cases/🔣️.json")) as { filename: string; mimeType: string; reportSchema: object; cases: { id: string; report: unknown; documentQc: unknown; effects: number }[] };
+  const validate = new Ajv({ strict: true }).compile(fixture.reportSchema);
+
+  it.each(fixture.cases)("preserves $id through the snapshot JSON twin", (vector) => {
+    const base = JSON.parse(remodelingSnapshotToJsonText(defaultRemodelingScene()));
+    base.results.qc = vector.report;
+    const encoded = JSON.parse(remodelingSnapshotToJsonText(decodeRemodelingSnapshot(base)));
+    expect(encoded.results.qc).toEqual(vector.documentQc);
+    expect(vector.effects).toBe(vector.report === null ? 0 : 1);
+    if (vector.report !== null) expect(validate(vector.report), JSON.stringify(validate.errors)).toBe(true);
+  });
+
+  it("describes the actual JSON download in both locales", () => {
+    const manifest = readFileSync(join(editor, "📜️manifest/🦀️.rs"), "utf8");
+    const description = manifest.split("\n").find((line) => line.includes(".action_describe(\"exportQcReport\""));
+    expect(description?.match(/remodeling-qc-report\.json/g)).toHaveLength(2);
+    expect(description).not.toContain("remodeling-qc-report.ops");
+    expect(fixture.mimeType).toBe("application/json");
+    expect(fixture.filename).toBe("remodeling-qc-report.json");
   });
 });

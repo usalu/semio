@@ -55,7 +55,7 @@ fn k_graph(n: usize, k: usize) -> (CompiledModel, crate::topology::GraphTopology
 fn solves_a_satisfiable_path() {
     let (model, topo, arcs) = checkerboard_topology(6);
     let config = SearchConfig::default();
-    let outcome = solve(&model, &topo, &config, 1, None, &[]);
+    let outcome = solve(&model, &topo, &config, 1, None, &[]).expect("original search and teardown complete");
     match outcome {
         SolveOutcome::Solved(sol) => {
             assert!(oracle::check_assignment(&model, &sol.assignment, &arcs).is_ok());
@@ -82,7 +82,7 @@ fn proves_unsat_on_odd_cycle_with_backtrack_mode() {
     let topo = tb.build().unwrap();
 
     let config = SearchConfig { mode: SearchMode::Backtrack, ..Default::default() };
-    let outcome = solve(&model, &topo, &config, 1, None, &[]);
+    let outcome = solve(&model, &topo, &config, 1, None, &[]).expect("original search and teardown complete");
     match outcome {
         SolveOutcome::Unsatisfiable(report) => {
             assert!(report.proven);
@@ -97,7 +97,7 @@ fn backtracking_solves_graph_coloring_needing_multiple_decisions() {
     let (model, topo, arcs) = k_graph(4, 4);
     for seed in 0..20 {
         let config = SearchConfig::default();
-        let outcome = solve(&model, &topo, &config, seed, None, &[]);
+        let outcome = solve(&model, &topo, &config, seed, None, &[]).expect("original search and teardown complete");
         match outcome {
             SolveOutcome::Solved(sol) => assert!(oracle::check_assignment(&model, &sol.assignment, &arcs).is_ok()),
             other => panic!("seed {seed}: expected Solved, got {other:?}"),
@@ -109,7 +109,7 @@ fn backtracking_solves_graph_coloring_needing_multiple_decisions() {
 fn unsatisfiable_k5_with_four_colors_proves_unsat() {
     let (model, topo, _arcs) = k_graph(5, 4);
     let config = SearchConfig { mode: SearchMode::Backtrack, ..Default::default() };
-    let outcome = solve(&model, &topo, &config, 7, None, &[]);
+    let outcome = solve(&model, &topo, &config, 7, None, &[]).expect("original search and teardown complete");
     match outcome {
         SolveOutcome::Unsatisfiable(report) => assert!(report.proven),
         other => panic!("expected Unsatisfiable, got {other:?}"),
@@ -120,7 +120,7 @@ fn unsatisfiable_k5_with_four_colors_proves_unsat() {
 fn backjump_mode_matches_backtrack_completeness() {
     let (model, topo, _arcs) = k_graph(5, 4);
     let config = SearchConfig { mode: SearchMode::Backjump, ..Default::default() };
-    let outcome = solve(&model, &topo, &config, 7, None, &[]);
+    let outcome = solve(&model, &topo, &config, 7, None, &[]).expect("original search and teardown complete");
     match outcome {
         SolveOutcome::Unsatisfiable(report) => assert!(report.proven),
         other => panic!("expected Unsatisfiable, got {other:?}"),
@@ -128,7 +128,7 @@ fn backjump_mode_matches_backtrack_completeness() {
 
     let (model2, topo2, arcs2) = k_graph(4, 4);
     let config2 = SearchConfig { mode: SearchMode::Backjump, ..Default::default() };
-    let outcome2 = solve(&model2, &topo2, &config2, 3, None, &[]);
+    let outcome2 = solve(&model2, &topo2, &config2, 3, None, &[]).expect("original search and teardown complete");
     match outcome2 {
         SolveOutcome::Solved(sol) => assert!(oracle::check_assignment(&model2, &sol.assignment, &arcs2).is_ok()),
         other => panic!("expected Solved, got {other:?}"),
@@ -139,7 +139,7 @@ fn backjump_mode_matches_backtrack_completeness() {
 fn fixed_pins_are_respected() {
     let (model, topo, _arcs) = checkerboard_topology(3);
     let config = SearchConfig::default();
-    let outcome = solve(&model, &topo, &config, 5, None, &[(NodeId(0), PatternId(1))]);
+    let outcome = solve(&model, &topo, &config, 5, None, &[(NodeId(0), PatternId(1))]).expect("original search and teardown complete");
     match outcome {
         SolveOutcome::Solved(sol) => assert_eq!(sol.assignment[0], PatternId(1)),
         other => panic!("expected Solved, got {other:?}"),
@@ -150,7 +150,7 @@ fn fixed_pins_are_respected() {
 fn budget_exceeded_reports_partial_state() {
     let (model, topo, _arcs) = checkerboard_topology(30);
     let config = SearchConfig { budget: Budget { max_observations: Some(0), ..Default::default() }, ..Default::default() };
-    let outcome = solve(&model, &topo, &config, 1, None, &[]);
+    let outcome = solve(&model, &topo, &config, 1, None, &[]).expect("original search and teardown complete");
     let SolveOutcome::BudgetExceeded { partial, report } = outcome else {
         panic!("expected BudgetExceeded");
     };
@@ -171,8 +171,8 @@ fn budget_exceeded_reports_partial_state() {
 fn same_seed_is_fully_reproducible() {
     let (model, topo, _arcs) = checkerboard_topology(10);
     let config = SearchConfig::default();
-    let o1 = solve(&model, &topo, &config, 123, None, &[]);
-    let o2 = solve(&model, &topo, &config, 123, None, &[]);
+    let o1 = solve(&model, &topo, &config, 123, None, &[]).expect("original search and teardown complete");
+    let o2 = solve(&model, &topo, &config, 123, None, &[]).expect("original search and teardown complete");
     match (o1, o2) {
         (SolveOutcome::Solved(s1), SolveOutcome::Solved(s2)) => assert_eq!(s1.assignment, s2.assignment),
         _ => panic!("expected both solves to succeed"),
@@ -184,8 +184,8 @@ fn golden_replay_same_seed_reproduces_the_identical_decision_trace() {
     use crate::diag::TraceReplay;
     let (model, topo, _arcs) = k_graph(4, 4);
     let config = SearchConfig { diag_level: DiagLevel::Decisions, ..Default::default() };
-    let o1 = solve(&model, &topo, &config, 77, None, &[]);
-    let o2 = solve(&model, &topo, &config, 77, None, &[]);
+    let o1 = solve(&model, &topo, &config, 77, None, &[]).expect("original search and teardown complete");
+    let o2 = solve(&model, &topo, &config, 77, None, &[]).expect("original search and teardown complete");
     match (o1, o2) {
         (SolveOutcome::Solved(s1), SolveOutcome::Solved(s2)) => {
             let t1 = TraceReplay::from_report(&s1.report);
@@ -203,8 +203,8 @@ fn diag_off_records_no_decision_events_but_summary_and_above_do() {
     let off_config = SearchConfig { diag_level: DiagLevel::Off, ..Default::default() };
     let decisions_config = SearchConfig { diag_level: DiagLevel::Decisions, ..Default::default() };
 
-    let off_outcome = solve(&model, &topo, &off_config, 1, None, &[]);
-    let decisions_outcome = solve(&model, &topo, &decisions_config, 1, None, &[]);
+    let off_outcome = solve(&model, &topo, &off_config, 1, None, &[]).expect("original search and teardown complete");
+    let decisions_outcome = solve(&model, &topo, &decisions_config, 1, None, &[]).expect("original search and teardown complete");
     match (off_outcome, decisions_outcome) {
         (SolveOutcome::Solved(off_sol), SolveOutcome::Solved(dec_sol)) => {
             assert!(off_sol.report.events.is_empty());
@@ -221,7 +221,7 @@ fn cancellation_stops_search_and_reports_partial() {
     let cancel = CancelToken::new();
     cancel.cancel();
     let config = SearchConfig::default();
-    let outcome = solve_cancellable(&model, &topo, &config, 1, None, &[], &cancel);
+    let outcome = solve_cancellable(&model, &topo, &config, 1, None, &[], &cancel).expect("original search and teardown complete");
     let SolveOutcome::Cancelled { partial, report } = outcome else {
         panic!("expected Cancelled");
     };
@@ -259,7 +259,7 @@ fn restart_only_never_proves_unsat_on_unsatisfiable_instance() {
     let (model, topo, _arcs) = k_graph(5, 4);
     for restart_schedule in [RestartSchedule::Fixed(base), geometric] {
         let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(row["maxRestarts"].as_u64().unwrap()), restart_schedule, ..Default::default() };
-        let outcome = solve(&model, &topo, &config, 1, None, &[]);
+        let outcome = solve(&model, &topo, &config, 1, None, &[]).expect("original search and teardown complete");
         let SolveOutcome::Contradiction(failed) = outcome else {
             panic!("expected restart exhaustion");
         };
@@ -274,7 +274,7 @@ fn restart_only_never_proves_unsat_on_unsatisfiable_instance() {
 fn restart_only_still_solves_satisfiable_instances() {
     let (model, topo, arcs) = k_graph(4, 4);
     let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(50), restart_schedule: RestartSchedule::Luby(4), ..Default::default() };
-    let outcome = solve(&model, &topo, &config, 1, None, &[]);
+    let outcome = solve(&model, &topo, &config, 1, None, &[]).expect("original search and teardown complete");
     match outcome {
         SolveOutcome::Solved(sol) => assert!(oracle::check_assignment(&model, &sol.assignment, &arcs).is_ok()),
         other => panic!("expected Solved, got {other:?}"),
@@ -328,7 +328,7 @@ fn nogood_learning_still_proves_unsat_on_pigeonhole_instance() {
     use crate::nogood::NogoodConfig;
     let (model, topo, _arcs) = k_graph(5, 4);
     let config = SearchConfig { nogood: NogoodConfig { enabled: true, ..Default::default() }, ..Default::default() };
-    let outcome = solve(&model, &topo, &config, 1, None, &[]);
+    let outcome = solve(&model, &topo, &config, 1, None, &[]).expect("original search and teardown complete");
     match outcome {
         SolveOutcome::Unsatisfiable(rep) => assert!(rep.proven),
         other => panic!("expected Unsatisfiable, got {other:?}"),
@@ -341,7 +341,7 @@ fn nogood_learning_survives_restarts_and_still_proves_unsat() {
     let (model, topo, _arcs) = k_graph(5, 4);
     let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(20), restart_schedule: RestartSchedule::Fixed(10), nogood: NogoodConfig { enabled: true, ..Default::default() }, ..Default::default() };
     for seed in 0..10 {
-        let outcome = solve(&model, &topo, &config, seed, None, &[]);
+        let outcome = solve(&model, &topo, &config, seed, None, &[]).expect("original search and teardown complete");
         assert!(matches!(outcome, SolveOutcome::Contradiction(_)), "seed {seed}: expected Contradiction, got {outcome:?}");
     }
 }
@@ -366,7 +366,7 @@ mod quick {
 
             let oracle_result = oracle::enumerate(&model, node_count, &arcs, &init_domains, 1);
             let config = SearchConfig { mode: SearchMode::Backtrack, ..Default::default() };
-            let outcome = solve(&model, &topo, &config, trial as u64, None, &[]);
+            let outcome = solve(&model, &topo, &config, trial as u64, None, &[]).expect("original search and teardown complete");
 
             match outcome {
                 SolveOutcome::Solved(sol) => {
@@ -400,7 +400,7 @@ mod quick {
 
             let oracle_result = oracle::enumerate(&model, node_count, &arcs, &init_domains, 1);
             let config = SearchConfig { mode: SearchMode::Backtrack, nogood: NogoodConfig { enabled: true, max_len: 8, max_count: 64 }, ..Default::default() };
-            let outcome = solve(&model, &topo, &config, trial as u64, None, &[]);
+            let outcome = solve(&model, &topo, &config, trial as u64, None, &[]).expect("original search and teardown complete");
 
             match outcome {
                 SolveOutcome::Solved(sol) => {

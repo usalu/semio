@@ -224,7 +224,7 @@ fn patch_layer(layer: &mut LowpolyPaintLayer, patch: &LowpolyPaintLayerPatch) {
 }
 
 fn stroke_layer(layer: &mut LowpolyPaintLayer, runs: &[PixelRun]) -> Option<()> {
-    let mut pixels = layer.materialized_pixels();
+    let mut pixels = layer.materialized_pixels().ok()?;
     for run in runs {
         let start = run.offset as usize;
         let end = start.checked_add(run.bytes.len()).filter(|end| *end <= pixels.len())?;
@@ -239,6 +239,8 @@ fn stroke_layer(layer: &mut LowpolyPaintLayer, runs: &[PixelRun]) -> Option<()> 
 
 /// ▶️ Applies the paint-layer edits in order onto `layers`.
 pub fn paint_edits_after(layers: &[LowpolyPaintLayer], edits: &[LowpolyPaintEdit]) -> Result<Vec<LowpolyPaintLayer>, protocol::MutationApplyError> {
+    for layer in layers { layer.validate_pixels().map_err(|error|paint_edit_error("lowpoly.paint.invalid-texture",&error.to_string(),0))?; }
+    for (position,edit) in edits.iter().enumerate(){if let LowpolyPaintEdit::Insert{layer,..}|LowpolyPaintEdit::Replace{layer,..}=edit{layer.validate_pixels().map_err(|error|paint_edit_error("lowpoly.paint.invalid-texture",&error.to_string(),position))?;}}
     let mut next: Vec<LowpolyPaintLayer> = Vec::new();
     next.extend_from_slice(layers);
     for (position, edit) in edits.iter().enumerate() {
@@ -361,7 +363,7 @@ fn paint_edits_inverse(base: &[LowpolyPaintLayer], edits: &[LowpolyPaintEdit]) -
         } else {
             let patch = LowpolyPaintLayerPatch { name: touch.name.then(|| layer.name.clone()), visible: touch.visible.then_some(layer.visible), opacity: touch.opacity.then_some(layer.opacity), blend_mode: touch.blend_mode.then(|| layer.blend_mode.clone()) };
             let metadata = (patch != LowpolyPaintLayerPatch::default()).then_some(LowpolyPaintEdit::Patch { index, patch });
-            let pixels = layer.materialized_pixels();
+            let pixels = if layer.pixels.is_empty(){semio_s_artifact_lowpoly_lowpoly_model::snapshot::empty_paint_pixels()}else{layer.pixels.clone()};
             let runs: Vec<PixelRun> = touch.runs.iter().map(|(offset, length)| PixelRun { offset: *offset, bytes: pixels.get(*offset as usize..*offset as usize + *length).map(<[u8]>::to_vec).unwrap_or_default() }).collect();
             metadata.into_iter().chain((!runs.is_empty()).then_some(LowpolyPaintEdit::Stroke { index, runs })).collect()
         };
@@ -389,6 +391,7 @@ impl protocol::ColdMutationDiff<LowpolySnapshot> for LowpolyDiff {
 
     fn apply(&self, unpublished: &mut LowpolySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         let snapshot = &*unpublished;
+        snapshot.validate_paint_pixels().map_err(|error|paint_edit_error("lowpoly.paint.invalid-texture",&error.to_string(),0))?;
         let mut next = snapshot.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
@@ -396,6 +399,7 @@ impl protocol::ColdMutationDiff<LowpolySnapshot> for LowpolyDiff {
         if let Some(delta) = &self.objects {
             next.objects = delta.commit_onto(&next.objects, capability).map_err(|error| error.under(["objects"]))?;
         }
+        next.validate_paint_pixels().map_err(|error|paint_edit_error("lowpoly.paint.invalid-texture",&error.to_string(),0))?;
         *unpublished = next;
         Ok(())
     }

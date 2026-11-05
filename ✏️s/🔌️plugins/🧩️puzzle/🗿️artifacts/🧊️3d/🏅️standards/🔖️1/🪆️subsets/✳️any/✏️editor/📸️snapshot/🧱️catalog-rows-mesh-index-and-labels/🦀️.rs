@@ -333,7 +333,7 @@ pub fn puzzle3d_vortices_from_kind_template(catalog_entry: &semio_framework_valu
                     let position = template.get("point").or_else(|| template.get("position")).and_then(|value| FromValue::from_value(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0]);
                     let direction = template.get("direction").and_then(|value| FromValue::from_value(value.clone()).ok());
                     let radius = template.get("radius").and_then(|value| value.as_f64());
-                    Puzzle3dVortex { id: format!("v{index}"), vortex_kind: template.get("vortexKind").and_then(|value| value.as_str()).map(str::to_string), position, direction, radius, hidden: false, locked: false }
+                    Puzzle3dVortex { label: None, id: format!("v{index}"), vortex_kind: template.get("vortexKind").and_then(|value| value.as_str()).map(str::to_string), position, direction, radius, hidden: false, locked: false }
                 })
                 .collect()
         })

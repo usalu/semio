@@ -2,21 +2,12 @@
 
 use super::*;
 
-//#region 🔖️Writer
-/// 📝️ Writes `value` as compact JSON.
-// 🚫️async: R9 pure in-memory format, no I/O.
 pub fn to_string(value: &Value) -> String {
     let mut out = String::new();
     write_value(value, &mut out);
     out
 }
 
-/// 🪐️ Writes `value` as 2-space-indented JSON, matching `serde_json::to_string_pretty`'s own
-/// layout (`": "` after object keys, one array/object member per line, no trailing newline) — the
-/// `serde_json::to_string_pretty` replacement every human-facing JSON view (an example-document
-/// viewer, an exported fixture, a rule inspector) still needs even after its call site stops
-/// depending on `serde_json` for everything else.
-// 🚫️async: R9 pure in-memory format, no I/O.
 pub fn to_string_pretty(value: &Value) -> String {
     let mut out = String::new();
     write_value_pretty(value, &mut out, 0);
@@ -63,9 +54,6 @@ fn write_value_pretty(value: &Value, out: &mut String, depth: usize) {
     }
 }
 
-/// 🪞️ `value.to_string()`/`format!("{value}")`, mirroring `serde_json::Value`'s own `Display` —
-/// every plugin call site that used to write `serde_json::json!({...}).to_string()` keeps
-/// compiling unchanged against `pack::json!({...}).to_string()`.
 impl fmt::Display for Value {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str(&to_string(self))
@@ -104,9 +92,6 @@ fn write_value(value: &Value, out: &mut String) {
     }
 }
 
-/// 🎛️ Escapes `"`, `\`, and control characters (`\b \f \n \r \t` shorthands, `\u00XX` otherwise);
-/// everything else — including non-ASCII — passes through unescaped, matching `serde_json`'s
-/// default (`ensure_ascii`-off) writer.
 fn write_string(text: &str, out: &mut String) {
     out.push('"');
     for ch in text.chars() {
@@ -142,16 +127,6 @@ fn write_number(number: Number, out: &mut String) {
     }
 }
 
-/// 🔧️ `serde_json`'s own (`zmij`-based) fixed/exponential split for `f64`: fixed notation for
-/// `-5 <= exponent <= 15` on the leading-digit decimal exponent, exponential otherwise — traced
-/// by hand from `zmij 1.0.21`'s `write<Float>` (`~/.cargo/registry/…/zmij-1.0.21/src/lib.rs`,
-/// the `(-5..=15).contains(&dec_exp)` guard) and confirmed against the pinned resolved version in
-/// this workspace's own `Cargo.lock`. Not ECMA-262's `-6 <= e < 21` (that was this writer's prior,
-/// wrong rule — ties in the last significant digit alone hid the boundary-case fanout it caused).
-/// A whole-number float always gets an explicit `.0` in fixed notation so it never collapses onto
-/// its integer twin on the wire. See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/
-/// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️float-format-parity.md`.
 pub(super) fn write_float(value: f64, out: &mut String) {
     write_float_to(value, out).expect("String accepts formatted JSON floats");
 }
-//#endregion 🔖️Writer

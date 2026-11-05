@@ -255,6 +255,11 @@ impl RasterPngPreparation {
     }
 
     pub fn advance(&mut self, cell_budget: usize) -> RasterPngProgress {
+        let Some(cell_count) = usize::try_from(self.raster.width).ok().and_then(|width| usize::try_from(self.raster.height).ok().and_then(|height| width.checked_mul(height))) else { return RasterPngProgress::Failed };
+        let maximum_width = (RASTER_PNG_DURABLE_CHUNK_BYTES - 18) / 2;
+        if self.raster.width == 0 || self.raster.height == 0 || self.raster.width as usize > maximum_width || cell_count != self.raster.values.len() {
+            return RasterPngProgress::Failed;
+        }
         match self.phase {
             RasterPngPhase::MinMax => {
                 let Some(end) = self.cursor.checked_add(cell_budget.max(1)).map(|end| end.min(self.raster.values.len())) else { return RasterPngProgress::Failed };

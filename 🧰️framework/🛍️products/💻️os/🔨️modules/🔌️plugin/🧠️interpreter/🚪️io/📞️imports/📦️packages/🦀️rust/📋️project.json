@@ -1,0 +1,44 @@
+{
+  "name": "@semio-tech/framework-plugin-interpreter-imports",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🚪️io/📞️imports/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🚪️io/📞️imports",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:os-plugin"
+  ],
+  "targets": {
+    "check": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo 📜️script.ts check",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo 📜️script.ts test",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

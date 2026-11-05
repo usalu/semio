@@ -1,0 +1,275 @@
+{
+  "issued": {
+    "input": {
+      "operation": 71,
+      "generation": 3,
+      "epoch": 23,
+      "work": {
+        "clockBinding": 1,
+        "absoluteDeadlineUs": 123456,
+        "fuel": 1000000
+      },
+      "grant": {
+        "maximumItems": 16,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 65536,
+        "maximumDepth": 64
+      }
+    },
+    "fuel": 10000,
+    "deadlineUs": 123000
+  },
+  "cases": [
+    {
+      "id": "same",
+      "actual": {
+        "input": {
+          "operation": 71,
+          "generation": 3,
+          "epoch": 23,
+          "work": {
+            "clockBinding": 1,
+            "absoluteDeadlineUs": 123456,
+            "fuel": 1000000
+          },
+          "grant": {
+            "maximumItems": 16,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 65536,
+            "maximumDepth": 64
+          }
+        },
+        "fuel": 10000,
+        "deadlineUs": 123000
+      },
+      "valid": true
+    },
+    {
+      "id": "worker-metadata",
+      "actual": {
+        "input": {
+          "operation": 71,
+          "generation": 3,
+          "epoch": 23,
+          "work": {
+            "clockBinding": 1,
+            "absoluteDeadlineUs": 123456,
+            "fuel": 999999
+          },
+          "grant": {
+            "maximumItems": 15,
+            "maximumCopyBytes": 4095,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 65536,
+            "maximumDepth": 64
+          }
+        },
+        "fuel": 10000,
+        "deadlineUs": 123000
+      },
+      "valid": true
+    },
+    {
+      "id": "shorter-slice",
+      "actual": {
+        "input": {
+          "operation": 71,
+          "generation": 3,
+          "epoch": 23,
+          "work": {
+            "clockBinding": 1,
+            "absoluteDeadlineUs": 123456,
+            "fuel": 1000000
+          },
+          "grant": {
+            "maximumItems": 16,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 65536,
+            "maximumDepth": 64
+          }
+        },
+        "fuel": 9999,
+        "deadlineUs": 122900
+      },
+      "valid": true
+    },
+    {
+      "id": "foreign-generation",
+      "actual": {
+        "input": {
+          "operation": 71,
+          "generation": 4,
+          "epoch": 23,
+          "work": {
+            "clockBinding": 1,
+            "absoluteDeadlineUs": 123456,
+            "fuel": 1000000
+          },
+          "grant": {
+            "maximumItems": 16,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 65536,
+            "maximumDepth": 64
+          }
+        },
+        "fuel": 10000,
+        "deadlineUs": 123000
+      },
+      "valid": false
+    },
+    {
+      "id": "foreign-source-clock",
+      "actual": {
+        "input": {
+          "operation": 71,
+          "generation": 3,
+          "epoch": 23,
+          "work": {
+            "clockBinding": 2,
+            "absoluteDeadlineUs": 123456,
+            "fuel": 1000000
+          },
+          "grant": {
+            "maximumItems": 16,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 65536,
+            "maximumDepth": 64
+          }
+        },
+        "fuel": 10000,
+        "deadlineUs": 123000
+      },
+      "valid": false
+    },
+    {
+      "id": "renewed-source-deadline",
+      "actual": {
+        "input": {
+          "operation": 71,
+          "generation": 3,
+          "epoch": 23,
+          "work": {
+            "clockBinding": 1,
+            "absoluteDeadlineUs": 123457,
+            "fuel": 1000000
+          },
+          "grant": {
+            "maximumItems": 16,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 65536,
+            "maximumDepth": 64
+          }
+        },
+        "fuel": 10000,
+        "deadlineUs": 123000
+      },
+      "valid": false
+    },
+    {
+      "id": "renewed-source-fuel",
+      "actual": {
+        "input": {
+          "operation": 71,
+          "generation": 3,
+          "epoch": 23,
+          "work": {
+            "clockBinding": 1,
+            "absoluteDeadlineUs": 123456,
+            "fuel": 1000001
+          },
+          "grant": {
+            "maximumItems": 16,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 65536,
+            "maximumDepth": 64
+          }
+        },
+        "fuel": 10000,
+        "deadlineUs": 123000
+      },
+      "valid": false
+    },
+    {
+      "id": "renewed-vm-fuel",
+      "actual": {
+        "input": {
+          "operation": 71,
+          "generation": 3,
+          "epoch": 23,
+          "work": {
+            "clockBinding": 1,
+            "absoluteDeadlineUs": 123456,
+            "fuel": 1000000
+          },
+          "grant": {
+            "maximumItems": 16,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 65536,
+            "maximumDepth": 64
+          }
+        },
+        "fuel": 10001,
+        "deadlineUs": 123000
+      },
+      "valid": false
+    },
+    {
+      "id": "expanded-physical-depth",
+      "actual": {
+        "input": {
+          "operation": 71,
+          "generation": 3,
+          "epoch": 23,
+          "work": {
+            "clockBinding": 1,
+            "absoluteDeadlineUs": 123456,
+            "fuel": 1000000
+          },
+          "grant": {
+            "maximumItems": 16,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 65536,
+            "maximumDepth": 65
+          }
+        },
+        "fuel": 10000,
+        "deadlineUs": 123000
+      },
+      "valid": false
+    },
+    {
+      "id": "renewed-slice",
+      "actual": {
+        "input": {
+          "operation": 71,
+          "generation": 3,
+          "epoch": 23,
+          "work": {
+            "clockBinding": 1,
+            "absoluteDeadlineUs": 123456,
+            "fuel": 1000000
+          },
+          "grant": {
+            "maximumItems": 16,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 65536,
+            "maximumReleaseBytes": 65536,
+            "maximumDepth": 64
+          }
+        },
+        "fuel": 10000,
+        "deadlineUs": 123001
+      },
+      "valid": false
+    }
+  ]
+}

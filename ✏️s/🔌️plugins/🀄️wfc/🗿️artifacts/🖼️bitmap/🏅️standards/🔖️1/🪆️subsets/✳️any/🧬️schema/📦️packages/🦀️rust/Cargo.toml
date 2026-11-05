@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = ["semio-s-artifact-wfc-bitmap-inferences/testkit"]
+
 [dependencies]
 machine = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 pack = { workspace = true }
@@ -46,6 +49,7 @@ semio-s-artifact-wfc-bitmap-snapshot = { path = "../../📸️snapshot/📦️pa
 semio-s-plugin-wfc-engine = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-wfc-bitmap-inferences = { path = "../../💡️inferences/📦️packages/🦀️rust" , features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

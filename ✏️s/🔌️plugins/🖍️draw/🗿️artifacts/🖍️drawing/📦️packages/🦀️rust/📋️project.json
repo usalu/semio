@@ -17,7 +17,16 @@
     ]
   },
   "targets": {
-    "test-inspector-selection-actions":{"executor":"repo:script","cache":true, "outputs": [],"options":{"cwd":"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust","command":"repo ./📜️script.ts test-inspector-selection-actions","forwardAllArgs":true}},
+    "test-inspector-selection-actions": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test-inspector-selection-actions",
+        "forwardAllArgs": true
+      }
+    },
     "build": {
       "executor": "repo:script",
       "cache": true,
@@ -45,7 +54,8 @@
         "forwardAllArgs": true
       },
       "dependsOn": [
-        "graph-generate"
+        "graph-generate",
+        "native-coverage"
       ]
     },
     "test": {
@@ -57,7 +67,8 @@
         "forwardAllArgs": true
       },
       "dependsOn": [
-        "graph-generate"
+        "graph-generate",
+        "native-coverage"
       ]
     },
     "verify-drawing-canvas-window-ownership": {
@@ -175,6 +186,22 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts preview-generated"
+      }
+    },
+    "native-coverage": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/**/Cargo.toml",
+        "!{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/**/target/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts native-coverage",
+        "forwardAllArgs": false
       }
     }
   }

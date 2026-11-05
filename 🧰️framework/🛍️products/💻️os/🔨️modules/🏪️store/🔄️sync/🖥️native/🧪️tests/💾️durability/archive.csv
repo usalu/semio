@@ -1,0 +1,4 @@
+id,format,root,history,member,current,recursive
+pair0,pair,old,spr0,,old,0
+archive1,archive,new,spr1,child,new,1
+pair2,pair,pair,spr2,,pair,0

@@ -54,24 +54,19 @@ impl<T: Topology + Clone + Send> WfcRestore<T> {
     }
 
     /// 🤝️ Closes the lent payload turn by turn from the next step's own wallet before decoding resumes.
-    pub(super) fn retire_delivered_publication<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
-        let publication = self.publication.as_mut().expect("a delivered wfc restore publication is staged");
-        let step = match publication.close_step(context.retained_grant()) { Ok(step) => step, Err(error) => { context.consume_retained(error.retained_progress())?; return Err(error) } };
-        context.consume_retained(step.progress())?;
-        if publication.terminal_is_empty() {
-            self.publication = None;
-        }
+    pub(super) fn retire_delivered_publication<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        close_publication_step(&mut self.publication,context)?;
         Ok(None)
     }
 
-    pub(super) fn drive_publication<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    pub(super) fn drive_publication<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         self.publication.as_mut().expect("a staged wfc restore publication").poll(context)
     }
 
     /// 📏️ Quotes the next close turn: the staged publication, the restored job's own frontier, the raw bytes, or one popped owner.
     pub(super) fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
-        if let Some(publication) = self.publication.as_ref() {
-            return publication.retirement_demands();
+        if self.publication.is_some() {
+            return publication_retirement_demands(&self.publication);
         }
         if let Some(restored) = self.restored.as_ref() {
             return Ok(RetirementDemand { copy_bytes: restored.next_close_copy_byte_demand()?, capacity_bytes: restored.next_close_capacity_byte_demand(0)?, release_bytes: restored.next_close_release_byte_demand()?, depth: restored.next_close_depth_demand()?.saturating_add(1) });
@@ -85,12 +80,12 @@ impl<T: Topology + Clone + Send> WfcRestore<T> {
 
 impl<T: Topology + Clone + Send> WfcRestore<T> {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    pub fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
-        if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) && !context.is_cancelled() && context.operation() == self.operation.operation && context.generation() == self.operation.generation {
+    pub fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        if self.publication.as_ref().is_some_and(|publication| publication.needs_retirement()) && !context.is_cancelled() && context.operation() == self.operation.operation && context.generation() == self.operation.generation {
             return self.retire_delivered_publication(context);
         }
         if context.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(context);
+            return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             if self.publication.as_ref().is_some_and(|publication| !publication.is_fault()) {
@@ -105,14 +100,14 @@ impl<T: Topology + Clone + Send> WfcRestore<T> {
         }
         match self.run(context) {
             WfcRestoreRun::Yield | WfcRestoreRun::Staged => Ok(None),
-            WfcRestoreRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
-            WfcRestoreRun::Complete => JobOutcomeBorrow::admit_complete(context, None, None),
+            WfcRestoreRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into),
+            WfcRestoreRun::Complete => JobOutcomeBorrow::admit_complete(context, None, None).map_err(Into::into),
         }
     }
 }
 
 impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>,_return_claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
@@ -144,23 +139,13 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
             }
             let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-            if let Some(publication) = self.publication.as_mut() {
-                let step = publication.close_step(grant)?;
-                if publication.terminal_is_empty() {
-                    self.publication = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
+            if self.publication.is_some() { return close_publication_step(&mut self.publication,cx); }
+            if self.restored.as_ref().is_some_and(InteractiveJob::terminal_is_empty) {
+                return semio_framework_job::close_original_granted_step(cx,|_|{self.restored=None;semio_framework_value::RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}});
             }
             if let Some(restored) = self.restored.as_mut() {
                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
                 let step = cx.with_retained_loan(child, |same| restored.close_step(same))?;
-                if restored.terminal_is_empty() {
-                    self.restored = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
-                }
                 return Ok(match step {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
                     step => step,

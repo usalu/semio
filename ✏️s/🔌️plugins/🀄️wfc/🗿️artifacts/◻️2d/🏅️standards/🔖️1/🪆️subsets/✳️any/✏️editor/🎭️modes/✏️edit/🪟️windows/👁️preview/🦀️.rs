@@ -197,7 +197,7 @@ fn slot_layers(slot: &crate::schema::snapshot::Wfc2dSlot, tile: Option<&Wfc2dTil
 /// 🖼️ Live fill payload while the run is non-terminal; otherwise `None`.
 pub fn live_fill_payload(tool_run: Option<&ToolRunView>) -> Option<Wfc2dFillTickPayload> {
     let run = tool_run.filter(|run| run.tool_id == fill::TOOL_ID && !run.state.is_terminal())?;
-    fill::decode_fill_payload(run.payload.as_deref()?)
+    fill::decode_fill_payload(run.payload.as_deref()?).filter(|payload| crate::editor::wfc2d::transient::source_matches(&payload.source_revision, Some(&run.identity.base_revision)))
 }
 
 /// 🖼️ The whole board's layer array — one entry per slot, in document order.
@@ -205,7 +205,7 @@ pub fn preview_layers_json(document: &Wfc2dSnapshot, transient: &Wfc2dTransient,
     let fit = preview_fit(document);
     let mut layers: Vec<String> = Vec::new();
     for slot in &document.slots {
-        let traced = fill.and_then(|payload| payload.trace.iter().rev().find(|event| event.slot_id == slot.id).map(|event| event.tile_id.clone()));
+        let traced = fill.filter(|payload| !payload.done).and_then(|payload| payload.trace.iter().rev().find(|event| event.slot_id == slot.id).map(|event| event.tile_id.clone()));
         let tile_id = traced
             .or_else(|| fill.and_then(|payload| payload.assignments.get(&slot.id).cloned().flatten()))
             .or_else(|| assigned_tile(transient, &slot.id).map(str::to_string))

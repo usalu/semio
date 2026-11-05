@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "s.wfc.test-driver.contract.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "clockUs",
+    "fuel",
+    "deadlineUs",
+    "close",
+    "cases"
+  ],
+  "properties": {
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "const": 16000000
+        },
+        "copyBytes": {
+          "type": "integer",
+          "const": 1073741824
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "const": 1073741824
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "const": 1073741824
+        },
+        "depth": {
+          "type": "integer",
+          "const": 256
+        }
+      }
+    },
+    "clockUs": {
+      "const": 0
+    },
+    "fuel": {
+      "const": 100000000
+    },
+    "deadlineUs": {
+      "const": "18446744073709551615"
+    },
+    "close": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jobEmpty",
+        "originEmpty",
+        "callerEmpty"
+      ],
+      "properties": {
+        "jobEmpty": {
+          "const": true
+        },
+        "originEmpty": {
+          "const": true
+        },
+        "callerEmpty": {
+          "const": true
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": [
+        {
+          "const": {
+            "id": "pending",
+            "stepFuel": 8,
+            "expectedReturned": "outcome",
+            "businessSteps": 2,
+            "observed": "yield"
+          }
+        },
+        {
+          "const": {
+            "id": "yield",
+            "stepFuel": 8,
+            "expectedReturned": "outcome",
+            "businessSteps": 1,
+            "observed": "yield"
+          }
+        },
+        {
+          "const": {
+            "id": "cancel",
+            "stepFuel": 8,
+            "expectedReturned": "outcome",
+            "businessSteps": 1,
+            "observed": "cancelled"
+          }
+        },
+        {
+          "const": {
+            "id": "refusal",
+            "stepFuel": 8,
+            "expectedReturned": "continuation",
+            "businessSteps": 1,
+            "observed": "refusal"
+          }
+        }
+      ],
+      "minItems": 4,
+      "maxItems": 4,
+      "additionalItems": false
+    }
+  }
+}

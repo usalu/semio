@@ -3,11 +3,11 @@
 use super::asset_handles_and_durable_content::{
     remodeling_durable_chunk, RemodelingDurableArtifactStore, RemodelingMeshChild, REMODELING_BOUNDED_MESH_TRIANGLES, REMODELING_BOUNDED_MESH_VERTICES, REMODELING_BOX_MESH_CHILD_ID, REMODELING_EMPTY_MESH_CHILD_ID, REMODELING_MESH_CONTENT_BYTES,
 };
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use super::asset_handles_and_durable_content::{RemodelingContentDigest, RemodelingContentKind};
 use super::buffers::ByteBuffer;
 use semio_framework::MeshData;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -19,7 +19,7 @@ fn mesh_child_handle(child_id: String, artifact_id: String) -> RemodelingMeshChi
     store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn mesh_digest_bytes(chunks: impl IntoIterator<Item = impl AsRef<[u8]>>) -> String {
     let mut digest = RemodelingContentDigest::default();
     for chunk in chunks {
@@ -183,10 +183,10 @@ pub fn resolve_bounded_remodeling_mesh(store: &RemodelingDurableArtifactStore, h
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 static REMODELING_TEST_MESHES: std::sync::OnceLock<std::sync::Mutex<BTreeMap<String, MeshData>>> = std::sync::OnceLock::new();
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn remodeling_test_meshes() -> &'static std::sync::Mutex<BTreeMap<String, MeshData>> {
     REMODELING_TEST_MESHES.get_or_init(|| std::sync::Mutex::new(BTreeMap::new()))
 }

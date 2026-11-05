@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["version", "artifactId", "kind", "initial"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "artifactId": { "type": "string", "minLength": 1 },
+    "kind": { "const": "os.agent.probe/v1" },
+    "initial": { "type": "object" }
+  },
+  "$defs": {
+    "Created": {
+      "type": "object",
+      "required": ["artifactId", "kind", "jobId", "status"],
+      "properties": {
+        "artifactId": { "type": "string", "minLength": 1 },
+        "kind": { "const": "os.agent.probe/v1" },
+        "jobId": { "type": "string", "minLength": 1 },
+        "status": { "const": "SUCCEEDED" }
+      }
+    },
+    "Opened": {
+      "type": "object",
+      "required": ["artifactId", "kind", "sizeBytes"],
+      "properties": {
+        "artifactId": { "type": "string", "minLength": 1 },
+        "kind": { "const": "os.agent.probe/v1" },
+        "sizeBytes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "Snapshot": {
+      "type": "object",
+      "required": ["artifactId", "packBytes", "sprBytes", "untrusted"],
+      "properties": {
+        "artifactId": { "type": "string", "minLength": 1 },
+        "packBytes": { "type": "integer", "minimum": 1 },
+        "sprBytes": { "type": "integer", "minimum": 1 },
+        "untrusted": {
+          "type": "object",
+          "required": ["content"],
+          "properties": {
+            "content": {
+              "type": "object",
+              "required": ["packBase64", "sprBase64"],
+              "properties": {
+                "packBase64": { "type": "string", "minLength": 1 },
+                "sprBase64": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Validated": {
+      "type": "object",
+      "required": ["artifactId", "schema", "validation", "valid"],
+      "properties": {
+        "artifactId": { "type": "string", "minLength": 1 },
+        "schema": { "const": "os.agent.probe/v1" },
+        "validation": { "const": "canonical-pair" },
+        "valid": { "const": true }
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 4,
+  "maxItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "fault",
+      "parentCancelled",
+      "status",
+      "parentLive",
+      "beforeStart",
+      "callback"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1
+      },
+      "fault": {
+        "enum": [
+          "cancel",
+          "other",
+          "aggregate"
+        ]
+      },
+      "parentCancelled": {
+        "type": "boolean"
+      },
+      "status": {
+        "enum": [
+          "cancelled",
+          "failed"
+        ]
+      },
+      "parentLive": {
+        "type": "boolean"
+      },
+      "beforeStart": {
+        "type": "boolean"
+      },
+      "callback": {
+        "type": "boolean"
+      }
+    }
+  }
+}

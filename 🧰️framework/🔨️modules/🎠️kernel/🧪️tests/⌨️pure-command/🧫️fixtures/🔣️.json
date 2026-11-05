@@ -1,0 +1,180 @@
+{
+  "cases": [
+    {
+      "id": "explicit-command-context",
+      "valid": true,
+      "request": {
+        "invocation": {
+          "command": {
+            "address": {
+              "owner": {
+                "mode": {
+                  "pluginId": "neutral",
+                  "appId": "surface.with.dots",
+                  "modeId": "review"
+                }
+              },
+              "commandId": "accept"
+            },
+            "arguments": {
+              "value": 7
+            }
+          }
+        },
+        "viewState": {
+          "locale": "de",
+          "terminology": "native",
+          "activeModeId": "review"
+        }
+      }
+    },
+    {
+      "id": "retained-context-allowed",
+      "valid": true,
+      "request": {
+        "invocation": {
+          "action": {
+            "address": {
+              "pluginId": "neutral",
+              "appId": "surface.with.dots",
+              "modeId": "edit",
+              "windowKindId": "details",
+              "windowInstanceId": "details",
+              "actionId": "inspect"
+            },
+            "arguments": {}
+          }
+        }
+      }
+    },
+    {
+      "id": "language-required",
+      "valid": false,
+      "request": {
+        "invocation": {
+          "command": {
+            "address": {
+              "owner": {
+                "plugin": {
+                  "pluginId": "neutral"
+                }
+              },
+              "commandId": "inspect"
+            },
+            "arguments": {}
+          }
+        },
+        "viewState": {
+          "terminology": "native"
+        }
+      }
+    },
+    {
+      "id": "raw-invocation-refused",
+      "valid": false,
+      "request": {
+        "address": {
+          "owner": {
+            "plugin": {
+              "pluginId": "neutral"
+            }
+          },
+          "commandId": "inspect"
+        },
+        "arguments": {}
+      }
+    }
+  ],
+  "contextCases": [
+    {
+      "id": "explicit-context-wins",
+      "request": 0,
+      "retained": {
+        "locale": "en",
+        "terminology": "reuse",
+        "activeModeId": "edit",
+        "windowId": "details-2",
+        "windowInstances": [
+          {
+            "id": "details-2",
+            "windowKindId": "details"
+          }
+        ]
+      },
+      "expectedContext": {
+        "locale": "de",
+        "terminology": "native",
+        "activeModeId": "review"
+      }
+    },
+    {
+      "id": "retained-real-window",
+      "request": 1,
+      "retained": {
+        "locale": "en",
+        "terminology": "reuse",
+        "activeModeId": "review",
+        "windowId": "details-2",
+        "windowInstances": [
+          {
+            "id": "details-2",
+            "windowKindId": "details"
+          }
+        ]
+      },
+      "expectedContext": {
+        "locale": "en",
+        "terminology": "reuse",
+        "activeModeId": "review",
+        "windowId": "details-2",
+        "windowInstances": [
+          {
+            "id": "details-2",
+            "windowKindId": "details"
+          }
+        ]
+      },
+      "expectedWindow": "details-2",
+      "expectedMode": "review"
+    },
+    {
+      "id": "absent-caller-context",
+      "request": 1,
+      "expectedFault": "plugin.unavailable"
+    },
+    {
+      "id": "foreign-caller-window",
+      "request": 1,
+      "retained": {
+        "locale": "en",
+        "terminology": "reuse",
+        "activeModeId": "review",
+        "windowId": "details-2",
+        "windowInstances": [
+          {
+            "id": "details-2",
+            "windowKindId": "main"
+          }
+        ]
+      },
+      "expectedFault": "input.invalid"
+    },
+    {
+      "id": "inactive-command-mode",
+      "request": 0,
+      "context": {
+        "locale": "en",
+        "terminology": "reuse",
+        "activeModeId": "edit",
+        "windowId": "details-2",
+        "windowInstances": [
+          {
+            "id": "details-2",
+            "windowKindId": "details"
+          }
+        ]
+      },
+      "expectedFault": "plugin.unavailable"
+    }
+  ]
+}

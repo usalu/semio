@@ -1,0 +1,10 @@
+{
+  "schema": "lowpoly.viewer-localized-ui/v1",
+  "expect": {
+    "windowTitleOverride": false,
+    "windowLabels": {
+      "en": "Mesh",
+      "de": "Netz"
+    }
+  }
+}

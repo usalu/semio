@@ -69,7 +69,7 @@ pub use semio_framework_value_intrinsic::bytes;
 pub mod bounded_clone;
 
 pub use semio_framework_value_native_encoding::native_encoding;
-pub use native_encoding::{NativeEncodeControl,NativeEncodeContinuation};
+pub use native_encoding::{NativeEncodeControl,NativeEncodeContinuation,NativeScopedEncodeContinuation};
 
 
 

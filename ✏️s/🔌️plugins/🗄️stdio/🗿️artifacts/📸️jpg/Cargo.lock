@@ -1067,6 +1067,7 @@ dependencies = [
  "semio-framework-kernel-identity",
  "semio-framework-kernel-media-jobs",
  "semio-framework-kernel-ui",
+ "semio-framework-manifest-address",
  "semio-framework-manifest-media",
  "semio-framework-manifest-view-model",
  "semio-framework-pack",
@@ -3895,6 +3896,9 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-job-fault-publication",
  "semio-framework-job-payload",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin-abi",
+ "semio-framework-ui-contract",
  "semio-os-kernel",
  "semio-plugin-abi",
  "semio-framework-value",
@@ -6085,6 +6089,7 @@ version = "0.1.0"
 dependencies = [
  "semio-ui-contract-budget",
  "semio-framework-value",
+ "semio-framework-value-native-decoding",
  "serde",
 ]
 
@@ -6524,6 +6529,7 @@ name = "semio-framework-value-native-owned"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
+ "semio-framework-value-derive",
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-default",
@@ -7168,6 +7174,8 @@ dependencies = [
  "semio-framework-schema-state",
  "semio-framework-test-fixtures",
  "semio-framework-trace",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
  "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -7320,7 +7328,6 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-jpg-inferences",
  "semio-s-artifact-stdio-jpg-mutations",
- "semio-s-artifact-stdio-jpg-operations",
  "semio-s-artifact-stdio-jpg-schema",
  "semio-s-artifact-stdio-jpg-test-oracle",
  "serde_json",

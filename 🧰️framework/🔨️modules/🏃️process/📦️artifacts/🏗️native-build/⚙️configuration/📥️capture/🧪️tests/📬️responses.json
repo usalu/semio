@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "success-warning",
+      "capture": {
+        "stdout": "{\"build\":{\"jobs\":1}}",
+        "stderr": "warning: fixture diagnostic\n",
+        "status": 0,
+        "signal": null
+      },
+      "accepted": true,
+      "value": {
+        "build": {
+          "jobs": 1
+        }
+      }
+    },
+    {
+      "id": "pretty-success-warning",
+      "capture": {
+        "stdout": "{\n \"build\": {\"jobs\": 1}\n}\n",
+        "stderr": "warning: fixture diagnostic\n",
+        "status": 0,
+        "signal": null
+      },
+      "accepted": true,
+      "value": {
+        "build": {
+          "jobs": 1
+        }
+      }
+    },
+    {
+      "id": "stderr-object-is-not-data",
+      "capture": {
+        "stdout": "",
+        "stderr": "{\"build\":{\"jobs\":1}}",
+        "status": 0,
+        "signal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "malformed-stdout-valid-stderr",
+      "capture": {
+        "stdout": "{",
+        "stderr": "{}",
+        "status": 0,
+        "signal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "failed-valid-stdout",
+      "capture": {
+        "stdout": "{}",
+        "stderr": "failure",
+        "status": 1,
+        "signal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "signal-valid-stdout",
+      "capture": {
+        "stdout": "{}",
+        "stderr": "",
+        "status": 0,
+        "signal": "SIGTERM"
+      },
+      "accepted": false
+    },
+    {
+      "id": "unknown-terminal",
+      "capture": {
+        "stdout": "{}",
+        "stderr": "",
+        "status": null,
+        "signal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "interleaved-stderr-is-not-machine-data",
+      "capture": {
+        "stdout": "{\n \"build\": {\"jobs\": 1}\n}\n",
+        "stderr": "warning: before JSON\nwarning: between JSON rows\nwarning: after JSON\n",
+        "status": 0,
+        "signal": null
+      },
+      "accepted": true,
+      "value": {
+        "build": {
+          "jobs": 1
+        }
+      }
+    },
+    {
+      "id": "utf8-split-unicode",
+      "capture": {
+        "stdout": "{\"name\":\"🧱️ Größe\"}",
+        "stderr": "warning: unicode split\n",
+        "status": 0,
+        "signal": null
+      },
+      "accepted": true,
+      "value": {
+        "name": "🧱️ Größe"
+      }
+    }
+  ]
+}

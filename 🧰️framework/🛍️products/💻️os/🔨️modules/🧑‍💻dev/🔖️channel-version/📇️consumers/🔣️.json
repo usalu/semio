@@ -7,10 +7,6 @@
       "guest": true
     },
     {
-      "path": "🟦️.ts",
-      "occurrences": 1
-    },
-    {
       "path": "🧪️testing/⚖️scale/🦀️.rs",
       "occurrences": 1,
       "guest": true
@@ -40,19 +36,11 @@
       "occurrences": 8
     },
     {
-      "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧬️schema/🔣️.json",
-      "occurrences": 1
-    },
-    {
-      "path": "🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
-      "occurrences": 1
-    },
-    {
       "path": "🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/🧬️catalog-publication/🔣️.json",
       "occurrences": 3,
       "hostileValues": [
-        22,
-        24
+        23,
+        26
       ],
       "hostileOccurrences": 2
     },
@@ -78,7 +66,7 @@
     },
     {
       "path": "🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🚀️local-hub.json",
-      "occurrences": 6
+      "occurrences": 8
     },
     {
       "path": "🧪️tests/🧫️fixtures/📇️directory/🌐️browser-document-open-v1.json",
@@ -127,6 +115,10 @@
       "occurrences": 1
     },
     {
+      "path": "🔨️modules/📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🎬️media-export-wire/🧬️schema/🔣️.json",
+      "occurrences": 1
+    },
+    {
       "path": "🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/📚️fixture-corpus-laws/🦀️.rs",
       "occurrences": 1,
       "arbitrary": true
@@ -135,6 +127,30 @@
       "path": "🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🔣️.json",
       "occurrences": 1,
       "derived": "the host fixture component's describe output (its `🛂️.descriptor.semio` twin is re-derived with it)"
+    },
+    {
+      "path": "🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧪️tests/🧫️fixtures/🔣️.json",
+      "occurrences": 15,
+      "hostileValues": [
+        22
+      ],
+      "hostileOccurrences": 1
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🏗️startup/🧪️tests/🧫️fixtures/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/🚪️io/🪪️bindings/🏛️catalog/🧪️tests/🧫️fixtures/🔣️.json",
+      "occurrences": 8
     }
   ]
 }

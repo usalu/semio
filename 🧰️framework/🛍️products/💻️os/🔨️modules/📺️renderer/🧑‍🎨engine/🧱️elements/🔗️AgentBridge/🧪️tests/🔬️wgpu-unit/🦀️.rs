@@ -12,10 +12,11 @@ use super::*;
 const FRAME_FIXTURES: &str = include_str!("../../../../../../🌉️mcp/🧵️bridge/🧪️tests/🧫️fixtures/📨️frames.json");
 const CANCELLATION_FIXTURE: &str = include_str!("../🧫️fixtures/🛑️cancellation/🔣️.json");
 const HANDSHAKE_FIXTURE: &str = include_str!("../🧫️fixtures/🤝️handshake/🔣️.json");
+const APP_COMMAND_REFUSAL_FIXTURE: &str = include_str!("../🧫️fixtures/🗿️app-command-refusal/🔣️.json");
 
-/// 📨️ Shell→Gateway variants this shell deliberately does not model — the four snapshot-carrying
+/// 📨️ Shell→Gateway variants this shell deliberately does not model — the three snapshot-carrying
 /// frames that only a `ShellState`-mirroring shell produces (see [`ShellToGateway`]'s own doc).
-const UNMODELLED_SHELL_TO_GATEWAY: [&str; 4] = ["ShellState", "ShellStatePatch", "Instances", "AppFrames"];
+const UNMODELLED_SHELL_TO_GATEWAY: [&str; 3] = ["ShellState", "ShellStatePatch", "Instances"];
 
 fn decode_hex(hex: &str) -> Vec<u8> {
     assert!(hex.len() % 2 == 0, "fixture hex must be byte-aligned: {hex}");
@@ -75,7 +76,27 @@ fn every_modelled_shell_to_gateway_fixture_round_trips_through_this_codec() {
         assert_eq!(encode_hex(&frame.encode()), hex, "{variant} re-encoded to different bytes");
         seen.push(variant);
     }
-    assert_eq!(distinct_variants(&seen), 7, "Hello + ShellCommandResult + Approval + Ping + Bye + AgentMessage + AgentCancel — the eleven SSOT variants minus the unmodelled four, saw {seen:?}");
+    assert_eq!(distinct_variants(&seen), 8, "the eleven SSOT variants minus the three unmodelled snapshot frames, saw {seen:?}");
+}
+
+#[test]
+fn an_unrouted_app_command_is_refused_on_its_own_instance_and_correlation() {
+    let fixture: serde_json::Value = serde_json::from_str(APP_COMMAND_REFUSAL_FIXTURE).expect("app command refusal fixture");
+    let seq = fixture["request"]["seq"].as_str().expect("request seq").parse::<u64>().expect("u64 seq");
+    let instance_id = fixture["request"]["instanceId"].as_str().expect("instance");
+    let mut state = AgentBridgeState::default();
+    state.note_socket_opened("shell-native", "agent:local", BridgeFlags::default());
+    let hello = state.take_outbox();
+    assert!(matches!(&hello[0], ShellToGateway::Hello { flags, .. } if !flags.relay_app_commands));
+    state.apply_frame(GatewayToShell::AppCommand { seq, instance_id: instance_id.to_string(), command: serde_json::to_vec(&fixture["request"]["command"]).expect("command JSON") }, 0.0);
+    let outbox = state.take_outbox();
+    assert_eq!(outbox.len(), 1);
+    let decoded = ShellToGateway::decode(&outbox[0].encode()).expect("app reply codec");
+    let ShellToGateway::AppFrames { in_reply_to, instance_id: addressed_instance, frames } = decoded else { panic!("expected AppFrames") };
+    assert_eq!(in_reply_to, seq);
+    assert_eq!(addressed_instance, instance_id);
+    assert_eq!(frames.len(), 1);
+    assert_eq!(serde_json::from_slice::<serde_json::Value>(&frames[0]).expect("fault JSON"), fixture["response"]);
 }
 
 #[test]

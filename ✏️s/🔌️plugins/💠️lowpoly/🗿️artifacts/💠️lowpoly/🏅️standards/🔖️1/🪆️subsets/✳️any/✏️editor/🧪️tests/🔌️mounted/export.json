@@ -1,0 +1,56 @@
+{
+  "schema": "lowpoly.mounted-export/v1",
+  "setup": {
+    "primitive": "plane",
+    "name": "Export Fixture"
+  },
+  "expected": {
+    "objects": 1,
+    "positions": [
+      [
+        -1,
+        0,
+        -1
+      ],
+      [
+        -1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        -1
+      ],
+      [
+        1,
+        0,
+        1
+      ]
+    ],
+    "area": 4
+  },
+  "formats": [
+    {
+      "format": "obj",
+      "filename": "export-fixture.obj",
+      "mimeType": "model/obj",
+      "encoding": null,
+      "faces": 1
+    },
+    {
+      "format": "ply",
+      "filename": "export-fixture.ply",
+      "mimeType": "application/x-ply",
+      "encoding": null,
+      "faces": 1
+    },
+    {
+      "format": "stl",
+      "filename": "export-fixture.stl",
+      "mimeType": "model/stl",
+      "encoding": null,
+      "faces": 2
+    }
+  ]
+}

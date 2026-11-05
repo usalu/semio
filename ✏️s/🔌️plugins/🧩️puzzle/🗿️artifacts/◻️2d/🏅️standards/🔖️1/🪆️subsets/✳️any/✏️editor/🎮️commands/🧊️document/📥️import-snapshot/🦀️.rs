@@ -34,14 +34,18 @@ impl Puzzle2dImportFault {
 
 //#region 🔖️Command
 /// 📥 The snapshot an import carries: the picked JSON text or an inline object in `payload` —
-/// accepted only when it is a puzzle 2d snapshot (its `schema` or a `nodes` array).
+/// accepted only when its explicit schema is Puzzle 2d, or its schema-free nodes form an array.
 pub fn puzzle2d_import_value(args: &Value) -> Result<Value, Puzzle2dImportFault> {
     let value = match args.get(IMPORT_ARGUMENT_PAYLOAD).and_then(Value::as_str) {
         Some(text) if text.len() > PUZZLE_IMPORT_TOTAL_BYTES => return Err(Puzzle2dImportFault::Capacity),
         Some(text) => semio_framework_pack_json::from_json_str::<Value>(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| Puzzle2dImportFault::Payload)?,
         None => args.get(IMPORT_ARGUMENT_PAYLOAD).cloned().filter(|payload| payload.as_object().is_some()).ok_or(Puzzle2dImportFault::Payload)?,
     };
-    let is_snapshot = value.get("schema").and_then(Value::as_str) == Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) || value.get("nodes").is_some_and(|nodes| nodes.as_array().is_some());
+    let nodes = value.get("nodes");
+    let is_snapshot = match value.get("schema") {
+        Some(schema) => schema.as_str() == Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) && nodes.is_none_or(|nodes| nodes.as_array().is_some()),
+        None => nodes.is_some_and(|nodes| nodes.as_array().is_some()),
+    };
     if !is_snapshot {
         return Err(Puzzle2dImportFault::Payload);
     }

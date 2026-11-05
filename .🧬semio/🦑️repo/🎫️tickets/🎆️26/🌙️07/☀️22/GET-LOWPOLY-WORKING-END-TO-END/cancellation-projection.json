@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "policy": "PerOperation",
+  "cases": [
+    {
+      "name": "Exact App Action",
+      "surface": "app",
+      "proof": "exact",
+      "initial": false,
+      "outcome": "projected",
+      "expected": true
+    },
+    {
+      "name": "Exact Window Action",
+      "surface": "window",
+      "proof": "exact",
+      "initial": false,
+      "outcome": "projected",
+      "expected": true
+    },
+    {
+      "name": "Unmatched Action Remains False",
+      "surface": "app",
+      "proof": "absent-unrelated",
+      "initial": false,
+      "outcome": "unchanged",
+      "expected": false
+    },
+    {
+      "name": "Unmatched Authored Flag Is Preserved",
+      "surface": "window",
+      "proof": "absent-unrelated",
+      "initial": true,
+      "outcome": "unchanged",
+      "expected": true
+    },
+    {
+      "name": "Wrong Owner Proof Refuses",
+      "surface": "app",
+      "proof": "wrong-owner",
+      "initial": false,
+      "outcome": "refused",
+      "expected": null
+    },
+    {
+      "name": "Wrong Schema Proof Refuses",
+      "surface": "window",
+      "proof": "wrong-schema",
+      "initial": false,
+      "outcome": "refused",
+      "expected": null
+    },
+    {
+      "name": "Duplicate Proof Refuses",
+      "surface": "app",
+      "proof": "duplicate",
+      "initial": false,
+      "outcome": "refused",
+      "expected": null
+    },
+    {
+      "name": "Missing Migrated Proof Refuses",
+      "surface": "window",
+      "proof": "missing-migrated",
+      "initial": false,
+      "outcome": "refused",
+      "expected": null
+    }
+  ]
+}

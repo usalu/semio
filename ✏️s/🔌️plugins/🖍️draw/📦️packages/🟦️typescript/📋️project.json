@@ -3,6 +3,17 @@
   "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+      "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/*.{ts,tsx,mts,mjs,json,rs,toml,lock,svg,png,jpg,jpeg,webp,bmp,gif,pdf,dwg,dxf,semio,wit,sql,txt,bin,graphql,proto,spicy,abnf,ksy,g4,ebnf,feature}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/🧪️tests/🧫️fixtures/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/📚️examples/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/dist/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/.🧾️store/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/target/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/.cache/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/node_modules/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/🗑️generated/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/**/*",
@@ -12,6 +23,28 @@
     ]
   },
   "targets": {
+    "browser-acceptance": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        "workspace:deps-browsers"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts browser-acceptance",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
+        }
+      }
+    },
     "test": {
       "executor": "repo:script",
       "options": {
@@ -46,6 +79,19 @@
         "cwd": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts utility-action-policy",
         "forwardAllArgs": true
+      }
+    },
+    "browser-oracle-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "repo ./📜️script.ts browser-acceptance oracle"
       }
     }
   }

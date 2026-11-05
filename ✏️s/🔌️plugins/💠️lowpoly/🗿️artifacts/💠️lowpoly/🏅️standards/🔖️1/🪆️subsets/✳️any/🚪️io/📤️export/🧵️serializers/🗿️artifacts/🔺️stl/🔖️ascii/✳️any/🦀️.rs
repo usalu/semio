@@ -1,7 +1,7 @@
 //! 🔺️ lowpoly -> stl
 //!
-//! Real ASCII STL export through `engine::encode_stl_ascii`: every object whose persisted
-//! `mesh_content` is non-empty is transformed into world space (scale -> Euler-degree rotation ->
+//! Real ASCII STL export through `engine::encode_stl_ascii`: every object's current mesh
+//! is transformed into world space (scale -> Euler-degree rotation ->
 //! translation) and each n-gon is fan-triangulated, one facet per triangle with its computed unit
 //! face normal.
 //!

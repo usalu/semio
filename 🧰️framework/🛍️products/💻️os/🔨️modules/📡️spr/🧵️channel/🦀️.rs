@@ -21,7 +21,7 @@
 /// `AppFrame::Welcome` handshake entirely — lifecycle now arrives through the reactor ABI's
 /// `Event::InstanceOpen`/`InstanceClose`, so this constant is no longer carried on the wire by any
 /// frame; it exists purely as the drift guard the tests below assert against.
-pub const CHANNEL_VERSION: u32 = 23;
+pub const CHANNEL_VERSION: u32 = 25;
 //#endregion 🔖️Version
 
 //#region 🔖️ChannelHandshake

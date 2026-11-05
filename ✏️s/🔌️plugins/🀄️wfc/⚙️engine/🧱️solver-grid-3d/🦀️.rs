@@ -9,7 +9,7 @@ use crate::grid3d::Grid3dTopology;
 use crate::ids::PatternId;
 use crate::model::CompiledModel;
 use crate::outcome::{Solution, SolveOutcome};
-use crate::search::{self, CancelToken, SearchConfig};
+use crate::search::{self, CancelToken, SearchConfig,SearchResult};
 use crate::topology::Topology;
 
 // #region 🔖️Builder
@@ -94,16 +94,16 @@ impl Grid3dSolver {
         }
     }
 
-    pub fn solve(&mut self, seed: u64) -> SolveOutcome {
+    pub fn solve(&mut self, seed: u64) -> SearchResult<Grid3dTopology> {
         match self.constraint_set() {
-            Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, None, &cs),
+            Some(cs) => Ok(search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, None, &cs)),
             None => search::solve(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed),
         }
     }
 
-    pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
+    pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SearchResult<Grid3dTopology> {
         match self.constraint_set() {
-            Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, Some(cancel), &cs),
+            Some(cs) => Ok(search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, Some(cancel), &cs)),
             None => search::solve_cancellable(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, cancel),
         }
     }

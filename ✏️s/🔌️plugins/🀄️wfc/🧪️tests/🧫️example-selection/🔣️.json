@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "action": "setActiveExample",
+  "argument": "exampleId",
+  "artifacts": [
+    {
+      "id": "bitmap",
+      "defaultExample": "rooms-16",
+      "examples": [
+        "rooms-16",
+        "flowers-24"
+      ]
+    },
+    {
+      "id": "grid2d",
+      "defaultExample": "pipes",
+      "examples": [
+        "pipes",
+        "terrain"
+      ]
+    },
+    {
+      "id": "wfc2d",
+      "defaultExample": "two-room-corridor",
+      "examples": [
+        "two-room-corridor",
+        "wall-roof-facade-strip",
+        "hex-ring",
+        "terrain-ring"
+      ]
+    },
+    {
+      "id": "grid3d",
+      "defaultExample": "blocks",
+      "examples": [
+        "blocks",
+        "pipes-3d"
+      ]
+    },
+    {
+      "id": "wfc3d",
+      "defaultExample": "two-room-corridor",
+      "examples": [
+        "two-room-corridor",
+        "wall-roof-facade-strip",
+        "tower-stack"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "cleared-picker",
+      "input": "",
+      "select": "default"
+    },
+    {
+      "id": "explicit-picker",
+      "input": null,
+      "select": "named",
+      "exampleIndex": 1
+    },
+    {
+      "id": "unknown-picker",
+      "input": "not-an-example",
+      "select": "refuse"
+    }
+  ]
+}

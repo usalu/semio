@@ -1,0 +1,3 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";
+const file="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🏠️native/🦀️.rs";
+let source=readFileSync(file,"utf8");const before="Ok(false)if!invoked=>{call.result=Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,\"native immutable origin is currently borrowed\").into());}";if(source.split(before).length!==2)throw Error("expected origin contention branch");source=source.replace(before,"Ok(false)if!invoked=>{}");const temp=import.meta.dirname+"/🗑️generated/guest-home-contention-edit.rs";writeFileSync(temp,source);renameSync(temp,file);

@@ -9,7 +9,7 @@ use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 //#region 🔖️Inverse
 pub fn inverse<Op: From<EditPaintLayer>>(payload: &ApplyPaintStroke, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-    let Some(runs) = payload.runs(base).filter(|runs| !runs.is_empty() && payload.invariant_violation().is_none()) else {
+    let Some(runs) = payload.runs(base)?.filter(|runs| !runs.is_empty() && payload.invariant_violation().is_none()) else {
         return Ok(Vec::new());
     };
     crate::edit_paint_layer::inverse::inverse(&EditPaintLayer { object_id: payload.object_id.clone(), layer_index: payload.layer_index, runs }, base)?

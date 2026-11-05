@@ -87,3 +87,13 @@ path = "../../🎟️source/♻️close/🧪️tests/owning.rs"
 name = "original-return-and-retirement-contracts"
 required-features = ["testkit"]
 path = "../../🧪️contracts/owning.rs"
+
+[[test]]
+name = "original-native-parent-retirement"
+required-features = ["testkit"]
+path = "../../🎟️source/🏠️native/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-source-native-encoding"
+required-features = ["testkit"]
+path = "../../🛫️encoding/🧪️tests/🦀️.rs"

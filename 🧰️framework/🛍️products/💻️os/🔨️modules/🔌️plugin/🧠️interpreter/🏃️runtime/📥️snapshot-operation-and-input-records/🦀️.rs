@@ -39,11 +39,7 @@ impl OwnedSnapshotOperation {
     }
 }
 
-/// 🔀️ `serde`-only, not `ToValue`: `events`/`command_page`/`budget` embed `semio_framework::kernel::
-/// {Event, CommandPageCursor, FixedCommandPage, Budget}`, none of which have `ToValue`/`FromValue`
-/// yet (same orphan-rule/`rename_all_fields`-unsupported blocker as `owned_abi::PollInput`'s own
-/// hand-written bridge in `🔌️plugin/🦀️.rs` — see that impl's docstring). Converting this
-/// needs the `🎠️kernel` module's own conversion pass first.
+/// 🔀️ Serializes borrowed kernel inputs without an intermediate value tree.
 #[derive(serde::Serialize)]
 pub(super) struct OwnedPollInput<'a> {
     pub(super) events: &'a [&'a Event],
@@ -67,12 +63,12 @@ pub(super) struct OwnedRestoreInput {
 /// 🧬️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b): the input envelope of the four owned `codec`
 /// exports — the mirror of the guest's `owned_abi::CodecInput`.
 #[derive(serde::Serialize)]
-pub(super) struct OwnedCodecInput<'a> {
-    pub(super) artifact_schema: &'a str,
-    pub(super) document_id: &'a str,
-    pub(super) pack: &'a [u8],
-    pub(super) spr: &'a [u8],
-    pub(super) ops: &'a [u8],
+pub struct OwnedCodecInput<'a> {
+    pub artifact_schema: &'a str,
+    pub document_id: &'a str,
+    pub pack: &'a [u8],
+    pub spr: &'a [u8],
+    pub ops: &'a [u8],
 }
 
 /// 🪶️ The input envelope of the owned `codec.sqlite-export`/`sqlite-import` exports — the mirror of the guest's own snapshot
@@ -93,22 +89,21 @@ pub struct OwnedInvocation {
     pub fuel_used: u64,
 }
 
-/// 🪪️ The owned engine's semantic identity: a digest of the interpreter's source and of this owned
-/// host adapter's source — every instruction a guest executes and every host import answer it can
-/// observe. A fact one build of the engine derived from a component (a verified pack-schema hash)
-/// holds for every other build of the same engine — a copied, re-signed or cross-compiled binary —
-/// and a changed engine never reuses one.
+/// 🪪️ Identifies the complete interpreter/runtime source and floating-point writer.
 pub fn owned_engine_identity() -> &'static str {
     static IDENTITY: std::sync::OnceLock<String> = std::sync::OnceLock::new();
     IDENTITY.get_or_init(|| {
         let interpreter = semio_plugin_interpreter::INTERPRETER_SOURCE.as_bytes();
         let host = OWNED_RUNTIME_SOURCE.as_bytes();
-        let mut engine = Vec::with_capacity(64 + interpreter.len() + host.len());
+        let imports=semio_framework_plugin_interpreter_imports::ORIGINAL_HOST_SOURCE.as_bytes();
+        let mut engine = Vec::with_capacity(72 + interpreter.len() + host.len()+imports.len());
         engine.extend_from_slice(b"semio.owned-engine/v1\n");
         engine.extend_from_slice(&(interpreter.len() as u64).to_le_bytes());
         engine.extend_from_slice(interpreter);
         engine.extend_from_slice(&(host.len() as u64).to_le_bytes());
         engine.extend_from_slice(host);
+        engine.extend_from_slice(&(imports.len()as u64).to_le_bytes());
+        engine.extend_from_slice(imports);
         format!("owned-engine-v1:{}", semio_framework_hash::hex_lower(semio_framework_hash::hash(&engine).as_bytes()))
     })
 }

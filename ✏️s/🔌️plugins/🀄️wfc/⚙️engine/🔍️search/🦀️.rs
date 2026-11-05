@@ -19,6 +19,10 @@ use crate::sample::{self, ValueSampler};
 use crate::topology::Topology;
 use crate::trail::Trail;
 use semio_framework_geometry::random::Rng;
+#[path="🏃️batch/🦀️.rs"]
+mod batch;
+pub use batch::{SearchJob,SearchFailure,SearchResult};
+use batch::drive_batch_job;
 
 // #region 🔖️Config
 /// 🌳️ Whether a failed attempt restarts from scratch or resumes chronological backtracking.
@@ -455,11 +459,11 @@ fn initialize<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option
 /// 🌳️ Applies `init_domains` (or full domains) and `fixed` pins, runs initial propagation, then
 /// drives search per `config` until solved, proven unsatisfiable, or a budget/restart limit stops
 /// the attempt. `init_domains`, when present, must have one entry per node.
-pub fn solve<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
+pub fn solve<T: Topology + Clone + Send + 'static>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)]) -> SearchResult<T> {
     drive_batch_job(model, topo, config, seed, init_domains, fixed, None)
 }
 
-pub fn solve_cancellable<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: &CancelToken) -> SolveOutcome {
+pub fn solve_cancellable<T: Topology + Clone + Send + 'static>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: &CancelToken) -> SearchResult<T> {
     drive_batch_job(model, topo, config, seed, init_domains, fixed, Some(cancel))
 }
 
@@ -467,76 +471,6 @@ fn partial_from_job<T: Topology + Clone>(job: &WfcJob<T>) -> PartialState {
     let domains = job.domain_masks();
     let decided = domains.iter().map(|domain| (domain.count_ones() == 1).then(|| domain.first_set().expect("singleton WFC domain"))).collect();
     PartialState { domains, decided }
-}
-
-fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: Option<&CancelToken>) -> SolveOutcome {
-    use crate::job::{admit_payload_authority, close_job, close_payload_authority, payload_bytes, HEADLESS_GRANT};
-    use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, InteractiveJob, JobOutcomeBorrow, Operation, RetainedCloneProgress, RevisionId, StepBudget, StepContext};
-
-    if config.mode == SearchMode::RestartOnly || config.nogood.enabled {
-        return solve_inner(model, topo, config, seed, init_domains, fixed, cancel, None);
-    }
-
-    let start = std::time::Instant::now();
-    let operation = Operation::new(allocate_operation_id(), RevisionId(0), Generation(0), seed);
-    let job_config = WfcJobConfig {
-        sampler: match config.sampler {
-            ValueSampler::WeightedRoulette => WfcSampler::WeightedRoulette,
-            ValueSampler::Uniform => WfcSampler::Uniform,
-        },
-    };
-    let mut job = WfcJob::new(operation, model.clone(), topo.clone(), job_config, init_domains.map(<[PatternSet]>::to_vec), fixed.to_vec());
-    let mut sequence = 0;
-    let mut authority = admit_payload_authority(operation);
-    let step_cancel = root_cancel_token();
-    let result = loop {
-        let (observations, propagations, backtracks) = job.metrics();
-        let metrics = Metrics { observations, propagations, backtracks, elapsed_millis: start.elapsed().as_millis() as u64, ..Metrics::default() };
-        let run_report = |terminal: Event, observed: &[(NodeId, PatternId)]| {
-            let mut events = Vec::new();
-            if config.diag_level >= DiagLevel::Decisions {
-                events.extend(observed.iter().map(|&(node, chosen)| Event::Observed { node, chosen }));
-            }
-            if config.diag_level != DiagLevel::Off {
-                events.push(terminal);
-            }
-            RunReport { metrics, model_fingerprint: model.fingerprint(), seed, events }
-        };
-        if cancel.is_some_and(CancelToken::is_cancelled) {
-            break SolveOutcome::Cancelled { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
-        }
-        if config.budget.max_observations.is_some_and(|limit| observations >= limit) || config.budget.max_backtracks.is_some_and(|limit| backtracks >= limit) || config.budget.max_millis.is_some_and(|limit| metrics.elapsed_millis >= limit) {
-            break SolveOutcome::BudgetExceeded { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
-        }
-        let mut receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::with_payload_authority(operation.operation, operation.generation, StepBudget::new(4_096, u64::MAX, HEADLESS_GRANT), &step_cancel, || Some(0), &mut sequence, &mut receipt, &authority).expect("batch context admits its payload authority");
-        let result = match job.step(&mut context) {
-            Ok(Some(JobOutcomeBorrow::Complete { output, .. })) => {
-                let bytes = output.map(payload_bytes).unwrap_or_default();
-                let commit = semio_framework_pack_json::from_json_str::<crate::job::WfcCommit>(std::str::from_utf8(&bytes).expect("completed WFC batch output is UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject);
-                let assignment = commit.expect("completed WFC batch job has a valid commit").assignment.into_iter().map(PatternId).collect();
-                Some(SolveOutcome::Solved(Solution { assignment, report: run_report(Event::Solved, job.observed()) }))
-            }
-            Ok(Some(JobOutcomeBorrow::Fault { detail, .. })) => {
-                let unsatisfiable = payload_bytes(detail) == b"wfc-unsatisfiable";
-                let report = run_report(Event::Contradiction { node: NodeId(0) }, job.observed());
-                if unsatisfiable {
-                    Some(SolveOutcome::Unsatisfiable(UnsatReport { proven: true, report }))
-                } else {
-                    Some(SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report }))
-                }
-            }
-            Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => Some(SolveOutcome::Cancelled { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) }),
-            Ok(_) => None,
-            Err(_) => Some(SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report: run_report(Event::Contradiction { node: NodeId(0) }, job.observed()) })),
-        };
-        if let Some(result) = result {
-            break result;
-        }
-    };
-    close_job(&mut job);
-    close_payload_authority(&mut authority);
-    result
 }
 
 /// 🌳️ Like [`solve`], but also applies every constraint's initial restriction and rejects (via an

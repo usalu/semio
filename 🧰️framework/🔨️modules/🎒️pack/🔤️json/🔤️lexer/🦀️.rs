@@ -2,12 +2,6 @@
 
 use super::*;
 
-//#region 🔖️Lexer
-/// 🪙️ One structural token — the streaming layer everything else is built on. A future
-/// chunked-`Read` streaming API would produce these incrementally across buffer refills; today's
-/// `Lexer` already tokenizes without materializing the whole document as a DOM first, it just still
-/// requires the whole input as one contiguous `&str` (every framework consumer today hands over a
-/// short handcrafted schema leaf, never something worth reading in chunks).
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Null,
@@ -23,8 +17,6 @@ pub enum Token {
     Colon,
 }
 
-/// 🔤️ Token-at-a-time reader over a `&str` — zero-copy for structural bytes, allocating
-/// only for string/number token payloads.
 pub struct Lexer<'a> {
     pub(super) input: &'a str,
     pub(super) pos: usize,
@@ -89,16 +81,12 @@ impl NumberScan {
     }
 }
 
-/// 🔣️ Retains the original allocation-free RFC8259 numeric scanner under caller-authored turns.
 #[derive(Clone,Copy)]
 pub struct JsonNumberCursor(NumberScan);
 
 impl JsonNumberCursor{
-    /// 🌱️ Begins one exact numeric TEXT field without scanning, copying, or allocating.
     pub fn new()->Self{Self(NumberScan::new(0))}
-    /// 📍️ Reports the actual original numeric source position.
     pub fn position(&self)->usize{self.0.position}
-    /// 🧮️ Performs one original numeric grammar transition into the retained scalar owner.
     pub fn step<S:JsonReadSource+?Sized>(&mut self,input:&S)->Result<Option<Number>,JsonError>{self.0.step(input)}
 }
 
@@ -111,7 +99,6 @@ impl<'a> Lexer<'a> {
         Self { input, pos: 0 }
     }
 
-    /// 🔎️ Current byte offset into the input.
     pub fn position(&self) -> usize {
         self.pos
     }
@@ -135,16 +122,11 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// 🔢️ Reads one JSON number literal per RFC 8259 §6: `-? int frac? exp?`, no leading zeros.
-    /// Falls back to `Number::Float` whenever a fractional part, exponent, or `u64`/`i64` overflow
-    /// is present — identical to `serde_json` with its `float_roundtrip` oracle configuration and
-    /// without `arbitrary_precision` (the only configuration this repo ever builds with).
     pub(super) fn read_number(&mut self) -> Result<Token, JsonError> {
         let mut number = NumberScan::new(self.pos);
         loop { if let Some(value) = number.step(self.input)? { self.pos = number.position; return Ok(Token::Number(value)); } }
     }
 
-    /// 🧵️ Reads the 4 hex digits of one `\uXXXX` escape (already past the `u`).
     fn read_hex4(&mut self, escape_start: usize) -> Result<u32, JsonError> {
         let bytes = self.input.as_bytes();
         if self.pos + 4 > bytes.len() {
@@ -164,16 +146,12 @@ impl<'a> Lexer<'a> {
         Ok(value)
     }
 
-    /// 💯️ Reads a full JSON string literal (opening quote must be at `self.pos`). Handles every
-    /// short escape, `\uXXXX`, and UTF-16 surrogate pairs for supplementary-plane characters —
-    /// rejects a lone (unpaired) surrogate rather than silently producing an invalid `char`.
     fn read_string(&mut self) -> Result<String, JsonError> {
         self.pos += 1; let mut output = String::new();
         while let Some(character) = json_character(self)? { output.push(character); }
         Ok(output)
     }
 
-    /// 📤️ Reads the next structural or scalar token, or `None` at end of input.
     pub fn next_token(&mut self) -> Result<Option<Token>, JsonError> {
         self.skip_ws();
         let Some(byte) = self.peek_byte() else { return Ok(None) };
@@ -211,4 +189,3 @@ impl<'a> Lexer<'a> {
         }
     }
 }
-//#endregion 🔖️Lexer

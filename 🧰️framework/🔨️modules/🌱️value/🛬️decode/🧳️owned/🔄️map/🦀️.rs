@@ -2,9 +2,7 @@
 use crate::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,OriginalReceivingPrimary,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneClose,retained_clone_grant_admits}};
 use super::{NativeReceive,NativeReceiver,NativeDecodeControl,RetainedCloneRef,tree::{fixed,receipt,invalid}};
 use std::{marker::PhantomData,mem::ManuallyDrop};
-/// 🧬️ Implementations perform only an infallible allocation-free authored ownership move.
 pub trait NativeReceiveMap<T>:RetireOwned{fn from_native(value:T)->Self;}
-/// 🪡️ The original child, pending native owner and mapped output all keep their real cancellation custody.
 pub struct NativeMappedReceiver<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>>{inner:T::Receiver,pending:ManuallyDrop<Option<T>>,output:ManuallyDrop<Option<U>>,retirement:RetainedCloneClose,closing:bool,marker:PhantomData<fn(&I)->U>}
 fn nested(mut d:RetirementDemand)->Result<RetirementDemand,ValueError>{d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"native mapped receiving depth overflow"))?;Ok(d)}
 fn child(g:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g}}

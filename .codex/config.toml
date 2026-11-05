@@ -9,6 +9,6 @@ cwd = "."
 [mcp_servers.semio]
 default_tools_approval_mode = "approve"
 command = "repo"
-args = ["dev", "mcp", "stdio", "os", "--catalog", "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated", "--folder", ".🧬semio/🔗space/os-mcp", "--scopes", "workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"]
+args = ["dev", "mcp", "stdio", "os", "--catalog", "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated", "--catalog-target", "@semio-tech/s-dev-composition:generate", "--folder", ".🧬semio/🔗space/os-mcp", "--scopes", "workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write", "--operation-policy", "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/💡️host-operation-policy.json"]
 enabled = true
 cwd = "."

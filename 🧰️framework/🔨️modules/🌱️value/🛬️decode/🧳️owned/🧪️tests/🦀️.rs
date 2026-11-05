@@ -28,6 +28,7 @@ impl NativeReceiver<DslValue,Row> for Receiving{
 }
 impl Drop for Receiving{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native receiving retains original physical owner");}}
 pub(crate) struct Bank{left:RetainedCloneGrant,work:u64}
+impl Bank{pub(crate) fn work_loan(&self,maximum:u64)->crate::source_fixture::WorkLoan<'_>{crate::source_fixture::WorkLoan::new(&self.work,maximum)}}
 impl Bank{
  pub(crate) fn new()->Self{let f:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/📐️.json")).unwrap();let f=&f["stock"];Self{left:RetainedCloneGrant{maximum_items:f["items"].as_u64().unwrap()as usize,maximum_copy_bytes:f["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:f["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:f["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:f["depth"].as_u64().unwrap()as usize},work:f["fuel"].as_u64().unwrap()}}
  pub(crate) fn grant(&self)->RetainedCloneGrant{assert!(self.work>0&&self.left.maximum_items>0,"native field fixture exhausted its finite stock");RetainedCloneGrant{maximum_items:1,..self.left}}

@@ -99,12 +99,12 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
     semio_framework_pack_json::to_json_string(&layers)
 }
 
-pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>, labels: &LowpolyLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     match loaded {
         Some(loaded) => {
             scene_surface(LOWPOLY_PLAY_SURFACE_UV, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: uv_canvas_layers_json(loaded, view, texture_cache), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
         }
-        None => semio_plugin::built_text_node(semio_ui_locale::Label::data("Failed to load UV canvas")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly uv window failed-load text admission failed")),
+        None => semio_plugin::built_text_node(labels.failed_uv.into()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly uv window failed-load text admission failed")),
     }
 }
 //#endregion 🔖️Scene

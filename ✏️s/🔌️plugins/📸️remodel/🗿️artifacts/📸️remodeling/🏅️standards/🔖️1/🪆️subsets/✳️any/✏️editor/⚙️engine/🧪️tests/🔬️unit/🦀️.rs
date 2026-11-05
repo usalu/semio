@@ -61,3 +61,46 @@ fn raster_digest_and_chunk_overflow_fail_without_wrapping() {
     chunks.chunk_count = u64::MAX;
     assert!(matches!(chunks.advance(1), RasterPngProgress::Failed));
 }
+
+#[test]
+fn raster_png_portable_vectors_match_independent_decoder() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️raster-png.json")).expect("raster PNG vectors");
+    for vector in fixture["vectors"].as_array().expect("vectors") {
+        let id = vector["id"].as_str().expect("vector id");
+        let mut raster = remodeling_geo::Raster::new(1, 1, 1.0, [0.0, 0.0]);
+        raster.width = vector["width"].as_u64().expect("width") as u32;
+        raster.height = vector["height"].as_u64().expect("height") as u32;
+        if let Some(fill) = vector.get("fill") {
+            let count = fill["count"].as_u64().expect("fill count") as usize;
+            raster.values = vec![fill["value"].as_f64().expect("fill value") as f32; count];
+            raster.valid = vec![fill["valid"].as_bool().expect("fill validity"); count];
+        } else {
+            raster.values = vector["values"].as_array().expect("values").iter().map(|value| value.as_f64().expect("value") as f32).collect();
+            raster.valid = vector["valid"].as_array().expect("valid").iter().map(|value| value.as_bool().expect("validity")).collect();
+        }
+        let mut encoder = RasterPngPreparation::new(raster);
+        let mut bytes = Vec::new();
+        let mut failed = false;
+        let mut completed = false;
+        for _ in 0..64 {
+            match encoder.advance(1) {
+                RasterPngProgress::Working => {}
+                RasterPngProgress::Chunk(chunk) => bytes.extend(chunk),
+                RasterPngProgress::Complete => { completed = true; break; }
+                RasterPngProgress::Failed => { failed = true; break; }
+            }
+        }
+        assert_eq!(failed, vector["failed"].as_bool().unwrap_or(false), "{id}");
+        if failed {
+            assert!(bytes.is_empty(), "{id}: invalid raster emitted bytes");
+            continue;
+        }
+        assert!(completed, "{id}: encoder did not terminate");
+        let mut reader = png::Decoder::new(bytes.as_slice()).read_info().expect("independent PNG decoder");
+        let mut pixels = vec![0; reader.output_buffer_size()];
+        let info = reader.next_frame(&mut pixels).expect("independent PNG pixels");
+        assert_eq!(info.bit_depth, png::BitDepth::Sixteen, "{id}");
+        let expected = vector["pixels"].as_array().expect("pixels").iter().flat_map(|value| (value.as_u64().expect("sample") as u16).to_be_bytes()).collect::<Vec<_>>();
+        assert_eq!(&pixels[..info.buffer_size()], expected.as_slice(), "{id}");
+    }
+}

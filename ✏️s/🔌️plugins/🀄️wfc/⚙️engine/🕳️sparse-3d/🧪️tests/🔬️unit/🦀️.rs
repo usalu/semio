@@ -97,5 +97,5 @@ fn sparse_graph_solves_through_the_ordinary_kernel() {
     let volume = SparseVolume::from_coords([(0, 0, 0), (1, 0, 0), (2, 0, 0)]);
     let topo = volume.to_graph_topology(&rels).unwrap();
     let config = SearchConfig::default();
-    assert!(matches!(search::solve(&model, &topo, &config, 1, None, &[]), SolveOutcome::Solved(_)));
+    assert!(matches!(search::solve(&model, &topo, &config, 1, None, &[]).expect("original search and teardown complete"), SolveOutcome::Solved(_)));
 }

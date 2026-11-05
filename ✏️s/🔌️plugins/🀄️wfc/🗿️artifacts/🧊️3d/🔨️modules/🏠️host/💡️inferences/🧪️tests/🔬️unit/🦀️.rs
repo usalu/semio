@@ -2,9 +2,11 @@
 //! contradiction instead of panicking or hanging, it respects a pin, and its entropy field tracks the
 //! tile weight distribution.
 
+use crate::host::inferences::{Wfc3dInferenceJob, Wfc3dInferenceRequest};
+use crate::standards::v1::subsets::any::schema::inferences::Wfc3dInferenceCommit;
 use std::collections::BTreeMap;
 use crate::host::inferences::*;
-use crate::standards::v1::subsets::any::schema::inferences::{Wfc3dContradiction, Wfc3dEntropy, Wfc3dSolve, Wfc3dSolveResult, MAX_WFC3D_TILES};
+use crate::standards::v1::subsets::any::schema::inferences::{Wfc3dEntropy, MAX_WFC3D_TILES};
 use crate::schema::snapshot::{GraphRule, Slot3d, SlotEdge, Tile, Wfc3dSnapshot, WFC3D_DOCUMENT_SCHEMA};
 
 //#region 🧸️Fixtures
@@ -31,18 +33,27 @@ fn two_slot_two_tile() -> Wfc3dSnapshot {
 }
 //#endregion 🧸️Fixtures
 
-#[test]
-fn a_trivially_satisfiable_spec_assigns_every_slot() {
-    let values = store::infer_field::<Wfc3dSnapshot, Wfc3dSolve>(&two_slot_two_tile(), None);
-    match &values["wfc3d"] {
-        Wfc3dSolveResult::Solved { assignments } => assert_eq!(assignments.len(), 2, "both slots must be assigned"),
-        Wfc3dSolveResult::Unsolved => panic!("a trivially satisfiable spec must solve"),
-    }
+fn resumable_result(snapshot: &Wfc3dSnapshot) -> Result<Wfc3dInferenceCommit, String> {
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(1), snapshot.seed);
+    let mut job = Wfc3dInferenceJob::new(operation, Wfc3dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
+    let mut driver = semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::new(operation.operation, operation.generation);
+    let bytes = driver.completed_output(&mut job, 64, 2_000_000)?;
+    let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
+    crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value::<Wfc3dInferenceCommit>(text).map_err(|error| error.to_string())
 }
 
 #[test]
-fn the_contradiction_field_agrees_with_the_solve_field_on_a_satisfiable_spec() {
-    assert!(store::infer_field::<Wfc3dSnapshot, Wfc3dContradiction>(&two_slot_two_tile(), None)["wfc3d"]);
+fn a_trivially_satisfiable_spec_assigns_every_slot() {
+    let commit = resumable_result(&two_slot_two_tile()).expect("resumable graph completes");
+    assert_eq!(commit.assignments.len(), 2, "both slots must be assigned");
+}
+
+#[test]
+fn the_resumable_job_and_headless_batch_publish_the_same_assignment() {
+    let snapshot = two_slot_two_tile();
+    let stepped = resumable_result(&snapshot).expect("resumable graph completes");
+    let batch = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("headless graph completes");
+    assert_eq!(stepped, batch);
 }
 
 /// 🩺 One tile and one edge, with no rule admitting that tile beside itself: nothing can fill both
@@ -52,8 +63,7 @@ fn an_unsatisfiable_spec_is_reported_as_a_contradiction_not_a_panic() {
     let mut snapshot = two_slot_two_tile();
     snapshot.tiles = vec![tile("a", 1.0)];
     snapshot.rules.clear();
-    assert!(!store::infer_field::<Wfc3dSnapshot, Wfc3dContradiction>(&snapshot, None)["wfc3d"]);
-    assert_eq!(store::infer_field::<Wfc3dSnapshot, Wfc3dSolve>(&snapshot, None)["wfc3d"], Wfc3dSolveResult::Unsolved);
+    assert!(resumable_result(&snapshot).is_err(), "no commit can be published for an unsatisfiable graph");
 }
 
 /// ⛓️ A forbidding rule always beats an admitting one, whatever order they were authored in — the
@@ -63,9 +73,9 @@ fn a_forbidding_rule_beats_an_admitting_one() {
     let mut snapshot = two_slot_two_tile();
     snapshot.tiles = vec![tile("a", 1.0)];
     snapshot.rules = vec![GraphRule { id: "r-aa".into(), tile_a_id: "a".into(), tile_b_id: "a".into(), relation: None, allowed: true }];
-    assert!(store::infer_field::<Wfc3dSnapshot, Wfc3dContradiction>(&snapshot, None)["wfc3d"], "the admitting rule alone must solve");
+    assert!(resumable_result(&snapshot).is_ok(), "the admitting rule alone must solve");
     snapshot.rules.push(GraphRule { id: "r-aa-no".into(), tile_a_id: "a".into(), tile_b_id: "a".into(), relation: None, allowed: false });
-    assert!(!store::infer_field::<Wfc3dSnapshot, Wfc3dContradiction>(&snapshot, None)["wfc3d"], "the forbidding rule must win");
+    assert!(resumable_result(&snapshot).is_err(), "the forbidding rule must win");
 }
 
 /// 🔁 The determinism law: `compute` is a pure function of the snapshot, WFC's internal randomness
@@ -74,8 +84,8 @@ fn a_forbidding_rule_beats_an_admitting_one() {
 #[test]
 fn identical_seed_and_spec_always_produce_the_same_solution() {
     let snapshot = two_slot_two_tile();
-    let first = store::infer_field::<Wfc3dSnapshot, Wfc3dSolve>(&snapshot, None);
-    let second = store::infer_field::<Wfc3dSnapshot, Wfc3dSolve>(&snapshot, None);
+    let first = resumable_result(&snapshot).expect("first solve completes");
+    let second = resumable_result(&snapshot).expect("second solve completes");
     assert_eq!(first, second);
 }
 
@@ -83,7 +93,7 @@ fn identical_seed_and_spec_always_produce_the_same_solution() {
 fn changing_only_the_seed_still_solves_a_satisfiable_spec() {
     let mut snapshot = two_slot_two_tile();
     snapshot.seed = 999;
-    assert!(matches!(store::infer_field::<Wfc3dSnapshot, Wfc3dSolve>(&snapshot, None)["wfc3d"], Wfc3dSolveResult::Solved { .. }));
+    assert!(resumable_result(&snapshot).is_ok());
 }
 
 #[test]
@@ -91,13 +101,9 @@ fn a_pinned_slot_always_resolves_to_its_pinned_tile() {
     let mut snapshot = two_slot_two_tile();
     snapshot.slots[0].pinned_tile_id = Some("a".into());
     snapshot.slots[1].pinned_tile_id = Some("b".into());
-    match &store::infer_field::<Wfc3dSnapshot, Wfc3dSolve>(&snapshot, None)["wfc3d"] {
-        Wfc3dSolveResult::Solved { assignments } => {
-            assert_eq!(assignments["s1"], "a");
-            assert_eq!(assignments["s2"], "b");
-        }
-        Wfc3dSolveResult::Unsolved => panic!("a pinned-and-admitted pair must solve"),
-    }
+    let commit = resumable_result(&snapshot).expect("pinned-and-admitted pair completes");
+    assert_eq!(commit.assignments["s1"], "a");
+    assert_eq!(commit.assignments["s2"], "b");
 }
 
 /// ⛓️ Relations are separate constraint channels: a rule scoped to `beside` admits the pair `beside`
@@ -107,14 +113,15 @@ fn a_relation_scoped_rule_only_constrains_its_own_relation() {
     let mut snapshot = two_slot_two_tile();
     snapshot.tiles = vec![tile("a", 1.0)];
     snapshot.rules = vec![GraphRule { id: "r-aa-beside".into(), tile_a_id: "a".into(), tile_b_id: "a".into(), relation: Some("beside".into()), allowed: true }];
-    assert!(store::infer_field::<Wfc3dSnapshot, Wfc3dContradiction>(&snapshot, None)["wfc3d"], "the admit is scoped to `beside`, and this edge is `beside`");
+    assert!(resumable_result(&snapshot).is_ok(), "the beside relation is admitted");
     snapshot.edges[0].relation = "above".into();
-    assert!(!store::infer_field::<Wfc3dSnapshot, Wfc3dContradiction>(&snapshot, None)["wfc3d"], "the same admit must NOT reach another relation");
+    assert!(resumable_result(&snapshot).is_err(), "a beside rule cannot admit another relation");
 }
 
 #[test]
 fn an_empty_document_solves_trivially_with_no_assignments() {
-    assert_eq!(store::infer_field::<Wfc3dSnapshot, Wfc3dSolve>(&Wfc3dSnapshot::default(), None)["wfc3d"], Wfc3dSolveResult::Solved { assignments: BTreeMap::new() });
+    let commit = resumable_result(&Wfc3dSnapshot::default()).expect("empty graph completes");
+    assert_eq!(commit.assignments, BTreeMap::new());
 }
 
 #[test]

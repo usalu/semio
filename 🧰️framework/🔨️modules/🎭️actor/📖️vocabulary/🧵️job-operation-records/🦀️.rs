@@ -45,6 +45,8 @@ impl JobOperation {
 /// 📸️ Opaque resumable state plus the committed progress boundary it represents.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::semio_framework_value")]
+#[derive(semio_framework_value::NativeReceive)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct JobCheckpoint {
     pub state: Vec<u8>,
     pub applied_progress: u64,

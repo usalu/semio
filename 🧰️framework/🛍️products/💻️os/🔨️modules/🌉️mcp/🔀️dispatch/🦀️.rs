@@ -27,7 +27,7 @@ use semio_os_mcp_inference_hub::hub_wire::is_hub_inference_route;
 use semio_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, InferCommand, InferenceOutcome, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedActionRecord, PreparedOps, SagaMember, SagaMemberResult, SagaRecord, SagaReport, UndoMember, UndoRecord, UndoRedoReport, declared_effective_input, map_fault, omitted_revision_arguments, revision_guard_required, unacknowledged_relay_error};
 use semio_os_mcp_port::policy::{AgentPrincipal, ApprovalGate, AutoApprovePolicy, PolicyEngine};
 use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
-use semio_os_mcp_schema::schema::{compile_validator, validate};
+use semio_os_mcp_schema::schema::{compile_validator, untrusted_capability_output, validate};
 
 //#region 🔖️ActionAdapter
 
@@ -60,6 +60,7 @@ pub struct ActionAdapter {
     pub policy: PolicyEngine,
     pub client: ClientInfo,
     invocation_counter: AtomicU64,
+    targets: Mutex<std::collections::BTreeMap<String, (u32, semio_framework_os_mcp_port::channel_port::ActionTarget)>>,
     history_undo_port: Mutex<Option<Arc<dyn HistoryUndoPort>>>,
     approvals: Mutex<Option<Arc<ApprovalCoordinator>>>,
 }
@@ -69,7 +70,7 @@ pub(crate) const INSTANCE_BUSY_MAX_ATTEMPTS: u32 = 3;
 impl ActionAdapter {
     pub fn new(channel: Box<ArtifactChannels>, handles: Arc<HandleTable>, idempotency: Arc<IdempotencyStore>, audit: Arc<AuditSinks>, auto_approve: AutoApprovePolicy, client: ClientInfo) -> Self {
         let policy = PolicyEngine::new(handles.clone(), auto_approve);
-        Self { channel: Mutex::new(channel), handles, idempotency, audit, policy, client, invocation_counter: AtomicU64::new(0), history_undo_port: Mutex::new(None), approvals: Mutex::new(None) }
+        Self { channel: Mutex::new(channel), handles, idempotency, audit, policy, client, invocation_counter: AtomicU64::new(0), targets: Mutex::new(std::collections::BTreeMap::new()), history_undo_port: Mutex::new(None), approvals: Mutex::new(None) }
     }
 
     //#region 💡️Inference
@@ -221,11 +222,59 @@ impl ActionAdapter {
         Err(last_error.unwrap_or_else(|| GatewayError::new(GatewayErrorCode::PreconditionFailed, "instance busy, retries exhausted")))
     }
 
+    /// 🎯️ Reuses a bounded session-local target identity outside the catalog slot namespace.
+    pub fn target_instance(&self, catalog: &Catalog, principal: &AgentPrincipal, capability_id: &str, target: &semio_framework_os_mcp_port::channel_port::ActionTarget) -> Result<u32, GatewayError> {
+        if target.instance_id.is_none() && target.plugin_id.is_none() && target.app_id.is_none() && target.artifact_ref.is_none() && target.window_id.is_none() && target.mode_id.is_none() {
+            return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "target must name at least one selector"));
+        }
+        let capability = catalog.get(capability_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, "unknown capability"))?;
+        self.policy.authorize_scopes(principal, capability)?;
+        let mut target = target.clone();
+        if let semio_framework_os_mcp_catalog::catalog::CapabilityOwner::Plugin { plugin_id, app_id, mode_id, .. } = &capability.owner {
+            if target.plugin_id.as_ref().is_some_and(|id| id != plugin_id)
+                || target.app_id.as_ref().is_some_and(|id| app_id.as_ref().is_some_and(|app| app != id))
+                || target.mode_id.as_ref().is_some_and(|id| mode_id.as_ref().is_some_and(|mode| mode != id)) {
+                return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, "target does not own this capability"));
+            }
+            target.plugin_id = Some(plugin_id.clone());
+            target.app_id = target.app_id.or_else(|| app_id.clone());
+        }
+        let key = serde_json::to_string(&target).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, error.to_string()))?;
+        let mut targets = self.targets.lock().expect("target directory lock poisoned");
+        let instance = match targets.get(&key) {
+            Some((instance, _)) => *instance,
+            None if targets.len() >= 4096 => return Err(GatewayError::new(GatewayErrorCode::BudgetExceeded, "session target directory is full")),
+            None => 0x8000_0000 + targets.len() as u32,
+        };
+        let resolved = self.channel.lock().expect("artifact channel lock poisoned").select_target(instance, capability_id, &target).map_err(|fault| map_fault(&fault))?;
+        targets.insert(key, (instance, resolved));
+        Ok(instance)
+    }
+
+    /// 🗿️ Resolves a registered artifact to its exact selected guest, refusing ambiguous aliases.
+    pub fn artifact_instance(&self, artifact_id: &str, plugin_id: &str, app_id: &str) -> Result<Option<u32>, GatewayError> {
+        let targets = self.targets.lock().expect("target directory lock poisoned");
+        let instances: std::collections::BTreeSet<u32> = targets.values().filter(|(_, target)|
+            target.artifact_ref.as_deref() == Some(artifact_id)
+            && target.plugin_id.as_deref() == Some(plugin_id)
+            && target.app_id.as_deref().is_none_or(|app| app == app_id)
+        ).map(|(instance, _)| *instance).collect();
+        if instances.len() > 1 {
+            return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "artifact has several selected guest identities; name an unambiguous artifact target"));
+        }
+        Ok(instances.into_iter().next())
+    }
+
     //#region 🔖️PrepareAndPreview
     /// 🧾️ `📋️master.md` §3.3 Prepare + Preview, combined into one call (matches `PreparedActionReport`
     /// carrying the preview inline): validate → resolve capability → policy → capture baseline
     /// revision (Observe) → dry-run `PureCommand` (Preview) → mint `prep_`.
     pub fn prepare(&self, catalog: &Catalog, principal: &AgentPrincipal, session: &SessionHandle, capability_id: &str, input: serde_json::Value, instance: u32, now_ms: u64) -> Result<PreparedActionReport, GatewayError> {
+        self.prepare_in_context(catalog, principal, session, capability_id, input, instance, None, now_ms)
+    }
+
+    /// 🖼️ Previews with the caller's exact resolved view context.
+    pub fn prepare_in_context(&self, catalog: &Catalog, principal: &AgentPrincipal, session: &SessionHandle, capability_id: &str, input: serde_json::Value, instance: u32, context: Option<semio_framework::ViewModel>, now_ms: u64) -> Result<PreparedActionReport, GatewayError> {
         let invocation_id = self.next_invocation_id();
 
         let capability = match catalog.get(capability_id) {
@@ -256,12 +305,13 @@ impl ActionAdapter {
             other => return Err(GatewayError::new(GatewayErrorCode::Internal, format!("unexpected frame from ReadHistory: {other:?}"))),
         };
 
-        let (ops, warnings) = match self.exchange_one(instance, AppCommand::PureCommand { capability_id: capability_id.to_string(), input: input.clone() })? {
-            AppFrame::Emit { ops, warnings } => (ops, warnings),
+        let (ops, warnings, output) = match self.exchange_one(instance, AppCommand::PureCommand { capability_id: capability_id.to_string(), input: input.clone(), view_state: context })? {
+            AppFrame::Emit { ops, warnings, output } => (ops, warnings, output),
             other => return Err(GatewayError::new(GatewayErrorCode::Internal, format!("unexpected frame from PureCommand: {other:?}"))),
         };
 
-        let record = PreparedActionRecord { capability_id: capability_id.to_string(), input: input.clone(), instance, baseline: baseline.clone(), ops: ops.clone(), principal_id: principal.id.clone() };
+        let untrusted = untrusted_capability_output(output.unwrap_or(serde_json::Value::Null), Some(&baseline), capability.artifact_kind.as_deref());
+        let record = PreparedActionRecord { capability_id: capability_id.to_string(), input: input.clone(), instance, baseline: baseline.clone(), ops: ops.clone(), principal_id: principal.id.clone(), untrusted: untrusted.clone() };
         let payload = serde_json::to_value(&record).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
         let prepared_handle = self.handles.mint(HandleKind::Prepared, session.clone(), Attachment::Capability { capability_id: capability_id.to_string() }, payload, now_ms);
 
@@ -271,7 +321,7 @@ impl ActionAdapter {
             prepared_handle,
             capability_id: capability_id.to_string(),
             expected_revision: Some(baseline),
-            preview: serde_json::json!({ "opsCount": ops.op_counts(), "warnings": warnings }),
+            preview: serde_json::json!({ "opsCount": ops.op_counts(), "warnings": warnings, "untrusted": untrusted }),
             expires_at_ms: now_ms.saturating_add(HandleKind::Prepared.default_ttl_ms()),
         })
     }
@@ -302,6 +352,9 @@ impl ActionAdapter {
     /// post-unblock review caught, see `📓️terra-P6-report.md` "post-unblock fixes"). The idempotency
     /// key, not the prepared handle, is the source of truth for what a replay returns.
     pub fn invoke(&self, catalog: &Catalog, principal: &AgentPrincipal, session: &SessionHandle, request: InvokeRequest, instance: u32, now_ms: u64) -> Result<InvocationReport, GatewayError> {
+        if request.prepared_handle.is_some() && (request.capability_id.is_some() || request.input.is_some() || request.context.is_some()) {
+            return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "prepared actions retain their capability, input and caller context"));
+        }
         match &request.idempotency_key {
             Some(key) => {
                 let failure: std::cell::RefCell<Option<GatewayError>> = std::cell::RefCell::new(None);
@@ -321,6 +374,7 @@ impl ActionAdapter {
                             undo_token: None,
                             postconditions: Vec::new(),
                             replayed: false,
+                            untrusted: serde_json::Value::Null,
                         };
                         *failure.borrow_mut() = Some(error);
                         failed
@@ -360,7 +414,7 @@ impl ActionAdapter {
                     return Err(error);
                 }
             }
-            let prepared = self.prepare(catalog, principal, session, &capability_id, input, instance, now_ms)?;
+            let prepared = self.prepare_in_context(catalog, principal, session, &capability_id, input, instance, request.context.clone(), now_ms)?;
             let resolved = self.handles.resolve(&prepared.prepared_handle, session, now_ms)?;
             let stored: PreparedActionRecord = serde_json::from_value(resolved.payload).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
             (Some(prepared.prepared_handle), stored)
@@ -449,6 +503,7 @@ impl ActionAdapter {
                 undo_token: None,
                 postconditions: Vec::new(),
                 replayed: false,
+                untrusted: record.untrusted.clone(),
             };
             self.record_audit(
                 AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input },
@@ -474,10 +529,14 @@ impl ActionAdapter {
                     let _ = self.exchange_one(record.instance, AppCommand::TransactionUndo { group_id: txn_id.clone() });
                     Err(unacknowledged_relay_error(&edit_id, &relay))
                 }
-                Ok(AppFrame::TransactionCommitted { edit_id, relay, .. }) => {
+                Ok(AppFrame::TransactionCommitted { edit_id, relay, output, .. }) => {
                     let after = match self.exchange_one(record.instance, AppCommand::ReadHistory) {
                         Ok(AppFrame::HistorySnapshot(revision)) => revision,
                         _ => current.clone(),
+                    };
+                    let untrusted = match output {
+                        Some(output) => untrusted_capability_output(output, Some(&after), capability.artifact_kind.as_deref()),
+                        None => record.untrusted.clone(),
                     };
                     let undo_record = UndoRecord { members: vec![UndoMember::LocalGuestTransaction { instance: record.instance, transaction_id: txn_id.clone() }] };
                     let undo_token = self.handles.mint(HandleKind::Undo, session.clone(), Attachment::Capability { capability_id: record.capability_id.clone() }, serde_json::to_value(&undo_record).unwrap_or_default(), now_ms);
@@ -493,6 +552,7 @@ impl ActionAdapter {
                         undo_token: Some(undo_token),
                         postconditions: std::iter::once(format!("edit:{edit_id}")).chain(relay.map(|_| "relay:acknowledged".to_string())).collect(),
                         replayed: false,
+                        untrusted,
                     })
                 }
                 Ok(other) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("unexpected frame from TransactionCommit: {other:?}"))),

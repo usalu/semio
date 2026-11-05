@@ -33,3 +33,7 @@ record unpin-pixel tag=9
 field body bytes
 record paint-input-stroke tag=10
 field body bytes
+record pin-solution tag=11
+field body bytes
+record restore-pins tag=12
+field body bytes

@@ -1,0 +1,10 @@
+{
+  "controller": "s.lowpoly.lowpoly@1/*#editor",
+  "tools": [
+    "importMeshFile",
+    "exportMesh",
+    "paintFill",
+    "fillBucket"
+  ],
+  "cancellable": true
+}

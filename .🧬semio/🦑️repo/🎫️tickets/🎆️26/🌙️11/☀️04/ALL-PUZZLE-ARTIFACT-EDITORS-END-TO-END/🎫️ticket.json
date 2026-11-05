@@ -1,0 +1,25 @@
+{
+  "title": "All Puzzle Artifact Editors End To End",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Get 2d 3d 5d editors running end to end. MCP ticket open returned success but local folder was absent; materialize same authorized ticket in shared checkout. GPT6.1 Sol High coordinator Medium execution Low audits.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2785"
+  },
+  "goal": "runningframework/runningproducts/runningos/runnings/runningplugins/runningpuzzle",
+  "sessions": [
+    "74ae25db-115c-496f-b9c9-cdff10011152"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-04 21:37:25",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "39b6ae5d4aab567d4dafbc69cb0e1a9a09c9d377",
+      "prompt": "Get 2d 3d 5d editors running end to end. MCP ticket open returned success but local folder was absent; materialize same authorized ticket in shared checkout. GPT6.1 Sol High coordinator Medium execution Low audits.",
+      "llm": "codex"
+    }
+  ]
+}

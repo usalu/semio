@@ -1,0 +1,23 @@
+{
+  "name": "cargo",
+  "arguments": {
+    "command": [
+      "test",
+      "--manifest-path",
+      "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔤️text/📦️packages/🦀️rust/Cargo.toml",
+      "-p",
+      "semio-framework-ui-contract-text",
+      "-p",
+      "semio-framework-ui-contract-values",
+      "-p",
+      "semio-framework-ui-contract-presentation",
+      "--lib",
+      "ui_"
+    ],
+    "configuration": "prototype",
+    "store": "shared",
+    "parallelism": 2,
+    "language": "en",
+    "agent": "semio-mcp-ui-owner-laws"
+  }
+}

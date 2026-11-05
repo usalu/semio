@@ -1,0 +1,21 @@
+{
+  "title": "Solve All Merge Conflicts",
+  "emoji": "🔀",
+  "status": "open",
+  "description": "Resolve every current unmerged path from the stash apply. Keep unique code, tests, and config from both Updated upstream and Stashed changes.",
+  "goal": "🎯consistentrepohistory",
+  "sessions": [
+    "9152c64f-86d6-4b20-b97b-0a663dea9471"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-05 07:43:06",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "cursor-chat",
+      "checkpoint": "a15c8956e6cf99be538aa4faf17b8da2df29ea0b",
+      "prompt": "Resolve every current unmerged path from the stash apply. Keep unique code, tests, and config from both Updated upstream and Stashed changes."
+    }
+  ]
+}

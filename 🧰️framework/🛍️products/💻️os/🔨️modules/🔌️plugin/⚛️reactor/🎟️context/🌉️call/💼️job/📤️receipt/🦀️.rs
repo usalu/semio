@@ -86,7 +86,7 @@ impl OriginalOwnedJobReceiptLoan {
  pub const fn empty()->Self{Self{receipt:OriginalOwnedJobFixedReceipt::empty(),borrowed:false}}
  pub fn produce(&mut self,body:impl FnOnce()->OriginalOwnedJobCall)->Result<&[u8;184],ValueError>{if self.borrowed{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original owned job receipt remains borrowed"))}self.receipt.write(body());self.borrowed=true;Ok(self.receipt.bytes())}
  pub fn hand_back(&mut self,pointer:usize,length:usize)->bool{if !self.borrowed||pointer!=self.receipt.bytes().as_ptr()as usize||length!=184{return false}self.borrowed=false;true}
- pub fn owns_pointer(&self,pointer:usize)->bool{pointer==self.receipt.bytes().as_ptr()as usize}
+ pub fn owns_pointer(&self,pointer:usize)->bool{let start=self.receipt.bytes().as_ptr()as usize;pointer>=start&&pointer<start+184}
 }
 
 fn invalid() -> ValueError { ValueError::literal(ValueRefusalKind::InvalidValue, "original owned job header contains an invalid tag, flag, extent or scalar body") }

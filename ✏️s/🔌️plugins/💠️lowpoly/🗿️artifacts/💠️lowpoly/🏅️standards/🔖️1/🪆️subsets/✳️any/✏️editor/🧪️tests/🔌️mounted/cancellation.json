@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "action": "extrude",
+  "arguments": {
+    "extrudeDistance": 0.5
+  },
+  "selection": [
+    [
+      "face",
+      "lowpoly-document.obj-1.face.0"
+    ]
+  ],
+  "body": "lowpoly.play.main",
+  "cancelAction": "cancelTypedOperation",
+  "staleGenerationXor": "0000000000000001",
+  "lateTurns": 16,
+  "expected": {
+    "staleRejected": true,
+    "cancelTerminal": true,
+    "snapshotUnchanged": true,
+    "progressRetired": true,
+    "lateCompletionSuppressed": true,
+    "committedEditsUnchanged": true
+  }
+}

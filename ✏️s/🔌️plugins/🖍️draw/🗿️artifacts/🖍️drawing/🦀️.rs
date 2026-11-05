@@ -145,3 +145,23 @@ pub mod standards {
     pub mod v1;
 }
 //#endregion 🪢️TaxonomyMounts
+
+#[cfg(test)]
+mod io_descriptor_tests {
+    /// 🧪️ Native registration and both client oracles share one neutral descriptor fixture.
+    #[test]
+    fn io_descriptors_match_neutral_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures/📇️descriptor-parity.json")).expect("neutral IO fixture");
+        let dialect = |value: semio_framework_artifact_reference::Dialect| serde_json::json!({
+            "artifactKind": value.artifact_kind, "standard": value.standard.0, "subset": value.subset.0,
+        });
+        let entries: Vec<_> = super::io().entries.iter().map(|entry| serde_json::json!({
+            "from": dialect(entry.from), "into": dialect(entry.into),
+            "fidelity": format!("{:?}", entry.fidelity), "sniffs": entry.sniff.is_some(),
+        })).collect();
+        assert_eq!(serde_json::json!(entries), fixture["entries"]);
+        for pair in fixture["unsupportedPairs"].as_array().expect("unsupported pairs") {
+            assert!(!entries.iter().any(|entry| entry["from"] == pair["from"] && entry["into"] == pair["into"]));
+        }
+    }
+}

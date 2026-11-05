@@ -1,0 +1,130 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "locales",
+    "ready",
+    "minimumBootLayers",
+    "example",
+    "utility",
+    "gesture",
+    "layerDelta",
+    "persistence",
+    "export",
+    "steps",
+    "guestFaults"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.draw.browser-journey.v1"
+    },
+    "locales": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "ready": {
+      "const": "draw"
+    },
+    "minimumBootLayers": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "example": {
+      "const": {
+        "id": "demo",
+        "label": "Demo"
+      }
+    },
+    "utility": {
+      "const": "shapeRect"
+    },
+    "gesture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "steps"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/point"
+        },
+        "to": {
+          "$ref": "#/$defs/point"
+        },
+        "steps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+    "layerDelta": {
+      "const": 1
+    },
+    "persistence": {
+      "const": {
+        "kind": "folder",
+        "dataClass": "persistedLocalOnly",
+        "reconnect": "s-folder-reconnect",
+        "minimumEventGrowthBytes": 1
+      }
+    },
+    "export": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "pages",
+        "change"
+      ],
+      "properties": {
+        "format": {
+          "const": "pdf"
+        },
+        "pages": {
+          "const": 1
+        },
+        "change": {
+          "const": "renderedPixels"
+        }
+      }
+    },
+    "steps": {
+      "const": [
+        "boot",
+        "blank",
+        "example",
+        "attach",
+        "rectangle",
+        "undo",
+        "redo",
+        "persisted",
+        "export",
+        "reload"
+      ]
+    },
+    "guestFaults": {
+      "const": [
+        "worker-fault",
+        "trap"
+      ]
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number",
+        "minimum": 0.05,
+        "maximum": 0.95
+      }
+    }
+  }
+}

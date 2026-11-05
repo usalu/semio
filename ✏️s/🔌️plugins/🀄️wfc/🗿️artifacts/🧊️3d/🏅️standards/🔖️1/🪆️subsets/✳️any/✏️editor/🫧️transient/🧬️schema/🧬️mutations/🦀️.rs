@@ -26,14 +26,15 @@ pub enum Wfc3dTransientMutation {
 pub struct Wfc3dTransientDiff {
     pub assignments: Option<Vec<Wfc3dAssignment>>,
     pub contradiction: Option<bool>,
+    pub source_revision: Option<Vec<u8>>,
 }
 
-protocol::retained_row_patch!(pub retained_fields for Wfc3dTransientDiff => Wfc3dTransient { assignments: Vec<Wfc3dAssignment>, contradiction: bool });
+protocol::retained_row_patch!(pub retained_fields for Wfc3dTransientDiff => Wfc3dTransient { assignments: Vec<Wfc3dAssignment>, contradiction: bool, source_revision: Vec<u8> });
 protocol::retained_patch_diff!(Wfc3dTransientDiff => Wfc3dTransient);
 
 impl protocol::DiffAlgebra<Wfc3dTransient> for Wfc3dTransientDiff {
     fn is_empty(&self) -> bool {
-        self.assignments.is_none() && self.contradiction.is_none()
+        self.assignments.is_none() && self.contradiction.is_none() && self.source_revision.is_none()
     }
 }
 
@@ -42,6 +43,7 @@ impl protocol::ColdDiffAlgebra<Wfc3dTransient> for Wfc3dTransientDiff {
         Self {
             assignments: self.assignments.as_ref().map(|_| base.assignments.clone()),
             contradiction: self.contradiction.as_ref().map(|_| base.contradiction.clone()),
+            source_revision: self.source_revision.as_ref().map(|_| base.source_revision.clone()),
         }
     }
 }
@@ -50,6 +52,7 @@ impl protocol::MutationDiff<Wfc3dTransient> for Wfc3dTransientDiff {}
 
 impl protocol::ColdMutationDiff<Wfc3dTransient> for Wfc3dTransientDiff {
     fn absorb(&mut self, later: Self) {
+        if later.source_revision.is_some() { self.source_revision = later.source_revision; }
         if later.assignments.is_some() {
             self.assignments = later.assignments;
         }
@@ -67,6 +70,7 @@ impl protocol::ColdMutationDiff<Wfc3dTransient> for Wfc3dTransientDiff {
         if let Some(value) = &self.contradiction {
             next.contradiction.clone_from(value);
         }
+        if let Some(value) = &self.source_revision { next.source_revision.clone_from(value); }
         *unpublished = next;
         Ok(())
     }

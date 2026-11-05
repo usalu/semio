@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {"name":"grow returns previous extent","args":[1],"body":[0,32,0,64,0,11],"expected":1},
+    {"name":"grow respects declared maximum","args":[2],"body":[0,32,0,64,0,11],"expected":-1},
+    {"name":"grow zero initializes new pages","args":[1],"body":[0,32,0,64,0,26,65,128,128,4,45,0,0,11],"expected":0},
+    {"name":"overlap copy preserves memmove direction","args":[0],"body":[0,65,1,65,0,65,5,252,10,0,0,65,5,45,0,0,11],"expected":101},
+    {"name":"fill writes exact byte","args":[0],"body":[0,65,0,65,228,0,65,16,252,11,0,65,15,45,0,0,11],"expected":100},
+    {"name":"memory size reads actual pages","args":[0],"body":[0,63,0,11],"expected":1}
+  ]
+}

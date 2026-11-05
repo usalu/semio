@@ -1,6 +1,12 @@
 //! 🏟️ Collection arena: the collection kinds and handles, the page and collection slots, the process-wide value arena and its headroom. See [`super`].
 
 use super::*;
+#[path="🌱️opening/🦀️.rs"]mod opening;
+pub use opening::{UiArenaOpening,UiArenaBacking};
+#[path="📌️registration/🦀️.rs"]mod registration;
+pub use registration::{UiArenaRegistry,UiArenaRegistration,UiArenaBorrow,ui_value_arena_registry};
+#[path="🎟️source/🦀️.rs"]mod source;
+pub use source::UiArenaLifetime;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UiCollectionKind {

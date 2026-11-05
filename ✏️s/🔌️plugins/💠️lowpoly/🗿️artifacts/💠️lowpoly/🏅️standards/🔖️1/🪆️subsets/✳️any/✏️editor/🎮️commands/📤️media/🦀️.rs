@@ -20,8 +20,7 @@ use serde::{Deserialize, Serialize};
 pub const LOWPOLY_MESH_FILE_OPEN_REQUEST: u64 = 1_301;
 /// 📁️ What the shell's file picker accepts for a mesh import.
 pub const LOWPOLY_MESH_FILE_ACCEPT: &str = ".obj,.ply,.stl";
-/// 🧮️ The largest mesh file `importMeshFile` admits on the wire (a low-poly OBJ/PLY/STL is tens to a
-/// few hundred KiB; the wire carries it as text or a base64 data url).
+/// 🧮️ The largest UTF-8 file payload string, including any base64 data-url prefix and expansion.
 pub const LOWPOLY_MESH_FILE_BYTES: usize = 2 * 1024 * 1024;
 
 fn media_fault(code: &str, message: impl Into<String>) -> Fault {

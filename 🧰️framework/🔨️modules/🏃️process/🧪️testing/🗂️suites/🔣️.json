@@ -989,6 +989,52 @@
         "linux",
         "win32"
       ]
+    },
+    {
+      "id": "owned-cancellation",
+      "budgetMs": 60000,
+      "typecheck": "none",
+      "files": [
+        "🧭️routing/📥️invocation/🏃️process/🧪️tests/🛑️owned-cancellation/🟦️.ts",
+        "🧭️routing/📥️invocation/🏃️process/🧪️tests/☣️retry-after-tracked-failure/🟦️.ts",
+        "🧭️routing/📥️invocation/🏃️process/🧪️tests/🌊️drain/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "deadline-following",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/⏳️following/🟦️.ts",
+        "🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/⏳️progress/🟦️.ts",
+        "🧭️routing/📥️invocation/🏃️process/📤️child/🧪️tests/🟦️.ts",
+        "🧭️routing/📥️invocation/🏃️process/🧪️tests/⏳️admission/projection.ts",
+        "🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "root-family-preservation",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/💾️cache/🧪️tests/🟦️.ts"
+      ],
+      "testNamePattern": "neutral Core root-family preservation actual native custody and inode oracle",
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     }
   ],
   "codeSuites": [

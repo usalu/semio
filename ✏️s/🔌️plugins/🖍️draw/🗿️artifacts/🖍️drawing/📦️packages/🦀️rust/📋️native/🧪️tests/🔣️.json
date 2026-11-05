@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "expectedPackages": 37,
+  "requiredPackages": [
+    "semio-s-artifact-draw-drawing",
+    "semio-s-artifact-draw-drawing-viewer",
+    "semio-s-artifact-draw-drawing-geometry",
+    "semio-s-artifact-draw-drawing-read",
+    "semio-s-artifact-draw-drawing-write",
+    "semio-s-artifact-draw-drawing-io"
+  ],
+  "cases": [
+    {
+      "effect": "none",
+      "schemaAccepted": true,
+      "complete": true
+    },
+    {
+      "effect": "omit",
+      "schemaAccepted": true,
+      "complete": false
+    },
+    {
+      "effect": "duplicate",
+      "schemaAccepted": false,
+      "complete": false
+    },
+    {
+      "effect": "unknown",
+      "schemaAccepted": true,
+      "complete": false
+    },
+    {
+      "effect": "wrong-manifest",
+      "schemaAccepted": true,
+      "complete": false
+    },
+    {
+      "effect": "omit-check",
+      "schemaAccepted": true,
+      "complete": false
+    },
+    {
+      "effect": "omit-test",
+      "schemaAccepted": true,
+      "complete": false
+    }
+  ]
+}

@@ -128,7 +128,7 @@
           "properties": {
             "appChannelVersion": {
               "type": "integer",
-              "const": 23
+              "const": 24
             }
           }
         },

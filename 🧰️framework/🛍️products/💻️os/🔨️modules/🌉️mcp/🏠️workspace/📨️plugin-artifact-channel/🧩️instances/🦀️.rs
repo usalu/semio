@@ -5,53 +5,39 @@ use super::*;
 //#region 🔖️ArtifactChannel
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
-    /// ☠️ Throws an instance away. A turn cut by an epoch deadline or a trap leaves the component
-    /// instance mid-call — wasmtime answers `cannot enter component instance` for every later call —
-    /// so there is nothing to resume and nothing to salvage; the next `ensure_instance` builds a
-    /// fresh one. `drop_instance` is driven rather than relying on `Drop` because it is what the
-    /// `GuestRuntime` contract names for closing an instance, and under wasmtime it is exactly the
-    /// `Store` release the pooling allocator needs to reclaim the slab.
+    /// ♻️ Retires the actual instance on its lifetime source and retains every refused owner.
     pub(super) fn discard_instance(&mut self, instance: u32) {
-        self.session_documents.remove(&instance);
-        self.backbone_bindings.remove(&instance);
-        if let Some(guest) = self.instances.remove(&instance) {
-            semio_framework_async::block_on(self.runtime.drop_instance(guest));
+        if !self.instances.contains_key(&instance){return}
+        self.closing_instances.insert(instance);
+        let deadline=std::time::Instant::now()+INSTANCE_OPEN_WALL_BUDGET;
+        loop{
+            let runtime=Arc::clone(&self.runtime);
+            let guest=self.instances.get_mut(&instance).expect("closing instance remains owned");
+            let mut closed=false;
+            let turn=self.host_driver.dispatch_admission_step(false,|_,cx|semio_framework_plugin_host::GuestRelayAdmissionCall{result:runtime.close_original_instance_step(guest,&self.compiled,cx).map(|done|{closed=done;}),execution:None});
+            match turn{
+                Ok(true) if closed=>{
+                    self.instances.remove(&instance);
+                    self.closing_instances.remove(&instance);
+                    self.session_documents.remove(&instance);
+                    self.backbone_bindings.remove(&instance);
+                    return
+                }
+                Err(failure)=>{self.startup_failure=Some(failure);return}
+                _ if std::time::Instant::now()>=deadline=>return,
+                _=>std::thread::yield_now(),
+            }
         }
     }
 
-    /// 🎬️ Opens `instance`'s guest and drives it to settle: `Event::InstanceOpen`, then the
-    /// `InstanceLifecycleAck` for whatever receipt that open published, until the guest reports
-    /// `Idle` with nothing owed. Bounded by [`INSTANCE_OPEN_WALL_BUDGET`], with each turn bounded by
-    /// [`headless_open_budget`].
-    ///
-    /// 🐎️ The mid-flight pump this replaces (slices, an `undelivered` queue, a `turn_in_flight`
-    /// guard) existed because an OWNED-interpreter turn can yield mid-call and refuse new events
-    /// until it settles. A compiled turn is atomic — it returns a `TurnResult` or it faults — so the
-    /// queue has nothing to hold and the guard nothing to guard. What survives the move is the part
-    /// that was never about the runtime: the acknowledgement below.
-    ///
-    /// 🧾️ The guest's `ActorInstanceLifecycleReceipt` is acknowledged here. An open the host never
-    /// acknowledges is retained state the guest re-offers on every later turn — `🖥️host`'s own
-    /// `🔬️poll-turn-memory` law measures exactly that — so without this the instance never reaches
-    /// `Idle` and every command afterwards pays for an open that never finished.
-    ///
-    /// ♻️ The guest's own retained lifecycle-deadline verdict is runtime-independent too: it is the
-    /// guest saying "I kept my progress, ask me again", so the events it did not consume are
-    /// re-offered on the next turn rather than lost.
+    /// 🎬️ Opens the dynamic component and acknowledges its genuine lifecycle receipts.
     pub(crate) fn ensure_instance(&mut self, instance: u32) -> Result<(), Fault> {
         self.ensure_instance_scoped(instance, &ActivationScope::detached())
     }
 
-    /// 🎬️ [`Self::ensure_instance`] under a caller's progress and cancel: a cancel observed between
-    /// turns throws the half-open guest away, so the next open starts clean.
-    ///
-    /// 🎟️ The grants are handed to `instantiate` — the store's capability table is built with the
-    /// instance — and travel in `Event::InstanceOpen` as well, which is where the guest reads them.
-    ///
-    /// ⏱️ A compiled turn cut by its own ceiling is not a yield to resume from: the
-    /// instance is mid-call and unusable. Report it as the bounded budget fault it is,
-    /// rather than as a wiring fault, and throw the half-open instance away.
+    /// 🎟️ Uses the actual caller scope and source-issued phased startup.
     pub(crate) fn ensure_instance_scoped(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
+        if self.closing_instances.contains(&instance){return Err(Self::not_wired("instance retirement","the actual previous instance and its original source remain retained"))}
         if self.instances.contains_key(&instance) {
             return Ok(());
         }
@@ -97,20 +83,24 @@ impl PluginArtifactChannel {
                     owed.splice(0..0, events);
                 }
                 Err(error @ (semio_plugin_guest_contract::TurnFault::DeadlineExceeded | semio_plugin_guest_contract::TurnFault::FuelExhausted)) => {
-                    semio_framework_async::block_on(self.runtime.drop_instance(guest));
+                    self.instances.insert(instance,guest);
+                    self.discard_instance(instance);
                     return Err(Fault { code: "budget.exceeded".to_string(), message: format!("InstanceOpen exceeded one turn's ceiling ({error}); the guest never came up") });
                 }
                 Err(error) => {
-                    semio_framework_async::block_on(self.runtime.drop_instance(guest));
+                    self.instances.insert(instance,guest);
+                    self.discard_instance(instance);
                     return Err(Self::not_wired("InstanceOpen", error));
                 }
             }
             if let Err(cancelled) = scope.checkpoint() {
-                semio_framework_async::block_on(self.runtime.drop_instance(guest));
+                self.instances.insert(instance,guest);
+                self.discard_instance(instance);
                 return Err(cancelled);
             }
             if std::time::Instant::now() >= deadline {
-                semio_framework_async::block_on(self.runtime.drop_instance(guest));
+                self.instances.insert(instance,guest);
+                self.discard_instance(instance);
                 return Err(Self::budget_fault("InstanceOpen"));
             }
         }

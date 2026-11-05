@@ -71,6 +71,7 @@ class DocumentOpeningScopeCheckScript extends BundleScript {
 class AgentBridgeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("agent-bridge-check accepts no arguments");
+    runCmd(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🌉️agent-artifact-route/🧪️tests/🟦️.test.ts")], { cwd: this.repoRoot });
     process.env.SEMIO_TEST_LEVEL = "long";
     process.env.SEMIO_INCLUDE_AGENT_BRIDGE = "1";
     await runVitest(this.root, ["--run", "--silent=false"], "../../🧪️tests/🎚️config/🟦️.ts");

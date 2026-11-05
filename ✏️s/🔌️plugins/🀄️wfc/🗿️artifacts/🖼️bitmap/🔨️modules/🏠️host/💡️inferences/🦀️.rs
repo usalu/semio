@@ -148,8 +148,10 @@ pub struct BitmapInferenceJob {
     pub(crate) restore: Option<engine::job::WfcRestore<engine::grid2d::Grid2dTopology>>,
     pub(crate) child: Option<engine::job::WfcJob<engine::grid2d::Grid2dTopology>>,
     pub(crate) child_commit: Option<engine::job::WfcCommit>,
-    pub(crate) output: Option<semio_framework_job_payload::RetainedJobPayloadWriter>,
-    pub(crate) rejected_output_page: Option<semio_framework_job_payload::JobPayloadPageSource>,
+    pub(crate) output: Option<semio_framework_job_payload::RetainedPayloadBuilder>,
+    pub(crate) output_chunk: Option<Vec<u8>>,
+    pub(crate) output_cursor: usize,
+    pub(crate) output_next: Option<(EncodePhase, usize)>,
     pub(crate) encode_phase: EncodePhase,
     pub(crate) encode_cursor: usize,
     pub(crate) preview_units: u64,
@@ -198,8 +200,10 @@ impl BitmapInferenceJob {
             restore: None,
             child: None,
             child_commit: None,
-            output: Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput)),
-            rejected_output_page: None,
+            output: Some(semio_framework_job_payload::RetainedPayloadBuilder::new(semio_framework_job_payload::JobPayloadStream::CommitOutput)),
+            output_chunk: None,
+            output_cursor: 0,
+            output_next: None,
             encode_phase: EncodePhase::Open,
             encode_cursor: 0,
             preview_units: 0,
@@ -391,44 +395,44 @@ impl BitmapInferenceJob {
     /// 📝️ Fills ONE payload page to capacity before asking for another. One page per small write
     /// would burn the operation's 256-page budget on a handful of entropy values — the exact
     /// admission refusal this encoder is shaped to avoid.
-    pub(crate) fn encode_one(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, String> {
-        let source = self.rejected_output_page.take().unwrap_or_default();
-        let mut writer = self.output.take().ok_or("bitmap-output-writer-missing")?;
-        let outcome = self.encode_into(context, &mut writer, source);
-        self.output = Some(writer);
-        outcome
+    pub(crate) fn encode_one(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_job::receive_original_retained_work;
+        if !self.output.as_ref().expect("output builder").is_initialized() {
+            let turn = self.output.as_mut().unwrap().advance_initialization(context); receive_original_retained_work(context, turn)?; return Ok(());
+        }
+        if let Some(chunk) = self.output_chunk.as_ref() {
+            if self.output_cursor < chunk.len() {
+                let turn = self.output.as_mut().unwrap().append_original(context, chunk, &mut self.output_cursor);
+                receive_original_retained_work(context, turn)?; return Ok(());
+            }
+            let step = semio_framework_job::close_original_granted_step(context, |grant| {
+                let released_bytes = self.output_chunk.as_ref().unwrap().capacity();
+                if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < released_bytes { return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }
+                self.output_chunk = None;
+                let (phase, cursor) = self.output_next.take().expect("next bitmap encoder");
+                self.encode_phase = phase; self.encode_cursor = cursor;
+                semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } }), work: 1 }
+            })?;
+            let _ = step;
+            return Ok(());
+        }
+        if self.encode_phase == EncodePhase::Close && self.encode_cursor == 1 {
+            let output = self.output.as_mut().unwrap();
+            if output.published().is_none() { let turn = output.seal(context); receive_original_retained_work(context, turn)?; return Ok(()); }
+            let turn = output.take_finished(&mut self.output_payload, context.retained_grant()); receive_original_retained_work(context, turn)?;
+            if self.output_payload.is_some() { self.stage = BitmapInferenceStage::Complete; }
+            return Ok(());
+        }
+        let grant = context.retained_grant();
+        if context.should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_capacity_bytes < BITMAP_ENCODE_CHUNK + 128 { return Ok(()); }
+        let (chunk, phase, cursor) = self.next_encode_chunk().unwrap_or_else(|| ("]}".to_string(), EncodePhase::Close, 1));
+        self.output_chunk = Some(chunk.into_bytes()); self.output_cursor = 0; self.output_next = Some((phase, cursor));
+        let capacity = self.output_chunk.as_ref().unwrap().capacity();
+        context.consume_fuel(1);
+        context.consume_retained(semio_framework_job::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: capacity, ..Default::default() })?;
+        Ok(())
     }
 
-    pub(crate) fn encode_into(&mut self, context: &mut semio_framework_job::StepContext<'_>, writer: &mut semio_framework_job_payload::RetainedJobPayloadWriter, source: semio_framework_job_payload::JobPayloadPageSource) -> Result<bool, String> {
-        let mut page = match context.admit_payload_page(writer, source) {
-            Ok(page) => page,
-            Err(rejected) => {
-                self.rejected_output_page = Some(rejected.into_source());
-                return Err("bitmap-inference-output-admission-exceeded".into());
-            }
-        };
-        let mut wrote_any = false;
-        loop {
-            let Some((chunk, phase, cursor)) = self.next_encode_chunk() else {
-                page.write(b"]}").map_err(|_| "bitmap-inference-output-page")?;
-                page.commit();
-                self.stage = BitmapInferenceStage::Complete;
-                return Ok(true);
-            };
-            if !chunk.is_empty() {
-                if page.write(chunk.as_bytes()).is_err() {
-                    if !wrote_any {
-                        return Err("bitmap-inference-output-chunk-exceeds-a-page".into());
-                    }
-                    page.commit();
-                    return Ok(false);
-                }
-                wrote_any = true;
-            }
-            self.encode_phase = phase;
-            self.encode_cursor = cursor;
-        }
-    }
 }
 
 /// 🚦️ What one bounded run decided before any outcome is lent.
@@ -438,6 +442,7 @@ pub(crate) enum BitmapInferenceJobRun {
     Staged,
     StepRestore,
     StepChild,
+    StepOutput,
 }
 
 /// 🤝️ Which retained owner produced the outcome currently on loan.
@@ -495,9 +500,7 @@ impl BitmapInferenceJob {
                 BitmapInferenceStage::Restore => {
                     if self.restore_done {
                         self.child = self.restore.as_mut().expect("restore job").take_job();
-                        if let Some(mut restore) = self.restore.take() {
-                            engine::job::close_job(&mut restore);
-                        }
+                        if let Some(restore) = self.restore.as_mut() { restore.begin_close(); }
                         self.restore_done = false;
                         self.stage = BitmapInferenceStage::Solve;
                         return self.stage_preview(context);
@@ -518,22 +521,7 @@ impl BitmapInferenceJob {
                         return self.stage_fault(error.into_bytes());
                     }
                 }
-                BitmapInferenceStage::EncodeCommit => match self.encode_one(context) {
-                    Ok(true) => {
-                        let output = match self.output.take().expect("bitmap output writer").finish() {
-                            Ok(output) => output,
-                            Err(mut writer) => {
-                                writer.begin_close();
-                                self.output = Some(writer);
-                                return BitmapInferenceJobRun::Yield;
-                            }
-                        };
-                        self.output_payload = Some(output);
-                        return BitmapInferenceJobRun::Yield;
-                    }
-                    Ok(false) => {},
-                    Err(error) => return self.stage_fault(error.into_bytes()),
-                },
+                BitmapInferenceStage::EncodeCommit => return BitmapInferenceJobRun::StepOutput,
                 BitmapInferenceStage::Complete => unreachable!("complete returns immediately"),
             }
             context.consume_fuel(1);
@@ -551,13 +539,8 @@ impl BitmapInferenceJob {
     }
 
     /// 🤝️ Closes the lent preview or fault turn by turn from the next step's own wallet.
-    fn retire_delivered<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
-        let publication = self.publication.as_mut().expect("a delivered inference publication is staged");
-        let step = match publication.close_step(context.retained_grant()) { Ok(step) => step, Err(error) => { context.consume_retained(error.retained_progress())?; return Err(error) } };
-        context.consume_retained(step.progress())?;
-        if publication.terminal_is_empty() {
-            self.publication = None;
-        }
+    fn retire_delivered<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        semio_s_plugin_wfc_engine::job::close_publication_step(&mut self.publication, context)?;
         Ok(None)
     }
 
@@ -567,9 +550,7 @@ impl BitmapInferenceJob {
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "inference close depth overflow"))?;
             Ok(demand)
         };
-        if let Some(publication) = self.publication.as_ref() {
-            return publication.retirement_demands();
-        }
+        if self.publication.is_some() { return semio_s_plugin_wfc_engine::job::publication_retirement_demands(&self.publication); }
         if let Some(output) = self.output.as_ref() {
             return if output.terminal_is_empty() { Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }) } else { nested(output.retirement_demands()?) };
         }
@@ -577,27 +558,27 @@ impl BitmapInferenceJob {
             return if payload.terminal_is_empty() { Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }) } else { nested(payload.retirement_demands()?) };
         }
         if let Some(restore) = self.restore.as_ref() {
+            if restore.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: restore.next_close_copy_byte_demand()?, capacity_bytes: restore.next_close_capacity_byte_demand(0)?, release_bytes: restore.next_close_release_byte_demand()?, depth: restore.next_close_depth_demand()?.saturating_add(1) });
         }
         if let Some(child) = self.child.as_ref() {
+            if child.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: child.next_close_copy_byte_demand()?, capacity_bytes: child.next_close_capacity_byte_demand(0)?, release_bytes: child.next_close_release_byte_demand()?, depth: child.next_close_depth_demand()?.saturating_add(1) });
         }
-        if let Some(source) = self.rejected_output_page.as_ref() {
-            return Ok(semio_framework_value::RetirementDemand { release_bytes: source.allocated_capacity_bytes(), depth: 1, ..Default::default() });
-        }
+        if let Some(chunk) = self.output_chunk.as_ref() { return Ok(semio_framework_value::RetirementDemand { release_bytes: chunk.capacity(), depth: 1, ..Default::default() }); }
         Ok(semio_framework_value::RetirementDemand::default())
     }
 }
 
 impl BitmapInferenceJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_job::JobOutcomeBorrow;
-        if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {
+        if self.publication.as_ref().is_some_and(|publication| publication.needs_retirement()) {
             return self.retire_delivered(context);
         }
         if context.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(context);
+            return Ok(JobOutcomeBorrow::admit_cancelled(context)?);
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             self.stage_fault(b"stale-bitmap-inference-operation".to_vec());
@@ -607,11 +588,11 @@ impl BitmapInferenceJob {
             return self.publication.as_mut().expect("a staged inference publication").poll(context);
         }
         if self.output_payload.is_some() {
-            return JobOutcomeBorrow::admit_complete(context, self.child.as_ref().and_then(|child| child.commit_state()), self.output_payload.as_ref());
+            return Ok(JobOutcomeBorrow::admit_complete(context, self.child.as_ref().and_then(|child| child.commit_state()), self.output_payload.as_ref())?);
         }
         match self.run(context) {
             BitmapInferenceJobRun::Yield | BitmapInferenceJobRun::Staged => Ok(None),
-            BitmapInferenceJobRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
+            BitmapInferenceJobRun::Cancelled => Ok(JobOutcomeBorrow::admit_cancelled(context)?),
             BitmapInferenceJobRun::StepRestore => {
                 let result = self.restore.as_mut().expect("restore job").step_value(context)?;
                 if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
@@ -621,13 +602,14 @@ impl BitmapInferenceJob {
                 self.lent = BitmapInferenceJobLent::Restore;
                 Ok(result)
             }
+            BitmapInferenceJobRun::StepOutput => { self.encode_one(context)?; Ok(None) }
             BitmapInferenceJobRun::StepChild => {
                 let result = self.child.as_mut().expect("WFC child").step_value(context)?;
                 let end = if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
                     Some(InferenceChildEnd::Complete)
                 } else {
                     if let Some(JobOutcomeBorrow::Fault { detail, .. }) = &result {
-            if engine::job::payload_bytes(detail) == b"wfc-unsatisfiable" {
+            if engine::job::payload_equals(detail, b"wfc-unsatisfiable") {
                 Some(InferenceChildEnd::Unsatisfiable)
             } else {
                 None
@@ -648,7 +630,7 @@ impl BitmapInferenceJob {
 }
 
 impl InteractiveJob for BitmapInferenceJob {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self, context:&mut semio_framework_job::StepContext<'_>, _claim:&mut semio_framework_job::OriginalJobReturnClaim)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         use semio_framework_job::JobOutcomeKind;
@@ -672,9 +654,6 @@ impl InteractiveJob for BitmapInferenceJob {
         if let Some(child) = self.child.as_mut() {
             child.begin_close();
         }
-        if let Some(output) = self.output.as_mut() {
-            output.begin_close();
-        }
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
@@ -692,61 +671,54 @@ impl InteractiveJob for BitmapInferenceJob {
             }
             let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
             let child_grant = semio_framework_job::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-            if let Some(publication) = self.publication.as_mut() {
-                let step = publication.close_step(grant)?;
-                if publication.terminal_is_empty() {
-                    self.publication = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
+            if self.publication.is_some() {
+                let step = semio_s_plugin_wfc_engine::job::close_publication_step(&mut self.publication, cx)?;
+                return Ok(match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
             }
             if let Some(output) = self.output.as_mut() {
                 if output.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.output = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return Ok(match output.close_step(child_grant) {
-                    Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                    Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
-                });
+                let step = semio_framework_job::receive_original_retained_work(cx, output.close_step_granted(child_grant))?;
+                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(payload) = self.output_payload.as_mut() {
                 if payload.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.output_payload = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return Ok(match payload.close_step(child_grant) {
-                    Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                    Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
-                });
+                let step = semio_framework_job::receive_original_retained_work(cx, payload.close_step(child_grant))?;
+                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(restore) = self.restore.as_mut() {
-                let step = cx.with_retained_loan(child_grant, |same| restore.close_step(same))?;
                 if restore.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.restore = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
+                    return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
+                let step = cx.with_retained_loan(child_grant, |same| restore.close_step(same))?;
                 return Ok(match step {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
                     step => step,
                 });
             }
             if let Some(child) = self.child.as_mut() {
-                let step = cx.with_retained_loan(child_grant, |same| child.close_step(same))?;
                 if child.terminal_is_empty() {
+                    cx.consume_fuel(1);
                     self.child = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
+                    return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
+                let step = cx.with_retained_loan(child_grant, |same| child.close_step(same))?;
                 return Ok(match step {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
                     step => step,
                 });
             }
-            if let Some(source) = self.rejected_output_page.take() {
-                let released_bytes = source.allocated_capacity_bytes();
-                drop(source);
+            if let Some(chunk) = self.output_chunk.take() {
+                let released_bytes = chunk.capacity(); cx.consume_fuel(1); drop(chunk);
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { released_bytes, ..one } });
             }
             Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
@@ -772,7 +744,7 @@ impl InteractiveJob for BitmapInferenceJob {
     /// 🚪️ Ownership ONLY — deliberately NOT gated on a closing flag: the retained session calls `begin_close`
     /// itself, and a flag-gated predicate would spin its own close ladder forever.
     fn terminal_is_empty(&self) -> bool {
-        self.publication.is_none() && self.output.is_none() && self.output_payload.is_none() && self.restore.is_none() && self.child.is_none() && self.rejected_output_page.is_none()
+        self.publication.is_none() && self.output.is_none() && self.output_payload.is_none() && self.restore.is_none() && self.child.is_none() && self.output_chunk.is_none()
     }
 }
 
@@ -814,21 +786,32 @@ pub fn register_bitmap_inference_factory(bus: &semio_framework::ActionBus) -> Re
 }
 
 /// 🏁 Explicit headless adapter over the same complete parent job the public factory hands out.
-pub fn solve_with_job(snapshot: &BitmapSnapshot) -> Result<BitmapInferenceCommit, String> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn solve_with_job(snapshot: &BitmapSnapshot) -> Result<BitmapInferenceCommit, semio_s_plugin_wfc_engine::job::HeadlessFailure<BitmapInferenceJob, BitmapInferenceCommit>> {
     solve_with_clock(snapshot, semio_framework_job::default_now_us)
 }
 
 /// 🧮️ The same headless adapter driven by an injected clock, so correctness laws run on
 /// [`semio_framework_job::logical_now_us`] and never on a descheduled thread's wall clock.
-pub fn solve_with_clock(snapshot: &BitmapSnapshot, now_us: fn() -> Option<u64>) -> Result<BitmapInferenceCommit, String> {
-    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
-    let job = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
-    engine::job::run_headless(
+#[cfg(any(test, feature = "testkit"))]
+pub fn solve_with_clock(snapshot: &BitmapSnapshot, now_us: fn() -> Option<u64>) -> Result<BitmapInferenceCommit, semio_s_plugin_wfc_engine::job::HeadlessFailure<BitmapInferenceJob, BitmapInferenceCommit>> {
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(1), snapshot.seed);
+    let job = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None }).map_err(semio_s_plugin_wfc_engine::job::HeadlessFailure::rejected)?;
+    engine::job::run_headless_supervised(
         job,
         operation,
         now_us,
-        engine::job::HeadlessSite { site: "wfc.bitmap.inference.headless", label: "bitmap-inference-headless", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: HEADLESS_FUEL_PER_STEP, step_budget_us: HEADLESS_STEP_BUDGET_US },
-        |_job, output| {
+        engine::job::HeadlessSite { site: "wfc.bitmap.inference.headless", label: "bitmap-inference-headless", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: HEADLESS_FUEL_PER_STEP, step_budget_us: HEADLESS_STEP_BUDGET_US,
+            retained_stock: semio_framework_job::RetainedCloneGrant { maximum_items: 16_000_000, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 256 },
+            lifetime_fuel: 100_000_000, lifetime_budget_us: 60_000_000,
+        },
+        |_job| None,
+        |_job, outcome| {
+            let output = match outcome {
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Complete(bytes) => bytes,
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Fault(bytes) => return Err(String::from_utf8_lossy(bytes).into_owned()),
+                semio_s_plugin_wfc_engine::job::HeadlessOutcome::Cancelled => return Err("bitmap-inference-cancelled".into()),
+            };
             std::str::from_utf8(output)
                 .map_err(|error| format!("bitmap-invalid-commit:{error}"))
                 .and_then(|text| crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value::<BitmapInferenceCommit>(text).map_err(|error| format!("bitmap-invalid-commit:{error}")))
@@ -836,55 +819,9 @@ pub fn solve_with_clock(snapshot: &BitmapSnapshot, now_us: fn() -> Option<u64>) 
     )
 }
 
-impl store::InferredField<BitmapSnapshot> for BitmapSolve {
-    type Dependency = Vec<u8>;
-    type Key = String;
-    type Value = BitmapSolveResult;
 
-    const FIELD_ID: &'static str = "s.wfc.bitmap.inference.solve";
-    const SCHEMA_VERSION: u32 = 1;
 
-    fn reads() -> &'static [&'static str] {
-        &["seed", "input", "output", "model", "pinned"]
-    }
-    fn plan(_snapshot: &BitmapSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
-        vec![store::InferenceStep { key: "bitmap".to_string(), parents: Vec::new() }]
-    }
-    fn dep_input(snapshot: &BitmapSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(snapshot).into_bytes()
-    }
-    fn compute(snapshot: &BitmapSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        match solve_with_job(snapshot) {
-            Ok(commit) if !commit.contradiction && !commit.pixels.is_empty() => BitmapSolveResult::Solved { pixels: commit.pixels },
-            _ => BitmapSolveResult::Unsolved,
-        }
-    }
-}
 
-impl store::InferredField<BitmapSnapshot> for BitmapContradiction {
-    type Dependency = Vec<u8>;
-    type Key = String;
-    type Value = bool;
-
-    const FIELD_ID: &'static str = "s.wfc.bitmap.inference.contradiction";
-    const SCHEMA_VERSION: u32 = 1;
-
-    fn reads() -> &'static [&'static str] {
-        &["seed", "input", "output", "model", "pinned"]
-    }
-    fn plan(_snapshot: &BitmapSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
-        vec![store::InferenceStep { key: "bitmap".to_string(), parents: Vec::new() }]
-    }
-    fn dep_input(snapshot: &BitmapSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        crate::standards::v1::subsets::any::io::text::inferences::encode_inference_value(snapshot).into_bytes()
-    }
-    fn compute(snapshot: &BitmapSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        match solve_with_job(snapshot) {
-            Ok(commit) => commit.contradiction,
-            Err(_) => true,
-        }
-    }
-}
 
 impl store::InferredField<BitmapSnapshot> for BitmapEntropy {
     type Dependency = Vec<u8>;

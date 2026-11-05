@@ -1,0 +1,53 @@
+{
+  "schema": "semio.draw.browser-journey.v1",
+  "locales": [
+    "en",
+    "de"
+  ],
+  "ready": "draw",
+  "minimumBootLayers": 1,
+  "example": {
+    "id": "demo",
+    "label": "Demo"
+  },
+  "utility": "shapeRect",
+  "gesture": {
+    "from": [
+      0.35,
+      0.35
+    ],
+    "to": [
+      0.6,
+      0.6
+    ],
+    "steps": 8
+  },
+  "layerDelta": 1,
+  "persistence": {
+    "kind": "folder",
+    "dataClass": "persistedLocalOnly",
+    "reconnect": "s-folder-reconnect",
+    "minimumEventGrowthBytes": 1
+  },
+  "export": {
+    "format": "pdf",
+    "pages": 1,
+    "change": "renderedPixels"
+  },
+  "steps": [
+    "boot",
+    "blank",
+    "example",
+    "attach",
+    "rectangle",
+    "undo",
+    "redo",
+    "persisted",
+    "export",
+    "reload"
+  ],
+  "guestFaults": [
+    "worker-fault",
+    "trap"
+  ]
+}

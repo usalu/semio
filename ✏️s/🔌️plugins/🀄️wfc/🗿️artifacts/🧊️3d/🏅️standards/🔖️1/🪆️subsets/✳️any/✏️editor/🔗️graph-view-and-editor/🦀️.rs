@@ -171,7 +171,7 @@ impl ArtifactEditor for Wfc3dEditor {
         artifact_schema: "s.wfc.wfc3d",
         factory: "Wfc3dRetainedCommandJobFactory",
         factory_type: Wfc3dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(WFC_3D_RETAINED_RAW_BYTES, WFC_3D_RETAINED_WORK_ITEMS, 1, WFC_3D_RETAINED_OUTPUT_BYTES, 7_500),
         tools: [
             "change-seed", "create-slot", "delete-slot", "move-slot", "resize-slot", "connect-slots", "disconnect-slots", "pin-slot", "unpin-slot",
             "create-tile", "delete-tile", "change-tile-weight", "change-tile-media", "create-rule", "delete-rule",
@@ -259,7 +259,7 @@ impl ArtifactEditor for Wfc3dEditor {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        render_body(body_key, doc.snapshot, cfg.snapshot, &Wfc3dTransient::default(), None)
+        render_body(body_key, doc.snapshot, cfg.snapshot, &Wfc3dTransient::default(), None, None)
     }
 
     fn render_with_request_context(
@@ -273,7 +273,7 @@ impl ArtifactEditor for Wfc3dEditor {
         cx:&mut semio_plugin::StepContext<'_>,
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
-        render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot, doc.tool_run())
+        render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot, doc.tool_run(), doc.render_operation_ref().map(|operation| operation.canonical_base_revision))
 
         })();
         rendered.map(Some).map_err(Into::into)
@@ -361,7 +361,10 @@ pub fn command_emit(command: &Wfc3dEditorCommand, document: &Wfc3dSnapshot, conf
 /// feeding it here made a pan or a wheel on the graph canvas warp the 3d view (measured live:
 /// one graph pan put the preview inside a tile). `camera_json`'s own framing distance is the
 /// pose authority.
-pub fn render_body(body_key: &str, document: &Wfc3dSnapshot, config: &Wfc3dConfig, transient: &Wfc3dTransient, tool_run: Option<&ToolRunView>) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+pub fn render_body(body_key: &str, document: &Wfc3dSnapshot, config: &Wfc3dConfig, transient: &Wfc3dTransient, tool_run: Option<&ToolRunView>, revision: Option<[u8;32]>) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+    let empty = Wfc3dTransient::default();
+    let transient = if crate::editor::wfc3d::transient::source_matches(&transient.source_revision, revision.as_ref()) { transient } else { &empty };
+    let tool_run = tool_run.filter(|run| revision.is_some_and(|revision| run.identity.base_revision == revision));
     match body_key {
         graph::WFC_GRAPH_BODY => {
             let camera = graph::GraphCamera { x: config.camera_x, y: config.camera_y, zoom: config.camera_zoom };
@@ -371,9 +374,11 @@ pub fn render_body(body_key: &str, document: &Wfc3dSnapshot, config: &Wfc3dConfi
             let fill = preview::live_fill_payload(tool_run);
             let paint = fill.as_ref().map(|payload| {
                 let mut paint = payload.clone().into_transient();
-                for event in &payload.trace {
-                    paint.assignments.retain(|assignment| assignment.slot_id != event.slot_id);
-                    paint.assignments.push(crate::editor::wfc3d::transient::Wfc3dAssignment { slot_id: event.slot_id.clone(), tile_id: event.tile_id.clone() });
+                if !payload.done {
+                    for event in &payload.trace {
+                        paint.assignments.retain(|assignment| assignment.slot_id != event.slot_id);
+                        paint.assignments.push(crate::editor::wfc3d::transient::Wfc3dAssignment { slot_id: event.slot_id.clone(), tile_id: event.tile_id.clone() });
+                    }
                 }
                 paint
             }).unwrap_or_else(|| transient.clone());
@@ -383,3 +388,6 @@ pub fn render_body(body_key: &str, document: &Wfc3dSnapshot, config: &Wfc3dConfi
     }
 }
 //#endregion 🔖️Editor
+
+/// 🪟️ Projects only cache and run data bound to the mounted render authority.
+pub fn render_with_transient(body_key: &str, doc: &ArtifactView<'_, Wfc3dSnapshot>, cfg: &ConfigView<'_, Wfc3dConfig>, transient: &semio_plugin::TransientView<'_, Wfc3dTransient>) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> { render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot, doc.tool_run(), doc.render_operation_ref().map(|operation| operation.canonical_base_revision)) }

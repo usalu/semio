@@ -10,6 +10,10 @@ pub struct UiText {
     len: u16,
 }
 
+#[path="🛬️receive/🦀️.rs"]
+mod native_receiving;
+pub use native_receiving::UiTextNativeReceiver;
+
 impl Default for UiText {
     fn default() -> Self {
         Self { bytes: [0; UI_TEXT_MAX_BYTES], len: 0 }

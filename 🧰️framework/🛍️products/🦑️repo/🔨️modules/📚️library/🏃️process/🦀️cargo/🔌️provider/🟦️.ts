@@ -1,3 +1,4 @@
+import {withRepositoryPublishedCargoExecutableV1} from "../../../⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
 import {receiveScriptProcessInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import type { CargoAdmissionProviderV1, CompilerStoreViewV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
@@ -16,6 +17,7 @@ export const provider: CargoAdmissionProviderV1 = {
   runPackageTests: runRepositoryCargoTests,
   testPolicy: repositoryCargoTestPolicyV1,
   runExactLaws: request => runRepositoryExactCargoLaws({ ...request, preparation: configuredRepositoryCargoPreparationPolicyV1() }),
+  withPublishedExecutable:withRepositoryPublishedCargoExecutableV1,
   withCompilerStore: (workspace,mode,control,environment,body) => receiveScriptProcessInvocation(environment,original=>withRepositoryCompilerStoreV1(workspace,mode,control,environment,async(store,phase)=>{
     const root=readNativeCallerAuthorityV1(original.capabilities).repositoryRoot;
     const withCargoInputs:CompilerStoreViewV1["withCargoInputs"]=(request,consume)=>repositoryCargoCompilerInputsV1({workspace:root,invocation:original,control:phase,storage:store.storage,network:repositoryCargoNetworkV1(original,root),consumption:repositoryCargoConsumptionV1(request.arguments,"artifact")})(request,consume);

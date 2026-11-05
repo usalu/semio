@@ -95,45 +95,45 @@ pub(super) fn wasm_max_f64(left: f64, right: f64) -> f64 {
     }
 }
 
-pub(super) fn trunc_i32_from_f32(value: f32, signed: bool) -> Result<i32, CoreError> {
+pub(super) fn trunc_i32_from_f32(value: f32, signed: bool) -> Result<i32, NumericError> {
     trunc_i32_from_f64(f64::from(value), signed)
 }
 
-pub(super) fn trunc_i32_from_f64(value: f64, signed: bool) -> Result<i32, CoreError> {
+pub(super) fn trunc_i32_from_f64(value: f64, signed: bool) -> Result<i32, NumericError> {
     if value.is_nan() {
-        return Err(CoreError::Trap("invalid conversion to integer".into()));
+        return Err(NumericError::Conversion);
     }
     let value = value.trunc();
     if signed {
         if !(-2_147_483_648.0..2_147_483_648.0).contains(&value) {
-            return Err(CoreError::Trap("integer overflow".into()));
+            return Err(NumericError::Overflow);
         }
         Ok(value as i32)
     } else {
         if !(0.0..4_294_967_296.0).contains(&value) {
-            return Err(CoreError::Trap("integer overflow".into()));
+            return Err(NumericError::Overflow);
         }
         Ok(value as u32 as i32)
     }
 }
 
-pub(super) fn trunc_i64_from_f32(value: f32, signed: bool) -> Result<i64, CoreError> {
+pub(super) fn trunc_i64_from_f32(value: f32, signed: bool) -> Result<i64, NumericError> {
     trunc_i64_from_f64(f64::from(value), signed)
 }
 
-pub(super) fn trunc_i64_from_f64(value: f64, signed: bool) -> Result<i64, CoreError> {
+pub(super) fn trunc_i64_from_f64(value: f64, signed: bool) -> Result<i64, NumericError> {
     if value.is_nan() {
-        return Err(CoreError::Trap("invalid conversion to integer".into()));
+        return Err(NumericError::Conversion);
     }
     let value = value.trunc();
     if signed {
         if value < -9_223_372_036_854_775_808.0 || value >= 9_223_372_036_854_775_808.0 {
-            return Err(CoreError::Trap("integer overflow".into()));
+            return Err(NumericError::Overflow);
         }
         Ok(value as i64)
     } else {
         if value < 0.0 || value >= 18_446_744_073_709_551_616.0 {
-            return Err(CoreError::Trap("integer overflow".into()));
+            return Err(NumericError::Overflow);
         }
         Ok(value as u64 as i64)
     }

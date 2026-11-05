@@ -1,0 +1,102 @@
+# Mission
+
+Get all puzzle artifact editors working end to end in the current repository. Deliver the implemented, integrated, verified result. Continue through discovery, repairs, regression coverage, and final verification without stopping after a plan or the first successful editor.
+
+Limit the work to puzzle artifact editors and the shared dependencies necessary for their operation. Derive the complete editor inventory and intended behavior from the repository's registries, types, routes, menus, specifications, fixtures, and tests. Include editors that are registered but unreachable, partially implemented, disabled because they are broken, or missing a required integration. Preserve intentional feature restrictions; do not invent new puzzle types or unrelated product features.
+
+# Coordinator, models, and fleet
+
+The main session is the coordinator: Claude Opus 5.5, medium effort, model claude-opus-5-5. Keep planning, prioritization, delegation, cross-component decisions, integration, and final acceptance in this session.
+
+Maintain a fleet of 20 parallel background workers, additional to the coordinator:
+
+- 12 instances of puzzle-sonnet: Claude Sonnet 5.5, medium effort, model claude-sonnet-5-5, for medium- and high-complexity implementation, debugging, integration, and automated testing.
+- 6 instances of puzzle-haiku-audit: Claude Haiku 5.5, medium effort, model claude-haiku-5-5, for strictly read-only exploration, inventories, contract tracing, test-gap analysis, and independent audits.
+- 2 instances of puzzle-haiku-small-fix: Claude Haiku 5.5, medium effort, model claude-haiku-5-5, for explicitly bounded low-complexity fixes, fixtures, labels, and straightforward test additions.
+
+These three profiles are reusable templates. Instantiate 20 independent workers; do not confuse three profile definitions with three running workers. Select the supplied profile by name and honor its configured model and effort. Do not override it with a different model or use built-in worker types that inherit Opus. Report any runtime model substitution or effort restriction you can observe.
+
+After the minimum orientation needed to delegate safely, launch the full fleet without waiting for the first worker to finish. Give each worker an ID, concrete objective, logical ownership boundary, acceptance criteria, dependencies, and required return format. Supply the repository context and coordination rules it needs; do not assume workers see this conversation.
+
+Keep all 20 slots productively occupied during implementation and verification. Reassign a completed slot immediately to the next ready task. Break work into independent editor, infrastructure, test, and audit assignments. When a dependency blocks a worker, move it to another ready assignment. Keep worker nesting off; the coordinator owns all 20 slots.
+
+Read-only Haiku workers return findings in their responses and never modify files, run mutating commands, or write reports. Small-fix Haiku workers escalate architecture, persistence, data-contract, complex state, and cross-component changes to Sonnet. The coordinator maintains the shared progress record.
+
+Treat 20 active workers as the operating target throughout the task. If rate limits, tool limits, unavailable models, exhausted ready work, or final integration prevent it, state the concrete constraint and keep the maximum useful supported concurrency. Do not claim workers are running when they are not.
+
+# Throughput and usage
+
+The user prioritizes speed and maximum useful parallel throughput over conserving tokens. If this session uses a subscription weekly allowance, use the full remaining allowance as quickly as service limits permit on relevant discovery, repairs, verification, and hardening; do not reserve quota for later.
+
+If this session uses API billing, apply the same aggressive work policy within any configured account or session spending limit. API billing is not a subscription weekly allowance. Do not change billing settings or switch authentication to continue spending.
+
+Respect actual rate limits and backoff instructions. Continue until the scope is complete and verified, or a hard limit or concrete blocker prevents further progress. Completion is a valid stopping condition; do not create artificial tasks or repeat unchanged checks merely to consume quota. Before an unavoidable stop, preserve a precise continuation checkpoint.
+
+# Work alongside other agents
+
+Other agents are working on other logical parts of the same repository, including potentially the same files. Keep working in conjunction with them. A dirty working tree, unfamiliar diff, or same-file overlap is expected and does not justify stopping.
+
+Read applicable repository instructions, including CLAUDE.md and AGENTS.md. Inspect the initial Git status and relevant diffs to establish context. Preserve all existing and concurrent changes. Do not stash, reset, clean, discard, broadly restore files, switch the shared checkout's branch, or overwrite another agent's work.
+
+Assign ownership by editor, component, symbol, or specific change region. Re-read the current relevant file content immediately before editing and apply narrow patches. Avoid whole-file rewrites, repository-wide formatting, unrelated dependency changes, and shared lockfile churn.
+
+When the exact same region needs concurrent edits, use the available coordination channel to agree on a temporary integrator for that region, or use established isolation that preserves current uncommitted work. If no channel exists, record the overlap, re-read current content, reconcile compatible changes, and continue all independent tasks. Escalate only a specific irreconcilable decision; keep the rest of the fleet working.
+
+Use distinct test data, artifact IDs, output directories, and ports when parallel execution could collide. Run shared dependency installation, schema changes, and other shared-state operations through one assigned owner. Stop only processes started by this fleet.
+
+Do not stage, commit, push, or deploy unless separately authorized or expressly required by applicable repository instructions. Keep the deliverable in the working tree with a precise account of this task's changes.
+
+# Discovery and execution
+
+1. Identify the framework, package manager, application entry points, editor registry, artifact schemas, persistence path, development backend, test infrastructure, and supported commands. Use the existing project setup and Windows-compatible commands.
+
+2. Build one acceptance matrix for every discovered puzzle artifact editor: artifact type, UI entry point, relevant components, supported operations, serialization/persistence contract, known defects, assigned owner, verification evidence, and status. Record unsupported operations as not applicable with a reason.
+
+3. Start with six Haiku audit assignments: editor inventory and reachability; UI controls and unfinished behavior; schema/serialization contracts; persistence and API wiring; tests and fixtures; accessibility and failure states. Give the Sonnet and small-fix workers independent grounded assignments immediately, then refine them as findings arrive.
+
+4. Repair shared blockers early: registry dispatch, editor shell, state adapters, validation, serialization, API handlers, storage, asset handling, and renderer/preview integration. Assign distinct editor families and behavioral tests across the Sonnet workers. Delegate narrow mechanical repairs to the two Haiku small-fix workers.
+
+5. Work in short implementation-and-verification cycles. Require each worker to return its findings, exact changed paths, behavior repaired, commands run and outcomes, remaining risks, and coordination needs. Integrate against the latest shared content and close the acceptance matrix row by row.
+
+6. Maintain a concise task-specific checkpoint using the repository's established task-tracking convention, or one coordinator-owned local progress file. Track the fleet, matrix, completed work, outstanding defects, relevant concurrent changes, and exact resume steps. Keep progress updates focused on completed behavior, remaining failures, and blockers.
+
+# Required end-to-end behavior
+
+For every editor, demonstrate the actual supported user journey:
+
+- Reach and open the correct editor through the real application.
+- Create a valid new puzzle artifact and open an existing one.
+- Perform meaningful edits through the actual UI; verify all advertised controls and puzzle-specific rules.
+- Validate accepted and rejected input, and show useful validation feedback.
+- Show the correct preview or rendered result.
+- Save through the application's intended persistence path.
+- Reload or close and reopen the artifact, then prove that the meaningful edits survived and the data remains valid.
+- Exercise supported import/export, duplication, deletion, undo/redo, keyboard actions, and asset handling where applicable.
+- Handle relevant empty, malformed, loading, failed-save, failed-load, and navigation states without silent loss of edits.
+
+Trace failures through the complete applicable chain: UI event -> editor state -> validation -> serialization -> API/backend -> durable storage -> loading -> rendering. Preserve compatible existing artifacts and established data contracts.
+
+Resolve dead controls, broken registrations, placeholder handlers, fake successful saves, dropped fields, state synchronization defects, and missing integration within this scope. Do not hide failing features, weaken validation, delete failing tests, or replace required behavior with mocks to produce a pass.
+
+# Verification and completion
+
+Use the project's existing test stack. Add focused regressions for actual defects and missing critical journeys. Run relevant linting, type checks, builds, unit/integration tests, and browser-level end-to-end checks. Coordinate expensive suites so the fleet does not repeatedly launch identical full runs.
+
+Verify representative real UI interactions and save/reopen round trips for every editor against the intended local development backend or persistence layer. Mocks may support focused tests, but cannot prove the real integration by themselves. Use available browser tooling or the project's browser test runner.
+
+Inspect failures before assigning blame to concurrent work. Fix failures caused by this task; record unrelated failures with concrete evidence while continuing unblocked editor work. Recheck affected behavior after integrating changes or observing relevant concurrent modifications.
+
+Do not mark an editor complete based only on compilation, a rendered screen, an agent's assurance, or an unexecuted test. Record the tested code state and exact checks. If a backend, credential, browser, model, or tool is unavailable, record the precise blocker and what remains unverified; keep completing everything else.
+
+Finish when the full editor inventory is accounted for, all required in-scope behavior is implemented, meaningful verification passes, and no known in-scope defect remains. If a hard blocker prevents this, report partial completion honestly and provide the smallest concrete unblock/resume action.
+
+Final response:
+
+1. Outcome and concise summary of repairs.
+2. Every editor with its verified, failed, blocked, or unverified status.
+3. Tests and commands actually executed, including results and applicable round-trip evidence.
+4. Material files changed and integration decisions.
+5. Remaining blockers, unrelated failures, and exact continuation steps, if any.
+
+Begin immediately: inspect the repository, instantiate the 20-worker fleet, and execute.
+

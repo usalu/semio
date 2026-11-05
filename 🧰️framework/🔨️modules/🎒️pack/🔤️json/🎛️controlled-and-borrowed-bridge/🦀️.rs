@@ -2,27 +2,15 @@
 
 use super::*;
 
-//#region 🔖️ToFromValueBridge
-/// 🔣️ `serde_json::to_string`/`from_str` analogs over [`ToValue`]/[`FromValue`] instead of
-/// `Serialize`/`DeserializeOwned` — layered on the structural [`from_dsl_value`]/[`to_dsl_value`]
-/// walk above (`//#region 🔖️DslValueBridge`) rather than a second one: a concurrent session
-/// landed that walk in this same file while this one was in flight, so this region only adds the
-/// generic string convenience pair it didn't have, instead of a duplicate `DslValue <-> Value`
-/// conversion. Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: the
-/// pair every plugin routes JSON text through once it stops deriving
-/// `serde::Serialize`/`Deserialize` in favor of `ToValue`/`FromValue`.
 pub fn to_json_string<T: ToValue>(value: &T) -> String {
     to_string(&from_dsl_value(&value.to_value()))
 }
 
-/// 🔤️ `serde_json::from_str` analog over [`FromValue`] instead of `DeserializeOwned` — a parse
-/// failure and a decode failure both collapse onto [`ValueError`], matching `from_value`'s own.
 pub fn from_json_str<T: FromValue>(text: &str, policy: JsonMemberPolicy) -> Result<T, ValueError> {
     let value = parse(text, policy).map_err(JsonError::into_value_error)?;
     T::from_value(to_dsl_value(&value))
 }
 
-/// 🚦️ Parses and binds JSON under the caller's cumulative native ownership control.
 pub fn from_json_str_controlled<T: FromValue>(text: &str, policy: JsonMemberPolicy, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<T, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(text.len())?;
@@ -33,7 +21,6 @@ pub fn from_json_str_controlled<T: FromValue>(text: &str, policy: JsonMemberPoli
     })
 }
 
-/// 🛫️ Writes ordered JSON under the caller's cumulative native ownership control.
 pub fn to_json_string_controlled<T: ToValue>(value: &T, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<String, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(0)?; let value = value.to_value_controlled(control)?.guard_decoded();
@@ -63,10 +50,8 @@ fn json_native_node<'a>(source: &'a DslValue, path: &[usize]) -> Result<JsonNati
     Ok(JsonNativeNode::Value(value))
 }
 
-/// 🔎️ A canonical JSON scalar or collection borrowed directly from the retained source owner.
 pub enum JsonWriteNode<'a>{Null,Bool(bool),Number(semio_framework_value::Number),String(&'a str),NativeString(&'a dyn semio_framework_value::paged::Utf8Text),Array(usize),Object(usize)}
 
-/// 🌱️ Source owners provide ordinal views without projecting or copying their payload first.
 pub trait JsonWriteSource{
     fn node_at_path(&self,path:&[usize])->Result<JsonWriteNode<'_>,ValueError>;
     fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError>;
@@ -80,7 +65,6 @@ impl JsonWriteSource for DslValue{
     fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError>{match json_native_node(self,path)?{JsonNativeNode::Value(Self::Object(entries))=>entries.get(index).map(|(key,_)|key.as_str()).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"JSON source key is absent")),_=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"JSON source key owner is absent"))}}
 }
 
-/// 🧵️ Retains physical writer state while borrowing the unchanged semantic owner per grant.
 pub struct JsonBorrowedWriteCursor {
     #[doc(hidden)] pub frames: Vec<JsonWriteFrame>, #[doc(hidden)] pub path: Vec<usize>, writer: ControlledWriter, #[doc(hidden)] pub phase: u8, pub(super) normal_step_progress:RetainedCloneProgress,last_work:u64,
 }
@@ -90,15 +74,12 @@ impl JsonBorrowedWriteCursor {
     pub fn new() -> Self { Self { frames: Vec::new(), path: Vec::new(), writer: ControlledWriter { bytes: 0, output: None }, phase: 0, normal_step_progress:Default::default(),last_work:0 } }
     /// 📍️ Returns the current canonical output byte count and measure/write phase.
     pub fn progress(&self) -> (usize, bool) { (self.writer.bytes, self.phase == 2) }
-    /// ⚖️ Borrows the complete measured extent before output storage is admitted.
     pub fn measured_bytes(&self)->Option<usize>{(self.phase==1&&self.frames.is_empty()).then_some(self.writer.bytes)}
-    /// 🔄️ Reuses only paid measure frames after their previous source walk reached its frontier.
     pub fn restart_measurement(&mut self)->Result<RetainedCloneProgress,ValueError>{
         if self.measured_bytes().is_none()||self.writer.output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON measurement still owns an unfinished source or output"))}
         self.path.clear();self.writer.bytes=0;self.frames.push(JsonWriteFrame{state:0,index:0,position:0});
         Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<JsonWriteFrame>()+size_of::<usize>(),..Default::default()})
     }
-    /// ⏱️ Advances at most the supplied structural or scalar-character transitions.
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
     pub fn last_turn_work(&self)->u64{self.last_work}
     /// 📏️ Quotes one actual scalar write, natural frame birth or final output allocation.
@@ -172,7 +153,6 @@ impl JsonBorrowedWriteCursor {
     pub(super) fn advance<S:JsonWriteSource+?Sized>(&mut self, source:&S, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {advance_source(&mut self.frames,&mut self.path,&mut self.writer,source,control).map(|_|())}
 }
 
-/// 🌳️ Owns its semantic source and the canonical borrowed writer state.
 pub struct JsonWriteCursor<S:JsonWriteSource>{#[doc(hidden)] pub source:Option<S>,#[doc(hidden)] pub state:JsonBorrowedWriteCursor}
 
 impl<S:JsonWriteSource> JsonWriteCursor<S>{

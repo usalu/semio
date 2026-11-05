@@ -1,21 +1,4 @@
-//! 💡️ `wfc3d` inferences — THE SOLVE ITSELF IS AN INFERENCE. `Wfc3dSnapshot` only ever persists the
-//! PROBLEM (slots/edges/tiles/rules/seed); the SOLUTION, the contradiction verdict and the
-//! pre-propagation entropy map are all derived here via `store::InferredField`, never
-//! mutation-authored state. The engine crate `semio_s_plugin_wfc_engine` supplies the internals of
-//! these `compute()` bodies.
-//!
-//! Determinism: `solve_with_job` reads only `snapshot` fields (`seed` included) and drives the same
-//! resumable `WfcJob<GraphTopology>` interactive callers use; every step is watchdog-wrapped and
-//! explicitly bounded. No ambient randomness enters the inference, so `DepHash` caching over
-//! `Wfc3dSolve`/`Wfc3dContradiction`/`Wfc3dEntropy` is sound.
-//!
-//! Rule semantics: the rules ARE the compatibility table. They compile onto an EMPTY `ModelBuilder`,
-//! so a tile pair no rule mentions is FORBIDDEN — an allow-list, the same law every other `wfc`
-//! artifact states. `allowed: true` pushes `allow`, `allowed: false` pushes `deny`, and deny always
-//! wins over allow at compile time regardless of call order. `relation: None` states the rule for
-//! every relation at once. A rule is written for an UNORDERED pair, so both directed orders are
-//! pushed. An empty rule set is therefore unsatisfiable the moment two slots are adjacent.
-
+//! 💡️ Resumable inference results for Wfc3d. Completed jobs publish derived answers; pure fields expose cheap authored metrics.
 use crate::schema::snapshot::Wfc3dSnapshot;
 use std::collections::BTreeMap;
 
@@ -103,34 +86,17 @@ pub struct Wfc3dInferenceCommit {
 //#endregion 🔖️Compile
 
 //#region 🔖️Solve
-/// 🏁 The solved assignment (slot id → tile id), or `Unsolved` for every non-`Solved` outcome
-/// (unsatisfiable/contradiction/budget/cancellation) — see `Wfc3dContradiction` for the dedicated
-/// satisfiability verdict.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase")]
-pub enum Wfc3dSolveResult {
-    #[default]
-    Unsolved,
-    Solved {
-        assignments: BTreeMap<String, String>,
-    },
-}
-
-pub struct Wfc3dSolve;
 
 
 
-/// 🏁 The solve as one call, for the editor/viewer preview lane: the inferred assignment is rendered,
-/// never persisted.
-pub fn solve_assignments(snapshot: &Wfc3dSnapshot) -> BTreeMap<String, String> {
-    crate::host::inferences::solve_with_job(snapshot).map(|commit| commit.assignments).unwrap_or_default()
-}
+
+
+
+
 //#endregion 🔖️Solve
 
 //#region 🔖️Contradiction
-/// 🩺 The satisfiability verdict on its own, so a caller who only needs "is this spec even solvable"
-/// never has to decode a full assignment map to find out.
-pub struct Wfc3dContradiction;
+
 
 
 //#endregion 🔖️Contradiction

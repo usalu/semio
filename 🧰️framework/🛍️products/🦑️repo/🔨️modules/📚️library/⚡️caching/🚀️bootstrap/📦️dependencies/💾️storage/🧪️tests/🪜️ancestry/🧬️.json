@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "version",
+    "cases",
+    "refusals",
+    "aggregate",
+    "nativeRefusals"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "parts",
+          "existing",
+          "create",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parts": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*$"
+            }
+          },
+          "existing": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "create": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "created"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "created": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 64
+              }
+            }
+          }
+        }
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "fault",
+          "create"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fault": {
+            "enum": [
+              "missing",
+              "symlink",
+              "device",
+              "identity",
+              "cancel"
+            ]
+          },
+          "create": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "aggregate": {
+      "type": "object",
+      "required": [
+        "roots",
+        "siblings",
+        "depth",
+        "multiChunkBytes",
+        "empty"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "roots": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 64
+        },
+        "siblings": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 64
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "multiChunkBytes": {
+          "type": "integer",
+          "minimum": 65537,
+          "maximum": 1048576
+        },
+        "empty": {
+          "const": true
+        }
+      }
+    },
+    "nativeRefusals": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "file-hash",
+          "file-replacement",
+          "parent-replacement",
+          "cancel",
+          "fresh-roster",
+          "path-escape",
+          "file-link",
+          "parent-link"
+        ]
+      }
+    }
+  }
+}

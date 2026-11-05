@@ -1,0 +1,135 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "pagePixels",
+    "referenceBytes",
+    "maximumPixels",
+    "maximumDirectoryBytes",
+    "grant",
+    "maximumWork",
+    "cases",
+    "accounting"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "pagePixels": {
+      "const": 4096
+    },
+    "referenceBytes": {
+      "const": 8
+    },
+    "maximumPixels": {
+      "const": 16777216
+    },
+    "maximumDirectoryBytes": {
+      "const": 32768
+    },
+    "grant": {
+      "const": {
+        "maximumItems": 32,
+        "maximumCopyBytes": 32768,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 4096
+      }
+    },
+    "maximumWork": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "width",
+          "height",
+          "seed",
+          "whiteColumnStride",
+          "connectorRow",
+          "target",
+          "background",
+          "expectedReached",
+          "expectedPages",
+          "expectedCapacityBytes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16384
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16384
+          },
+          "seed": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "whiteColumnStride": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "connectorRow": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "target": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "background": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "expectedReached": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expectedPages": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expectedCapacityBytes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "accounting": {
+      "const": "typescript-logical"
+    }
+  }
+}

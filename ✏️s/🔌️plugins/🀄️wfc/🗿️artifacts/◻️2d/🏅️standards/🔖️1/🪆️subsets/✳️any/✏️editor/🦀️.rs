@@ -67,7 +67,7 @@ use semio_framework_2d_compute::EngineHandles;
 #[path = "🧾️command-enum-and-retained-routes/🦀️.rs"]
 mod command_enum_and_retained_routes;
 pub use command_enum_and_retained_routes::{
-    solve_transient, wfc2d_command_id, Wfc2dEditorCommand, Wfc2dRetainedCommandJobFactory,
+    wfc2d_command_id, Wfc2dEditorCommand, Wfc2dRetainedCommandJobFactory,
     WFC_2D_NODE_GRAPH_EDIT, WFC_2D_RETAINED_TOOL_IDS, WFC_2D_SET_ACTIVE_EXAMPLE,
 };
 use command_enum_and_retained_routes::{

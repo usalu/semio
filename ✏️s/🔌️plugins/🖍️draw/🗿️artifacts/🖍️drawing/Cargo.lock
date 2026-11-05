@@ -7029,6 +7029,7 @@ dependencies = [
  "semio-s-artifact-draw-drawing-scene",
  "semio-s-artifact-draw-drawing-viewer",
  "semio-s-artifact-draw-drawing-write",
+ "serde_json",
 ]
 
 [[package]]

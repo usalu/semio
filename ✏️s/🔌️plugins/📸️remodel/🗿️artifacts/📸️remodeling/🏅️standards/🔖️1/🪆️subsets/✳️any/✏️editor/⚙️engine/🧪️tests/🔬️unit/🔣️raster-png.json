@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "id": "valid-range",
+      "width": 2,
+      "height": 2,
+      "values": [
+        0,
+        100,
+        5,
+        10
+      ],
+      "valid": [
+        true,
+        false,
+        true,
+        true
+      ],
+      "pixels": [
+        0,
+        0,
+        32768,
+        65535
+      ]
+    },
+    {
+      "id": "constant",
+      "width": 1,
+      "height": 2,
+      "values": [
+        4,
+        4
+      ],
+      "valid": [
+        true,
+        true
+      ],
+      "pixels": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "empty-width",
+      "width": 0,
+      "height": 1,
+      "values": [],
+      "valid": [],
+      "failed": true
+    },
+    {
+      "id": "empty-height",
+      "width": 1,
+      "height": 0,
+      "values": [],
+      "valid": [],
+      "failed": true
+    },
+    {
+      "id": "missing-values",
+      "width": 2,
+      "height": 1,
+      "values": [
+        1
+      ],
+      "valid": [
+        true,
+        true
+      ],
+      "failed": true
+    },
+    {
+      "id": "extra-values",
+      "width": 1,
+      "height": 1,
+      "values": [
+        1,
+        2
+      ],
+      "valid": [
+        true,
+        true
+      ],
+      "failed": true
+    },
+    {
+      "id": "row-over-durable-limit",
+      "width": 2040,
+      "height": 1,
+      "failed": true,
+      "fill": {
+        "count": 2040,
+        "value": 1,
+        "valid": true
+      }
+    }
+  ]
+}

@@ -224,6 +224,7 @@ pub enum AppFrame {
         mime_type: String,
         total_bytes: u64,
         detail: String,
+        descriptor: Vec<u8>,
     },
     MediaExportChunk {
         in_reply_to: u64,

@@ -9,7 +9,7 @@
   },
   "operation": 71,
   "generation": 3,
-  "channelVersion": 23,
+  "channelVersion": 25,
   "phases": [
     "Resources",
     "StartOpening",
@@ -34,11 +34,20 @@
     }
   ],
   "nativeFactory": {
+    "sourceGrantMustExceedTurnCopy": true,
+    "tamperedTotalGrantRefused": true,
     "transferCopyBytes": [
       0,
       8192
     ],
     "foreignSourceSameBusiness": true,
     "terminalState": "Closed"
+  },
+  "clockImport": {
+    "clockMicroseconds": 1000,
+    "actualTag": 1,
+    "pointer": 64,
+    "expectedHex": "0100000000000000e803000000000000",
+    "expectedInstructions": 5
   }
 }

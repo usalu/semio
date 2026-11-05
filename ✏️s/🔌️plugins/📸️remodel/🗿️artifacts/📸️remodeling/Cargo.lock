@@ -445,6 +445,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a31eee39dddec8330830986fcd7625edb5a24ec90ea038215273bbc3adb08ac6"
 
 [[package]]
+name = "crunchy"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
+
+[[package]]
 name = "crypto-common"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -579,6 +585,12 @@ name = "fastrand"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
+
+[[package]]
+name = "fax"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "caf1079563223d5d59d83c85886a56e586cfd5c1a26292e971a0fa266531ac5a"
 
 [[package]]
 name = "fdeflate"
@@ -849,6 +861,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "half"
+version = "2.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ea2d84b969582b4b1864a92dc5d27cd2b77b622a8d79306834f1be5ba20d84b"
+dependencies = [
+ "cfg-if",
+ "crunchy",
+ "zerocopy",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -995,6 +1018,21 @@ checksum = "cb68373c0d6620ef8105e855e7745e18b0d00d3bdb07fb532e434244cdb9a714"
 dependencies = [
  "icu_normalizer",
  "icu_properties",
+]
+
+[[package]]
+name = "image"
+version = "0.25.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85ab80394333c02fe689eaf900ab500fbd0c2213da414687ebf995a65d5a6104"
+dependencies = [
+ "bytemuck",
+ "byteorder-lite",
+ "moxcms",
+ "num-traits",
+ "tiff",
+ "zune-core 0.5.3",
+ "zune-jpeg 0.5.15",
 ]
 
 [[package]]
@@ -1250,6 +1288,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "moxcms"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb85c154ba489f01b25c0d36ae69a87e4a1c73a72631fc6c0eb6dde34a73e44b"
+dependencies = [
+ "num-traits",
+ "pxfm",
+]
+
+[[package]]
 name = "multiversion_no_op"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1402,6 +1450,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "pxfm"
+version = "0.1.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d55d956fa96f5ec02be2e13af0e20391a5aa83d6a074e3ad368959d0fab299ea"
+
+[[package]]
 name = "quick-error"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1540,7 +1594,7 @@ dependencies = [
  "svgtypes",
  "tiny-skia",
  "usvg",
- "zune-jpeg",
+ "zune-jpeg 0.4.21",
 ]
 
 [[package]]
@@ -2574,6 +2628,7 @@ dependencies = [
  "semio-framework-kernel-identity",
  "semio-framework-kernel-media-jobs",
  "semio-framework-kernel-ui",
+ "semio-framework-manifest-address",
  "semio-framework-manifest-media",
  "semio-framework-manifest-view-model",
  "semio-framework-pack",
@@ -5638,6 +5693,9 @@ dependencies = [
  "semio-framework-job-payload",
  "semio-os-kernel",
  "semio-plugin-abi",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin-abi",
+ "semio-framework-ui-contract",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde",
@@ -5666,9 +5724,44 @@ dependencies = [
  "semio-plugin-host-shard-executor",
  "semio-plugin-host-wake",
  "semio-plugin-interpreter-runtime",
+ "semio-framework-os-kernel",
+ "semio-framework-os-vcs",
+ "semio-framework-plugin-guest-contract",
+ "semio-framework-plugin-host-codec",
+ "semio-framework-plugin-host-engine",
+ "semio-framework-plugin-host-guest-runtime",
+ "semio-framework-plugin-host-post-turn-relay",
+ "semio-framework-plugin-host-process-transport",
+ "semio-framework-plugin-host-routers",
+ "semio-framework-plugin-host-shard",
+ "semio-framework-plugin-host-shard-executor",
+ "semio-framework-plugin-host-wake",
+ "semio-framework-plugin-interpreter-runtime",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-plugin-host-codec"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor",
+ "semio-framework-job",
+ "semio-framework-plugin-host-guest-runtime",
+ "semio-framework-plugin-host-post-turn-relay",
+ "semio-framework-plugin-host-wake",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-plugin-host-configuration"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-pack-json",
+ "semio-plugin-decl-emission",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -5742,6 +5835,12 @@ dependencies = [
  "semio-plugin-host-guest-runtime",
  "semio-plugin-host-shard",
  "semio-plugin-host-wake",
+ "semio-framework-plugin-guest-contract",
+ "semio-framework-plugin-host-engine",
+ "semio-framework-plugin-host-guest-runtime",
+ "semio-framework-plugin-host-shard",
+ "semio-framework-plugin-host-source-json",
+ "semio-framework-plugin-host-wake",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -5807,6 +5906,31 @@ dependencies = [
  "semio-plugin-host-guest-runtime",
  "semio-plugin-host-shard",
  "tokio",
+]
+
+[[package]]
+name = "semio-framework-plugin-host-source-json"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor",
+ "semio-framework-job",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-plugin-host-wake"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-actor",
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-job-payload",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
 ]
 
 [[package]]
@@ -6434,6 +6558,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-interpreter-imports"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin-guest-contract",
+ "semio-framework-plugin-interpreter",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-plugin-interpreter-runtime"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-actor",
+ "semio-framework-artifact-reference",
+ "semio-framework-diagnostic",
+ "semio-framework-hash",
+ "semio-framework-job",
+ "semio-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-pack-json-float",
+ "semio-plugin-guest-contract",
+ "semio-plugin-interpreter",
+ "semio-framework-plugin-guest-contract",
+ "semio-framework-plugin-interpreter",
+ "semio-framework-plugin-interpreter-imports",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-plugin-interpreter-runtime"
 version = "0.1.0"
 dependencies = [
@@ -6448,6 +6608,9 @@ dependencies = [
  "semio-framework-pack-json-float",
  "semio-plugin-guest-contract",
  "semio-plugin-interpreter",
+ "semio-framework-plugin-guest-contract",
+ "semio-framework-plugin-interpreter",
+ "semio-framework-plugin-interpreter-imports",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -8051,6 +8214,7 @@ version = "0.1.0"
 dependencies = [
  "semio-ui-contract-budget",
  "semio-framework-value",
+ "semio-framework-value-native-decoding",
  "serde",
 ]
 
@@ -8490,6 +8654,7 @@ name = "semio-framework-value-native-owned"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
+ "semio-framework-value-derive",
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-default",
@@ -8694,6 +8859,13 @@ name = "semio-framework-value-sort"
 version = "0.1.0"
 
 [[package]]
+name = "semio-repo-test-host"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-process-routing-workspace",
+]
+
+[[package]]
 name = "semio-s-artifact-remodel-remodeling"
 version = "0.1.0"
 dependencies = [
@@ -8737,12 +8909,12 @@ dependencies = [
  "semio-s-artifact-remodel-remodeling-mutations",
  "semio-s-artifact-remodel-remodeling-panels",
  "semio-s-artifact-remodel-remodeling-read",
+ "semio-s-artifact-remodel-remodeling-reconstruct",
  "semio-s-artifact-remodel-remodeling-schema",
  "semio-s-artifact-remodel-remodeling-viewer",
  "semio-s-artifact-remodel-remodeling-write",
+ "semio-s-artifact-stdio-jpg-test-oracle",
  "semio-s-artifact-stdio-semio-image",
- "semio-s-plugin-energy-engine-model",
- "semio-s-plugin-energy-engine-results",
  "serde_json",
 ]
 
@@ -8867,6 +9039,7 @@ dependencies = [
  "semio-s-artifact-remodel-remodeling-images",
  "semio-s-artifact-remodel-remodeling-model",
  "semio-s-artifact-remodel-remodeling-video",
+ "serde_json",
 ]
 
 [[package]]
@@ -8874,9 +9047,9 @@ name = "semio-s-artifact-remodel-remodeling-engine"
 version = "0.1.0"
 dependencies = [
  "png",
- "semio-framework",
  "semio-framework-geometry",
  "semio-framework-io-base64",
+ "semio-framework-mesh-engine",
  "semio-framework-number",
  "semio-framework-pack",
  "semio-framework-value",
@@ -9025,8 +9198,8 @@ name = "semio-s-artifact-remodel-remodeling-mesh"
 version = "0.1.0"
 dependencies = [
  "png",
- "semio-framework",
  "semio-framework-io-base64",
+ "semio-framework-mesh-engine",
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-s-artifact-remodel-remodeling-algebra",
@@ -9521,8 +9694,8 @@ dependencies = [
 name = "semio-s-artifact-remodel-remodeling-reconstruct"
 version = "0.1.0"
 dependencies = [
- "semio-framework",
  "semio-framework-geometry",
+ "semio-framework-mesh-engine",
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-s-artifact-remodel-remodeling-camera",
@@ -9561,13 +9734,14 @@ name = "semio-s-artifact-remodel-remodeling-session"
 version = "0.1.0"
 dependencies = [
  "bitvec",
- "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-diagnostic",
  "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-job-publication",
  "semio-os-kernel",
+ "semio-framework-mesh-engine",
+ "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-tool-run",
@@ -10126,6 +10300,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-os-kernel",
  "semio-framework-pack",
@@ -10453,6 +10628,10 @@ dependencies = [
  "semio-plugin",
  "semio-ui-contract",
  "semio-ui-locale",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-s-artifact-stdio-contract-wire",
 ]
@@ -11331,6 +11510,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-os-kernel",
  "semio-framework-pack",
@@ -11921,6 +12101,8 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-ui-locale",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-binary",
@@ -12057,9 +12239,15 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-jpg-inferences",
  "semio-s-artifact-stdio-jpg-mutations",
- "semio-s-artifact-stdio-jpg-operations",
  "semio-s-artifact-stdio-jpg-schema",
- "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-jpg-test-oracle"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "semio-repo-test-host",
 ]
 
 [[package]]
@@ -14599,6 +14787,7 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-base",
  "semio-s-artifact-stdio-pdf-mut-base-2",
@@ -21040,144 +21229,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-plugin-energy-engine-air-exchange"
-version = "0.1.0"
-dependencies = [
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-pack-json",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-framework-value-native-owned",
- "semio-s-plugin-energy-engine-props",
- "semio-s-plugin-energy-engine-units",
- "serde",
-]
-
-[[package]]
-name = "semio-s-plugin-energy-engine-calendar"
-version = "0.1.0"
-dependencies = [
- "semio-framework-pack-json",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-framework-value-native-owned",
- "semio-framework-value-snapshot-projection",
- "serde",
-]
-
-[[package]]
-name = "semio-s-plugin-energy-engine-error"
-version = "0.1.0"
-dependencies = [
- "semio-framework-value",
- "semio-framework-value-derive",
- "serde",
-]
-
-[[package]]
-name = "semio-s-plugin-energy-engine-geometry"
-version = "0.1.0"
-dependencies = [
- "semio-framework-geometry",
- "semio-s-plugin-energy-engine-units",
-]
-
-[[package]]
-name = "semio-s-plugin-energy-engine-meters"
-version = "0.1.0"
-dependencies = [
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-plugin-energy-engine-model",
- "serde",
-]
-
-[[package]]
-name = "semio-s-plugin-energy-engine-metrics"
-version = "0.1.0"
-dependencies = [
- "semio-framework-value",
- "semio-framework-value-derive",
- "serde",
-]
-
-[[package]]
-name = "semio-s-plugin-energy-engine-model"
-version = "0.1.0"
-dependencies = [
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-pack-json",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-framework-value-native-owned",
- "semio-framework-value-persistent",
- "semio-framework-value-snapshot-projection",
- "semio-s-plugin-energy-engine-air-exchange",
- "semio-s-plugin-energy-engine-calendar",
- "semio-s-plugin-energy-engine-error",
- "semio-s-plugin-energy-engine-geometry",
- "semio-s-plugin-energy-engine-schedule",
- "serde",
-]
-
-[[package]]
-name = "semio-s-plugin-energy-engine-output"
-version = "0.1.0"
-dependencies = [
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-plugin-energy-engine-model",
- "semio-s-plugin-energy-engine-units",
- "serde",
-]
-
-[[package]]
-name = "semio-s-plugin-energy-engine-props"
-version = "0.1.0"
-dependencies = [
- "semio-s-plugin-energy-engine-units",
-]
-
-[[package]]
-name = "semio-s-plugin-energy-engine-results"
-version = "0.1.0"
-dependencies = [
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-plugin-energy-engine-error",
- "semio-s-plugin-energy-engine-meters",
- "semio-s-plugin-energy-engine-metrics",
- "semio-s-plugin-energy-engine-model",
- "semio-s-plugin-energy-engine-output",
- "serde",
-]
-
-[[package]]
-name = "semio-s-plugin-energy-engine-schedule"
-version = "0.1.0"
-dependencies = [
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-pack-json",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-framework-value-native-owned",
- "semio-framework-value-snapshot-projection",
- "serde",
-]
-
-[[package]]
-name = "semio-s-plugin-energy-engine-units"
-version = "0.1.0"
-dependencies = [
- "semio-framework-value",
- "semio-framework-value-derive",
- "serde",
-]
-
-[[package]]
 name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -21464,6 +21515,20 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.9",
+]
+
+[[package]]
+name = "tiff"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b63feaf3343d35b6ca4d50483f94843803b0f51634937cc2ec519fc32232bc52"
+dependencies = [
+ "fax",
+ "flate2",
+ "half",
+ "quick-error",
+ "weezl",
+ "zune-jpeg 0.5.15",
 ]
 
 [[package]]
@@ -22873,10 +22938,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f423a2c17029964870cfaabb1f13dfab7d092a62a29a89264f4d36990ca414a"
 
 [[package]]
+name = "zune-core"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d56377fd46368984a170bc5aac5567e52ca5da874caa60bea39fcbca78fb658b"
+
+[[package]]
 name = "zune-jpeg"
 version = "0.4.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29ce2c8a9384ad323cf564b67da86e21d3cfdff87908bc1223ed5c99bc792713"
 dependencies = [
- "zune-core",
+ "zune-core 0.4.12",
+]
+
+[[package]]
+name = "zune-jpeg"
+version = "0.5.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27bc9d5b815bc103f142aa054f561d9187d191692ec7c2d1e2b4737f8dbd7296"
+dependencies = [
+ "zune-core 0.5.3",
 ]

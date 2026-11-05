@@ -1,0 +1,89 @@
+{
+  "result": {
+    "retainedReceipt": {
+      "input": {
+        "operation": 71,
+        "generation": 3,
+        "epoch": 1,
+        "work": {
+          "clockBinding": 1,
+          "absoluteDeadlineUs": 1000000,
+          "fuel": 100000
+        },
+        "grant": {
+          "maximumItems": 100000,
+          "maximumCopyBytes": 16777216,
+          "maximumCapacityBytes": 16777216,
+          "maximumReleaseBytes": 16777216,
+          "maximumDepth": 128
+        }
+      },
+      "spent": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "workUnitsSpent": 0,
+      "remaining": {
+        "maximumItems": 100000,
+        "maximumCopyBytes": 16777216,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 128
+      },
+      "remainingFuel": 100000
+    },
+    "uiPatches": [
+      {
+        "surface": "fixture",
+        "baseRevision": 0,
+        "revision": 1,
+        "ops": [
+          {
+            "type": "remove",
+            "id": 1
+          }
+        ]
+      }
+    ],
+    "effects": [
+      {
+        "notify": {
+          "message": "收到 🪟"
+        }
+      }
+    ],
+    "status": "idle",
+    "fuelUsed": 0,
+    "commandIngress": "idle",
+    "coldPairIngress": "idle",
+    "lifecycleReceipt": null,
+    "uiPatchReceipt": null
+  },
+  "grant": {
+    "maximumItems": 100000,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 128
+  },
+  "states": [
+    {
+      "event": "publish",
+      "held": true
+    },
+    {
+      "event": "deniedClose",
+      "held": true
+    },
+    {
+      "event": "foreignClose",
+      "held": true
+    },
+    {
+      "event": "fundedClose",
+      "held": false
+    }
+  ]
+}

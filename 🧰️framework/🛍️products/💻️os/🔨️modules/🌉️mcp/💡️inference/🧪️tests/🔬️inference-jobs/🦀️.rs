@@ -81,7 +81,6 @@ fn block_on<F: std::future::Future>(future: F) -> F::Output {
     tokio::runtime::Builder::new_current_thread().enable_all().build().expect("current-thread runtime").block_on(future)
 }
 
-//#region 🧪️Vocabulary
 
 #[test]
 fn a_503_inference_unavailable_becomes_a_retryable_plugin_unavailable_that_names_the_missing_binding() {
@@ -110,7 +109,6 @@ fn a_503_inference_unavailable_becomes_a_retryable_plugin_unavailable_that_names
     assert_eq!(InferenceRouteErrorV1::Capacity.to_gateway_error("x").code, GatewayErrorCode::PluginUnavailable);
 }
 
-//#endregion 🧪️Vocabulary
 
 #[test]
 fn a_retained_local_wait_is_interrupted_by_its_own_operation_label_and_by_nothing_else() {
@@ -127,7 +125,6 @@ fn a_retained_local_wait_is_interrupted_by_its_own_operation_label_and_by_nothin
     assert!(!interrupt_inference_operation(&label), "a released wait is gone");
 }
 
-//#region 🧪️Policy
 
 fn principal(scopes: &[&str]) -> AgentPrincipal {
     AgentPrincipal::from_scope_names("agent:test", "test agent", &scopes.iter().map(|scope| (*scope).to_string()).collect::<Vec<_>>(), None)
@@ -214,4 +211,3 @@ fn the_four_capabilities_are_direct_object_typed_gateway_tools_with_bilingual_de
     assert!(GATEWAY_TOOL_NAMES.iter().filter(|name| expected.contains(name)).count() == expected.len(), "the census must list every inference job tool");
 }
 
-//#endregion 🧪️Policy

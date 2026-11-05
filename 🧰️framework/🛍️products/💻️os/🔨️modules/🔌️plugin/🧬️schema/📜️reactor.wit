@@ -70,6 +70,23 @@ interface reactor {
     ready: bool,
     refusal: option<actor-authority-refusal>,
   }
+  record actor-context-budget {
+    input: retained-turn-input,
+    retained-policy: retained-grant,
+    fuel: u64,
+    deadline-us: u64,
+    cancelled: bool,
+  }
+  enum actor-input-disposition { borrowed, retained, returned }
+  record actor-input-admission-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    ready: bool,
+    disposition: actor-input-disposition,
+    returned-wire: option<list<u8>>,
+    refusal: option<actor-authority-refusal>,
+  }
   variant actor-call-failure {
     authority(actor-authority-refusal),
     semantic,
@@ -227,14 +244,16 @@ interface reactor {
   /// ▶️ One guest turn. Carries NO bulk payload: `list<event>` and `budget` flatten to seven values,
   /// which the canonical ABI passes directly, so this call — the one the host makes hundreds of
   /// thousands of times per session — allocates nothing in guest memory that outlives it.
-  admit-actor-context: async func(input: retained-turn-input, retained-policy: retained-grant) -> actor-admission-call;
-  close-actor-context: async func(input: retained-turn-input, retained-policy: retained-grant) -> actor-context-close-call;
+  admit-actor-context: async func(budget: actor-context-budget) -> actor-admission-call;
+  admit-actor-input: async func(wire: option<list<u8>>, budget: actor-context-budget) -> actor-input-admission-call;
+  close-actor-context: async func(budget: actor-context-budget) -> actor-context-close-call;
+  close-actor-output: async func(budget: actor-context-budget) -> actor-context-close-call;
   /// ⚖️ LAW: `events` carries AT MOST ONE event. A turn serves one event slot and owns one pending output, and turn results
   /// are not mergeable, so the host queues further events and delivers them one per `poll`; a guest refuses a longer list
   /// with `a reactor turn admits at most one event`. The type stays a `list` only because a `list` crosses the canonical
   /// ABI as two flat values where an inlined `option<event>` would exceed the 16-value flat limit and leak its indirect
   /// parameter area (see the `stage-command-page` note above).
-  poll: async func(events: list<event>, budget: budget) -> result<turn-result, actor-call-refusal>;
+  poll: async func(budget: actor-context-budget) -> result<turn-result, actor-call-refusal>;
 
   /// 🤝️ The app-channel version this guest was compiled for (`CHANNEL_VERSION`). A host reads it exactly once, right after
   /// instantiation and before any frame, and refuses a guest of another version with `plugin.channel-mismatch`: the frame layout

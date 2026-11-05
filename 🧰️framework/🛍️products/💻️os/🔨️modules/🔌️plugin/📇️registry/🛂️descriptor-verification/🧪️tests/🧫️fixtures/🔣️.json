@@ -15,7 +15,7 @@
       },
       "execution": "isolated",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {}
@@ -37,7 +37,7 @@
       },
       "execution": "declarative",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {}
@@ -59,7 +59,7 @@
       },
       "execution": "linked",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {}
@@ -81,7 +81,7 @@
       },
       "execution": "exclusive",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {}
@@ -103,7 +103,7 @@
       },
       "execution": "cold",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {}
@@ -125,7 +125,7 @@
       },
       "execution": "isolated",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {},
@@ -177,7 +177,7 @@
       },
       "execution": "isolated",
       "executionProtocol": {
-        "appChannelVersion": 23,
+        "appChannelVersion": 25,
         "extra": true
       },
       "quotas": {},
@@ -199,7 +199,7 @@
       },
       "execution": "isolated",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {}
@@ -221,7 +221,7 @@
       },
       "execution": "isolated",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {}
@@ -243,7 +243,7 @@
       },
       "execution": "cooperative",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {}
@@ -265,7 +265,7 @@
       },
       "execution": "isolated",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {},
@@ -288,7 +288,7 @@
       },
       "execution": "isolated",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {},
@@ -315,7 +315,7 @@
       },
       "execution": "isolated",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {},
@@ -342,7 +342,7 @@
       },
       "execution": "isolated",
       "executionProtocol": {
-        "appChannelVersion": 23
+        "appChannelVersion": 25
       },
       "quotas": {},
       "contributions": {}

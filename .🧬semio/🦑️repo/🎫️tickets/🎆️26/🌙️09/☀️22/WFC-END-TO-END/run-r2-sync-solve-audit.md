@@ -1,0 +1,27 @@
+# Synchronous Solve Architecture Audit
+
+Read-only current source; no edits or queues. This distinguishes production-compiled helpers from actually mounted runtime calls.
+
+All five host inference files expose solve_with_clock wrapping run_headless; default solve/solve_with_job passes default_now_us. Tests extensively call solve_with_clock(logical_now_us), but the wrappers are not test-only. Each artifact also implements two InferredField::compute methods that invoke the synchronous wrapper: graph2d inference861/886,grid2d859/884,bitmap848/873,graph3d factory-and-solve100/125,grid3d857/882. The compute signature has only snapshot,key,parents; it has no original StepContext, cancellation or progress receiver. Grid2d contradiction884 can invoke solve twice when the first returns a satisfiable noncontradictory commit.
+
+Concrete mounted cold renders: graph3d viewer preview49 calls solved_transient; editor transient87–99 calls solve_with_job. Grid3d viewer preview67 directly calls solve(document), and its module doc explicitly describes inline render solving. Both block rendering and have no external cancellation/progress route. Returning an unsolved cage on failure does not make the expensive attempted solve interaction-friendly.
+
+Additional compiled helpers graph2d command-enum-and-retained-routes202 solve_transient and bitmap artifact-editor264 solve_transient have no non-test caller hits in current WFC scan; report these as obsolete helper candidates, not proven mounted paths. Graph3d schema solve_assignments125 also calls synchronous solve and has no non-test caller hit. Their empty source_revision results cannot become a valid current cache without proper authority binding.
+
+Clean recommendation: do not propagate owned HeadlessFailure through every pure inferred compute. That preserves a synchronous uncancellable architecture and gives pure field computation runtime cleanup custody it cannot carry. Remove production synchronous cold-solving entry points and unused helpers. Keep test convenience in the dev-only oracle, driven with owned TestJobDriver. Actual production solve work belongs to existing resumable inference/fill jobs, supplied by the real original caller and publishing revision-bound retained transient commits through the established action/effect routes.
+
+Inferred solver fields must become explicit reads/projections of an admitted current solve result, with unavailable/pending distinguished from solved/contradiction. Where a pure snapshot-only field cannot access current derived state, remove the expensive computed declaration or redesign its schema/input to include a completed result; do not silently substitute empty assignments/true contradiction on missing cache. Cheap authored metrics can remain pure computed fields. Viewer rendering must use available authored/current result data and expose proper host-driven solve progress rather than invoke a cold solve on render. Existing app-local cache ownership and source-revision fences remain mandatory; do not add process-global cache merely to retain viewer results.
+
+This is an architecture recommendation requiring deliberate schema/caller changes; no claim is made that current cached values are already available in every viewer or InferredField API. Parent/native owner received exact paths and reachability distinctions before any implementation choice.
+
+## Production Gating Refresh
+
+All10 expensive inferred compute implementations removed; remaining one compute per artifact is cheap authored metrics. Five solve wrappers now cfg(any(test,feature=testkit)). Manifest walk found25 WFC manifests with testkit declarations/forwarding; inference packages have empty testkit feature, consumers activate it under dev-dependencies. No inference testkit activation appeared in a normal dependency line in that walk. Native manifest resolution remains required.
+
+Concrete remaining ordinarycfg blockers at this snapshot: grid3d viewer render64 calls gated solve; graph3d viewer49 calls ungated solved_transient which calls gated solve_with_job at transient88; graph3d schema solve_assignments98 likewise calls gated solve_with_job. Those production references must be removed or redesigned, not enabled by production testkit. Parent notified. This is before concurrent viewer fixes, not a claim current source is quiescent.
+
+## Implemented Caller Contract
+
+Root removed all ten obsolete pure Solve/Contradiction InferredField implementations and their Rust-only marker/result declarations. The normative completed inference JSON/TypeScript/GraphQL/protobuf answers are unchanged; cheap entropy fields remain. The old fields were not used by mounted rendering and could not carry original progress, cancellation or retained failure custody. Existing algorithm laws are preserved through actual resumable parent-job outputs; selected cases also compare the headless batch answer.
+
+Five explicit headless conveniences are gated by cfg(test) or feature=testkit and return typed HeadlessFailure owners instead of flattening partial custody to strings. Twenty-five component manifests declare or forward testkit only via explicit dev-dependency features. Native implements the bounded headless owned caller/failure carrier. Ordinary production viewers are being migrated by their owners to authored/current admitted projections. These are source changes with parse/static evidence only; no native or browser pass is claimed.

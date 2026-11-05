@@ -1,15 +1,4 @@
-//! 💡️ Bitmap inferences — THE SOLVE ITSELF IS AN INFERENCE. `BitmapSnapshot` only ever persists the
-//! PROBLEM (input sample, palette, output extent, model parameters, pins, seed); the solved output
-//! bitmap, the contradiction verdict and the entropy map are all derived here, never
-//! mutation-authored state.
-//!
-//! The route is the classic overlapping model end to end: `extract_2d` learns `N × N` patterns from
-//! the input sample (expanded under the first `model.symmetry` elements of D4), `Grid2dTopology`
-//! gives the output its four-neighbour stencil with boundaries taken from `output.periodic`, and the
-//! resumable `WfcJob` — the same one every interactive caller drives — collapses it. Determinism:
-//! every input is a snapshot field, `seed` included, and no ambient randomness enters, so `DepHash`
-//! caching over `BitmapSolve`/`BitmapContradiction`/`BitmapEntropy` is sound.
-
+//! 💡️ Resumable inference results for Bitmap. Completed jobs publish derived answers; pure fields expose cheap authored metrics.
 use crate::schema::snapshot::{BitmapSnapshot};
 use semio_s_plugin_wfc_engine as engine;
 
@@ -193,28 +182,15 @@ pub fn compile_bitmap_collapse(snapshot: &BitmapSnapshot) -> Result<BitmapCollap
 //#endregion 🔖️Compile
 
 //#region 🔖️Solve
-/// 🏁 The solved output bitmap, or `Unsolved` for every non-`Solved` outcome (contradiction, budget,
-/// cancellation) — see [`BitmapContradiction`] for the dedicated satisfiability verdict.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase")]
-pub enum BitmapSolveResult {
-    #[default]
-    Unsolved,
-    Solved {
-        #[value(with = "semio_framework_value::bytes")]
-        pixels: Vec<u8>,
-    },
-}
 
-pub struct BitmapSolve;
+
+
 
 
 //#endregion 🔖️Solve
 
 //#region 🔖️Contradiction
-/// 🩺 The satisfiability verdict on its own, so a caller who only needs "can this sample tile that
-/// output at all" never has to decode a whole bitmap to find out.
-pub struct BitmapContradiction;
+
 
 
 //#endregion 🔖️Contradiction

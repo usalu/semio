@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "full-schema-output",
+      "arguments": [
+        "schemas"
+      ],
+      "character": "x",
+      "bytes": 70000,
+      "status": 0
+    },
+    {
+      "name": "audit-exit-retained",
+      "arguments": [
+        "audit"
+      ],
+      "character": "a",
+      "bytes": 16,
+      "status": 1
+    }
+  ]
+}

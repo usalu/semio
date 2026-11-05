@@ -215,9 +215,8 @@ impl AgentBridgeState {
         reconnect_delay_ms(self.reconnect_attempt)
     }
 
-    /// 📥️ Applies one decoded inbound frame. `shellCommand`/`appCommand` are acknowledged with a
-    /// refusal rather than silently dropped: the wgpu shell has no `ShellState` reducer twin, so
-    /// claiming `ok` would lie to the gateway.
+    /// 📥️ Queues supported chrome commands for host settlement and explicitly refuses artifact
+    /// commands while this carrier has no live artifact route.
     pub fn apply_frame(&mut self, frame: GatewayToShell, now_ms: f64) {
         match frame {
             GatewayToShell::Welcome { bridge_version, .. } if bridge_version != BRIDGE_VERSION => {
@@ -239,7 +238,15 @@ impl AgentBridgeState {
                 Ok(inbound) => self.inbound_shell_commands.push(inbound),
                 Err(fault) => self.outbox.push(ShellToGateway::ShellCommandResult { in_reply_to: seq, ok: false, fault: Some(fault) }),
             },
-            GatewayToShell::AppCommand { .. } => {}
+            GatewayToShell::AppCommand { seq, instance_id, .. } => {
+                let frame = serde_json::json!({
+                    "version": 1,
+                    "kind": "error",
+                    "code": "plugin.unavailable",
+                    "message": "this shell has no live artifact route mounted — it renders the agent surface but does not execute artifact commands; resolve a headless context (`--folder`/`--hub`) for mutations"
+                });
+                self.outbox.push(ShellToGateway::AppFrames { in_reply_to: seq, instance_id, frames: vec![frame.to_string().into_bytes()] });
+            }
             GatewayToShell::ApprovalRequested { approval_id, summary } => {
                 self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
                 self.pending_approvals.push(PendingAgentApproval { approval_id: approval_id.clone(), summary: summary.clone(), requested_at_ms: now_ms });

@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "stdio-default",
+      "args": [],
+      "expected": [
+        "stdio",
+        "--host-driver-policy",
+        "authored-policy",
+        "--operation-policy",
+        "authored-inference-policy"
+      ]
+    },
+    {
+      "name": "http",
+      "args": [
+        "http",
+        "--port",
+        "8792"
+      ],
+      "expected": [
+        "http",
+        "--port",
+        "8792",
+        "--host-driver-policy",
+        "authored-policy",
+        "--operation-policy",
+        "authored-inference-policy"
+      ]
+    },
+    {
+      "name": "explicit-policy",
+      "args": [
+        "http",
+        "--host-driver-policy",
+        "caller-policy"
+      ],
+      "expected": [
+        "http",
+        "--host-driver-policy",
+        "caller-policy",
+        "--operation-policy",
+        "authored-inference-policy"
+      ]
+    },
+    {
+      "name": "explicit-both-policies",
+      "args": [
+        "stdio",
+        "--host-driver-policy",
+        "caller-policy",
+        "--operation-policy",
+        "caller-inference-policy"
+      ],
+      "expected": [
+        "stdio",
+        "--host-driver-policy",
+        "caller-policy",
+        "--operation-policy",
+        "caller-inference-policy"
+      ]
+    }
+  ]
+}

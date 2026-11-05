@@ -1,0 +1,61 @@
+{
+  "cases": [
+    {
+      "steps": [
+        "enter",
+        "execute",
+        "leave",
+        "execute"
+      ],
+      "allowed": [
+        true,
+        false
+      ]
+    },
+    {
+      "steps": [
+        "execute"
+      ],
+      "allowed": [
+        false
+      ]
+    },
+    {
+      "steps": [
+        "enter",
+        "enter",
+        "execute",
+        "leave",
+        "execute",
+        "leave",
+        "execute"
+      ],
+      "allowed": [
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "steps": [
+        "enter",
+        "unwind",
+        "execute"
+      ],
+      "allowed": [
+        false
+      ]
+    },
+    {
+      "steps": [
+        "enter",
+        "foreignThread",
+        "execute",
+        "leave"
+      ],
+      "allowed": [
+        true
+      ]
+    }
+  ]
+}

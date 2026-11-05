@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","-p","semio-framework-plugin-interpreter-runtime","--lib","original_byte_unit_call"],"configuration":"prototype","store":"shared","parallelism":2,"language":"en","agent":"semio-mcp-byte-unit-laws"}}

@@ -54,7 +54,7 @@ fn derive_seed_is_deterministic_and_varies_by_index() {
 fn multi_start_finds_a_valid_solution() {
     let (model, topo, arcs) = checkerboard(20);
     let config = SearchConfig::default();
-    let outcome = multi_start(&model, &topo, &config, 1, None, &[], 4);
+    let outcome = multi_start(&model, &topo, &config, 1, None, &[], 4).expect("original search and teardown complete");
     match outcome {
         SolveOutcome::Solved(sol) => assert!(oracle::check_assignment(&model, &sol.assignment, &arcs).is_ok()),
         other => panic!("expected Solved, got {other:?}"),
@@ -65,7 +65,7 @@ fn multi_start_finds_a_valid_solution() {
 fn multi_start_proves_unsat_when_every_attempt_would() {
     let (model, topo) = k_graph(5, 4);
     let config = SearchConfig::default();
-    let outcome = multi_start(&model, &topo, &config, 7, None, &[], 6);
+    let outcome = multi_start(&model, &topo, &config, 7, None, &[], 6).expect("original search and teardown complete");
     match outcome {
         SolveOutcome::Unsatisfiable(rep) => assert!(rep.proven),
         other => panic!("expected Unsatisfiable, got {other:?}"),
@@ -76,8 +76,8 @@ fn multi_start_proves_unsat_when_every_attempt_would() {
 fn multi_start_is_deterministic_across_repeated_calls() {
     let (model, topo, _arcs) = checkerboard(12);
     let config = SearchConfig::default();
-    let a = multi_start(&model, &topo, &config, 99, None, &[], 8);
-    let b = multi_start(&model, &topo, &config, 99, None, &[], 8);
+    let a = multi_start(&model, &topo, &config, 99, None, &[], 8).expect("original search and teardown complete");
+    let b = multi_start(&model, &topo, &config, 99, None, &[], 8).expect("original search and teardown complete");
     match (a, b) {
         (SolveOutcome::Solved(sa), SolveOutcome::Solved(sb)) => assert_eq!(sa.assignment, sb.assignment),
         _ => panic!("expected both calls to solve"),
@@ -88,8 +88,8 @@ fn multi_start_is_deterministic_across_repeated_calls() {
 fn single_attempt_matches_a_plain_solve_call() {
     let (model, topo, _arcs) = checkerboard(10);
     let config = SearchConfig::default();
-    let direct = search::solve(&model, &topo, &config, derive_seed(5, 0), None, &[]);
-    let via_multi_start = multi_start(&model, &topo, &config, 5, None, &[], 1);
+    let direct = search::solve(&model, &topo, &config, derive_seed(5, 0), None, &[]).expect("original search and teardown complete");
+    let via_multi_start = multi_start(&model, &topo, &config, 5, None, &[], 1).expect("original search and teardown complete");
     match (direct, via_multi_start) {
         (SolveOutcome::Solved(sa), SolveOutcome::Solved(sb)) => assert_eq!(sa.assignment, sb.assignment),
         _ => panic!("expected both to solve identically"),

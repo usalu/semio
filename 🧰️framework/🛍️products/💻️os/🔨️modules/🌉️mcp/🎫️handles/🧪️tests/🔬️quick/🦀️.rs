@@ -133,6 +133,7 @@ fn idempotent_replay_reuses_the_cached_report_and_flags_it() {
             undo_token: None,
             postconditions: vec![],
             replayed: false,
+            untrusted: serde_json::Value::Null,
         }
     };
     let first = store.get_or_insert_with("agent:local", "key-1", 0, make_report);
@@ -158,6 +159,7 @@ fn different_idempotency_keys_never_collide() {
         undo_token: None,
         postconditions: vec![],
         replayed: false,
+        untrusted: serde_json::Value::Null,
     });
     let b = store.get_or_insert_with("agent:local", "key-b", 0, || InvocationReport {
         invocation_id: "inv-b".into(),
@@ -171,6 +173,7 @@ fn different_idempotency_keys_never_collide() {
         undo_token: None,
         postconditions: vec![],
         replayed: false,
+        untrusted: serde_json::Value::Null,
     });
     assert_ne!(a.invocation_id, b.invocation_id);
     assert_eq!(store.len(), 2);
@@ -194,6 +197,7 @@ fn expired_idempotency_entry_recomputes() {
             undo_token: None,
             postconditions: vec![],
             replayed: false,
+            untrusted: serde_json::Value::Null,
         }
     }
     let first = store.get_or_insert_with("agent:local", "key-1", 0, || report_with(&calls, "inv-1"));

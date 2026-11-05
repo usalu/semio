@@ -24,8 +24,9 @@ use semio_os_mcp_routing::routing_and_shell_routed::PluginComponentSource;
 
 /// 🏠️ The real `GatewayBackend` — see this file's module doc for the shape and the honest gaps.
 pub struct HeadlessWorkspace {
+    pub operation_policy: semio_os_mcp_port::channel_port::HostOperationPolicy,
     pub host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub test_discovery:Option<Vec<semio_framework::PackageDescriptor>>,
     pub(crate) artifact_host: store::sync::ArtifactHost,
     pub origin: WorkspaceOrigin,
@@ -158,8 +159,8 @@ impl HeadlessWorkspace {
     /// 🗿️ The body and the schema are both answerable for a hub document: the body from the
     /// authenticated binding's own verified canonical pair, the schema from the descriptor
     /// the binding already published (`DocumentDescriptor.artifact_schema` — the hub's own
-    /// authority over what this document IS, never a guess). Only `history` and `validation`
-    /// remain typed gaps, and they are gaps in the WIRE, not in this binding.
+    /// authority over what this document IS, never a guess). Validation decodes the canonical
+    /// pair with its owner codec; remote history requires a revision-bound history surface.
     ///
     /// 🪢 Two vocabularies, both published, neither collapsed into the other. `schema` is
     /// the declared pack schema — what the bytes are. `artifactKind` is the owning
@@ -176,12 +177,14 @@ impl HeadlessWorkspace {
     /// for an arbitrary plugin-backed artifact, so this names precisely what's missing rather
     /// than fabricating a schema this workspace cannot see.
     ///
-    /// 🧯️ Killed fabrication: this used to unconditionally answer `{"valid": true}` for ANY
-    /// artifact id, including ones this workspace has never even seen. The real wire protocol
-    /// has no validate query command either (same gap as `schema` above) — a live plugin
-    /// instance's own `validate()` is not reachable from here yet, so this is now a typed,
-    /// retryable gap naming exactly that, never a hardcoded pass.
+    /// 🔎️ Validation decodes the live canonical pair through its installed owner codec.
     pub(crate) fn read_artifact_resource(&self, artifact_id: &str, suffix: Option<&str>, uri: &str) -> Result<Vec<ResourceContent>, GatewayError> {
+        #[cfg(not(target_arch = "wasm32"))]
+        if suffix == Some("validation") {
+            let body = self.validate_artifact(artifact_id, &semio_framework_os_mcp_port::channel_port::ActivationScope::detached())?;
+            return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
+        }
+
         if matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
             let snapshot = self.hub_snapshot()?;
             if !snapshot.documents.keys().any(|scope| scope.document_id == artifact_id) {
@@ -205,7 +208,6 @@ impl HeadlessWorkspace {
                     let body = serde_json::json!({ "artifactId": artifact_id, "schema": document.view.descriptor.artifact_schema, "artifactKind": catalog.dialect_kinds.get(&document.scope), "spaceId": document.scope.space_id });
                     return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
                 }
-                Some("validation") => return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "artifact validation remains unavailable until the wire protocol carries a validate query command").retryable()),
                 Some("history") => return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "artifact history remains unavailable until a revision-bound remote history surface exists").retryable()),
                 Some(_) => return Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact sub-resource for {artifact_id}"))),
             }
@@ -237,7 +239,6 @@ impl HeadlessWorkspace {
                 }]),
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open history in this workspace"))),
             },
-            Some("validation") => Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{artifact_id}` cannot be validated yet — the real wire protocol has no validate query command, and no live plugin instance is reachable from this workspace to ask")).retryable()),
             Some(other) => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact sub-resource: {other}"))),
         }
     }

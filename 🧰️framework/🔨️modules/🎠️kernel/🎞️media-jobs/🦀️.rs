@@ -104,6 +104,7 @@ pub fn spawned_job_completion(steps: &[SpawnedJobStep]) -> Result<SpawnedJobComp
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct IconRenderExportItem {
     pub filename: String,
     pub request: DslValue,
@@ -185,6 +186,7 @@ pub const VIDEO_RENDER_PROGRAM_MAXIMUM_FRAMES: u64 = 36_000;
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct VideoRenderPath {
     pub verbs: String,
     pub points: Vec<f64>,
@@ -196,6 +198,7 @@ pub struct VideoRenderPath {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct VideoRenderImage {
     pub url: String,
 }
@@ -209,6 +212,7 @@ pub struct VideoRenderImage {
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub enum VideoRenderOp {
     Fill { path: u32, transform: [f64; 6], color: [f64; 4] },
     Stroke { path: u32, transform: [f64; 6], color: [f64; 4], width: f64 },
@@ -220,6 +224,7 @@ pub enum VideoRenderOp {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct VideoRenderScene {
     pub ops: Vec<VideoRenderOp>,
 }
@@ -229,6 +234,7 @@ pub struct VideoRenderScene {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct VideoRenderRun {
     pub scene: u32,
     pub frames: u32,
@@ -241,6 +247,7 @@ pub struct VideoRenderRun {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct VideoRenderProgram {
     pub schema: String,
     pub width: u32,

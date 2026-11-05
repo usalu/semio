@@ -103,6 +103,36 @@ fn principal(scopes: &[&str]) -> AgentPrincipal {
     AgentPrincipal::from_scope_names("agent:test", "test agent", &scopes.iter().map(|scope| scope.to_string()).collect::<Vec<_>>(), None)
 }
 
+#[test]
+fn genuine_command_results_reach_preview_commit_and_replay_only_as_untrusted_content() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/command-output.json")).unwrap();
+    for row in cases.as_array().unwrap() {
+        let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+        let mut capability = synthetic_capability("test.editor.cmd.inspect", &[], ApprovalMode::Never, false);
+        capability.effects.writes.clear();
+        let catalog = single_capability_catalog(capability);
+        let session = SessionHandle::new(row["id"].as_str().unwrap());
+        let principal = principal(&[]);
+        if row["empty"].as_bool().unwrap() { channel.force_empty_preview(0); }
+        channel.force_result_output(0, (!row["preview"].is_null()).then(|| row["preview"].clone()), (!row["committed"].is_null()).then(|| row["committed"].clone()));
+        let prepared = adapter.prepare(&catalog, &principal, &session, "test.editor.cmd.inspect", serde_json::json!({}), 0, 0).unwrap();
+        if !row["preview"].is_null() { assert_eq!(prepared.preview["untrusted"]["content"], row["preview"]); }
+        let request = InvokeRequest { prepared_handle: Some(prepared.prepared_handle), idempotency_key: Some(row["id"].as_str().unwrap().to_string()), ..Default::default() };
+        let report = adapter.invoke(&catalog, &principal, &session, request.clone(), 0, 1).unwrap();
+        assert_eq!(report.untrusted["content"], row["expected"]);
+        assert_eq!(report.untrusted["provenance"]["source"], "capability-output");
+        assert_eq!(report.untrusted["provenance"]["authors"]["kind"], "unattributed");
+        assert_eq!(report.untrusted["provenance"]["revision"]["contentSha256"], row["sha256"]);
+        let replay = adapter.invoke(&catalog, &principal, &session, request, 0, 2).unwrap();
+        assert_eq!(replay.untrusted, report.untrusted);
+        assert!(replay.replayed);
+        if row["empty"].as_bool().unwrap() {
+            assert!(report.undo_token.is_none());
+            assert!(!channel.frame_log().iter().any(|(_, command)| matches!(command, AppCommand::TransactionPrepare { .. } | AppCommand::TransactionCommit { .. })));
+        }
+    }
+}
+
 //#region 🔖️PreviewVsCommit
 
 /// 🪞️ The exact PureCommand op payload (preview) and the exact TransactionPrepare op payload
@@ -731,11 +761,12 @@ fn run_inference_sends_one_infer_command_and_returns_the_guest_result() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
     for _ in 0..3{channel.bump_generation(3);}
     let command = InferCommand {
+        
         plugin_id: "wfc".into(),
         artifact_kind: "s.wfc.wfc3d".into(),
         inference_schema: "s.wfc.wfc3d.solve".into(),
         revision: 4,
-        turn: semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1671,absolute_deadline_us:1000000,fuel:64},grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2},
+        document_generation:3,retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2},
         cancellation_id: "cancel-1".into(),
         work_units: 64,
         maximum_elapsed_milliseconds: 13,
@@ -757,7 +788,7 @@ fn run_inference_sends_one_infer_command_and_returns_the_guest_result() {
 fn run_inference_maps_a_stale_generation_to_a_revision_conflict() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
     for _ in 0..4{channel.bump_generation(0);}
-    let command = InferCommand { plugin_id: "neutral".into(), artifact_kind: "test.neutral.record".into(), inference_schema: "test.neutral.record.compute".into(), turn: semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1671,absolute_deadline_us:1000000,fuel:64},grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}, revision:7,cancellation_id:"original stale cancellation".into(),work_units:1,maximum_elapsed_milliseconds:13,canonical_payload:Vec::new(),artifact_id:String::new(),artifact_document:None,cancel:InferenceCancel::default() };
+    let command = InferCommand { plugin_id: "neutral".into(), artifact_kind: "test.neutral.record".into(), inference_schema: "test.neutral.record.compute".into(), document_generation:3,retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}, revision:7,cancellation_id:"original stale cancellation".into(),work_units:1,maximum_elapsed_milliseconds:13,canonical_payload:Vec::new(),artifact_id:String::new(),artifact_document:None,cancel:InferenceCancel::default() };
     let error = adapter.run_inference(0, command).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::RevisionConflict);
 }

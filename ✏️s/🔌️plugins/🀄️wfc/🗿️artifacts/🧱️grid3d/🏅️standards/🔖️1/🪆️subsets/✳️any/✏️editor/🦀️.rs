@@ -29,13 +29,15 @@ use semio_plugin::NoDraft;
 use semio_plugin::NoDraftMutation;
 use semio_plugin::NoPresence;
 use semio_plugin::NoPresenceMutation;
-use semio_plugin::NoTransient;
-use semio_plugin::NoTransientMutation;
 use semio_plugin::ToolRef;
 use semio_plugin::ToolRunJob;
 use semio_plugin::ToolRunJobRequest;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_2d_compute::EngineHandles;
+
+#[path="🫧️transient/🦀️.rs"]
+pub mod transient;
+use transient::{Grid3dTransient,Grid3dTransientMutation,SetSolve};
 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — one variant per document verb, plus the three the surface
@@ -79,9 +81,11 @@ pub enum Grid3dEditorCommand {
     SetCamera { x: f64, y: f64, z: f64, target_x: f64, target_y: f64, target_z: f64, zoom: f64 },
     #[dsl(key = "setActiveExample")]
     SetActiveExample { example_id: String },
-    /// 🏁 Starts the interactive fill tool run; the finished cache lands in `Grid3dPreviewResidency`.
+    /// 🏁 Starts the interactive fill tool run; the finished payload lands in the instance-local transient.
     #[dsl(key = "solve")]
     Solve,
+    #[dsl(key="commit-fill")]
+    CommitFill { payload_json:String },
     /// 🖱️ The host's own instance-pick verb, dispatched when the scene declares no `domainId` — the
     /// lane a WRITING utility runs on. It is `pickCell`'s twin rather than an alias, because
     /// `dispatch_typed_command_inner` rejects a command whose `command_id` is not the action it was
@@ -150,11 +154,11 @@ fn box_media(color: Grid3dColor) -> Grid3dTileMedia {
 }
 
 /// 📚️ The registered example an id names, or `None` for an id this artifact never published. An
-/// unknown id FAULTS rather than silently opening an empty grid — the navbar picker sends the id it
+/// empty id selects the boot document; an unknown id FAULTS rather than silently opening an empty grid — the navbar picker sends the id it
 /// read off the manifest, so a mismatch is a real registration bug and has to be loud.
 pub fn example_snapshot(example_id: &str) -> Option<Grid3dSnapshot> {
     match example_id {
-        crate::examples::blocks::ID => Some(crate::examples::blocks::snapshot()),
+        "" | crate::examples::blocks::ID => Some(crate::examples::blocks::snapshot()),
         crate::examples::pipes_3d::ID => Some(crate::examples::pipes_3d::snapshot()),
         _ => None,
     }
@@ -243,6 +247,7 @@ pub fn command_from_action(action: &str, args: Option<&semio_framework_value::Ds
             example_id: text("exampleId").or_else(|| text("id")).or_else(|| text("value")).unwrap_or_else(|| crate::examples::blocks::ID.to_string()),
         }),
         "solve" => Ok(Grid3dEditorCommand::Solve),
+        "commit-fill" => Ok(Grid3dEditorCommand::CommitFill {payload_json:text("payloadJson").ok_or_else(||missing("payloadJson"))?}),
         _ => Err(Fault::from(format!("wfc.grid3d.action.unsupported '{action}'"))),
     }
 }
@@ -319,6 +324,11 @@ pub fn grid3d_command_emit(
             return Ok(Emit { window_config_mutations: vec![addressed_config(view, Grid3dWindowConfigMutation::SetCamera(Grid3dWindowConfigSetCamera { camera_x: *x, camera_y: *y, camera_z: *z, target_x: *target_x, target_y: *target_y, target_z: *target_z, zoom: *zoom }))?], ..Default::default() });
         }
         Grid3dEditorCommand::SetHover { .. } | Grid3dEditorCommand::WorldPick { .. } => return Ok(Emit::default()),
+        Grid3dEditorCommand::CommitFill {payload_json}=>{
+            let payload=fill_tool::Grid3dFillPayload::decode(payload_json.as_bytes()).filter(|payload|payload.done).ok_or_else(||Fault::new(semio_framework_plugin::FaultOrigin::App,semio_framework_plugin::FaultCode::new("wfc.grid3d.fill.invalid"),"wfc.grid3d.fill.invalid"))?;
+            if !preview::source_matches(&payload.source_revision,doc.operation_optional().map(|operation|&operation.canonical_base_revision)){return Err(Fault::new(semio_framework_plugin::FaultOrigin::App,semio_framework_plugin::FaultCode::new("wfc.grid3d.fill.stale"),"wfc.grid3d.fill.stale"));}
+            return Ok(Emit::default());
+        },
         Grid3dEditorCommand::Solve => {
             return Ok(Emit::effect(fill_tool::start_effect()));
         }
@@ -364,10 +374,12 @@ pub const GRID3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setCamera",
     grid::ACTION_SET_ACTIVE_EXAMPLE,
     "solve",
+    "commit-fill",
 ];
 
 const GRID3D_RETAINED_PAYLOAD_SCHEMA: &str = "wfc.grid3d.tool-command.v1";
-const GRID3D_RETAINED_RAW_BYTES: usize = 65_536;
+pub const GRID3D_RETAINED_RAW_BYTES: usize = 2 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
+pub const GRID3D_RETAINED_OUTPUT_BYTES: usize = 4 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
 const GRID3D_RETAINED_WORK_ITEMS: usize = 4_096;
 
 /// 📄️ One document-lane publication row.
@@ -385,6 +397,7 @@ const fn window_config_route(tool_id: &'static str) -> semio_plugin::ArtifactToo
 /// `HostOnly`: it answers a whole-document `Effect::LoadDocument`, which is not an edit, so
 /// re-picking the open example mints no phantom undo entry.
 pub const GRID3D_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "commit-fill", lanes: &[semio_plugin::ArtifactToolPublicationLane::Transient] },
     artifact_route("changeSeed"),
     artifact_route("resizeGrid"),
     artifact_route("changeCellSizes"),
@@ -458,7 +471,7 @@ impl semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp
             input.context.and_then(|context| context.view_state.as_deref()),
         )?;
         self.completed = true;
-        Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
+        Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: semio_plugin::EphemeralEmit { presence: Vec::new(), transient: match input.command { Grid3dEditorCommand::CommitFill { payload_json } => vec![SetSolve { payload_json: payload_json.clone() }.into()], _ => Vec::new() }, window_transient: Vec::new() } })
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -495,7 +508,7 @@ impl semio_framework::ToolJobFactory for Grid3dRetainedCommandJobFactory {
     }
 
     fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
-        semio_framework::ToolExecutionContract::bounded_first_step(GRID3D_RETAINED_RAW_BYTES, GRID3D_RETAINED_WORK_ITEMS, 1, 262_144, 7_500)
+        semio_framework::ToolExecutionContract::bounded_first_step(GRID3D_RETAINED_RAW_BYTES, GRID3D_RETAINED_WORK_ITEMS, 1, GRID3D_RETAINED_OUTPUT_BYTES, 7_500)
     }
 
     semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GRID3D_RETAINED_RAW_BYTES, checkpoint_resume: false);
@@ -518,8 +531,10 @@ impl ArtifactEditor for Grid3dEditor {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
         use semio_ui_locale::LocalizedLabel;
-        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 3]> = std::sync::LazyLock::new(|| {
+        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 5]> = std::sync::LazyLock::new(|| {
             [
+            ("wfc.grid3d.fill.invalid", LocalizedLabel::native("The fill result is invalid.", "Das Füllergebnis ist ungültig.")),
+            ("wfc.grid3d.fill.stale", LocalizedLabel::native("This fill belongs to an older document revision.", "Dieses Füllergebnis gehört zu einem älteren Dokumentstand.")),
             ("wfc.grid3d.window.required", LocalizedLabel::native("This action needs an open grid window.", "Diese Aktion braucht ein geöffnetes Rasterfenster.")),
             ("wfc.grid3d.window.kind-required", LocalizedLabel::native("This action is not available in this window.", "Diese Aktion ist in diesem Fenster nicht verfügbar.")),
             ("wfc.grid3d.tile.none-armed", LocalizedLabel::native("Arm a tile before pinning a cell.", "Vor dem Fixieren einer Zelle eine Kachel wählen.")),
@@ -536,8 +551,8 @@ impl ArtifactEditor for Grid3dEditor {
     type DraftMutation = NoDraftMutation;
     type Presence = NoPresence;
     type PresenceMutation = NoPresenceMutation;
-    type Transient = NoTransient;
-    type TransientMutation = NoTransientMutation;
+    type Transient = Grid3dTransient;
+    type TransientMutation = Grid3dTransientMutation;
     type Command = Grid3dEditorCommand;
 
     const DIALECT: Dialect = WFC_GRID3D_DIALECT;
@@ -555,7 +570,7 @@ impl ArtifactEditor for Grid3dEditor {
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
     /// 🗃️ The bounded retirement catalog every store lane is released THROUGH: a store built without
@@ -584,8 +599,10 @@ impl ArtifactEditor for Grid3dEditor {
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_plugin::no_transient_store_disposer())
+        Some(semio_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
+
+    fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> { Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>()) }
 
     fn reference_birth()->Option<fn()->Result<Grid3dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::examples::blocks::snapshot())
@@ -600,6 +617,7 @@ impl ArtifactEditor for Grid3dEditor {
     /// the declared-action/command round trip.
     fn command_id(command: &Self::Command) -> &'static str {
         match command {
+            Grid3dEditorCommand::CommitFill {..}=>"commit-fill",
             Grid3dEditorCommand::ChangeSeed { .. } => "changeSeed",
             Grid3dEditorCommand::ResizeGrid { .. } => "resizeGrid",
             Grid3dEditorCommand::ChangeCellSizes { .. } => "changeCellSizes",
@@ -670,13 +688,13 @@ impl ArtifactEditor for Grid3dEditor {
         artifact_schema: "s.wfc.grid3d",
         factory: "Grid3dRetainedCommandJobFactory",
         factory_type: Grid3dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(GRID3D_RETAINED_RAW_BYTES, 4_096, 1, GRID3D_RETAINED_OUTPUT_BYTES, 7_500),
         tools: [
             "changeSeed", "resizeGrid", "changeCellSizes", "changePeriodicity",
             "createTile", "deleteTile", "changeTileWeight", "changeTileColor",
             "createRule", "deleteRule",
             "pinCell", "unpinCell", "maskCell", "unmaskCell",
-            "pickCell", "worldSelect", "setHover", "worldPick", "setActiveTile", "setCamera", "setActiveExample", "solve"
+            "pickCell", "worldSelect", "setHover", "worldPick", "setActiveTile", "setCamera", "setActiveExample", "solve", "commit-fill"
         ]
     }
 
@@ -694,13 +712,31 @@ impl ArtifactEditor for Grid3dEditor {
         grid3d_command_emit(command, doc, cfg, view_state)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        let window_config: Grid3dWindowConfig = config_from_view(cfg);
-        let window_id = view_state.window_id.as_deref().or(view_state.focused_window_id.as_deref()).unwrap_or(body_key);
+    fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,cfg:&ConfigView<'_,Self::Config>,view_state:&semio_plugin::ViewModel)->semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>{
+        Self::render_bodies(body_key,doc,cfg,view_state,&Grid3dTransient::default())
+    }
+
+    fn render_with_request_context(
+        _owner:&semio_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key:&str,
+        doc:&ArtifactView<'_,Self::Snapshot>,
+        cfg:&ConfigView<'_,Self::Config>,
+        view_state:&semio_plugin::ViewModel,
+        transient:&semio_plugin::TransientView<'_,Self::Transient>,
+        _interaction:&semio_plugin::app::InteractionView<'_>,
+        _cx:&mut semio_plugin::StepContext<'_>,
+    )->semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree>{
+        Self::render_bodies(body_key,doc,cfg,view_state,transient.snapshot).map(Some).map_err(Into::into)
+    }
+
+}
+impl Grid3dEditor {
+    fn render_bodies(body_key:&str,doc:&ArtifactView<'_,Grid3dSnapshot>,cfg:&ConfigView<'_,NoConfig>,view_state:&semio_plugin::ViewModel,transient:&Grid3dTransient)->semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>{
+        let window_config=config_from_view(cfg);
         match body_key {
-            grid::BODY_KEY => grid::render(doc.snapshot, &window_config, &[], None, grid3d_active_utility(Some(view_state))).map(semio_plugin::built_to_component_tree),
-            preview::BODY_KEY => preview::render(doc.snapshot, &window_config, window_id, doc.tool_run()).map(semio_plugin::built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            grid::BODY_KEY=>grid::render(doc.snapshot,&window_config,&[],None,grid3d_active_utility(Some(view_state))).map(semio_plugin::built_to_component_tree),
+            preview::BODY_KEY=>preview::render(doc.snapshot,&window_config,transient,doc.tool_run(),doc.render_operation_ref().map(|operation|&operation.canonical_base_revision)).map(semio_plugin::built_to_component_tree),
+            _=>semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -797,3 +833,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 }
 //#endregion 🧩️ArtifactItems2
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️render-source/🦀️.rs"]
+mod render_source_laws;

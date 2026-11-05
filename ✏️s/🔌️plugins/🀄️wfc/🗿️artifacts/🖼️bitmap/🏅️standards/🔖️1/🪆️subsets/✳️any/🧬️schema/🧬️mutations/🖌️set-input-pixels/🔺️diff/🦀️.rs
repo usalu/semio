@@ -6,7 +6,7 @@ use crate::schema::snapshot::{read_region, BitmapSnapshot};
 
 pub fn diff(payload: &super::SetInputPixels, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
     let region = &payload.pixels;
-    if payload.width == 0 || payload.height == 0 || region.len() != (payload.width as usize) * (payload.height as usize) {
+    if payload.width == 0 || payload.height == 0 || (payload.width as usize).checked_mul(payload.height as usize) != Some(region.len()) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("The region payload holds {} bytes, not {}×{}.", region.len(), payload.width, payload.height), ["pixels".to_string()]);
     }
     if payload.x.saturating_add(payload.width) > base.input.width || payload.y.saturating_add(payload.height) > base.input.height {

@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "version",
+    "wit",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "wit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "required": [
+          "operation",
+          "type",
+          "bytes",
+          "alignment"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "operation": {
+            "enum": [
+              "clock",
+              "wall",
+              "seed",
+              "check",
+              "write",
+              "flush",
+              "environment",
+              "terminal",
+              "begin"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "alignment": {
+            "enum": [
+              4,
+              8
+            ]
+          }
+        }
+      }
+    }
+  }
+}

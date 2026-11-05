@@ -213,7 +213,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -267,7 +267,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -313,7 +313,7 @@
                     "schema": {
                       "kind": "number",
                       "min": 0.01,
-                      "max": 2.0,
+                      "max": 2,
                       "integer": false
                     },
                     "presentation": {
@@ -346,7 +346,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -420,7 +420,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -513,7 +513,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -587,7 +587,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -641,7 +641,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -695,7 +695,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -809,7 +809,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -855,7 +855,7 @@
                     "schema": {
                       "kind": "number",
                       "min": 0.05,
-                      "max": 1.0,
+                      "max": 1,
                       "integer": false
                     },
                     "presentation": {
@@ -888,7 +888,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -942,7 +942,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -996,7 +996,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1050,7 +1050,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1104,7 +1104,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1158,7 +1158,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1212,7 +1212,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1285,7 +1285,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1339,7 +1339,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1387,7 +1387,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "dy",
@@ -1406,7 +1406,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "dz",
@@ -1425,7 +1425,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   }
                 ],
                 "inPalette": true,
@@ -1451,7 +1451,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1499,7 +1499,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "ax",
@@ -1518,7 +1518,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "ay",
@@ -1537,7 +1537,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 1.0
+                    "default": 1
                   },
                   {
                     "id": "az",
@@ -1556,7 +1556,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   }
                 ],
                 "inPalette": true,
@@ -1582,7 +1582,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1630,7 +1630,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 1.0
+                    "default": 1
                   },
                   {
                     "id": "sy",
@@ -1649,7 +1649,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 1.0
+                    "default": 1
                   },
                   {
                     "id": "sz",
@@ -1668,7 +1668,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 1.0
+                    "default": 1
                   }
                 ],
                 "inPalette": true,
@@ -1694,7 +1694,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1748,7 +1748,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1802,7 +1802,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1856,7 +1856,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1951,14 +1951,14 @@
                 "semantics": {
                   "effects": {
                     "external": false,
-                    "destructive": true,
+                    "destructive": false,
                     "reversible": false
                   },
                   "policy": {
                     "scopes": [
                       "shell.navigate"
                     ],
-                    "approval": "whenDestructive"
+                    "approval": "never"
                   },
                   "execution": {
                     "preview": "none",
@@ -1967,7 +1967,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -2018,7 +2018,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -2072,7 +2072,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -2126,7 +2126,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -2180,7 +2180,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -3131,7 +3131,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -3185,7 +3185,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -3239,7 +3239,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -4132,17 +4132,35 @@
             "id": "importSnapshotJson",
             "label": {
               "native": {
-                "en": "Import Snapshot Json",
+                "en": "Import Snapshot JSON",
                 "de": "Snapshot-JSON importieren"
               },
               "reuse": {
-                "en": "Import Snapshot Json",
+                "en": "Import Snapshot JSON",
                 "de": "Snapshot-JSON importieren"
               }
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "json",
+                "label": {
+                  "native": {
+                    "en": "Snapshot JSON",
+                    "de": "Snapshot-JSON"
+                  },
+                  "reuse": {
+                    "en": "Snapshot JSON",
+                    "de": "Snapshot-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -4166,7 +4184,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4186,17 +4204,35 @@
             "id": "replaceSnapshotJson",
             "label": {
               "native": {
-                "en": "Set Fixture Json",
-                "de": "Fixture-JSON festlegen"
+                "en": "Replace Snapshot JSON",
+                "de": "Snapshot-JSON ersetzen"
               },
               "reuse": {
-                "en": "Set Fixture Json",
-                "de": "Fixture-JSON festlegen"
+                "en": "Replace Snapshot JSON",
+                "de": "Snapshot-JSON ersetzen"
               }
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "json",
+                "label": {
+                  "native": {
+                    "en": "Snapshot JSON",
+                    "de": "Snapshot-JSON"
+                  },
+                  "reuse": {
+                    "en": "Snapshot JSON",
+                    "de": "Snapshot-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -4220,18 +4256,18 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
               "description": {
                 "native": {
-                  "en": "Loads a test fixture given as JSON as the whole lowpoly document, replacing the current scene; invalid JSON changes nothing.",
-                  "de": "Lädt eine als JSON übergebene Test-Fixture als gesamtes Lowpoly-Dokument und ersetzt die aktuelle Szene; ungültiges JSON ändert nichts."
+                  "en": "Replaces the current Lowpoly document with the supplied snapshot JSON; invalid JSON changes nothing.",
+                  "de": "Ersetzt das aktuelle Lowpoly-Dokument durch das übergebene Snapshot-JSON; ungültiges JSON ändert nichts."
                 },
                 "reuse": {
-                  "en": "Loads a test fixture given as JSON as the whole lowpoly document, replacing the current scene; invalid JSON changes nothing.",
-                  "de": "Lädt eine als JSON übergebene Test-Fixture als gesamtes Lowpoly-Dokument und ersetzt die aktuelle Szene; ungültiges JSON ändert nichts."
+                  "en": "Replaces the current Lowpoly document with the supplied snapshot JSON; invalid JSON changes nothing.",
+                  "de": "Ersetzt das aktuelle Lowpoly-Dokument durch das übergebene Snapshot-JSON; ungültiges JSON ändert nichts."
                 }
               }
             }
@@ -4274,7 +4310,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4320,7 +4356,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4375,7 +4411,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4430,7 +4466,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4485,7 +4521,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4531,7 +4567,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4586,7 +4622,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4641,7 +4677,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4696,7 +4732,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4751,7 +4787,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4806,7 +4842,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4851,7 +4887,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4896,7 +4932,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4951,7 +4987,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4996,7 +5032,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5041,7 +5077,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5087,7 +5123,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5740,8 +5776,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -5847,8 +5883,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -5965,8 +6001,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -6045,8 +6081,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -6124,8 +6160,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -6242,8 +6278,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -6322,8 +6358,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -6450,8 +6486,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -6529,8 +6565,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -6662,8 +6698,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -6740,8 +6776,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -7854,7 +7890,7 @@
         "namedLayouts": [
           {
             "id": "lowpoly-paint",
-            "label": "Paint",
+            "label": "Paint / Malen",
             "iconId": "paintbrush",
             "layout": {
               "root": {
@@ -7862,23 +7898,21 @@
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 60.0,
+                    "size": 60,
                     "children": [
                       {
                         "kind": "window",
-                        "windowKindId": "lowpoly-main",
-                        "title": "Model"
+                        "windowKindId": "lowpoly-main"
                       }
                     ]
                   },
                   {
                     "kind": "stack",
-                    "size": 40.0,
+                    "size": 40,
                     "children": [
                       {
                         "kind": "window",
-                        "windowKindId": "lowpoly-uv",
-                        "title": "UV"
+                        "windowKindId": "lowpoly-uv"
                       }
                     ]
                   }
@@ -7894,12 +7928,11 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 100.0,
+                "size": 100,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "lowpoly-main",
-                    "title": "Model"
+                    "windowKindId": "lowpoly-main"
                   }
                 ]
               }
@@ -8007,7 +8040,7 @@
         "mediaOutputs": [],
         "artifactKinds": [
           {
-            "id": "3d.lowpoly",
+            "id": "s.lowpoly.lowpoly",
             "label": {
               "native": {
                 "en": "3D Lowpoly",
@@ -8090,7 +8123,7 @@
           "exportFormats": [],
           "importFormats": [],
           "artifact": {
-            "id": "3d.lowpoly",
+            "id": "s.lowpoly.lowpoly",
             "name": "3D Lowpoly",
             "dimension": "3d",
             "componentKind": "lowpoly"
@@ -8810,8 +8843,7 @@
             "children": [
               {
                 "kind": "window",
-                "windowKindId": "framework.window.mesh",
-                "title": "Model"
+                "windowKindId": "framework.window.mesh"
               }
             ]
           }
@@ -8889,7 +8921,7 @@
   "activationEvents": [
     {
       "onArtifactKind": {
-        "kind": "3d.lowpoly"
+        "kind": "s.lowpoly.lowpoly"
       }
     }
   ],
@@ -8903,7 +8935,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 23
+    "appChannelVersion": 24
   },
   "quotas": {},
   "contributions": {

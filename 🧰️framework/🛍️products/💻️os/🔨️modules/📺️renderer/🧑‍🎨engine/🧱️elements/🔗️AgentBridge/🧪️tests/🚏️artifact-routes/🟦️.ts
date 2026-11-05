@@ -1,4 +1,4 @@
-/** 🔗️ Artifact routes: 16 tests covering shell channel payload codec; round-trips base64 at every length class and refuses malformed text; decodes every gateway→shell command in the shared fixture; and more. */
+/** 🔗️ Artifact route codec, live transaction ownership, targeted dispatch and cooperative cancellation laws. */
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/AgentBridge/🚏️artifact-routes.test.ts
 /** 🚏️ AgentBridge artifact routes: the shell channel payload codec, the app command answer, the live artifact route and the artifact-bytes route of a live editor instance. */
@@ -13,6 +13,9 @@ import { answerAgentAppCommand, NO_ARTIFACT_ROUTE_MESSAGE } from "../../🟢️s
 import { shellAppFault } from "@semio-tech/framework/mcp/channel";
 import { decodeChannelBase64, decodeShellAppCommand, encodeChannelBase64, shellAppFrameToJson, type ShellAppFrameV1 } from "@semio-tech/framework/mcp/channel";
 import { channelAppPayloadsFixtureUrl } from "@semio-tech/framework-os-mcp/testing/fixtures";
+import Ajv from "ajv";
+import type { ActionDispatchLifecycleV1 } from "@semio-tech/framework";
+import { createAgentArtifactRouteV1, decodeAgentDeferredPlanV1 } from "../../../🏛️ShellHost/🌉️agent-artifact-route/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️LiveArtifactRoute
@@ -89,6 +92,15 @@ describe("shell channel payload codec", () => {
 });
 
 describe("answerAgentAppCommand", () => {
+  it("matches the native shell's language-neutral missing-route refusal", async () => {
+    const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🗿️app-command-refusal/🔣️.json", import.meta.url), "utf8"));
+    const request = { seq: BigInt(fixture.request.seq), instanceId: fixture.request.instanceId, command: decodeShellAppCommand(new TextEncoder().encode(JSON.stringify(fixture.request.command))) };
+    const answer = await answerAgentAppCommand(request, undefined);
+    expect(answer.variant === "appFrames" && answer.inReplyTo).toBe(request.seq);
+    expect(answer.variant === "appFrames" && answer.instanceId).toBe(request.instanceId);
+    expect(answer.variant === "appFrames" && JSON.parse(new TextDecoder().decode(answer.frames[0]!))).toEqual(fixture.response);
+  });
+
   it("refuses immediately when no host mounted an artifact route, instead of going silent", async () => {
     const answer = await answerAgentAppCommand({ seq: 7n, instanceId: "inst-1", command: { kind: "readHistory" } }, undefined);
     expect(answer.variant).toBe("appFrames");
@@ -261,3 +273,132 @@ describe("agent artifact-bytes route", () => {
   });
 });
 //#endregion 🔖️ArtifactBytesRoute
+
+const routeFixture = JSON.parse(readFileSync(new URL("../../../🏛️ShellHost/🌉️agent-artifact-route/🧪️fixtures/🔣️.json", import.meta.url), "utf8"));
+
+describe("live shell artifact transaction ownership", () => {
+  const harness = () => {
+    const app = { id: "note", controllerId: "note-controller", actions: [{ id: "appendParagraph" }], windowKinds: [{ id: "editor", bodyKey: "editor" }] };
+    const dispatch = vi.fn(async (_action: unknown, _origin?: unknown, _propagate?: boolean, _lifecycle?: ActionDispatchLifecycleV1) => ({ kind: "applied", inputSeq: 1 }));
+    const ports = {
+      agentDeferredPlansRef: { current: new Map<string, string>() },
+      sessionRef: { current: { pluginId: "host", instanceId: 1n, app: { ...app, id: "host", controllerId: "host-controller" } } },
+      spawnedAppsRef: { current: [{ id: "note-a", pluginId: "note", appId: "note", instanceId: 2n }, { id: "note-b", pluginId: "note", appId: "note", instanceId: 3n }] },
+      loadedPluginsRef: { current: [{ manifest: { apps: [app] }, handle: { pluginId: "note", readHistory: async () => ({ cursor: 8, upserts: [{ seq: 8, actionId: "edit-8" }] }) } }] },
+      onActionRef: { current: dispatch },
+      activeWindowIdRef: { current: "note-b::editor" },
+    };
+    const route = createAgentArtifactRouteV1(ports as unknown as Parameters<typeof createAgentArtifactRouteV1>[0]);
+    const send = (instanceId: string, command: unknown) => route({ seq: 1n, instanceId, command } as Parameters<typeof route>[0]);
+    return { ports, dispatch, send };
+  };
+
+  it("agrees with the independent JSON Schema oracle on every neutral plan fixture", () => {
+    const validate = new Ajv().compile(routeFixture.planSchema);
+    for (const row of routeFixture.planCases) {
+      expect(Boolean(validate(row.value))).toBe(row.valid);
+      expect(decodeAgentDeferredPlanV1(JSON.stringify(row.value)) !== null).toBe(row.valid);
+    }
+    expect(decodeAgentDeferredPlanV1("malformed")).toBeNull();
+  });
+
+  it("executes the fixture journey in the addressed editor while another editor owns focus", async () => {
+    const { send, dispatch } = harness();
+    let ops: unknown;
+    for (const step of routeFixture.journey) {
+      const command = step.kind === "pureCommand" ? { kind: step.kind, capabilityId: "note.note.appendParagraph", input: { text: "hello" } }
+        : step.kind === "transactionPrepare" ? { kind: step.kind, txnId: "shared", ops, origin: { kind: "agent", principal: "agent:local", invocationId: "one" } }
+        : { kind: step.kind, txnId: "shared" };
+      const frames = await send(step.instance, command);
+      expect(frames[0]?.kind).toBe(step.expect);
+      if (frames[0]?.kind === "emit") ops = frames[0].ops;
+    }
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatch.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ action: "appendParagraph", args: { text: "hello" }, provenance: { origin: "agent", windowId: "note-a::editor", causedBy: null } }));
+  });
+
+  it("rejects malformed, extra and undeclared operations before acknowledging prepare", async () => {
+    const { send, dispatch } = harness();
+    expect((await send("2", { kind: "pureCommand", capabilityId: "note.note.appendParagraph", input: [] }))[0]?.kind).toBe("error");
+    const emitted = await send("2", { kind: "pureCommand", capabilityId: "note.note.appendParagraph", input: {} });
+    expect(emitted[0]?.kind === "emit" && emitted[0].warnings).toEqual(["This live shell prepares a deferred action; domain argument validation and mutation occur at commit."]);
+    const plan = emitted[0]?.kind === "emit" ? emitted[0].ops.document[0]! : new Uint8Array();
+    const invalid = [
+      { document: [], config: [], draft: [] },
+      { document: [plan, plan], config: [], draft: [] },
+      { document: [plan], config: [plan], draft: [] },
+      { document: [new TextEncoder().encode("null")], config: [], draft: [] },
+      { document: [new TextEncoder().encode(JSON.stringify({ ...JSON.parse(new TextDecoder().decode(plan)), deferredAction: "missing" }))], config: [], draft: [] },
+    ];
+    for (const ops of invalid) expect((await send("2", { kind: "transactionPrepare", txnId: "bad", ops }))[0]?.kind).toBe("error");
+    expect((await send("2", { kind: "transactionCommit", txnId: "bad" }))[0]?.kind).toBe("error");
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("keeps independent same-id plans and refuses duplicate prepare without replacing the first", async () => {
+    const { send, dispatch } = harness();
+    for (const instanceId of ["2", "3"]) {
+      const frames = await send(instanceId, { kind: "pureCommand", capabilityId: "note.note.appendParagraph", input: { instanceId } });
+      const ops = frames[0]?.kind === "emit" ? frames[0].ops : null;
+      expect((await send(instanceId, { kind: "transactionPrepare", txnId: "same", ops }))[0]?.kind).toBe("transactionPrepared");
+      expect((await send(instanceId, { kind: "transactionPrepare", txnId: "same", ops }))[0]?.kind).toBe("error");
+    }
+    await send("2", { kind: "transactionRollback", txnId: "same" });
+    expect((await send("2", { kind: "transactionCommit", txnId: "same" }))[0]?.kind).toBe("error");
+    expect((await send("3", { kind: "transactionCommit", txnId: "same" }))[0]?.kind).toBe("transactionCommitted");
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatch.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ args: { instanceId: "3" } }));
+  });
+
+  it("refuses superseded dispatch and a closed target instead of acknowledging a mutation", async () => {
+    const { ports, send, dispatch } = harness();
+    const frames = await send("2", { kind: "pureCommand", capabilityId: "note.note.appendParagraph", input: {} });
+    const ops = frames[0]?.kind === "emit" ? frames[0].ops : null;
+    await send("2", { kind: "transactionPrepare", txnId: "lost", ops });
+    dispatch.mockResolvedValueOnce({ kind: "superseded", inputSeq: 1, by: 2 } as never);
+    expect((await send("2", { kind: "transactionCommit", txnId: "lost" }))[0]?.kind).toBe("error");
+    ports.spawnedAppsRef.current = [];
+    expect((await send("2", { kind: "transactionCommit", txnId: "lost" }))[0]?.kind).toBe("error");
+  });
+
+  it("cancels the exact admitted operation, including a cancellation arriving before admission", async () => {
+    const { ports, send, dispatch } = harness();
+    const fixture = routeFixture.cancellation;
+    let lifecycle: ActionDispatchLifecycleV1 | undefined;
+    let settle: (() => void) | undefined;
+    dispatch.mockImplementationOnce(async (_action, _origin, _propagate, observer) => {
+      lifecycle = observer;
+      await new Promise<void>(resolve => { settle = resolve; });
+      return { kind: "applied", inputSeq: 1 };
+    });
+    const pending = send(fixture.instance, { kind: "transactionUndo", groupId: "edit-8" });
+    const cancel = vi.fn(() => { settle?.(); });
+    await send(fixture.foreignInstance, { kind: "cancel", cancelSeq: BigInt(fixture.seq) });
+    expect(cancel).not.toHaveBeenCalled();
+    ports.spawnedAppsRef.current = [];
+    await send(fixture.instance, { kind: "cancel", cancelSeq: BigInt(fixture.seq) });
+    lifecycle?.started({ operationId: fixture.operationId, generation: fixture.generation, cancel });
+    expect(cancel).toHaveBeenCalledTimes(fixture.cancelCalls);
+    expect((await pending)[0]?.kind).toBe(fixture.terminal);
+    await send(fixture.instance, { kind: "cancel", cancelSeq: BigInt(fixture.seq) });
+    expect(cancel).toHaveBeenCalledTimes(fixture.cancelCalls);
+  });
+
+  it("delivers cancellation directly to an already admitted operation", async () => {
+    const { send, dispatch } = harness();
+    const fixture = routeFixture.cancellation;
+    let settle: (() => void) | undefined;
+    const cancel = vi.fn(() => { settle?.(); });
+    dispatch.mockImplementationOnce(async (_action, _origin, _propagate, lifecycle) => {
+      lifecycle?.started({ operationId: fixture.operationId, generation: fixture.generation, cancel });
+      await new Promise<void>(resolve => { settle = resolve; });
+      return { kind: "applied", inputSeq: 1 };
+    });
+    const pending = send(fixture.instance, { kind: "transactionRedo", groupId: "edit-8" });
+    expect((await send(fixture.instance, { kind: "transactionRedo", groupId: "edit-8" }))[0]?.kind).toBe("error");
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    await send(fixture.instance, { kind: "cancel", cancelSeq: BigInt(fixture.seq) });
+    expect(cancel).toHaveBeenCalledTimes(fixture.cancelCalls);
+    expect((await pending)[0]?.kind).toBe(fixture.terminal);
+  });
+});

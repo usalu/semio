@@ -1,0 +1,15 @@
+{
+  "schema": "puzzle.5d",
+  "cases": [
+    { "id": "canonical", "document": { "schema": "puzzle.5d", "parts": [], "fasteners": [] }, "accepted": true },
+    { "id": "empty-canonical", "document": { "schema": "puzzle.5d" }, "accepted": true },
+    { "id": "structural", "document": { "parts": [], "fasteners": [] }, "accepted": true },
+    { "id": "foreign-with-parts", "document": { "schema": "puzzle.3d", "parts": [] }, "accepted": false },
+    { "id": "null-schema", "document": { "schema": null, "parts": [] }, "accepted": false },
+    { "id": "numeric-schema", "document": { "schema": 5, "parts": [] }, "accepted": false },
+    { "id": "malformed-parts", "document": { "schema": "puzzle.5d", "parts": {} }, "accepted": false },
+    { "id": "null-parts", "document": { "schema": "puzzle.5d", "parts": null }, "accepted": false },
+    { "id": "untyped", "document": {}, "accepted": false },
+    { "id": "array", "document": [], "accepted": false }
+  ]
+}

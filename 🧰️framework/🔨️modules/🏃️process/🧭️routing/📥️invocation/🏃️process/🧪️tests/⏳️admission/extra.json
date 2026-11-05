@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "owners": {
+    "first": "fixture:dag-extra-first",
+    "second": "fixture:dag-extra-second",
+    "renewable": "fixture:dag-extra-renewable"
+  },
+  "followingMaximumMilliseconds": 1500,
+  "parentMaximumMilliseconds": 60000,
+  "renewable": {
+    "idleMilliseconds": 80,
+    "maximumMilliseconds": 5000
+  },
+  "expiryWaitMilliseconds": 120,
+  "expected": {
+    "reachableControls": 3,
+    "expiryName": "ProgressDeadlineExpired",
+    "expiryReason": "idle"
+  }
+}

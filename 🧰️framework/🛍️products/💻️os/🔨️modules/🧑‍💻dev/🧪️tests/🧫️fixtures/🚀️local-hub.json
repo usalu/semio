@@ -257,7 +257,7 @@
               "path": "packages/stdio/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 23
+              "appChannelVersion": 25
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -294,7 +294,7 @@
               "path": "packages/gis/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 23
+              "appChannelVersion": 25
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -352,7 +352,7 @@
               "path": "packages/gis/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 23
+              "appChannelVersion": 25
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -373,7 +373,7 @@
               "path": "packages/note/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 23
+              "appChannelVersion": 25
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -412,7 +412,7 @@
               "path": "packages/stdio/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 23
+              "appChannelVersion": 25
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -449,7 +449,7 @@
               "path": "packages/gis/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 23
+              "appChannelVersion": 25
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -501,7 +501,7 @@
               "path": "packages/stdio/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 23
+              "appChannelVersion": 25
             },
             "browserActor": {
               "kind": "closed-browser-actor"
@@ -538,7 +538,7 @@
               "path": "packages/gis/descriptor.semio"
             },
             "executionProtocol": {
-              "appChannelVersion": 23
+              "appChannelVersion": 25
             },
             "browserActor": {
               "kind": "closed-browser-actor"

@@ -74,8 +74,8 @@ DESK_SURFACE_M = 0.72
 TOASTER_RATE = 12.0
 LAPTOP_RATE = 24.0
 _SEASON_CASTS = {
-    False: {"toaster": "shared-toaster-winter", "laptop": "cooling-heating-comparison-laptop", "lamp": "shared-lamp-winter"},
-    True: {"toaster": "cooling-heating-comparison-toaster-summer", "laptop": "cooling-heating-comparison-laptop-summer", "lamp": "shared-lamp-summer"},
+    False: {"table": "cooling-heating-comparison-table-winter", "toaster": "shared-toaster-winter", "laptop": "cooling-heating-comparison-laptop", "lamp": "shared-lamp-winter"},
+    True: {"table": "cooling-heating-comparison-table-summer", "toaster": "cooling-heating-comparison-toaster-summer", "laptop": "cooling-heating-comparison-laptop-summer", "lamp": "shared-lamp-summer"},
 }
 COOLER_RATE = 45.0
 CAST_MARGIN_M = 0.05
@@ -141,10 +141,10 @@ def _internal_gains(house, *, overheated: bool = False):
                              else "shared-person-winter", unit=unit,
                              anchor=np.array([-0.75, floor_y, 0.0]))
 
-    table = staffage("cooling-heating-comparison-table", unit=unit, anchor=np.array([0.8, floor_y, 0.0]))
     casts = _SEASON_CASTS[overheated]
+    table = staffage(casts["table"], unit=unit, anchor=np.array([0.8, floor_y, 0.0]))
     toaster = staffage_motion(casts["toaster"], unit=unit, rate=TOASTER_RATE,
-                             anchor=np.array([0.8, floor_y + staffage_height("cooling-heating-comparison-table") * unit, 0.0]))
+                             anchor=np.array([0.8, floor_y + staffage_height(casts["table"]) * unit, 0.0]))
     kitchen = VGroup(table, toaster)
 
     desk_top = mid_y + DESK_SURFACE_M * unit

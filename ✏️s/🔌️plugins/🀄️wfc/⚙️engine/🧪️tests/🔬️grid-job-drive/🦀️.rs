@@ -2,13 +2,13 @@
 //! overlapping-extraction model, proving the un-gated grid/extract modules are reachable from the
 //! same production job the graph artifacts use.
 
-use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, InteractiveJob, JobOutcomeBorrow, Operation, RetainedCloneProgress, RevisionId, StepBudget, StepContext};
+use semio_framework_job::{allocate_operation_id, Generation, JobOutcomeBorrow, Operation, RevisionId};
 
 use crate::extract::{extract_2d, Extract2dConfig, Sample2d};
 use crate::grid2d::{declare_stencil_relations, declare_stencil_relations_tiled, Boundary, Grid2dTopology, Stencil2d};
 use crate::grid3d::{declare_stencil_relations_3d_tiled, Grid3dTopology, Stencil3d};
 use crate::ids::{PatternId, RelationId, TileId};
-use crate::job::{close_job, WfcCommit, WfcJob, WfcJobConfig, HEADLESS_GRANT};
+use crate::job::{WfcCommit, WfcJob, WfcJobConfig};
 use crate::model::{CompiledModel, ModelBuilder};
 use crate::symmetry::SymmetryGroup2d;
 use crate::tiled::TiledModelBuilder;
@@ -22,25 +22,22 @@ fn operation(seed: u64) -> Operation {
 
 /// 🧵️ Steps the job to its terminal outcome, then closes it through its own quoted ladder the way a worker session does.
 fn solve<T: Topology + Clone + Send>(job: &mut WfcJob<T>, operation: Operation, fuel: u64) -> WfcCommit {
-    let mut sequence = operation.preview_sequence;
+    let mut driver = semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::new(operation.operation, operation.generation);
     let mut terminal = None;
     for _ in 0..STEP_LIMIT {
-        let mut receipt = RetainedCloneProgress::default();
-        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut receipt);
-        let ended = match job.step(&mut context).expect("wfc step admission") {
+        let ended = driver.step(job, fuel, |outcome| match outcome {
             Some(JobOutcomeBorrow::Complete { .. }) => Some(true),
             Some(JobOutcomeBorrow::Fault { .. } | JobOutcomeBorrow::Cancelled { .. }) => Some(false),
             _ => None,
-        };
+        });
         if let Some(complete) = ended {
             assert!(complete, "WFC job ended without a commit");
             terminal = job.commit();
             break;
         }
     }
-    let commit = terminal.expect("WFC job did not complete");
-    close_job(job);
-    commit
+    driver.close(job);
+    terminal.expect("WFC job did not complete")
 }
 
 /// 🀄️ Two tiles that may never sit next to their own kind — a checkerboard on any stencil.

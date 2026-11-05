@@ -361,6 +361,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         }
         let mut app = app;
         semio_plugin_decl_registry::declarations::stamp_fault_notices::<A>(&mut app.definition);
+        semio_plugin_decl_registry::declarations::stamp_app_contracts::<A>(&mut app.definition);
         let definition = app.definition.clone();
         self.document_app_ids.push(definition.id.clone());
         self.app_defs.push((app, semio_plugin_decl_registry::plugin_program::AppFactory { definition:definition.into(),registration:None,original_factory:None, create: Some(factory::<A, PA>), document_schema: A::DOCUMENT_SCHEMA, codec: semio_plugin_decl_surface::artifact_codec_table::<A>() }));
@@ -434,6 +435,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
         }
         semio_plugin_decl_registry::declarations::stamp_fault_notices::<semio_plugin_decl_surface::ViewerApp<V>>(&mut def);
+        semio_plugin_decl_registry::declarations::stamp_app_contracts::<semio_plugin_decl_surface::ViewerApp<V>>(&mut def);
         let app = App { definition: def.clone(), examples: Vec::new() };
         self.app_defs.push((app, semio_plugin_decl_registry::plugin_program::AppFactory { definition: def.into(),registration:None,original_factory:None, create: Some(factory::<V, PA>), document_schema: V::DOCUMENT_SCHEMA, codec: semio_plugin_decl_surface::artifact_codec_table::<semio_plugin_decl_surface::ViewerApp<V>>() }));
         self.app_schema_descriptors.push(app_schema::<V>);
@@ -503,6 +505,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             semio_plugin_decl_app::mount_natural_file_actions(&mut def, codec);
         }
         semio_plugin_decl_registry::declarations::stamp_fault_notices::<semio_plugin_decl_surface::EditorApp<E>>(&mut def);
+        semio_plugin_decl_registry::declarations::stamp_app_contracts::<semio_plugin_decl_surface::EditorApp<E>>(&mut def);
         let app = App { definition: def.clone(), examples };
         self.app_defs.push((app, semio_plugin_decl_registry::plugin_program::AppFactory { definition: def.into(),registration:None,original_factory:None, create: Some(factory::<E, PA>), document_schema: E::DOCUMENT_SCHEMA, codec: semio_plugin_decl_surface::artifact_codec_table::<semio_plugin_decl_surface::EditorApp<E>>() }));
         self.app_schema_descriptors.push(app_schema::<E>);

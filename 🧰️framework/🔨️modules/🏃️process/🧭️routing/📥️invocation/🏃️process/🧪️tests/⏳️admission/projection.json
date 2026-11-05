@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "parentMilliseconds": 600,
+  "narrowMilliseconds": 300,
+  "childMilliseconds": 200,
+  "waitMilliseconds": 750,
+  "activeMilliseconds": 50,
+  "toleranceMilliseconds": 40,
+  "model": [
+    {
+      "wall": 600,
+      "monotonic": 500,
+      "wait": 750,
+      "expected": 1250
+    },
+    {
+      "wall": -100,
+      "monotonic": -100,
+      "wait": 750,
+      "expected": 650
+    },
+    {
+      "wall": 900,
+      "monotonic": 400,
+      "wait": 0,
+      "expected": 400
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "width": 2,
+  "height": 2,
+  "paletteSize": 2,
+  "cases": [
+    { "id": "complete-unordered", "pins": [[1,1,0],[0,1,1],[1,0,1],[0,0,0]], "indices": [0,1,1,0] },
+    { "id": "partial", "pins": [[0,0,0],[1,0,1],[0,1,1]], "indices": null },
+    { "id": "duplicate", "pins": [[0,0,0],[1,0,1],[0,1,1],[0,0,0]], "indices": null },
+    { "id": "outside", "pins": [[0,0,0],[1,0,1],[0,1,1],[2,1,0]], "indices": null },
+    { "id": "unknown-color", "pins": [[0,0,0],[1,0,1],[0,1,1],[1,1,2]], "indices": null }
+  ]
+}

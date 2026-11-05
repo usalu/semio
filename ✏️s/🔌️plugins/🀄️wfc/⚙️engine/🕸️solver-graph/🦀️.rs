@@ -11,9 +11,13 @@ use crate::model::CompiledModel;
 use crate::outcome::{Solution, SolveOutcome};
 use crate::parallel;
 use crate::repair;
-use crate::search::{self, CancelToken, SearchConfig};
+use crate::search::{self, CancelToken, SearchConfig,SearchResult};
 use crate::topology::GraphTopology;
 use crate::trail::Checkpoint;
+
+/// 🧳️ Distinguishes invalid checkpoint data from an original-source search still owning work.
+#[derive(Debug)]
+pub enum ResumeFailure { Checkpoint(SolveError),Search(search::SearchFailure<GraphTopology>) }
 
 // #region 🔖️Builder
 /// 🏗️ Builds a [`GraphSolver`] from a compiled model and a fixed graph topology.
@@ -90,16 +94,16 @@ impl GraphSolver {
         }
     }
 
-    pub fn solve(&mut self, seed: u64) -> SolveOutcome {
+    pub fn solve(&mut self, seed: u64) -> SearchResult<GraphTopology> {
         match self.constraint_set() {
-            Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed, None, &cs),
+            Some(cs) => Ok(search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed, None, &cs)),
             None => search::solve(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed),
         }
     }
 
-    pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
+    pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SearchResult<GraphTopology> {
         match self.constraint_set() {
-            Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed, Some(cancel), &cs),
+            Some(cs) => Ok(search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed, Some(cancel), &cs)),
             None => search::solve_cancellable(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed, cancel),
         }
     }
@@ -115,14 +119,14 @@ impl GraphSolver {
 
     /// 🕸️ Resumes from a [`Checkpoint`] taken from this same model (fingerprint-checked). See
     /// [`Checkpoint`]'s docs for the resumability fidelity this provides.
-    pub fn resume(&mut self, checkpoint: &Checkpoint) -> Result<SolveOutcome, SolveError> {
+    pub fn resume(&mut self, checkpoint: &Checkpoint) -> Result<SolveOutcome, ResumeFailure> {
         if checkpoint.model_fingerprint != self.model.fingerprint() {
-            return Err(SolveError::CorruptCheckpoint { reason: "model fingerprint mismatch" });
+            return Err(ResumeFailure::Checkpoint(SolveError::CorruptCheckpoint { reason: "model fingerprint mismatch" }));
         }
         if checkpoint.domains.len() != self.topology.node_count() {
-            return Err(SolveError::CorruptCheckpoint { reason: "domain count does not match topology node count" });
+            return Err(ResumeFailure::Checkpoint(SolveError::CorruptCheckpoint { reason: "domain count does not match topology node count" }));
         }
-        Ok(search::solve(&self.model, &self.topology, &self.config, checkpoint.seed, Some(&checkpoint.domains), &[]))
+        search::solve(&self.model, &self.topology, &self.config, checkpoint.seed, Some(&checkpoint.domains), &[]).map_err(ResumeFailure::Search)
     }
 
     pub fn model(&self) -> &CompiledModel {
@@ -137,7 +141,7 @@ impl GraphSolver {
     /// other node to its value in `previous_assignment` (typically a prior `Solved` outcome's
     /// assignment). See [`crate::repair`]'s module docs for the exact contract — a returned
     /// `Unsatisfiable` means no fix exists at this radius, not that the whole model is unsat.
-    pub fn repair(&self, previous_assignment: &[PatternId], centers: &[NodeId], radius: usize, seed: u64) -> SolveOutcome {
+    pub fn repair(&self, previous_assignment: &[PatternId], centers: &[NodeId], radius: usize, seed: u64) -> SearchResult<GraphTopology> {
         repair::repair_region(&self.model, &self.topology, &self.adjacency, previous_assignment, centers, radius, &self.config, seed)
     }
 
@@ -152,7 +156,7 @@ impl GraphSolver {
     /// from `base_seed`, and deterministically reduces them — see
     /// [`crate::parallel::multi_start`]'s docs for the exact reduction rule. Ignores constraints
     /// (like `solve`/`solve_all` without constraints attached); ignores soft scoring.
-    pub fn solve_multi_start(&self, base_seed: u64, attempts: usize) -> SolveOutcome {
+    pub fn solve_multi_start(&self, base_seed: u64, attempts: usize) -> SearchResult<GraphTopology> {
         parallel::multi_start(&self.model, &self.topology, &self.config, base_seed, self.init_domains.as_deref(), &self.fixed, attempts)
     }
 }

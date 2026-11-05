@@ -434,7 +434,7 @@ impl ReconstructionRunJob {
                 cx.consume_fuel(1);
                 Ok(None)
             }
-            Owed::Complete => JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from),
+            Owed::Complete => JobOutcomeBorrow::admit_complete(cx, None, None),
             Owed::Fault => {
                 self.outbox.begin(JobPublicationKind::Fault, Vec::new());
                 cx.consume_fuel(1);
@@ -448,7 +448,7 @@ impl ReconstructionRunJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
     fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.closing || cx.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from).map_err(semio_framework_job::OriginalTurnFailure::from);
+            return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         match self.outbox.phase(cx)? {
             OutboxPhase::Building => return self.outbox.advance(cx),

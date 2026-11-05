@@ -21,7 +21,7 @@ pub(super) struct InterchangePreparation {
     pub(super) phase: InterchangePhase,
     pub(super) cursor: usize,
     accumulated_normals: Vec<[f64; 3]>,
-    pub(super) mesh_data: semio_framework::MeshData,
+    pub(super) mesh_data: semio_framework_mesh_engine::MeshData,
     texture_png: Option<BoundedTexturePngPreparation>,
 }
 
@@ -31,7 +31,7 @@ impl InterchangePreparation {
             phase: InterchangePhase::AllocateNormals,
             cursor: 0,
             accumulated_normals: Vec::with_capacity(mesh.positions.len()),
-            mesh_data: semio_framework::MeshData { positions: Vec::with_capacity(mesh.positions.len() * 3), normals: Vec::with_capacity(mesh.positions.len() * 3), indices: Vec::with_capacity(mesh.triangles.len() * 3), ..Default::default() },
+            mesh_data: semio_framework_mesh_engine::MeshData { positions: Vec::with_capacity(mesh.positions.len() * 3), normals: Vec::with_capacity(mesh.positions.len() * 3), indices: Vec::with_capacity(mesh.triangles.len() * 3), ..Default::default() },
             texture_png: None,
         }
     }

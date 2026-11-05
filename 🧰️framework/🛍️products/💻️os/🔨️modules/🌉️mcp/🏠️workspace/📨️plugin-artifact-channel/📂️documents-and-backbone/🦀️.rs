@@ -9,25 +9,25 @@ impl PluginArtifactChannel {
         self.pending_command_closes.terminal_is_empty()
     }
 
-    pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
+    pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Result<Self, GatewayError> {
         let wasm_path = resolve_plugin_wasm_path(&repo_root, &entry)?;
         let runtime = shared_plugin_runtime()?;
         let compiled = scoped_compiled_component(runtime.as_ref(), &entry.plugin_id, ComponentBytes::File(&wasm_path), &ActivationScope::detached())?;
-        Ok(Self::from_compiled(runtime, compiled, entry.plugin_id, descriptor, app_ref, actor_label, host_driver_policy))
+        Ok(Self::from_compiled(runtime, compiled, entry.plugin_id, descriptor, app_ref, actor_label, host_driver_policy, operation_policy))
     }
 
     /// 🧩️ Opens a channel over component bytes the caller already holds, whatever their provenance —
     /// a repo build read from disk, or the execution-target component a Hub authorized and served.
     /// Everything past the bytes is identical, which is exactly the point: a hub-bound agent's guest
     /// is the SAME guest a local one gets, not a second code path with its own behaviour.
-    pub fn from_component(bytes: &[u8], plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
+    pub fn from_component(bytes: &[u8], plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Result<Self, GatewayError> {
         let runtime = shared_plugin_runtime()?;
         let compiled = shared_compiled_component(runtime.as_ref(), &plugin_id, bytes)?;
-        Ok(Self::from_compiled(runtime, compiled, plugin_id, descriptor, app_ref, actor_label, host_driver_policy))
+        Ok(Self::from_compiled(runtime, compiled, plugin_id, descriptor, app_ref, actor_label, host_driver_policy, operation_policy))
     }
 
     /// 🧩️ A channel over a component this process already compiled — see [`scoped_compiled_component`].
-    pub fn from_compiled(runtime: Arc<GuestRuntimes>, compiled: semio_plugin_host::CompiledHandle, plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Self {
+    pub fn from_compiled(runtime: Arc<GuestRuntimes>, compiled: semio_plugin_host::CompiledHandle, plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Self {
         Self {
             runtime,
             compiled,
@@ -36,8 +36,14 @@ impl PluginArtifactChannel {
             app_ref,
             actor_label,
             host_driver_policy,
-            host_driver:Arc::new(semio_plugin_host::GuestRelayWakeDriver::new(host_driver_policy,semio_framework_job::default_now_us,Box::new(||false)).expect("headless wake driver admission")),
+            operation_policy,
+            startup_custody:None,
+            startup_instance_custody:None,
+            startup_failure:None,
+            operation_refusal:None,
+            host_driver:Arc::new(semio_framework_plugin_host::GuestRelayWakeDriver::new(host_driver_policy,semio_framework_job::default_now_us,Box::new(||false)).expect("headless wake driver admission")),
             instances: HashMap::new(),
+            closing_instances:std::collections::BTreeSet::new(),
             pending_exchanges: PendingExchangeRegistry::new(),
             pending_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
             rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
@@ -138,14 +144,21 @@ impl PluginArtifactChannel {
     /// 🔀️ A guest that holds ANOTHER artifact (its app's session document moved to a document the agent opened since,
     /// [`route_session_artifact`]) is thrown away first: a guest is only ever seeded fresh, never while its backbone is
     /// bound to a different document.
-    pub fn load_session_document(&mut self, instance: u32, artifact_id: &str, pack: &[u8], spr: &[u8], scope: &ActivationScope) -> Result<(), Fault> {
+    pub fn load_session_document(&mut self, instance: u32, artifact_id: &str, pack: &[u8], spr: &[u8], archive: Option<&[u8]>, scope: &ActivationScope) -> Result<(), Fault> {
         match self.session_documents.get(&instance) {
             Some(loaded) if loaded == artifact_id => return Ok(()),
             Some(_) => self.discard_instance(instance),
             None => {}
         }
         self.ensure_instance_scoped(instance, scope)?;
-        self.load_document_archive(instance, pack, spr, scope)?;
+        match archive {
+            Some(bytes) => {
+                let carrier = semio_framework_async::block_on(store::decode_document_archive_bytes(bytes)).map_err(|error| Fault { code: "document.loading".into(), message: error.to_string() })?;
+                if carrier.parent_pack != pack || carrier.parent_spr != spr { return Err(Fault { code: "document.loading".into(), message: "archive root differs from the selected canonical pair".into() }); }
+                self.load_archive_carrier(instance, carrier, scope)?;
+            }
+            None => self.load_document_archive(instance, pack, spr, scope)?,
+        }
         self.session_documents.insert(instance, artifact_id.to_string());
         Ok(())
     }
@@ -165,7 +178,11 @@ impl PluginArtifactChannel {
     ///
     /// ⚠️ A guest fault, terminal or refused, is the guest's own typed fault with its own code (`document.loading`, …).
     pub(crate) fn load_document_archive(&mut self, instance: u32, pack: &[u8], spr: &[u8], scope: &ActivationScope) -> Result<(), Fault> {
-        let mut load = store::DocumentArchiveLoadHost::new(store::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr.to_vec(), members: Vec::new() });
+        self.load_archive_carrier(instance, store::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr.to_vec(), members: Vec::new() }, scope)
+    }
+
+    fn load_archive_carrier(&mut self, instance: u32, carrier: store::DocumentArchivePack, scope: &ActivationScope) -> Result<(), Fault> {
+        let mut load = store::DocumentArchiveLoadHost::new(carrier);
         let deadline = std::time::Instant::now() + DOCUMENT_LOAD_WALL_BUDGET;
         let mut stopped: Option<Fault> = None;
         loop {

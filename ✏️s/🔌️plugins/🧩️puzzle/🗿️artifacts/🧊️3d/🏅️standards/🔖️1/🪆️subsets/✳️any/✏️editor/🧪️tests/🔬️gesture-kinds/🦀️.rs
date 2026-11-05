@@ -9,11 +9,11 @@ use {semio_s_artifact_puzzle_3d_mutations_object::change_object_hidden::mutation
 #[cfg(test)] use semio_s_artifact_puzzle_3d_commands_document::add_target_volume;
 
 fn vortex(id: &str) -> Puzzle3dVortex {
-    Puzzle3dVortex { id: id.into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }
+    Puzzle3dVortex { label: None, id: id.into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }
 }
 
 fn object(id: &str, origin: [f64; 3]) -> Puzzle3dObject {
-    Puzzle3dObject { id: id.into(), label: None, object_kind: Some("Object".into()), origin, orientation: None, scale: None, mesh_url: None, vortices: vec![vortex("v0")], hidden: false, locked: false }
+    Puzzle3dObject { anchor: Default::default(), id: id.into(), label: None, object_kind: Some("Object".into()), origin, orientation: None, scale: None, mesh_url: None, vortices: vec![vortex("v0")], hidden: false, locked: false }
 }
 
 fn base() -> Puzzle3dSnapshot {
@@ -127,7 +127,7 @@ fn a_paste_gesture_is_one_create_object_per_clone_with_a_fresh_id() {
 #[test]
 fn a_duplicate_clone_is_a_create_object_and_a_painted_volume_is_a_create_target_volume() {
     let before = base();
-    let clone = create_object(semio_s_artifact_puzzle_3d_model::Puzzle3dObject { id: "a-copy".into(), origin: [0.5, 0.5, 0.0], ..before.objects[0].clone() }, None);
+    let clone = create_object(semio_s_artifact_puzzle_3d_model::Puzzle3dObject { anchor: Default::default(), id: "a-copy".into(), origin: [0.5, 0.5, 0.0], ..before.objects[0].clone() }, None);
     let volume = add_target_volume::add_target_volume_mutation([1.1, 2.0, 2.9], 1.0, [2, 2, 2]);
     let (after, restored) = replay(&before, &[clone, volume]);
     assert_eq!(after.objects.len(), 4);

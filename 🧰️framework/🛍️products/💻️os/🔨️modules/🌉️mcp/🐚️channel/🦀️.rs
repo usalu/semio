@@ -38,7 +38,7 @@ use semio_os_mcp_bridge_codec::bridge::{BridgeInstanceRef, GatewayToShell};
 use semio_os_mcp_catalog::catalog::{CapabilityOwner, Catalog};
 use semio_os_mcp_foundation::base64_codec::{BASE64_ALPHABET, encode_base64};
 use semio_os_mcp_foundation::reports::RevisionStamp;
-use semio_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, MutationOrigin, PreparedOps};
+use semio_os_mcp_port::channel_port::{ActivationScope, ActionTarget, AppCommand, AppFrame, ArtifactChannel, Fault, MutationOrigin, PreparedOps};
 use semio_os_mcp_port::policy::AgentPrincipal;
 
 //#region 🔖️Base64
@@ -102,7 +102,7 @@ pub fn encode_app_command(command: &AppCommand) -> serde_json::Value {
     let body = match command {
         AppCommand::ReadHistory => serde_json::json!({ "kind": "readHistory" }),
         AppCommand::ReadArtifact => serde_json::json!({ "kind": "readArtifact" }),
-        AppCommand::PureCommand { capability_id, input } => serde_json::json!({ "kind": "pureCommand", "capabilityId": capability_id, "input": input }),
+        AppCommand::PureCommand { capability_id, input, view_state } => serde_json::json!({ "kind": "pureCommand", "capabilityId": capability_id, "input": input, "context": view_state }),
         AppCommand::TransactionPrepare { txn_id, ops, origin } => {
             let MutationOrigin::Agent { principal, invocation_id } = origin;
             serde_json::json!({
@@ -165,10 +165,10 @@ pub fn decode_app_frame(value: &serde_json::Value) -> Result<AppFrame, String> {
         "emit" => {
             let ops = value.get("ops").ok_or_else(|| "emit payload has no `ops`".to_string())?;
             let warnings = value.get("warnings").and_then(serde_json::Value::as_array).map(|entries| entries.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect()).unwrap_or_default();
-            Ok(AppFrame::Emit { ops: PreparedOps { document: decode_lane(ops.get("document"))?, config: decode_lane(ops.get("config"))?, draft: decode_lane(ops.get("draft"))?, children: Vec::new() }, warnings })
+            Ok(AppFrame::Emit { ops: PreparedOps { document: decode_lane(ops.get("document"))?, config: decode_lane(ops.get("config"))?, draft: decode_lane(ops.get("draft"))?, children: Vec::new() }, warnings, output: value.get("output").cloned() })
         }
         "transactionPrepared" => Ok(AppFrame::TransactionPrepared { txn_id: field_str(value, "txnId")? }),
-        "transactionCommitted" => Ok(AppFrame::TransactionCommitted { txn_id: field_str(value, "txnId")?, edit_id: field_str(value, "editId")?, relay: None }),
+        "transactionCommitted" => Ok(AppFrame::TransactionCommitted { txn_id: field_str(value, "txnId")?, edit_id: field_str(value, "editId")?, relay: None, output: value.get("output").cloned() }),
         "transactionRolledBack" => Ok(AppFrame::TransactionRolledBack { txn_id: field_str(value, "txnId")? }),
         "transactionUndone" => Ok(AppFrame::TransactionUndone { group_id: field_str(value, "groupId")? }),
         "transactionRedone" => Ok(AppFrame::TransactionRedone { group_id: field_str(value, "groupId")? }),
@@ -299,6 +299,7 @@ pub struct ShellArtifactChannel {
     /// refused outright as soon as the shell had more than one program open — measured inside `s`
     /// with a spawned editor: `the attached shell has 3 open instances` (ticket 26/09/18 S6 §5.4).
     plugin: Option<String>,
+    targets: Mutex<HashMap<u32, ActionTarget>>,
     timeout: Duration,
     instance_wait: Duration,
 }
@@ -312,7 +313,7 @@ enum InstanceResolution {
 
 impl ShellArtifactChannel {
     pub fn new(binding: Arc<SessionChannelBinding>, catalog: Arc<Catalog>) -> Self {
-        Self { binding, catalog, bound: Mutex::new(HashMap::new()), plugin: None, timeout: Duration::from_millis(SHELL_APP_COMMAND_TIMEOUT_MS), instance_wait: Duration::from_millis(SHELL_INSTANCE_WAIT_MS) }
+        Self { binding, catalog, bound: Mutex::new(HashMap::new()), plugin: None, targets: Mutex::new(HashMap::new()), timeout: Duration::from_millis(SHELL_APP_COMMAND_TIMEOUT_MS), instance_wait: Duration::from_millis(SHELL_INSTANCE_WAIT_MS) }
     }
 
     /// 🎯️ Pins the plugin whose artifact this channel drives, so a capability-less command resolves
@@ -383,11 +384,33 @@ impl ShellArtifactChannel {
         if entries.is_empty() {
             return InstanceResolution::Pending(fault("plugin.unavailable", format!("the attached shell has published no open plugin instances within {waited}ms — open an artifact in the shell before driving it from an agent")));
         }
+        if let Some(existing) = self.bound.lock().expect("shell channel instance binding lock poisoned").get(&instance).cloned() {
+            let target = self.targets.lock().expect("shell target lock poisoned").get(&instance).cloned();
+            let entry = entries.iter().find(|entry| entry.instance_id == existing).filter(|entry| {
+                Self::capability_of(command).is_none_or(|capability_id| self.catalog.get(capability_id).is_some_and(|capability| match &capability.owner {
+                    CapabilityOwner::Plugin { plugin_id, app_id, .. } => &entry.plugin_id == plugin_id && app_id.as_ref().is_none_or(|app| &entry.app_id == app),
+                    _ => false,
+                }))
+            });
+            if let Some(entry) = entry.filter(|entry| target.as_ref().is_none_or(|target|
+                target.plugin_id.as_ref().is_none_or(|id| &entry.plugin_id == id)
+                && target.app_id.as_ref().is_none_or(|id| &entry.app_id == id)
+                && target.artifact_ref.as_ref().is_none_or(|id| &entry.artifact_ref == id)
+                && target.window_id.as_ref().is_none_or(|id| entry.window_ids.contains(id)))) {
+                return InstanceResolution::Bound(entry.instance_id.clone());
+            }
+            return InstanceResolution::Refused(fault("plugin.unavailable", "the bound target disappeared or changed ownership; prepare a new action"));
+        }
         if let Some(capability_id) = Self::capability_of(command) {
             if let Some(plugin_id) = self.owning_plugin(capability_id) {
-                if let Some(entry) = entries.iter().find(|entry| entry.plugin_id == plugin_id) {
-                    self.bound.lock().expect("shell channel instance binding lock poisoned").insert(instance, entry.instance_id.clone());
-                    return InstanceResolution::Bound(entry.instance_id.clone());
+                let app_id = self.catalog.get(capability_id).and_then(|capability| match &capability.owner { CapabilityOwner::Plugin { app_id, .. } => app_id.as_deref(), _ => None });
+                let owned: Vec<_> = entries.iter().filter(|entry| entry.plugin_id == plugin_id && app_id.is_none_or(|id| entry.app_id == id)).collect();
+                if owned.len() == 1 {
+                    self.bound.lock().expect("shell channel instance binding lock poisoned").insert(instance, owned[0].instance_id.clone());
+                    return InstanceResolution::Bound(owned[0].instance_id.clone());
+                }
+                if owned.len() > 1 {
+                    return InstanceResolution::Refused(fault("plugin.unavailable", "capability has multiple live instances; supply an explicit target"));
                 }
                 return InstanceResolution::Pending(fault(
                     "plugin.unavailable",
@@ -468,6 +491,39 @@ impl ShellArtifactChannel {
 }
 
 impl ArtifactChannel for ShellArtifactChannel {
+    fn select_target(&mut self, instance: u32, capability_id: &str, target: &ActionTarget) -> Result<ActionTarget, Fault> {
+        let capability = self.catalog.get(capability_id).ok_or_else(|| fault("capability.not-found", "unknown target capability"))?;
+        let CapabilityOwner::Plugin { plugin_id, app_id, .. } = &capability.owner else {
+            return Err(fault("plugin.unavailable", "target capability has no plugin owner"));
+        };
+        if target.plugin_id.as_ref().is_some_and(|id| id != plugin_id) || target.app_id.as_ref().is_some_and(|id| app_id.as_ref().is_some_and(|owner| owner != id)) {
+            return Err(fault("capability-denied", "target plugin/app does not own this capability"));
+        }
+        let (handle, connection) = self.binding.relay_connection().ok_or_else(|| fault("plugin.unavailable", "target shell is disconnected"))?;
+        let entries = handle.last_instances(connection).unwrap_or_default();
+        let candidates: Vec<_> = entries.iter().filter(|entry|
+            entry.plugin_id == *plugin_id
+            && app_id.as_ref().is_none_or(|id| &entry.app_id == id)
+            && target.instance_id.as_ref().is_none_or(|id| &entry.instance_id == id)
+            && target.plugin_id.as_ref().is_none_or(|id| &entry.plugin_id == id)
+            && target.app_id.as_ref().is_none_or(|id| &entry.app_id == id)
+            && target.artifact_ref.as_ref().is_none_or(|id| &entry.artifact_ref == id)
+            && target.window_id.as_ref().is_none_or(|id| entry.window_ids.contains(id))
+        ).collect();
+        if candidates.len() != 1 {
+            return Err(fault("plugin.unavailable", format!("target resolves to {} live instances; exactly one is required", candidates.len())));
+        }
+        let selected = candidates[0].instance_id.clone();
+        let mut bound = self.bound.lock().expect("shell channel instance binding lock poisoned");
+        if bound.get(&instance).is_some_and(|existing| existing != &selected) {
+            return Err(fault("capability-denied", "a prepared target cannot be rebound to another live instance"));
+        }
+        bound.insert(instance, selected.clone());
+        let resolved = ActionTarget { instance_id: Some(selected), plugin_id: Some(candidates[0].plugin_id.clone()), app_id: Some(candidates[0].app_id.clone()), artifact_ref: Some(candidates[0].artifact_ref.clone()), window_id: target.window_id.clone(), mode_id: target.mode_id.clone() };
+        self.targets.lock().expect("shell target lock poisoned").insert(instance, resolved.clone());
+        Ok(resolved)
+    }
+
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         if commands.len() != 1 {
             return Err(fault("channel.not-wired", format!("the shell route sends exactly one command per exchange, received {}", commands.len())));

@@ -149,8 +149,8 @@ impl ActiveMediaExport {
 #[doc(hidden)]
 pub struct MediaDownloadPreparation{
  pub operation_id:u64,pub source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation,usize),
- pub document_identity:(usize,usize),pub mime_identity:(usize,usize),pub chunks_identity:usize,pub coordinates:(u32,semio_framework_job::RevisionId,semio_framework_job::Generation),
- pub buffers:std::mem::ManuallyDrop<Option<[Vec<u8>;2]>>,pub buffers_close:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<[Vec<u8>;2]>>>,pub stage:usize,
+ pub document_identity:(usize,usize),pub mime_identity:(usize,usize),pub schema_identity:(usize,usize),pub port_identity:(usize,usize),pub chunks_identity:usize,pub coordinates:(u32,semio_framework_job::RevisionId,semio_framework_job::Generation),
+ pub buffers:std::mem::ManuallyDrop<Option<[Vec<u8>;4]>>,pub buffers_close:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<[Vec<u8>;4]>>>,pub stage:usize,
  pub handle:std::mem::ManuallyDrop<Option<ArtifactMediaExportHandle>>,pub handle_close:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactMediaExportHandle>>>,
  pub output:std::mem::ManuallyDrop<Option<semio_plugin_decl_media::ArtifactDownloadOutput>>,pub output_close:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin_decl_media::ArtifactDownloadOutput>>>,pub published:bool,
 }

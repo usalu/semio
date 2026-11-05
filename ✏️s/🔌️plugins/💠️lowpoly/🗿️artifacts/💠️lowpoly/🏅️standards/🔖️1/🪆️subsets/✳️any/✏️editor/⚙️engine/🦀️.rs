@@ -55,7 +55,7 @@ impl LowpolyDocument {
         let next_object_serial = snapshot.objects.iter().filter_map(|object| object.id.strip_prefix("obj-")?.parse::<u32>().ok()).max().unwrap_or(100);
         let mut doc = Self { snapshot, active_object_id, selection, meshes: Vec::new(), dirty: Vec::new(), next_object_serial, mesh_workspace };
         doc.reload_meshes()?;
-        doc.ensure_all_paint_buffers();
+        doc.ensure_all_paint_buffers()?;
         Ok(doc)
     }
     /// 🗺️ `sync_meshes_to_snapshot`/`add_primitive` — callers merge this back into their own session
@@ -80,17 +80,19 @@ impl LowpolyDocument {
         &self.selection
     }
 
-    pub fn ensure_all_paint_buffers(&mut self) {
+    pub fn ensure_all_paint_buffers(&mut self) -> Result<(),LowpolyCoreError> {
+        for object in &self.snapshot.objects { for layer in &object.paint_layers { layer.validate_pixels()?; } }
         for object in &mut self.snapshot.objects {
             if object.paint_layers.is_empty() {
                 object.paint_layers.push(LowpolyPaintLayer::new("Base"));
             }
             for layer in &mut object.paint_layers {
-                if layer.pixels.len() != LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4 {
+                if layer.pixels.is_empty() {
                     layer.pixels = semio_s_artifact_lowpoly_lowpoly_model::snapshot::empty_paint_pixels();
                 }
             }
         }
+        Ok(())
     }
 
     pub fn layer_pixels(&self, object_id: &str, layer_index: usize) -> Result<&[u8], LowpolyCoreError> {
@@ -347,6 +349,8 @@ impl LowpolyDocument {
 
     pub fn ensure_paint_layer(&mut self, object_id: &str, layer_index: usize) -> Result<(), LowpolyCoreError> {
         let idx = self.object_index(object_id)?;
+        for layer in &self.snapshot.objects[idx].paint_layers { layer.validate_pixels()?; }
+        if self.snapshot.objects[idx].paint_layers.is_empty() && layer_index>0 { return Err(LowpolyCoreError::LayerIndexOutOfRange); }
         if self.snapshot.objects[idx].paint_layers.is_empty() {
             self.snapshot.objects[idx].paint_layers.push(LowpolyPaintLayer::new("Base"));
         }
@@ -404,26 +408,26 @@ impl LowpolyDocument {
 
     pub fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, LowpolyCoreError> {
         let idx = self.object_index(object_id)?;
-        Ok(semio_s_artifact_lowpoly_lowpoly_model::composite_layer_pixels(&self.snapshot.objects[idx].paint_layers))
+        Ok(semio_s_artifact_lowpoly_lowpoly_model::composite_layer_pixels(&self.snapshot.objects[idx].paint_layers)?)
     }
 
     /// 🖌️ Stamps a soft brush (or eraser) into a layer's pixel buffer in place.
     #[allow(clippy::too_many_arguments, reason = "1:1 forwarder for stamp_brush's own justified 8 args plus object_id/layer_index; a params struct would only move the same fields around for this single call site")]
     pub fn paint_stroke(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) -> Result<(), LowpolyCoreError> {
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
-        semio_s_artifact_lowpoly_lowpoly_model::stamp_brush(layer_pixels, u, v, radius, color, hardness, opacity, eraser);
+        semio_s_artifact_lowpoly_lowpoly_model::stamp_brush(layer_pixels, u, v, radius, color, hardness, opacity, eraser)?;
         Ok(())
     }
 
     pub fn fill_bucket(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, color: [u8; 4]) -> Result<(), LowpolyCoreError> {
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
-        semio_s_artifact_lowpoly_lowpoly_model::flood_fill(layer_pixels, u, v, color);
+        semio_s_artifact_lowpoly_lowpoly_model::flood_fill(layer_pixels, u, v, color)?;
         Ok(())
     }
 
     pub fn sample_pixel(&self, object_id: &str, u: f32, v: f32) -> Result<[u8; 4], LowpolyCoreError> {
         let composite = self.composite_layers(object_id)?;
-        Ok(semio_s_artifact_lowpoly_lowpoly_model::sample_pixel_from(&composite, u, v))
+        Ok(semio_s_artifact_lowpoly_lowpoly_model::sample_pixel_from(&composite, u, v)?)
     }
 }
 //#endregion 🔖️ComputeSession

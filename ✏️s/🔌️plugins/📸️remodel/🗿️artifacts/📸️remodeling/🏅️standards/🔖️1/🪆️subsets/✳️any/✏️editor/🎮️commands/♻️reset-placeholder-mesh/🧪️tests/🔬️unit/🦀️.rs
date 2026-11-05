@@ -8,12 +8,11 @@ use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::comman
 use crate::editor::remodeling::unit_tests::context::{app, dispatch};
 use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 use semio_plugin::artifact_app_laws;
-use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{MeshSource, RemodelingSnapshot};
 
-/// 🧩️ `results.mesh.mesh` is a composed CHILD handle now — reads the real vertex count through
-/// `remodeling_mesh_workspace`'s working-scene cache (0 on a cold cache, matching an empty mesh).
+/// 🧩️ Reads the composed mesh from the document's durable content, including after a cold reopen.
 fn mesh_vertex_count(snapshot: &RemodelingSnapshot) -> usize {
-    semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_mesh_workspace(&snapshot.results.mesh.mesh).map_or(0, |mesh| mesh.vertex_count())
+    semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&snapshot.durable_artifacts, &snapshot.results.mesh.mesh).map_or(0, |mesh| mesh.vertex_count())
 }
 
 #[semio_framework_async_macros::async_test]

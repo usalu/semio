@@ -1,10 +1,7 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-const here = dirname(fileURLToPath(import.meta.url));
+import { verifyPickerExamples } from "../../../🧪️tests/🧩️picker/🟦️.ts";
 describe("demo-session", () => {
-  it("ships primary asset", () => {
-    expect(readFileSync(join(here, "../../🖼️assets/🎮️.cmd.semio"), "utf8").length).toBeGreaterThan(8);
+  it("loads every registered picker snapshot through the production codec", () => {
+    expect(verifyPickerExamples().map(example => example.id)).toEqual(["demo", "demo-session", "synthetic-orbit"]);
   });
 });

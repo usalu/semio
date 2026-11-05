@@ -1,0 +1,193 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "maximumWork",
+    "large"
+  ],
+  "properties": {
+    "schema": {
+      "const": "pixels.flood-region/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "width",
+          "height",
+          "palette",
+          "rows",
+          "color",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          },
+          "palette": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "$ref": "#/definitions/colour"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "seed": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "seedUv": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "color": {
+            "$ref": "#/definitions/colour"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reached",
+              "changed",
+              "rows",
+              "runOffsets"
+            ],
+            "properties": {
+              "reached": {
+                "$ref": "#/definitions/indices"
+              },
+              "changed": {
+                "$ref": "#/definitions/indices"
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "runOffsets": {
+                "$ref": "#/definitions/indices"
+              }
+            }
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "seed"
+            ],
+            "not": {
+              "required": [
+                "seedUv"
+              ],
+              "properties": {
+                "seedUv": {}
+              }
+            },
+            "properties": {
+              "seed": {}
+            }
+          },
+          {
+            "required": [
+              "seedUv"
+            ],
+            "not": {
+              "required": [
+                "seed"
+              ],
+              "properties": {
+                "seed": {}
+              }
+            },
+            "properties": {
+              "seedUv": {}
+            }
+          }
+        ]
+      }
+    },
+    "maximumWork": {
+      "const": 3
+    },
+    "large": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "budget",
+        "minimumProgressTurns"
+      ],
+      "properties": {
+        "width": {
+          "const": 256
+        },
+        "height": {
+          "const": 256
+        },
+        "budget": {
+          "const": 256
+        },
+        "minimumProgressTurns": {
+          "const": 256
+        }
+      }
+    }
+  },
+  "definitions": {
+    "colour": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "indices": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uniqueItems": true
+    }
+  }
+}

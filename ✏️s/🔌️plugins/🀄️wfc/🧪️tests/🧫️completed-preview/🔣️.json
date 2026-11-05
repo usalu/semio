@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "id": "partial-observation",
+      "done": false,
+      "discarded": false,
+      "assigned": 0,
+      "traced": 1,
+      "expected": 1,
+      "showDiscard": false
+    },
+    {
+      "id": "partial-discard",
+      "done": false,
+      "discarded": true,
+      "assigned": 0,
+      "traced": 1,
+      "expected": 1,
+      "showDiscard": true
+    },
+    {
+      "id": "completed-observation",
+      "done": true,
+      "discarded": false,
+      "assigned": 0,
+      "traced": 1,
+      "expected": 0,
+      "showDiscard": false
+    },
+    {
+      "id": "completed-discard",
+      "done": true,
+      "discarded": true,
+      "assigned": 0,
+      "traced": 1,
+      "expected": 0,
+      "showDiscard": false
+    }
+  ]
+}

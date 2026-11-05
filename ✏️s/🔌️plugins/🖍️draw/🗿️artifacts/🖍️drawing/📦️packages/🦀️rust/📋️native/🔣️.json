@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "packages": [
+    {
+      "name": "semio-s-artifact-draw-drawing-editor-tool",
+      "manifest": "✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-editor-commands",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-editor-commands-2",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️commands-2/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-editor-commands-tests",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-editor-store-preparation",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-editor",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-editor-interaction",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-editor-interaction-tests",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-editor-tests-2",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🍰️companion-2/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-editor-tests",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-viewer",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-examples",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-write",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-read",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-io",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-scene",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-scene-paint",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-scene-support",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🛟support/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-scene-tests",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-descriptor",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-model",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-diff",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-model-tests",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-mutations",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-geometry",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-style",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/🎨️style/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-style-tests",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-metadata",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/🏷️metadata/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-transform",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/🔀️transform/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-transform-tests",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-structure",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/🧱️structure/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-structure-tests",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing",
+      "manifest": "📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-host",
+      "manifest": "🔨️modules/🏠️host/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-host-tests",
+      "manifest": "🔨️modules/🏠️host/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-host-arena",
+      "manifest": "🔨️modules/🏠️host/🧰️owned/🏟️arena/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-s-artifact-draw-drawing-host-digest",
+      "manifest": "🔨️modules/🏠️host/🧰️owned/🔏️digest/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    }
+  ]
+}

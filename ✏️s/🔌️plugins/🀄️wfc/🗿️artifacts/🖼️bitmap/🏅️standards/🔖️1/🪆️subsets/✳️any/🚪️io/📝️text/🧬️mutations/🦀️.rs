@@ -16,6 +16,9 @@ use crate::schema::mutations::change_palette_color::ChangePaletteColor;
 use crate::schema::mutations::change_seed::ChangeSeed;
 use crate::schema::mutations::paint_input_stroke::{BitmapStrokePoint, PaintInputStroke};
 use crate::schema::mutations::pin_pixel::PinPixel;
+use crate::schema::mutations::pin_solution::PinSolution;
+use crate::schema::mutations::restore_pins::RestorePins;
+use crate::schema::snapshot::BitmapPinnedPixel;
 use crate::schema::mutations::remove_palette_color::RemovePaletteColor;
 use crate::schema::mutations::resize_input::ResizeInput;
 use crate::schema::mutations::resize_output::ResizeOutput;
@@ -79,6 +82,8 @@ pub enum BitmapOperationDsl {
         xs: Vec<u32>,
         ys: Vec<u32>,
     },
+    PinSolution { xs: Vec<u32>, ys: Vec<u32>, colors: Vec<u32> },
+    RestorePins { xs: Vec<u32>, ys: Vec<u32>, colors: Vec<u32> },
 }
 
 pub fn operation_to_dsl(operation: &BitmapMutation) -> BitmapOperationDsl {
@@ -94,6 +99,8 @@ pub fn operation_to_dsl(operation: &BitmapMutation) -> BitmapOperationDsl {
         BitmapMutation::PinPixel(PinPixel { x, y, color }) => BitmapOperationDsl::PinPixel { x: *x, y: *y, color: *color },
         BitmapMutation::UnpinPixel(UnpinPixel { x, y }) => BitmapOperationDsl::UnpinPixel { x: *x, y: *y },
         BitmapMutation::PaintInputStroke(PaintInputStroke { points, color }) => BitmapOperationDsl::PaintInputStroke { color: *color, xs: points.iter().map(|point| point.x).collect(), ys: points.iter().map(|point| point.y).collect() },
+        BitmapMutation::PinSolution(PinSolution { pins }) => BitmapOperationDsl::PinSolution { xs: pins.iter().map(|pin| pin.x).collect(), ys: pins.iter().map(|pin| pin.y).collect(), colors: pins.iter().map(|pin| pin.color).collect() },
+        BitmapMutation::RestorePins(RestorePins { pins }) => BitmapOperationDsl::RestorePins { xs: pins.iter().map(|pin| pin.x).collect(), ys: pins.iter().map(|pin| pin.y).collect(), colors: pins.iter().map(|pin| pin.color).collect() },
     }
 }
 
@@ -110,7 +117,16 @@ pub fn operation_from_dsl(operation: BitmapOperationDsl) -> Result<BitmapMutatio
         BitmapOperationDsl::PinPixel { x, y, color } => BitmapMutation::PinPixel(PinPixel { x, y, color }),
         BitmapOperationDsl::UnpinPixel { x, y } => BitmapMutation::UnpinPixel(UnpinPixel { x, y }),
         BitmapOperationDsl::PaintInputStroke { color, xs, ys } => BitmapMutation::PaintInputStroke(PaintInputStroke { points: xs.into_iter().zip(ys).map(|(x, y)| BitmapStrokePoint { x, y }).collect(), color }),
+        BitmapOperationDsl::PinSolution { xs, ys, colors } => BitmapMutation::PinSolution(PinSolution { pins: pin_rows_from_dsl(xs, ys, colors)? }),
+        BitmapOperationDsl::RestorePins { xs, ys, colors } => BitmapMutation::RestorePins(RestorePins { pins: pin_rows_from_dsl(xs, ys, colors)? }),
     })
+}
+/// 📏️ Parallel wire columns describe exactly one complete list, never a truncated zip.
+fn pin_rows_from_dsl(xs: Vec<u32>, ys: Vec<u32>, colors: Vec<u32>) -> Result<Vec<BitmapPinnedPixel>, semio_framework_value::ValueError> {
+    if xs.len() != ys.len() || xs.len() != colors.len() || xs.len() > 512 * 512 {
+        return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "pin batch columns differ or exceed the schema capacity"));
+    }
+    Ok(xs.into_iter().zip(ys).zip(colors).map(|((x, y), color)| BitmapPinnedPixel { x, y, color }).collect())
 }
 //#endregion 🔖️OpTextMirror
 

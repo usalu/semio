@@ -16,6 +16,7 @@ mod refusal_retirement;
 artifact_retire_leaf!(RetainedCloneGrant);
 artifact_retire_leaf!(RetirementDemand);
 artifact_retire_leaf!(RetainedCloneProgress);
+artifact_retire_leaf!(RetainedCloneStep);
 artifact_retire_leaf!(ValueRefusalKind);
 
 #[cfg(test)]

@@ -2,17 +2,6 @@
 
 use super::*;
 
-//#region 🔖️DslValueBridge
-/// 🌱️ Structural conversion from `semio_framework_value::DslValue` (the in-memory tree
-/// `ToValue`/`FromValue` target onto — see `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/
-/// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/
-/// 📓️serde-replacement-surface.md` §"pack::json::Value ↔ DslValue conversion") into this crate's
-/// own JSON-text-oriented [`Value`] — the two are sibling shapes with no shared type, so a
-/// `Mutation`/`MutationDiff` payload that needs literal JSON **text** (a wire byte string, not
-/// just an in-memory value) walks through here on the way to [`to_string`]/[`parse`].
-/// Maps `semio_framework_value::Number`'s `UInt`/`Int`/`Float` variants onto this crate's own
-/// identically-shaped [`Number`] one-for-one — an integer stays an integer across the bridge
-/// instead of being widened to `f64` and printed back with a spurious `.0`.
 pub fn from_dsl_value(value: &DslValue) -> Value {
     match value {
         DslValue::Null => Value::Null,
@@ -29,8 +18,6 @@ pub fn from_dsl_value(value: &DslValue) -> Value {
     }
 }
 
-/// ⏪️ The reverse of [`from_dsl_value`] — maps numbers variant-for-variant, so an integer stays an
-/// integer across the bridge instead of being widened to `f64` and printed back as `1.0`.
 pub fn to_dsl_value(value: &Value) -> DslValue {
     match value {
         Value::Null => DslValue::Null,
@@ -63,4 +50,3 @@ impl ToValue for Object {
         DslValue::object(self.iter().map(|(key, value)| (key.to_string(), value.to_value())))
     }
 }
-//#endregion 🔖️DslValueBridge

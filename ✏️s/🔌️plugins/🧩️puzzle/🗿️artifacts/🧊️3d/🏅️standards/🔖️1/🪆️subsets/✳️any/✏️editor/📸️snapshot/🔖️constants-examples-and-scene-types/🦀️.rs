@@ -81,6 +81,8 @@ pub fn puzzle3d_interaction_select(granularity: &str, id: &str) -> ActionDescrip
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dVortex {
     pub id: String,
+    #[value(default)]
+    pub label: Option<String>,
     #[value(default, rename = "vortexKind")]
     pub vortex_kind: Option<String>,
     #[value(default)]
@@ -124,6 +126,8 @@ pub struct Puzzle3dReference {
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dObject {
     pub id: String,
+    #[value(default)]
+    pub anchor: semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor,
     #[value(default)]
     pub label: Option<String>,
     #[value(default, rename = "objectKind")]
@@ -186,6 +190,10 @@ pub struct Puzzle3dTargetVolume {
 #[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dAttraction {
+    #[value(default)]
+    pub x: f64,
+    #[value(default)]
+    pub y: f64,
     #[value(default)]
     pub id: String,
     pub attracting: String,

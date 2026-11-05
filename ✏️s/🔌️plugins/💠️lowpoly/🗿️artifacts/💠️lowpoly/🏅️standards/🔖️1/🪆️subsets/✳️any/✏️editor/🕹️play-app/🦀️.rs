@@ -52,11 +52,11 @@ fn lowpoly_render(
     let view = LowpolyView { snapshot: projection, config };
     let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_ARTIFACT).then(|| semio_s_artifact_lowpoly_lowpoly_view::build_doc(projection, config, scratch)).flatten();
     let node = match body_key {
-        LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache, &world_selection),
-        LOWPOLY_PLAY_BODY_UV => paint_mode::windows::uv::render(view, loaded.as_ref(), &texture_cache),
+        LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache, &world_selection, labels),
+        LOWPOLY_PLAY_BODY_UV => paint_mode::windows::uv::render(view, loaded.as_ref(), &texture_cache, labels),
         LOWPOLY_PLAY_BODY_ARTIFACT => match &loaded {
             Some(loaded) => document_panel::render(view, loaded, labels, &semio_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_ARTIFACT)),
-            None => semio_plugin::built_text_node(semio_ui_locale::Label::data("Failed to load lowpoly document"))
+            None => semio_plugin::built_text_node(labels.failed_model.into())
                 .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly document failed-load text admission failed")),
         },
         LOWPOLY_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_CATALOGUE)),
@@ -65,6 +65,19 @@ fn lowpoly_render(
         _ => semio_plugin::built_text_node(semio_ui_locale::Label::data(format!("Unknown body: {body_key}")))
             .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly unknown-body text admission failed")),
     }?;
+    let node = if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) && !doc.operations().is_empty() {
+        use semio_plugin::{Buildable, HasBase, HasChildren};
+        let progress = semio_plugin::app::operation_progress::operation_progress_controls(doc.operations(), semio_s_artifact_lowpoly_lowpoly_kit::lowpoly_controller_id(), view_state.locale)?;
+        semio_ui_contract::column()
+            .try_id(format!("{body_key}.with-progress"))
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly progress container"))?
+            .try_children([progress, node])
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly progress children"))?
+            .try_build()
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly progress build"))?
+    } else {
+        node
+    };
     Ok(semio_plugin::built_to_component_tree(node))
 }
 
@@ -77,6 +90,15 @@ fn lowpoly_render(
 pub struct LowpolyPlayApp;
 
 impl ArtifactEditor for LowpolyPlayApp {
+    fn fault_notices()->&'static [(&'static str,semio_framework_ui_locale::LocalizedLabel)] {
+        static NOTICES:std::sync::LazyLock<[(&str,semio_framework_ui_locale::LocalizedLabel);3]>=std::sync::LazyLock::new(||[("lowpoly.paint.invalid-texture",semio_framework_ui_locale::LocalizedLabel::native("The paint layer must be empty or contain exactly 256 × 256 RGBA pixels.","Die Malebene muss leer sein oder genau 256 × 256 RGBA-Pixel enthalten.")),("lowpoly.snapshot-json.capacity",semio_framework_ui_locale::LocalizedLabel::native("Snapshot JSON must be at most 2 MiB.","Snapshot-JSON darf höchstens 2 MiB groß sein.")),("lowpoly.snapshot-json.invalid",semio_framework_ui_locale::LocalizedLabel::native("The snapshot JSON is invalid.","Das Snapshot-JSON ist ungültig."))]);
+        &*NOTICES
+    }
+    /// 📶️ Live operation controls appear in both editing windows.
+    fn operation_progress_scope() -> semio_framework::kernel::UiDirtyScope {
+        semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![LOWPOLY_PLAY_BODY_MAIN.into(), LOWPOLY_PLAY_BODY_UV.into()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
+    }
+
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![semio_s_artifact_lowpoly_lowpoly_examples::source()]
@@ -152,68 +174,18 @@ impl ArtifactEditor for LowpolyPlayApp {
         Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
-    semio_plugin::bounded_first_step_tool_proofs! {
-        owner: EditorApp<LowpolyPlayApp>,
-        owner_file: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.lowpoly.lowpoly@1/*#editor",
-        artifact_schema: "lowpoly.document",
-        factory: "LowpolyCommandJobFactory",
-        factory_type: LowpolyCommandJobFactory,
-        tools: {
-            "patchObject" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "addPaintLayer" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setActiveObject" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setActivePaintLayer" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setUtilityParam" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "engagementInput" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "toggleShowEdges" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "toggleSun" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setSunAzimuth" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setSunElevation" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setSunIntensity" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setCamera" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "importSnapshotJson" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "replaceSnapshotJson" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "exportMesh" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "loadMeshRequest" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "importMeshFile" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "deleteSelection" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "duplicateObject" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "paintSample" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "extrude" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "inset" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "bevel" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "loopCut" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "subdivide" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "triangulate" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "mirror" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "decimate" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "flipFaces" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "merge" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "dissolve" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "snap" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "toggleSmooth" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "unwrapActive" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "markUvSeam" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "clearSeam" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "engagementSubmit" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "translateSelection" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "rotateSelection" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "scaleSelection" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "paintStroke" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "paintAt" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "canvasPointerDown" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "canvasPointerMove" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "canvasPointerUp" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "paintFill" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "fillBucket" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "addPrimitive" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-        }
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::tool_contract::ArtifactBoundedFirstStepProof> {
+        let proof = |factory, tool, contract| semio_plugin::tool_contract::ArtifactBoundedFirstStepProof::new::<EditorApp<LowpolyPlayApp>>(
+            "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs", "s.lowpoly.lowpoly@1/*#editor", factory, tool, "lowpoly.document", contract);
+        let mut proofs: Vec<_> = LOWPOLY_MIGRATED_TOOL_IDS.iter().map(|tool| proof("LowpolyCommandJobFactory", *tool, lowpoly_contract()).with_factory_type::<EditorApp<LowpolyPlayApp>, LowpolyCommandJobFactory>()).collect();
+        proofs.extend(LOWPOLY_IMPORT_TOOL_IDS.iter().map(|tool| proof("LowpolyImportJobFactory", *tool, lowpoly_import_contract()).with_factory_type::<EditorApp<LowpolyPlayApp>, LowpolyImportJobFactory>()));
+        proofs
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(LowpolyCommandJobFactory::new(&controller))
+        registry.register(LowpolyCommandJobFactory::new(&controller))?;
+        registry.register(LowpolyImportJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
@@ -224,11 +196,20 @@ impl ArtifactEditor for LowpolyPlayApp {
         if original.command.command_id() != original.tool_id {
             return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "lowpoly retained command does not match its exact registered tool").into());
         }
+        let oversized_snapshot_json = match &original.command {
+            LowpolyCommand::ImportSnapshotJson(payload) => payload.json.len() > LOWPOLY_SNAPSHOT_JSON_BYTES,
+            LowpolyCommand::ReplaceSnapshotJson(payload) => payload.json.len() > LOWPOLY_SNAPSHOT_JSON_BYTES,
+            _ => false,
+        };
+        if oversized_snapshot_json {
+            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("lowpoly.snapshot-json.capacity"), "Snapshot JSON exceeds its declared UTF-8 input budget").into());
+        }
         if !lowpoly_command_admitted(&original.command, &original.snapshot, &original.config) {
-            return Err(Fault::from("lowpoly-retained-command-capacity"));
+            return Err(Fault::from("lowpoly-retained-command-capacity").into());
         }
         let tool_id = original.command.command_id();
-        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, LowpolyCommand::command_id, LOWPOLY_RETAINED_RAW_BYTES, LOWPOLY_RETAINED_WORK_ITEMS, false, |request| LowpolyRetainedCommandWork::new(tool_id, disposition, request.operation.operation.0, request.operation.generation.0, request.canonical_base_revision, request.context.identity_digest()))
+        let maximum_raw_bytes = lowpoly_command_maximum_raw_bytes(&original.command);
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, LowpolyCommand::command_id, maximum_raw_bytes, LOWPOLY_RETAINED_WORK_ITEMS, false, |request| LowpolyRetainedCommandWork::new(tool_id, disposition, request.operation.operation.0, request.operation.generation.0, request.canonical_base_revision, request.context.identity_digest()))
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -282,6 +263,10 @@ impl ArtifactEditor for LowpolyPlayApp {
             }
             _ => Err(MediaError::NotImplemented),
         }
+    }
+
+    fn original_action_command_producer() -> Option<&'static dyn semio_framework_plugin::tool_contract::ArtifactOriginalCommandProducerFactory<LowpolyCommand>> {
+        Some(&semio_framework_plugin::tool_contract::OriginalActionCommandBridge::<LowpolyCommand>(<Self as ArtifactEditor>::command_from_action, lowpoly_command_maximum_raw_bytes))
     }
 
     fn command_id(command: &LowpolyCommand) -> &'static str {

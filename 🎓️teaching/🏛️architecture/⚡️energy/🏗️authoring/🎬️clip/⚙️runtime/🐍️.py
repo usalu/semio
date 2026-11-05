@@ -445,13 +445,23 @@ def source_speech_root(script: Path, *, language: str) -> Path:
     return owner.parent / language / owner.name
 
 
+def narration_rows(script: Path, scene_name: str) -> list:
+    """🗣️ Narration rows of one scene, including rows a call such as `_figures([...])` builds when the class is imported."""
+    scene = next(node for node in ast.parse(script.read_text(encoding="utf-8")).body if isinstance(node, ast.ClassDef) and node.name == scene_name)
+    assignment = next(node for node in scene.body if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "NARRATION" for target in node.targets))
+    try:
+        return ast.literal_eval(assignment.value)
+    except ValueError:
+        module = "🎓️teaching." + script.resolve().relative_to(teaching_root(script)).with_suffix("").as_posix().replace("/", ".")
+        return list(getattr(importlib.import_module(module), scene_name).NARRATION)
+
+
 def source_narration(segment: dict, *, language: str) -> list[tuple[str, Path]]:
     """🗣️ Resolve existing canonical clause recordings without generating speech."""
     script = teaching_root(Path(__file__)) / segment["script"]
     try:
-        scene = next(node for node in ast.parse(script.read_text(encoding="utf-8")).body if isinstance(node, ast.ClassDef) and node.name == segment["scene"])
-        narration = next(ast.literal_eval(node.value) for node in scene.body if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "NARRATION" for target in node.targets))
-    except (SyntaxError, StopIteration):
+        narration = narration_rows(script, segment["scene"])
+    except (SyntaxError, StopIteration, FileNotFoundError, ImportError, AttributeError):
         return []
     number = re.match(r"Beat(\d+)", segment["scene"])
     owner = f"beat_{number.group(1)}" if number else segment["scene"]

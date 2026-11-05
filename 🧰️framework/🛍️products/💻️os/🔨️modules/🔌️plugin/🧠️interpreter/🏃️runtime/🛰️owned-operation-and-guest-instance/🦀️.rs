@@ -100,6 +100,7 @@ pub(super) struct OwnedCheckpointView<'a>{pub(super) pending:&'a Option<OwnedPen
 /// 🏃️ One instance of an owned compiled guest: its interpreter state, the operation it has in flight, the original receipt
 /// that operation keeps, and what the guest printed.
 pub struct OwnedGuestInstance {
+    pub(super) original_host:Option<semio_framework_plugin_interpreter_imports::OriginalHostState>,
     pub(super) original_job_clock:Option<(u64,fn()->Option<u64>)>,
     pub(super) artifact: Arc<OwnedSemioArtifact>,
     pub(super) actor: Option<OwnedSemioInstance>,
@@ -107,6 +108,7 @@ pub struct OwnedGuestInstance {
     pub(super) original_source:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,
     pub(super) original_startup_input:Option<semio_framework_actor::RetainedTurnInput>,
     pub(super) original_call:Option<original_call::OwnedOriginalCall>,
+    pub(super) original_unit:Option<super::original_unit::OwnedUnit>,
     pub(super) pending: Option<OwnedPending>,
     pub(super) original_receipt: Option<semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,
     /// ☠️ Set by the first guest trap. A trapped guest keeps whatever linear memory, shadow-stack
@@ -114,17 +116,14 @@ pub struct OwnedGuestInstance {
     /// stack pointer and traps again 112 bytes further down — ticket 26/09/18 slice A1 read that
     /// drift as the defect itself. There is no recovery short of re-instantiation, so this refuses.
     pub(super) poisoned: bool,
-    /// 🩺️ Everything this guest has written to `wasi:cli/stdout`/`stderr`, bounded by
-    /// [`GUEST_DIAGNOSTICS_CAPACITY_BYTES`] — see [`retain_owned_guest_diagnostics`]. Unlike the
-    /// wasmtime path this is ALWAYS armed: the owned interpreter serves the stream shim itself at
-    /// no cost, and a guest panic message that is thrown away is a whole investigation.
+    /// 🩺️ Keeps guest output in the declared diagnostic capacity.
     pub(super) diagnostics: Vec<u8>,
     pub(super) context: i32,
     pub(super) next_resource: i32,
     pub(super) instance_id: u32,
 }
 
-impl Drop for OwnedGuestInstance{fn drop(&mut self){assert!(std::thread::panicking()||(self.original_core.is_none()&&self.original_source.is_none()),"Owned original instance reached Drop before its paid Core and source close")}}
+impl Drop for OwnedGuestInstance{fn drop(&mut self){assert!(std::thread::panicking()||(self.original_core.is_none()&&self.original_source.is_none()&&self.original_unit.is_none()),"Owned original instance reached Drop before its paid Core and source close")}}
 
 impl OwnedGuestInstance {
     pub fn original_core_mut(&mut self)->Result<(&Arc<semio_plugin_interpreter::CoreModule>,&mut semio_plugin_interpreter::CoreInstanceOpening),semio_framework_value::ValueError>{let core=self.original_core.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Owned call requires its genuine paid original Core holder"))?;Ok((self.artifact.original_actor_module(),core))}
@@ -151,7 +150,7 @@ impl OwnedGuestInstance {
 
     /// 🩺️ Everything this guest has written to `wasi:cli/stdout`/`stderr`, bounded by [`GUEST_DIAGNOSTICS_CAPACITY_BYTES`].
     pub fn diagnostics(&self) -> &[u8] {
-        &self.diagnostics
+        self.original_host.as_ref().map_or(&self.diagnostics,|host|host.diagnostics())
     }
 
     /// ⏸️ The snapshot operation this instance has in flight and the fuel it ran so far; refused when another owned operation

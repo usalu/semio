@@ -1,8 +1,6 @@
 //! 🫧️ Bitmap app-local computed solve state shared by every window of one editor instance. The
 //! INFERRED output bitmap lives here and only here: it is never a snapshot field, never an edit,
-//! never undoable — exactly the law the schema tree states. A `Solve` command recomputes it; every
-//! other command leaves it alone, which is why a stale render is visibly stale rather than silently
-//! wrong.
+//! never undoable — exactly the law the schema tree states. A `Solve` command recomputes it; the source revision identifies the exact document that produced it.
 
 /// ✉️ The envelope id must be DOTTED (`plugin.artifact`). `DslArtifact` falls back to the extension
 /// when no `id` is given, and `SemioEnvelope::from_envelope_id` refuses an id without a `.` — so a
@@ -23,6 +21,8 @@ pub struct BitmapTransient {
     /// buffer into the document's current extent and shows a plausible lie.
     pub output_width: u32,
     pub output_height: u32,
+    /// 🧾️ Canonical document revision captured by the fill run, encoded as base64.
+    pub source_revision: String,
 }
 
 impl pack::snapshot::ArtifactDsl for BitmapTransient {
@@ -77,14 +77,15 @@ pub struct BitmapTransientDiff {
     pub contradiction: Option<bool>,
     pub output_width: Option<u32>,
     pub output_height: Option<u32>,
+    pub source_revision: Option<String>,
 }
 
-protocol::retained_row_patch!(pub retained_fields for BitmapTransientDiff => BitmapTransient { output_pixels: Option<String>, contradiction: bool, output_width: u32, output_height: u32 });
+protocol::retained_row_patch!(pub retained_fields for BitmapTransientDiff => BitmapTransient { output_pixels: Option<String>, contradiction: bool, output_width: u32, output_height: u32, source_revision: String });
 protocol::retained_patch_diff!(BitmapTransientDiff => BitmapTransient);
 
 impl protocol::DiffAlgebra<BitmapTransient> for BitmapTransientDiff {
     fn is_empty(&self) -> bool {
-        self.output_pixels.is_none() && self.contradiction.is_none() && self.output_width.is_none() && self.output_height.is_none()
+        self.output_pixels.is_none() && self.contradiction.is_none() && self.output_width.is_none() && self.output_height.is_none() && self.source_revision.is_none()
     }
 }
 
@@ -95,6 +96,7 @@ impl protocol::ColdDiffAlgebra<BitmapTransient> for BitmapTransientDiff {
             contradiction: self.contradiction.as_ref().map(|_| base.contradiction.clone()),
             output_width: self.output_width.as_ref().map(|_| base.output_width.clone()),
             output_height: self.output_height.as_ref().map(|_| base.output_height.clone()),
+            source_revision: self.source_revision.as_ref().map(|_| base.source_revision.clone()),
         }
     }
 }
@@ -112,6 +114,7 @@ impl protocol::ColdMutationDiff<BitmapTransient> for BitmapTransientDiff {
         if later.output_width.is_some() {
             self.output_width = later.output_width;
         }
+        if later.source_revision.is_some() { self.source_revision = later.source_revision; }
         if later.output_height.is_some() {
             self.output_height = later.output_height;
         }
@@ -132,6 +135,7 @@ impl protocol::ColdMutationDiff<BitmapTransient> for BitmapTransientDiff {
         if let Some(value) = &self.output_height {
             next.output_height.clone_from(value);
         }
+        if let Some(value) = &self.source_revision { next.source_revision.clone_from(value); }
         *unpublished = next;
         Ok(())
     }

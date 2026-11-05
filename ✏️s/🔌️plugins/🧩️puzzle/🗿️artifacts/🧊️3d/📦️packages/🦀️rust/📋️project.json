@@ -19,6 +19,15 @@
     ]
   },
   "targets": {
+    "verify-import-acceptance": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify import-acceptance",
+        "forwardAllArgs": true
+      }
+    },
     "build": {
       "executor": "repo:script",
       "cache": true,

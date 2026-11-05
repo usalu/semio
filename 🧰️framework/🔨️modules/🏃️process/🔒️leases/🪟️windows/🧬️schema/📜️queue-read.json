@@ -1,0 +1,137 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "value",
+    "vectors",
+    "controlRefusal",
+    "unknownFailures"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "value": {
+      "type": "string"
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "platform",
+          "errors",
+          "expected",
+          "attempts",
+          "pauses"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "platform": {
+            "enum": [
+              "win32",
+              "linux",
+              "darwin"
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "EPERM",
+                "EINTR",
+                "ENOENT",
+                "EIO"
+              ]
+            }
+          },
+          "expected": {
+            "enum": [
+              "value",
+              "missing",
+              "error"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "pauses": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "controlRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "stages"
+      ],
+      "properties": {
+        "code": {
+          "const": "EPERM"
+        },
+        "stages": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "stage",
+              "reads",
+              "sleeps"
+            ],
+            "properties": {
+              "stage": {
+                "enum": [
+                  "before-read",
+                  "after-failure",
+                  "during-wait",
+                  "after-success"
+                ]
+              },
+              "reads": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "sleeps": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "unknownFailures": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "enum": [
+          null,
+          false,
+          17,
+          "foreign failure"
+        ]
+      }
+    }
+  }
+}

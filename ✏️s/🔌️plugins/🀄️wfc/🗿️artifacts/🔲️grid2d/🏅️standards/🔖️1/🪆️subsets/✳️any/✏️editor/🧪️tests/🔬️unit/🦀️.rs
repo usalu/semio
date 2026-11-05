@@ -104,7 +104,7 @@ fn every_authored_action_id_maps_back_to_a_typed_command() {
     let declared: Vec<String> = definition.window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone())).collect();
     for id in crate::mutations::KINDS.iter().copied().chain(AUTHORED.iter().copied()) {
         assert!(declared.iter().any(|declared| declared == id), "{id} is declared by no pane");
-        <Grid2dEditor as ArtifactEditor>::command_from_action(id, None, None).unwrap_or_else(|error| panic!("{id}: {error:?}"));
+        <Grid2dEditor as ArtifactEditor>::command_from_action(id, &mut None, &mut None).unwrap_or_else(|error| panic!("{id}: {error:?}"));
     }
 }
 
@@ -123,7 +123,7 @@ fn every_tool_job_id_is_a_declared_migrated_verb_with_a_command() {
             .find(|action| &action.id == id)
             .unwrap_or_else(|| panic!("{id} is a tool-job id no window declares"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{id}");
-        let command = <Grid2dEditor as ArtifactEditor>::command_from_action(id, None, None).unwrap_or_else(|error| panic!("{id}: {error:?}"));
+        let command = <Grid2dEditor as ArtifactEditor>::command_from_action(id, &mut None, &mut None).unwrap_or_else(|error| panic!("{id}: {error:?}"));
         assert_eq!(grid2d_command_id(&command), *id, "the command a verb decodes to must answer that verb's own id");
     }
     for kind in crate::mutations::KINDS {
@@ -133,7 +133,7 @@ fn every_tool_job_id_is_a_declared_migrated_verb_with_a_command() {
 
 #[test]
 fn an_unknown_action_is_refused_rather_than_silently_defaulted() {
-    assert!(<Grid2dEditor as ArtifactEditor>::command_from_action("not-a-verb", None, None).is_err());
+    assert!(<Grid2dEditor as ArtifactEditor>::command_from_action("not-a-verb", &mut None, &mut None).is_err());
 }
 
 #[test]
@@ -143,7 +143,7 @@ fn the_command_channel_round_trips_through_its_binary_op_form() {
         Grid2dEditorCommand::PickCell { x: 2, y: 1 },
         Grid2dEditorCommand::SetCamera { x: 1.0, y: 2.0, zoom: 3.0 },
         Grid2dEditorCommand::Solve,
-        Grid2dEditorCommand::CommitFill { solve_json: String::new() },
+        Grid2dEditorCommand::CommitFill { solve_json: String::new(), source_revision: Vec::new() },
     ] {
         let bytes = <Grid2dEditorCommand as protocol::OpBinary>::encode_op(&command).expect("encode");
         assert_eq!(<Grid2dEditorCommand as protocol::OpBinary>::decode_op(&bytes).expect("decode"), command);
@@ -171,10 +171,10 @@ fn the_example_switcher_resolves_exactly_the_bundled_ids() {
 /// was — re-picking the boot example is not an edit.
 #[test]
 fn switching_example_loads_a_document_instead_of_journalling_an_edit() {
-    let command = <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some((semio_framework_value::DslValue::Object(vec![("exampleId".into(), semio_framework_value::DslValue::String("terrain".into()))])).clone()), None).expect("decode");
+    let command = <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", &mut Some((semio_framework_value::DslValue::Object(vec![("exampleId".into(), semio_framework_value::DslValue::String("terrain".into()))])).clone()), &mut None).expect("decode");
     assert_eq!(command, Grid2dEditorCommand::SetActiveExample { example_id: "terrain".into() });
     assert_eq!(
-        <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some((semio_framework_value::DslValue::Object(vec![("id".into(), semio_framework_value::DslValue::String("pipes".into()))])).clone()), None).expect("decode"),
+        <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", &mut Some((semio_framework_value::DslValue::Object(vec![("id".into(), semio_framework_value::DslValue::String("pipes".into()))])).clone()), &mut None).expect("decode"),
         Grid2dEditorCommand::SetActiveExample { example_id: "pipes".into() },
         "the navbar's alternative argument spelling decodes to the same command"
     );
@@ -200,13 +200,13 @@ fn a_canvas_press_on_the_grid_pins_the_cell_under_the_pointer() {
     assert!(!grid::owns_surface(preview::SURFACE_ID), "a press on the read-only preview surface never edits");
     assert_eq!(
         <Grid2dEditor as ArtifactEditor>::command_from_action(
-            "canvasPointerDown", Some((semio_framework_value::DslValue::Object(vec![
+            "canvasPointerDown", &mut Some((semio_framework_value::DslValue::Object(vec![
                 ("surfaceId".into(), semio_framework_value::DslValue::String(grid::SURFACE_ID.into())),
                 ("x".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(400.0))),
                 ("y".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(300.0))),
                 ("width".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(800.0))),
                 ("height".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(600.0))),
-            ])).clone()), None)
+            ])).clone()), &mut None)
         .expect("decode"),
         Grid2dEditorCommand::CanvasPointerDown { surface_id: grid::SURFACE_ID.into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 }
     );
@@ -222,12 +222,12 @@ fn both_camera_spellings_decode_to_their_own_command() {
         semio_framework_value::DslValue::Object(vec![("x".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(4.0))), ("y".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(5.0))), ("zoom".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(2.0)))]),
     )]);
     assert_eq!(
-        <Grid2dEditor as ArtifactEditor>::command_from_action("setCamera", Some((nested).clone()), None).expect("decode"),
+        <Grid2dEditor as ArtifactEditor>::command_from_action("setCamera", &mut Some((nested).clone()), &mut None).expect("decode"),
         Grid2dEditorCommand::SyncCamera { x: 4.0, y: 5.0, zoom: 2.0 }
     );
     let flat = semio_framework_value::DslValue::Object(vec![("x".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(4.0))), ("y".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(5.0))), ("zoom".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(2.0)))]);
     assert_eq!(
-        <Grid2dEditor as ArtifactEditor>::command_from_action("set-camera", Some((flat).clone()), None).expect("decode"),
+        <Grid2dEditor as ArtifactEditor>::command_from_action("set-camera", &mut Some((flat).clone()), &mut None).expect("decode"),
         Grid2dEditorCommand::SetCamera { x: 4.0, y: 5.0, zoom: 2.0 }
     );
 }
@@ -273,14 +273,14 @@ fn the_commit_fill_command_writes_solve_json() {
     let document = crate::examples::grid2d::pipes::document();
     let commit = crate::host::inferences::solve_with_clock(&document, semio_framework_job::logical_now_us).expect("pipes solves");
     let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&document, &history);
+    let doc = ArtifactView::with_operation(&document, &history, AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], retained: semio_plugin::artifact_app_laws::fixture_retained_turn().grant, authoring_seed: "seed".into() });
     let no_config = NoConfig::default();
     let cfg = ConfigView { snapshot: &no_config, window: None };
     let mut view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     view.window_id = Some("preview-1".into());
     view.window_instances = vec![semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: preview::WINDOW_KIND_ID.into() }];
-    let solve_json = semio_framework_pack_json::to_json_string(&commit);
-    let emit = Grid2dEditor::dispatch(&Grid2dEditorCommand::CommitFill { solve_json: solve_json.clone() }, &doc, &cfg, Some(&view)).expect("commit-fill writes");
+    let solve_json = semio_framework_pack_json::to_json_string(&fill_tool::Grid2dCachedSolve { source_revision: vec![7; 32], commit });
+    let emit = Grid2dEditor::dispatch(&Grid2dEditorCommand::CommitFill { solve_json: solve_json.clone(), source_revision: vec![7; 32] }, &doc, &cfg, Some(&view)).expect("commit-fill writes");
     assert_eq!(emit.window_config_mutations.len(), 1);
 }
 
@@ -291,7 +291,7 @@ fn the_commit_fill_command_writes_solve_json() {
 fn a_cell_click_of_an_armed_utility_is_one_tool_transaction() {
     let document = crate::examples::grid2d::pipes::document();
     let history = semio_plugin::HistoryView::empty();
-    let admitted = ArtifactView::with_operation(&document, &history, semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], authoring_seed: "seed".into() });
+    let admitted = ArtifactView::with_operation(&document, &history, semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], retained: semio_plugin::artifact_app_laws::fixture_retained_turn().grant, authoring_seed: "seed".into() });
     let no_config = NoConfig::default();
     let cfg = ConfigView { snapshot: &no_config, window: None };
     let armed = |utility: &str| {
@@ -345,3 +345,144 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
 }
 
 semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid2d::Grid2dEditor, || semio_plugin::App { definition: crate::editor::grid2d::create_grid2d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+/// 🎬️ The shared picker contract loads the boot document when its selection is cleared.
+#[test]
+fn the_example_picker_obeys_the_language_neutral_selection_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️example-selection/🔣️.json")).expect("selection contract");
+    let artifact = fixture["artifacts"].as_array().unwrap().iter().find(|row| row["id"] == "grid2d").unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let input = case["input"].as_str().unwrap_or_else(|| artifact["examples"][case["exampleIndex"].as_u64().unwrap() as usize].as_str().unwrap());
+        let actual = example_document(input);
+        let expected = match case["select"].as_str().unwrap() {
+            "default" => Some(crate::examples::grid2d::pipes::document()),
+            "named" => Some(crate::examples::grid2d::terrain::document()),
+            _ => None,
+        };
+        assert_eq!(actual, expected, "{}", case["id"]);
+    }
+    let examples = [
+        (crate::examples::grid2d::pipes::ID, crate::examples::grid2d::pipes::document()),
+        (crate::examples::grid2d::terrain::ID, crate::examples::grid2d::terrain::document()),
+    ];
+    let expected_ids: Vec<_> = examples.iter().map(|(id, _)| *id).collect();
+    let fixture_ids: Vec<_> = artifact["examples"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect();
+    assert_eq!(fixture_ids, expected_ids);
+    for (id, expected) in examples {
+        assert_eq!(example_document(id), Some(expected), "{id}");
+    }
+}
+
+/// 📝️ Every author-facing action stages the arguments its typed command consumes.
+#[test]
+fn the_action_forms_obey_the_language_neutral_argument_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️grid2d-action-arguments/🔣️.json")).expect("argument contract");
+    let source = include_str!("../../../../../../../../../🧪️tests/🧫️grid2d-action-arguments/🔣️.json");
+    let native = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native contract");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_string(&native)).expect("native output"), fixture);
+    let definition = create_grid2d_editor();
+    for case in fixture["cases"].as_array().unwrap() {
+        let id = case["action"].as_str().unwrap();
+        let action = definition.window_kinds.iter().flat_map(|window| &window.actions).find(|action| action.id == id).unwrap();
+        let args = semio_framework_pack_json::parse(&case["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native arguments");
+        let args = semio_framework_pack_json::to_dsl_value(&args);
+        let effective = semio_framework::effective_action_args(&action.args, &args, None);
+        let command = <Grid2dEditor as ArtifactEditor>::command_from_action(id, &mut Some(effective), &mut None).expect("form bridges");
+        let actual = serde_json::Value::from(semio_framework_value::ToValue::to_value(&command));
+        assert_eq!(actual, case["command"], "{id}");
+    }
+    for id in fixture["internalActions"].as_array().unwrap() {
+        let id = id.as_str().unwrap();
+        let action = definition.window_kinds.iter().flat_map(|window| &window.actions).find(|action| action.id == id).unwrap();
+        assert!(!action.in_palette, "{id}");
+    }
+    for (id, expected) in fixture["actions"].as_object().unwrap() {
+        let actions: Vec<_> = definition.window_kinds.iter().flat_map(|window| &window.actions).filter(|action| &action.id == id).collect();
+        assert!(!actions.is_empty(), "{id}");
+        for action in actions {
+            let actual: Vec<&str> = action.args.iter().map(|arg| arg.id.as_str()).collect();
+            let expected: Vec<&str> = expected.as_array().unwrap().iter().map(|arg| arg.as_str().unwrap()).collect();
+            assert_eq!(actual, expected, "{id}");
+        }
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mounted_preview_uses_render_authority_for_live_source_binding() {
+    use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunState};
+    let snapshot = crate::examples::grid2d::pipes::document();
+    let history = semio_plugin::HistoryView::empty();
+    let context = semio_plugin::AppRenderOperationContext {
+        app_instance_id: 1,
+        base_revision: semio_framework_job::RevisionId(1),
+        generation: semio_framework_job::Generation(1),
+        canonical_base_revision: [0; 32],
+        mounted_policy: semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT,
+    };
+    let payload = fill_tool::Grid2dFillPayload { assignments: vec![fill_tool::Grid2dFillCell { x: 0, y: 0, tile_id: Some(snapshot.tiles[0].id.clone()) }], ..Default::default() };
+    let make_run = || {
+        let mut run = semio_plugin::ToolRunView::new("fill", ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32]), ToolRunState::Running);
+        run.payload = Some(payload.encode().into());
+        run
+    };
+    let no_config = NoConfig::default();
+    let config = ConfigView { snapshot: &no_config, window: None };
+    let view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let doc = ArtifactView::with_render_context(&snapshot, &history, semio_plugin::ChildContentView::EMPTY, context, "grid2d", None).await;
+    assert!(doc.operation_optional().is_none());
+    let empty = <Grid2dEditor as ArtifactEditor>::render(preview::BODY_KEY, &doc, &config, &view).expect("empty");
+    let fresh = <Grid2dEditor as ArtifactEditor>::render(preview::BODY_KEY, &doc.with_tool_run(Some(make_run())), &config, &view).expect("fresh");
+    let empty = serde_json::to_value(&empty.root).expect("empty tree");
+    assert_ne!(serde_json::to_value(&fresh.root).expect("fresh tree"), empty);
+    let changed = ArtifactView::with_render_context(&snapshot, &history, semio_plugin::ChildContentView::EMPTY, semio_plugin::AppRenderOperationContext { canonical_base_revision: [1; 32], ..context }, "grid2d", None).await.with_tool_run(Some(make_run()));
+    let stale = <Grid2dEditor as ArtifactEditor>::render(preview::BODY_KEY, &changed, &config, &view).expect("stale");
+    assert_eq!(serde_json::to_value(&stale.root).expect("stale tree"), empty);
+}
+
+#[test]
+fn a_supported_control_grid_fits_the_completion_dispatch_envelope() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️dispatch-envelope/🔣️.json")).expect("portable envelope fixture");
+    let width = fixture["width"].as_u64().unwrap() as u32;
+    let height = fixture["height"].as_u64().unwrap() as u32;
+    let tile_id = fixture["tileId"].as_str().unwrap();
+    let commit = crate::schema::inferences::Grid2dInferenceCommit {
+        assignments: (0..height).flat_map(|y| (0..width).map(move |x| (x, y, tile_id.to_owned()))).collect(),
+        contradiction: false,
+        entropy: Vec::new(),
+    };
+    let cache = fill_tool::Grid2dCachedSolve { source_revision: vec![0; 32], commit };
+    let encoded = semio_framework_pack_json::to_json_string(&cache);
+    assert_eq!(encoded.len() as u64, fixture["cacheBytes"].as_u64().unwrap());
+    let args = semio_framework::dsl_value!({ "solveJson": encoded, "sourceRevision": vec![0u8; 32] });
+    let native = semio_framework_pack_json::to_json_string(&args);
+    let independent = serde_json::to_vec(&serde_json::json!({ "solveJson": semio_framework_pack_json::to_json_string(&cache), "sourceRevision": vec![0u8; 32] })).expect("third-party argument encoding");
+    assert_eq!(native.as_bytes(), independent.as_slice());
+    assert_eq!(native.len() as u64, fixture["argsBytes"].as_u64().unwrap());
+    assert!(native.len() > 65_536, "the former envelope refused this supported completion");
+    assert!(native.len() <= super::GRID2D_RETAINED_RAW_BYTES);
+    assert!(native.len() <= super::GRID2D_ARTIFACT_MUTATION_MAXIMUM_BYTES);
+}
+
+#[test]
+fn completed_cache_callbacks_publish_only_for_current_command_authority() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️preview-revisions/🔣️.json")).expect("revision cases");
+    let document = crate::examples::grid2d::pipes::document();
+    let history = semio_plugin::HistoryView::empty();
+    let no_config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &no_config, window: None };
+    let mut view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    view.window_id = Some("preview-1".into());
+    view.window_instances = vec![semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: preview::WINDOW_KIND_ID.into() }];
+    for case in fixture["cases"].as_array().expect("cases") {
+        let current: Option<[u8; 32]> = serde_json::from_value(case["currentRevision"].clone()).expect("current");
+        let doc = match current {
+            Some(revision) => ArtifactView::with_operation(&document, &history, AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: revision, retained: semio_plugin::artifact_app_laws::fixture_retained_turn().grant, authoring_seed: "seed".into() }),
+            None => ArtifactView::new(&document, &history),
+        };
+        let source_revision: Vec<u8> = serde_json::from_value(case["sourceRevision"].clone()).expect("source");
+        let solve_json = semio_framework_pack_json::to_json_string(&fill_tool::Grid2dCachedSolve { source_revision: source_revision.clone(), commit: crate::schema::inferences::Grid2dInferenceCommit { assignments: vec![(0, 0, document.tiles[0].id.clone())], ..Default::default() } });
+        let command = Grid2dEditorCommand::CommitFill { solve_json, source_revision };
+        let emitted = Grid2dEditor::dispatch(&command, &doc, &cfg, Some(&view)).expect("completion");
+        assert_eq!(emitted.window_config_mutations.len(), usize::from(case["visible"].as_bool().unwrap()), "{}", case["id"]);
+        assert!(emitted.artifact_mutations.is_empty());
+    }
+}

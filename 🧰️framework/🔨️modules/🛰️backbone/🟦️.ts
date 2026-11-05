@@ -6,6 +6,8 @@
 import type { UtilityLeaf } from "@semio-tech/framework";
 import { readVarintU64, writeVarintU64 } from "../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import { decodePackValue, encodePackValue } from "../🎁️packs/🟦️.ts";
+import { absoluteBackbonePathV1 } from "./🛣️path/🟦️.ts";
+export { absoluteBackbonePathV1, backbonePathDirectoryV1 } from "./🛣️path/🟦️.ts";
 
 //#region 🔖️Backbone
 export const FRAMEWORK_SYNC_CONTROLLER_ID = "framework.sync";
@@ -64,13 +66,11 @@ export function buildRemoteBackboneUri(hostPort: string, spaceId: string, docume
 }
 
 export function buildFileBackboneUri(path: string): string {
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  return `file://${normalized}`;
+  return `file://${absoluteBackbonePathV1(path)}`;
 }
 
 export function buildFolderBackboneUri(path: string): string {
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  return `folder://${normalized}`;
+  return `folder://${absoluteBackbonePathV1(path)}`;
 }
 
 export function remoteEnvelopeUrl(remote: { readonly hostPort: string; readonly spaceId: string; readonly documentId: string }): string {

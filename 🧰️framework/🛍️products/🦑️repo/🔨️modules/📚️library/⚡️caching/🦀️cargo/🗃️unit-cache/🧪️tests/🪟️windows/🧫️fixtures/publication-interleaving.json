@@ -1,0 +1,15 @@
+{
+  "steps": [
+    "peer.stage",
+    "winner.stage",
+    "winner.publish",
+    "winner.collect",
+    "peer.publish",
+    "peer.collect"
+  ],
+  "expectedPublished": [
+    "peer",
+    "winner"
+  ],
+  "temporarySuffix": ".tmp.exe"
+}

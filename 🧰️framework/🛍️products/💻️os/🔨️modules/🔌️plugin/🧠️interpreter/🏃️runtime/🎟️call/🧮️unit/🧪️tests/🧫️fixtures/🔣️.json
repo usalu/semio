@@ -1,0 +1,95 @@
+{
+  "cases": [
+    {
+      "name": "allocate owns copy",
+      "phase": "allocate",
+      "event": "allocated",
+      "next": "copy",
+      "valid": true
+    },
+    {
+      "name": "copy owns call",
+      "phase": "copy",
+      "event": "copied",
+      "next": "call",
+      "valid": true
+    },
+    {
+      "name": "call owns borrow",
+      "phase": "call",
+      "event": "returned",
+      "next": "borrow",
+      "valid": true
+    },
+    {
+      "name": "borrow owns release",
+      "phase": "borrow",
+      "event": "acknowledged",
+      "next": "release",
+      "valid": true
+    },
+    {
+      "name": "release owns complete",
+      "phase": "release",
+      "event": "released",
+      "next": "complete",
+      "valid": true
+    },
+    {
+      "name": "allocate cancellation retires instance",
+      "phase": "allocate",
+      "event": "cancelled",
+      "next": "abort",
+      "valid": true
+    },
+    {
+      "name": "copy cancellation retires instance",
+      "phase": "copy",
+      "event": "cancelled",
+      "next": "abort",
+      "valid": true
+    },
+    {
+      "name": "call cancellation retires instance",
+      "phase": "call",
+      "event": "cancelled",
+      "next": "abort",
+      "valid": true
+    },
+    {
+      "name": "borrow cancellation retires instance",
+      "phase": "borrow",
+      "event": "cancelled",
+      "next": "abort",
+      "valid": true
+    },
+    {
+      "name": "release cancellation retires instance",
+      "phase": "release",
+      "event": "cancelled",
+      "next": "abort",
+      "valid": true
+    },
+    {
+      "name": "borrow cannot disappear before acknowledgement",
+      "phase": "borrow",
+      "event": "released",
+      "next": "complete",
+      "valid": false
+    },
+    {
+      "name": "copy cannot execute before full input",
+      "phase": "copy",
+      "event": "returned",
+      "next": "borrow",
+      "valid": false
+    },
+    {
+      "name": "completion cannot restart",
+      "phase": "complete",
+      "event": "allocated",
+      "next": "copy",
+      "valid": false
+    }
+  ]
+}

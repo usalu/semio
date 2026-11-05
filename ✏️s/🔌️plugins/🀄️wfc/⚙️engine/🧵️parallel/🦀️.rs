@@ -6,7 +6,7 @@ use crate::bitset::PatternSet;
 use crate::ids::{NodeId, PatternId};
 use crate::model::CompiledModel;
 use crate::outcome::SolveOutcome;
-use crate::search::{self, SearchConfig};
+use crate::search::{self, SearchConfig,SearchResult};
 use crate::topology::Topology;
 
 // #region 🔖️Seed
@@ -30,19 +30,19 @@ fn derive_seed(base_seed: u64, i: usize) -> u64 {
 /// so if attempt 0 exhausts its search tree, the model has no solution regardless of what other
 /// seeds found).
 ///
-pub fn multi_start<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, base_seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], attempts: usize) -> SolveOutcome {
+pub fn multi_start<T: Topology + Clone + Send + 'static>(model: &CompiledModel, topo: &T, config: &SearchConfig, base_seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], attempts: usize) -> SearchResult<T> {
     let attempts = attempts.max(1);
     let mut first = None;
     for i in 0..attempts {
-        let outcome = search::solve(model, topo, config, derive_seed(base_seed, i), init_domains, fixed);
+        let outcome = search::solve(model, topo, config, derive_seed(base_seed, i), init_domains, fixed)?;
         if matches!(outcome, SolveOutcome::Solved(_)) {
-            return outcome;
+            return Ok(outcome);
         }
         if first.is_none() {
             first = Some(outcome);
         }
     }
-    first.expect("attempts.max(1) guarantees at least one outcome")
+    Ok(first.expect("attempts.max(1) guarantees at least one outcome"))
 }
 // #endregion 🔖️MultiStart
 

@@ -2,7 +2,7 @@ use super::*;
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url;
 use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames;
 use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::FRAME_MIME;
-use semio_framework_job::{root_cancel_token, StepBudget};
+use semio_framework_job::{StepBudget, OriginalJobFixtureCaller, OriginalJobReturnOrigin, OriginalJobReturn, InteractiveStage};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_tool_run::{ToolRunId, ToolRunTick, ToolRunTraceOp};
 use std::time::{Duration, Instant};
@@ -107,20 +107,114 @@ fn view_to_turn(view: JobOutcomeView<'_>) -> Turn {
     }
 }
 
-/// 🚦️ One `step` call: `None` while the job is still working inside a turn, the delivered outcome otherwise.
-fn step_once(job: &mut impl InteractiveJob, step_budget: StepBudget, sequence: &mut u64, clock: fn() -> Option<u64>) -> Option<Turn> {
-    let mut retained = RetainedCloneProgress::default();
-    let mut context = StepContext::new(semio_framework_job::OperationId(91), semio_framework_job::Generation(1), step_budget, root_cancel_token(), clock, sequence, &mut retained);
-    let borrow = job.step(&mut context).expect("remodeling job step")?;
-    let descriptor = borrow.into_descriptor();
-    Some(view_to_turn(job.borrow_outcome(&descriptor).expect("remodeling job outcome")))
+
+const SOURCE_STOCK: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1_000_000_000, maximum_copy_bytes: 1_000_000_000, maximum_capacity_bytes: 1_000_000_000, maximum_release_bytes: 1_000_000_000, maximum_depth: 128 };
+
+struct RunDriver {
+    caller: Option<OriginalJobFixtureCaller>,
+    origin: OriginalJobReturnOrigin,
 }
 
-fn turn(job: &mut impl InteractiveJob, step_budget: StepBudget, sequence: &mut u64) -> Turn {
-    for _ in 0..1_000_000 {
-        if let Some(turn) = step_once(job, StepBudget::new(step_budget.fuel, step_budget.deadline_us, step_budget.retained), sequence, never) {
-            return turn;
+impl RunDriver {
+    fn new(clock: fn() -> Option<u64>) -> Self {
+        Self {
+            caller: Some(OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(91), semio_framework_job::Generation(1), SOURCE_STOCK, clock, u64::MAX, 1_000_000_000)),
+            origin: OriginalJobReturnOrigin::empty(),
         }
+    }
+
+    fn close_job(&mut self, job: &mut impl InteractiveJob) {
+        for _ in 0..4096 {
+            if self.origin.outcome().is_none() { break; }
+            self.caller.as_mut().expect("original caller").turn(FUNDED_GRANT, |cx| self.origin.acknowledge_outcome(cx)).expect("funded result acknowledgement");
+        }
+        assert!(self.origin.outcome().is_none(), "original outcome acknowledged");
+        let mut began = false;
+        self.caller.as_mut().expect("original caller").turn(FUNDED_GRANT, |cx| semio_framework_job::close_original_granted_step(cx, |_| {
+            job.begin_close();
+            began = true;
+            semio_framework_value::RetainedWorkOutcome { result: Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }), work: 1 }
+        })).expect("funded job close admission");
+        assert!(began, "original caller funded close admission");
+        for _ in 0..10_000_000 {
+            let step = self.caller.as_mut().expect("original caller").turn(FUNDED_GRANT, |cx| job.close_step(cx)).expect("funded job close");
+            if matches!(step, InteractiveJobCloseStep::Complete { .. }) { assert!(job.terminal_is_empty(), "closed job has no retained owner"); return; }
+        }
+        panic!("job did not close");
+    }
+}
+
+impl Drop for RunDriver {
+    fn drop(&mut self) {
+        if std::thread::panicking() { return; }
+        let caller = self.caller.as_mut().expect("original caller");
+        for _ in 0..4096 {
+            if self.origin.terminal_is_empty() { break; }
+            caller.turn(FUNDED_GRANT, |cx| self.origin.close_step(cx)).expect("funded return close");
+        }
+        assert!(self.origin.terminal_is_empty(), "original return closed");
+        self.caller.take().expect("original caller").retire(SOURCE_STOCK);
+    }
+}
+
+thread_local! { static UNIT_CLOCK: std::cell::Cell<u64> = const { std::cell::Cell::new(0) }; }
+
+fn unit_clock() -> Option<u64> { Some(UNIT_CLOCK.with(std::cell::Cell::get)) }
+
+struct DeadlineUnitJob<'a, J>(&'a mut J, Option<u64>);
+
+impl<J: InteractiveJob> InteractiveJob for DeadlineUnitJob<'_, J> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        if let Some(deadline) = self.1 {
+            UNIT_CLOCK.with(|clock| clock.set(deadline));
+            cx.observe_step_clock(Some(deadline));
+        }
+        self.0.step(cx, claim)
+    }
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> { self.0.borrow_outcome(descriptor) }
+    fn begin_close(&mut self) { self.0.begin_close(); }
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { self.0.close_step(cx) }
+    fn terminal_is_empty(&self) -> bool { self.0.terminal_is_empty() }
+}
+
+/// 🚦️ One funded caller turn receives and acknowledges its actual returned ownership.
+fn step_once(job: &mut impl InteractiveJob, step_budget: StepBudget, driver: &mut RunDriver) -> Option<Turn> {
+    let origin = &mut driver.origin;
+    driver.caller.as_mut().expect("original caller").turn(step_budget.retained, |cx| {
+        if origin.outcome().is_some() {
+            origin.acknowledge_outcome(cx)?;
+            return Ok(None);
+        }
+        let deadline = if step_budget.deadline_us == 0 { unit_clock().expect("unit clock") + 1 } else { step_budget.deadline_us };
+        let mut outcome = None;
+        cx.with_original_work_loan(step_budget.fuel, deadline, |cx| {
+            if !origin.admit(cx)? { return Ok(()); }
+            let mut verdict = None;
+            let mut unit = DeadlineUnitJob(job, (step_budget.deadline_us == 0).then_some(deadline));
+            let returned = semio_framework_job::drive_step(&mut unit, cx, origin.receiver()?, "remodeling.run", InteractiveStage::InteractiveStep, &mut verdict)?;
+            match returned {
+                OriginalJobReturn::Preparing | OriginalJobReturn::Pending => Ok(()),
+                OriginalJobReturn::Outcome(reply) => {
+                    let mut returned = Some(reply.into_descriptor());
+                    origin.receive_outcome(cx, &mut returned)?;
+                    outcome = origin.outcome().map(|descriptor| view_to_turn(unit.borrow_outcome(descriptor).expect("remodeling job outcome")));
+                    Ok(())
+                }
+                OriginalJobReturn::Continuation(reply) => {
+                    let failure = format!("{:?} {:?} {:?}", reply.view().callback, reply.view().qualification, reply.view().receipt_qualification);
+                    let mut returned = Some(reply);
+                    origin.receive_continuation(cx, &mut returned)?;
+                    panic!("remodeling job continuation: {failure}");
+                }
+            }
+        })?;
+        Ok(outcome)
+    }).expect("original remodeling caller turn")
+}
+
+fn turn(job: &mut impl InteractiveJob, step_budget: StepBudget, driver: &mut RunDriver) -> Turn {
+    for _ in 0..1_000_000 {
+        if let Some(turn) = step_once(job, StepBudget::new(step_budget.fuel, step_budget.deadline_us, step_budget.retained), driver) { return turn; }
     }
     panic!("the job never delivered an outcome");
 }
@@ -186,17 +280,19 @@ impl Mirror {
 /// ▶️ Drives `job` to its terminal outcome under `budget`, folding every tick.
 fn run_to_end(job: &mut ReconstructionRunJob, budget: StepBudget) -> Mirror {
     let mut mirror = Mirror::default();
-    let mut sequence = 0;
+    let mut sequence = RunDriver::new(never);
     for _ in 0..10_000_000 {
         match turn(job, budget, &mut sequence) {
             Turn::Tick(tick) => mirror.fold(tick),
             Turn::Checkpoint(bytes) => mirror.checkpoints.push(bytes),
             Turn::Complete => {
                 mirror.completed = true;
+                sequence.close_job(job);
                 return mirror;
             }
             Turn::Fault => {
                 mirror.faulted = true;
+                sequence.close_job(job);
                 return mirror;
             }
             Turn::Yield => {}
@@ -421,7 +517,7 @@ async fn a_resumed_run_replays_silently_to_its_checkpoint_and_ends_with_the_same
     let wanted = law["checkpointIndex"].as_u64().expect("checkpoint index") as usize;
     let mut first = fresh_run(Arc::clone(&document));
     let mut mirror = Mirror::default();
-    let mut sequence = 0;
+    let mut sequence = RunDriver::new(never);
     let checkpoint = loop {
         match turn(&mut first, whole_turns(), &mut sequence) {
             Turn::Tick(tick) => mirror.fold(tick),
@@ -435,6 +531,9 @@ async fn a_resumed_run_replays_silently_to_its_checkpoint_and_ends_with_the_same
             Turn::Yield => {}
         }
     };
+    sequence.close_job(&mut first);
+    drop(sequence);
+    let mut sequence = RunDriver::new(never);
     let decoded = ReconstructionRunCheckpoint::decode(&checkpoint).expect("checkpoint decodes");
     assert!(decoded.decisions > 0);
     let steps_before = mirror.steps.len();
@@ -447,6 +546,7 @@ async fn a_resumed_run_replays_silently_to_its_checkpoint_and_ends_with_the_same
             Turn::Fault => panic!("the resumed run faulted"),
         }
     }
+    sequence.close_job(&mut resumed);
     assert_eq!(reason_id(mirror.steps[steps_before].1), law["firstResumedStep"], "the resumed job emits nothing before it is live again");
     assert_eq!(mirror.ops, whole.ops, "the resumed run publishes exactly the uninterrupted provisional result");
     assert_eq!(mirror.resident.keys().collect::<Vec<_>>(), whole.resident.keys().collect::<Vec<_>>(), "the resumed trace holds exactly the uninterrupted records");
@@ -466,11 +566,12 @@ async fn the_revalidate_job_keeps_the_result_on_an_unchanged_head_and_withdraws_
     let changed = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_ingest_params::update_ingest_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::IngestParams { frame_sample_stride: 2, ..document.params.ingest.clone() })).expect("params apply"));
     for (head, withdrawn) in [(unrelated, false), (changed, true)] {
         let mut job = ReconstructionRevalidateJob::new(identity(), head, Some(&checkpoint), provisional);
-        let mut sequence = 0;
+        let mut sequence = RunDriver::new(never);
         let Turn::Tick(tick) = turn(&mut job, whole_turns(), &mut sequence) else { panic!("revalidation reports one tick") };
         assert_eq!(tick.retract_to, withdrawn.then_some(0), "withdrawn = {withdrawn}");
         assert_eq!(tick.steps.iter().any(|step| step.reason == ReconstructionRunReason::InputsChanged.code() && step.kind == ToolRunStepKind::Danger), withdrawn);
         assert!(matches!(turn(&mut job, whole_turns(), &mut sequence), Turn::Complete));
+        sequence.close_job(&mut job);
     }
 }
 
@@ -496,11 +597,6 @@ async fn the_provisional_result_applies_onto_its_base_and_its_inverse_restores_t
     assert_eq!(current, *document, "undoing the run's single edit restores its base byte for byte");
 }
 
-/// ⏱️ A clock whose deadline has always passed, so every step performs exactly one bounded unit.
-fn expired_clock() -> Option<u64> {
-    Some(u64::MAX)
-}
-
 #[semio_framework_async_macros::async_test]
 async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example() {
     let law = &fixture()["interactive"];
@@ -513,12 +609,13 @@ async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example
         let mut labels: Vec<Option<String>> = Vec::new();
         for run in 0..law["coldRuns"].as_u64().expect("cold runs") as usize {
             let mut job = fresh_run(Arc::clone(&document));
-            let mut sequence = 0;
+            let mut sequence = RunDriver::new(unit_clock);
             for index in 0.. {
                 let stage = job.stage.id();
                 let unit = job.engine.as_ref().map(|engine| engine.unit_label());
                 let started = Instant::now();
-                let outcome = step_once(&mut job, budget(semio_framework_job::INTERACTIVE_LANE_FUEL, 0), &mut sequence, expired_clock);
+                let deadline = if job.outbox.kind.is_none() && job.owed.is_empty() { 0 } else { u64::MAX };
+                let outcome = step_once(&mut job, budget(semio_framework_job::INTERACTIVE_LANE_FUEL, deadline), &mut sequence);
                 let elapsed = started.elapsed();
                 if run == 0 {
                     best.push((elapsed, stage));
@@ -532,6 +629,7 @@ async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example
                     break;
                 }
             }
+            sequence.close_job(&mut job);
         }
         let (worst, stage) = best.iter().copied().max_by_key(|(elapsed, _)| *elapsed).expect("units");
         let over_target = best.iter().filter(|(elapsed, _)| *elapsed >= target).count();
@@ -582,4 +680,27 @@ async fn print_run_fixture_cases() {
         });
         eprintln!("[FIXTURE] {}", serde_json::to_string_pretty(&case).expect("case json"));
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn cancellation_stops_publication_and_retires_the_run_with_its_original_caller() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("🔣️cancel.json")).expect("cancel fixture");
+    let mut job = fresh_run(imported_document(law["document"].as_str().expect("document")).await);
+    let mut driver = RunDriver::new(never);
+    let wanted = law["decisionsBeforeCancel"].as_u64().expect("decisions");
+    for _ in 0..100_000 {
+        if job.decisions >= wanted { break; }
+        let _ = step_once(&mut job, budget(1, u64::MAX), &mut driver);
+    }
+    assert_eq!(job.decisions, wanted);
+    driver.caller.as_ref().expect("original caller").cancel().cancel_now();
+    for _ in 0..law["turnsAfterCancel"].as_u64().expect("cancel turns") {
+        assert!(step_once(&mut job, budget(1, u64::MAX), &mut driver).is_none(), "cancelled caller publishes no further outcomes");
+    }
+    assert_eq!(job.decisions, law["decisionsAfterCancel"].as_u64().expect("unchanged decisions"));
+    driver.close_job(&mut job);
+    assert_eq!(job.scene.is_some(), law["sceneRetainedAfterClose"].as_bool().expect("scene retired"));
+    assert_eq!(job.engine.is_some(), law["engineRetainedAfterClose"].as_bool().expect("engine retired"));
+    assert!(job.observations.is_empty());
+    assert!(job.owed.is_empty());
 }

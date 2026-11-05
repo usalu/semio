@@ -167,7 +167,7 @@ fn puzzle3d_next_object_label_increments_from_the_authored_seed_name() {
     let next = puzzle3d_next_object_label(&scene_snapshot.objects, &scene_snapshot, kind);
     assert_eq!(next, "Hexagonal Cut Concrete Forest Left 2");
     let mut peers = scene_snapshot.objects.clone();
-    peers.push(Puzzle3dObject {
+    peers.push(Puzzle3dObject { anchor: Default::default(),
         id: "fill-1".into(),
         label: Some("Hexagonal Cut Concrete Forest Left 2".into()),
         object_kind: Some(kind.into()),

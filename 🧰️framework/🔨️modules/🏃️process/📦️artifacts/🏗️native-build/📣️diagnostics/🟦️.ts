@@ -10,6 +10,6 @@ export function nativeBuildDiagnosticLinesV1(key:NativeBuildDiagnosticV1,values:
 }
 
 /** 🪧️ A progress sink that prints the observation rows of the cargo provenance as sentences instead of JSON. */
-export function cargoProvenanceConsoleSinkV1(kind:"provenance"|"recipe",environment:Readonly<Record<string,string|undefined>>=process.env):(row:Readonly<{bytes:number;totalBytes:number;work:number}>)=>void{
- return row=>{for(const line of nativeBuildDiagnosticLinesV1(kind==="recipe"?"recipeReading":"provenanceReading",{work:row.work,bytes:row.bytes,totalBytes:row.totalBytes},environment))console.log(line);};
+export function cargoProvenanceConsoleSinkV1(kind:"provenance"|"recipe",environment:Readonly<Record<string,string|undefined>>=process.env,output:(line:string)=>void=line=>console.log(line)):(row:Readonly<{bytes:number;totalBytes:number;work:number}>)=>void{
+ return row=>{for(const line of nativeBuildDiagnosticLinesV1(kind==="recipe"?"recipeReading":"provenanceReading",{work:row.work,bytes:row.bytes,totalBytes:row.totalBytes},environment))output(line);};
 }

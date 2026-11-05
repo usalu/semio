@@ -90,6 +90,7 @@ fn every_declared_action_bridges_to_the_command_it_names() {
         ("createRule", semio_framework_pack_json::parse(r#"{"id":"r","tileAId":"air","tileBId":"wall","direction":"RIGHT","allowed":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
         ("deleteRule", semio_framework_pack_json::parse(r#"{"id":"r"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
         ("pinCell", semio_framework_pack_json::parse(r#"{"x":0,"y":0,"z":0,"tileId":"air"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("commit-fill", Ok(semio_framework::dsl_value!({"payloadJson":"{}"}))),
         ("unpinCell", semio_framework_pack_json::parse(r#"{"x":0,"y":0,"z":0}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
         ("maskCell", semio_framework_pack_json::parse(r#"{"x":0,"y":0,"z":0}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
         ("unmaskCell", semio_framework_pack_json::parse(r#"{"x":0,"y":0,"z":0}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
@@ -221,7 +222,7 @@ fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_ros
 fn a_cell_click_of_an_armed_utility_is_one_tool_transaction() {
     let document = crate::examples::blocks::snapshot();
     let history = semio_plugin::HistoryView::empty();
-    let admitted = ArtifactView::with_operation(&document, &history, semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], authoring_seed: "seed".into() });
+    let admitted = ArtifactView::with_operation(&document, &history, semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], retained: semio_plugin::artifact_app_laws::fixture_retained_turn().grant, authoring_seed: "seed".into() });
     let no_config = NoConfig::default();
     let cfg = ConfigView { snapshot: &no_config, window: None };
     let armed = |utility: &str| {
@@ -240,3 +241,51 @@ fn a_cell_click_of_an_armed_utility_is_one_tool_transaction() {
 }
 
 semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid3d::Grid3dEditor, || semio_plugin::App { definition: crate::editor::grid3d::create_grid3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+
+
+#[test]
+fn every_authored_action_argument_is_exposed_by_its_form() {
+    let source = include_str!("../🧫️fixtures/🎛️action-arguments/🔣️.json");
+    let oracle: serde_json::Value = serde_json::from_str(source).expect("third-party fixture decoder");
+    let native = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native fixture decoder");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_string(&native)).expect("native output"), oracle);
+    let definition = grid::definition();
+    for case in oracle["cases"].as_array().expect("cases") {
+        let action = case["action"].as_str().expect("action");
+        let declared = definition.actions.iter().find(|row| row.id == action).expect("declared action");
+        let keys: std::collections::BTreeSet<&str> = declared.args.iter().map(|arg| arg.id.as_str()).collect();
+        let expected: std::collections::BTreeSet<&str> = case["args"].as_object().expect("arguments").keys().map(String::as_str).collect();
+        assert_eq!(keys, expected, "{action} must expose every authored field");
+        let args = semio_framework_pack_json::parse(&case["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value)).expect("argument bag");
+        let effective = semio_framework::effective_action_args(&declared.args, &args, None);
+        let command = command_from_action(action, Some(&effective)).expect("the form bridges");
+        assert_eq!(Grid3dEditor::command_id(&command), action);
+        let encoded = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&command)));
+        let actual: serde_json::Value = serde_json::from_str(&encoded).expect("serialized command");
+        let expected: serde_json::Value = serde_json::from_str(case["commandJson"].as_str().expect("expected command")).expect("oracle command");
+        assert_eq!(actual, expected, "{action} keeps every supplied value");
+    }
+}
+
+#[test]
+fn example_selection_follows_the_shared_language_neutral_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️example-selection/🔣️.json")).expect("example selection fixture");
+    let artifact = fixture["artifacts"].as_array().expect("artifacts").iter().find(|row| row["id"] == "grid3d").expect("artifact row");
+    let examples = [(crate::examples::blocks::ID, crate::examples::blocks::snapshot()), (crate::examples::pipes_3d::ID, crate::examples::pipes_3d::snapshot())];
+    assert_eq!(artifact["examples"], serde_json::json!(examples.iter().map(|(id, _)| *id).collect::<Vec<_>>()));
+    for (id, document) in &examples {
+        assert_eq!(example_snapshot(id).as_ref(), Some(document), "registered example {id}");
+    }
+    for case in fixture["cases"].as_array().expect("cases") {
+        let selection = case["select"].as_str().expect("selection");
+        let index = case["exampleIndex"].as_u64().unwrap_or(0) as usize;
+        let input = case["input"].as_str().unwrap_or(examples[index].0);
+        let resolved = example_snapshot(input);
+        match selection {
+            "refuse" => assert!(resolved.is_none(), "{}", case["id"]),
+            "named" => assert_eq!(resolved.as_ref(), Some(&examples[index].1), "{}", case["id"]),
+            "default" => assert_eq!(resolved.as_ref(), Some(&examples[0].1), "{}", case["id"]),
+            other => panic!("unknown selection {other}"),
+        }
+    }
+}

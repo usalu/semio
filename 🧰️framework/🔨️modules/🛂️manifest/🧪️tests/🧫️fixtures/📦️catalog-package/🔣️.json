@@ -10,7 +10,7 @@
     "examples": []
   },
   "execution": "isolated",
-  "executionProtocol": { "appChannelVersion": 23 },
+  "executionProtocol": { "appChannelVersion": 25 },
   "contributions": {
     "inferenceServices": [{
       "owner": "contract-test",
