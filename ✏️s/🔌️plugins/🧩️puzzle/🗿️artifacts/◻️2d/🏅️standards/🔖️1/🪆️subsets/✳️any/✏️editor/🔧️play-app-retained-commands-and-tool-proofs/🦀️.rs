@@ -26,10 +26,10 @@ impl Puzzle2dPlayApp {
         body_key: &str,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         window_transient: &Puzzle2dWindowTransient,
         interaction: Puzzle2dInteractionSnapshot,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_kind = window::kind_for_view(view_state).unwrap_or(semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID);
         let runtime = window::runtime(cfg.snapshot, &window_config, window_transient, Some(window_kind));
@@ -38,7 +38,7 @@ impl Puzzle2dPlayApp {
         let document_json = snapshot.to_string();
         let envelope = puzzle2d_scene_with(snapshot, runtime, active_utility, interaction);
         let labels = puzzle2d_labels(view_state);
-        let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
+        let windows = semio_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
             overview::BODY_KEY => overview::render(&document_json, &envelope)?,
             detail::BODY_KEY => detail::render(&document_json, &envelope)?,
@@ -47,9 +47,9 @@ impl Puzzle2dPlayApp {
             catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope, labels, &windows)?,
             crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels, &windows)?,
             settings::PUZZLE2D_PLAY_BODY_SETTINGS => settings::render(&envelope, labels, settings::panel_window_id(view_state))?,
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
         };
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
     }
 }
 
@@ -83,8 +83,8 @@ impl Puzzle2dRetainedCommandJobFactory {
 }
 
 impl ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Puzzle2dPlayApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Puzzle2dPlayApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Puzzle2dPlayApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Puzzle2dPlayApp>>;
 
     fn keys(&self) -> &[ToolFactoryKey] {
         &self.keys
@@ -102,12 +102,12 @@ impl ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
         self.contract
     }
 
-    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
+    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
 
     
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCommandJobFactory {
     type Owner = EditorApp<Puzzle2dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PUZZLE2D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_BOARD_SNAPSHOT_SCHEMA;
@@ -182,11 +182,11 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
 pub struct Puzzle2dRetainedCommandProofs;
 
 impl Puzzle2dRetainedCommandProofs {
-    pub fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    pub fn proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         Self::bounded_first_step_tool_proofs()
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle2d@1/*#editor",
@@ -264,11 +264,11 @@ impl Puzzle2dRetainedCommandProofs {
 pub struct Puzzle2dHostConfigurationProofs;
 
 impl Puzzle2dHostConfigurationProofs {
-    pub fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    pub fn proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         Self::bounded_first_step_tool_proofs()
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle2d@1/*#editor",

@@ -2,19 +2,19 @@
 use std::sync::Arc;
 use std::collections::BTreeMap;
 use semio_framework::kernel::Budget;
-use semio_framework_plugin_host_guest_runtime::{GuestRuntimes, PackageRef, WasmtimeRuntime};
-use semio_framework_plugin_host_routers::{IoEntryKey, IoEntryRoute, IoRouter, io_entries_conflict, resolve_io_route, route_reenters_calling_plugin};
-use semio_framework_plugin_guest_contract::{JobStep, PluginHostError, TurnFault};
+use semio_plugin_host_guest_runtime::{GuestRuntimes, PackageRef, WasmtimeRuntime};
+use semio_plugin_host_routers::{IoEntryKey, IoEntryRoute, IoRouter, io_entries_conflict, resolve_io_route, route_reenters_calling_plugin};
+use semio_plugin_guest_contract::{JobStep, PluginHostError, TurnFault};
 use semio_framework_actor::{PackageHash, PackageId, ActorId as RuntimeActorId};
-use semio_framework_plugin_host_post_turn_relay::PluginInstanceHandle;
-use semio_framework_plugin_host_engine::SharedEngineConfig;
+use semio_plugin_host_post_turn_relay::PluginInstanceHandle;
+use semio_plugin_host_engine::SharedEngineConfig;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_plugin_host_guest_runtime::MockGuestRuntime;
+use semio_plugin_host_guest_runtime::MockGuestRuntime;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_plugin_host_engine::minimal_component_without_actor_world;
+use semio_plugin_host_engine::minimal_component_without_actor_world;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_plugin_host_post_turn_relay::{test_relay_original_input,test_relay_wake_authority};
-use semio_framework_plugin_host_guest_runtime::GuestRuntime as _;
+use semio_plugin_host_post_turn_relay::{test_relay_original_input,test_relay_wake_authority};
+use semio_plugin_host_guest_runtime::GuestRuntime as _;
 
 //#region 🔖️IoRouterW1d
 /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): the NEW `IoRouter` mechanism's own
@@ -317,11 +317,11 @@ async fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_t
     )];
     router.register_plugin("cad", handle, &dialects, &[]).await.expect("register cad");
 
-    let key = semio_framework_os_kernel::io::IoKey {
+    let key = semio_os_kernel::io::IoKey {
         artifact_kind: "s.stdio.step".to_string(),
         standard: "ap214".to_string(),
         subset: "*".to_string(),
-        direction: semio_framework_os_kernel::io::IoDirection::Export,
+        direction: semio_os_kernel::io::IoDirection::Export,
         format_kind: "s.cad".to_string(),
         format_standard: "1".to_string(),
         format_subset: "*".to_string(),
@@ -349,11 +349,11 @@ async fn io_router_compose_still_refuses_to_route_back_into_the_calling_plugin()
     )];
     router.register_plugin("cad", handle, &dialects, &[]).await.expect("register cad");
 
-    let key = semio_framework_os_kernel::io::IoKey {
+    let key = semio_os_kernel::io::IoKey {
         artifact_kind: "s.stdio.step".to_string(),
         standard: "ap214".to_string(),
         subset: "*".to_string(),
-        direction: semio_framework_os_kernel::io::IoDirection::Export,
+        direction: semio_os_kernel::io::IoDirection::Export,
         format_kind: "s.cad".to_string(),
         format_standard: "1".to_string(),
         format_subset: "*".to_string(),

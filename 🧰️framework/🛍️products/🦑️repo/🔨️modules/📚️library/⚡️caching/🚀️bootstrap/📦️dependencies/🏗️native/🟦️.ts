@@ -3,8 +3,8 @@ import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️
 import {browserSystemPortV1,prepareBrowserDependenciesV1,type BrowserSystemPortV1} from "./🌐️system/🟦️.ts";
 import { parseCargoPreparationStorageV1, type CargoPreparationStorageV1 } from "../../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import nativeSchema from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json" with { type: "json" };
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { type NativeCallerPhaseV1 } from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import { OwnedCommandFailure } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { Script, createIssuedResourceControlV1, requireIssuedResourceControlInvocationV1, type ScriptInvocation, findWorkspaceRoot } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -12,7 +12,7 @@ import { discoverCargoWorkspaces } from "../../../../🗂️workspaces/🦀️ca
 import { withRepositoryCargoPreparationV1 } from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { repoToolCacheEnv } from "../../../../🏃️process/🌿️environment/🟦️.ts";
-import { requireWasmBindgenLocksV1, wasmBindgenVersion } from "../../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
+import { requireWasmBindgenLocksV1, wasmBindgenVersion, wasmBindgenCargoCommandV1, wasmBindgenCommandMatchesV1 } from "../../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
 import { selectPackageManagerV1 } from "../🔌️managers/📚️catalog/🟦️.ts";
 import { repositoryCachePartitionRootV1 } from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import { NATIVE_TOOLCHAINS_V1, pythonEnvironmentOfProjectV1, toolchainMessageV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
@@ -44,8 +44,12 @@ export async function prepareDependencies(kind: string, workspace: string, invoc
     catch(error){signal.throwIfAborted();phase.budget();if(!(error instanceof OwnedCommandFailure))throw error;return "";}
   };
   const tool = async (crate: string, command: string[], version: string): Promise<void> => {
-    if ((await probe(command[0]!, [...command.slice(1), "--version"])).split(/\s+/).includes(version)) return;
-    await run("cargo", ["install", crate, "--version", version, "--locked"]);
+    const binding=crate==="wasm-bindgen-cli",explicit=binding?boundedEnvironment.SEMIO_TOOL_WASM_BINDGEN:undefined,executable=binding?(explicit?resolve(workspace,explicit):wasmBindgenCargoCommandV1(boundedEnvironment.CARGO_HOME??"")):command[0]!;
+    const ready=async():Promise<boolean>=>{if(binding&&!existsSync(executable))return false;const output=await probe(executable,[...command.slice(1),"--version"]);return binding?wasmBindgenCommandMatchesV1(output,version):output.split(/\s+/).includes(version);};
+    if(await ready())return;
+    if(explicit)throw Error("Explicit wasm-bindgen must match Cargo.lock: "+version);
+    await run("cargo", ["install", crate, "--version", version, "--locked",...(binding?["--force"]:[])]);
+    if(binding&&!await ready())throw Error("Prepared wasm-bindgen must match Cargo.lock: "+version);
   };
   const target = async (name: string): Promise<void> => {
     if (!(await probe("rustup", ["target", "list", "--installed"])).trim().split(/\r?\n/).includes(name))
@@ -69,11 +73,11 @@ export async function prepareDependencies(kind: string, workspace: string, invoc
     const browserEnvironment={...boundedEnvironment,...repoToolCacheEnv(workspace)};
     await prepareBrowserDependenciesV1(browserPort(browserEnvironment),(command,args,environment)=>run(command,[...args],false,environment),runtimeExecutableV1(),join(workspace,"node_modules/playwright/cli.js"),browserEnvironment,signal,phase.authority.network.offline);
   }
-  else if (kind === "wasm" || kind === "trunk") {
+  else if (kind === "wasm" || kind === "trunk" || kind === "browser-wasm") {
     const bindgen = wasmBindgenVersion(readFileSync(join(workspace, "Cargo.lock"), "utf8"));
     requireWasmBindgenLocksV1(workspace);
     if (kind === "wasm") await tool("wasm-pack", ["wasm-pack"], toolPinValueV1("wasm-pack"));
-    else await tool("trunk", ["trunk"], toolPinValueV1("trunk"));
+    else if(kind === "trunk")await tool("trunk", ["trunk"], toolPinValueV1("trunk"));
     await tool("wasm-bindgen-cli", ["wasm-bindgen"], bindgen);
     await target(kind === "wasm" ? "wasm32-wasip2" : "wasm32-unknown-unknown");
     console.log(`[deps-${kind}] Pinned tools and Rust WebAssembly target are ready`);

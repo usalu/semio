@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for InsertBuilding where Op:
         record: "InsertBuilding",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert building", "Gebäude einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert building", "Gebäude einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-building".into()]

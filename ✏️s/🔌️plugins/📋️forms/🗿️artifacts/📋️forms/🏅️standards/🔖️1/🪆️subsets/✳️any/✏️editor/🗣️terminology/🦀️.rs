@@ -3,7 +3,7 @@
 //! value is that every locale combination is compile-checked in one place.
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the forms app; one field per label makes every locale combination compile-checked.
     pub struct FormsLabels {
         extension_unavailable: native_en "Extension unavailable", native_de "Erweiterung nicht verfügbar", reuse_en "Extension unavailable", reuse_de "Erweiterung nicht verfügbar";
@@ -14,6 +14,7 @@ semio_framework_ui_locale::app_labels! {
         parameters: native_en "Parameters", native_de "Parameter", reuse_en "Parameters", reuse_de "Parameter";
         unset: native_en "No default", native_de "Kein Standardwert", reuse_en "No default", reuse_de "Kein Standardwert";
         label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
+        unsupported_kind: native_en "Unsupported kind", native_de "Nicht unterstützte Art", reuse_en "Unsupported kind", reuse_de "Nicht unterstützte Art";
         kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
         visibility: native_en "Show When", native_de "Anzeigen wenn", reuse_en "Show When", reuse_de "Anzeigen wenn";
         rule: native_en "Rule", native_de "Regel", reuse_en "Rule", reuse_de "Regel";
@@ -101,8 +102,8 @@ semio_framework_ui_locale::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-pub fn forms_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static FormsLabels {
-    semio_framework_plugin::resolve_labels::<FormsLabels>(view_state)
+pub fn forms_play_labels(view_state: &semio_plugin::ViewModel) -> &'static FormsLabels {
+    semio_plugin::resolve_labels::<FormsLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 

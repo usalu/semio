@@ -223,7 +223,7 @@ fn world_vortex_and_reference_pick_cursors_resume_revalidate_and_close() {
     }
     assert_eq!(vortex_cursor.best.map(|(token, _)| token), Some(vortex));
     let mut plan = vortex_cursor.finish_plan(&state.session, &state.selection, &state.interaction, 8).expect("vortex plan").expect("vortex hit");
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 8, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
     let actions = take_actions(&mut input);
     assert_eq!(actions.len(), 1);
@@ -287,7 +287,7 @@ fn world_component_cursor_steps_one_topology_item_and_rejects_aba() {
     assert_eq!(with_world_step_context(1, |context| cursor.step(&state.session, &state.selection, &state.interaction, &state.scene, 10, context)), WorldInteractionStep::Pending);
     assert_eq!(with_world_step_context(1, |context| cursor.step(&state.session, &state.selection, &state.interaction, &state.scene, 10, context)), WorldInteractionStep::Complete);
     let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 10).expect("component plan").expect("component hit");
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 10, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
     assert_eq!(take_actions(&mut input).len(), 1);
 
@@ -314,7 +314,7 @@ fn a_right_gesture_publishes_nothing_while_it_runs() {
     state.session.interaction_revision = 4;
     state.interaction.interaction_objects.revision = 4;
     state.selection.hovered_vortex_id = Some("vortex".into());
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut authority = WorldInteractionAuthority::default();
     authority.next_generation = 4;
     authority.queue.push(WorldInteractionIntent::pointer_button(0.0, 0.0, true, 2, &PointerModifiers::default())).unwrap();
@@ -349,7 +349,7 @@ fn an_intent_aimed_outside_the_surface_retires_instead_of_faulting_the_frame() {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.bounds = Rect { x: 536.0, y: 54.0, w: 1061.0, h: 913.0 };
     state.interaction.interaction_objects.revision = state.session.interaction_revision;
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut authority = WorldInteractionAuthority::default();
     authority.next_generation = 2;
     authority.queue.push(WorldInteractionIntent::pointer_move(534.4, 500.0, -34.0, -453.0, false, 0, &PointerModifiers::default())).unwrap();
@@ -406,7 +406,7 @@ fn world_marquee_click_retires_points_before_exact_release_retry() {
     up.generation = 2;
     state.authority.interaction_authority.as_mut().unwrap().queue.push(down).unwrap();
     state.authority.interaction_authority.as_mut().unwrap().queue.push(up).unwrap();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context)), WorldInteractionAuthorityStep::Complete);
     assert_eq!(state.authority.interaction_authority.as_ref().unwrap().marquee.as_ref().map(|gesture| gesture.len), Some(1));
     assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 2, &mut input, context)), WorldInteractionAuthorityStep::Pending);
@@ -436,7 +436,7 @@ fn world_marquee_pages_build_one_target_per_grant_and_publish_atomically_fifo() 
     let mut gesture = WorldMarqueeGesture::new(6, 7, [0.0, 0.0]);
     assert!(gesture.push([100.0, 100.0]));
     let mut job = WorldMarqueePublishJob::new(8, gesture, results, false, false);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     loop {
         turns += 1;
@@ -471,12 +471,12 @@ fn world_marquee_page_claim_saturation_preserves_all_results_for_exact_retry() {
     let mut gesture = WorldMarqueeGesture::new(6, 7, [0.0, 0.0]);
     assert!(gesture.push([100.0, 100.0]));
     let mut job = WorldMarqueePublishJob::new(8, gesture, results, false, false);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut blockers = Vec::new();
     while let Ok(claim) = input.claim_action(1) {
         blockers.push(claim);
     }
-    assert!(matches!(with_world_step_context(1, |context| job.step(&state.session, &state.interaction, 8, &mut input, context)), Err(semio_framework_ui_action::BoundedActionFault::ItemCredits)));
+    assert!(matches!(with_world_step_context(1, |context| job.step(&state.session, &state.interaction, 8, &mut input, context)), Err(semio_ui_action::BoundedActionFault::ItemCredits)));
     assert!(job.prepared.is_none());
     assert_eq!(job.results.lens[0], 1);
     input.release_action_claim(blockers.pop().expect("retry claim")).expect("release retry claim");
@@ -676,7 +676,7 @@ fn world_component_marquee_publish_preserves_shared_merge_and_exact_targets() {
     let mut gesture = WorldMarqueeGesture::new(state.session.interaction_revision, 7, [0.0, 0.0]);
     assert!(gesture.push([400.0, 400.0]));
     let mut job = WorldComponentMarqueePublishJob::new(8, gesture, results, WorldComponentKind::Vertex, true, false);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     loop {
         turns += 1;

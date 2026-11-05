@@ -1,7 +1,7 @@
 
 use semio_hub_space_commands_authoring::node_graph_edit::{NodeGraphEdit, space_node_graph_row};
 use semio_hub_space_foundation::config::SpaceConfig;
-use semio_framework_os::WorkflowMutation;
+use semio_os::WorkflowMutation;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {

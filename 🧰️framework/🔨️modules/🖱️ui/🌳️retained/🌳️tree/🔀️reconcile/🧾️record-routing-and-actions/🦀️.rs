@@ -30,13 +30,13 @@ pub(super) fn record_consumes_subtree(record: &UiNodeRecord) -> bool {
 /// geometry now travels on `Node::layout_spec` (see `flex`'s header), and this channel stays
 /// lossless so the reconcile diff still sees every token change.
 fn space_token(token: ui_contract::SpaceToken) -> Option<String> {
-    Some(semio_framework_ui_layout::space_token_name(token).to_string())
+    Some(semio_ui_layout::space_token_name(token).to_string())
 }
 
 /// 🔲️ A record's [`ui_contract::EdgeSpace`] as one legacy string — every side, space-separated in
 /// CSS shorthand order, so an asymmetric padding no longer collapses onto one sampled side.
 fn edge_token(edge: ui_contract::EdgeSpace) -> Option<String> {
-    let name = semio_framework_ui_layout::space_token_name;
+    let name = semio_ui_layout::space_token_name;
     Some(match edge {
         ui_contract::EdgeSpace::All(token) => name(token).to_string(),
         ui_contract::EdgeSpace::Symmetric { vertical, horizontal } => format!("{} {}", name(vertical), name(horizontal)),

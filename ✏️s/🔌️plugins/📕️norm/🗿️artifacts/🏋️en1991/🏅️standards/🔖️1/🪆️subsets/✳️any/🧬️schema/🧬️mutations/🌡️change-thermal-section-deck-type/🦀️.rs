@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeThermalSectionDeck
         record: "ChangedThermalSectionDeckType",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change deck type (1 steel, 2 composite, 3 concrete box, 4 concrete slab, 5 concrete beam) of the thermal section", "Temperaturquerschnitt: Überbauart (1 Stahl, 2 Verbund, 3 Betonhohlkasten, 4 Betonplatte, 5 Betonbalken) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change deck type (1 steel, 2 composite, 3 concrete box, 4 concrete slab, 5 concrete beam) of the thermal section", "Temperaturquerschnitt: Überbauart (1 Stahl, 2 Verbund, 3 Betonhohlkasten, 4 Betonplatte, 5 Betonbalken) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

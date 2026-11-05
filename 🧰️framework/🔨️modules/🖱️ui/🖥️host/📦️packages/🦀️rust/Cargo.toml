@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../.."
-name = "semio-framework-ui-host"
+name = "semio-ui-host"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -19,12 +19,12 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-abi = { path = "../../../../🌉️abi/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
-ui_render = { path = "../../../🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
-ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_render = { path = "../../../🖌️render/📦️packages/🦀️rust", package = "semio-ui-render" }
+ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 raw-window-handle = "0.6"
 
 [features]
-# 🪝️ Exposes the `testkit` hooks (forwarders of crate-private items) for the companion crate `semio-framework-ui-host-tests`.
+# 🪝️ Exposes the `testkit` hooks (forwarders of crate-private items) for the companion crate `semio-ui-host-tests`.
 testkit = []
 
 # 🪟️ Native windowing. Absent on wasm, where the browser canvas host takes over.
@@ -36,15 +36,15 @@ semio-framework-job = { path = "../../../../🧵️job/📦️packages/🦀️ru
 semio-framework-job-payload = { path = "../../../../🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-backend_metal = { path = "../../../🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust", package = "semio-framework-ui-backend-metal" }
+backend_metal = { path = "../../../🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust", package = "semio-ui-backend-metal" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-backend_d3d12 = { path = "../../../🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust", package = "semio-framework-ui-backend-d3d12" }
+backend_d3d12 = { path = "../../../🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust", package = "semio-ui-backend-d3d12" }
 
 # 🐧️ winit's Linux backends are features; these load their system libraries at run time (no dev packages).
 [target.'cfg(target_os = "linux")'.dependencies]
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen"] }
-backend_vulkan = { path = "../../../🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust", package = "semio-framework-ui-backend-vulkan" }
+backend_vulkan = { path = "../../../🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust", package = "semio-ui-backend-vulkan" }
 
 # 🌉️ `backend_webgpu` is a browser-only WebGPU-via-`wasm-bindgen` backend. Excluded from
 # `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the WASI component target too.
@@ -53,7 +53,7 @@ backend_vulkan = { path = "../../../🖌️render/🎯️targets/🌋️vulkan/�
 # `🦀️backend_alias.rs`): a headless component has no platform GPU surface to alias to. Left
 # unresolved for wasip2 deliberately; fixing it is out of this slice's scope.
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-backend_webgpu = { path = "../../../🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
+backend_webgpu = { path = "../../../🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-ui-backend-webgpu" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "machine", kind: "rename-machine", record: "RenamedMachine" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename machine to \"{}\"", self.new_label), &format!("Maschine in \"{}\" umbenennen", self.new_label))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename machine to \"{}\"", self.new_label), &format!("Maschine in \"{}\" umbenennen", self.new_label))
     }
 
     fn target(&self) -> Vec<String> {

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeAnchorDesignForce 
         record: "ChangedAnchorDesignForce",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design anchor force A_d of the anchor", "Anker: Bemessungsankerkraft A_d ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design anchor force A_d of the anchor", "Anker: Bemessungsankerkraft A_d ändern")
     }
 }
 

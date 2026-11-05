@@ -1,0 +1,235 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "owner",
+    "project",
+    "profiles",
+    "values",
+    "crate",
+    "rust",
+    "consumer",
+    "deliverables",
+    "targetOutputs",
+    "negative",
+    "cargoFeatures",
+    "wasmExport",
+    "workspaceFiles"
+  ],
+  "properties": {
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project": {
+      "type": "string",
+      "minLength": 1
+    },
+    "consumer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "crate": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]+$"
+    },
+    "rust": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "profile",
+          "target"
+        ],
+        "properties": {
+          "profile": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "target": {
+            "const": "wasm"
+          }
+        }
+      }
+    },
+    "values": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "deliverables": {
+      "type": "array",
+      "items": {
+        "enum": [
+          ".js",
+          "_bg.wasm"
+        ]
+      }
+    },
+    "targetOutputs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "const": "{projectRoot}/.🧾️store/wasm.json"
+      }
+    },
+    "negative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "diagnostic",
+        "reason",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "const": "compile-refusal"
+        },
+        "source": {
+          "const": "compile_error!(\"preserve the last successful renderer\");\n"
+        },
+        "diagnostic": {
+          "const": "preserve the last successful renderer"
+        },
+        "reason": {
+          "const": "Cargo artifact build failed"
+        },
+        "status": {
+          "const": 1
+        }
+      }
+    },
+    "cargoFeatures": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "const": "trim-paths"
+      }
+    },
+    "wasmExport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind"
+      ],
+      "properties": {
+        "name": {
+          "const": "answer"
+        },
+        "kind": {
+          "const": "function"
+        }
+      }
+    },
+    "workspaceFiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package.json",
+        "📋️project.json",
+        "Cargo.toml",
+        ".cargo/config.toml"
+      ],
+      "properties": {
+        "package.json": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "📋️project.json": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "Cargo.toml": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        ".cargo/config.toml": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "prefix": "[DATA] Wasm output refusal ",
+        "maximumWireCharacters": 32768,
+        "maximumReceiptBytes": 65536,
+        "maximumFailures": 256
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "complete",
+        "id",
+        "mode",
+        "reason",
+        "wire",
+        "wireSha256",
+        "sourceSha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "complete": {
+          "const": true
+        },
+        "id": {
+          "const": "compile-refusal"
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "wire": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32768
+        },
+        "wireSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

@@ -17,8 +17,8 @@ pub struct ReorderColumns {
 impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for ReorderColumns {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "columns", kind: "reorder-columns", record: "ReorderedColumns" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move column {} to #{}", self.name, self.to_index), &format!("Spalte {} nach #{} verschieben", self.name, self.to_index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move column {} to #{}", self.name, self.to_index), &format!("Spalte {} nach #{} verschieben", self.name, self.to_index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.name.clone()]

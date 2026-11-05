@@ -38,11 +38,15 @@ const repoRoot = path.resolve(playDir, "../..");
 const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-rs", "@semio-tech/framework-editor-rs", "@semio-tech/framework-os-node-graph-rs", "@semio-tech/puzzle-wasm", "@semio-tech/flow-core"];
 
 /** 🎡️ Static assets every pane declares (meshes, map tiles, CAD examples). */
-const resolvedPlaygroundAssets = PLAY_RUNTIME_TARGETS.flatMap(target => target.assets);
-const { extensionModuleDirNames } = playRuntimeModuleLayout();
+const pane = process.env.SEMIO_TECH_PLAY_PANE;
+const runtimeTargets = pane === undefined ? PLAY_RUNTIME_TARGETS : PLAY_RUNTIME_TARGETS.filter(target => target.variant === pane);
+if (runtimeTargets.length === 0) throw new Error(`Unknown Play pane: ${pane}`);
+const engineFacet = pane === undefined ? "play" : "renderer";
+const resolvedPlaygroundAssets = runtimeTargets.flatMap(target => target.assets);
+const { extensionModuleDirNames } = playRuntimeModuleLayout(runtimeTargets);
 
 export default defineOwnedBuildConfigFactory(({ command, mode }) => {
-  const development = command === "serve" ? readPlayActivation(repoRoot) : undefined;
+  const development = command === "serve" ? readPlayActivation(repoRoot, pane) : undefined;
   const pluginModulesDir = builtPluginModulesRootIn(repoRoot, readBuildMode(mode));
   const installedExtensionsDir = development?.extensionsDirectory ?? pluginModulesDir;
   const extensionDir = (name: string): string => playExtensionDirectory(name, pluginModulesDir, development?.extensionDirectories);
@@ -84,15 +88,15 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
       semioServeCloseVitePlugin(),
       ...semioHostHtmlVitePlugin(repoRoot, { title: "semio · Play", entry: "./🟦️.tsx", bodyClass: "h-screen w-screen overflow-hidden bg-background text-foreground", cnameHost: PLAY_HOST }),
       semioEmojiIndexHtmlVitePlugin(playDir),
-      managedWasmPackagesVitePluginV1(frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),facet:"play"}).map(({packageName,root,entry,files,entrypoint})=>({packageName,root,entry,files,entrypoint}))),
+      managedWasmPackagesVitePluginV1(frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),facet:engineFacet}).map(({packageName,root,entry,files,entrypoint})=>({packageName,root,entry,files,entrypoint}))),
       playgroundFlowWasmDevStubPlugin(repoRoot,flowBrowserDeliveryV1(repoRoot,repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),command})),
       semioBackboneVitePlugin(),
       semioBlobVitePlugin(),
-      ...(development ? [playUnionReceiptVitePlugin({ workspace: repoRoot })] : []),
-      ...(development ? [semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: playActivationComponents(repoRoot, development.extensionDirectories) })] : []),
+      ...(development && pane === undefined ? [playUnionReceiptVitePlugin({ workspace: repoRoot })] : []),
+      ...(development ? [semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: playActivationComponents(repoRoot, development.extensionDirectories, development.receipt.plugins.map(plugin => plugin.pluginId)) })] : []),
       ...(command === "serve" ? [semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot, streams: devStreamMuxServer })] : []),
       ...semioAssetsVitePlugin(repoRoot),
-      ...(command === "build" ? [] : staticDirMountVitePlugins(repoRoot, [...playDevStaticDirMounts(repoRoot, extensionDir, readBuildMode(mode)), ...runtimeAssetDeliveries(), ...packageAssetDeliveries()])),
+      ...(command === "build" ? [] : staticDirMountVitePlugins(repoRoot, [...playDevStaticDirMounts(repoRoot, extensionDir, readBuildMode(mode), runtimeTargets), ...runtimeAssetDeliveries(), ...packageAssetDeliveries()])),
       ...createAssetBuildPluginsV1(repoRoot, resolvedPlaygroundAssets, PLAYGROUND_ASSET_PROVIDERS_V1, playGisMapTileServeMode(command === "build" ? "build" : "serve")),
       uiReactBuildPlugin(),
       ...uiTailwindBuildPlugins(),

@@ -5,24 +5,24 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_scene::canvas2d_snapshot_with_page;
-use semio_framework_ui_scene::canvas2d_snapshot_abort_write;
-use semio_framework_ui_scene::canvas2d_snapshot_abort_write_step;
-use semio_framework_ui_scene::canvas2d_snapshot_admit_page;
-use semio_framework_ui_scene::canvas2d_snapshot_begin;
-use semio_framework_ui_scene::canvas2d_snapshot_begin_close;
-use semio_framework_ui_scene::canvas2d_snapshot_close_step;
-use semio_framework_ui_scene::canvas2d_snapshot_seal;
-use semio_framework_ui_scene::canvas2d_snapshot_terminal_is_empty;
-use semio_framework_ui_scene::canvas2d_snapshot_write_terminal_is_empty;
-use semio_framework_ui_scene::Canvas2dSnapshotDescriptor;
-use semio_framework_ui_scene::Canvas2dSnapshotLease;
-use semio_framework_ui_scene::Canvas2dSnapshotPage;
-use semio_framework_ui_scene::Canvas2dSnapshotWriteToken;
-use semio_framework_ui_scene::CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY;
+use semio_os_kernel::Viewport2d;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_scene::canvas2d_snapshot_with_page;
+use semio_ui_scene::canvas2d_snapshot_abort_write;
+use semio_ui_scene::canvas2d_snapshot_abort_write_step;
+use semio_ui_scene::canvas2d_snapshot_admit_page;
+use semio_ui_scene::canvas2d_snapshot_begin;
+use semio_ui_scene::canvas2d_snapshot_begin_close;
+use semio_ui_scene::canvas2d_snapshot_close_step;
+use semio_ui_scene::canvas2d_snapshot_seal;
+use semio_ui_scene::canvas2d_snapshot_terminal_is_empty;
+use semio_ui_scene::canvas2d_snapshot_write_terminal_is_empty;
+use semio_ui_scene::Canvas2dSnapshotDescriptor;
+use semio_ui_scene::Canvas2dSnapshotLease;
+use semio_ui_scene::Canvas2dSnapshotPage;
+use semio_ui_scene::Canvas2dSnapshotWriteToken;
+use semio_ui_scene::CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY;
 use std::collections::HashMap;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_element_endpoints;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::find_node_2d;
@@ -70,8 +70,8 @@ async fn mesh_preview_renders_region_edges() {
     crate::context::dispatch(&mut app, semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand::SetActiveExample(semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let node = render(&snapshot, &Viewport2d::default()).expect("fixture surface admission");
-    let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
-    let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
+    let semio_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
+    let scene: Canvas2dScene = semio_ui_scene::decode(props).expect("decode canvas scene");
     assert!(scene.layers_json.contains("mesh-edge-"), "expected mesh-edge preview layers in the model scene");
 }
 
@@ -194,7 +194,7 @@ fn fem2d_visual_job_maximum_plus_one_rejects_before_owner_transfer() {
 fn mounted_visual_complete_field_pages_match_independent_json_and_close_one_page() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧵️session/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let count = fixture["visual"]["fields"].as_u64().unwrap() as usize;
-    assert_eq!(semio_framework_ui_scene::CANVAS2D_SNAPSHOT_PAGE_CAPACITY, fixture["visual"]["pageCapacity"].as_u64().unwrap() as usize);
+    assert_eq!(semio_ui_scene::CANVAS2D_SNAPSHOT_PAGE_CAPACITY, fixture["visual"]["pageCapacity"].as_u64().unwrap() as usize);
     let doc = Fem2dSnapshot::default();
     let visual = Fem2dLiveVisual { fields: (0..count).map(|index| NodeLiveField { node_id: format!("n{index}"), displacement: [index as f64 * 1e-6, -1e-6], residual: [0.0; 2], reaction: [0.0; 2], contour: index as f64 * 1e-6, mode_shape: [0.0; 2] }).collect(), state: FemVisualState::ValidatedFinal, converged: true, validated_final: true, ..Default::default() };
     let freshness = visual_freshness(791);

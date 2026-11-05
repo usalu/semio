@@ -2,7 +2,7 @@ use super::*;
 use crate::editor_domain::editor_laws::context;
 use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
-use semio_framework_plugin::{ArtifactEditor, PluginApp};
+use semio_plugin::{ArtifactEditor, PluginApp};
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🧫️fixtures/🔣️.json")).expect("creation fixture")
@@ -53,10 +53,10 @@ async fn rejected_creation_returns_a_fault_and_leaves_the_document_unchanged() {
     for value in cases["invalid"].as_array().unwrap().iter().chain(cases["unsupportedOperators"].as_array().unwrap()) {
         let args: semio_framework_value::DslValue = value.clone().into();
         let command = semio_s_artifact_procedural_3d_editor::Generation3dPlayApp::command_from_action("addWidget", Some((args).clone()), None).expect("decoded");
-        let admission = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        let admission = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         let fault = match admission {
             Err(fault) => fault,
-            Ok(_) => semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("creation must fail"),
+            Ok(_) => semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("creation must fail"),
         };
         assert_eq!(fault.code.0, fixture()["faultCode"].as_str().unwrap());
         assert_eq!(context::snapshot(&app), before);
@@ -89,8 +89,8 @@ async fn automatic_addition_undo_redo_restores_both_content_and_position() {
     context::dispatch(&mut app, Generation3dCommand::AddWidget(payload(&serde_json::json!({"kind":"inputNote"})))).await;
     let after = context::snapshot(&app);
     assert_eq!(after.host_snapshot.widgets.len(), before.host_snapshot.widgets.len() + 1);
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(context::snapshot(&app), before);
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(context::snapshot(&app), after);
 }

@@ -23,4 +23,4 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 serde = { workspace = true }
-semio-framework-ui-declaration = { path = "../../../../🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-ui-declaration = { path = "../../../../🖱️ui/📜️declaration/📦️packages/🦀️rust" }

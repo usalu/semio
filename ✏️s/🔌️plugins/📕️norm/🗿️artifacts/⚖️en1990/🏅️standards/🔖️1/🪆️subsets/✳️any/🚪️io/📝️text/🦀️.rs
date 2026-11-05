@@ -1,7 +1,7 @@
 //! 🚪️ Artifact representation module ownership.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 extern crate semio_framework_schema as framework_schema;
 #[path = "📸️snapshot/🦀️.rs"]
 pub mod snapshot;

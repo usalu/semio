@@ -1,6 +1,6 @@
 mod input_decoding_fixture {
     use super::*;
-    use semio_framework_ui_tui_core::event::{mods, Event, Key, KeypadKey, MouseButton, MouseKind};
+    use semio_ui_tui_core::event::{mods, Event, Key, KeypadKey, MouseButton, MouseKind};
     use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 
     const FIXTURE: &str = include_str!("../🧫️fixtures/⌨️input-decoding/🔣️.json");

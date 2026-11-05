@@ -10,7 +10,7 @@ pub struct InsertDeck { pub index: usize, pub deck: Deck }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for InsertDeck where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::remove_deck::RemoveDeck> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "deck", kind: "insert-deck", record: "InsertedDeck" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert deck {} at #{}", self.deck.id, self.index), &format!("Deck {} an #{} einfügen", self.deck.id, self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert deck {} at #{}", self.deck.id, self.index), &format!("Deck {} an #{} einfügen", self.deck.id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.deck.id.clone()] }
 }
 

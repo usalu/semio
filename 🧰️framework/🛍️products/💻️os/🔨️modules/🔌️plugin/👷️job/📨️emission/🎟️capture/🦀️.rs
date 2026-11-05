@@ -1,7 +1,7 @@
 //! 📨️ Original emitted values and metadata move under the actual caller before mounted publication owns them.
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_emission::{ActionMeta,Emit,OriginalHostConfigurationDeclaration};
-use semio_framework_plugin_host_configuration::OriginalHostConfiguration;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_emission::{ActionMeta,Emit,OriginalHostConfigurationDeclaration};
+use semio_plugin_host_configuration::OriginalHostConfiguration;
 use semio_framework_job::{OriginalCallerSourceLoan,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand,StepContext};
 use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::RetainedCloneClose};
 use std::mem::{ManuallyDrop,size_of};

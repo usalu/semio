@@ -2,7 +2,7 @@
 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::*;
-use semio_framework_os_kernel::{
+use semio_os_kernel::{
     sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind},
     os_store::serialization::ArtifactSqliteSnapshotHost,
 };
@@ -62,11 +62,11 @@ impl Drop for Parts {
 }
 
 impl ArtifactSqliteSnapshotHost for PptxSnapshot {
-    fn encode_sqlite_snapshot_native(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
+    fn encode_sqlite_snapshot_native(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode(self, encoding, control, native_owner.native())
     }
 
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_owner: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_owner: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         native_owner.receive::<Self, Self>(|slot, native_control, body| {
             let value = crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::decode(payload, control, native_control)?;
             let owner = semio_framework_value::DecodedValue::new(value, |value: Self| value.retire_sqlite_snapshot());
@@ -77,7 +77,7 @@ impl ArtifactSqliteSnapshotHost for PptxSnapshot {
         })
     }
 
-    fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
+    fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
         crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::preflight(self, encoding, control)
     }
 

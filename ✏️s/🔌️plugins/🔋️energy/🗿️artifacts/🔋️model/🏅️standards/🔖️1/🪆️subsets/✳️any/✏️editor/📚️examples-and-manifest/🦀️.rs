@@ -48,8 +48,8 @@ pub(super) fn example_model(example_id: &str) -> Option<crate::model::Model> {
 }
 
 /// 📚️ The picker's option list, in `example_rows` order.
-pub(super) fn example_options() -> Vec<semio_framework_plugin::ActionArgOption> {
-    example_rows().into_iter().map(|(id, label, _)| semio_framework_plugin::ActionArgOption { value: id.to_string(), label: LocalizedLabel::native(label, label) }).collect()
+pub(super) fn example_options() -> Vec<semio_plugin::ActionArgOption> {
+    example_rows().into_iter().map(|(id, label, _)| semio_plugin::ActionArgOption { value: id.to_string(), label: LocalizedLabel::native(label, label) }).collect()
 }
 //#endregion 📚️Examples
 
@@ -60,7 +60,7 @@ pub(super) fn example_options() -> Vec<semio_framework_plugin::ActionArgOption> 
 /// 🎬️ Every action this editor declares APP-level, in one roster: `build_definition` copies each of
 /// them onto every window kind, which is what makes a panel control and a keybinding dispatchable
 /// whatever window is active. `setActiveExample` is app-level too, through `.mutation(…)`.
-pub fn app_level_action_definitions() -> Vec<semio_framework_plugin::ActionDefinition> {
+pub fn app_level_action_definitions() -> Vec<semio_plugin::ActionDefinition> {
     let mut actions = inspector_action_definitions();
     actions.extend(crate::editor_edit::window_shared_action_definitions());
     actions
@@ -75,7 +75,7 @@ pub fn app_level_action_definitions() -> Vec<semio_framework_plugin::ActionDefin
 /// actions and binds their chords; the editor binds none of its own for the simulation.
 /// Each window owns its own action list (`structure::actions`/`zones::actions`/the simulation
 /// window's `definition`), so this function never restates one.
-pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_energy_model_editor() -> semio_plugin::AppDefinition {
     let mut builder = Editor::builder(MODEL_DIALECT)
         .document(["semio", "energy", "model"])
         .artifact_kind(crate::snapshot::artifact_kind())
@@ -89,12 +89,12 @@ pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(simulation::definition())
         .window_kind_def(model_window::definition())
         .interaction(crate::editor_interaction::energy_model_interaction_definition())
-        .window_kind_interactions(model_window::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(ENERGY_MODEL_INTERACTION_DOMAIN)])
+        .window_kind_interactions(model_window::WINDOW_KIND_ID, vec![semio_plugin::InteractionRef::new(ENERGY_MODEL_INTERACTION_DOMAIN)])
         .panel_tab_def(artifact_panel::definition())
         .panel_tab_def(inspection_panel::definition())
         .tool(tools::simulation::definition())
         .mutation(SET_ACTIVE_EXAMPLE_ACTION_ID, LocalizedLabel::native("Load example", "Beispiel laden"))
-        .action_args(SET_ACTIVE_EXAMPLE_ACTION_ID, vec![semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example_options()).required()])
+        .action_args(SET_ACTIVE_EXAMPLE_ACTION_ID, vec![semio_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example_options()).required()])
         .keybinding("mod+shift+n", CREATE_ZONE_ACTION_ID)
         .keybinding("mod+shift+s", CREATE_SURFACE_ACTION_ID)
         .keybinding("mod+shift+g", SET_SITE_ACTION_ID)
@@ -131,7 +131,7 @@ pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
     builder = builder.action_describe("create-surface", LocalizedLabel::native("Adds a new surface with the given name and class to an existing zone, built from an existing construction.", "Fügt einer vorhandenen Zone eine neue Fläche mit dem angegebenen Namen und der Klasse hinzu, aufgebaut aus einer vorhandenen Konstruktion."));
     builder = builder.action_describe("create-zone", LocalizedLabel::native("Adds a new thermal zone with the given name, volume in cubic metres, multiplier and conditioning.", "Fügt eine neue thermische Zone mit dem angegebenen Namen, Volumen in Kubikmetern, Multiplikator und Konditionierung hinzu."));
     builder = builder.action_describe("rename-zone", LocalizedLabel::native("Renames one thermal zone; zone names key every simulation report, so a name already in use is refused.", "Benennt eine thermische Zone um; Zonennamen sind der Schlüssel aller Simulationsberichte, ein bereits vergebener Name wird abgelehnt."));
-    builder = builder.action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome);
+    builder = builder.action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome);
     builder.build_definition()
 }
 //#endregion 🔖️Manifest

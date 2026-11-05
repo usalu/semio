@@ -48,7 +48,7 @@ fn a_chrome_panel_reserves_a_safe_area_for_the_surface_overlay_row() {
 /// of painting under it, and moves back the moment the panel closes.
 #[test]
 fn the_overlay_row_steps_clear_of_an_open_floating_panel() {
-    let theme = semio_framework_os_renderer_wgpu_host_base::resolve_theme("light");
+    let theme = semio_renderer_wgpu_host_base::resolve_theme("light");
     let computing = "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
     let bounds = Rect::new(4.0, 44.0, 952.0, 592.0);
     let worlds = [("window:procedural-preview", bounds, Some(computing))];
@@ -88,18 +88,18 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
             .enumerate()
             .map(|(index, id)| {
                 let id = id.as_str().unwrap().to_string();
-                let mut windows = vec![semio_framework_os_renderer_wgpu_dock::DockStackTab::new(id.clone())];
+                let mut windows = vec![semio_renderer_wgpu_dock::DockStackTab::new(id.clone())];
                 if id == "b" {
                     windows[0].template_id = change.and_then(|row| row["templateId"].as_str()).map(str::to_string);
                     if let Some(extra) = change.and_then(|row| row["extraId"].as_str()) {
-                        windows.push(semio_framework_os_renderer_wgpu_dock::DockStackTab::instance(extra, "b", WindowStackCorner::TopLeft));
+                        windows.push(semio_renderer_wgpu_dock::DockStackTab::instance(extra, "b", WindowStackCorner::TopLeft));
                     }
                 }
-                let stack = semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows, active: id };
+                let stack = semio_renderer_wgpu_dock::DockNode::Stack { windows, active: id };
                 (stack, weights[index].as_f64().unwrap() as f32)
             })
             .collect();
-        WindowLayout { root: semio_framework_os_renderer_wgpu_dock::dock_node_to_layout_root(&semio_framework_os_renderer_wgpu_dock::DockNode::Row(children)) }
+        WindowLayout { root: semio_renderer_wgpu_dock::dock_node_to_layout_root(&semio_renderer_wgpu_dock::DockNode::Row(children)) }
     };
     for case in law["cases"].as_array().unwrap() {
         let mut shell = host_test_shell();
@@ -166,8 +166,8 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
     )
     .unwrap();
     let mut seeded = layout(&law["initialWeights"], Some(retitle));
-    if let semio_framework_ui_layout::layout::WindowLayoutRoot::Axis(axis) = &mut seeded.root {
-        if let semio_framework_ui_layout::layout::WindowLayoutChild::Stack(stack) = &mut axis.children[1] {
+    if let semio_ui_layout::layout::WindowLayoutRoot::Axis(axis) = &mut seeded.root {
+        if let semio_ui_layout::layout::WindowLayoutChild::Stack(stack) = &mut axis.children[1] {
             stack.children[1].title = retitle["bakedTitle"].as_str().map(str::to_string);
         }
     }
@@ -186,14 +186,14 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
 
 #[test]
 fn incoming_layout_prunes_unknown_windows_against_the_react_instance_roster() {
-    fn paths(node: &semio_framework_os_renderer_wgpu_dock::DockNode, path: String, out: &mut Vec<String>) {
+    fn paths(node: &semio_renderer_wgpu_dock::DockNode, path: String, out: &mut Vec<String>) {
         match node {
-            semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows, .. } => {
+            semio_renderer_wgpu_dock::DockNode::Stack { windows, .. } => {
                 if !windows.is_empty() {
                     out.push(path);
                 }
             }
-            semio_framework_os_renderer_wgpu_dock::DockNode::Row(children) | semio_framework_os_renderer_wgpu_dock::DockNode::Column(children) => {
+            semio_renderer_wgpu_dock::DockNode::Row(children) | semio_renderer_wgpu_dock::DockNode::Column(children) => {
                 for (index, (child, _)) in children.iter().enumerate() {
                     paths(child, if path.is_empty() { index.to_string() } else { format!("{path}.{index}") }, out);
                 }

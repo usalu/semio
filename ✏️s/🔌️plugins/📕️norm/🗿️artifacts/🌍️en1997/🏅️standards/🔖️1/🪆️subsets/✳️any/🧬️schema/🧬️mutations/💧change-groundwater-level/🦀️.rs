@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeGroundwaterLevel w
         verb: "change", entity: "groundwater-level", kind: "change-groundwater-level", record: "ChangedGroundwaterLevel",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change groundwater level", "Grundwasserstand ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change groundwater level", "Grundwasserstand ändern")
     }
 }
 

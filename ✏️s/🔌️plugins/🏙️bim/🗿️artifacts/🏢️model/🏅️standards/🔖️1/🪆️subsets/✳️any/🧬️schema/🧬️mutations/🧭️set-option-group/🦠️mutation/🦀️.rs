@@ -21,7 +21,7 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "option-group", kind: "set-option-group", record: "SetOptionGroup" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Set option group", "Ändern") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Set option group", "Ändern") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

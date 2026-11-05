@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPlatePlateFu 
         record: "ChangedJointPlatePlateFu",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plate tensile strength f_u,p of the joint plate", "Anschlussblech: Zugfestigkeit des Blechs f_u,p ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plate tensile strength f_u,p of the joint plate", "Anschlussblech: Zugfestigkeit des Blechs f_u,p ändern")
     }
 }
 

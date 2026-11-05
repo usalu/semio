@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfKSigma where Op:
         record: "ChangedCfKSigma",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Buckling factor k_σ of the cold-formed member", "Kaltprofil: Beulwert k_σ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Buckling factor k_σ of the cold-formed member", "Kaltprofil: Beulwert k_σ ändern")
     }
 }
 

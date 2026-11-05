@@ -486,7 +486,7 @@ pub enum ShellHubSignInAnswer {
 }
 
 /// 🏘️ What one spawned spaces read answers: the rows, or `Err` when the list could not be read (the rows on screen stay).
-pub type ShellHubSpacesAnswer = Result<Vec<semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceRow>, ()>;
+pub type ShellHubSpacesAnswer = Result<Vec<semio_renderer_wgpu_hub_contracts::space_browser::SpaceRow>, ()>;
 
 /// 🔐️ One hub workspace request whose network legs run on a spawned task and never on the frame's interaction state:
 /// the frame keeps taking input while the hub answers, the chrome shows the phase, and `cancel` ends the request. A
@@ -507,7 +507,7 @@ impl<T: 'static> ShellHubTask<T> {
         T: Send,
     {
         let (sender, receiver) = std::sync::mpsc::channel();
-        let task = ShellPoolFuture::spawn(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, async move {
+        let task = ShellPoolFuture::spawn(semio_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, async move {
             let _ = sender.send(leg.await);
         });
         Self { receiver, cancel, task: Some(task) }
@@ -517,7 +517,7 @@ impl<T: 'static> ShellHubTask<T> {
     #[cfg(target_arch = "wasm32")]
     pub fn spawn(cancel: CancelToken, leg: impl std::future::Future<Output = T> + 'static) -> Self {
         let (sender, receiver) = std::sync::mpsc::channel();
-        semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
+        semio_renderer_wgpu_host_base::spawn_app_task(async move {
             let _ = sender.send(leg.await);
         });
         Self { receiver, cancel }

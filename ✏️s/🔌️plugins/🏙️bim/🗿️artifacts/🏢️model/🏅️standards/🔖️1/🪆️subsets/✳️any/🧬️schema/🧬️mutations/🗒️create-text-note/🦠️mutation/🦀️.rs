@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "text-note", kind: "create-text-note", record: "CreateTextNote" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create text note \"{}\"", self.id), &format!("Textnotiz \"{}\" anlegen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create text note \"{}\"", self.id), &format!("Textnotiz \"{}\" anlegen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

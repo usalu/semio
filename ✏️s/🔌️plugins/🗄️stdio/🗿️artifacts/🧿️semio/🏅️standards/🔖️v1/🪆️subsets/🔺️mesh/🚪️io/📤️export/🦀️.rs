@@ -3,7 +3,7 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
     #[path = "."]
     pub mod serializers {
@@ -98,7 +98,7 @@ extern crate semio_framework_os_kernel as store;
 
 use semio_s_artifact_stdio_semio_mesh::io::SemioMeshFormat;
 use semio_s_artifact_stdio_semio_base::SemioConversion;
-use semio_framework_plugin::{serializer_entry_of, io::{register_composer_entries, ComposerEntry}, app::{ArtifactDeclarationBuilder, DeclarationReady}};
+use semio_plugin::{serializer_entry_of, io::{register_composer_entries, ComposerEntry}, app::{ArtifactDeclarationBuilder, DeclarationReady}};
 
 /// 🧾️ This direction's composer rows, built once.
 pub fn entries() -> &'static [ComposerEntry] {
@@ -123,7 +123,7 @@ fn register() {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_mesh(mesh: &semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot, format: SemioMeshFormat) -> Result<Vec<u8>, String> {
     use {crate::serializers::artifacts::dwg::v_ac1024::any::SemioMeshToDwg, crate::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf, crate::serializers::artifacts::las::v1_0::any::SemioMeshToLas, crate::serializers::artifacts::obj::v3_0::any::SemioMeshToObj, crate::serializers::artifacts::ply::v1_0::any::SemioMeshToPly, crate::serializers::artifacts::png::v1_2::any::SemioMeshToPng, crate::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl};
-    use semio_framework_plugin::{ ArtifactSerializer};
+    use semio_plugin::{ ArtifactSerializer};
     match format {
         SemioMeshFormat::Stl => Ok(semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::io::encode_stl_ascii(&::semio_framework_async::poll::resolve_ready(SemioMeshToStl::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),
         SemioMeshFormat::Obj => Ok(semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::io::encode_obj(&::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),

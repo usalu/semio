@@ -3,17 +3,17 @@
 //#region 🧬️ComposedParentFixture
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_cancellation_during_open_closure_and_view_preparation_preserves_the_live_bundle() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     for (case, target) in [
-        ("member-open", semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::OpeningMembers),
-        ("closure", semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::ValidatingClosure),
-        ("views", semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::PreparingCandidateViews),
+        ("member-open", semio_plugin_document_media::ActiveArtifactStoreReplacementState::OpeningMembers),
+        ("closure", semio_plugin_document_media::ActiveArtifactStoreReplacementState::ValidatingClosure),
+        ("views", semio_plugin_document_media::ActiveArtifactStoreReplacementState::PreparingCandidateViews),
     ] {
         let mut app = live_composed_replacement_app().await;
         let old_parent_id = app.stores.store.envelope().id.clone();
         let old_window_generation = app.stores.window_transient_store.document_generation();
         let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 710 + case.len() as u64, &format!("cancel-{case}"), 31, &mut cx).await;
-        drive_composed_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
+        drive_composed_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
         assert!(app.try_begin_owned_document_members(handle, 1, u64::MAX).expect("cancel member registry"));
         app.admit_owned_document_member(handle, ingress).unwrap_or_else(|_| panic!("cancel candidate ingress"));
         app.seal_owned_document_members(handle).expect("cancel candidate seal");
@@ -24,8 +24,8 @@ async fn retained_composed_replacement_cancellation_during_open_closure_and_view
             assert!(app.ingest.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.active_member_open.is_some()));
         }
         app.cancel_artifact_store_replacement(handle).expect("cancel retained composed replacement");
-        drive_composed_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, &mut cx).await;
-        assert_eq!(app.poll_artifact_store_replacement(handle), semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{case}");
+        drive_composed_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, &mut cx).await;
+        assert_eq!(app.poll_artifact_store_replacement(handle), semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{case}");
         assert_eq!(app.stores.store.envelope().id, old_parent_id, "{case}");
         assert_eq!(app.child_composition.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").expect("live content retained").count, 0, "{case}");
         assert_eq!(app.stores.window_transient_store.document_generation(), old_window_generation, "{case}");
@@ -38,7 +38,7 @@ async fn retained_composed_replacement_cancellation_during_open_closure_and_view
 
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_close_query_forwards_whole_member_page_extent() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/🧫️fixtures/📏️replacement-demand/🔣️.json")).expect("closed neutral replacement demand");
     let ordinary = fixture["ordinaryGrantBytes"].as_u64().unwrap() as usize;
     assert_eq!(ordinary,COMPOSITION_PAGE_GRANT.maximum_release_bytes);
@@ -47,16 +47,16 @@ async fn retained_composed_replacement_close_query_forwards_whole_member_page_ex
     assert_eq!(ceiling,COMPOSITION_CLEANUP_GRANT.maximum_release_bytes);
     let mut app = live_composed_replacement_app().await;
     let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 799, "exact-page-close", 31, &mut cx).await;
-    drive_composed_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
+    drive_composed_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
     assert!(app.try_begin_owned_document_members(handle, 1, u64::MAX).expect("member ingress registry"));
     app.admit_owned_document_member(handle, ingress).unwrap_or_else(|_| panic!("exact member ingress"));
     app.seal_owned_document_members(handle).expect("sealed member set");
-    drive_composed_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::OpeningMembers, &mut cx).await;
+    drive_composed_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::OpeningMembers, &mut cx).await;
     app.maintenance.maintenance_stage = 14;
     composed_maintenance_turn(&mut app, ordinary, &mut cx).expect("begin retained member open");
     app.cancel_artifact_store_replacement(handle).expect("cancel candidate");
     for _ in 0..100_000 {
-        if app.ingest.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.state == semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::RetiringRejectedMembers && active.active_member_open.as_ref().is_some_and(|open| store::MemberOpenOperation::next_release_byte_demand(open).is_ok_and(|bytes| bytes == extent))) { break; }
+        if app.ingest.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.state == semio_plugin_document_media::ActiveArtifactStoreReplacementState::RetiringRejectedMembers && active.active_member_open.as_ref().is_some_and(|open| store::MemberOpenOperation::next_release_byte_demand(open).is_ok_and(|bytes| bytes == extent))) { break; }
         app.close_step(&mut cx,COMPOSITION_PAGE_GRANT).expect("close prior owners and bounded logical request retirement"); let _ = app.take_constructor_receipt();
         semio_framework_async::yield_once().await;
     }
@@ -67,13 +67,13 @@ async fn retained_composed_replacement_close_query_forwards_whole_member_page_ex
     let mut terminal = false;
     for _ in 0..100_000 {
         let step = app.close_step(&mut cx,COMPOSITION_CLEANUP_GRANT).expect("explicit admitted cleanup extent"); let _ = app.take_constructor_receipt();
-        if matches!(step, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)) { terminal = true; break; }
+        if matches!(step, semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)) { terminal = true; break; }
         semio_framework_async::yield_once().await;
     }
     assert!(terminal && PluginApp::close_terminal_is_empty(&app));
     assert_eq!(demand, extent);
     assert_eq!(demand_after_denial, extent);
-    assert!(matches!(denied, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress.released_bytes == 0) || matches!(denied, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { .. }));
+    assert!(matches!(denied, semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress.released_bytes == 0) || matches!(denied, semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { .. }));
     assert_eq!(caller_demand, extent);
 
     let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
@@ -81,13 +81,13 @@ async fn retained_composed_replacement_close_query_forwards_whole_member_page_ex
 
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_terminal_store_box_requires_whole_physical_grant() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/🧫️fixtures/📏️replacement-terminal/🔣️.json")).expect("closed neutral terminal frame");
     let ceiling = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
     assert_eq!(ceiling,COMPOSITION_CLEANUP_GRANT.maximum_release_bytes);
     let mut app = live_composed_replacement_app().await;
     let handle = composed_replacement_candidate(&mut app, 798, "terminal-box-close", 0, &mut cx).await;
-    drive_composed_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
+    drive_composed_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
     app.cancel_artifact_store_replacement(handle).expect("cancel candidate before member ingress");
     let mut extent = None;
     for _ in 0..100_000 {
@@ -110,16 +110,16 @@ async fn retained_composed_replacement_terminal_store_box_requires_whole_physica
     let mut terminal = false;
     for _ in 0..100_000 {
         let step = app.close_step(&mut cx,COMPOSITION_CLEANUP_GRANT).expect("complete separately admitted app cleanup"); let _ = app.take_constructor_receipt();
-        if matches!(step, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)) { terminal = true; break; }
+        if matches!(step, semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)) { terminal = true; break; }
         semio_framework_async::yield_once().await;
     }
     assert!(terminal && PluginApp::close_terminal_is_empty(&app));
     assert_eq!(exact_demand, extent);
     assert!(retained);
     assert_eq!((denied_heap.requested_bytes, denied_heap.released_bytes), (0, 0));
-    assert!(matches!(denied, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress.copied_items <= 1 && progress.released_bytes == 0));
+    assert!(matches!(denied, semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress.copied_items <= 1 && progress.released_bytes == 0));
     assert_eq!((funded_heap.requested_bytes, funded_heap.released_bytes), (0, extent));
-    assert!(matches!(funded, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress.copied_items == 1 && progress.released_bytes == extent));
+    assert!(matches!(funded, semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress.copied_items == 1 && progress.released_bytes == extent));
 
     let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
@@ -137,22 +137,22 @@ async fn retained_composed_replacement_terminal_store_box_requires_whole_physica
 /// revision, and a pump that bypassed the app would answer progress here instead of a fault.
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_candidate_projection_is_the_apps_own_answer() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = live_composed_replacement_app().await;
     let old_parent_id = app.stores.store.envelope().id.clone();
     let handle = composed_replacement_candidate(&mut app, 741, "app-projection-parent", COMPOSED_PARENT_PROJECTION_REFUSAL_REVISION, &mut cx).await;
-    drive_composed_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
+    drive_composed_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
 
     app.maintenance.maintenance_stage = 14;
     let fault = composed_maintenance_turn(&mut app, 4096, &mut cx).expect_err("the app's refusal must reach the caller, never be answered as progress");
-    let semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(original)=&fault.primary else{panic!("original app diagnostic remains the primary")};
+    let semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(original)=&fault.primary else{panic!("original app diagnostic remains the primary")};
     assert_eq!(original.code.0, "test.parent-projection", "the app's own fault code survives the pump");
     assert_eq!(original.message, COMPOSED_PARENT_PROJECTION_REFUSAL_MESSAGE, "the app's own diagnostic survives the pump, not a flat framework string");
     close_composition_refusal(fault,&mut cx);
 
     app.cancel_artifact_store_replacement(handle).expect("cancel the refused candidate");
-    drive_composed_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, &mut cx).await;
-    assert_eq!(app.poll_artifact_store_replacement(handle), semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Cancelled);
+    drive_composed_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, &mut cx).await;
+    assert_eq!(app.poll_artifact_store_replacement(handle), semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Cancelled);
     assert_eq!(app.stores.store.envelope().id, old_parent_id, "a refused candidate never displaces the live parent");
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("refused candidate acknowledgement"));
     close_member_admission_app(&mut app, &mut cx);
@@ -162,20 +162,20 @@ async fn retained_composed_replacement_candidate_projection_is_the_apps_own_answ
 
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_rejects_a_real_live_child_generation_change_before_publication() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = live_composed_replacement_app().await;
     let old_parent_id = app.stores.store.envelope().id.clone();
     let old_window_generation = app.stores.window_transient_store.document_generation();
     let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 729, "stale-parent", 47, &mut cx).await;
-    drive_composed_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
+    drive_composed_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
     assert!(app.try_begin_owned_document_members(handle, 1, u64::MAX).expect("stale member registry"));
     app.admit_owned_document_member(handle, ingress).unwrap_or_else(|_| panic!("stale candidate ingress"));
     app.seal_owned_document_members(handle).expect("stale candidate seal");
-    drive_composed_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::CandidateReady, &mut cx).await;
+    drive_composed_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::CandidateReady, &mut cx).await;
     let generation = app.child_composition.admit_child_content_publication().expect("real live child publication authority");
     app.child_composition.publish_child_content_member(generation, "slot", "child-1").await.expect("real live child generation change");
-    drive_composed_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, &mut cx).await;
-    assert_eq!(app.poll_artifact_store_replacement(handle), semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault);
+    drive_composed_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, &mut cx).await;
+    assert_eq!(app.poll_artifact_store_replacement(handle), semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault);
     assert_eq!(app.stores.store.envelope().id, old_parent_id);
     assert_eq!(app.child_composition.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").expect("live content retained").count, 0);
     assert_eq!(app.stores.window_transient_store.document_generation(), old_window_generation);
@@ -187,7 +187,7 @@ async fn retained_composed_replacement_rejects_a_real_live_child_generation_chan
 
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_replacement_publishes_the_complete_nested_bundle_atomically() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let vectors = recursive_replacement_vectors();
     let row = recursive_replacement_case(&vectors, "recursive-unordered-success");
     let mut app = live_recursive_replacement_app().await;
@@ -200,11 +200,11 @@ async fn retained_window_input_recursive_replacement_publishes_the_complete_nest
     let (handle, ingress) = retained_recursive_replacement_fixture(&mut app, 741, parent_id, row["mode"].as_str().expect("recursive replacement mode"), &mut cx).await;
     eprintln!(
         "recursive replacement success: admitting complete member set active={} app={} ingress={}",
-        std::mem::size_of::<semio_framework_plugin_document_media::ActiveArtifactStoreReplacement<ComposedParentSnapshot, RecursiveFixtureMutation, RecursiveTestMembers>>(),
+        std::mem::size_of::<semio_plugin_document_media::ActiveArtifactStoreReplacement<ComposedParentSnapshot, RecursiveFixtureMutation, RecursiveTestMembers>>(),
         std::mem::size_of::<VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>>(),
-        std::mem::size_of::<semio_framework_plugin_child::OwnedDocumentMemberIngress>(),
+        std::mem::size_of::<semio_plugin_child::OwnedDocumentMemberIngress>(),
     );
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx)).await;
     admit_recursive_member_set(&mut app, handle, row, ingress);
 
     for _ in 0..100_000 {
@@ -228,13 +228,13 @@ async fn retained_window_input_recursive_replacement_publishes_the_complete_nest
             assert_eq!(app.child_composition.child_content_generation, old_content_generation);
             assert_eq!(app.stores.window_transient_store.document_generation(), old_window_generation);
         }
-        if app.poll_artifact_store_replacement(handle) == semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready {
+        if app.poll_artifact_store_replacement(handle) == semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready {
             break;
         }
         let _ = drive_recursive_replacement_step(&mut app, &mut cx).expect("atomic recursive replacement drive");
         semio_framework_async::yield_once().await;
     }
-    assert_eq!(app.poll_artifact_store_replacement(handle), semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert_eq!(app.poll_artifact_store_replacement(handle), semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready);
     let packs = PluginApp::child_packs(app.as_ref()).await.expect("published recursive member registry packs");
     assert_eq!(packs.iter().map(|entry| entry.child_id.as_str()).collect::<std::collections::BTreeSet<_>>(), std::collections::BTreeSet::from(["child-1", "grandchild-1"]));
     assert!(app.child_composition.test_child_admission_state(1).roots_retiring_empty);

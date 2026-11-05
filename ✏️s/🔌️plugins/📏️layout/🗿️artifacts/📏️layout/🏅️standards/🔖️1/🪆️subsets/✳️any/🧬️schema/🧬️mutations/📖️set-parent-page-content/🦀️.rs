@@ -21,7 +21,7 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for SetParentPageContent
 where Op: protocol::Mutation<LayoutSnapshot, Diff = LayoutDiff> + From<crate::set_parent_page_content::SetParentPageContent> + From<crate::set_page_overrides::SetPageOverrides> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "parent-page-content", kind: "set-parent-page-content", record: "SetParentPageContent" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Set parent page content", "Mustervorlageninhalt festlegen") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Set parent page content", "Mustervorlageninhalt festlegen") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

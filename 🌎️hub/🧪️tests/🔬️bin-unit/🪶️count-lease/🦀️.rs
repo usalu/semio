@@ -20,7 +20,7 @@ fn independent_count_file(root:&std::path::Path,bytes:&[u8],count:i32,encoding:&
 #[tokio::test(flavor="multi_thread",worker_threads=4)]
 async fn real_count_component_lease_uses_authenticated_hub_authority_and_erased_sqlite_io(){
  use semio_hub_trusted_catalog_fixtures::count_trusted_catalog_fixture;
- use semio_framework_os_mcp::HeadlessWorkspace;
+ use semio_os_mcp::HeadlessWorkspace;
  use directory::os_directory::client::LocalHubCredential;
  use std::path::PathBuf;
  use semio_framework::ArtifactDialect;
@@ -30,7 +30,7 @@ async fn real_count_component_lease_uses_authenticated_hub_authority_and_erased_
  use semio_framework_value::ValueRefusalKind;
  let output=semio_hub_testing::test_artifact_root().join("real-count-workspace-lease");std::fs::create_dir_all(&output).unwrap();
  let repo=semio_framework_test_fixtures::repo_root!();
- let component=std::fs::read(repo.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/dist/components/semio_framework_plugin_host_test_component.wasm")).expect("actual Count component prerequisite");
+ let component=std::fs::read(repo.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/dist/components/semio_plugin_host_test_component.wasm")).expect("actual Count component prerequisite");
  let document_id=artifact_document_id_for_test("real-count-workspace-lease");
  let profile=count_trusted_catalog_fixture::verified_count_profile(&output.join("verified-profile"),&component,&document_id).await.expect("production trusted loader accepts actual Count descriptor/component");
  let selection=profile.selection().clone();let mut state=test_state().await;
@@ -67,7 +67,7 @@ async fn real_count_component_lease_uses_authenticated_hub_authority_and_erased_
     let returned=io_run_with_snapshot_control(&import,file.clone(),SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let IoPayload::Text(text)=returned else{panic!("text encoding preserved")};assert_eq!(serde_json::from_str::<serde_json::Value>(&text).unwrap(),serde_json::json!({"count":count}));
     database.table_mut("semio_snapshot").unwrap().rows[0].values[5]=SqliteValue::Text("binary".into());let binary_file=semio_framework::sqlite_snapshot::export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
     let binary=io_run_with_snapshot_control(&import,IoPayload::Binary(binary_file),SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let IoPayload::Binary(native_pack)=&binary else{panic!("native Binary required")};
-    let mirror=codec_runtime.codec_print_mirror(&compiled,"fixture.neutral-host-fixture.counter",native_pack,&spr,semio_framework_plugin_host::Budget{fuel:8_000_000_000,deadline_ms:120000,max_effects:0,max_patch_bytes:0,max_frames:0}).await.expect("actual compiled owner decodes the native Count record");assert_eq!(serde_json::from_str::<serde_json::Value>(&mirror.dsl).unwrap(),serde_json::json!({"count":count}));
+    let mirror=codec_runtime.codec_print_mirror(&compiled,"fixture.neutral-host-fixture.counter",native_pack,&spr,semio_plugin_host::Budget{fuel:8_000_000_000,deadline_ms:120000,max_effects:0,max_patch_bytes:0,max_frames:0}).await.expect("actual compiled owner decodes the native Count record");assert_eq!(serde_json::from_str::<serde_json::Value>(&mirror.dsl).unwrap(),serde_json::json!({"count":count}));
     let physical=io_run_with_snapshot_control(&export,binary.clone(),SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;
     let IoPayload::Binary(binary_sqlite)=&physical else{panic!("binary native export still produces physical SQLite")};independent_count_file(&output,binary_sqlite,count,"binary");
     let binary_domain=semio_framework::sqlite_snapshot::import_sqlite_database(binary_sqlite,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert_eq!(binary_domain.table("fixture_counter").unwrap().rows[0].values,vec![SqliteValue::Integer(1),SqliteValue::Integer(i64::from(count))]);

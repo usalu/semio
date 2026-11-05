@@ -18,8 +18,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeCPe where Op: prot
         verb: "change", entity: "c-pe", kind: "change-c-pe", record: "ChangedCPe",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change external pressure coefficient cpe", "Außendruckbeiwert cpe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change external pressure coefficient cpe", "Außendruckbeiwert cpe ändern")
     }
 }
 

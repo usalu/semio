@@ -1,17 +1,17 @@
 //! 🧪️ Actual retained input and production SPR writer exercise the neutral owner contract.
 
 use semio_framework_value::ErasedSnapshotRetirement as _;
-use semio_framework_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification};
-use semio_framework_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
-use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenRequest};
+use semio_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification};
+use semio_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
+use semio_os_store_member_open::{MemberOpenDiagnostic, MemberOpenRequest};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_store_member_open::history::dictionary::record::RetainedDictionaryDelta;
-use semio_framework_os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification};
+use semio_os_store_member_open::history::dictionary::record::RetainedDictionaryDelta;
+use semio_os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification};
 use semio_framework_job::StepContext;
-use semio_framework_os_store_member_open::history::VerifiedMemberHistoryInput;
+use semio_os_store_member_open::history::VerifiedMemberHistoryInput;
 use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
-use semio_framework_os_store_owned_schema_decode::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages};
-use semio_framework_os_store_envelope::owner::OwnerRef;
+use semio_os_store_owned_schema_decode::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages};
+use semio_os_store_envelope::owner::OwnerRef;
 use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
 use serde_json::Value;
 
@@ -84,16 +84,16 @@ async fn history(fixture: &Value, row: &Value) -> Vec<u8> {
         records.push((65, vec![1, 7]));
     }
     if operation == "noncritical-transition" {
-        records.push((semio_framework_os_spr::REC_TRANSITION, vec![1]));
+        records.push((semio_os_spr::REC_TRANSITION, vec![1]));
     }
     if operation != "missing-composition" {
         records.push((65, composition));
     }
-    let options = semio_framework_os_spr::WriteOptions { required_flags: protocol::REQUIRED_HASH_CHAIN, optional_flags: protocol::OPTIONAL_CANONICAL };
-    let mut writer = semio_framework_os_spr::SprWriter::begin(Vec::new(), &options).await.unwrap();
+    let options = semio_os_spr::WriteOptions { required_flags: protocol::REQUIRED_HASH_CHAIN, optional_flags: protocol::OPTIONAL_CANONICAL };
+    let mut writer = semio_os_spr::SprWriter::begin(Vec::new(), &options).await.unwrap();
     for (kind, payload) in records {
         let critical = match (operation, kind) {
-            ("noncritical-dictionary", 3) | ("noncritical-document", 1) | ("noncritical-transition", semio_framework_os_spr::REC_TRANSITION) => false,
+            ("noncritical-dictionary", 3) | ("noncritical-document", 1) | ("noncritical-transition", semio_os_spr::REC_TRANSITION) => false,
             ("critical-composition", 65) => true,
             (_, 65) => false,
             _ => true,
@@ -127,7 +127,7 @@ fn request(fixture: &Value, row: &Value, history: &[u8]) -> MemberOpenRequest {
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(chunk).unwrap()).unwrap();
     }
     pages.seal().unwrap();
-    MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, Some(owner), pages, semio_framework_os_spr::ActorId(fixture["openedActor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("neutral request admission"))
+    MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, Some(owner), pages, semio_os_spr::ActorId(fixture["openedActor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("neutral request admission"))
 }
 
 fn verified_input(fixture: &Value, row: &Value, history: &[u8]) -> VerifiedMemberHistoryInput {

@@ -1,0 +1,12 @@
+[
+  {
+    "requestCase": 0,
+    "capability": "evaluate",
+    "responseAction": "flowEvalResolve"
+  },
+  {
+    "requestCase": 1,
+    "capability": "evaluate",
+    "responseAction": "flowEvalResolve"
+  }
+]

@@ -69,7 +69,7 @@ export function incrementalRootsV1(store:string):string[]{
   for(const segment of pattern.split("/"))current=current.flatMap(dir=>segment==="*"?directoriesOf(dir):isDirectory(join(dir,segment))?[join(dir,segment)]:[]);
   for(const base of current){
    let level=[base];
-   for(let depth=0;depth<policy.maximumProfileDepth;depth++){level=level.flatMap(directoriesOf).filter(dir=>basename(dir)!==policy.directory);for(const dir of level)if(isDirectory(join(dir,policy.directory)))found.add(join(dir,policy.directory));}
+   for(let depth=0;depth<policy.maximumProfileDepth;depth++){level=level.flatMap(directoriesOf).filter(dir=>basename(dir)!==policy.directory&&!(pattern===policy.laneBase&&depth===0&&policy.excludedLaneChildren.includes(basename(dir))));for(const dir of level)if(isDirectory(join(dir,policy.directory)))found.add(join(dir,policy.directory));}
   }
  }
  return [...found].sort();

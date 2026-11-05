@@ -1,7 +1,7 @@
 //! 🪐️ OS host orchestration for space drafts and collection archives.
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 
 pub use semio_framework_artifact_space_collection::{
     artifact_backbone_uri, collection_backbone_uri, empty_collection_snapshot, entry_path, folder_path,
@@ -15,7 +15,7 @@ pub use semio_framework_artifact_space_space::{
     SpaceMutation, SpaceOptionalAvatar, SpacePackageError, SpaceProgramsDelta, SpaceUsersModification, SpaceCollectionsModification, SpaceExtensionsModification, SpaceUserRemoval, SpaceUserInsertion, SpaceUserRelocation, SpaceCollectionRemoval, SpaceCollectionInsertion, SpaceCollectionRelocation, SpaceProgramRemoval, SpaceProgramInsertion, SpaceProgramRelocation, SpaceExtensionRemoval, SpaceExtensionInsertion, SpaceExtensionRelocation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceUserPatch, SpaceUsersDelta, SpaceVisibility, S_SPACE_SCHEMA,
 };
 
-use semio_framework_os_host_registry::resolve_kernel_future;
+use semio_os_host_registry::resolve_kernel_future;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -443,11 +443,11 @@ pub fn real_blob_reader<B: store::BlobStore>(blob_store: &B) -> impl Fn(&str) ->
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub async fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8], actor: protocol::ActorId) -> Result<store::ArtifactStore<P, Mutation>, SpaceZipError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<P> + protocol::ColdMutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
 {
-    let parsed = store::os_store::text_format::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| SpaceZipError::Pack(error.to_string()))?;
-    store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(parsed.envelope, actor).await.map_err(|error| SpaceZipError::Pack(error.to_string()))
+    let parsed = store::os_store::text_format::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(parsed.envelope, actor).await.map_err(|error| SpaceZipError::Pack(error.to_string()))
 }
 
 /// 📥️ Puts one imported blob's bytes into a live `store::BlobStore`, verifying the freshly computed

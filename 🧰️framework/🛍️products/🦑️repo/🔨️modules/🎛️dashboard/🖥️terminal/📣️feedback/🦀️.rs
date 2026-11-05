@@ -1,6 +1,6 @@
 pub use dashboard_labels::DashboardLabels;
 use dashboard_labels::labels;
-pub use semio_framework_ui_tui_terminal::backend::TerminalBackend;
+pub use semio_ui_tui_terminal::backend::TerminalBackend;
 pub use ui_locale::Locale;
 use std::collections::VecDeque;
 use std::io;

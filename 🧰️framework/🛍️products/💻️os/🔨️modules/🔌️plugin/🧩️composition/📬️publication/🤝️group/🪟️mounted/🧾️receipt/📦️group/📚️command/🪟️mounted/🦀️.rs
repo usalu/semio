@@ -1,7 +1,7 @@
 use crate::mounted_child_group_receipt_group::command::CommandPrune;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use store::MemberFactory;
 use store::SpaceMember;

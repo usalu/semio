@@ -1,5 +1,5 @@
 use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use crate::viewer::mp4::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]

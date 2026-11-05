@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeSlopeGoverningLaye
         record: "ChangedSlopeGoverningLayerId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change governing layer id of the slope", "Böschung: Kennung der maßgebenden Schicht ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change governing layer id of the slope", "Böschung: Kennung der maßgebenden Schicht ändern")
     }
 }
 

@@ -9,14 +9,14 @@
 //! this same host (`🧱️elements/🕸️NodeGraph/🟦️.tsx` — `nodeGraphSelectionActionArgs`,
 //! `nodeGraphHoverActionArgs`, `nodeGraphViewportActionArgs`).
 
-use semio_framework_os_renderer_wgpu_engine_attach::drop_engine_surface;
+use semio_renderer_wgpu_engine_attach::drop_engine_surface;
 use super::*;
-use semio_framework_os_kernel::Viewport2d;
+use semio_os_kernel::Viewport2d;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_declaration::ui::SurfaceKind;
-use semio_framework_ui_layout::layout::UiPresence;
-use semio_framework_ui_scene_node_graph::{NodeGraphInteractionDomain, NodeGraphScene};
-use semio_framework_ui_wgpu_input::InputState;
+use semio_ui_declaration::ui::SurfaceKind;
+use semio_ui_layout::layout::UiPresence;
+use semio_ui_scene_node_graph::{NodeGraphInteractionDomain, NodeGraphScene};
+use semio_ui_wgpu_input::InputState;
 
 static NODE_GRAPH_SCENE_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧱️elements/⚙️EngineCanvas/🧪️tests/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json"));
 
@@ -66,8 +66,8 @@ pub(super) fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
     }
 }
 
-fn paint_scene_into_draw_list(scene: &UiComponentSceneNode, bounds: Rect) -> semio_framework_os_renderer_wgpu_ui_engine_tests::surface_fixtures::RetainedSurfacePaint {
-    semio_framework_os_renderer_wgpu_ui_engine_tests::surface_fixtures::paint_retained_surface_scene(scene, bounds)
+fn paint_scene_into_draw_list(scene: &UiComponentSceneNode, bounds: Rect) -> semio_renderer_wgpu_ui_engine_tests::surface_fixtures::RetainedSurfacePaint {
+    semio_renderer_wgpu_ui_engine_tests::surface_fixtures::paint_retained_surface_scene(scene, bounds)
 }
 
 /// 🔤️ One action's string fields, key-sorted — the emitted value contract is order-preserving, and a
@@ -150,7 +150,7 @@ fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list()
     assert!(resources.terminal_is_empty());
     drop(packet);
     drop(resources);
-    semio_framework_os_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
+    semio_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
 }
 
 #[test]
@@ -193,7 +193,7 @@ fn tutorial_semantic_points_resolve_through_live_graph_geometry() {
     let actual = resolve_tutorial_surface_point(&host_id, &semio_framework::onboarding::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "radius".into(), value: 1.5 }).unwrap();
     assert!((actual.0 - expected[0]).abs() < 0.001 && (actual.1 - expected[1]).abs() < 0.001, "slider domain must use the same zoomed track as React: {actual:?} vs {expected:?}");
     assert_eq!(resolve_tutorial_surface_point(&host_id, &semio_framework::onboarding::IntroductionPoint::Scene { id: surface_id.into(), position: [0.0, 0.0, 0.0] }), None, "a 2D graph intentionally has no 3D scene projector");
-    semio_framework_os_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
+    semio_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
 }
 
 #[test]
@@ -299,7 +299,7 @@ fn fit_graph_answers_the_fitted_camera_not_the_scene_camera() {
     assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel), "attach");
 
     let scene_camera = [94.755_815_717_374_45, -97.508_331_346_796_68, 1.784_432_561_601_109_9];
-    let fitted = semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_fit_camera(surface_id).expect("a live graph can be framed");
+    let fitted = semio_renderer_wgpu_engine_graph::node_graph::node_graph_fit_camera(surface_id).expect("a live graph can be framed");
     assert_ne!(fitted, scene_camera, "the fit must answer a camera it computed, not the scene's own");
 
     let (published, painted, coverage) = ENGINE_SURFACES
@@ -319,7 +319,7 @@ fn fit_graph_answers_the_fitted_camera_not_the_scene_camera() {
 fn projection_snapshot_rejects_invalid_node_graph_viewports() {
     let _serialized = engine_surface_law_guard();
     for camera in [[0.0, 0.0, 0.0], [f64::NAN, 0.0, 1.0], [0.0, f64::INFINITY, 1.0]] {
-        assert!(matches!(graph_projection_snapshot(Vec::new(), None, None, camera), Err(semio_framework_ui_action::BoundedActionFault::Structure)));
+        assert!(matches!(graph_projection_snapshot(Vec::new(), None, None, camera), Err(semio_ui_action::BoundedActionFault::Structure)));
     }
 }
 
@@ -370,5 +370,5 @@ fn node_graph_paint_publishes_its_captions_over_the_engine_raster() {
     assert!(caption_layer > raster_layer, "captions paint in a LATER layer than the engine raster ({caption_layer} vs {raster_layer}), or the opaque texture covers them");
     let glyphs: usize = draw.layers.iter().map(|layer| layer.overlay_ui_instances.len()).sum();
     assert!(glyphs >= labels, "every published caption reaches the draw list as glyphs, got {glyphs} for {labels} captions");
-    semio_framework_os_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
+    semio_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
 }

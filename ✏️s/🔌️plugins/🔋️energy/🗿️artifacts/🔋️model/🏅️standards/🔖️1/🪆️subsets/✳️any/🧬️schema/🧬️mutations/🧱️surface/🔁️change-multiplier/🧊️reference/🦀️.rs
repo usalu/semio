@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "surface", kind: "change-surface-multiplier", record: "ChangedSurfaceMultiplier" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change surface {} multiplier to {}", self.id.0, self.new_multiplier), &format!("Multiplikator von Oberfläche {} auf {} ändern", self.id.0, self.new_multiplier))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change surface {} multiplier to {}", self.id.0, self.new_multiplier), &format!("Multiplikator von Oberfläche {} auf {} ändern", self.id.0, self.new_multiplier))
     }
 
     fn target(&self) -> Vec<String> {

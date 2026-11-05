@@ -1,7 +1,7 @@
 //! 🗄️ Caller-authored Stdio contribution assembly.
 
-use semio_framework_plugin::plugin_app_close_prelude::{PluginBuilder, Ready};
-use semio_framework_plugin::{PluginApp, PluginAssemblyError};
+use semio_plugin::plugin_app_close_prelude::{PluginBuilder, Ready};
+use semio_plugin::{PluginApp, PluginAssemblyError};
 use semio_s_artifact_stdio_contract::registry::ContributionRegistry;
 use semio_s_artifact_stdio_contract::{ArtifactAssembly, NativeCodecFactoryReceipt};
 use std::collections::BTreeSet;
@@ -17,7 +17,7 @@ pub struct AssemblyOwner<'a> {
 pub struct AssemblyPlan {
     assemblies: Vec<ArtifactAssembly>,
     receipts: Vec<NativeCodecFactoryReceipt>,
-    kinds: Vec<semio_framework_plugin::ArtifactKindSpec>,
+    kinds: Vec<semio_plugin::ArtifactKindSpec>,
 }
 
 impl AssemblyPlan {

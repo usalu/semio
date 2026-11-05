@@ -1,21 +1,21 @@
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_process_process3d_panels::inspection::*;
 use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_measure_label, editor::process3d::terminology::Process3dLabels};
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::Stock, snapshot::WorkingSolid, snapshot::WorkshopMachine};
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::tree_item;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 use semio_s_artifact_process_process3d_commands::step::add_step;
 use semio_s_artifact_process_process3d_editor::Process3dCommand;
 use semio_s_artifact_process_process3d_kit::PROCESS3D_INTERACTION_DOMAIN;
@@ -68,7 +68,7 @@ fn select(app: &mut context::Process3dApp, id: &str) {
         ("merge".to_string(), DslValue::String("replace".into())),
         ("method".to_string(), DslValue::String("pick".into())),
     ]);
-    context::action(app, semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(&args));
+    context::action(app, semio_plugin::INTERACTION_SELECT_ACTION_ID, Some(&args));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -125,7 +125,7 @@ async fn selected_machine_id_renders_its_capabilities() {
 #[semio_framework_async_macros::async_test]
 async fn a_capability_section_stamps_its_total_closed_and_materialises_it_open() {
     use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::MeasureRecipe, snapshot::Workshop, snapshot::WorkshopMachine};
-    use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+    use semio_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
     let mut fixture = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     fixture.workshop = Workshop {
         machines: vec![WorkshopMachine {
@@ -146,11 +146,11 @@ async fn a_capability_section_stamps_its_total_closed_and_materialises_it_open()
             }],
         }],
     };
-    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let section = "process3d-play-inspector.capability.cut";
     let project = |windows: &TreeWindows<'_>| {
         let node = render(&fixture, &["machine:saw".to_string()], labels, windows).expect("inspector renders");
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("inspector projection")
+        semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("inspector projection")
     };
 
     let closed = project(&TreeWindows::unhosted());
@@ -163,7 +163,7 @@ async fn a_capability_section_stamps_its_total_closed_and_materialises_it_open()
 
     let view = ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_INSPECTION.into(), node_key: section.into(), open: Some(true), offset: 0, rows: 32 }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let opened = project(&TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_INSPECTION));
     assert!(opened.contains("Kerf: 0.05"), "opening the section materialises its parameters: {opened}");

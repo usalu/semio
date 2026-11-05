@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeElementOutstand wh
         record: "ChangedElementOutstand",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Outstand element of the section element", "Querschnittsteil: Einseitig gestütztes Querschnittsteil ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Outstand element of the section element", "Querschnittsteil: Einseitig gestütztes Querschnittsteil ändern")
     }
 }
 

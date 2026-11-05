@@ -37,8 +37,8 @@ where
         vec!["id".to_string()]
     }
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename document to \"{}\"", self.new_id), &format!("Dokument in \"{}\" umbenennen", self.new_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename document to \"{}\"", self.new_id), &format!("Dokument in \"{}\" umbenennen", self.new_id))
     }
 }
 

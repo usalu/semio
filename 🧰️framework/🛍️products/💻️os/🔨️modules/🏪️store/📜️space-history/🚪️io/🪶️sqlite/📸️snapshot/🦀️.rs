@@ -3,14 +3,14 @@
 #[path="🛂️validation/🦀️.rs"]mod validation;
 #[path="🫴️receiving/🦀️.rs"]mod receiving;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_spr::HybridLogicalTimestamp;
+use semio_os_spr::HybridLogicalTimestamp;
 use crate::lifted_serialization::ArtifactSqliteSnapshotHost;
-use semio_framework_os_store_space_schema::space_history_document::{S_SPACE_HISTORY_SCHEMA, SpaceAlternative, SpaceCheckpoint, SpaceHistorySnapshot, SpaceMemberPin};
-use semio_framework_os_vcs::Author;
+use semio_os_store_space_schema::space_history_document::{S_SPACE_HISTORY_SCHEMA, SpaceAlternative, SpaceCheckpoint, SpaceHistorySnapshot, SpaceMemberPin};
+use semio_os_vcs::Author;
 use semio_framework_io_sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, validate_sqlite_database_schema};
 use semio_framework_io_sqlite_snapshot::artifact::{Cell, RowWriter};
 use semio_framework_value::{ValueError, ValueRefusalKind};
-use semio_framework_os_space_sqlite_cells as fields;
+use semio_os_space_sqlite_cells as fields;
 #[path = "🚦️native/🦀️.rs"]
 mod native;
 #[path = "⚖️settlement/🦀️.rs"]
@@ -20,7 +20,7 @@ pub use native::decode_with as decode_native_cst;
 pub mod admission;
 /// 🚪️ The new explicitly authored SQLite coordinate of the real persisted history owner.
 pub const SQLITE_SNAPSHOT_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: S_SPACE_HISTORY_SCHEMA, standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
-pub use semio_framework_os_store_space_schema::lifted_snapshot::{pair, rows, schema, word, write_rows};
+pub use semio_os_store_space_schema::lifted_snapshot::{pair, rows, schema, word, write_rows};
 
 
 

@@ -546,7 +546,7 @@ export class OpenPlanCheckScript extends BundleScript {
       }
       return matches[0]!;
     };
-    const schemaTarget = ["-p", "semio-framework-os-kernel", "--lib"];
+    const schemaTarget = ["-p", "semio-os-kernel", "--lib"];
     const schemaLaw = exactLaw(schemaTarget, "document_open_plan_v1_matches_language_neutral_fixture");
     const catalogTarget = ["-p", "semio-hub-trusted-catalog-laws", "--lib"];
     const catalogLaw = exactLaw(catalogTarget, "verified_trusted_catalog_document_open_generation_and_resolution_are_exact");

@@ -1,3 +1,4 @@
+import {mergeStoryWorldSelectionV1,pickStoryWorldSelectionV1} from "../🎯️selection/🟦️.ts";
 // #region 🧲️Header
 // 💻️ ✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx
 // Specs: Host the framework renderer's `World3dHost` for Storybook + Playwright selection/camera checks, driven by the *real* puzzle-3d example fixtures.
@@ -130,22 +131,6 @@ const STORY_DEFAULT_RUNTIME: StoryWorld3dRuntime = {
   activeUtility: "select",
 };
 
-/** 🖱️ Story-local mirror of the ONE `MergeMode` set algebra (`🕹️interaction/🧪️tests/🧫️fixtures/🎯️merge-modes.json`) — applies a `worldPick`/`worldSelect`/`worldVortexSelect` merge mode to the current selection. */
-function applyStoryWorldMerge(current: readonly string[], id: string, merge: string): string[] {
-  const set = new Set(current);
-  if (merge === "replace" || merge === "range") return [id];
-  if (merge === "additive") {
-    set.add(id);
-    return [...set];
-  }
-  if (merge === "subtractive") {
-    set.delete(id);
-    return [...set];
-  }
-  if (set.has(id)) set.delete(id);
-  else set.add(id);
-  return [...set];
-}
 
 /** 🧩️ Story-local mirror of a subset of `d3::Puzzle3dPlayApp::handle_action` (`puzzle/plugin/rs/lib.rs`) — enough for the story to click/hover/orbit/delete/duplicate against the real fixtures. */
 function storyActionArguments(value: unknown): Record<string, unknown> | undefined {
@@ -156,25 +141,22 @@ function reduceStoryWorld3dAction(state: StoryWorld3dState, action: string, args
   const { fixture, runtime } = state;
   switch (action) {
     case "worldPick": {
-      const index = Number(args?.id);
       const merge = typeof args?.merge === "string" ? args.merge : "replace";
-      const target = fixture.objects[index];
-      if (!target) return state;
-      return { fixture, runtime: { ...runtime, selectedIds: applyStoryWorldMerge(runtime.selectedIds, target.id, merge) } };
+      return { fixture, runtime: { ...runtime, selectedIds: pickStoryWorldSelectionV1(runtime.selectedIds, fixture.objects, args?.id, merge) } };
     }
     case "worldSelect": {
       const ids = Array.isArray(args?.ids) ? (args.ids as string[]) : [];
       const merge = typeof args?.merge === "string" ? args.merge : "replace";
       if (merge === "replace") return { fixture, runtime: { ...runtime, selectedIds: ids } };
       let selectedIds = runtime.selectedIds;
-      for (const id of ids) selectedIds = applyStoryWorldMerge(selectedIds, id, merge);
+      for (const id of ids) selectedIds = mergeStoryWorldSelectionV1(selectedIds, id, merge);
       return { fixture, runtime: { ...runtime, selectedIds } };
     }
     case "worldVortexSelect": {
       const fullId = args?.fullId;
       const merge = typeof args?.merge === "string" ? args.merge : "replace";
       if (typeof fullId !== "string") return state;
-      return { fixture, runtime: { ...runtime, selectedIds: applyStoryWorldMerge(runtime.selectedIds, fullId, merge) } };
+      return { fixture, runtime: { ...runtime, selectedIds: mergeStoryWorldSelectionV1(runtime.selectedIds, fullId, merge) } };
     }
     case "setHover": {
       const objectId = args?.objectId;

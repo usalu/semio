@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_ui_contract::{accessibility_role, Component, ContainerRole};
+use semio_ui_contract::{accessibility_role, Component, ContainerRole};
 
 struct Stub;
 

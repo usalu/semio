@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLoadCaseMomentVari
         record: "ChangedLoadCaseMomentVariable",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Variable moment M_Q,k of the footing load case", "Fundament-Lastfall: Veränderliches Moment M_Q,k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Variable moment M_Q,k of the footing load case", "Fundament-Lastfall: Veränderliches Moment M_Q,k ändern")
     }
 }
 

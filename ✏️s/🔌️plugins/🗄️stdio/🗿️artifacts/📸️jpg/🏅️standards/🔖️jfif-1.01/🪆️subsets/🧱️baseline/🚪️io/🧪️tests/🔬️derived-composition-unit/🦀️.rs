@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use semio_framework_plugin::io::AnalyzeSource;
+    use semio_plugin::io::AnalyzeSource;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn gradient_image(w: u32, h: u32) -> Vec<u8> {

@@ -1,5 +1,5 @@
 //! 🧮️ Explicit TIFF row indexes and typed collection backing share the transfer ledger.
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind};
+use semio_os_kernel::sqlite_snapshot::{SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind};
 
 pub(super) fn owned_vec<T>(count:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<T>,ValueError>{
     control.admit_allocation_bytes(count.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"TIFF construction backing overflow"))?)?;

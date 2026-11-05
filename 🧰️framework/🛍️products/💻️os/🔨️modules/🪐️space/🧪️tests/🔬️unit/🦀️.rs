@@ -1,12 +1,12 @@
 
-use semio_framework_os_kernel::ColdMutation;
-use semio_framework_os_kernel::ColdMutationDiff;
-use semio_framework_os_kernel::ColdDiffAlgebra;
+use semio_os_kernel::ColdMutation;
+use semio_os_kernel::ColdMutationDiff;
+use semio_os_kernel::ColdDiffAlgebra;
 use super::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::Mutation as _;
 use protocol::MutationDiff as _;
-use semio_framework_os_kernel::os_pack::snapshot::ArtifactDsl;use store::BlobStore;
+use semio_os_kernel::os_pack::snapshot::ArtifactDsl;use store::BlobStore;
 
 /// 🛂️ Binds a finite test caller identity authority, the one every authored space edit is admitted through.
 macro_rules! test_identity {
@@ -15,8 +15,8 @@ macro_rules! test_identity {
     };
     ($identity:ident, $maximum:expr) => {
         let mut observer_function = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-        let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer_function;
-        let mut $identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new($maximum, observer).expect("finite test identity admission");
+        let observer: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer_function;
+        let mut $identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new($maximum, observer).expect("finite test identity admission");
     };
 }
 
@@ -743,7 +743,7 @@ fn load_repair_reconcilers_never_write_history_rows() {
     let mut atelier = empty_space_snapshot("Atelier", SpaceKind::Atelier, SpaceVisibility::Private);
     atelier.users.push(demo_user("u2", SpaceRole::Author));
     atelier.users.push(demo_user("u1", SpaceRole::Author));
-    let space_store = resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-repair-space", atelier, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    let space_store = resolve_kernel_future(store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-repair-space", atelier, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
     let space_history = space_store.envelope().vcs.clone();
     let loaded = space_store.snapshot().expect("projection");
     let (repaired, reports) = reconcile_space_atelier_invariant(loaded.clone());
@@ -753,7 +753,7 @@ fn load_repair_reconcilers_never_write_history_rows() {
 
     let mut collection = empty_collection_snapshot("Demo");
     collection.folders.push(CollectionFolder { id: "f1".into(), parent_id: Some("missing".into()), name: "Orphan".into() });
-    let collection_store = resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "art-repair-collection", collection, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    let collection_store = resolve_kernel_future(store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "art-repair-collection", collection, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
     let collection_history = collection_store.envelope().vcs.clone();
     let loaded = collection_store.snapshot().expect("projection");
     let (repaired, reports) = reconcile_collection_integrity(loaded.clone());
@@ -775,7 +775,7 @@ fn load_repair_reconcilers_never_write_history_rows() {
 fn zip_export_import_round_trips_real_store_documents_and_blob() {
     test_identity!(identity);
     let mut nested_space_store =
-        resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+        resolve_kernel_future(store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
     resolve_kernel_future(nested_space_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], transaction: None }, &mut identity)).expect("apply");
     resolve_kernel_future(nested_space_store.dispatch(store::os_store::store_schema::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }, &mut identity)).expect("commit checkpoint");
     let original_pack_files = resolve_kernel_future(nested_space_store.snapshot_pack()).expect("snapshot pack");

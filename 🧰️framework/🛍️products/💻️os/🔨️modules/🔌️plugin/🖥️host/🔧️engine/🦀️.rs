@@ -7,7 +7,7 @@ use wasmtime::component::Component;
 use wasmtime::{Config, Engine, InstanceAllocationStrategy, PoolingAllocationConfig, ResourceLimiter, Store};
 use crate::original_deadline::{OriginalDeadlineError, remaining_original_deadline_us};
 use std::path::{Path, PathBuf};
-use semio_framework_plugin_guest_contract::{PluginHostError, TurnFault, identity_turn_fault};
+use semio_plugin_guest_contract::{PluginHostError, TurnFault, identity_turn_fault};
 use semio_framework_async::{ProcessKind, WorkerPool, WorkerPoolConfig};
 
 #[path = "../⏱️deadline/🦀️.rs"]
@@ -287,8 +287,8 @@ impl EpochDeadlines {
 
     /// 🕰️ Arms the unchanged absolute caller deadline while translating its wake to the pool clock.
     pub fn arm_original<T>(&self,store:&mut Store<T>,cell:&EpochDeadlineCell,deadline_us:u64)->Result<EpochDemand,TurnFault>{
-        let clock=cell.2.ok_or_else(||identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))?;
-        let remaining=remaining_original_deadline_us(clock(),deadline_us).map_err(|error|match error{OriginalDeadlineError::MissingClock=>identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)),OriginalDeadlineError::Expired=>TurnFault::DeadlineExceeded})?;
+        let clock=cell.2.ok_or_else(||identity_turn_fault(semio_plugin_guest_contract::operation_authority::refusal(4)))?;
+        let remaining=remaining_original_deadline_us(clock(),deadline_us).map_err(|error|match error{OriginalDeadlineError::MissingClock=>identity_turn_fault(semio_plugin_guest_contract::operation_authority::refusal(4)),OriginalDeadlineError::Expired=>TurnFault::DeadlineExceeded})?;
         let demand=self.arm(store,cell,remaining.div_ceil(1_000));
         cell.1.store(deadline_us,std::sync::atomic::Ordering::Release);
         Ok(demand)

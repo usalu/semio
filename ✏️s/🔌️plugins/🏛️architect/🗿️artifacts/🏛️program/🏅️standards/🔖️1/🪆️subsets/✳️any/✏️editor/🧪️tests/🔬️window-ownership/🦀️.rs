@@ -8,13 +8,13 @@ use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::DslValue as Value;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::HistoryView;
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactView;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::HistoryView;
+use semio_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
 use crate::{editor::architect::catalog::adjacency_kind_from_id, editor::architect::catalog::analysis_kind_picker_options, editor::architect::catalog::parse_entity_id, editor::architect::catalog::parse_entity_id_from_args, editor::architect::catalog::parse_register_id, editor::architect::catalog::report_kind_picker_options, editor::architect::catalog::REGISTER_IDS};
 #[allow(unused_imports)]
@@ -50,65 +50,65 @@ use crate::standards::v1::subsets::any::schema::registers::catalog::RegisterRow;
 #[allow(unused_imports)]
 use crate::{standards::v1::subsets::any::schema::snapshot::ProgramSnapshot, standards::v1::subsets::any::schema::snapshot::ARCHITECT_PROGRAM_SCHEMA};
 #[allow(unused_imports)]
-use semio_framework_plugin::{app::ArtifactOwnedToolJobContext, app::ArtifactOwnedToolJobRequest, app::Dialect, app::InteractionView};
+use semio_plugin::{app::ArtifactOwnedToolJobContext, app::ArtifactOwnedToolJobRequest, app::Dialect, app::InteractionView};
 #[allow(unused_imports)]
-use semio_framework_plugin::{retained_command::ArtifactCommandWork, retained_command::ArtifactRetainedCommandInputs, retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
+use semio_plugin::{retained_command::ArtifactCommandWork, retained_command::ArtifactRetainedCommandInputs, retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppOperationContext;
+use semio_plugin::AppOperationContext;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactToolPublicationLane;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolExecutionContract;
+use semio_plugin::ToolExecutionContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolFactoryKey;
+use semio_plugin::ToolFactoryKey;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactoryError;
+use semio_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 use crate::editor::architect::*;
@@ -194,7 +194,7 @@ async fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
 #[test]
 fn architect_window_ownership_interactive_classification_matches_retained_owners() {
     use crate::editor::architect::{create_architect_app, ArchitectExchangeCommandJobFactory, ArchitectPlayApp, ArchitectWindowCommandJobFactory, ARCHITECT_EXCHANGE_TOOL_IDS, ARCHITECT_RETAINED_TOOL_IDS};
-    use semio_framework_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, InteractiveJobClassification};
+    use semio_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, InteractiveJobClassification};
 
     let definition = create_architect_app();
     let actions = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).collect::<Vec<_>>();
@@ -218,9 +218,9 @@ fn architect_window_ownership_interactive_classification_matches_retained_owners
 fn architect_window_ownership_report_handler_preserves_exact_invocation_identity() {
     use crate::editor::architect::commands::analysis::run_report;
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use semio_framework_plugin::{ArtifactView, HistoryView, ViewModel, ViewWindowInstance, WindowConfigOwner};
+    use semio_plugin::{ArtifactView, HistoryView, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
-    fn authored_id(emit: &semio_framework_plugin::Emit<crate::standards::v1::subsets::any::schema::mutations::ProgramMutation, crate::editor::architect::config::ArchitectConfigMutation>) -> crate::standards::v1::subsets::any::schema::kernel::EntityId {
+    fn authored_id(emit: &semio_plugin::Emit<crate::standards::v1::subsets::any::schema::mutations::ProgramMutation, crate::editor::architect::config::ArchitectConfigMutation>) -> crate::standards::v1::subsets::any::schema::kernel::EntityId {
         let Some(ProgramMutation::CreateRegisterRow(payload)) = emit.artifact_mutations.first() else { panic!("one authored ReportRecord") };
         assert_eq!(emit.artifact_mutations.len(), 1);
         assert_eq!(payload.row.key(), crate::standards::v1::subsets::any::schema::registers::catalog::RegisterKey::ReportRecord);
@@ -239,7 +239,7 @@ fn architect_window_ownership_report_handler_preserves_exact_invocation_identity
         .into_iter()
         .map(|(id, window_kind_id)| ViewWindowInstance { id: id.into(), window_kind_id: window_kind_id.into() })
         .collect(),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let left = all.for_window_instance("architect-report-left").expect("left Report");
     let right = all.for_window_instance("architect-report-right").expect("right Report");
@@ -253,7 +253,7 @@ fn architect_window_ownership_report_handler_preserves_exact_invocation_identity
     let wrong_kind_id = authored_id(&wrong_kind);
     assert!(wrong_kind.window_config_mutations.is_empty());
 
-    let stale = ViewModel { window_id: Some("architect-report-gone".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let stale = ViewModel { window_id: Some("architect-report-gone".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     assert!(run_report::handle_with_view(&payload, &doc, Some(&stale)).is_err());
     let right_emit = run_report::handle_with_view(&payload, &doc, Some(&right)).expect("right Report authoring");
     let right_id = authored_id(&right_emit);
@@ -279,16 +279,16 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                 use crate::editor::architect::commands::graph::node_graph_viewport;
                 use crate::editor::architect::commands::register::select_register;
                 use crate::editor::architect::{create_architect_app, ArchitectCommand, ArchitectPlayApp};
-                use semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt;
-                use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
+                use semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt;
+                use semio_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
 
                 type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
 
                 async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand, view: Option<&ViewModel>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<TypedOperationFixtureReceipt, String> {
                     let meta = ActionMeta { instance_id: 93, view_state: view.cloned(), ..artifact_app_laws::meta("architect-window-ownership") };
-                    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
-                    artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))
+                    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+                    artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))
                 }
 
                 async fn register_config(app: &mut ArchitectApp, view: &ViewModel) -> Result<ArchitectRegisterWindowConfig, String> {
@@ -338,7 +338,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     .into_iter()
                     .map(|(id, window_kind_id)| ViewWindowInstance { id: id.into(), window_kind_id: window_kind_id.into() })
                     .collect(),
-                    ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+                    ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
                 };
                 let register_left = all.for_window_instance("architect-register-left").expect("left Register");
                 let register_right = all.for_window_instance("architect-register-right").expect("right Register");
@@ -349,7 +349,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                 let report_left = all.for_window_instance("architect-report-left").expect("left Report");
                 let report_right = all.for_window_instance("architect-report-right").expect("right Report");
                 let mut scope = artifact_app_laws::OriginalFixtureScope::admit();
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                 app.bind_instance_id(93).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -362,11 +362,11 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     .await?;
                     let graph_receipt = dispatch(
                         &mut app,
-                        ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: -20.0, y: 12.5, zoom: 1.75 } }),
+                        ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_os_kernel::Viewport2d { x: -20.0, y: 12.5, zoom: 1.75 } }),
                         Some(&graph_left), scope.cx())
                     .await?;
                     for receipt in [&register_receipt, &adjacency_receipt, &graph_receipt] {
-                        if receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count() != 1 {
+                        if receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::WindowConfig).count() != 1 {
                             return Err("Architect exact window command did not publish one WindowConfig lane".into());
                         }
                     }
@@ -374,7 +374,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                         || register_config(&mut app, &register_right).await? != ArchitectRegisterWindowConfig::default()
                         || adjacency_config(&mut app, &adjacency_left).await?.adjacency_kind_filter != Some(crate::standards::v1::subsets::any::schema::registers::AdjacencyKind::Preferred)
                         || adjacency_config(&mut app, &adjacency_right).await? != adjacency::config::ArchitectAdjacencyWindowConfig::default()
-                        || graph_config(&mut app, &graph_left).await?.viewport != (semio_framework_os_kernel::Viewport2d { x: -20.0, y: 12.5, zoom: 1.75 })
+                        || graph_config(&mut app, &graph_left).await?.viewport != (semio_os_kernel::Viewport2d { x: -20.0, y: 12.5, zoom: 1.75 })
                         || graph_config(&mut app, &graph_right).await? != graph::config::ArchitectGraphWindowConfig::default()
                     {
                         return Err("Architect Register, Adjacency, or Graph config crossed exact same-kind windows".into());
@@ -397,7 +397,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     }
 
                     let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                     reopened.bind_instance_id(94).await;
                     for pack in packs {
                         reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;
@@ -410,19 +410,19 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     let restored_right_graph = graph_config(&mut reopened, &graph_right).await?;
                     let restored_left_report = report_config(&mut reopened, &report_left).await?;
                     let restored_right_report = report_config(&mut reopened, &report_right).await?;
-                    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).map_err(|error| format!("{error:?}"))?;
+                    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).map_err(|error| format!("{error:?}"))?;
                     if restored_left_register.active_register != "requirements"
                         || restored_right_register != ArchitectRegisterWindowConfig::default()
                         || restored_left_adjacency.adjacency_kind_filter != Some(crate::standards::v1::subsets::any::schema::registers::AdjacencyKind::Preferred)
                         || restored_right_adjacency != adjacency::config::ArchitectAdjacencyWindowConfig::default()
-                        || restored_left_graph.viewport != (semio_framework_os_kernel::Viewport2d { x: -20.0, y: 12.5, zoom: 1.75 })
+                        || restored_left_graph.viewport != (semio_os_kernel::Viewport2d { x: -20.0, y: 12.5, zoom: 1.75 })
                         || restored_right_graph != graph::config::ArchitectGraphWindowConfig::default()
                         || restored_left_report != report::config::ArchitectReportWindowConfig::default()
                         || restored_right_report != report::config::ArchitectReportWindowConfig::default()
                     {
                         return Err("Architect exact window configs changed during reopen".into());
                     }
-                    let stale = ViewModel { window_id: Some("architect-register-gone".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+                    let stale = ViewModel { window_id: Some("architect-register-gone".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
                     if addressed(&stale, "risks".into()).is_ok() {
                         return Err("Architect Register accepted stale window identity".into());
                     }
@@ -435,7 +435,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                 if let Err(error) = &outcome {
                     eprintln!("Architect exact-window runtime failure before close: {error}");
                 }
-                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
                 outcome.expect("Architect exact-window ownership runtime law");
             }))
         })

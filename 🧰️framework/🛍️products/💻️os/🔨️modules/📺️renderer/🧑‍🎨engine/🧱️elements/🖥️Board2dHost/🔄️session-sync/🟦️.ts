@@ -31,7 +31,6 @@ export function applySnapshotToSession(session: Board2dWasmSession, scene: Board
     console.error(`[board-2d] engine refused the snapshot (${scene.snapshotJson.length} chars) — nothing is painted until a snapshot parses`);
     (globalThis as { __semioBoard2dRefusedSnapshot?: string }).__semioBoard2dRefusedSnapshot = scene.snapshotJson;
   }
-  session.setSelectionOptions?.(scene.selectionMethod, "replace", true, true, true);
   if (session.setSelectionIdsJsonSilent) session.setSelectionIdsJsonSilent(scene.selectionJson);
   else session.setSelectionIdsJson(scene.selectionJson);
   const camera = parseBoardCamera(scene.cameraJson);

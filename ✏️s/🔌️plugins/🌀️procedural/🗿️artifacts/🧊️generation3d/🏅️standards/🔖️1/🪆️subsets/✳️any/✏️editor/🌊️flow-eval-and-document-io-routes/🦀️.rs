@@ -46,11 +46,11 @@ impl semio_framework::ToolJobFactory for Generation3dFlowEvalJobFactory {
         generation3d_flow_eval_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_FLOW_EVAL_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_FLOW_EVAL_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dFlowEvalJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for Generation3dFlowEvalJobFactory {
     type Owner = EditorApp<Generation3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = GENERATION3D_FLOW_EVAL_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
@@ -66,7 +66,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dFlowEva
 pub(super) struct Generation3dFlowEvalJobFactoryProofs;
 
 impl Generation3dFlowEvalJobFactoryProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Generation3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#editor",
@@ -115,7 +115,7 @@ impl semio_framework_value::retirement::RetireOwned for Generation3dDocumentReti
 
 pub struct Generation3dDocumentIoWork {
     pub(super) tool_id: &'static str,
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) consumed: bool,
     pub(super) closing: bool,
     source_identity: Option<usize>,
@@ -133,7 +133,7 @@ pub struct Generation3dDocumentIoWork {
 }
 
 impl Generation3dDocumentIoWork {
-    pub(super) fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, instance_owner, consumed: false, closing:false, source_identity:None, source_demand:None, expand_admission:false, projection:None, projected:None, writer:None, text:None, envelope:None, candidate:None, retirement:None, encoding:None, phase:0 }
     }
 
@@ -240,7 +240,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
         command: &Generation3dCommand,
         snapshot: &Generation3dSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
     ) -> Option<usize> {
         if matches!(command, Generation3dCommand::ImportDocument(_)) {
             return GENERATION3D_RETAINED_CAPACITY.rows_for_items(snapshot.host_snapshot.widgets.len().checked_add(3)?);
@@ -360,11 +360,11 @@ impl semio_framework::ToolJobFactory for Generation3dDocumentIoJobFactory {
         generation3d_document_io_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_DOCUMENT_IO_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_DOCUMENT_IO_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dDocumentIoJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for Generation3dDocumentIoJobFactory {
     type Owner = EditorApp<Generation3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = GENERATION3D_DOCUMENT_IO_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
@@ -382,7 +382,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dDocumen
 pub(super) struct Generation3dDocumentIoJobFactoryProofs;
 
 impl Generation3dDocumentIoJobFactoryProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Generation3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#editor",
@@ -398,7 +398,7 @@ impl Generation3dDocumentIoJobFactoryProofs {
 //#endregion 🔖️Generation3dPlayApp
 
 /// 🧾️ The flow-evaluation and document-io factories' first-step proofs, in registration order.
-pub(super) fn generation3d_flow_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+pub(super) fn generation3d_flow_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
     let mut proofs = Generation3dFlowEvalJobFactoryProofs::bounded_first_step_tool_proofs();
     proofs.extend(Generation3dDocumentIoJobFactoryProofs::bounded_first_step_tool_proofs());
     proofs

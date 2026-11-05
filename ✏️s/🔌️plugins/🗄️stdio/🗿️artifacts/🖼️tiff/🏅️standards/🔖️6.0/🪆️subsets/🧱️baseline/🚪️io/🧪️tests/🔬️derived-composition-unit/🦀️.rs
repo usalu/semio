@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
 
-    use semio_framework_plugin::io::AnalyzeSource;
+    use semio_plugin::io::AnalyzeSource;
 
     /// 🌱 Uses one owned exact raster for native composition.
     fn minimal_non_degenerate_snapshot() -> TiffSnapshot { crate::schema::blank_tiff_snapshot() }

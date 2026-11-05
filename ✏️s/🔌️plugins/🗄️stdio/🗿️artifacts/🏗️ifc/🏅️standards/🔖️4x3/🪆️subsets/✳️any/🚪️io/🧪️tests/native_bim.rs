@@ -126,7 +126,7 @@ fn native_bim_nonidentity_site_and_contradictory_storey_frames_refuse() {
 
 #[test]
 fn actual_native_bim_composers_publish_target_snapshot_packs() {
-    use semio_framework_plugin::io::{ErasedComposeSource,IoPayload};
+    use semio_plugin::io::{ErasedComposeSource,IoPayload};
     let source=source();
     let exported=semio_framework_async::poll::resolve_ready((domains::entries()[1].compose)(&[ErasedComposeSource {dialect:domains::BIM_DIALECT,payload:IoPayload::Binary(source.encode_pack())}])).unwrap();
     let restored=semio_framework_async::poll::resolve_ready((domains::entries()[0].compose)(&[ErasedComposeSource {dialect:crate::io::IFC4X3_DIALECT,payload:exported.payload}])).unwrap();

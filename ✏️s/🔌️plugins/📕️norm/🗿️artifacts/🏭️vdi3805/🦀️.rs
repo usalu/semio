@@ -2,9 +2,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -238,8 +238,8 @@ pub const VDI3805_EXTENSION: &str = "vdi3805";
 /// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    package_descriptor().map_err(|error| semio_framework_plugin::ArtifactDefinitionError::new("artifact.package-schema", error.to_string()))?;
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    package_descriptor().map_err(|error| semio_plugin::ArtifactDefinitionError::new("artifact.package-schema", error.to_string()))?;
     use semio_s_artifact_norm_contract::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
     const S: &[Q] = &[Q { namespace: "schema", value: "s.norm.vdi3805" }];
     const I: &[Q] = &[Q { namespace: "schema", value: "s.norm.vdi3805.inference" }];
@@ -265,13 +265,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     semio_s_artifact_norm_contract::definition::assemble_definition("s.norm.vdi3805", ROWS)
 }
 
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(semio_s_artifact_norm_vdi3805_schema::vdi3805_artifact_schema_descriptor())
         .inferences([semio_s_artifact_norm_vdi3805_inferences::vdi3805_artifact_inference_descriptor()])
         .composers(semio_s_artifact_norm_vdi3805_io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<semio_s_artifact_norm_vdi3805_editor::Vdi3805PlayApp>>()
+        .document_codec::<semio_plugin::EditorApp<semio_s_artifact_norm_vdi3805_editor::Vdi3805PlayApp>>()
         .try_build()
 }
 

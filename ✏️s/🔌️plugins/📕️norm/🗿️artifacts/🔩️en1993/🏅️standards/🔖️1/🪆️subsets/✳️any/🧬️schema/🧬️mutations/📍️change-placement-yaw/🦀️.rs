@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlacementYaw where
         record: "ChangedPlacementYaw",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Yaw about Z of the placement", "Platzierung: Gierwinkel um Z ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Yaw about Z of the placement", "Platzierung: Gierwinkel um Z ändern")
     }
 }
 

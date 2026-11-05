@@ -1,17 +1,17 @@
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use crate::editor::shooting::terminology::ShootingLabels;
 #[allow(unused_imports)]
 use crate::ShootingSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::MeasureSelectItem;
+use semio_plugin::MeasureSelectItem;
 use crate::editor::shooting::modes::edit::windows::icon::options::format::*;
 use crate::editor::shooting::terminology::shooting_play_labels;
 
 #[semio_framework_async_macros::async_test]
 async fn format_measure_offers_svg_and_png() {
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    let labels = shooting_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = shooting_play_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     match measure(&snapshot, labels) {
         WindowMeasure::Select { items, value, .. } => {
             assert_eq!(items.len(), 2);

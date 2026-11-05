@@ -1,6 +1,6 @@
 //! 🚪️ Native artifact representation codecs.
 use super::super::super::*;
-use semio_framework_os_kernel::{os_spr as protocol,os_store as store};
+use semio_os_kernel::{os_spr as protocol,os_store as store};
 
 impl pack::snapshot::ArtifactDsl for Snapshot {
  const EXTENSION:&'static str="snapshot-refusal";

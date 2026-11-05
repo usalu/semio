@@ -1,7 +1,7 @@
 use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
+use semio_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::point_of;
 #[allow(unused_imports)]
@@ -11,7 +11,7 @@ use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::m
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
+use semio_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 #[allow(unused_imports)]

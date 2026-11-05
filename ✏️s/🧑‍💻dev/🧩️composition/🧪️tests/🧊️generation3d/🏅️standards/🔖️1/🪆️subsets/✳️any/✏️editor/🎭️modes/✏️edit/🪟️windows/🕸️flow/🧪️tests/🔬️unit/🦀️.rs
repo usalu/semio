@@ -18,7 +18,7 @@ async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     let json = render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN).await;
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<NodeGraphScene>(&json).expect("node-graph scene decodes off the rendered surface");
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene::<NodeGraphScene>(&json).expect("node-graph scene decodes off the rendered surface");
     assert!(scene.host_snapshot_json.as_deref().is_some_and(|host_snapshot| host_snapshot.contains("flow.host_snapshot")));
     let capabilities = scene.capabilities_json.clone().unwrap_or_default();
     assert!(capabilities.contains("flow"), "missing flow engine capability: {capabilities}");
@@ -41,7 +41,7 @@ async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
 #[semio_framework_async_macros::async_test]
 async fn the_app_catalogue_section_carries_the_registered_operators() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let catalogue: serde_json::Value = serde_json::from_str(&semio_framework_os_flow::flow_app_catalogue_json()).expect("app catalogue json");
+    let catalogue: serde_json::Value = serde_json::from_str(&semio_os_flow::flow_app_catalogue_json()).expect("app catalogue json");
     let operators = catalogue.get("operators").and_then(|value| value.as_array()).expect("operators array");
     assert!(operators.iter().any(|operator| operator.get("id").and_then(|value| value.as_str()).is_some_and(|id| id.contains("math.add") || id.contains("brep."))));
     assert!(catalogue.get("sections").and_then(|value| value.as_array()).is_some_and(|sections| !sections.is_empty()));

@@ -21,22 +21,22 @@ use super::*;
 /// never a fabricated result.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct PluginArtifactChannel {
-    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
-    pub(super) host_driver:Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,
+    pub host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy,
+    pub(super) host_driver:Arc<semio_plugin_host::GuestRelayWakeDriver>,
     /// 🐎️ The process-wide compiled runtime ([`shared_plugin_runtime`]), held as the `GuestRuntimes`
     /// enum rather than a bare `WasmtimeRuntime` because the inference lane's
     /// `PluginInstanceHandle` takes exactly that `Arc` — and it MUST be the same one: a
     /// `wasmtime::Component` belongs to the `Engine` that compiled it, so a second runtime could not
     /// instantiate `compiled` at all.
     pub runtime: Arc<GuestRuntimes>,
-    pub compiled: semio_framework_plugin_host::CompiledHandle,
+    pub compiled: semio_plugin_host::CompiledHandle,
     /// 🔌️ The plugin this channel drives. It is the id alone, never a registry ROW: the row names a
     /// repo path this channel has no use for, and a hub-authorized component has no repo path at all.
     pub plugin_id: String,
     pub descriptor: semio_framework::PackageDescriptor,
     pub app_ref: semio_framework::AppRef,
     pub actor_label: String,
-    pub(super) instances: HashMap<u32, semio_framework_plugin_host::GuestInstance>,
+    pub(super) instances: HashMap<u32, semio_plugin_host::GuestInstance>,
     pub(super) pending_exchanges: PendingExchangeRegistry<1>,
     pub(super) pending_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
     pub(super) rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
@@ -80,6 +80,6 @@ pub struct PluginArtifactChannel {
 /// (which owns the `Arc<GuestRuntimes>` and the `GuestInstance`), so this struct holds only it.
 #[cfg(not(target_arch = "wasm32"))]
 pub(super) struct PluginInferenceRoute {
-    pub router: semio_framework_plugin_host::ArtifactInferenceRouter,
+    pub router: semio_plugin_host::ArtifactInferenceRouter,
 }
 //#endregion 🔖️ArtifactChannel

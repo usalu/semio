@@ -1,5 +1,5 @@
 # ⚡️ Repository launchers open the declared fixed Rust backing before compilation. Every agent compiles in its own lane
-# (`m/u/l/<lane>/{t,b}`) and shares results only through the content-addressed unit cache (`m/u`); the static paths below name the
+# (`m/u/l/<lane> (target t)`) and shares results only through the content-addressed unit cache (`m/u`); the static paths below name the
 # default lane `d`, which an unattributed command uses. No two Cargo processes share a build directory, so Cargo's unit locks
 # cannot form a cycle between processes; `fine-grain-locking` stays for the passes of one driver generation.
 # `checksum-freshness` compares actual source contents.

@@ -1,0 +1,27 @@
+{
+  "rows": [
+    {
+      "state": null,
+      "expected": 0
+    },
+    {
+      "state": {
+        "generation": 0
+      },
+      "expected": 0
+    },
+    {
+      "state": {
+        "generation": 17
+      },
+      "expected": 17
+    },
+    {
+      "state": {
+        "generation": 9007199254740991
+      },
+      "expected": 9007199254740991
+    }
+  ],
+  "constructRegistry": false
+}

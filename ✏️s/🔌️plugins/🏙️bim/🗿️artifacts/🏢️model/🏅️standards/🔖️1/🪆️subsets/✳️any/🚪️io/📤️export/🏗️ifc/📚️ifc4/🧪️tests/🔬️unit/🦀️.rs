@@ -4,7 +4,7 @@ use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, PropertyKind, TemplateTarget};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, PropertyTemplate};
 use semio_framework::io_schema::IoPayload;
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::Export;

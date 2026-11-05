@@ -31,8 +31,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "periodicity", kind: "change-periodicity", record: "ChangedPeriodicity" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change periodicity to {}/{}/{}", self.periodic_x, self.periodic_y, self.periodic_z), &format!("Periodizität auf {}/{}/{} ändern", self.periodic_x, self.periodic_y, self.periodic_z))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change periodicity to {}/{}/{}", self.periodic_x, self.periodic_y, self.periodic_z), &format!("Periodizität auf {}/{}/{} ändern", self.periodic_x, self.periodic_y, self.periodic_z))
     }
 }
 

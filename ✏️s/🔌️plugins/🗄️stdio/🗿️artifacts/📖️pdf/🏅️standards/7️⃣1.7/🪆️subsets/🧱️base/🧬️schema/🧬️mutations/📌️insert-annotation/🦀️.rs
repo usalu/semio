@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "annotation", kind: "insert-annotation", record: "Insert" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert annotation at {} on page {}", self.at, self.index), &format!("Anmerkung an {} auf Seite {} einfügen", self.at, self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert annotation at {} on page {}", self.at, self.index), &format!("Anmerkung an {} auf Seite {} einfügen", self.at, self.index))
     }
 
     fn target(&self) -> Vec<String> {

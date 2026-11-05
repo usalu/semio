@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeFallingDropHeight 
         record: "ChangedFallingDropHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change drop height h of the falling load", "Fallende Last: Fallhöhe h ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change drop height h of the falling load", "Fallende Last: Fallhöhe h ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

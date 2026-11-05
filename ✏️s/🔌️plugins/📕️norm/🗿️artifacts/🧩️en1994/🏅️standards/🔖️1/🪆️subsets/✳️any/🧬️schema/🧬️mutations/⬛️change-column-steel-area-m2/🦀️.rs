@@ -17,8 +17,8 @@ pub struct ChangeColumnSteelAreaM2 {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnSteelAreaM2 where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_steel_area_m2::ChangeColumnSteelAreaM2> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-steel-area-m2", kind: "change-column-steel-area-m2", record: "ChangedColumnSteelAreaM2" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change column steel area A_a", "Stahlquerschnittsfläche A_a der Stütze ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change column steel area A_a", "Stahlquerschnittsfläche A_a der Stütze ändern")
     }
 }
 

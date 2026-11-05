@@ -81,7 +81,7 @@ use crate::editor::puzzle2d::window::*;
     }
 
     fn rejected_puzzle2d_transient(transient: Puzzle2dWindowTransient) -> Puzzle2dWindowTransient {
-        let owners = <Puzzle2dOverviewWindowTransientOwner as semio_framework_plugin::WindowTransientOwner>::build_owners();
+        let owners = <Puzzle2dOverviewWindowTransientOwner as semio_plugin::WindowTransientOwner>::build_owners();
         let request = store::ArtifactEphemeralOneItemPreparationRequest {
             operation: semio_framework_job::OperationId(1),
             generation: semio_framework_job::Generation(1),

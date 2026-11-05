@@ -10,7 +10,7 @@ fn sqlite_snapshot_bim_original_reader_tracks_current_shared_ownership(){
  let mut malformed=original.clone();malformed.tables.iter_mut().find(|table|table.name=="bim_curtain_grid").unwrap().rows.retain(|row|!matches!(row.values[1],SqliteValue::Integer(_)));assert!(original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|ModelSnapshot::from_sqlite_database(&malformed, sqlite_control)).is_err(),"required type U grid absent");
  let mut malformed=original.clone();let row=malformed.tables.iter_mut().find(|table|table.name=="bim_annotation_anchor").unwrap().rows.iter_mut().find(|row|matches!(row.values[2],SqliteValue::Integer(_))).unwrap();row.values[3]=SqliteValue::Integer(1);assert!(original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|ModelSnapshot::from_sqlite_database(&malformed, sqlite_control)).is_err(),"leader anchor ordinal is not zero");
 }
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
@@ -51,7 +51,7 @@ fn sqlite_snapshot_bim_complete_semantics_preserve_original_named_maps(){
 }
 #[test]
 fn sqlite_snapshot_bim_complete_public_provider_is_actual(){
- let codec=<ModelSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("BIM original public owner lacks SQLite capability");
+ let codec=<ModelSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("BIM original public owner lacks SQLite capability");
  let _=codec;assert_eq!(ModelSnapshot::SQLITE_SCHEMA,SCHEMA);
 }
 #[test]

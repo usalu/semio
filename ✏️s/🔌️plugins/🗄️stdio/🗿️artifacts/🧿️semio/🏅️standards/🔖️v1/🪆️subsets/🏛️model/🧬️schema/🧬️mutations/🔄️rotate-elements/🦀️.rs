@@ -39,10 +39,10 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "elements", kind: "rotate-elements", record: "RotatedElements" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (items_en, items_de) = element_count_label(self.targets.len());
         let (degrees_en, degrees_de) = number_label(self.angle.to_degrees());
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {items_en} by {degrees_en}°"), &format!("{items_de} um {degrees_de}° drehen"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Rotate {items_en} by {degrees_en}°"), &format!("{items_de} um {degrees_de}° drehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()
