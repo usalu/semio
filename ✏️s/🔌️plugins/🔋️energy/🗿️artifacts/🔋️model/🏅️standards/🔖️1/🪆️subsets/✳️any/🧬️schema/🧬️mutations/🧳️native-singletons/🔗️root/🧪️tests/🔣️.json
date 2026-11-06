@@ -1,6 +1,12 @@
 {
   "contract": "semio.energy.original-root-links.v1",
   "bodyBytes": 4096,
+  "comparisonWorkUnits": 16,
+  "checkDeniedProjectionWork": true,
+  "checkPinInspectionWork": true,
+  "checkZeroBodyDenial": true,
+  "checkOwnerPartialDenialWork": true,
+  "ownerWorkUnits": 4096,
   "cancelAt": [
     0,
     1,

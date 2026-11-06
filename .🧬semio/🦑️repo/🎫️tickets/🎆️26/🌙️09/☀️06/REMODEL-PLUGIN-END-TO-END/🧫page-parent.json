@@ -1,0 +1,10 @@
+{"walks":[
+{"id":"already-satisfied","work":[4,5]},
+{"id":"empty-root","work":[4,7,6,2,4,7,8,2,4,5]},
+{"id":"empty-leaf-payload","work":[4,7,8,2,4,5]},
+{"id":"grow-root","work":[4,6,23,2,4,9,8,2,4,9,10,2,4,5]},
+{"id":"existing-branch","work":[4,9,8,2,4,9,10,2,4,5]},
+{"id":"second-level-root","work":[4,6,23,2,4,9,24,2,4,11,10,2,4,11,12,2,4,5]},
+{"id":"nested-metadata","work":[4,11,10,2,4,11,12,2,4,5]},
+{"id":"nested-payload","work":[4,11,12,2,4,5]}
+],"cache":{"sameContextStorageReads":0,"changedIndexFirstPhase":"HeaderRead","activeMismatchStorageReads":0,"closeWork":5}}

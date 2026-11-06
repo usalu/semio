@@ -1,0 +1,17 @@
+[
+  {
+    "type": "optionalText",
+    "cursorWork": 8,
+    "baseWork": 42
+  },
+  {
+    "type": "integer",
+    "cursorWork": 2,
+    "baseWork": 36
+  },
+  {
+    "type": "bytes",
+    "cursorWork": 8,
+    "baseWork": 42
+  }
+]

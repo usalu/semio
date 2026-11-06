@@ -1,0 +1,184 @@
+{
+  "extent": 304,
+  "cases": [
+    {
+      "name": "actual partial context",
+      "budget": [
+        "9007199254741009",
+        "7",
+        "11",
+        "23",
+        "999999",
+        "65536",
+        "4096",
+        "1048576",
+        "1048576",
+        "1048576",
+        "64",
+        "512",
+        "65536",
+        "65536",
+        "65536",
+        "32",
+        "8192",
+        "999000",
+        "0"
+      ],
+      "actual": {
+        "items": "39",
+        "copy": "304",
+        "capacity": "0",
+        "release": "0",
+        "work": "39"
+      },
+      "prepaid": {
+        "items": "0",
+        "copy": "0",
+        "capacity": "0",
+        "release": "0",
+        "work": "0"
+      },
+      "held": {
+        "items": "1",
+        "copy": "2",
+        "capacity": "0",
+        "release": "0",
+        "work": "1"
+      },
+      "sequence": "1",
+      "returned": "0",
+      "status": 1,
+      "phase": 1,
+      "refusal": 0
+    },
+    {
+      "name": "observed exact preceding return",
+      "budget": [
+        "9007199254741009",
+        "7",
+        "12",
+        "23",
+        "999999",
+        "65536",
+        "4096",
+        "1048576",
+        "1048576",
+        "1048576",
+        "64",
+        "512",
+        "65536",
+        "65536",
+        "65536",
+        "32",
+        "8192",
+        "999000",
+        "0"
+      ],
+      "actual": {
+        "items": "40",
+        "copy": "306",
+        "capacity": "0",
+        "release": "0",
+        "work": "40"
+      },
+      "prepaid": {
+        "items": "1",
+        "copy": "2",
+        "capacity": "0",
+        "release": "0",
+        "work": "1"
+      },
+      "held": {
+        "items": "1",
+        "copy": "2",
+        "capacity": "0",
+        "release": "0",
+        "work": "1"
+      },
+      "sequence": "2",
+      "returned": "1",
+      "status": 1,
+      "phase": 3,
+      "refusal": 0
+    },
+    {
+      "name": "retained failed partial source",
+      "budget": [
+        "9007199254741009",
+        "7",
+        "13",
+        "23",
+        "999999",
+        "65536",
+        "4096",
+        "1048576",
+        "1048576",
+        "1048576",
+        "64",
+        "512",
+        "65536",
+        "65536",
+        "65536",
+        "32",
+        "8192",
+        "999000",
+        "0"
+      ],
+      "actual": {
+        "items": "40",
+        "copy": "304",
+        "capacity": "128",
+        "release": "0",
+        "work": "40"
+      },
+      "prepaid": {
+        "items": "0",
+        "copy": "0",
+        "capacity": "0",
+        "release": "0",
+        "work": "0"
+      },
+      "held": {
+        "items": "1",
+        "copy": "2",
+        "capacity": "0",
+        "release": "0",
+        "work": "1"
+      },
+      "sequence": "3",
+      "returned": "0",
+      "status": 2,
+      "phase": 4,
+      "refusal": 6
+    }
+  ],
+  "reserve": {
+    "normalProducerItems": 32,
+    "headerWords": 38,
+    "headerBookkeeping": 3,
+    "heldReturn": 1,
+    "clock": 1,
+    "fault": 1,
+    "observer": 1,
+    "birth": 1,
+    "bootstrapItems": 46,
+    "cases": [
+      {
+        "items": 32,
+        "accepted": false
+      },
+      {
+        "items": 45,
+        "accepted": false
+      },
+      {
+        "items": 46,
+        "accepted": true
+      },
+      {
+        "items": 128,
+        "accepted": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "cases": [
+    {
+      "name": "first-publication",
+      "physicalReturn": false,
+      "priorRevision": 0,
+      "acknowledged": 0,
+      "sameSource": true,
+      "accepted": true
+    },
+    {
+      "name": "physical-only-is-not-acceptance",
+      "physicalReturn": true,
+      "priorRevision": 7,
+      "acknowledged": 0,
+      "sameSource": true,
+      "accepted": false
+    },
+    {
+      "name": "next-source-confirms-real-return",
+      "physicalReturn": true,
+      "priorRevision": 7,
+      "acknowledged": 7,
+      "sameSource": true,
+      "accepted": true
+    },
+    {
+      "name": "unreturned-header",
+      "physicalReturn": false,
+      "priorRevision": 7,
+      "acknowledged": 7,
+      "sameSource": true,
+      "accepted": false
+    },
+    {
+      "name": "foreign-source",
+      "physicalReturn": true,
+      "priorRevision": 7,
+      "acknowledged": 7,
+      "sameSource": false,
+      "accepted": false
+    },
+    {
+      "name": "different-publication",
+      "physicalReturn": true,
+      "priorRevision": 7,
+      "acknowledged": 6,
+      "sameSource": true,
+      "accepted": false
+    }
+  ],
+  "retirement": [
+    {
+      "name": "actual-producer-and-all-children-closed",
+      "producerClosed": true,
+      "childrenReturned": true,
+      "exactJournal": true,
+      "held": [
+        2,
+        291,
+        3
+      ],
+      "forfeitedBefore": [
+        1,
+        7,
+        2
+      ],
+      "forfeitedAfter": [
+        3,
+        298,
+        5
+      ],
+      "accepted": true
+    },
+    {
+      "name": "live-producer",
+      "producerClosed": false,
+      "childrenReturned": true,
+      "exactJournal": true,
+      "held": [
+        2,
+        291,
+        3
+      ],
+      "forfeitedBefore": [
+        1,
+        7,
+        2
+      ],
+      "forfeitedAfter": [
+        1,
+        7,
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "name": "unreturned-child",
+      "producerClosed": true,
+      "childrenReturned": false,
+      "exactJournal": true,
+      "held": [
+        2,
+        291,
+        3
+      ],
+      "forfeitedBefore": [
+        1,
+        7,
+        2
+      ],
+      "forfeitedAfter": [
+        1,
+        7,
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "name": "another-journal",
+      "producerClosed": true,
+      "childrenReturned": true,
+      "exactJournal": false,
+      "held": [
+        2,
+        291,
+        3
+      ],
+      "forfeitedBefore": [
+        1,
+        7,
+        2
+      ],
+      "forfeitedAfter": [
+        1,
+        7,
+        2
+      ],
+      "accepted": false
+    }
+  ]
+}

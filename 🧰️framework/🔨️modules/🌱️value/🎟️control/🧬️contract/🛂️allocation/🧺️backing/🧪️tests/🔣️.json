@@ -1,0 +1,52 @@
+{
+  "vectors": [
+    {
+      "id": "empty",
+      "kind": "byte",
+      "count": 0,
+      "bytes": 0
+    },
+    {
+      "id": "one",
+      "kind": "byte",
+      "count": 1,
+      "bytes": 1
+    },
+    {
+      "id": "odd",
+      "kind": "byte",
+      "count": 7,
+      "bytes": 7
+    },
+    {
+      "id": "non-power",
+      "kind": "byte",
+      "count": 63,
+      "bytes": 63
+    },
+    {
+      "id": "word",
+      "kind": "word",
+      "count": 3,
+      "bytes": 24
+    },
+    {
+      "id": "over-aligned",
+      "kind": "wide",
+      "count": 3,
+      "bytes": 192
+    },
+    {
+      "id": "zero-sized",
+      "kind": "zero",
+      "count": 9,
+      "bytes": 0
+    }
+  ],
+  "strings": [
+    0,
+    1,
+    7,
+    64
+  ]
+}

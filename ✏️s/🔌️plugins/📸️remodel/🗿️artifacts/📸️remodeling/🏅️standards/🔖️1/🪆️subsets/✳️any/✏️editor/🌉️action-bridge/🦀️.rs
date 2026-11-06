@@ -178,8 +178,8 @@ pub(super) mod args_bridge {
                 })
             }
             "setLayerVisibility" => RemodelingCommand::SetLayerVisibility(set_layer_visibility::SetLayerVisibility { layer: text_or("layer", ""), visible: bool_or("visible", true) }),
-            "setFrameCursor" => RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: text(args, "streamId"), frame_index: u32_or("frameIndex", 0) }),
-            "setReportTable" => RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: text_or("table", "frames") }),
+            "setFrameCursor" => RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: text(args, "streamId").or_else(|| field(args, "frameIndex").and_then(|_| text(args, "value"))), frame_index: u32_or("frameIndex", u32_or("value", 0)) }),
+            "setReportTable" => RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: text_or("table", &text_or("value", "frames")) }),
             "importFrames" => RemodelingCommand::ImportFrames(import_frames::ImportFrames {}),
             "importVideo" => RemodelingCommand::ImportVideo(import_video::ImportVideo {}),
             "exportQcReport" => RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {}),

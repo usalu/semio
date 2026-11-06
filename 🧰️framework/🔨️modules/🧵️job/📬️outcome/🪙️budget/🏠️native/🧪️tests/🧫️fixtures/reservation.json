@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "producer": "blocked",
+      "state": 0,
+      "serial": 0,
+      "record": false
+    },
+    {
+      "producer": "failure",
+      "state": 0,
+      "serial": 0,
+      "record": false
+    },
+    {
+      "producer": "ready",
+      "state": 1,
+      "serial": 1,
+      "record": true
+    }
+  ]
+}

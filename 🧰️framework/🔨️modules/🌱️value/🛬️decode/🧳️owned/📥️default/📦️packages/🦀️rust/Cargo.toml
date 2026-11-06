@@ -33,5 +33,6 @@ semio-framework-value-paged-list = { path = "../../../../../📋️list/📦️p
 semio-framework-value-native-storage = { path = "../../../📦️storage/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-admission = { path = "../../../../../🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

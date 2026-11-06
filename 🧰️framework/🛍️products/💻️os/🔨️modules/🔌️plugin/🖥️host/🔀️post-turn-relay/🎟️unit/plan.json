@@ -1,1 +1,150 @@
-{"job":7,"offset":3,"length":5,"cases":[{"action":"admit-actor","export":"AdmitActorContext","arguments":19,"purpose":"infrastructure"},{"action":"start","export":"StartJob","arguments":20,"purpose":"semantic"},{"action":"acknowledge-chunk","export":"AcknowledgeJobOutputChunk","arguments":22,"purpose":"semantic"},{"action":"borrow-chunk","export":"BorrowJobOutput","arguments":5,"purpose":null},{"action":"close-actor","export":"CloseActorContext","arguments":19,"purpose":"infrastructure"},{"action":"close-jobs","export":"CloseJobs","arguments":19,"purpose":"infrastructure"},{"action":"close-actor-output","export":"CloseActorOutput","arguments":19,"purpose":"infrastructure"},{"action":"publish-failure","export":"PublishActorFailure","arguments":20,"purpose":"infrastructure"},{"action":"read-failure","export":"ReadActorFailure","arguments":20,"purpose":"infrastructure"},{"action":"acknowledge-failure","export":"AcknowledgeActorFailure","arguments":20,"purpose":"infrastructure"},{"action":"acknowledge-failure-chunk","export":"AcknowledgeActorFailureChunk","arguments":22,"purpose":"infrastructure"},{"action":"read","export":"ReadJobOutput","arguments":20,"purpose":"semantic"}]}
+{
+  "job": 7,
+  "offset": 3,
+  "length": 5,
+  "cases": [
+    {
+      "action": "admit-actor",
+      "export": "AdmitActorContext",
+      "arguments": 19,
+      "purpose": "infrastructure",
+      "page": false,
+      "prefix": []
+    },
+    {
+      "action": "start",
+      "export": "StartJob",
+      "arguments": 20,
+      "purpose": "semantic",
+      "page": false,
+      "prefix": [
+        7
+      ]
+    },
+    {
+      "action": "acknowledge-chunk",
+      "export": "AcknowledgeJobOutputChunk",
+      "arguments": 22,
+      "purpose": "semantic",
+      "page": false,
+      "prefix": [
+        7,
+        3,
+        5
+      ]
+    },
+    {
+      "action": "borrow-chunk",
+      "export": "BorrowJobOutput",
+      "arguments": 5,
+      "purpose": null,
+      "page": true,
+      "prefix": [
+        7,
+        11,
+        12,
+        3,
+        5
+      ]
+    },
+    {
+      "action": "close-actor",
+      "export": "CloseActorContext",
+      "arguments": 19,
+      "purpose": "infrastructure",
+      "page": false,
+      "prefix": []
+    },
+    {
+      "action": "close-jobs",
+      "export": "CloseJobs",
+      "arguments": 19,
+      "purpose": "infrastructure",
+      "page": false,
+      "prefix": []
+    },
+    {
+      "action": "close-actor-output",
+      "export": "CloseActorOutput",
+      "arguments": 19,
+      "purpose": "infrastructure",
+      "page": false,
+      "prefix": []
+    },
+    {
+      "action": "publish-failure",
+      "export": "PublishActorFailure",
+      "arguments": 21,
+      "purpose": "infrastructure",
+      "page": false,
+      "prefix": [
+        41,
+        21
+      ]
+    },
+    {
+      "action": "read-failure",
+      "export": "ReadActorFailure",
+      "arguments": 21,
+      "purpose": "infrastructure",
+      "page": false,
+      "prefix": [
+        41,
+        21
+      ]
+    },
+    {
+      "action": "acknowledge-failure",
+      "export": "AcknowledgeActorFailure",
+      "arguments": 21,
+      "purpose": "infrastructure",
+      "page": false,
+      "prefix": [
+        41,
+        21
+      ]
+    },
+    {
+      "action": "acknowledge-failure-chunk",
+      "export": "AcknowledgeActorFailureChunk",
+      "arguments": 23,
+      "purpose": "infrastructure",
+      "page": false,
+      "prefix": [
+        41,
+        21,
+        3,
+        5
+      ]
+    },
+    {
+      "action": "read",
+      "export": "ReadJobOutput",
+      "arguments": 20,
+      "purpose": "semantic",
+      "page": false,
+      "prefix": [
+        7
+      ]
+    },
+    {
+      "action": "borrow-failure-chunk",
+      "export": "BorrowActorFailure",
+      "arguments": 6,
+      "purpose": null,
+      "page": true,
+      "prefix": [
+        41,
+        21,
+        11,
+        12,
+        3,
+        5
+      ]
+    }
+  ],
+  "failure": {
+    "failedEpoch": 41,
+    "callKind": 21
+  }
+}

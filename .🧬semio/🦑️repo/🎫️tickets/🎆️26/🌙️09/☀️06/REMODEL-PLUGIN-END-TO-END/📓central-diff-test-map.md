@@ -1,0 +1,5 @@
+# Central diff test map
+
+The existing central receiving law is replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧪️tests/🦀️.rs:55. It constructs NativeDecodeControl::new with a real callback, admits original sources, calls central begin/preflight/commit, and pays owner, source and post closure. Its source should be checked against current signatures since its test body may predate work-budget changes. The control recipient wrapper exercises the actual allocation ledger.
+
+NativeDecodeControl prepare_work and commit_work are in decode/🎟️work/🦀️.rs:56,63. The recipient close path uses settle(turn, control.commit_work(turn.work)) after successful pre-admission. Current framework search found calls but no definition for receive_retained_work; treat it as a potentially stale API rather than evidence of funding.

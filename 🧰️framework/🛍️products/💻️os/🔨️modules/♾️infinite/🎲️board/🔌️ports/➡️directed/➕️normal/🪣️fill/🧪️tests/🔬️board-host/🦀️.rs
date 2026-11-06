@@ -285,7 +285,7 @@ fn board_fill_original_descriptors_keep_source_and_semantic_serial_separate() {
     assert!(result.is_err()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     while !job.terminal_is_empty() { let grant = original.caller.remaining_grant(); original.close_job(&mut job, grant); }
     while !ingress.terminal_is_empty() { let grant = original.caller.remaining_grant(); original.close_ingress(&mut ingress, grant); }
-    while !decoder.terminal_is_empty() { original.caller.turn(BoardFillOriginalFixture::stock(), |cx| { let step = decoder.close_step(cx.retained_grant())?; cx.consume_retained(step.progress())?; cx.consume_fuel(step.progress().copied_items as u64); Ok(()) }).unwrap(); }
+    while !decoder.terminal_is_empty() { original.caller.turn(BoardFillOriginalFixture::stock(), |cx| { decoder.close_on_source(cx)?; Ok(()) }).unwrap(); }
     foreign.finish(); original.finish();
 }
 

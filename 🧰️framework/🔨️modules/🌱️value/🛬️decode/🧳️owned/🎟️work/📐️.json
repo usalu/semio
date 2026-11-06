@@ -10,8 +10,8 @@
   },
   "input": 17,
   "deniedWork": 0,
-  "bindingWork": 1,
-  "readWork": 1,
+  "bindingWork": 6,
+  "readWork": 2,
   "invalidReadWork": 1,
   "cachedCloseWork": 0,
   "axes": [
@@ -21,5 +21,6 @@
     "release",
     "depth"
   ],
-  "sourceAdmissionWork": 6
+  "sourceAdmissionWork": 12,
+  "construction": "optional-u64-placement"
 }

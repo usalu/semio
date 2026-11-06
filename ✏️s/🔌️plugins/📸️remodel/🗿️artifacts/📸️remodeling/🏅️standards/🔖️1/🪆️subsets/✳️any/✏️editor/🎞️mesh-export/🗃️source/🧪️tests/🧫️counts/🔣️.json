@@ -1,0 +1,13 @@
+{
+  "cases": [
+    { "text": "0", "value": "0" },
+    { "text": "+1", "value": "1" },
+    { "text": "00000000000000000000000000000000000000000000000003", "value": "3" },
+    { "text": "18446744073709551615", "value": "18446744073709551615" },
+    { "text": "18446744073709551616", "refused": true },
+    { "text": "", "refused": true },
+    { "text": "+", "refused": true },
+    { "text": "-1", "refused": true },
+    { "text": "1x", "refused": true }
+  ]
+}

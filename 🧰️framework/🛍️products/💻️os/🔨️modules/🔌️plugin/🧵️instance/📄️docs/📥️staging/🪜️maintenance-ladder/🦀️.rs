@@ -33,7 +33,7 @@ impl protocol::RetainedHistoryTurn for StepTurn<'_, '_> {
     fn is_cancelled(&self)->bool{self.actual.try_lock().map_or(true,|cx|cx.is_cancelled())}
 }
 struct StepWork<'a,'b,'c>(&'a StepTurn<'b,'c>);
-impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for StepWork<'_,'_,'_>{
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for StepWork<'_,'_,'_>{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let cx=self.0.actual.try_lock().map_err(|_|ValueError::invariant("original archive caller is already borrowed"))?;let paused=if self.0.closing{cx.retirement_should_yield()}else{cx.should_yield()};Ok(if !paused&&(self.0.closing||!cx.is_cancelled()){cx.fuel_remaining().checked_sub(observed).unwrap_or(0)}else{0})}
     fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{
         let cx=self.0.actual.try_lock().map_err(|_|ValueError::invariant("original archive caller is already borrowed"))?;
         let paused=if self.0.closing{cx.retirement_should_yield()}else{cx.should_yield()};
@@ -275,7 +275,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                     active.hydration = Some(store::RetainedPersistedDocumentHydration::from_pack(
                         pack,
                         history,
-                        expected,
+                        {let declared=expected;store::PersistedDocumentHydrationIdentity{id:declared.artifact_id,dialect:Some(declared.dialect)}},
                         owner,
                         A::DOCUMENT_SCHEMA.to_string(),
                         owners,

@@ -45,7 +45,7 @@ impl PluginInstanceHandleAdmission{
  }
  pub fn terminal_is_empty(&self)->bool{self.home_input.is_none()&&self.output_input.is_none()&&self.fault_input.is_none()&&self.guest_fault_input.is_none()&&self.actor_failure_input.is_none()&&self.home.is_none()&&self.output.is_none()&&self.fault.is_none()&&self.guest_fault.is_none()&&self.actor_failure.is_none()&&self.ready.is_none()}
 }
-pub(super) fn return_native<T:OriginalNativeRetirement>(native:&mut Option<OriginalNativeLease<T>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let Some(lease)=native.as_mut()else{return Ok(true)};if !lease.return_step(cx)?||!retirement_metadata(cx,size_of::<Option<OriginalNativeLease<T>>>())?{return Ok(false)}native.take();Ok(true)}
+pub(super) fn return_native<T:OriginalNativeRetirement>(native:&mut Option<OriginalNativeLease<T>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{OriginalNativeLease::return_slot_step(native,cx)}
 fn metadata(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{if cx.should_yield(){return Ok(false)}pay(cx,bytes)}
 fn retirement_metadata(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{if cx.retirement_should_yield(){return Ok(false)}pay(cx,bytes)}
 fn pay(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}

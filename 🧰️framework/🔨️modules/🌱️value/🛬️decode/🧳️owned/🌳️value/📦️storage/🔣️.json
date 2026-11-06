@@ -9,7 +9,10 @@
     "birthWork",
     "cachedWork",
     "empty",
-    "stock"
+    "stock",
+    "push",
+    "retainedHeader",
+    "partialPush"
   ],
   "properties": {
     "count": {
@@ -40,6 +43,57 @@
         "fuel": 100000,
         "maximumTurns": 100000
       }
+    },
+    "push": {
+      "const": {
+        "value": 42,
+        "work": 3,
+        "cases": [
+          {
+            "maximum": 0,
+            "work": 0,
+            "accepted": false
+          },
+          {
+            "maximum": 1,
+            "work": 0,
+            "accepted": false
+          },
+          {
+            "maximum": 2,
+            "work": 0,
+            "accepted": false
+          },
+          {
+            "maximum": 3,
+            "work": 3,
+            "accepted": true
+          }
+        ]
+      }
+    },
+    "retainedHeader": {
+      "const": "optional-storage"
+    },
+    "partialPush": {
+      "const": [
+        {
+          "complete": false,
+          "childWork": 1,
+          "parentWork": 0,
+          "index": 0,
+          "phase": 3,
+          "donor": 42
+        },
+        {
+          "complete": true,
+          "childWork": 2,
+          "parentWork": 2,
+          "index": 1,
+          "phase": 4,
+          "donor": null
+        }
+      ]
     }
   }
 }

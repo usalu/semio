@@ -1,0 +1,34 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "left",
+      "right",
+      "members",
+      "status"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "left": {
+        "type": "string",
+        "pattern": "^([0-9a-f]{2})*$"
+      },
+      "right": {
+        "type": "string",
+        "pattern": "^([0-9a-f]{2})*$"
+      },
+      "members": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "status": {
+        "enum": [
+          "passed",
+          "failed",
+          "unexecuted"
+        ]
+      }
+    }
+  }
+}

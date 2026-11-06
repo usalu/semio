@@ -1,0 +1,5 @@
+# Remaining retained result decisions
+
+The cold reference owners distinguish seven result replacements. Sparse and dense return `mutation.no-op` for equal values, including two absent values. Tracks likewise warns on equal vectors. Trajectory, geo products and QC refuse clearing an already absent value with `mutation.target-missing`, targeting the document id; equal present values warn. Mesh first validates a durable content handle against actual complete mesh content, refusing `mutation.target-mismatch` with the mesh child id before checking equality; equal valid meshes warn. Every changed case produces its corresponding results field, and every inverse must retain the actual original field.
+
+These are source observations only. The retained implementations, bounded typed equality for their transitive result payloads, durable-content lookup, actual decision/inverse/close tests and factory mounting remain unfinished. In particular, IEEE equality must follow the concrete payload's `PartialEq` implementation and must not use identity as a shortcut for a NaN-containing value. No native execution is claimed here.

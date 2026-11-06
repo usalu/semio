@@ -1,8 +1,20 @@
-//! 👯️ Heterogeneous defaults retain each authentic child across separate return and close turns.
+//! 👯️ Heterogeneous defaults retain authentic children and paid parent transitions.
 use super::*;
-pub struct NativePairDefaultCursor<A:NativeDefault,B:NativeDefault>{first_child:NativeDefaultSlot<A>,second_child:NativeDefaultSlot<B>,first:ManuallyDrop<Option<A>>,second:ManuallyDrop<Option<B>>,output:ManuallyDrop<Option<(A,B)>>,retirement:RetainedCloneClose,phase:u8,closing:bool}
-impl<A:NativeDefault,B:NativeDefault>NativePairDefaultCursor<A,B>{pub fn new()->Self{Self{first_child:NativeDefaultSlot::new(),second_child:NativeDefaultSlot::new(),first:ManuallyDrop::new(None),second:ManuallyDrop::new(None),output:ManuallyDrop::new(None),retirement:Default::default(),phase:0,closing:false}}}
-impl<A:NativeDefault,B:NativeDefault>NativeDefault for(A,B){type Cursor=NativePairDefaultCursor<A,B>;fn default_cursor()->Self::Cursor{NativePairDefaultCursor::new()}}
+use crate::native_decoding::construction::{NativeReceivingEffect,NativeRecoveryLoan};
+pub struct NativePairDefaultCursor<A:NativeDefault,B:NativeDefault>{first_child:NativeDefaultSlot<A>,second_child:NativeDefaultSlot<B>,first:ManuallyDrop<Option<A>>,second:ManuallyDrop<Option<B>>,output:ManuallyDrop<Option<(A,B)>>,retirement:RetainedCloneClose,effect:NativeReceivingEffect,retirement_effect:NativeReceivingEffect<crate::OriginalRetirementFailure>,phase:u8,closing:bool}
+impl<A:NativeDefault,B:NativeDefault>NativePairDefaultCursor<A,B>{
+ pub fn new()->Self{Self{first_child:NativeDefaultSlot::new(),second_child:NativeDefaultSlot::new(),first:ManuallyDrop::new(None),second:ManuallyDrop::new(None),output:ManuallyDrop::new(None),retirement:Default::default(),effect:Default::default(),retirement_effect:Default::default(),phase:0,closing:false}}
+ fn first_capture()->usize{size_of::<Option<A>>()+size_of::<u8>()}
+ fn second_capture()->usize{size_of::<Option<B>>()+size_of::<u8>()}
+ fn publication_copy()->usize{size_of::<Option<A>>()+size_of::<Option<B>>()+size_of::<Option<(A,B)>>()+size_of::<u8>()}
+}
+impl<A:NativeDefault,B:NativeDefault>NativeDefault for(A,B){
+ type Cursor=NativePairDefaultCursor<A,B>;
+ fn default_cursor_demand()->RetirementDemand{fixed(size_of::<Option<Self::Cursor>>())}
+ fn default_cursor_work_demand()->Result<u64,ValueError>{Ok(1)}
+ fn default_cursor_allocates()->bool{false}
+ fn default_cursor(output:&mut Option<Self::Cursor>,g:RetainedCloneGrant,_:Option<&mut Option<usize>>)->RetainedWorkOutcome{let d=Self::default_cursor_demand();if output.is_some()||!retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some(NativePairDefaultCursor::new());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}}
+}
 impl<A:NativeDefault,B:NativeDefault>NativeDefaultCursor<(A,B)>for NativePairDefaultCursor<A,B>{
  fn demands(&self,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.closing{return Err(invalid())}match self.phase{0=>if self.first_child.ready(){Ok(fixed(0))}else{self.first_child.demands(body,maximum_work_units)},1=>if self.first_child.terminal_is_empty(){Ok(fixed(0))}else{self.first_child.close_demands(body)},2=>if self.second_child.ready(){Ok(fixed(0))}else{self.second_child.demands(body,maximum_work_units)},3=>if self.second_child.terminal_is_empty(){Ok(fixed(0))}else{self.second_child.close_demands(body)},4|5=>Ok(fixed(0)),_=>Err(invalid())}}
  fn advance(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{semio_framework_value_native_receiver_protocol::native_receive_zero_work!(maximum_work_units);if self.output_ready(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=match self.demands(body,maximum_work_units){Ok(d)=>d,Err(e)=>return RetainedWorkOutcome{result:Err(e.into()),work:0}};if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if let Err(e)=control.checkpoint(){return RetainedWorkOutcome{result:Err(e.into()),work:0}}

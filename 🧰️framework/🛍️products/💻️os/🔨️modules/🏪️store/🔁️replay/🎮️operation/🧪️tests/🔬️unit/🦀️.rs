@@ -48,7 +48,7 @@ impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
 
     fn last_turn_work(&self)->u64{self.last_work}
     fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let mut demand=if let Some(owner)=self.input_close.as_ref(){owner.next_demand(body)?}else if let Some(owner)=self.active.as_ref(){owner.next_demand(body)?}else if let Some(owner)=self.shared.as_ref(){owner.next_demand(body)?}else{self.inverse_list.as_ref().map_or(Ok(Default::default()),|owner|owner.next_demand(body))?};demand.depth=demand.depth.max(1);Ok(demand)}
-    fn advance_demands(&self,_body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:match self.phase{1=>self.base.as_ref().unwrap().get(self.inverse.as_ref().unwrap().len()..).unwrap().chars().next().map_or(0,char::len_utf8),3=>self.original.as_ref().unwrap().text.get(self.next.as_ref().unwrap().len()..).unwrap().chars().next().map_or(0,char::len_utf8),_=>0},capacity_bytes:match self.phase{0=>self.base.as_ref().unwrap().len(),2=>self.original.as_ref().unwrap().text.len(),_=>0},release_bytes:0,depth:1})}
+    fn advance_demands(&self,_body:usize,_maximum_work_units:u64)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:match self.phase{1=>self.base.as_ref().unwrap().get(self.inverse.as_ref().unwrap().len()..).unwrap().chars().next().map_or(0,char::len_utf8),3=>self.original.as_ref().unwrap().text.get(self.next.as_ref().unwrap().len()..).unwrap().chars().next().map_or(0,char::len_utf8),_=>0},capacity_bytes:match self.phase{0=>self.base.as_ref().unwrap().len(),2=>self.original.as_ref().unwrap().text.len(),_=>0},release_bytes:0,depth:1})}
     fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,_control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, semio_framework_value::OriginalRetirementFailure> {
         self.last_work=0;
         if self.cancelled || self.closing || !grant.permits_one() { return Ok(ArtifactReplayPreparationStep::Blocked); }
@@ -228,7 +228,7 @@ impl ArtifactReplayPreparation<(), ()> for EmptyPreparation {
     fn close_work_demand(&self,_:usize)->Result<u64,ValueError>{Ok(0)}
     fn last_turn_work(&self)->u64{0}
     fn close_demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
-    fn advance_demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+    fn advance_demands(&self,_:usize,_:u64)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
     fn advance(&mut self,body:usize,_:ArtifactStoreOneItemGrant,_control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, semio_framework_value::OriginalRetirementFailure> { Ok(ArtifactReplayPreparationStep::Blocked) }
     fn take_prepared(&mut self) -> Option<ArtifactReplayPrepared<(), ()>> { None }
     fn cancel(&mut self) { self.payload[0] = 1; }
@@ -257,17 +257,17 @@ fn cooperative_history_preparation_receipts_keep_each_physical_currency() {
     let cursor = Box::new(TextPreparation::new(Arc::new("original 😀".into()), context, calls.clone(),Arc::clone(&input)));
     let mut task = ArtifactReplayPreparationTask::new(context, cursor);
 
-    let (demand, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| task.demands(7,[9;32],4096).unwrap());
+    let (demand, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| task.demands(7,[9;32],4096,1).unwrap());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert_eq!((demand.copy_bytes,demand.capacity_bytes,demand.release_bytes),(0,"original 😀".len(),0));
     let grant=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-    assert!(task.demands(8,[9;32],4096).is_err());
+    assert!(task.demands(8,[9;32],4096,1).is_err());
     assert_eq!(calls.load(Ordering::SeqCst), 0);
     let step = task.step(7, [9; 32], grant.maximum_copy_bytes, grant,&mut control, &mut || false).unwrap();
     assert_eq!(step.progress().retained_capacity_bytes, grant.maximum_capacity_bytes);
     assert_eq!(step.progress().copied_bytes, 0);
     task.cancel();
-    assert_eq!(task.demands(7,[9;32],4096).unwrap(),Default::default());
+    assert_eq!(task.demands(7,[9;32],4096,1).unwrap(),Default::default());
     close(task.into_retirement(),&mut control);
 }
 
@@ -302,7 +302,7 @@ struct WorkPreparation{units:u64,close_units:u64,reject:bool,last_work:u64,closi
 impl WorkPreparation{fn perform(&mut self,units:u64){self.last_work=0;for unit in 0..units{std::hint::black_box(unit);self.last_work+=1;}}}
 impl ArtifactReplayPreparation<(),()> for WorkPreparation{
  fn close_work_demand(&self,_:usize)->Result<u64,ValueError>{Ok(if self.closing&&!self.closed{self.close_units}else{0})}
- fn advance_demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+ fn advance_demands(&self,_:usize,_:u64)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
  fn advance(&mut self,_:usize,_:ArtifactStoreOneItemGrant,_:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,semio_framework_value::OriginalRetirementFailure>{self.perform(self.units);if self.reject{return Err(ValueError::invariant("original work fixture refusal").into())}Ok(ArtifactReplayPreparationStep::Pending(Default::default()))}
  fn last_turn_work(&self)->u64{self.last_work}
  fn take_prepared(&mut self)->Option<ArtifactReplayPrepared<(),()>>{None}

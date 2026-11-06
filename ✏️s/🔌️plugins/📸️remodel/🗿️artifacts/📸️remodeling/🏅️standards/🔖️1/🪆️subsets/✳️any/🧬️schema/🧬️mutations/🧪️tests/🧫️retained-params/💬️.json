@@ -1,0 +1,9 @@
+[
+  {"facet":"ingest","a":0.5,"b":4294967295,"c":0,"message":"Ingest params need a finite non-negative min sharpness and positive max frames/frame sample stride (got min_sharpness=0.5, max_frames=4294967295, frame_sample_stride=0)."},
+  {"facet":"ingest","a":"NaN","b":200,"c":5,"message":"Ingest params need a finite non-negative min sharpness and positive max frames/frame sample stride (got min_sharpness=NaN, max_frames=200, frame_sample_stride=5)."},
+  {"facet":"feature","a":0,"b":-1,"message":"Feature params need a positive target count and a finite non-negative edge threshold (got target_count=0, edge_threshold=-1)."},
+  {"facet":"feature","a":4000,"b":"inf","message":"Feature params need a positive target count and a finite non-negative edge threshold (got target_count=4000, edge_threshold=inf)."},
+  {"facet":"matching","a":0,"message":"Match ratio test 0 must be finite and within (0, 1]."},
+  {"facet":"matching","a":"-inf","message":"Match ratio test -inf must be finite and within (0, 1]."},
+  {"facet":"matching","a":"NaN","message":"Match ratio test NaN must be finite and within (0, 1]."}
+]

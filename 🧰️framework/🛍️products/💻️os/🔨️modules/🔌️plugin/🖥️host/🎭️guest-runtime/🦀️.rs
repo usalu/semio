@@ -59,7 +59,7 @@ pub use original_instance_opening::GuestActorOpening;
 mod original_unit;
 #[path="🪙️escrow/🦀️.rs"]
 mod original_escrow;
-pub use original_escrow::{GuestHeaderDeallocateReturned,GuestFrozenEscrowBorrow,GuestFrozenEscrowIdentity};
+pub use original_escrow::{GuestBootstrapHeaderIdentity,GuestBootstrapHeaderDeallocateReturned,GuestFrozenBootstrapBorrow,GuestActorFailureCallReference,GuestHeaderDeallocateReturned,GuestActorFailureAcknowledged,GuestFrozenEscrowBorrow,GuestFrozenEscrowIdentity};
 
 #[path = "💼️job-crossing/🦀️.rs"]
 mod job_crossing;
@@ -71,20 +71,10 @@ mod guest_fault_tests;
 
 //#region 🔖️MockGuestRuntime
 
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️mock-guest-runtime/🦀️.rs"]
-mod mock_guest_runtime_tests;
+
 //#endregion 🔖️MockGuestRuntime
 
 //#region 🐎️WasmtimeRuntime
-/// 🧬️ The real `impl GuestRuntime for WasmtimeRuntime` — `design-runtime.md` §2. Nested `mod
-/// actor_bindings` (mirrors the file's own `mod extension_bindings` idiom below, "wasmtime's
-/// `bindgen!` cannot be invoked twice at the same module scope") so this coexists with the OLD
-/// `plugin-world`/`extension-world` `bindgen!` calls until the deletion pass — both of which are
-/// now unconditionally broken independent of this packet (their `world` names no longer exist in
-/// `📜️world.wit`, which declares only `world actor`), a finding recorded in
-/// `📓️terra-B1-host-native-report.md`.
-
 use semio_plugin_host_engine::wasm;
 pub(crate) use wasm::component::Accessor;
 use semio_framework_actor::{ActorId, OriginalGuestExecutionBudget, OriginalGuestExecutionReceipt, OriginalJobBudget, OriginalJobCallFailure, OriginalJobCancelReply, OriginalJobOutcome, OriginalJobOutputAckReply, OriginalJobOutputChunk, OriginalJobOutputReply, OriginalJobOutputState, OriginalJobSource, OriginalJobStartReply, OriginalJobStepReply, PackageHash, PackageId, ActorId as RuntimeActorId};
@@ -118,3 +108,5 @@ use semio_plugin_host_wit::wit_ui;
 
 //#endregion 🐎️WasmtimeRuntime
 //#endregion 🎭️GuestRuntime
+
+pub use semio_plugin_interpreter_runtime::{OwnedActorFailureAckFrame,OwnedActorFailureAcknowledged};

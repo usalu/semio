@@ -1,1 +1,1 @@
-{"operation":71,"generation":3,"receipts":[{"phase":"actor","epoch":1,"spent":[1,41,0,0]},{"phase":"wake","epoch":2,"spent":[1,41,0,0]},{"phase":"actor","epoch":3,"spent":[1,41,0,0]}],"remaining":[61,262021,1048576,1048576,64]}
+{"operation":71,"generation":3,"receipts":[{"phase":"actor","epoch":1,"spent":[1,41,0,0],"grant":[1,4096,65536,262144,64]},{"phase":"wake","epoch":2,"spent":[1,41,0,0],"grant":[1,2048,65536,262144,64]},{"phase":"actor","epoch":3,"spent":[1,41,0,0],"grant":[1,4096,65536,262144,64]}],"remaining":[61,262021,1048576,1048576,64],"wakeCopyBytes":2048}

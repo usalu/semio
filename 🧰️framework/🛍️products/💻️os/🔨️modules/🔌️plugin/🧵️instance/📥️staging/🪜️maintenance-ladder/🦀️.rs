@@ -40,7 +40,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             if cx.should_yield(){return Ok(PluginLifecycleStep::Progress(empty))}
             let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);if grant.maximum_items==0{return Ok(PluginLifecycleStep::Progress(empty))}
             let Some(unit)=self.ladder_ref().maintenance_unit_at(position,cursor)else{cx.consume_fuel(1);continue};
-            let Some(demand)=self.ladder_ref().maintenance_unit_demand(unit,grant.maximum_copy_bytes)?else{cx.consume_fuel(1);continue};
+            let Some(demand)=self.ladder_ref().maintenance_unit_demand(unit,grant.maximum_copy_bytes,cx.fuel_remaining())?else{cx.consume_fuel(1);continue};
             if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){cx.consume_fuel(1);continue}
             if matches!(unit,MaintenanceUnit::MediaRefusal)&&self.media.quoted_media_refusal_selected(){return self.ladder_ctx().maintenance_unit_step(unit,cx,grant)}
             let step=semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{

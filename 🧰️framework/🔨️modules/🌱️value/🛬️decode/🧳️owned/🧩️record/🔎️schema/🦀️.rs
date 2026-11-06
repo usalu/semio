@@ -3,6 +3,8 @@ use super::NativeRecordKey;
 use crate::{NativeDecodeControl,OriginalReceivingPrimary,RetainedWorkOutcome,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneRef,retained_clone_grant_admits},source::{NativeValueSource,fixed,receipt,invalid}};
 use semio_framework_value_persistent::list::{PagedList,PagedListError};
 use std::mem::{ManuallyDrop,size_of};
+fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
+fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
 #[derive(Clone,Copy)]pub struct NativeSchemaLeaf{pub name:&'static str,pub ordinal:u32}
 #[derive(Clone,Copy)]pub enum NativeRecordSchema{Leaf(NativeSchemaLeaf),Flatten{fields:fn(usize)->Option<NativeRecordSchema>,count:usize},Union{fields:fn(usize)->Option<NativeRecordSchema>,count:usize},Skip}
 #[derive(Clone,Copy)]pub enum NativeSchemaKeySource{Record(usize),Text,VariantTag,EnumOrdinal,RecordName(usize),RecordText(usize)}
@@ -11,8 +13,7 @@ use std::mem::{ManuallyDrop,size_of};
 #[derive(Clone,Copy)]enum Key{Name(*const str),Ordinal(u32)}
 fn combined(left:NativeFieldMatch,right:NativeFieldMatch)->NativeFieldMatch{match(left,right){(NativeFieldMatch::Missing,right)=>right,(left,NativeFieldMatch::Missing)=>left,_=>NativeFieldMatch::Ambiguous}}
 fn alternative(left:NativeFieldMatch,right:NativeFieldMatch)->NativeFieldMatch{match(left,right){(NativeFieldMatch::Ambiguous,_)|(_,NativeFieldMatch::Ambiguous)=>NativeFieldMatch::Ambiguous,(NativeFieldMatch::Missing,right)=>right,(left,_)=>left}}
-fn page<T>(r:Result<T,PagedListError>)->Result<T,ValueError>{r.map_err(|e|ValueError::literal(ValueRefusalKind::OwnershipLimit,e.reason))}
-pub struct NativeRecordMatcher<I:NativeValueSource+?Sized>{binding:Option<RetainedCloneBinding>,frames:ManuallyDrop<PagedList<SchemaFrame,{usize::MAX}>>,pending:Option<SchemaFrame>,key:Option<Key>,leaf:Option<NativeSchemaLeaf>,leaf_root:usize,offset:usize,key_source:NativeSchemaKeySource,fields:fn(usize)->Option<NativeRecordSchema>,count:usize,matched:NativeFieldMatch,done:bool,closing:bool,input:std::marker::PhantomData<fn(&I)>}
+pub struct NativeRecordMatcher<I:NativeValueSource+?Sized>{binding:Option<RetainedCloneBinding>,key_source:NativeSchemaKeySource,key_child:ManuallyDrop<Option<RetainedOwnedProjection<dyn NativeValueSource>>>,key:Option<Key>,frames:ManuallyDrop<PagedList<SchemaFrame,{usize::MAX}>>,reservation:NativePagedReservation,active:Option<SchemaFrame>,pending:Option<SchemaFrame>,discard:Option<SchemaFrame>,release:Option<PagedListReleaseSelection>,leaf:Option<NativeSchemaLeaf>,leaf_root:usize,offset:usize,fields:fn(usize)->Option<NativeRecordSchema>,count:usize,matched:NativeFieldMatch,done:bool,started:bool,closing:bool,effect:NativeReceivingEffect,input:std::marker::PhantomData<fn(&I)>}
 unsafe impl<I:NativeValueSource+?Sized>Send for NativeRecordMatcher<I>{}
 impl<I:NativeValueSource+?Sized>NativeRecordMatcher<I>{
  pub fn new(fields:fn(usize)->Option<NativeRecordSchema>,count:usize,key_source:NativeSchemaKeySource)->Self{Self{binding:None,frames:ManuallyDrop::new(PagedList::new()),pending:None,key:None,leaf:None,leaf_root:0,offset:0,key_source,fields,count,matched:NativeFieldMatch::Missing,done:false,closing:false,input:std::marker::PhantomData}}

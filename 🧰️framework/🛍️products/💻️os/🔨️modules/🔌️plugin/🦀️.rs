@@ -58,7 +58,7 @@ pub mod owned_abi {
 
     /// 📬️ Releases one guest allocation after the reactor-context receipt registries had their chance to claim it; the plain release is abi's.
     pub unsafe fn deallocate(pointer: u32, length: u32) {
-        if crate::reactor::original_actor_context::exports::fixed_receipt_pointer(pointer,length)||crate::reactor::original_actor_context::exports::release_owned_job_receipt(pointer,length) { return; }
+        if crate::reactor::original_actor_context::exports::release_resident_receipt(pointer,length) { return; }
         unsafe { semio_plugin_abi::owned_abi::deallocate(pointer, length) }
     }
 }
@@ -110,8 +110,9 @@ pub use tool_contract::original_reserved_producer_laws;
 
 pub use semio_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
 pub mod app {
-    pub use semio_plugin_time_travel as time_travel;
     //! 🧩️ The crate's public app vocabulary: declarative app builder, plugin traits and runtime types, composed from the facet modules that own them.
+    pub use semio_plugin_operation::{typed_operation_unit_census, TypedOperationUnitCensus};
+    pub use semio_plugin_time_travel as time_travel;
     pub use semio_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
     pub use semio_plugin_decl_surface::{OriginalArtifactEditorBirth,OriginalArtifactViewerBirth};
     pub use semio_plugin_decl_views::{NoConfigGenesisOwner,NoDraftGenesisOwner};

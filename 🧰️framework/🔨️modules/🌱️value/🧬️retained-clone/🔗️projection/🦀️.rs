@@ -19,6 +19,7 @@ unsafe impl<T: ?Sized + Sync> Sync for RetainedOwnedProjection<T> {}
 impl<T: ?Sized + Sync> RetainedOwnedProjection<T> {
     /// 📏️ Quotes the original sealed alias before any projection callback executes.
     pub fn constructor_demand()->crate::RetirementDemand { crate::RetirementDemand { copy_bytes:RetainedCloneBinding::alias_copy_bytes()+std::mem::size_of::<Self>(),depth:1,..Default::default() } }
+    pub const fn constructor_work_demand()->u64{RetainedCloneBinding::alias_work_demand()+1}
     pub(super) fn admit_constructor(grant:RetainedCloneGrant)->Result<(),ValueError> {
         if grant.maximum_items==0 { return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original projection requires one admitted item")); }
         if grant.maximum_depth==0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original projection requires admitted depth")); }

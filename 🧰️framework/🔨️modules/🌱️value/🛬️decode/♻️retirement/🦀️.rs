@@ -3,11 +3,13 @@ use super::{NativeDecodeControl,NativeDecodeProgress,allocation};
 use crate::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneStep,retained_clone_grant_admits}};
 /// 🪢️ Exposes only original semantic admission during a prepared work action.
 pub trait NativePreparedDecodeControl{
+ fn available_work_units(&mut self)->Result<u64,ValueError>;
  fn checkpoint(&mut self)->Result<(),ValueError>;
  fn admit_turn_capacity(&mut self,bytes:usize)->Result<(),ValueError>;
  fn charge(&mut self,bytes:usize)->Result<(),ValueError>;
 }
 impl NativePreparedDecodeControl for NativeDecodeControl<'_>{
+ fn available_work_units(&mut self)->Result<u64,ValueError>{NativeDecodeControl::available_work_units(self)}
  fn checkpoint(&mut self)->Result<(),ValueError>{NativeDecodeControl::checkpoint(self)}
  fn admit_turn_capacity(&mut self,bytes:usize)->Result<(),ValueError>{NativeDecodeControl::admit_turn_capacity(self,bytes)}
  fn charge(&mut self,bytes:usize)->Result<(),ValueError>{NativeDecodeControl::charge(self,bytes)}
@@ -21,6 +23,40 @@ impl<'operation,'decode> NativeRetirementDecodeControl<'operation,'decode>{
  pub fn ledger_identity(&self)->crate::NativeAllocationIdentity{self.original.ledger_identity()}
  /// 🧷️ Observes the exact original recipient retained by this decoder continuation.
  pub fn retirement_recipient_identity(&self)->Option<u64>{self.funding.as_ref().map(|funding|funding.identity).or_else(||self.original.retirement_recipient_identity())}
+ /// 🔭️ Reads the actual current or already-held work without another reservation.
+ pub fn available_work_units(&mut self)->Result<u64,ValueError>{self.original.available_work_units()}
+ /// ⏳️ Reports the original issuer's retained work action before callback resolution.
+ pub fn has_pending_work(&self)->bool{self.original.has_pending_work()}
+ /// 🚦️ Reports the original unresolved work quote without invoking it again.
+ pub fn work_quote_pending(&self)->bool{self.original.work_quote_pending()}
+ /// 🛟️ Settles an existing value effect through its unchanged original recipient and work issuer.
+ /// ♻️ Births only an owned retirement frontier through the same physical and work recipients.
+ pub fn receive_retirement(&mut self,demand:RetirementDemand,frame:&mut super::NativeReceivingEffect<crate::OriginalRetirementFailure>,allocating:bool,work:u64,operation:impl FnOnce(RetainedCloneGrant,Option<&mut Option<usize>>)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailure>)->crate::RetainedWorkOutcome<crate::RetainedCloneProgress,super::OriginalReceivingPrimary>{let before=self.original.owned_bytes();let spend=RetirementEncodingSpend{loan:self,before};spend.loan.original.receive_retirement(demand,frame,allocating,work,operation)}
+ pub fn finish_receiving(&mut self,frame:&mut super::NativeReceivingEffect)->crate::RetainedWorkOutcome<crate::RetainedCloneProgress,super::OriginalReceivingPrimary>{self.original.finish_receiving(frame)}
+ /// ♻️ Settles an existing retirement effect while preserving its whole original child failure.
+ pub fn finish_retirement_receiving(&mut self,frame:&mut super::NativeReceivingEffect<crate::OriginalRetirementFailure>)->crate::RetainedWorkOutcome<crate::RetainedCloneProgress,super::OriginalReceivingPrimary>{self.original.finish_retirement_receiving(frame)}
+ /// 🧳️ Dispatches only an already-owned recovery loan without exposing semantic admission.
+ pub fn finish_recovery(&mut self,loan:super::construction::NativeRecoveryLoan<'_>)->crate::RetainedWorkOutcome<crate::RetainedCloneProgress,super::OriginalReceivingPrimary>{match loan{super::construction::NativeRecoveryLoan::Value(frame)=>self.finish_receiving(frame),super::construction::NativeRecoveryLoan::Retirement(frame)=>self.finish_retirement_receiving(frame)}}
+ /// 📬️ Returns the original grant reply unchanged when its recipient or callback phase differs.
+ pub fn resolve_receiving_grant<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,reply:Result<RetainedCloneGrant,ValueError>)->Result<(),(ValueError,Result<RetainedCloneGrant,ValueError>)>{frame.resolve_grant(self.original,reply)}
+ /// 🧾️ Resolves the exact original allocation callback and preserves every refused reply donor.
+ pub fn resolve_receiving_allocation_callback<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,reply:Result<(),ValueError>)->Result<(),(ValueError,Result<(),ValueError>)>{frame.resolve_allocation_callback(self.original,reply)}
+ /// ⛽️ Resolves only the pending quote of this unchanged original work issuer.
+ pub fn resolve_work_quote(&mut self,reply:Result<bool,ValueError>)->Result<Result<bool,ValueError>,(ValueError,Result<bool,ValueError>)>{self.original.resolve_work_quote(reply)}
+ /// 📨️ Resolves an already-submitted physical receipt without creating another effect.
+ pub fn resolve_receiving_receipt<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,reply:Result<(),ValueError>)->Result<(),(ValueError,Result<(),ValueError>)>{frame.resolve_receipt(self.original,reply)}
+ /// 🏷️ Reconciles only the retained actual marker of an already-started physical effect.
+ pub fn resolve_receiving_effect_marker<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,actual:Option<usize>)->Result<(),ValueError>{frame.resolve_effect_marker(self.original,actual)}
+ /// 🏁️ Finishes the already-started allocation through its original captured port.
+ pub fn finish_receiving_allocation<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>)->Result<(),ValueError>{frame.finish_allocation(self.original)}
+ /// 🫴️ Retains a real allocated child's exact response or returns the entire donor on refusal.
+ pub fn resolve_receiving_child<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,reply:crate::RetainedWorkOutcome<RetainedCloneStep,E>)->Result<(),(ValueError,crate::RetainedWorkOutcome<RetainedCloneStep,E>)>{frame.resolve_child(self.original,reply)}
+ /// 🧮️ Returns one real unallocated child's response only to its pending original frontier.
+ pub fn resolve_unallocated_receiving_child<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,reply:crate::RetainedWorkOutcome<RetainedCloneStep,E>)->Result<(),(ValueError,crate::RetainedWorkOutcome<RetainedCloneStep,E>)>{frame.resolve_unallocated_child(self.original,reply)}
+ /// ⏪️ Cancels original held work only when the effect itself proves that no child ran.
+ pub fn cancel_unperformed_receiving_work<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>)->Result<(),ValueError>{frame.cancel_unperformed_work(self.original)}
+ /// 🛑️ Cancels a granted original frame whose physical effect was never started.
+ pub fn cancel_unstarted_receiving<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>)->Result<(),ValueError>{frame.cancel_unstarted(self.original)}
  /// 📊️ Reads cumulative original allocation without issuing another capacity.
  pub fn owned_bytes(&self)->usize{self.original.ledger.as_ref().expect("original decode ledger present").owned_bytes()}
  /// 🎟️ Admits one real cleanup birth against this original hop before reporting the original cancellation observer.

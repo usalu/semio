@@ -16,9 +16,9 @@ fn retained_paged_list_owner_page_ceiling_preserves_order_and_exact_retirement()
                 let bytes = owner.next_allocation_bytes().unwrap();
                 assert!(bytes <= ceiling);
                 let before = (owner.capacity(), owner.allocated_bytes(), owner.len());
-                assert!(!owner.reserve_one(bytes - 1).unwrap().progressed);
+                assert!(!owner.reserve_one(bytes - 1,&mut None).unwrap().progressed);
                 assert_eq!((owner.capacity(), owner.allocated_bytes(), owner.len()), before);
-                let step = owner.reserve_one(bytes).unwrap();
+                let step = owner.reserve_one(bytes,&mut None).unwrap();
                 assert!(step.progressed);
                 assert_eq!(step.allocated_bytes, bytes);
                 admitted += bytes;
@@ -39,13 +39,13 @@ fn retained_paged_list_owner_page_ceiling_preserves_order_and_exact_retirement()
     }
     let mut owner = PagedList::<u64, 200>::with_payload_page_bytes(ceiling).unwrap();
     for value in fixture["input"].as_array().unwrap().iter().chain(fixture["append"].as_array().unwrap()) {
-        while !owner.has_reserved_slot() { assert!(owner.reserve_one(ceiling).unwrap().progressed); }
+        while !owner.has_reserved_slot() { assert!(owner.reserve_one(ceiling,&mut None).unwrap().progressed); }
         owner.push_reserved(value.as_u64().unwrap()).unwrap();
     }
     assert_eq!(serde_json::to_value(owner.iter().copied().collect::<Vec<_>>()).unwrap(), fixture["expected"]);
     assert_eq!(owner.iter().sum::<u64>(), fixture["sum"].as_u64().unwrap());
     let mut default = PagedList::<u64, 600>::default();
-    assert!(default.reserve_one(ceiling).unwrap().progressed);
+    assert!(default.reserve_one(ceiling,&mut None).unwrap().progressed);
     assert_eq!(default.next_allocation_bytes().unwrap(), fixture["defaultPayloadPageBytes"].as_u64().unwrap() as usize);
 }
 
@@ -57,7 +57,7 @@ fn retained_paged_list_neutral_order_capacity_and_close() {
     let mut admitted = 0;
     for index in 0..data["ordered"]["count"].as_u64().unwrap() {
         while !list.has_reserved_slot() {
-            let step = list.reserve_one(grant).unwrap();
+            let step = list.reserve_one(grant,&mut None).unwrap();
             assert!(step.progressed);
             assert!(step.allocated_bytes <= grant);
             admitted += step.allocated_bytes;
@@ -97,16 +97,16 @@ fn retained_paged_list_capacity_admission_and_exact_release_grants() {
         let exact = list.next_capacity_allocation_bytes(600).unwrap().expect("target still needs backing");
         assert!(exact > 0, "a target beyond current capacity must request its next real backing even while the current leaf has unused slots");
         let before = (list.capacity(), list.allocated_bytes());
-        assert!(!list.reserve_capacity_one(600, exact - 1).unwrap().progressed);
+        let mut actual=Some(73);assert!(!list.reserve_capacity_one(600, exact - 1,&mut actual).unwrap().progressed);assert_eq!(actual,Some(73));
         assert_eq!((list.capacity(), list.allocated_bytes()), before);
-        let step = list.reserve_capacity_one(600, exact).unwrap();
+        let mut actual=None;let(step,heap)=crate::observe_retirement_allocations(||list.reserve_capacity_one(600, exact,&mut actual).unwrap());assert_eq!(actual,Some(heap.0));assert_eq!(heap,(exact,0));
         assert!(step.progressed);
         assert_eq!(step.allocated_bytes, exact);
     }
     assert_eq!(list.next_capacity_allocation_bytes(600), Ok(None));
     assert_eq!(list.len(), 0);
     assert_eq!(list.initialized_len(), 0);
-    assert!(list.reserve_capacity_one(601, 4096).is_err());
+    let mut actual=Some(73);assert!(list.reserve_capacity_one(601, 4096,&mut actual).is_err());assert_eq!(actual,Some(73));
     assert_eq!(list.capacity(), 600);
     let pointer = list.backing_ptr(512).unwrap();
     let exact = list.next_release_allocation_bytes().unwrap();
@@ -131,7 +131,7 @@ fn paged_child_source_returns_genuine8194_backing_to_parent_without_physical_cre
     let exact=fixture["wireBytes"].as_u64().unwrap()as usize;
     let mut source=PagedList::<u8,8194>::empty();
     for byte in fixture["wire"].as_str().unwrap().bytes().chain(std::iter::repeat_n(fixture["paddingByte"].as_u64().unwrap()as u8,fixture["paddingBytes"].as_u64().unwrap()as usize)){
-        while !source.has_reserved_slot(){let progress=source.reserve_one(maximum).unwrap();assert!(progress.progressed&&progress.allocated_bytes<=maximum);}
+        while !source.has_reserved_slot(){let progress=source.reserve_one(maximum,&mut None).unwrap();assert!(progress.progressed&&progress.allocated_bytes<=maximum);}
         source.push_reserved(byte).unwrap();
     }
     assert_eq!(source.len(),exact);
@@ -172,12 +172,12 @@ fn paged_child_source_returns_genuine8194_backing_to_parent_without_physical_cre
 #[test]
 fn paged_actual_height_preserves_maximum_authority_pointer_and_parent_handoff(){
     use semio_framework_value_allocation_return::{ParentAllocationReturn,AllocationReturnStep};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌳️actual-height.json")).unwrap();assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(fixture["ownerWords"],7);assert_eq!(size_of::<PagedList<u64,{isize::MAX as usize}>>(),7*size_of::<usize>());
-    let mut scalar=PagedList::<u64,{isize::MAX as usize}>::empty();let mut allocations=0;while !scalar.has_reserved_slot(){let required=scalar.next_allocation_bytes().unwrap();assert!(required<=4096);let step=scalar.reserve_one(4096).unwrap();assert!(step.progressed);assert_eq!(step.allocated_bytes,required);allocations+=1;}assert!(scalar.push_reserved(fixture["scalar"].as_u64().unwrap()).is_ok());assert!(allocations<=2,"one scalar preallocated maximum-height scaffolding");assert!(scalar.allocated_bytes()<=8192);assert_eq!(scalar[0],7);scalar.pop();while !scalar.terminal_is_empty(){assert!(scalar.release_empty_page(4096).unwrap().progressed)}
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌳️actual-height.json")).unwrap();assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(fixture["ownerWords"],8);assert_eq!(size_of::<PagedList<u64,{isize::MAX as usize}>>(),8*size_of::<usize>());
+    let mut scalar=PagedList::<u64,{isize::MAX as usize}>::empty();let mut allocations=0;while !scalar.has_reserved_slot(){let required=scalar.next_allocation_bytes().unwrap();assert!(required<=4096);let step=scalar.reserve_one(4096,&mut None).unwrap();assert!(step.progressed);assert_eq!(step.allocated_bytes,required);allocations+=1;}assert!(scalar.push_reserved(fixture["scalar"].as_u64().unwrap()).is_ok());assert!(allocations<=2,"one scalar preallocated maximum-height scaffolding");assert!(scalar.allocated_bytes()<=8192);assert_eq!(scalar[0],7);scalar.pop();while !scalar.terminal_is_empty(){assert!(scalar.release_empty_page(4096).unwrap().progressed)}
     for bytes in fixture["growthPayloadBytes"].as_array().unwrap(){
         let length=bytes.as_u64().unwrap()as usize;let mut owner=PagedList::<u8,{isize::MAX as usize}>::empty();let mut first=None;assert_eq!(owner.next_push_depth_demand().unwrap_err().kind,PagedListRefusalKind::OwnershipLimit);let mut depths=Vec::new();
         for index in 0..length{
-            while !owner.has_reserved_slot(){let required=owner.next_allocation_bytes().unwrap();assert!(required<=4096);let retained=owner.allocated_bytes();let pointer=owner.backing_ptr(0);assert!(!owner.reserve_one(required.saturating_sub(1)).unwrap().progressed);assert_eq!(owner.allocated_bytes(),retained);assert_eq!(owner.backing_ptr(0),pointer);let step=owner.reserve_one(4096).unwrap();assert!(step.progressed);assert_eq!(step.allocated_bytes,required);}
+            while !owner.has_reserved_slot(){let required=owner.next_allocation_bytes().unwrap();assert!(required<=4096);let retained=owner.allocated_bytes();let pointer=owner.backing_ptr(0);assert!(!owner.reserve_one(required.saturating_sub(1),&mut None).unwrap().progressed);assert_eq!(owner.allocated_bytes(),retained);assert_eq!(owner.backing_ptr(0),pointer);let step=owner.reserve_one(4096,&mut None).unwrap();assert!(step.progressed);assert_eq!(step.allocated_bytes,required);}
             if let Some(row)=fixture["reservedPushDepth"].as_array().unwrap().iter().find(|row|row["index"].as_u64().unwrap()as usize==index){let before=(owner.len(),owner.allocated_bytes(),owner.backing_ptr(0));let depth=owner.next_push_depth_demand().unwrap();assert_eq!(depth,row["depth"].as_u64().unwrap()as usize);assert_eq!((owner.len(),owner.allocated_bytes(),owner.backing_ptr(0)),before);depths.push(serde_json::json!({"index":index,"depth":depth}));}
             assert!(owner.push_reserved((index%251)as u8).is_ok());if index==0{first=owner.backing_ptr(0);}assert_eq!(owner.backing_ptr(0),first);
         }

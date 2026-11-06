@@ -264,7 +264,7 @@ impl OriginalNumericalFixture{
     }
     pub fn close_payload(&mut self,payload:&mut RetainedJobPayload){while !payload.terminal_is_empty(){let demand=payload.retirement_demands().expect("original payload close quote");self.turn(close_grant(demand),1,u64::MAX,|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|payload.close_step(grant))).expect("same original payload close");}}
     pub fn close_writer(&mut self,writer:&mut NumericalPayloadSlot){while let Some(demand)=numerical_writer_demand(writer){let demand=demand.expect("original writer close quote");self.turn(close_grant(demand),1,u64::MAX,|cx|{let grant=cx.retained_grant();Ok(numerical_writer_close(writer,grant))}).expect("same original writer close");}}
-    pub fn finish(mut self){while !self.decoder.terminal_is_empty(){let grant=self.caller.remaining_grant();self.caller.turn(grant,|cx|semio_framework_job::close_original_retained_step(cx,self.decoder.retirement_demands(grant.maximum_copy_bytes)?,|grant|self.decoder.close_step(grant))).expect("original numerical decoder return");}self.caller.retire(Self::STOCK);}
+    pub fn finish(mut self){while !self.decoder.terminal_is_empty(){let grant=self.caller.remaining_grant();self.caller.turn(grant,|cx|self.decoder.close_on_source(cx)).expect("original numerical decoder return");}self.caller.retire(Self::STOCK);}
 }
 
 /// 🔬️ Measures actual caller-thread allocations and releases without constructing an observer backing.

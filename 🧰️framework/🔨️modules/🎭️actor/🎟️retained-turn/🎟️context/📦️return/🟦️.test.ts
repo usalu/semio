@@ -1,0 +1,4 @@
+/** 📮️ Independent SQL validates actual write observation and armed returns. */
+import{test,expect}from"bun:test";import{Database}from"bun:sqlite";import Ajv from"ajv";
+import returns from"./cases.json";import returnSchema from"./🔣️.json";
+test("actor return claims observe actual writes and refuse duplicate or unissued returns",()=>{expect(new Ajv({strict:true}).compile(returnSchema)(returns)).toBe(true);const db=new Database(":memory:");try{for(const row of returns.cases)expect(Boolean((db.query("SELECT (NOT ? AND ? AND ?) AS allowed").get(Number(row.armed),Number(row.written),Number(row.sameSource))as{allowed:number}).allowed)).toBe(row.mayObserve);for(const row of returns.transitions)expect(Boolean((db.query("SELECT (? AND ?) AS allowed").get(Number(row.borrowed),Number(row.preissued))as{allowed:number}).allowed)).toBe(row.mayReturn);}finally{db.close()}});

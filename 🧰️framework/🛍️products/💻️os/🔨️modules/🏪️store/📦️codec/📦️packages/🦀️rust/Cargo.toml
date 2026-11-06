@@ -22,6 +22,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job-failure = { path = "../../../../../../../🔨️modules/🧵️job/⚠️failure/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-os-semio = { path = "../../../../🧬️semio/📦️packages/🦀️rust" }
 semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-os-store-backbone = { path = "../../../🔗️backbone/📦️packages/🦀️rust" }
@@ -57,3 +59,7 @@ serde_json = "1.0.140"
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 semio-framework-value-retirement = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust" }
+
+[[test]]
+name = "original-artifact-pair-projection"
+path = "../../📸️native-snapshot/🫴️receiving/📜️pair/🫴️failure/🧪️tests.rs"

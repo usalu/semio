@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "quote",
+          "available",
+          "advance"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "reserve",
+              "child",
+              "retire",
+              "terminal"
+            ]
+          },
+          "quote": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "available": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "advance": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

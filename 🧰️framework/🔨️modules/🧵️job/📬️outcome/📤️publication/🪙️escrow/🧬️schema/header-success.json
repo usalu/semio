@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"required":["bits","usize","loanOption","header","writes","items","copy","work"],"properties":{"bits":{"enum":[32,64]},"usize":{"enum":[4,8]},"loanOption":{"enum":[40,64]},"header":{"enum":[144,152,184]},"writes":{"enum":[20,21,22,25]},"items":{"const":8},"copy":{"type":"integer","minimum":1},"work":{"type":"integer","minimum":1}}}

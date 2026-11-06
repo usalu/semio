@@ -62,9 +62,6 @@ mod publication_work_tests;
 
 #[cfg(test)] use std::mem::size_of;
 
-#[cfg(test)]
-#[path="../📥️evaluation-source/🔎️read/✏️authoring/🧪️laws/🦀️.rs"]
-mod authoring_text_tests;
 
 #[cfg(test)] use neural::ColdRetire;
 #[cfg(test)] use semio_os_flow_host_session::invocation_publication::{FlowInferenceDependencyWork,FlowInvocationRequestWork,FlowInvocationOriginWork};

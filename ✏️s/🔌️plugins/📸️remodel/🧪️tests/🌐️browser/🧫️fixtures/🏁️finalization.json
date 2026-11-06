@@ -1,0 +1,118 @@
+[
+  {
+    "baseline": [
+      "Mesh: Placeholder, 0 vertices",
+      "none",
+      "none",
+      "none",
+      "none"
+    ],
+    "before": [
+      "Mesh: Placeholder, 0 vertices",
+      "none",
+      "none",
+      "none",
+      "none"
+    ],
+    "after": [
+      "Mesh: Reconstructed, 3 vertices",
+      "5",
+      "5",
+      "2",
+      "none"
+    ],
+    "peerBefore": [
+      "Mesh: Placeholder, 0 vertices",
+      "none",
+      "none",
+      "none",
+      "none"
+    ],
+    "peerAfter": [
+      "Mesh: Reconstructed, 3 vertices",
+      "5",
+      "5",
+      "2",
+      "none"
+    ],
+    "finalized": true,
+    "pass": true
+  },
+  {
+    "baseline": [
+      "Mesh: Placeholder, 0 vertices",
+      "none",
+      "none",
+      "none",
+      "none"
+    ],
+    "before": [
+      "Mesh: Placeholder, 0 vertices",
+      "none",
+      "none",
+      "none",
+      "none"
+    ],
+    "after": [
+      "Mesh: Placeholder, 3 vertices",
+      "5",
+      "5",
+      "2",
+      "none"
+    ],
+    "peerBefore": [
+      "Mesh: Placeholder, 0 vertices",
+      "none",
+      "none",
+      "none",
+      "none"
+    ],
+    "peerAfter": [
+      "Mesh: Placeholder, 3 vertices",
+      "5",
+      "5",
+      "2",
+      "none"
+    ],
+    "finalized": true,
+    "pass": false
+  },
+  {
+    "baseline": [
+      "old"
+    ],
+    "before": [
+      "changed early"
+    ],
+    "after": [
+      "Mesh: Reconstructed, 3 vertices"
+    ],
+    "peerBefore": [
+      "changed early"
+    ],
+    "peerAfter": [
+      "Mesh: Reconstructed, 3 vertices"
+    ],
+    "finalized": true,
+    "pass": false
+  },
+  {
+    "baseline": [
+      "old"
+    ],
+    "before": [
+      "old"
+    ],
+    "after": [
+      "Mesh: Reconstructed, 3 vertices"
+    ],
+    "peerBefore": [
+      "old"
+    ],
+    "peerAfter": [
+      "different"
+    ],
+    "finalized": true,
+    "pass": false
+  }
+]

@@ -9,6 +9,35 @@ use std::mem::ManuallyDrop;
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum InputAdmission { Pending, Ready, Failed, Closed }
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct OriginalActorInputFailureIdentity{owner:usize,outcome:usize,settlement:usize,binding:OriginalSourceBinding}
+pub struct OriginalActorInputFailureView<'a>{pub identity:OriginalActorInputFailureIdentity,pub outcome:Option<&'a OriginalJsonOutputOutcome>,pub settlement:Option<&'a OriginalNativeDecodeOutcome<RetainedCloneStep>>}
+
+fn projection_invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"input failure projection changed its retained branch")}
+impl OriginalActorInputFailureView<'_>{
+ fn field(&self,index:usize)->Result<&'static str,ValueError>{[self.outcome.and_then(|v|v.value.as_ref().err()).map(|_|"outcomeValue"),self.outcome.and_then(|v|v.receiving_refusal.as_ref()).map(|_|"outcomeReceiving"),self.settlement.and_then(|v|v.value.as_ref().err()).map(|_|"settlementValue"),self.settlement.and_then(|v|v.receiving_refusal.as_ref()).map(|_|"settlementReceiving")].into_iter().flatten().nth(index).ok_or_else(projection_invalid)}
+}
+impl semio_framework_job::OriginalDomainProjection for OriginalActorInputFailureView<'_>{
+ fn projection_identity(&self)->usize{self.identity.owner}
+ fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,ValueError>{
+  let Some((&field,rest))=path.split_first()else{return Ok(semio_framework_job::OriginalDomainView::IntrinsicObject((0..4).filter(|i|self.field(*i).is_ok()).count()))};
+  match self.field(field)?{
+   "outcomeValue"=>semio_framework_job::project_original_receiving_primary(self.outcome.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?,rest),
+   "outcomeReceiving"=>semio_framework_job::project_original_turn_failure(self.outcome.and_then(|v|v.receiving_refusal.as_ref()).ok_or_else(projection_invalid)?,rest),
+   "settlementValue"=>semio_framework_job::project_original_value_error(self.settlement.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?,rest),
+   _=>semio_framework_job::project_original_turn_failure(self.settlement.and_then(|v|v.receiving_refusal.as_ref()).ok_or_else(projection_invalid)?,rest)
+  }
+ }
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{
+  let Some((&field,rest))=path.split_first()else{return self.field(index)};
+  match self.field(field)?{
+   "outcomeValue"=>semio_framework_job::key_original_receiving_primary(self.outcome.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?,rest,index),
+   "outcomeReceiving"=>semio_framework_job::key_original_turn_failure(self.outcome.and_then(|v|v.receiving_refusal.as_ref()).ok_or_else(projection_invalid)?,rest,index),
+   "settlementValue"=>semio_framework_job::key_original_value_error(self.settlement.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?,rest,index),
+   _=>semio_framework_job::key_original_turn_failure(self.settlement.and_then(|v|v.receiving_refusal.as_ref()).ok_or_else(projection_invalid)?,rest,index)
+  }
+ }
+}
 
 /// 🧳️ The caller owns this frame before the decoder borrows an unchanged wire allocation.
 pub struct OriginalActorInputReceiving {
@@ -43,6 +72,14 @@ impl OriginalActorInputReceiving {
     }
     /// 👁️ The retained original failure is available for a funded publication before retirement.
     pub fn outcome(&self)->Option<&OriginalJsonOutputOutcome>{self.outcome.as_ref().and_then(ControlledRetirement::original)}
+    /// 🔎️ Borrows every actual retained failure branch without moving an outcome or inventing a cancellation cause.
+    pub fn with_failure_view_step(&self,expected:Option<&OriginalActorInputFailureIdentity>,cx:&mut StepContext<'_>,receive:impl for<'view> FnOnce(OriginalActorInputFailureView<'view>,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        let outcome=self.outcome().filter(|raw|raw.value.is_err()||raw.receiving_refusal.is_some());let settlement=self.settlement.as_ref().and_then(ControlledRetirement::original).filter(|raw|raw.value.is_err()||raw.receiving_refusal.is_some());
+        if outcome.is_none()&&settlement.is_none(){return Ok(false)}let binding=self.binding.filter(|binding|binding.matches(cx)).ok_or_else(invalid)?;
+        let identity=OriginalActorInputFailureIdentity{owner:self as*const Self as usize,outcome:outcome.map_or(0,|value|value as*const OriginalJsonOutputOutcome as usize),settlement:settlement.map_or(0,|value|value as*const OriginalNativeDecodeOutcome<RetainedCloneStep>as usize),binding};
+        if expected.is_some_and(|expected|*expected!=identity){return Err(invalid())}if !charge(cx,true,std::mem::size_of::<OriginalActorInputFailureView<'_>>())?{return Ok(false)}receive(OriginalActorInputFailureView{identity,outcome,settlement},cx)?;Ok(true)
+    }
     /// 🧯️ A fixed refusal names only a kind present in the retained original decoder outcome.
     pub fn failure_kind(&self)->Option<ValueRefusalKind>{
         let settlement=self.settlement.as_ref().and_then(ControlledRetirement::original).and_then(|raw|raw.receiving_refusal.as_ref().and_then(|failure|failure.primary_value().map(|error|error.kind)).or_else(||raw.value.as_ref().err().map(|error|error.kind)));
@@ -50,31 +87,31 @@ impl OriginalActorInputReceiving {
             .or_else(||outcome.value.as_ref().err().and_then(|cause|cause.primary.as_ref().or(cause.quote_refusal.as_ref()).or(cause.allocation_refusal.as_ref()).map(|error|error.kind)))})
     }
     pub fn input(&self)->Option<&ActorInput>{if self.input_returned()&&!self.closing{self.input.as_ref()}else{None}}
-    pub(super) fn with_input_step<T>(&mut self,cx:&mut StepContext<'_>,use_input:impl FnOnce(&mut ActorInput,&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<Option<T>,OriginalTurnFailure>{
+    pub fn with_input_step<T>(&mut self,cx:&mut StepContext<'_>,use_input:impl FnOnce(&mut ActorInput,&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<Option<T>,OriginalTurnFailure>{
         self.validate(None,cx)?;if !self.input_returned()||self.closing{return Err(invalid())}if !charge(cx,false,std::mem::size_of::<&mut ActorInput>())?{return Ok(None)}
         Ok(Some(use_input(self.input.as_mut().ok_or_else(invalid)?,cx)?))
     }
     /// 📨️ Keeps the unconsumed event in the same Source owner across a pending turn.
-    pub(super) fn prepare_poll_event(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+    pub fn prepare_poll_event(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.validate(None,cx)?;if !self.input_returned()||self.closing{return Err(invalid())}
         let Some(ActorInput::Poll(poll))=self.input.as_ref()else{return Err(invalid())};
-        if poll.events.len()>1||poll.command_page.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"poll input exceeds its retained single-event ingress").into())}
+        if poll.events.len()>1{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"poll input exceeds its retained single-event ingress").into())}
         if self.event.is_some()||poll.events.is_empty(){return Ok(true)}
         let bytes=std::mem::size_of::<Option<semio_framework::kernel::Event>>()+std::mem::size_of::<usize>();let progress=RetainedCloneProgress{copied_items:2,copied_bytes:bytes,..Default::default()};if cx.should_yield()||cx.is_cancelled()||cx.fuel_remaining()<2||cx.retained_grant().maximum_depth==0||!progress.fits(cx.retained_grant()){return Ok(false)}cx.retained_progress().checked_add(progress)?;
         let Some(ActorInput::Poll(poll))=self.input.as_mut()else{return Err(invalid())};*self.event=poll.events.pop();let posted=cx.consume_retained(progress);cx.consume_fuel(2);posted?;Ok(true)
     }
-    pub(super) fn with_poll_step<T>(&mut self,cx:&mut StepContext<'_>,run:impl FnOnce(&mut semio_plugin_abi::owned_abi::PollInput,&mut Option<semio_framework::kernel::Event>,&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<T,OriginalTurnFailure>{
+    pub fn with_poll_step<T>(&mut self,cx:&mut StepContext<'_>,run:impl FnOnce(&mut semio_plugin_abi::owned_abi::PollInput,&mut Option<semio_framework::kernel::Event>,&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<T,OriginalTurnFailure>{
         self.validate(None,cx)?;if !self.input_returned()||self.closing{return Err(invalid())}
         let Some(ActorInput::Poll(poll))=self.input.as_mut()else{return Err(invalid())};run(poll,&mut *self.event,cx)
     }
-    pub(super) fn poll_event_pending(&self)->bool{self.event.is_some()}
+    pub fn poll_event_pending(&self)->bool{self.event.is_some()||matches!(self.input.as_ref(),Some(ActorInput::Poll(poll))if !poll.events.is_empty()||poll.command_page.is_some())}
     pub fn input_returned(&self)->bool{self.returned&&self.capture.terminal_is_empty()}
     /// 🪪️ A replacement wire cannot displace an earlier still-borrowed allocation.
     pub fn owns_wire(&self,wire:&[u8])->bool{self.binding.is_some()&&self.pointer==wire.as_ptr() as usize&&self.length==wire.len()}
     /// 🧹️ A frame can leave its original parent only after every real child has closed.
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.capture.terminal_is_empty()&&self.decoder.terminal_is_empty()&&self.input.is_none()&&self.outcome.is_none()&&self.settlement.is_none()&&self.retirement.is_none()&&self.event.is_none()&&self.job.is_none()&&self.job_retirement.is_none()}
     /// 💼️ The exact decoded job becomes one retryable slot only under its original Source.
-    pub(super) fn prepare_job(&mut self,job:u64,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+    pub fn prepare_job(&mut self,job:u64,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.validate(None,cx)?;if !self.input_returned()||self.closing{return Err(invalid())}
         if let Some(existing)=self.job_id{return if existing==job{Ok(true)}else{Err(invalid())}}
         if !matches!(self.input.as_ref(),Some(ActorInput::Job(source)) if source.job==job){return Err(invalid())}
@@ -84,11 +121,11 @@ impl OriginalActorInputReceiving {
         let Some(ActorInput::Job(source))=self.input.take()else{unreachable!()};*self.job=Some(source);self.job_id=Some(job);Ok(true)
     }
     /// 🔒️ Only the already prepared matching job can lend its original source slot to Entry.
-    pub(super) fn job_slot(&mut self,job:u64)->Option<&mut Option<semio_framework_actor::OriginalJobSource>>{if !self.returned||self.closing||self.job_id!=Some(job){return None}Some(&mut *self.job)}
-    pub(super) fn job_prepared(&self,job:u64)->bool{self.returned&&!self.closing&&self.job_id==Some(job)}
-    pub(super) fn holds_job(&self,job:u64)->bool{matches!(self.input.as_ref(),Some(ActorInput::Job(source)) if source.job==job)||self.job_id==Some(job)&&self.job.is_some()}
-    pub(super) fn holds_job_in(&self,job:u64,entry_has_source:bool,cx:&StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(None,cx)?;Ok(self.holds_job(job)||self.job_prepared(job)&&entry_has_source)}
-    pub(super) fn matches_job_in(&self,job:u64,cx:&StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(None,cx)?;Ok(self.holds_job(job)||self.job_prepared(job))}
+    pub fn job_slot(&mut self,job:u64)->Option<&mut Option<semio_framework_actor::OriginalJobSource>>{if !self.returned||self.closing||self.job_id!=Some(job){return None}Some(&mut *self.job)}
+    pub fn job_prepared(&self,job:u64)->bool{self.returned&&!self.closing&&self.job_id==Some(job)}
+    pub fn holds_job(&self,job:u64)->bool{matches!(self.input.as_ref(),Some(ActorInput::Job(source)) if source.job==job)||self.job_id==Some(job)&&self.job.is_some()}
+    pub fn holds_job_in(&self,job:u64,entry_has_source:bool,cx:&StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(None,cx)?;Ok(self.holds_job(job)||self.job_prepared(job)&&entry_has_source)}
+    pub fn matches_job_in(&self,job:u64,cx:&StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(None,cx)?;Ok(self.holds_job(job)||self.job_prepared(job))}
     /// 🛑️ Cancellation retains every typed child for separately funded retirement.
     pub fn begin_close(&mut self,wire:Option<&[u8]>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.validate(wire,cx)?;

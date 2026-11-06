@@ -5,17 +5,24 @@ use super::*;
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
     P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty_unbounded() { return Ok(Default::default()); }
+        if self.original_failure.is_some()||self.original_context_failure.is_some()||!self.mutation_domain.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"hydration retains its complete unreceived original failure"));}
+        if !self.fold_protocol.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fold protocol cause requires its actual original receiver"))}
+        if !self.fold_output.terminal_is_empty(){return self.fold_output.close_demands(body)}
+        if !self.empty_messages.terminal_is_empty(){return self.empty_messages.close_demands(body)}
+        if !self.original_meta.terminal_is_empty(){return self.original_meta.close_demands(body)}
+        if let Some(cursor)=self.mutation_receiving.as_ref(){if !cursor.terminal_is_empty(){return cursor.close_demands(body)}return Ok(RetirementDemand{copy_bytes:std::mem::size_of_val(&self.mutation_receiving),release_bytes:std::mem::size_of::<M::Receiving>(),depth:1,..Default::default()})}
+        if !self.mutation_output.terminal_is_empty(){return self.mutation_output.close_demands(body)}
         if let Some(active) = self.active.as_ref() { return semio_os_store_read::artifact_retirement_box_demands(active, body); }
         macro_rules! original {
             ($field:ident) => { if self.$field.is_some() { return semio_os_store_read::artifact_retirement_owned_birth_demands(&self.$field); } };
         }
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "hydration child depth overflow"))?; Ok(demand) };
         let frame = |bytes| RetirementDemand { capacity_bytes: bytes, depth: 2, ..Default::default() };
-        if self.fold_job.is_some() { return semio_os_store_read::retirement_owner_demands(&self.fold_job, body); }
+        if let Some(job)=self.fold_job.as_ref(){if self.target==PersistedDocumentHydrationTarget::Envelope{return job.next_original_close_demand(body)}return semio_os_store_read::retirement_owner_demands(&self.fold_job,body)}
         original!(normalized_conflicts);
         original!(normalized_transitions);
         original!(transition_ledger);
@@ -53,7 +60,7 @@ where
 impl<P, M> ErasedSnapshotRetirement for RetainedPersistedDocumentHydration<P, M>
 where
     P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
         fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.close_demands(body)}
 
@@ -62,7 +69,16 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.depth) }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+        if self.target==PersistedDocumentHydrationTarget::Envelope&&self.fold_job.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original fold retirement requires its actual Source decoder")),work:0}}
+        if self.original_failure.is_some()||self.original_context_failure.is_some()||!self.mutation_domain.terminal_is_empty(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"hydration retains its complete unreceived original failure")),work:0}}
+        if !self.fold_protocol.terminal_is_empty(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fold protocol cause requires its actual original receiver")),work:0}}
+        if !self.fold_output.terminal_is_empty(){let turn=self.fold_output.close_step(grant);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}}
+        if !self.empty_messages.terminal_is_empty(){let turn=self.empty_messages.close_step(grant);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}}
+        if !self.original_meta.terminal_is_empty(){let turn=self.original_meta.close_step(grant);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}}
+        if let Some(cursor)=self.mutation_receiving.as_mut(){if !cursor.terminal_is_empty(){return cursor.close_step(grant)}let copy=std::mem::size_of_val(&self.mutation_receiving);let release=std::mem::size_of::<M::Receiving>();if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.mutation_receiving.take();return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:release,..Default::default()})),work:1}}
+        if !self.mutation_output.terminal_is_empty(){let turn=self.mutation_output.close_step(grant);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}}
+        let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty_unbounded() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -171,7 +187,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
 impl<P, M> Drop for RetainedPersistedDocumentHydration<P, M>
 where
     P: semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty_unbounded(), "persisted document hydration reached Drop before exact handoff or bounded retirement");
@@ -181,10 +197,19 @@ where
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
     P: semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
     /// 🔎️ Names the first original owner this hydration still retains, or `None` once every currency is terminal.
     pub fn remaining_owner(&self) -> Option<&'static str> {
+        if !self.mutation_domain.terminal_is_empty(){return Some("mutation_domain")}
+        if self.original_failure.is_some(){return Some("original_failure")}
+        if self.original_context_failure.is_some(){return Some("original_context_failure")}
+        if self.mutation_receiving.is_some(){return Some("mutation_receiving")}
+        if !self.mutation_output.terminal_is_empty(){return Some("mutation_output")}
+        if !self.fold_protocol.terminal_is_empty(){return Some("fold_protocol")}
+        if !self.fold_output.terminal_is_empty(){return Some("fold_output")}
+        if !self.empty_messages.terminal_is_empty(){return Some("empty_messages")}
+        if !self.original_meta.terminal_is_empty(){return Some("original_meta")}
         if !self.terminal { return Some("terminal"); }
         if self.actor.0.has_owner() { return Some("actor"); }
         if self.pack.is_some() { return Some("pack"); }

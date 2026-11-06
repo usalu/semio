@@ -44,4 +44,4 @@ where
 }
 }
 
-protocol::retained_set_record!(SetSolve => Grid3dTransient, Grid3dTransientDiff, Grid3dTransientMutation { authored: SetSolve = |leaf| leaf, patch: |value: SetSolve| (Grid3dTransientDiff { payload_json: Some(value.payload_json) },1), patch_work: |_: &SetSolve| Ok(1), inverse: |root: Grid3dTransient| (SetSolve { payload_json: root.payload_json }.into(),2), inverse_work: |_: &Grid3dTransient| Ok(2) });
+protocol::retained_set_record!(SetSolve => Grid3dTransient, Grid3dTransientDiff, Grid3dTransientMutation { authored: SetSolve = |leaf| leaf, source_work: 1, patch: |value: SetSolve| (Grid3dTransientDiff { payload_json: Some(value.payload_json) },1), patch_work: || Ok(1), inverse: |root: Grid3dTransient| (SetSolve { payload_json: root.payload_json }.into(),2), inverse_work: || Ok(2) });

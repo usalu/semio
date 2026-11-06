@@ -1,0 +1,7 @@
+# Bounded App Frame Reply Prefix
+
+Actual MCP command reply matching previously decoded an entire binary AppFrame merely to inspect its reply sequence, then dropped that materialized frame and retained the original payload for a second decode. The channel now owns a small allocation-free AppFrameReplyPrefix interface. It reads at most twelve bytes (tag, optional marker and u64 varint), distinguishes all 33 current tags, rejects incomplete/unknown/overflow prefixes, and preserves the three transaction reply forms.
+
+The actual MCP admission and response-wait loops now call this prefix interface. A prefix makes no claim about the frame body. The complete retained-frame decoder in PendingResponsePage remains the delivery authority, including malformed-body refusal. This reduces preliminary materialization but does not qualify the remaining raw-instance or unfunded pending-page consumers as migrated.
+
+Schema/fixture were authored before implementation. The portable first-party decoder and independent SQLite recursive bitwise decoder agree across all tags, optional absence, malformed prefixes and u64 maximum: one test passes with 101 assertions. The native integration law compares the actual interface with the same fixture and actual binary encoder, and asserts zero heap work while borrowing prefixes. That law is authored, uncompiled. Channel Source closure is 25 files, 224705 bytes and 3652 active lines, below unchanged caps.

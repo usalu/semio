@@ -220,7 +220,7 @@
         cancelled.admit_presence_ingress(admission, cursor, 0);
         cancel.cancel_now();
         cancelled.maintenance_stage = 7;
-        let quote = cancelled.maintenance_retirement_demands(16).expect("quoted cancelled roster demand");
+        let quote = cancelled.maintenance_retirement_demands(16,cx.fuel_remaining()).expect("quoted cancelled roster demand");
         let exact = fixture_close_grant(quote);
         let short = store::RetainedCloneGrant { maximum_copy_bytes: quote.copy_bytes.saturating_sub(1), maximum_capacity_bytes: quote.capacity_bytes.saturating_sub(1), maximum_release_bytes: quote.release_bytes.saturating_sub(1), ..exact };
         let interrupted = semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,short,quote,|same,grant|Ok((cancelled.maintenance_step(same,grant)?,cancelled.maintenance_terminal_is_empty()))).expect("original sub-page close grant");

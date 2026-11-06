@@ -1,0 +1,51 @@
+{
+  "cases": [
+    {
+      "name": "binary",
+      "binary": [
+        1,
+        2,
+        3
+      ],
+      "text": null,
+      "accepted": true,
+      "expected": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "binary-with-text-mirror",
+      "binary": [
+        4
+      ],
+      "text": "different mirror",
+      "accepted": true,
+      "expected": [
+        4
+      ]
+    },
+    {
+      "name": "text-is-not-binary-authority",
+      "binary": null,
+      "text": "fallback",
+      "accepted": false,
+      "expected": []
+    },
+    {
+      "name": "missing",
+      "binary": null,
+      "text": null,
+      "accepted": false,
+      "expected": []
+    },
+    {
+      "name": "empty-binary-is-left-to-its-own-receiver",
+      "binary": [],
+      "text": null,
+      "accepted": true,
+      "expected": []
+    }
+  ]
+}

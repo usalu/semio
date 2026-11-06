@@ -1,0 +1,5 @@
+# Native law split candidates
+
+Native-owned mounted source candidates include owned/🧪️tests 21675 bytes, list tests 19705, original tests 9597, header work tests 8994, sealed-shared tests 7677. Existing public integration wrappers and Cargo registrations already cover some separate paths; do not count those as removed unit bytes. List and original use super and finite bank helpers, so exact private access must be resolved with genuine public owners before a move. No four-file grouping has yet been proven to clear 38000 bytes while preserving all real capabilities.
+
+Native-decoding construction/backing tests are 15218 bytes and primarily use public NativeDecodeControl, NativeReceivingEffect, construction/work issuers, finite stock and existing allocator observer. They are a candidate for a public Cargo [[test]] integration target after verifying private references and removing their actual cfg unit mount. Actual closure must be remeasured; no test or cap claim.

@@ -28,6 +28,8 @@ impl RetainedJobPublication{
  fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"publication requires its same original source extent kind and operation until physical closure")}
  fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.builder.terminal_is_empty()&&!self.closing}
+ /// 📬️ Reports whether the original publication has lent its current outcome.
+ pub fn is_delivered(&self)->bool{self.delivered}
  pub fn published(&self)->Option<&RetainedJobPayload>{self.builder.published()}
  /// ⏩️ Quotes the next actual source frontier without copying, allocating or changing custody.
  pub fn advance_demands(&self,kind:JobPublicationKind,source:&[u8],cx:&StepContext<'_>)->Result<RetirementDemand,ValueError>{

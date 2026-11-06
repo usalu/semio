@@ -47,13 +47,13 @@
       "const": true
     },
     "maximumArguments": {
-      "const": 22
+      "const": 23
     },
     "budgetArguments": {
       "const": 19
     },
     "prefixArguments": {
-      "const": 3
+      "const": 4
     }
   }
 }

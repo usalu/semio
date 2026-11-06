@@ -93,7 +93,7 @@ fn differential_embedded_bin_chunk_matches_gltf_crate_oracle() {
 #[test]
 fn differential_generated_uv_sphere_glb_matches_gltf_crate_oracle() {
     let mesh = mesh_uv_sphere(1.0, 8, 6);
-    let bytes = mesh_to_glb(&mesh);
+    let bytes = mesh_to_glb(&mesh).unwrap();
     let ours = mesh_from_glb(&bytes).expect("first-party decode");
     let oracle = oracle_mesh_from_glb(&bytes).expect("oracle decode");
     assert_structurally_equal(&ours, &oracle);

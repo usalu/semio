@@ -1,0 +1,9 @@
+# Retained Owner Implementation — 2026-11-06
+
+Root and native recovery are dividing the required domain storage work. Root owns actual funded diff application and mutation preparation/inverse modules in their proper crates. Native recovery owns the snapshot store types/dependencies/codecs, cold reference behavior, fixture retirement and original mesh source/export producer. Modules remain unmounted until all live/cold/error retirement paths are ready; no partial alias change that causes ordinary-drop panics is accepted.
+
+The planned persisted stores use the existing first-party OrderedMap: assets holds RemodelingAssetChild, durable_artifacts holds RemodelingDurableArtifact. The existing chunk wire/schema initially stays Vec<ByteBuffer>; replacement values must clone leaves incrementally under funded grants without imposing a new 30-leaf limit. OriginalOwnedEntry supplies real original key/value/map custody, staged immutable updates and explicit paid close. A copied BTreeMap is not an original source.
+
+The actual current editor registers cold_mutation_apply_preparation_factory. ColdMutationDiff alone is not an incremental interactive owner. The real implementation must provide RetainedDiff<Snapshot>::Apply and RetainedMutation<Snapshot>::Preparation, including semantic decisions, inverses, denied-turn behavior, cancellation, rollback/error roots, displaced values and terminal close. The writer template previously cited wraps the cold factory and is not an adequate implementation template; Bitmap's retained owners are the relevant existing pattern.
+
+Nine portable durable-content cases cover create, append, truncate, remove, malformed input, multiple rows, rollback after an earlier staged row, and existing-empty versus absent. Native recovery's actual scoped TS consumer passed all nine and independent Ajv/fast-json-patch checks passed. No retained native owner or native cold-law execution is proved by those results.

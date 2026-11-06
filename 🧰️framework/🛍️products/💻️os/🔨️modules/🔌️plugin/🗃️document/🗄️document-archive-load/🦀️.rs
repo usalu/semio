@@ -431,3 +431,56 @@ where
         );
     }
 }
+
+/// 🧭️ Retains the exact borrowed archive and its bounded validation frontier before registry transfer.
+#[derive(Clone,Copy,Default,semio_framework_value::RetireOwned)]
+pub struct OriginalDocumentArchiveAdmission{source:Option<(u64,u64,u64)>,donor:usize,operation:u64,members:usize,phase:u8,row:usize,search:usize,field:usize,offset:usize,payload:usize,ready:bool}
+impl OriginalDocumentArchiveAdmission{
+ pub const fn empty()->Self{Self{source:None,donor:0,operation:0,members:0,phase:0,row:0,search:0,field:0,offset:0,payload:0,ready:false}}
+ pub fn completed(&self)->bool{self.phase==6}
+ pub fn validate_step(&mut self,operation:u64,archive:&mut protocol::DocumentArchivePack,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+  let identity=(cx.operation().0,cx.generation().0,cx.original_source_parent()?.source_identity()?);let donor=archive as*mut _ as usize;
+  if self.source.is_some_and(|source|source!=identity)||self.source.is_some()&&(self.operation!=operation||self.donor!=donor||self.phase!=6&&self.members!=archive.members.len()){return Err(archive_admission_fault("archive admission requires its unchanged Source and donor").into())}
+  if self.phase==6{return if archive.parent_pack.is_empty()&&archive.parent_spr.is_empty()&&archive.members.is_empty(){Ok(true)}else{Err(archive_admission_fault("transferred archive donor must remain empty").into())}}if cx.is_cancelled(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"archive admission observed cancellation").into())}
+  if !archive_admission_charge(cx,std::mem::size_of::<Self>())?{return Ok(false)}
+  if self.source.is_none(){if archive.members.len()>protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS||archive.parent_pack.is_empty()||archive.parent_spr.is_empty(){return Err(archive_admission_fault("archive count and parent pair must satisfy the declared archive bounds").into())}self.source=Some(identity);self.donor=donor;self.operation=operation;self.members=archive.members.len();self.payload=archive.parent_pack.len().checked_add(archive.parent_spr.len()).ok_or_else(||archive_admission_fault("archive byte count overflow"))?;self.phase=1;return Ok(false)}
+  match self.phase{
+   1=>{if self.row<self.members{self.payload=self.payload.checked_add(archive.members[self.row].envelope_pack.len()).ok_or_else(||archive_admission_fault("archive byte count overflow"))?;self.row+=1;}else{if self.payload>protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES{return Err(archive_admission_fault("archive exceeds its declared byte bound").into())}self.row=0;self.search=0;self.phase=2;}},
+   2=>{if self.row==self.members{self.row=0;self.field=0;self.offset=0;self.phase=3;}else if self.search==self.members{return Err(archive_admission_fault("archive member ordinals must be unique and contiguous").into())}else if archive.members[self.search].ordinal as usize==self.row{let bytes=std::mem::size_of::<protocol::OwnedDocumentMemberPackEntry>()*2;if !archive_admission_charge(cx,bytes)?{return Ok(false)}archive.members.swap(self.row,self.search);self.row+=1;self.search=self.row;}else{self.search+=1;}},
+   3=>{if self.row==self.members{self.row=0;self.phase=4;}else{let entry=&archive.members[self.row];if entry.envelope_pack.is_empty(){return Err(archive_admission_fault("archive member envelope must be present").into())}let fields=[entry.reference.artifact_id.as_str(),entry.reference.artifact_kind.as_str(),entry.reference.standard.as_str(),entry.reference.subset.as_str(),entry.owner.parent.artifact_id.as_str(),entry.owner.parent.artifact_kind.as_str(),entry.owner.parent.standard.as_str(),entry.owner.parent.subset.as_str(),entry.owner.slot.as_str(),entry.owner.child_id.as_str()];let field=fields[self.field];if field.is_empty()||field.len()>store::MEMBER_OPEN_IDENTITY_BYTES{return Err(archive_admission_fault("archive member identity exceeds its declared bounds").into())}while self.offset<field.len()&&!cx.should_yield(){let character=field[self.offset..].chars().next().ok_or_else(||archive_admission_fault("archive member identity lost its character frontier"))?;cx.consume_fuel(1);if character.is_control(){return Err(archive_admission_fault("archive member identity contains a control character").into())}self.offset+=character.len_utf8();}if self.offset==field.len(){self.offset=0;self.field+=1;if self.field==fields.len(){self.field=0;self.row+=1;}}}},
+   4=>{if self.row<self.members/2{if !archive_admission_charge(cx,std::mem::size_of::<protocol::OwnedDocumentMemberPackEntry>()*2)?{return Ok(false)}archive.members.swap(self.row,self.members-1-self.row);self.row+=1;}else{self.phase=5;self.ready=true;}},
+   5=>return Ok(self.ready),
+   _=>return Err(archive_admission_fault("archive admission frontier is invalid").into())
+  }Ok(false)
+ }
+ pub fn transfer_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,transfer:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if self.phase!=5||!self.ready{return Err(archive_admission_fault("archive transfer requires completed validation").into())}if !archive_admission_charge(cx,std::mem::size_of::<Self>())?{return Ok(false)}transfer(cx)?;self.phase=6;self.ready=false;Ok(true)}
+}
+fn archive_admission_charge(cx:&mut semio_framework_job::StepContext<'_>,bytes:usize)->Result<bool,semio_framework_job::OriginalTurnFailure>{let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
+fn archive_admission_fault(message:&'static str)->ValueError{ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
+
+#[cfg(test)]
+mod original_archive_admission_laws{
+ use super::*;use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};use semio_framework_value::{RetainedCloneGrant,ValueRefusalKind};fn clock()->Option<u64>{Some(1000)}
+ #[test]
+ fn borrowed_archive_keeps_its_actual_donor_on_denial_foreign_source_cancel_and_failed_transfer(){
+  let grant=RetainedCloneGrant{maximum_items:10000,maximum_copy_bytes:65536,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64};
+  let mut caller=OriginalJobFixtureCaller::admit(OperationId(9801),Generation(1),grant,clock,1000000,1000000);let mut donor=protocol::DocumentArchivePack{parent_pack:vec![1],parent_spr:vec![2],members:Vec::new()};let mut cursor=OriginalDocumentArchiveAdmission::empty();
+  let denied=RetainedCloneGrant{maximum_copy_bytes:0,..grant};assert!(!caller.turn(denied,|cx|cursor.validate_step(17,&mut donor,cx)).unwrap());assert!(cursor.source.is_none());assert_eq!(caller.receipt(),Default::default());
+  let mut ready=false;for _ in 0..32{ready=caller.turn(grant,|cx|cursor.validate_step(17,&mut donor,cx)).unwrap();if ready{break}}assert!(ready);assert_eq!(donor.parent_pack,[1]);assert_eq!(donor.parent_spr,[2]);
+  let mut foreign=OriginalJobFixtureCaller::admit(OperationId(9801),Generation(1),grant,clock,1000000,1000000);assert!(foreign.turn(grant,|cx|cursor.validate_step(17,&mut donor,cx)).is_err());assert_eq!(foreign.receipt(),Default::default());foreign.retire(grant);
+  assert!(caller.turn(grant,|cx|cursor.transfer_step(cx,|_|Err(ValueError::literal(ValueRefusalKind::WorkLimit,"retained recipient refused").into()))).is_err());assert!(!cursor.completed());assert_eq!(donor.parent_pack,[1]);assert_eq!(donor.parent_spr,[2]);
+  caller.cancel().cancel_now();assert!(caller.turn(grant,|cx|cursor.validate_step(17,&mut donor,cx)).is_err());assert!(!cursor.completed());assert_eq!(donor.parent_pack,[1]);caller.retire(grant);
+ }
+ #[test]
+ fn actual_source_validation_matches_the_portable_ordinal_corpus_without_payload_allocation(){
+  let law:serde_json::Value=serde_json::from_str(include_str!("admission.json")).unwrap();let grant=RetainedCloneGrant{maximum_items:10000,maximum_copy_bytes:65536,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64};
+  for row in law["cases"].as_array().unwrap(){
+   let reference=||protocol::DocumentArchiveArtifactRef{artifact_id:"id".into(),artifact_kind:"kind".into(),standard:"standard".into(),subset:"subset".into()};
+   let members=row["ordinals"].as_array().unwrap().iter().map(|value|protocol::OwnedDocumentMemberPackEntry{ordinal:value.as_u64().unwrap()as u32,reference:reference(),owner:protocol::DocumentArchiveOwnerRef{parent:reference(),slot:"slot".into(),child_id:"child".into()},envelope_pack:vec![3]}).collect();
+   let mut donor=protocol::DocumentArchivePack{parent_pack:vec![1],parent_spr:vec![2],members};let mut cursor=OriginalDocumentArchiveAdmission::empty();let mut caller=OriginalJobFixtureCaller::admit(OperationId(9802),Generation(1),grant,clock,1000000,1000000);let mut accepted=false;let mut refused=false;
+   for _ in 0..4096{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,|cx|cursor.validate_step(18,&mut donor,cx)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));match result{Ok(true)=>{accepted=true;break},Ok(false)=>{},Err(_)=>{refused=true;break}}}
+   assert_eq!(accepted,row["accepted"].as_bool().unwrap());if accepted{assert_eq!(donor.members.iter().map(|member|u64::from(member.ordinal)).collect::<Vec<_>>(),row["expected"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()).collect::<Vec<_>>());}else{assert!(refused)}assert_eq!(donor.parent_pack,[1]);assert_eq!(donor.parent_spr,[2]);caller.retire(grant);
+  }
+ }
+
+}

@@ -1,96 +1,67 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "stock",
-    "rejectedInputStock",
-    "productionMaximumDepth",
-    "depthCases",
-    "cancelCuts",
-    "input",
-    "expectedKinds",
-    "depthFailure",
-    "maximumTextFragmentBytes"
+  "stock": {
+    "items": 4096,
+    "copyBytes": 16777216,
+    "capacityBytes": 16777216,
+    "releaseBytes": 16777216,
+    "depth": 128,
+    "fuel": 1000000
+  },
+  "input": {
+    "alpha": [
+      "α🙂",
+      true,
+      17,
+      null,
+      {
+        "omega": "bounded text"
+      }
+    ]
+  },
+  "limits": [
+    0,
+    1,
+    2,
+    8,
+    13,
+    128
   ],
-  "properties": {
-    "stock": {
-      "const": {
-        "items": 100000,
-        "fuel": 100000,
-        "copyBytes": 33554432,
-        "capacityBytes": 33554432,
-        "releaseBytes": 33554432,
-        "depth": 64,
-        "maximumTurns": 20000
-      }
+  "cancelCuts": [
+    3,
+    8,
+    21,
+    47
+  ],
+  "quotes": [
+    {
+      "access": 1,
+      "parent": 2,
+      "maximum": 0,
+      "selected": 0
     },
-    "rejectedInputStock": {
-      "const": {
-        "items": 100000,
-        "fuel": 100000,
-        "copyBytes": 33554432,
-        "capacityBytes": 33554432,
-        "releaseBytes": 33554432,
-        "depth": 256,
-        "maximumTurns": 20000
-      }
+    {
+      "access": 1,
+      "parent": 2,
+      "maximum": 2,
+      "selected": 0
     },
-    "productionMaximumDepth": {
-      "const": 64
+    {
+      "access": 1,
+      "parent": 2,
+      "maximum": 3,
+      "selected": 3
     },
-    "depthCases": {
-      "const": [
-        0,
-        64,
-        65
-      ]
+    {
+      "access": 2,
+      "parent": 4,
+      "maximum": 5,
+      "selected": 0
     },
-    "cancelCuts": {
-      "const": [
-        0,
-        1,
-        2,
-        3,
-        7,
-        19,
-        71,
-        512
-      ]
-    },
-    "input": {
-      "const": {
-        "empty": [],
-        "null": null,
-        "flag": true,
-        "number": 17,
-        "rows": [
-          "雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂",
-          {
-            "nested": [
-              false,
-              null,
-              2.5
-            ]
-          }
-        ]
-      }
-    },
-    "expectedKinds": {
-      "const": [
-        "null",
-        "bool",
-        "number",
-        "text",
-        "array",
-        "object"
-      ]
-    },
-    "depthFailure": {
-      "const": "native dynamic subtree exceeds depth limit"
-    },
-    "maximumTextFragmentBytes": {
-      "const": 64
+    {
+      "access": 2,
+      "parent": 4,
+      "maximum": 6,
+      "selected": 6
     }
-  }
+  ]
 }

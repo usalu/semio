@@ -1,0 +1,1 @@
+{"contract":"semio.sealed-original-fallback-storage/v1","payloadElements":[1,8192],"frameIndependent":true,"value":73,"events":["handle-retire","fallback-reserve","payload-transfer","child-birth","backing-release"],"stock":{"items":2048,"copyBytes":65536,"capacityBytes":65536,"releaseBytes":65536,"depth":128,"fuel":8192},"maximumTurns":256}

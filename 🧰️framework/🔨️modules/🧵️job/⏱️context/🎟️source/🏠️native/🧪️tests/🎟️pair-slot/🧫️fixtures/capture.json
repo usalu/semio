@@ -1,0 +1,25 @@
+{
+  "deniedCopyBytes": 0,
+  "slotClearItems": 1,
+  "captureExtent": 1,
+  "states": [
+    {
+      "phase": "live",
+      "token": true,
+      "bank": true,
+      "closed": false
+    },
+    {
+      "phase": "captured",
+      "token": false,
+      "bank": true,
+      "closed": false
+    },
+    {
+      "phase": "observed",
+      "token": false,
+      "bank": false,
+      "closed": true
+    }
+  ]
+}

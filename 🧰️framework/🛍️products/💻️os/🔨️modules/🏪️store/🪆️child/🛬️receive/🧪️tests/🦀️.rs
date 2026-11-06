@@ -80,7 +80,7 @@ fn original_child_receive_same_caller_all_partial_prefixes_and_literal_target() 
             }
             retire(source,&mut caller,&mut decoder);
             while !decoder.terminal_is_empty() {
-                caller.turn(stock(),|cx|close_original_retained_step(cx,decoder.retirement_demands(4096)?,|grant|decoder.close_step(grant))).unwrap();
+                caller.turn(stock(),|cx|decoder.close_on_source(cx)).unwrap();
             }
             caller.retire(stock());
             if completed>0&&cut>completed { break; }

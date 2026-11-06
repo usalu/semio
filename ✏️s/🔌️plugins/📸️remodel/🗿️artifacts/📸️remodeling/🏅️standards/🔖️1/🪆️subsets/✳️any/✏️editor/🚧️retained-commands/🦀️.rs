@@ -204,7 +204,7 @@ impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowComma
         let config_view = ConfigView { snapshot: input.config, window };
         let document = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let resting = transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
-        if let Some(imported) = input.command.import_in_window(&document, &config_view, &resting) {
+        if let Some(imported) = input.command.import_in_window(&document, &config_view, &resting, input.context.and_then(|context| context.view_state.as_deref())) {
             let (emit, next) = imported?;
             let window_transient = match next == resting {
                 true => Vec::new(),

@@ -24,10 +24,14 @@ pub trait RetireOwned: Send + 'static {
     fn retirement_birth_bytes(&self)->Option<usize>{self.retirement_ready().then_some(size_of::<Self::RetirementCursor>())}
     /// 🏡️ Quotes a native cursor that drains this same initialized shared allocation in place.
     fn shared_original_demands(&self)->Result<Option<crate::RetirementDemand>,crate::ValueError> where Self:Sized+Sync{Ok(None)}
+    /// 🪙️ Quotes the actual authored in-place shared cursor constructor.
+    fn shared_original_work_demand(&self)->Result<Option<u64>,crate::ValueError> where Self:Sized+Sync{Ok(None)}
     /// 🏠️ Admits one exact shared original without extracting its complete inline value; refusal retains the original slot.
     fn shared_original_retirement(_original:&mut Option<arc_custody::original::SharedOriginal<Self>>,_effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<(Box<dyn RetirementCursor>,crate::retained_clone::RetainedCloneProgress)>> where Self:Sized+Sync{crate::RetainedWorkOutcome{result:Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"owner has no in-place shared original retirement")),work:0}}
     /// 📦️ Quotes field-wise retirement on this exact unique Box allocation when explicitly authored.
     fn boxed_original_demands(&self)->Result<Option<crate::RetirementDemand>,crate::ValueError> where Self:Sized{Ok(None)}
+    /// 📦️ Quotes the actual authored in-place unique cursor constructor.
+    fn boxed_original_work_demand(&self)->Result<Option<u64>,crate::ValueError> where Self:Sized{Ok(None)}
     /// 🎟️ Transfers unique original allocation custody only after its actual cursor birth is funded.
     fn boxed_original_retirement(_original:&mut Option<original_box::BoxOriginal<Self>>,_effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<(Box<dyn RetirementCursor>,crate::retained_clone::RetainedCloneProgress)>> where Self:Sized{crate::RetainedWorkOutcome{result:Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"owner has no in-place original Box retirement")),work:0}}
     /// 🔐️ Whether this owner retires through a controlled cursor whose births and releases are priced up front. Required, never defaulted: an owner that forgot to declare it was refused by every factory that demands controlled retirement, and the refusal only surfaced after a fixture deadline.
@@ -47,6 +51,8 @@ pub fn retirement_cursor_birth_demand<T:RetireOwned>(original:&T)->Result<crate:
  let copy_bytes=std::mem::size_of::<Option<T>>().checked_add(capacity_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"original cursor header transfer overflow"))?;
  Ok(crate::RetirementDemand{copy_bytes,capacity_bytes,depth:1,..Default::default()})
 }
+
+pub fn retirement_cursor_birth_work()->u64{4}
 
 pub use crate::retirement_contract::record_retirement_work;
 
@@ -253,6 +259,7 @@ macro_rules! retirement_fields_seed{
 }
 
 artifact_retire_leaf!(&'static str, (), bool, char, u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64);
+artifact_retire_leaf!(semio_framework_value_paged_list::PagedListReservationSelection,semio_framework_value_paged_list::PagedListReservationKind,semio_framework_value_paged_list::PagedListSelectionHeader);
 
 #[doc(hidden)]
 pub struct Bytes(ManuallyDrop<Vec<u8>>,bool);

@@ -14,7 +14,7 @@ package semio:framework@1.0.0;
 /// `describe.wit`'s `describe()` payload instead of a callable export.
 interface jobs {
   use types.{plugin-error};
-  use reactor.{retained-turn-input, retained-grant, retained-progress, actor-call-failure};
+  use reactor.{retained-turn-input, retained-grant, retained-progress, actor-call-failure, actor-failure-call-reference, actor-failure-publish-call, actor-failure-read-call, actor-failure-ack-call};
 
   record job-budget {
     input: retained-turn-input,
@@ -63,9 +63,9 @@ interface jobs {
   acknowledge-job-output: async func(job: u64, budget: job-budget) -> job-output-ack-call;
   cancel-job: async func(job: u64, budget: job-budget) -> job-cancel-call;
   close-jobs: async func(budget: job-budget) -> job-cancel-call;
-  publish-actor-failure: async func(job: u64, budget: job-budget) -> job-step-call;
-  read-actor-failure: async func(job: u64, budget: job-budget) -> job-output-call;
-  acknowledge-actor-failure: async func(job: u64, budget: job-budget) -> job-output-ack-call;
+  publish-actor-failure: async func(reference: actor-failure-call-reference, budget: job-budget) -> actor-failure-publish-call;
+  read-actor-failure: async func(reference: actor-failure-call-reference, budget: job-budget) -> actor-failure-read-call;
+  acknowledge-actor-failure: async func(reference: actor-failure-call-reference, budget: job-budget) -> actor-failure-ack-call;
   /// 🧵 Takes one sealed operation-owned download segment. Every `some` is at most 4,096
   /// bytes; the first `none` is the terminal observation and releases the operation authority.
   take-segmented-download-chunk: async func(instance-id: u32, operation-id: u64) -> result<option<list<u8>>, plugin-error>;

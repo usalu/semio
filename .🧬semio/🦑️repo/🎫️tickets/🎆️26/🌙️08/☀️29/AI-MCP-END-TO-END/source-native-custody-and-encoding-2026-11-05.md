@@ -131,3 +131,25 @@ Host pending inference payload contract now matches the guest and WIT. Independe
 
 ### Kernel Work Receipt
 The kernel now snapshots the real Source reserved observers around its reducer. Its nested RetainedTurnReceipt subtracts only the observed in-kernel reserved redemption and remains valid under its original fresh-input conservation validator. TurnResult.fuel_used records the actual aggregate reducer work before output capture/encoding/header processing. The independently authenticated fixed Core receipt continues to carry the full per-loan aggregate. Schema/AJV/SQLite model: 1 test / 8 assertions passed; authored native conservation law is uncompiled.
+
+## Actual Integration — 2026-11-06
+
+The guest Poll19 macro/body now mounts retained decoded input, Source-owned TurnResult capture and encoder, checked 152-byte fixed header, captured/input-pending flags, and final Source-qualified header exposure. The obsolete raw return_json/store Poll path is removed. Guest actor reserved observers now preserve full physical aggregate while maintaining fresh conserved counters across repeated borrows and epoch changes; native law includes a genuine preissued physical write redeemed under zero fresh currency. These are authored, not native-qualified.
+
+The common publisher/Entry pipeline has a real preborn single exposure cell, typed preissued exposure permit, exact final infallible word commit, genuine unexposed cancellation, separate physical handback/Source acceptance, and actual fresh-versus-reserved token-placement classification. Other 144/184 export bodies, first-response complete structural preflight, Host reconciliation resume, command Source custody and actual MCP native consumers remain incomplete.
+
+Root introduced the actual generic typed return-budget owner, keeping private context Origin capture and Source qualification; opaque nominal Credit/Witness prevent raw tuple mint/retag, and mint/redemption verify actual bound budget/table identity. Decoder state moved to its existing receiving owner and actual Source-loan closure now drains the previously stranded resources. All Source caps remain32/262144/4000. Fresh context after pure exposure qualification is26files261216B; further edits need recensus.
+
+Native requests are live: Wake offline metadata47556, replication command90774, typed budget79575, actual receiving Source-close74494, and actor context33477 (Guest). No new native pass has returned. Models and Rustfmt parsing do not establish working server readiness. Prior immutable native results failed manifest/lock preparation.
+
+## Root Integration Checkpoint — 2026-11-06
+
+The actual Host inference router now rejects duplicate live cancellation IDs without replacing the first request's revision/generation authority. Language-neutral Map/SQLite contract: one test, eleven assertions pass; native actual-router law pending. See inference-live-identity-2026-11-06.md.
+
+The actual Job Source now supports exact recipient-targeted physical retirement and a scoped unit visit to an unloaned retained native root after all Source children/return inboxes have returned. Strong native-retired witnesses retain their original global requirements. Physical root deallocation now separately pays actual root-option/byte-count/generation metadata; a zero-copy native denial law is authored. Portable target/root-visit contract: one test, three assertions pass. Parser checks show formatting differences only; no native compiler success is available. Context Source closure is 25 files / 262104 bytes / 1728 active lines, unchanged caps. See targeted-native-retirement-2026-11-06.md.
+
+Launch has mounted genuine History acceptance/retirement and is building the actual by-value GuestPollSession outer owner, including actor-context Boot and paid terminal reset. Server has mounted all ordinary and failure job184 exports through Source header dispatch and is finishing real bootstrap/final144 protocol, header backing double-Deallocate classification, and process UiArena ownership. Guest is mounting exact return-slot custody through command/TLS/exchange consumers and factoring the shared typed return owner into the actor domain. These are implementation statements, not native or end-to-end passes.
+
+Native command request90774 ended before compilation on stale framework Cargo.toml extent after concurrent registration changes (129824 captured vs129932 actual, below cap). Fresh all-command-library request11269 replaces that terminal run. Existing root checks47556,79575,74494,59471 remain active; new exact native laws14026 and47445 remain active. No duplicate live request was submitted. Revalidate source freshness for any eventual artifacts.
+
+There is still no ready semio MCP artifact, native handshake, or successful end-to-end tool journey. Actual MCP raw-instance consumers still need conversion to the Session owner once the production controller interface is available. Process-fatal cleanup refusal must retain its owner-bearing failure at entry until explicit nonzero process termination; normal shutdown must fully retire its Source.

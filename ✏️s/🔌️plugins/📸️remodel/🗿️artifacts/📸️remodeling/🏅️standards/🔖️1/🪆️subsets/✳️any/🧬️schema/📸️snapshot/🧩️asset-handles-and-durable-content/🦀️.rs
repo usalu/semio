@@ -65,6 +65,8 @@ pub struct RemodelingDurableArtifact {
 }
 
 pub type RemodelingDurableArtifactStore = BTreeMap<String, RemodelingDurableArtifact>;
+pub type RemodelingOrderedAssetStore = semio_framework_value_ordered::OrderedMap<RemodelingAssetChild>;
+pub type RemodelingOrderedDurableArtifactStore = semio_framework_value_ordered::OrderedMap<RemodelingDurableArtifact>;
 
 pub const REMODELING_DURABLE_CHUNK_RAW_BYTES: usize = 4_096;
 

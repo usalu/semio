@@ -530,7 +530,7 @@ pub async fn test_retained_cancellation_publication_boundaries<A: ArtifactApp<Pr
         app.close_step(cx, original_grant).unwrap()
     }
     fn fixture_maintenance_turn<P: PluginApp>(app: &mut P, original_grant:RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) -> PluginLifecycleStep {
-        let _demand = app.maintenance_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+        let _demand = app.maintenance_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES,cx.fuel_remaining()).unwrap();
         app.maintenance_step(cx, original_grant).unwrap()
     }
     #[doc(hidden)]

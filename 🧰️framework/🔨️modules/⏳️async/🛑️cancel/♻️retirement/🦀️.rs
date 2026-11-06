@@ -5,7 +5,8 @@ use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementS
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,RetainedWorkOutcome,ValueError,ValueRefusalKind,shared_retirement_allocation_bytes};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum CancelTokenRetirementBlocked{SharedAlias,WeakAlias,RegisteredWaiter,WaiterContention}
-#[derive(Debug)]
+semio_framework_value::artifact_retire_leaf!(CancelTokenRetirementBlocked);
+#[derive(Debug,semio_framework_value::RetireOwned)]
 pub enum CancelTokenRetirementError{Blocked(CancelTokenRetirementBlocked),Refused(ValueError)}
 /// 🪢️ Keeps original cancellation custody after refusal and never recursively drops an ancestor.
 pub struct CancelTokenRetirement{current:ManuallyDrop<Option<CancelToken>>,node:ManuallyDrop<Option<CancelNode>>,waiter_capacity:usize}
@@ -23,15 +24,17 @@ impl CancelTokenRetirement{
         Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()})
     }
     /// ↩️ Returns this original token alias while its matching borrowed strong root stays live through the paid turn.
+    fn alias_return_work(&self)->u64{u64::from(!self.terminal_is_empty())}
+    pub fn return_alias_work_demand(&self)->Result<u64,ValueError>{Ok(self.alias_return_work())}
     pub fn return_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,CancelTokenRetirementError>{
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
-        let demand=RetirementDemand{depth:1,..Default::default()};
+        let work=self.alias_return_work();let demand=RetirementDemand{depth:1,..Default::default()};
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
         let matches=self.current.as_ref().is_some_and(|original|Arc::ptr_eq(&original.0,&witness.0));
-        if !matches{return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed cancellation root does not witness this original alias"))),work:1};}
-        if self.node.is_some(){return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"cancellation node custody cannot be returned as a root alias"))),work:1};}
+        if !matches{return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed cancellation root does not witness this original alias"))),work};}
+        if self.node.is_some(){return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"cancellation node custody cannot be returned as a root alias"))),work};}
         drop(self.current.take());
-        RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
+        RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work}
     }
     /// 🎟️ Releases one actual original frontier and retains every blocked original alias and ancestor.
     /// ⛽️ Quotes one original node inspection, buffer release or parent transition.

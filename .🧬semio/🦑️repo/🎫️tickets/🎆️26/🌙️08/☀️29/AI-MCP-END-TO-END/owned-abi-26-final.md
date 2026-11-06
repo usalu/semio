@@ -52,3 +52,7 @@ Semantic result encoding happens inside a real scoped context. The resulting byt
 The allocator and immutable channel query remain Core-runtime boundaries. All body execution, initialization, codec, snapshot, poll and output retirement calls require the explicit scope above. The scalar Core call frontier must support 22 arguments, which the chunk acknowledgement contracts require.
 
 The contract is not runtime evidence. Actual current guest compilation, publication hash, all 36 real export signatures, funded execution and real heap/retirement laws remain mandatory gates.
+
+## Actor Failure Selector Boundary
+
+All five Owned SDK failure wrappers now forward failed_epoch and call_kind before the existing ranges and B19 budget. Publish/read/ack have21 parameters, chunk ack23, borrow sixI64 in the order epoch,kind,operation,generation,offset,length. The epoch selector is kept distinct from the current authenticated budget epoch. Server owns selector validation/SAF1 bytes/Guest Entry failure origin; no fakeJob or JobOutcome overload is used by the new wrapper. The neutral schema+SQLite+independent WebAssembly arity/selector oracle passes; this does not qualify actual compiled guest exports. Exact evidence is generated/actor-failure-selectors.txt.

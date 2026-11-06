@@ -1,0 +1,7 @@
+# Browser Scenario Review — 2026-11-06
+
+Current neutral fixture and schema contain 15 distinct named scenarios: all 12 original obligations and separate JPEG, corrupt image and repeated append cases. The video description requires 45 frames. Schema constrains exact length, enumerates all IDs and requires each through contains; this prevents duplicate IDs even with differing descriptions. The acceptance function checks every expected ID once, passed status, nonempty evidence and no faults. Focused source tests use Ajv, validate removal and duplicate rejection, and check new IDs and 45-frame description; current run results are owned by browser agent.
+
+The three existing PNG inputs resolve in place under the repository, exist, and have absolute path length 157 on this checkout. The current driver records selected chooser inputs as evidence but does not mark import-images passed; import-cancel remains unexecuted. New JPEG/corrupt/append and AVI scenarios are checklist obligations, not completed execution. No native picker cancellation or import success is inferred.
+
+Concurrent-edit correction: an earlier helper snapshot emitted unprefixed data attributes while the driver used data-surface-*; the current helper SHA256 bd519e8cdf1a384762ea03468baefb094b660cd326d6ece25b226f9d0fc4a72d emits the exact names the driver reads. Browser agent reports a passing focused React SSR forwarding test; this review did not independently rerun it. No current attribute naming mismatch is claimed.

@@ -13,7 +13,8 @@ use semio_plugin_decl_app::tool_contract::{ArtifactToolCompletionValue, Artifact
 use semio_plugin_decl_views::child_view::ChildContentView;
 use semio_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep;
 use semio_plugin_composition_publication::{ChildPublicationResultV1, ComposedGestureResult, MountedTypedCommandFullOperationStage, PendingArtifactStorePublication, PendingChildGroupPublication, PendingChildGroupPublicationPhase};
-use semio_plugin_job::{DownloadResultPayload, INTERACTIVE_TURN_WORKER_WALL_US, TYPED_OPERATION_PUBLICATION_PUMPS, TYPED_OPERATION_STALL_FAULT_CEILING, TYPED_OPERATION_STALL_PROGRESS_MIX, TYPED_OPERATION_STALL_PUBLISHING_STAGE, TYPED_OPERATION_STALL_WITNESS_FLOOR, TransactionProposalDraft, TypedOperationCompletionWitness, TypedOperationLeftover, TypedOperationResultPage, TypedOperationUnitKind, record_typed_operation_unit};
+use semio_plugin_job::{DownloadResultPayload, INTERACTIVE_TURN_WORKER_WALL_US, TYPED_OPERATION_PUBLICATION_PUMPS, TYPED_OPERATION_STALL_FAULT_CEILING, TYPED_OPERATION_STALL_PROGRESS_MIX, TYPED_OPERATION_STALL_PUBLISHING_STAGE, TYPED_OPERATION_STALL_WITNESS_FLOOR, TransactionProposalDraft, TypedOperationCompletionWitness, TypedOperationLeftover, TypedOperationResultPage};
+use semio_plugin_operation::{TypedOperationUnitKind, record_typed_operation_unit};
 use semio_framework_value::{DslValue, ValueError};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_plugin_decl_emission::{Emit, TransactionPhase};

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "value",
+    "source",
+    "cancelled"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "value": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source": {
+      "const": "same-original"
+    },
+    "cancelled": {
+      "const": true
+    }
+  }
+}

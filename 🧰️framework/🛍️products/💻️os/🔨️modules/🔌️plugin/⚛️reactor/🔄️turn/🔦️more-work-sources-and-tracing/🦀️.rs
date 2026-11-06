@@ -234,7 +234,7 @@ pub(super) fn settle_turn_work<PA: semio_plugin_reactor_app::PluginApp>(runtime:
     let (executor_deadline_work, task_executor_work, process_pool_work) = (executors.deadline, executors.task, executors.pool);
     let more_work = executor_deadline_work || task_executor_work || process_pool_work;
     let executor_pending = REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || TASK_EXECUTOR.with(|executor| executor.has_pending());
-    let command_ingress_pending = COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
+    let command_ingress_pending = COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(|slot|!slot.terminal_is_empty()));
     let lifecycle_work = runtime.guest_lifetimes.borrow().has_work();
     let ui_retirement_work = close_late_ui_retirement()?;
     let extension_invocation_pending=RETAINED_EXTENSION_INVOCATIONS.with(|owners|owners.borrow().iter().any(Option::is_some))||original_receiving::response_pending()||original_receiving::intent_pending()||original_receiving::forms::pending();

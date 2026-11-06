@@ -1,0 +1,62 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "driverOutsideNative",
+    "receiverInsideNative",
+    "renewSource",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "driverOutsideNative": {
+      "const": true
+    },
+    "receiverInsideNative": {
+      "const": true
+    },
+    "renewSource": {
+      "const": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "events",
+          "valid"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "captured",
+                "receiverAccepted",
+                "receiverPending",
+                "receiverFailed",
+                "causeReceived",
+                "captureRetired",
+                "receiverRetired",
+                "coreRetired",
+                "sourceClosed"
+              ]
+            }
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

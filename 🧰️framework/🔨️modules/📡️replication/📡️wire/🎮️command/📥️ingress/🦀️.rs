@@ -30,6 +30,10 @@ pub const INVOCATION_RESULT_PACK_MAXIMUM_BYTES: usize = COMMAND_MAXIMUM_BYTES;
 #[path = "📄️command-page-behavior/🦀️.rs"]
 mod command_page_behavior;
 
+#[path="🎟️source-reader/🦀️.rs"]
+mod source_reader;
+pub use source_reader::{OriginalCommandVarint,OriginalCommandField,OriginalBinaryReadSource,OriginalBinarySlice};
+
 #[path = "🗃️page-set-and-reader-behavior/🦀️.rs"]
 mod page_set_and_reader_behavior;
 

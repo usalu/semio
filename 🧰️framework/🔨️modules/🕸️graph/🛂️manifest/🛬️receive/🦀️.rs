@@ -2,6 +2,7 @@
 use super::{PropertyBag,PropertyValue};
 use semio_framework_value::{Number,NativeDecodeControl,RetainedWorkOutcome,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,retained_clone_grant_admits}};
 use semio_framework_value_native_owned::native_decoding::{NativeReceive,NativeReceiver,OriginalReceivingPrimary,owned::{NativeDefault,tree::{NativeValueSource,NativeTreeKind,bulk::{NativeTreeReceiver,NativeTreeValue}}}};
+use semio_framework_value::native_decoding::owned::{NativeClosePermit,NativeRecoveryLoan};
 use std::mem::size_of;
 fn refusal(text:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,text)}
 impl NativeTreeValue for PropertyValue{
@@ -28,10 +29,13 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,PropertyBag> for PropertyBagRe
  fn output_ready(&self)->bool{self.validated&&self.child.output_ready()}
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.child.take_demand()}
  fn take(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(PropertyBag,RetainedCloneProgress)>>{let turn=self.child.take(g);RetainedWorkOutcome{result:turn.result.map(|value|value.map(|(value,p)|{let PropertyValue::Object(bag)=value else{unreachable!("qualified original object retains its native object kind")};(bag,p)})),work:turn.work}}
- fn begin_close(&mut self){self.child.begin_close();}
+ fn has_pending_recovery(&self)->bool{self.child.has_pending_recovery()}
+ fn pending_recovery(&mut self)->Option<NativeRecoveryLoan<'_>>{self.child.pending_recovery()}
+ fn resume_recovery(&mut self,control:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{self.child.resume_recovery(control)}
+ fn begin_close_admitted(&mut self,_permit:NativeClosePermit)->Result<(),ValueError>{self.child.begin_close()}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.child.close_demands(body)}
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.child.close_work_demand(body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{self.child.close_step(g)}
+ fn close_step(&mut self,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{self.child.close_step(g)}
  fn terminal_is_empty(&self)->bool{self.child.terminal_is_empty()}
 }
 impl semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue for PropertyBag{

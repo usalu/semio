@@ -11,7 +11,28 @@
   "deniedWork": 0,
   "allocationWork": 1,
   "initializeWork": 1,
-  "takeWork": 1,
-  "releaseWork": 1,
-  "copyBytes": 0
+  "takeWork": 4,
+  "releaseWork": 2,
+  "placeWork": 3,
+  "removeWork": 3,
+  "abiCases": [
+    {
+      "wordBytes": 4,
+      "valueBytes": 8,
+      "optionBytes": 16,
+      "fieldCopy": 28,
+      "takeCopy": 14,
+      "boxCopy": 15,
+      "releaseCopy": 5
+    },
+    {
+      "wordBytes": 8,
+      "valueBytes": 8,
+      "optionBytes": 16,
+      "fieldCopy": 32,
+      "takeCopy": 18,
+      "boxCopy": 27,
+      "releaseCopy": 9
+    }
+  ]
 }

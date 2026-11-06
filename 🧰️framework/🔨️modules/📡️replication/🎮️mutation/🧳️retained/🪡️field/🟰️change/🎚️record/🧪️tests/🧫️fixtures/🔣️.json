@@ -1,5 +1,7 @@
 {
   "bodyBytes": 4096,
+  "workUnits": 4096,
+  "checkPartialDenialWork": true,
   "cancelCuts": [
     0,
     1,

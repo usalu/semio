@@ -65,7 +65,7 @@ mod zero_allocation_tests{
   fn validate_sqlite_snapshot_subset(&self,_:&ArtifactDialect,_:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->IoResult<()>{control.record_performed_work(1).map_err(semio_framework_io_schema::IoError::from_value_error)?;if self.0{Err(semio_framework_io_schema::IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvalidValue,"zero-allocation authored refusal")))}else{Ok(semio_framework_io_schema::IoOutcome::clean(()))}}
  }
  struct Work(u64);
- impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for Work{fn admits(&mut self,observed:u64,additional:u64)->std::result::Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+ impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->std::result::Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
  struct Recipient{grant:RetainedCloneGrant,received:RetainedCloneProgress,deny:bool,refused:bool}
  impl NativeDecodeConstructionRecipient for Recipient{
   fn submitted(&self)->RetainedCloneProgress{self.received}

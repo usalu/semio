@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "required": [
+    "events",
+    "owner",
+    "liveBytes",
+    "aggregateNewCapacity",
+    "aggregateOldRelease",
+    "refund"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "events": {
+      "const": [
+        {
+          "owner": "B",
+          "event": "born",
+          "bytes": 100
+        },
+        {
+          "owner": "A",
+          "event": "born",
+          "bytes": 100
+        },
+        {
+          "owner": "B",
+          "event": "retired",
+          "bytes": 100
+        }
+      ]
+    },
+    "owner": {
+      "const": "A"
+    },
+    "liveBytes": {
+      "const": 100
+    },
+    "aggregateNewCapacity": {
+      "const": 100
+    },
+    "aggregateOldRelease": {
+      "const": 100
+    },
+    "refund": {
+      "const": false
+    }
+  }
+}

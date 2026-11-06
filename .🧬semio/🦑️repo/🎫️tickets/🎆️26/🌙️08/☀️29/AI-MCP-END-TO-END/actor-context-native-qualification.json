@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"agent":"semio-mcp-actor-context-qualification","command":["test","--manifest-path","🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/📦️packages/🦀️rust/Cargo.toml","--lib"],"configuration":"prototype","store":"shared","language":"en"}}

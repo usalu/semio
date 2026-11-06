@@ -13,7 +13,9 @@
     "deniedAxes",
     "cases",
     "oneBank",
-    "closeAllSourcesAndOutputs"
+    "closeAllSourcesAndOutputs",
+    "maximumItemsPerTurn",
+    "maximumWorkPerTurn"
   ],
   "properties": {
     "stock": {
@@ -22,7 +24,8 @@
         "copy": 16777216,
         "capacity": 16777216,
         "release": 16777216,
-        "depth": 128
+        "depth": 128,
+        "work": 1000000
       }
     },
     "maximumTurns": {
@@ -88,6 +91,12 @@
     },
     "closeAllSourcesAndOutputs": {
       "const": true
+    },
+    "maximumItemsPerTurn": {
+      "const": 8
+    },
+    "maximumWorkPerTurn": {
+      "const": 4096
     }
   }
 }

@@ -23,8 +23,8 @@ impl JobPayloadAuthority{
  pub fn accounted_capacity_bytes(&self)->usize{self.original().map_or(0,|ledger|ledger.process_share_bytes())}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()}
  pub fn retirement_demands(&self)->RetirementDemand{if self.terminal_is_empty(){return Default::default()}RetirementDemand{copy_bytes:Self::admission_demand().copy_bytes,release_bytes:semio_framework_value_retirement::retirement::allocation_return::shared_allocation_bytes::<JobPayloadOperationLedger>(),depth:1,..Default::default()}}
- /// ⛽️ The selected ledger return is one action; an empty authority performs none.
- pub fn retirement_work_demand(&self)->u64{u64::from(!self.terminal_is_empty())}
+ /// ⛽️ Delegates the exact selected original ledger handback work before effects.
+ pub fn retirement_work_demand(&self)->Result<u64,ValueError>{Ok(crate::ledger_work_demand(&self.original))}
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{close_ledger(&mut self.original,grant)}
 }
 impl Drop for JobPayloadAuthority{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original payload authority reached Drop before separate paid ledger closure");}}
@@ -210,3 +210,7 @@ impl RetainedPayloadBuilder{
   self.reserve_page(extent,cx)
  }
 }
+
+#[path="🎟️descriptor/🦀️.rs"]
+mod outcome_descriptor;
+pub use outcome_descriptor::{JobOutcomeKind,OriginalOutcomeDescriptor,OriginalOutcomeView,OriginalOutcomeDescriptorSlot};

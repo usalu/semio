@@ -5,8 +5,7 @@ use semio_framework_job::{StepBudget, StepContext};
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
 use std::mem::ManuallyDrop;
 
-#[path="🌉️call/📥️input/🦀️.rs"]
-pub mod original_input;
+pub use semio_plugin_guest_contract::original_input;
 #[path="🌉️call/📤️fault-frame/🦀️.rs"]
 pub mod original_failure_frame;
 

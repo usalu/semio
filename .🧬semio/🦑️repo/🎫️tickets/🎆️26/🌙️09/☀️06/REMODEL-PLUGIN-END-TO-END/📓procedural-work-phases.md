@@ -1,0 +1,7 @@
+# Procedural work phases
+
+TypedLiteral and NativeParamPatch text phases delegate FlowTextCopyWork advance or take; text close delegates that owner until terminal. EntryStep or Advance delegates OriginalOwnedEntry next_work_demand with the META copy reduction; entry close delegates next_close_work_demand, then paid terminal Option removal. Other phases perform fixed handoffs, except typed literal Field converts an index with bounded decimal loop and copy_within and captures a bounded six-word input identity. Close selects text, entry, active RetainedCloneClose, then each actual owner and binding.
+
+FlowTextCopyWork is flow/🖥️host/📥️evaluation-source/🔎️read/✏️authoring/📑️text/🦀️.rs. It exposes no work query and reports one while copying up to 4096 bytes. Truthful byte-based work requires its owner change. Its close delegates RetainedCloneClose of String and requires real child work query.
+
+Raw UpdateCursor consumers in scoped value, Flow and procedural search include Flow sqlite snapshot reconstruction:334,354; Flow sqlite snapshot native decoding:20; procedural generation sqlite native value:24; native-owned map and set. Controlled receiving remains owned by native agent. No execution claimed.

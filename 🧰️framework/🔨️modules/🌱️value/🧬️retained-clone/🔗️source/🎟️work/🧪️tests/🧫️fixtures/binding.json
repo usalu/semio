@@ -1,0 +1,50 @@
+[
+  {
+    "bound": false,
+    "matching": true,
+    "work": 0,
+    "physical": true,
+    "reported": 0,
+    "outcome": "denied"
+  },
+  {
+    "bound": false,
+    "matching": true,
+    "work": 1,
+    "physical": true,
+    "reported": 1,
+    "outcome": "unbound"
+  },
+  {
+    "bound": true,
+    "matching": true,
+    "work": 4,
+    "physical": true,
+    "reported": 0,
+    "outcome": "denied"
+  },
+  {
+    "bound": true,
+    "matching": true,
+    "work": 5,
+    "physical": false,
+    "reported": 0,
+    "outcome": "denied"
+  },
+  {
+    "bound": true,
+    "matching": true,
+    "work": 5,
+    "physical": true,
+    "reported": 5,
+    "outcome": "matched"
+  },
+  {
+    "bound": true,
+    "matching": false,
+    "work": 5,
+    "physical": true,
+    "reported": 2,
+    "outcome": "mismatch"
+  }
+]

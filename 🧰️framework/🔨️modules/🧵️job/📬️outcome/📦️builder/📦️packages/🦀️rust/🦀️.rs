@@ -47,7 +47,7 @@ pub use payload_builder::{JobPayloadAuthority, OriginalPayloadBuilderIdentity, O
 
 #[path = "../../../../♻️retirement/📄️payload/🧱️payload-owner/🦀️.rs"]
 mod payload_owner_retirement;
-pub use payload_owner_retirement::{close_ledger, ledger_demands};
+pub use payload_owner_retirement::{close_ledger, ledger_demands,ledger_work_demand};
 
 #[cfg(test)]
 #[global_allocator]

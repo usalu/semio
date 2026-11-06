@@ -35,7 +35,7 @@ try {
   const saved = join(generated, `mcp-${process.pid}.json`);
   if (!input.name?.startsWith("ticket_")) writeFileSync(saved, JSON.stringify(response));
   const result = response.result?.structuredContent;
-  console.log(JSON.stringify(method === "tools/list" ? response.result.tools.filter((tool: any) => new RegExp(process.env.SEMIO_TICKET_TOOL_FILTER??"ticket|cargo").test(tool.name)) : result?.operation ? { saved, ...result, stdout: result.stdout?.slice(-16000), stderr: result.stderr?.slice(-16000) } : response));
+  console.log(JSON.stringify(method === "tools/list" ? response.result.tools.filter((tool: any) => new RegExp(process.env.SEMIO_TICKET_TOOL_FILTER??"ticket|cargo").test(tool.name)) : result?.operation ? { saved, operation:result.operation, agent:result.agent, ok:result.ok, exitCode:result.exitCode, cancelled:result.cancelled, durationMs:result.durationMs, command:result.command, hint:result.hint, stdout:result.stdout?.slice(-4000), stderr:result.stderr?.slice(-4000) } : response));
 } finally {
   child.stdin!.end();
   await drained;

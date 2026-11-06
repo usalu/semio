@@ -12,6 +12,7 @@ use std::mem::{ManuallyDrop,size_of};
 #[macro_export]
 macro_rules! original_ordinal_operation_receiving{
  ($operation:ty)=>{impl $crate::original_receiving::OpBinaryReceiving for $operation{
+  type DomainFailure=$crate::original_receiving::ValueError;
   type Receiving=$crate::original_receiving::OriginalOperationReceiving<Self>;
   fn admit_receiving(source:&[u8],range:(usize,usize),grant:$crate::original_receiving::RetainedCloneGrant)->$crate::original_receiving::RetainedWorkOutcome<Option<(Self::Receiving,$crate::original_receiving::RetainedCloneProgress)>>{$crate::original_receiving::OriginalOperationReceiving::admit(source,range,grant)}
  }};
@@ -20,6 +21,7 @@ macro_rules! original_ordinal_operation_receiving{
 #[macro_export]
 macro_rules! original_tagged_operation_receiving{
  ($operation:ty,$protocol:expr)=>{impl $crate::original_receiving::OpBinaryReceiving for $operation{
+  type DomainFailure=$crate::original_receiving::ValueError;
   type Receiving=$crate::original_receiving::OriginalOperationReceiving<Self>;
   fn admit_receiving(source:&[u8],range:(usize,usize),grant:$crate::original_receiving::RetainedCloneGrant)->$crate::original_receiving::RetainedWorkOutcome<Option<(Self::Receiving,$crate::original_receiving::RetainedCloneProgress)>>{
    const TAGS:[u64;<$operation as $crate::original_receiving::BorrowedDslVariants>::VARIANTS.len()]={
@@ -103,9 +105,13 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving
   self.closed=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(demand))),work:1}
  }
 }
-impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> protocol::OpBinaryReceivingCursor<M> for OriginalOperationReceiving<M>{
+impl<M:DslOwnedReceivingVariants+BorrowedDslVariants+OpBinaryReceiving<DomainFailure=ValueError>> protocol::OpBinaryReceivingCursor<M> for OriginalOperationReceiving<M>{
  fn demands(&self,source:&[u8],body:usize)->Result<RetirementDemand,ValueError>{self.demands_inner(source,body)}
  fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{self.step_inner(source,native,body,grant)}
+ fn domain_failure(&self)->Option<&ValueError>{None}
+ fn domain_failure_demand(&self)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
+ fn domain_failure_work_demand(&self)->Result<u64,ValueError>{Ok(0)}
+ fn take_domain_failure_into(&mut self,recipient:&mut Option<ValueError>,_:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress>{RetainedWorkOutcome{result:if recipient.is_some(){Err(invalid("operation domain failure requires an empty original recipient"))}else{Ok(Default::default())},work:0}}
  fn is_ready(&self)->bool{self.phase==6&&self.closing==0&&self.output.value.is_some()}
  fn take_into(&mut self,recipient:&mut Option<M>,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress>{let demand=metadata::<M>();if self.failed||self.phase!=6||self.closing!=0||recipient.is_some()||self.output.value.is_none()||!funded(grant,demand){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}*recipient=self.output.value.take();RetainedWorkOutcome{result:Ok(receipt(demand)),work:1}}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}

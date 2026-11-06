@@ -11,7 +11,7 @@ use super::*;
 pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T, Prepared>(
     runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
     events: &mut Option<Event>,
-    command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
+    command_page: &mut Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
     cold_pair_page: Option<&semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,

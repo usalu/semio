@@ -1,0 +1,3 @@
+# Vec clone source review
+
+Reviewed `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs` as an uncompiled draft. The length is captured in a separate bound-source turn. The bitwise page quote and effect both derive the page size from remaining work and body; non-bitwise child progress, take and close forward their reported work, and allocation attempts use the actual marker. The fixed 15-unit cursor birth corresponds to the declared cursor fields and empty vector header in the current accounting. No concrete defect was established by this bounded source inspection. This is not evidence of compilation, successful native execution, or a complete proof of every error path.

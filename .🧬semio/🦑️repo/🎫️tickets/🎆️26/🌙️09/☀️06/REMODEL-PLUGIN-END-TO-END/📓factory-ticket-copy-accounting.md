@@ -1,0 +1,5 @@
+# Factory ticket copy accounting
+
+Current `🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🧫️fixtures/🔣️.json` specifies `ownerSlotCloseCopyBytes: 0` for both supported word sizes; its boxed erased owner slot sizes are 8 and 16 bytes. The current `♻️retirement/🎟️tickets/🦀️.rs:3–14` terminal demand and actual receipt each charge one `Option<Box<T>>` when `slot.take()` is dropped. The mounted native test adds the fixture's close-copy value to the separate owner payload header copy. The current fixture and ticket implementation therefore disagree.
+
+Nearby conventions conflict: `🧬️retained-clone/🧬️contract/🗃️box-cursor/🦀️.rs:59,73` quotes and reports two optional boxed child headers when removing an empty child, in addition to its boolean metadata; `♻️retirement/🎮️controlled/🦀️.rs:125,201` quotes and reports one optional boxed cursor header for a terminal take/drop. These observations do not establish a single canonical convention or a deliberate exception. The defining retirement owner must resolve that contract before modifying the expected fixture or its receipt. No test was run in this review.

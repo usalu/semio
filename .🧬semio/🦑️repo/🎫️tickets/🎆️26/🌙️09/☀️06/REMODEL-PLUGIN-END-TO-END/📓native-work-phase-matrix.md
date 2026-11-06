@@ -1,0 +1,7 @@
+# Native work phase matrix
+
+RetainedFieldCursor demand, work quote and advance carry source, body and maximum work; it selects binding, child birth or child advance. Take quotes child; close quotes child start, child turn, child removal or original binding. NativeReceiver now carries source, body and maximum work for advance demand, quote and execution; take and close expose independent work queries. NativeReceiveSlot selects reserve, initialized header, child take or child advance, and close selects child, header or output retirement. NativeDefaultCursor currently has no work/max contract.
+
+NativeValueSource is a public trait with no bounded accessor-cost contract; generic implementations may do more than fixed metadata work even though known DslValue accessors are direct. Matcher currently loops by item grant and compares 64 bytes reporting one unit; a truthful design must fund a selected event, account byte work and constrain or quote accessor costs. Nested receivers forward one actual leaf effect loan rather than fabricating another frame or issuer.
+
+Neutral laws should cover zero and quote-minus-one budgets with unchanged source and no physical birth, exact work success and actual work debit, UTF-8/schema-key boundaries and long comparisons, each default and nested receiver branch, cancellation at every phase, exact original recovery recipient substitution refusal, marker and allocation failure custody, and child-first paid closure. Third-party oracle should independently check typed decoded values. No execution.

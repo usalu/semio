@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🔨️modules/🧵️job/📬️outcome/🪙️budget/📦️packages/🦀️rust/Cargo.toml","-p","semio-framework-job-return-budget","--lib"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"codex-root-return-budget"}}

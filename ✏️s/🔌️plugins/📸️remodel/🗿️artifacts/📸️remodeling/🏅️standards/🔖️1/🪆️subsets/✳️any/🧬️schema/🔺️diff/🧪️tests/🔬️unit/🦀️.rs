@@ -24,6 +24,31 @@ fn frame(index: u32) -> FrameRef {
     FrameRef { index, timestamp_ms: f64::from(index) * 33.0, asset_id: "a1".into() }
 }
 
+#[test]
+fn durable_content_neutral_cases_match_cold_reference() {
+    use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingDurableArtifact;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️durable-content/🔣️.json")).unwrap();
+    let chunks = |value: &serde_json::Value| value.as_array().unwrap().iter().map(|chunk| ByteBuffer::from_u8_slice(chunk.as_str().unwrap().as_bytes())).collect::<Vec<_>>();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut base = std::collections::BTreeMap::new();
+        let initial = chunks(&case["initial"]);
+        if !initial.is_empty() || case["present"] == true { base.insert("asset".into(), RemodelingDurableArtifact { kind: "mesh".into(), mime: None, width: 0, height: 0, chunks: initial }); }
+        let rows = case["rows"].as_array().unwrap().iter().map(|row| match row["operation"].as_str().unwrap() {
+            "create" => RemodelingContentRow::Append { id: "asset".into(), header: Some(RemodelingContentHeader { kind: "mesh".into(), mime: None, width: 0, height: 0 }), chunks: chunks(&row["chunks"]) },
+            "append" => RemodelingContentRow::Append { id: "asset".into(), header: None, chunks: chunks(&row["chunks"]) },
+            "truncate" => RemodelingContentRow::Truncate { id: "asset".into(), from: row["from"].as_u64().unwrap() },
+            _ => panic!("unknown content operation"),
+        }).collect();
+        let original = base.clone();
+        let actual = RemodelingContentDelta { rows }.apply_rows(&base);
+        assert_eq!(base, original, "{} leaves its base unchanged", case["id"]);
+        if case["refused"] == true { assert!(actual.is_err(), "{}", case["id"]); continue; }
+        let actual = actual.unwrap();
+        let expected = chunks(&case["expected"]);
+        assert_eq!(actual.get("asset").map(|artifact| artifact.chunks.as_slice()).unwrap_or_default(), expected.as_slice(), "{}", case["id"]);
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn empty_diff_is_identity_and_absorb_is_fieldwise_last_writer() {
     let scene = default_remodeling_scene();

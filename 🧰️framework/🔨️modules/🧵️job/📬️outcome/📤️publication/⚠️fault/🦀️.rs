@@ -9,7 +9,7 @@ use std::mem::MaybeUninit;
 
 /// 🧯️ A fault publisher borrows only the authenticated, bounded original retirement loan.
 pub struct OriginalFaultPayloadStep<'a,'b>(&'a mut StepContext<'b>,std::marker::PhantomData<&'a ()>);
-impl<'a,'b> OriginalFaultPayloadStep<'a,'b>{fn bind(cx:&'a mut StepContext<'b>)->Result<Self,ValueError>{if !cx.original_retirement_active(){return Err(ValueError::invariant("fault publication requires original retirement authority"))}Ok(Self(cx,std::marker::PhantomData))}pub fn borrow_fault(cx:&'a mut StepContext<'b>,_:&'a Fault)->Result<Self,ValueError>{Self::bind(cx)}pub fn borrow_failure(cx:&'a mut StepContext<'b>,_:&'a OriginalTurnFailure)->Result<Self,ValueError>{Self::bind(cx)}}
+impl<'a,'b> OriginalFaultPayloadStep<'a,'b>{fn bind(cx:&'a mut StepContext<'b>)->Result<Self,ValueError>{if !cx.original_retirement_active(){return Err(ValueError::invariant("fault publication requires original retirement authority"))}Ok(Self(cx,std::marker::PhantomData))}pub fn borrow_fault(cx:&'a mut StepContext<'b>,_:&'a Fault)->Result<Self,ValueError>{Self::bind(cx)}pub fn borrow_failure(cx:&'a mut StepContext<'b>,_:&'a OriginalTurnFailure)->Result<Self,ValueError>{Self::bind(cx)}pub fn borrow_receiving(cx:&'a mut StepContext<'b>,_:&'a semio_framework_job::OriginalReceivingPrimary)->Result<Self,ValueError>{Self::bind(cx)}pub fn borrow_value(cx:&'a mut StepContext<'b>,_:&'a ValueError)->Result<Self,ValueError>{Self::bind(cx)}}
 impl JobPayloadStep for OriginalFaultPayloadStep<'_,'_>{fn payload_ledger(&self)->&Arc<JobPayloadOperationLedger>{JobPayloadStep::payload_ledger(self.0)}fn payload_page_granted(&self)->bool{JobPayloadStep::payload_page_granted(self.0)}fn grant_payload_page(&mut self){JobPayloadStep::grant_payload_page(self.0)}fn is_cancelled(&self)->bool{false}fn should_yield(&self)->bool{self.0.retirement_should_yield()}fn retained_grant(&self)->RetainedCloneGrant{self.0.retained_grant()}fn consume_retained(&mut self,p:RetainedCloneProgress)->Result<(),ValueError>{self.0.consume_retained(p)}}
 
 #[derive(Clone,Copy,PartialEq,Eq)]
@@ -54,6 +54,7 @@ impl RetainedFaultPublication{
  }
  /// 🤝️ Resolves only the same original sealed fault header against its exclusive descriptor.
  pub fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{if !self.delivered||self.closing{return Err(Self::invalid())}descriptor.fault(self.builder.published().ok_or_else(Self::invalid)?)}
+ pub fn retirement_work_demand(&self)->Result<u64,ValueError>{self.retirement_demands()?;if self.terminal_is_empty(){return Ok(0)}if !self.closing{return Ok(1)}if !self.wire.terminal_is_empty(){return Ok(self.wire.retirement_work_demand())}if !self.builder.terminal_is_empty(){return self.builder.retirement_work()}Ok(1)}
  pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{
   if self.terminal_is_empty(){return Ok(Default::default())}
   if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}

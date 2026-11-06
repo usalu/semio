@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "deniedLimit",
+    "admittedLimit",
+    "expectedStages"
+  ],
+  "properties": {
+    "source": {
+      "type": "integer"
+    },
+    "deniedLimit": {
+      "const": 0
+    },
+    "admittedLimit": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expectedStages": {
+      "const": 3
+    }
+  }
+}

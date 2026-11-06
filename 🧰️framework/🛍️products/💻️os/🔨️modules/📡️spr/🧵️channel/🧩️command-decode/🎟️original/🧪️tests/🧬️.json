@@ -1,0 +1,66 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "cases",
+    "trailingAccepted",
+    "deniedOwner"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "wire",
+          "tag",
+          "seq",
+          "fields"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "wire": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "tag": {
+            "type": "integer"
+          },
+          "seq": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        }
+      }
+    },
+    "trailingAccepted": {
+      "const": false
+    },
+    "deniedOwner": {
+      "const": "retained"
+    }
+  }
+}

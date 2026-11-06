@@ -1,0 +1,27 @@
+[
+  {
+    "action": "setFrameCursor",
+    "args": {
+      "value": "stream-a",
+      "frameIndex": 5
+    },
+    "stream": "stream-a",
+    "frame": 5
+  },
+  {
+    "action": "setFrameCursor",
+    "args": {
+      "streamId": "stream-a",
+      "value": 9
+    },
+    "stream": "stream-a",
+    "frame": 9
+  },
+  {
+    "action": "setReportTable",
+    "args": {
+      "value": "gcps"
+    },
+    "table": "gcps"
+  }
+]

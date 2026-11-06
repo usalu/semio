@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "source",
+      "bytes"
+    ],
+    "properties": {
+      "source": {
+        "type": "string"
+      },
+      "bytes": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "cases": [
+    {
+      "id": "empty",
+      "input": [],
+      "additional": 0,
+      "expected": []
+    },
+    {
+      "id": "empty-reserved",
+      "input": [],
+      "additional": 4,
+      "expected": []
+    },
+    {
+      "id": "one",
+      "input": [
+        "one"
+      ],
+      "additional": 0,
+      "expected": [
+        "one"
+      ]
+    },
+    {
+      "id": "pair",
+      "input": [
+        "a",
+        "b"
+      ],
+      "additional": 2,
+      "expected": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "id": "odd",
+      "input": [
+        "a",
+        "b",
+        "c"
+      ],
+      "additional": 1,
+      "expected": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "id": "unicode",
+      "input": [
+        "🧱",
+        "é",
+        "é",
+        ""
+      ],
+      "additional": 5,
+      "expected": [
+        "🧱",
+        "é",
+        "é",
+        ""
+      ]
+    }
+  ]
+}

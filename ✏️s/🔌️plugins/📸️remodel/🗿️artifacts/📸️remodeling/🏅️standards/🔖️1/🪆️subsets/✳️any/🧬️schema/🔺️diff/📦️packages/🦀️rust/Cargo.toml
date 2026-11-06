@@ -27,5 +27,7 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-remodel-remodeling-model = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace-memory-testing = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

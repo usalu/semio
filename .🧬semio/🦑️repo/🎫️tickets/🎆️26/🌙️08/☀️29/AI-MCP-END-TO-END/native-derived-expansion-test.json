@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/📦️packages/🦀️rust/Cargo.toml","-p","semio-framework-value-derive-expansion","--lib"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"codex-guest-derived-expansion"}}

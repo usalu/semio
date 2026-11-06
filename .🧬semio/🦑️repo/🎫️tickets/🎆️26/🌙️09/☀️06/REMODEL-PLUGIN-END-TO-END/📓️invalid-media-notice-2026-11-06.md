@@ -1,0 +1,11 @@
+# Invalid Media Notice — 2026-11-06
+
+The real frame-payload handler silently produced no assets/effects for invalid image bytes, zero dimensions and malformed data URLs. Its existing outer flow correctly advances every batch item and clears transient import state on the last item. An early error return would skip that settlement; this fix preserves the flow and adds the warning effect only.
+
+The retained command context supplies the actual optional ViewModel. Root threads that same context through the import router into the frame handler and resolves the existing app_labels matrix for the actual locale and terminology. The notice uses the existing Notify warning effect and named filename placeholder. Both English and German have explicit strings; no language is selected when a headless batch has no UI context. No new global effect, external runtime library, locale default or compatibility signature was added.
+
+The existing photo-admission data now has a strict 2020-12 schema and en/de warning vectors. The new native law checks all six existing invalid-source cases over both locales/all terminology variants, two successive batch items, one warning per item, zero artifact mutations, intermediate progress and terminal empty transient. The preexisting PNG/JPEG third-party rejection oracles remain. The native warning law has not executed: normal one-job handle 61382 is active in `invalid-media-notice-2026-11-06.log`.
+
+Rust parsing of the handler/router/retained work/test owner and Ajv validation of the neutral fixture returned exit 0. These do not prove native compilation or a displayed UI warning. A real picker/import must still prove the retained input contains its actual view state and that the host displays the warning. Existing recognized-video sampling failures and the separate single-video path still use their existing error handling; this still-image law does not establish video-error localization.
+
+The shared editor terminology file is being edited concurrently with the browser lane's control labels. Root only added invalid_import near error/status; the controls use their own nearby anchors. Actual source measurement after the combined additions is 32 files/256643 bytes/3459 active lines for editor integration, within the unchanged 32/262144/4000 boundaries. No source cap or test scope was relaxed.

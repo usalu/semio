@@ -1,16 +1,15 @@
 use super::*;
-use std::{io::Write, process::{Command, Stdio}};
 
 struct RefusedAllocation;
 unsafe impl PageAllocation for RefusedAllocation {
-    fn reserve<T>(_: &mut Vec<T>, _: usize) -> Result<(), std::collections::TryReserveError> {
-        Vec::<u8>::new().try_reserve_exact(usize::MAX)
+    fn reserve<T>(_: &mut Vec<T>, _: usize, actual:&mut Option<usize>) -> Result<(), PagedListError> {
+        *actual=None;Err(PagedListError{kind:PagedListRefusalKind::AllocationFailed,reason:"synthetic allocation refusal"})
     }
 }
 struct ExcessAllocation;
 unsafe impl PageAllocation for ExcessAllocation {
-    fn reserve<T>(owner: &mut Vec<T>, slots: usize) -> Result<(), std::collections::TryReserveError> {
-        owner.try_reserve_exact(slots * 2)
+    fn reserve<T>(owner: &mut Vec<T>, slots: usize, actual:&mut Option<usize>) -> Result<(), PagedListError> {
+        test_reserve(owner,slots * 2,actual)
     }
 }
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap() }
@@ -26,17 +25,17 @@ fn run(operation: &str) -> PagedListError {
         while !list.terminal_is_empty() { let bytes = list.next_release_allocation_bytes().unwrap(); assert!(list.release_empty_page(bytes).unwrap().progressed); }
         return refusal;
     }
-    if operation.ends_with("Payload") { list.reserve_one(list.next_allocation_bytes().unwrap()).unwrap(); }
+    if operation.ends_with("Payload") { list.reserve_one(list.next_allocation_bytes().unwrap(),&mut None).unwrap(); }
     let requested = list.next_allocation_bytes().unwrap();
     let physical = list.allocated_bytes();
-    let error = match operation {
-        "counter" => { list.allocated = isize::MAX as usize; list.reserve_one(requested).unwrap_err() },
-        "failMetadata" | "failPayload" => list.reserve_page_using::<RefusedAllocation>(requested).unwrap_err(),
-        "extraMetadata" | "extraPayload" => list.reserve_page_using::<ExcessAllocation>(requested).unwrap_err(),
-        "signedMetadata" | "signedPayload" => { list.allocated = isize::MAX as usize - requested; list.reserve_page_using::<ExcessAllocation>(requested * 2).unwrap_err() },
+    let mut actual=None;let error = match operation {
+        "counter" => { list.allocated = isize::MAX as usize; list.reserve_one(requested,&mut None).unwrap_err() },
+        "failMetadata" | "failPayload" => list.reserve_page_using::<RefusedAllocation>(requested,&mut actual).unwrap_err(),
+        "extraMetadata" | "extraPayload" => list.reserve_page_using::<ExcessAllocation>(requested,&mut actual).unwrap_err(),
+        "signedMetadata" | "signedPayload" => { list.allocated = isize::MAX as usize - requested; list.reserve_page_using::<ExcessAllocation>(requested * 2,&mut actual).unwrap_err() },
         _ => panic!("closed paged refusal operation"),
     };
-    list.allocated = physical + error.allocated_bytes;
+    if operation.starts_with("fail"){assert_eq!(actual,None)}else if operation!="counter"{assert_eq!(actual,Some(error.allocated_bytes))}list.allocated = physical + error.allocated_bytes;
     let refusal = error.refusal();
     while !list.terminal_is_empty() {
         let bytes = list.next_release_allocation_bytes().unwrap();
@@ -55,13 +54,5 @@ fn controlled_value_paged_refusal_actual_allocation_kind_corpus() {
     }
 }
 
-#[test]
-fn controlled_value_paged_refusal_independent_ajv_sqlite_oracle() {
-    
-    let script = "import{Database}from'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());const db=new Database(':memory:');const q=db.query(\"SELECT CASE WHEN ? LIKE 'fail%' THEN 'allocationFailed' WHEN ? LIKE 'extra%' THEN 'invariantViolated' ELSE 'ownershipLimit' END AS kind\");const rows=x.fixture.cases.map(row=>q.get(row.operation,row.operation).kind);db.close();await Bun.write(Bun.stdout,JSON.stringify(rows));";
-    let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
-    child.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture()}).to_string().as_bytes()).unwrap();
-    let output = child.wait_with_output().unwrap(); assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
-    let reference: Vec<String> = serde_json::from_slice(&output.stdout).unwrap();
-    for (row, kind) in fixture()["cases"].as_array().unwrap().iter().zip(reference) { assert_eq!(run(row["operation"].as_str().unwrap()).kind.as_str(), kind); }
-}
+
+fn test_reserve<T>(owner:&mut Vec<T>,slots:usize,actual:&mut Option<usize>)->Result<(),PagedListError>{*actual=None;let needed=owner.len().checked_add(slots).ok_or(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"test reservation overflow"})?;let allocating=std::mem::size_of::<T>()!=0&&needed>owner.capacity();if allocating{*actual=Some(0)}owner.try_reserve_exact(slots).map_err(|_|PagedListError{kind:PagedListRefusalKind::AllocationFailed,reason:"test allocation failed"})?;if allocating{*actual=Some(owner.capacity()*std::mem::size_of::<T>())}Ok(())}

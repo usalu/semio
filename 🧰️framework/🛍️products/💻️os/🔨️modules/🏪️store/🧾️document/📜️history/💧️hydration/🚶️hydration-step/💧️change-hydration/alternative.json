@@ -1,0 +1,17 @@
+{
+  "cases": [
+    {
+      "id": "branch-ä",
+      "name": "Änderung",
+      "checkpointIds": [
+        "cp1",
+        "cp2"
+      ]
+    },
+    {
+      "id": "empty",
+      "name": "",
+      "checkpointIds": []
+    }
+  ]
+}

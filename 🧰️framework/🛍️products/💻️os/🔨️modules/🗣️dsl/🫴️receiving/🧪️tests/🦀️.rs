@@ -30,7 +30,7 @@ fn original_command_receiving_operation_authored_tagged_header_resumes_each_orig
 
 struct OperationBank{left:RetainedCloneGrant,fuel:u64,quantum:RetainedCloneGrant}
 struct OperationWorkLoan{fuel:u64}
-impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for OperationWorkLoan{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.fuel))}}
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for OperationWorkLoan{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.fuel;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.fuel))}}
 struct OperationPhysicalLoan{submitted:RetainedCloneProgress,left:RetainedCloneGrant}
 impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructionRecipient for OperationPhysicalLoan{
  fn submitted(&self)->RetainedCloneProgress{self.submitted}fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(self.left)}

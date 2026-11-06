@@ -14,3 +14,21 @@ fn retained_issued_row_reference_preserves_original_pointer_path_and_paid_close(
   for _ in 0..10000{if retained.terminal_is_empty(){break;}let d=retained.close_demand(4096).unwrap();let g=grant(d,&bank);for denied in[RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.saturating_sub(1),..g},RetainedCloneGrant{maximum_capacity_bytes:0,..g},RetainedCloneGrant{maximum_release_bytes:0,..g},RetainedCloneGrant{maximum_depth:0,..g}]{if crate::retained_clone_grant_admits(denied,d){continue;}let(result,h)=observe_retirement_allocations(||retained.close_step(denied));let p=match result.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};assert_eq!(p,RetainedCloneProgress::default());assert_eq!(h,(0,0));assert_eq!(retained.close_demand(4096).unwrap(),d);}let(s,h)=bank.run(g,||retained.close_step(g),|step|step.progress());let s=s.unwrap();assert!(s.progress().fits(g));assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes));}assert!(retained.terminal_is_empty());assert!(retained.borrow().is_err());assert_eq!(observe_retirement_allocations(||drop(retained)).1,(0,0));close_source(&mut root,&mut bank);close_source(&mut foreign,&mut bank);
  }
 }
+
+#[test]
+fn fallible_child_retention_is_funded_before_accessor_and_preserves_original_alias(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ for row in law["childCases"].as_array().unwrap(){
+  let rows:Vec<String>=serde_json::from_value(law["rows"].clone()).unwrap();let rank=row["selected"].as_u64().unwrap()as usize;
+  let mut bank=Bank::new();let mut root=source(rows,&mut bank);let g=RetainedCloneGrant{maximum_items:row["items"].as_u64().unwrap()as usize,maximum_depth:row["depth"].as_u64().unwrap()as usize,..grant(RetainedOwnedProjection::<String>::constructor_demand(),&bank)};let calls=std::cell::Cell::new(0);
+  if row["retained"].as_bool().unwrap(){
+   let(result,heap)=bank.run(g,||root.borrow().try_project_owned(rank,|rows|{calls.set(calls.get()+1);rows.get(rank).ok_or_else(||crate::ValueError::invariant("absent original child"))},g),|(_,p)|*p);
+   let(mut retained,p)=result.unwrap();assert_eq!(heap,(0,0));assert!(p.fits(g));assert_eq!(retained.borrow().unwrap().get().as_str(),law["rows"][rank].as_str().unwrap());assert_eq!(retained.borrow().unwrap().get().as_ptr(),root.borrow().get()[rank].as_ptr());assert_eq!(retained.borrow().unwrap().source_identity(),root.borrow().source_identity());
+   for _ in 0..10000{if retained.terminal_is_empty(){break}let g=grant(retained.close_demand(4096).unwrap(),&bank);let(result,_)=bank.run(g,||retained.close_step(g,&mut None),|s|s.progress());result.unwrap();}
+   assert!(retained.terminal_is_empty());
+  }else{
+   let(result,heap)=observe_retirement_allocations(||root.borrow().try_project_owned(rank,|rows|{calls.set(calls.get()+1);rows.get(rank).ok_or_else(||crate::ValueError::invariant("absent original child"))},g));assert!(result.result.is_err());assert_eq!(result.work,0);assert_eq!(heap,(0,0));
+  }
+  assert_eq!(calls.get(),row["accessorCalls"].as_u64().unwrap()as usize);close_source(&mut root,&mut bank);
+ }
+}

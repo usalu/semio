@@ -137,3 +137,4 @@ pub fn expand(input: &DeriveInput) -> syn::Result<TokenStream> {
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod namespace_tests;
+

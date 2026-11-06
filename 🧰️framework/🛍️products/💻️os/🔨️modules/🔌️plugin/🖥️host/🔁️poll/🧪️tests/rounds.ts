@@ -1,0 +1,5 @@
+import{test,expect}from'bun:test';import{Database}from'bun:sqlite';import Ajv from'ajv/dist/2020';import law from'./rounds.json';import schema from'./rounds.schema.json';
+test('consecutive Poll rounds preserve the same native source and instance',()=>{
+ expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(':memory:');
+ try{db.run('CREATE TABLE rounds(number INTEGER PRIMARY KEY,source TEXT NOT NULL,instance TEXT NOT NULL,phase TEXT NOT NULL,births INTEGER NOT NULL,work INTEGER NOT NULL)');for(let n=0;n<law.rounds;n++)db.run('INSERT INTO rounds VALUES(?1,?2,?3,?4,?5,?6)',[n,law.source,law.instance,law.after,law.births,law.work]);const result=db.query('SELECT count(DISTINCT source) AS sources,count(DISTINCT instance) AS instances,sum(births) AS births,sum(work) AS work FROM rounds').get()as Record<string,number>;expect(result).toEqual({sources:1,instances:1,births:0,work:law.rounds});for(const key of['source-binding','frame-address','receiver','guest-context','guest-state'])expect(law.preserves).toContain(key);}finally{db.close()}
+});

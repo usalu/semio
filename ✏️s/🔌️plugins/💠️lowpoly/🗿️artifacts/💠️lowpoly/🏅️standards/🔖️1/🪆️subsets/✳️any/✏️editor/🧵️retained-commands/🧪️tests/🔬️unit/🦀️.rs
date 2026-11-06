@@ -276,7 +276,7 @@ fn finish_fill(mut caller: semio_framework_job::OriginalJobFixtureCaller, decode
         if decoder.terminal_is_empty() { caller.retire(grant); return; }
         caller.turn(grant, |cx| cx.with_original_retirement(|cx| {
             let demand = decoder.retirement_demands(grant.maximum_copy_bytes)?;
-            semio_framework_job::close_original_retained_step(cx, demand, |paid| decoder.close_step(paid))?;
+            decoder.close_on_source(cx)?;
             Ok(())
         })).expect("original fill decoder close");
     }

@@ -138,7 +138,15 @@ impl ArtifactEditor for RemodelingPlayApp {
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(RemodelingRetainedCommandJobFactory::new(&controller))
+        registry.register(RemodelingRetainedCommandJobFactory::new(&controller))?;
+        registry.register(semio_plugin::native_snapshot_export::NativeSnapshotPackExportFactory::<EditorApp<Self>>::new(&controller))
+    }
+
+    fn build_media_export_job(request: &mut Option<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>>, output: &mut Option<Box<dyn semio_plugin::ArtifactReservedJob + Send>>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        if request.as_ref().is_some_and(|request| request.port == semio_plugin::native_snapshot_export::SNAPSHOT_PACK_PORT) {
+            return semio_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<EditorApp<Self>>::admit_original(request, output, cx);
+        }
+        Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::UnsupportedOwner, "Remodeling media port has no registered resumable producer").into())
     }
 
     fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
@@ -298,8 +306,16 @@ impl ArtifactEditor for RemodelingPlayApp {
 
     /// 👁️ Dynamic per-render window measures — the Model window's layer toggles must reflect the LIVE
     /// config, so they are supplied here rather than frozen into the manifest.
-    fn window_measures(_doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        HashMap::from([(model::windows::model::REMODELING_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(&model::windows::model::config::current(cfg), remodeling_labels(view_state)))])
+    fn window_measures(doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        let labels = remodeling_labels(view_state);
+        let Some(kind) = view_state.window_id.as_deref().and_then(|id| view_state.window_instances.iter().find(|window| window.id == id)).map(|window| window.window_kind_id.as_str()) else { return HashMap::new() };
+        let measures = match kind {
+            model::windows::model::REMODELING_PLAY_WINDOW_MAIN => model::windows::model::window_measures(&model::windows::model::config::current(cfg), labels),
+            capture::windows::frames::REMODELING_PLAY_WINDOW_FRAMES => capture::windows::frames::window_measures(doc.snapshot, &capture::windows::frames::config::current(cfg), labels),
+            analyze::windows::report::REMODELING_PLAY_WINDOW_REPORT => analyze::windows::report::window_measures(&analyze::windows::report::config::current(cfg), labels),
+            _ => return HashMap::new(),
+        };
+        HashMap::from([(kind.to_string(), measures)])
     }
 }
 //#endregion 🔖️RemodelingPlayApp

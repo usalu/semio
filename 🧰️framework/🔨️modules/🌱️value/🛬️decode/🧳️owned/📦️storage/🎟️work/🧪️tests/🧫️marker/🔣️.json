@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "kind": "denied",
+      "marker": null
+    },
+    {
+      "kind": "zero_size",
+      "marker": null
+    },
+    {
+      "kind": "failed",
+      "marker": 0
+    },
+    {
+      "kind": "allocated",
+      "marker": 16
+    },
+    {
+      "kind": "denied_preserved",
+      "marker": 77
+    }
+  ]
+}

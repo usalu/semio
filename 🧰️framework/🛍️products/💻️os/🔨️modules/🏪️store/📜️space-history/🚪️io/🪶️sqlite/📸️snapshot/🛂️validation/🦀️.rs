@@ -83,7 +83,7 @@ mod dual_failure_tests{
   use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,RetirementDemand};
   use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeDecodeConstructionRecipient,NativeDecodeRetirementRecipient};
   struct Work(u64);
- impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for Work{fn admits(&mut self,observed:u64,additional:u64)->std::result::Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+ impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->std::result::Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
  struct Recipient{grant:RetainedCloneGrant,received:RetainedCloneProgress,refused:bool}
   impl NativeDecodeConstructionRecipient for Recipient{
    fn submitted(&self)->RetainedCloneProgress{self.received}

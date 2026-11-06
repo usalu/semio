@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "limits",
+    "cancellationTurns",
+    "record",
+    "invariants",
+    "sourceStock"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "limits": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cancellationTurns": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "record": {
+      "type": "object",
+      "required": [
+        "text",
+        "values"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "invariants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sourceStock": {
+      "type": "object",
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "fuel"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

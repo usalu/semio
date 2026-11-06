@@ -78,16 +78,17 @@ impl<S:ImmutableRootProjection> SnapshotProjection for S{
 impl<S:ImmutableRootProjection> SnapshotProjectionCursor<S> for ImmutableRootCursor<S>{
  fn demands(&self,original:RetainedCloneRef<'_,S>,_body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
   if self.closing||self.projected{return Err(invalid("immutable projection is closing or already prepared"));}
+  if maximum_work_units==0{return Ok(Default::default())}
   if !original.check_binding(&self.binding)?{return Ok(RetirementDemand{copy_bytes:original.binding_copy_bytes(),depth:1,..Default::default()});}
-  S::root_projection_demand(original)
+  let mut demand=S::root_projection_demand(original)?;demand.copy_bytes=demand.copy_bytes.checked_add(2).ok_or_else(||invalid("immutable projection marker extent overflow"))?;Ok(demand)
  }
  fn advance_work_demand(&self,original:RetainedCloneRef<'_,S>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.demands(original,body,maximum_work_units)?;if !original.check_binding(&self.binding)?{return Ok(1)}S::root_projection_work_demand(original)}
  fn advance(&mut self,original:RetainedCloneRef<'_,S>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailure>{let grant=effect.grant();let maximum_work_units=effect.maximum_work_units();let mut work=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{
   let selected=self.advance_work_demand(original,body,maximum_work_units)?;if selected==0||selected>maximum_work_units{return Ok(RetainedCloneStep::Progress(Default::default()))}let d=self.demands(original,body,maximum_work_units)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
   if let Some(progress)={let turn=original.bind(&mut self.binding,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
   let Some((output,progress))={let turn=S::project_root(original,grant);work+=turn.work;turn.result}?else{return Err(invalid("funded original root issuer omitted its candidate").into());};
-  *self.output=Some(output);self.projected=true;
-  let progress=admit_retained_clone_progress(grant,progress,"original immutable root projection")?;
+  *self.output=Some(output);self.projected=true;work+=1;
+  let progress=admit_retained_clone_progress(grant,RetainedCloneProgress{copied_bytes:d.copy_bytes,..progress},"original immutable root projection")?;
   if progress.copied_items==0{return Err(invalid("immutable root issuer omitted original work receipt").into());}
   self.admitted=true;Ok(RetainedCloneStep::Complete(progress))
  })();crate::RetainedWorkOutcome{result,work}}

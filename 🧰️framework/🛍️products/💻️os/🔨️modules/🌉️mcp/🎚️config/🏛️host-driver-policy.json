@@ -1,20 +1,20 @@
 {
   "admission": {
-    "maximumItems": 32,
+    "maximumItems": 128,
     "maximumCopyBytes": 1048576,
     "maximumCapacityBytes": 134217728,
     "maximumReleaseBytes": 536870912,
     "maximumDepth": 64
   },
   "drive": {
-    "maximumItems": 32,
+    "maximumItems": 128,
     "maximumCopyBytes": 1048576,
     "maximumCapacityBytes": 134217728,
     "maximumReleaseBytes": 536870912,
     "maximumDepth": 64
   },
   "wake": {
-    "maximumItems": 32,
+    "maximumItems": 128,
     "maximumCopyBytes": 1048576,
     "maximumCapacityBytes": 134217728,
     "maximumReleaseBytes": 536870912,

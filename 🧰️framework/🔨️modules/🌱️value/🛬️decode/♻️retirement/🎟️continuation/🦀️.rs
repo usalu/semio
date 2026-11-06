@@ -13,6 +13,7 @@ impl RetirementCursor for DecodeContinuationRetirement{
  fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
+impl Drop for DecodeContinuationRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.0.is_none(),"original decode continuation requires paid closure")}}
 impl RetireOwned for NativeDecodeContinuation{
  type RetirementCursor=DecodeContinuationRetirement;
  fn retirement_ready(&self)->bool{!self.work.has_live_actions()&&self.ledger.as_ref().is_some_and(|ledger|!ledger.is_bound())}

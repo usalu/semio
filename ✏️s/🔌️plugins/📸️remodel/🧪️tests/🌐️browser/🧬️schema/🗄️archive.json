@@ -1,0 +1,33 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "left",
+      "right",
+      "equal"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "left": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      },
+      "right": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      },
+      "equal": {
+        "type": "boolean"
+      }
+    }
+  }
+}

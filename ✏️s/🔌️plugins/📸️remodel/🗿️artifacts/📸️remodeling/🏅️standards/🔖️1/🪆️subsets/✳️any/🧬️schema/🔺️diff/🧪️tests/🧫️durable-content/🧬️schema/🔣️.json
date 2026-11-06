@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases"],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "initial", "rows"],
+        "oneOf": [{ "required": ["expected"] }, { "required": ["refused"] }],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "initial": { "$ref": "#/$defs/chunks" },
+          "present": { "type": "boolean" },
+          "expected": { "$ref": "#/$defs/chunks" },
+          "refused": { "const": true },
+          "rows": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/row" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "chunks": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "row": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["operation", "chunks"], "properties": { "operation": { "enum": ["create", "append"] }, "chunks": { "$ref": "#/$defs/chunks" } } },
+        { "type": "object", "additionalProperties": false, "required": ["operation", "from"], "properties": { "operation": { "const": "truncate" }, "from": { "type": "integer", "minimum": 0 } } }
+      ]
+    }
+  }
+}

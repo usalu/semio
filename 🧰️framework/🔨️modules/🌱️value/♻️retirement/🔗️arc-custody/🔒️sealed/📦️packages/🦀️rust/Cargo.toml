@@ -21,9 +21,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-storage = { path = "../../../../../🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../../../📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../🧪️testing/📥️admission/📦️packages/🦀️rust" }

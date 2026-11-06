@@ -1,0 +1,460 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "cases": [
+    {
+      "id": "insert-middle",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        },
+        {
+          "id": "c",
+          "value": 3
+        }
+      ],
+      "rows": [
+        {
+          "row": "insert",
+          "entity": {
+            "id": "b",
+            "value": 2
+          }
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "value": 1
+        },
+        {
+          "id": "b",
+          "value": 2
+        },
+        {
+          "id": "c",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "insert-empty",
+      "base": [],
+      "rows": [
+        {
+          "row": "insert",
+          "entity": {
+            "id": "",
+            "value": 7
+          }
+        }
+      ],
+      "expected": [
+        {
+          "id": "",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "id": "duplicate-insert",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        },
+        {
+          "id": "a",
+          "value": 2
+        }
+      ],
+      "rows": [
+        {
+          "row": "insert",
+          "entity": {
+            "id": "a",
+            "value": 3
+          }
+        }
+      ],
+      "refused": "duplicate-id"
+    },
+    {
+      "id": "replace-first-duplicate",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        },
+        {
+          "id": "a",
+          "value": 2
+        }
+      ],
+      "rows": [
+        {
+          "row": "replace",
+          "entity": {
+            "id": "a",
+            "value": 9
+          }
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "value": 9
+        },
+        {
+          "id": "a",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "remove-first-duplicate",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        },
+        {
+          "id": "a",
+          "value": 2
+        },
+        {
+          "id": "b",
+          "value": 3
+        }
+      ],
+      "rows": [
+        {
+          "row": "remove",
+          "key": "a"
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "value": 2
+        },
+        {
+          "id": "b",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "missing-replace",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        }
+      ],
+      "rows": [
+        {
+          "row": "replace",
+          "entity": {
+            "id": "z",
+            "value": 9
+          }
+        }
+      ],
+      "refused": "missing-target"
+    },
+    {
+      "id": "missing-remove",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        }
+      ],
+      "rows": [
+        {
+          "row": "remove",
+          "key": "z"
+        }
+      ],
+      "refused": "missing-target"
+    },
+    {
+      "id": "missing-patch",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        }
+      ],
+      "rows": [
+        {
+          "row": "patch",
+          "key": "z"
+        }
+      ],
+      "refused": "missing-target"
+    },
+    {
+      "id": "empty-patch",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        }
+      ],
+      "rows": [
+        {
+          "row": "patch",
+          "key": "a"
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "unsorted-remove-first",
+      "base": [
+        {
+          "id": "z",
+          "value": 1
+        },
+        {
+          "id": "a",
+          "value": 2
+        },
+        {
+          "id": "z",
+          "value": 3
+        }
+      ],
+      "rows": [
+        {
+          "row": "remove",
+          "key": "z"
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "value": 2
+        },
+        {
+          "id": "z",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "unicode-insert",
+      "base": [
+        {
+          "id": "é",
+          "value": 1
+        },
+        {
+          "id": "🧱",
+          "value": 3
+        }
+      ],
+      "rows": [
+        {
+          "row": "insert",
+          "entity": {
+            "id": "界",
+            "value": 2
+          }
+        }
+      ],
+      "expected": [
+        {
+          "id": "é",
+          "value": 1
+        },
+        {
+          "id": "界",
+          "value": 2
+        },
+        {
+          "id": "🧱",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "insert-then-remove",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        }
+      ],
+      "rows": [
+        {
+          "row": "insert",
+          "entity": {
+            "id": "b",
+            "value": 2
+          }
+        },
+        {
+          "row": "remove",
+          "key": "b"
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "remove-then-insert",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        },
+        {
+          "id": "b",
+          "value": 2
+        }
+      ],
+      "rows": [
+        {
+          "row": "remove",
+          "key": "a"
+        },
+        {
+          "row": "insert",
+          "entity": {
+            "id": "a",
+            "value": 8
+          }
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "value": 8
+        },
+        {
+          "id": "b",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "replace-twice",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        }
+      ],
+      "rows": [
+        {
+          "row": "replace",
+          "entity": {
+            "id": "a",
+            "value": 2
+          }
+        },
+        {
+          "row": "replace",
+          "entity": {
+            "id": "a",
+            "value": 3
+          }
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "unsorted-partition-traversal",
+      "base": [
+        {
+          "id": "a",
+          "value": 1
+        },
+        {
+          "id": "z",
+          "value": 2
+        },
+        {
+          "id": "b",
+          "value": 3
+        },
+        {
+          "id": "y",
+          "value": 4
+        },
+        {
+          "id": "c",
+          "value": 5
+        },
+        {
+          "id": "x",
+          "value": 6
+        },
+        {
+          "id": "d",
+          "value": 7
+        }
+      ],
+      "rows": [
+        {
+          "row": "insert",
+          "entity": {
+            "id": "m",
+            "value": 8
+          }
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "value": 1
+        },
+        {
+          "id": "z",
+          "value": 2
+        },
+        {
+          "id": "b",
+          "value": 3
+        },
+        {
+          "id": "m",
+          "value": 8
+        },
+        {
+          "id": "y",
+          "value": 4
+        },
+        {
+          "id": "c",
+          "value": 5
+        },
+        {
+          "id": "x",
+          "value": 6
+        },
+        {
+          "id": "d",
+          "value": 7
+        }
+      ]
+    }
+  ]
+}

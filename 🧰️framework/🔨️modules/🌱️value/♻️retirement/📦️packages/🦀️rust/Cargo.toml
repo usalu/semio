@@ -41,3 +41,10 @@ semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾
 [[test]]
 name = "scalar-collection-grants"
 path = "../../📋️collection/🧪️tests/native.rs"
+[[test]]
+name = "original-retirement-work"
+path = "../../🎮️controlled/🎟️work/🧪️tests/owning.rs"
+
+[[test]]
+name = "original-inline-retirement"
+path = "../../🧪️tests/🪑️inline/🦀️.rs"

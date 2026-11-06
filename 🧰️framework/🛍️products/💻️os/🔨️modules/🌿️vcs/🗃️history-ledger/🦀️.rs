@@ -321,6 +321,17 @@ impl<T> ArtifactHistoryLedger<T> {
     /// 📏️ Prices exactly one original row header and the native backing needed by its real next slot.
     pub fn owned_row_admission_demands(&self)->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:size_of::<T>()*2+size_of::<ArtifactHistoryReservation>()*2,capacity_bytes:self.next_reservation_allocation_bytes(),depth:1,..Default::default()}}
     /// 📥️ Moves one original deque row into this ledger without cloning payloads or reallocating its source backing.
+    /// 📥️ The actual retained row slot stays the donor until its unreserved ledger admits complete backing and metadata.
+    pub fn admit_owned_row(&mut self,source:&mut Option<T>,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress>{
+        use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome,ValueRefusalKind};
+        if self.directory_reads!=0||self.group.is_some()||self.reservation.is_some(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native row admission requires its unreserved original ledger")),work:0}}
+        if source.is_none(){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+        let demand=self.owned_row_admission_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+        match self.try_push(source.take().unwrap()){
+            Ok(_)=>RetainedWorkOutcome{result:Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}),work:1},
+            Err(row)=>{*source=Some(row);let p=RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<T>(),..Default::default()};RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native original row admission exhausted its ledger").with_retained_progress(p)),work:1}}
+        }
+    }
     pub fn admit_deque_front(&mut self,source:&mut std::collections::VecDeque<T>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,ValueError>{if self.directory_reads!=0||self.group.is_some()||self.reservation.is_some(){return Err(ValueError::literal(protocol::value::ValueRefusalKind::InvariantViolated,"native row admission requires its exact unreserved original ledger"))}if source.is_empty(){return Ok(Default::default())}let d=self.owned_row_admission_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(Default::default())}let row=source.pop_front().unwrap();if let Err(row)=self.try_push(row){source.push_front(row);return Err(ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"native original row admission exhausted its ledger"))}Ok(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})}
 
     pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
@@ -1049,3 +1060,28 @@ pub use edit_selection::OriginalHistoryEditSelection;
 
 #[path="replacements.rs"]
 mod replacements;
+
+#[cfg(test)]
+mod original_row_admission_laws {
+ use super::*;
+ use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
+ #[test]
+ fn original_option_row_denials_preserve_the_donor_and_paid_success_closes_every_backing() {
+  let law:serde_json::Value=serde_json::from_str(include_str!("row.json")).unwrap();
+  for row in law["cases"].as_array().unwrap() {
+   let mut ledger=ArtifactHistoryLedger::<i32>::empty();let demand=ledger.owned_row_admission_demands();let mut donor=Some(42);
+   let mut grant=RetainedCloneGrant{maximum_items:row["items"].as_u64().unwrap()as usize,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:row["depth"].as_u64().unwrap()as usize,..Default::default()};
+   if row["copy"].as_u64()<row["requiredCopy"].as_u64(){grant.maximum_copy_bytes=demand.copy_bytes-1}
+   if row["capacity"].as_u64()<row["requiredCapacity"].as_u64(){grant.maximum_capacity_bytes=demand.capacity_bytes-1}
+   let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ledger.admit_owned_row(&mut donor,grant));
+   let progress=turn.result.unwrap();assert!(progress.fits(grant));let admitted=row["admitted"].as_bool().unwrap();assert_eq!(donor.is_none(),admitted);assert_eq!(turn.work,u64::from(admitted));
+   assert_eq!(serde_json::to_value(ledger.iter().copied().collect::<Vec<_>>()).unwrap(),if admitted{serde_json::json!([42])}else{serde_json::json!([])});
+   assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,0));
+   if !admitted{assert_eq!(progress,RetainedCloneProgress::default());assert_eq!(donor,Some(42));}
+   while ledger.pop().is_some(){}
+   while ledger.retained_terminal_slot_count()>0{ledger.retire_terminal_slot(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}).unwrap();}
+   while !ledger.backing_is_empty(){let bytes=ledger.next_empty_page_release_byte_demand().unwrap();ledger.release_empty_page(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:bytes,maximum_depth:1,..Default::default()}).unwrap();}
+   assert!(ledger.terminal_is_empty());
+  }
+ }
+}

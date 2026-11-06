@@ -27,7 +27,7 @@
       "const": 1
     },
     "retryCpuStock": {
-      "const": 2
+      "const": 3
     },
     "writeWork": {
       "const": 1

@@ -21,8 +21,29 @@
     ]
   },
   {
+    "id": "import-jpeg",
+    "description": "Import JPEG stills through the visible file picker and verify durable images.",
+    "assets": [
+      "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/📚️examples/🎬️demo/🖼️assets/🖼️.jpg"
+    ]
+  },
+  {
+    "id": "import-corrupt",
+    "description": "Reject corrupt image input without partial document mutation.",
+    "assets": [
+      "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/🧫️fixtures/✂️truncated/rgba8-adam7-truncated.png"
+    ]
+  },
+  {
+    "id": "import-append",
+    "description": "Append repeated imports without overwriting existing frames."
+  },
+  {
     "id": "import-video",
-    "description": "Import a supported video through the visible file picker."
+    "description": "Import the finite 45-frame AVI through the visible file picker and verify the resulting stream.",
+    "assets": [
+      "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🧫️fixtures/🎬️.avi"
+    ]
   },
   {
     "id": "import-cancel",

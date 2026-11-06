@@ -29,10 +29,28 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
  pub fn source_identity(self)->u64{self.lease.get().id}
  /// 🪪️ Observes fixed issued-source and projection coordinates without retaining or authorizing access.
  pub fn reference_identity(self)->(u64,usize,usize,usize){(self.lease.get().id,self.projection.parent,self.projection.address,self.projection.discriminator)}
+ /// 📏️ Quotes one projected reference and its three source coordinates without accessing the original value.
+ pub fn projection_demand<U:?Sized>()->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<RetainedCloneRef<'a,U>>(),depth:1,..Default::default()}}
+ /// ⛽️ Composes a concrete accessor's bounded work with five reference and coordinate writes.
+ pub fn projection_work_demand(accessor_work:u64)->Result<u64,ValueError>{accessor_work.checked_add(5).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"projected source work overflow"))}
+ /// 🪡️ Invokes a bounded, nonallocating accessor only after the original work and physical grant admit its projected reference. The accessor must report its actual work and have no retained side effects. A borrowed projection copies no owned item.
+ pub fn project_paid<U:?Sized,F>(self,discriminator:usize,accessor_work:u64,maximum_work_units:u64,grant:RetainedCloneGrant,project:F)->RetainedWorkOutcome<Option<(RetainedCloneRef<'a,U>,RetainedCloneProgress)>>where F:FnOnce(&'a T)->RetainedWorkOutcome<&'a U>{
+  let quoted=match Self::projection_work_demand(accessor_work){Ok(v)=>v,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};let demand=Self::projection_demand::<U>();if maximum_work_units<quoted||!retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(None),work:0}}
+  let turn=project(self.value);let work=turn.work;if work>accessor_work{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"projected accessor exceeded its work quote")),work}}let value=match turn.result{Ok(value)=>value,Err(error)=>return RetainedWorkOutcome{result:Err(error),work}};let result=RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}};RetainedWorkOutcome{result:Ok(Some((result,RetainedCloneProgress{copied_items:0,copied_bytes:demand.copy_bytes,..Default::default()}))),work:work+5}
+ }
  pub fn project<U:?Sized,F>(self,discriminator:usize,project:F)->RetainedCloneRef<'a,U>where F:for<'source>FnOnce(&'source T)->&'source U{let value=project(self.value);RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}}}
  /// 🪤️ Projects through a fallible accessor so an absent original child refuses instead of aborting.
  pub fn try_project<U:?Sized,E,F>(self,discriminator:usize,project:F)->Result<RetainedCloneRef<'a,U>,E>where F:for<'source>FnOnce(&'source T)->Result<&'source U,E>{let value=project(self.value)?;Ok(RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}})}
  pub fn binding_copy_bytes(self)->usize{RetainedCloneBinding::alias_copy_bytes()}
+ /// ⛽️ Quotes fixed binding-state and four coordinate checks without reading the original source.
+ pub fn check_binding_work(binding:&Option<RetainedCloneBinding>)->u64{if binding.is_some(){5}else{1}}
+ /// 🪪️ Checks one issued original binding under its caller work and physical grant.
+ pub fn check_binding_paid(self,binding:&Option<RetainedCloneBinding>,maximum_work_units:u64,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<bool>>{
+  let quoted=Self::check_binding_work(binding);if maximum_work_units<quoted||!retained_clone_grant_admits(grant,RetirementDemand{depth:1,..Default::default()}){return RetainedWorkOutcome{result:Ok(None),work:0}}
+  let Some(expected)=binding.as_ref()else{return RetainedWorkOutcome{result:Ok(Some(false)),work:1}};let Some(lease)=expected.lease.as_ref()else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"projected source binding already closing")),work:1}};
+  let mismatch=|work|RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original clone source or projected path changed")),work};
+  if lease.get().id!=self.lease.get().id{return mismatch(2)}if expected.projection.parent!=self.projection.parent{return mismatch(3)}if expected.projection.address!=self.projection.address{return mismatch(4)}if expected.projection.discriminator!=self.projection.discriminator{return mismatch(5)}RetainedWorkOutcome{result:Ok(Some(true)),work:5}
+ }
  /// ✅️ Checks the original issued source and exact projected path without granting a new alias.
  pub fn check_binding(self,binding:&Option<RetainedCloneBinding>)->Result<bool,ValueError>{self.binding_demand(binding).map(|demand|demand.is_none())}
  /// 🔒️ Validates one original lease and projected path without exposing private custody.
@@ -49,11 +67,18 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
 impl<T:?Sized+Sync> RetainedCloneRef<'_,T>{
  /// 🧷️ Retains this exact issued source and projected path for resumed immutable work.
  pub fn retain_owned(self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<(RetainedOwnedProjection<T>,RetainedCloneProgress)>{unsafe{RetainedOwnedProjection::from_source(self,effect)}}
+ /// 🌿️ Retains a fallible original child only after its actual alias grant is admitted.
+ pub fn try_project_owned<U:?Sized+Sync,F>(self,discriminator:usize,project:F,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<(RetainedOwnedProjection<U>,RetainedCloneProgress)>where F:for<'source>FnOnce(&'source T)->Result<&'source U,ValueError>{
+  if let Err(error)=RetainedOwnedProjection::<U>::admit_constructor(effect.grant()){return RetainedWorkOutcome{result:Err(error),work:0}}
+  match self.try_project(discriminator,project){Ok(child)=>unsafe{RetainedOwnedProjection::from_source(child,effect)},Err(error)=>RetainedWorkOutcome{result:Err(error),work:0}}
+ }
 }
 fn close_query_busy()->ValueError{ValueError::literal(ValueRefusalKind::WorkLimit,"original close query already holds exclusive cursor custody")}
 pub struct RetainedCloneBinding{lease:ManuallyDrop<Option<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>,close:ManuallyDrop<Option<RetainedOwnerGate<retirement::controlled::ControlledRetirement<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>>>,projection:RetainedCloneProjection}
 impl RetainedCloneBinding{
  pub fn alias_copy_bytes()->usize{shared_issuance::SealedShared::<RetainedCloneLeaseOwner>::duplicate_copy_bytes()+std::mem::size_of::<Self>()+std::mem::size_of::<Option<Self>>()}
+ /// ⛽️ Quotes the actual sealed alias duplication and two binding-state writes.
+ pub const fn alias_work_demand()->u64{shared_issuance::SealedShared::<RetainedCloneLeaseOwner>::duplicate_work_demand()+2}
  fn new(lease:shared_issuance::SealedShared<RetainedCloneLeaseOwner>,projection:RetainedCloneProjection)->Self{Self{lease:ManuallyDrop::new(Some(lease)),close:ManuallyDrop::new(None),projection}}
  pub fn close_one(binding:&mut Option<Self>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{
   if binding.is_none(){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})}let grant=effect.grant();let demand=match Self::close_demand(binding,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};let work=match Self::close_work_demand(binding,grant.maximum_copy_bytes){Ok(work)=>work,Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};if effect.maximum_work_units()<work||!retained_clone::retained_clone_grant_admits(grant,demand){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}

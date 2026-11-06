@@ -1,0 +1,38 @@
+{
+  "stages": [
+    {
+      "origin": false,
+      "table": false,
+      "items": 1,
+      "copy": 0,
+      "capacity": 0,
+      "release": 0,
+      "work": 1
+    },
+    {
+      "origin": true,
+      "table": false,
+      "items": 1,
+      "copy": 6160,
+      "capacity": 6144,
+      "release": 6144,
+      "work": 1
+    },
+    {
+      "origin": true,
+      "table": true,
+      "items": 0,
+      "copy": 0,
+      "capacity": 0,
+      "release": 0,
+      "work": 0
+    }
+  ],
+  "table": {
+    "copy": 6160,
+    "capacity": 6144,
+    "work": 1
+  },
+  "callbackOnSetup": false,
+  "setupMayProgress": true
+}

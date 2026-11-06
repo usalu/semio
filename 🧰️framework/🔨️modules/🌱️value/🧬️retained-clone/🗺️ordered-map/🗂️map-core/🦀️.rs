@@ -128,7 +128,8 @@ impl<K: Serialize, V: Serialize> Serialize for RetainedOrderedMap<K, V> {
 }
 
 impl<K: RetireOwned, V: RetireOwned> RetireOwned for RetainedOrderedMap<K, V> {
-    fn retirement(self) -> Box<dyn crate::retirement::RetirementCursor> {
+    type Retirement=<Vec<Vec<(K,V)>> as RetireOwned>::Retirement;
+    fn retirement(self)->Self::Retirement{
         self.pages.retirement()
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { self.pages.retirement_birth_bytes() }

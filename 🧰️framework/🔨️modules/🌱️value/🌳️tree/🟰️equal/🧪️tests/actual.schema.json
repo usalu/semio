@@ -10,6 +10,7 @@
     "nullWork",
     "deniedWork",
     "cachedWork",
+    "workUnits",
     "maximumTurns",
     "laws",
     "compoundTraversal"
@@ -52,13 +53,16 @@
       ]
     },
     "nullWork": {
-      "const": 1
+      "const": 2
     },
     "deniedWork": {
       "const": 0
     },
     "cachedWork": {
       "const": 0
+    },
+    "workUnits": {
+      "const": 8192
     },
     "maximumTurns": {
       "const": 10000
@@ -76,7 +80,8 @@
     "compoundTraversal": {
       "const": {
         "zeroArrayLength": 4097,
-        "reserveCloseItems": 1,
+        "reserveCloseItems": 8,
+        "reserveCloseWork": 8,
         "wholeInlineCollapse": false,
         "callerStockRenewed": false
       }

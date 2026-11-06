@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "axes",
+    "stock",
+    "held",
+    "actual",
+    "unused",
+    "remaining",
+    "finalActual",
+    "foreignSource",
+    "repeatDebit",
+    "pendingObserverBlocksSettlement"
+  ],
+  "properties": {
+    "axes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "work"
+      ]
+    },
+    "stock": {
+      "const": [
+        64,
+        16384,
+        16384,
+        16384,
+        1000
+      ]
+    },
+    "held": {
+      "const": [
+        10,
+        2000,
+        1024,
+        1024,
+        600
+      ]
+    },
+    "actual": {
+      "const": [
+        2,
+        1000,
+        512,
+        400,
+        300
+      ]
+    },
+    "unused": {
+      "const": [
+        3,
+        400,
+        128,
+        100,
+        50
+      ]
+    },
+    "remaining": {
+      "const": [
+        5,
+        600,
+        384,
+        524,
+        250
+      ]
+    },
+    "finalActual": {
+      "const": [
+        7,
+        1600,
+        896,
+        924,
+        550
+      ]
+    },
+    "foreignSource": {
+      "const": false
+    },
+    "repeatDebit": {
+      "const": false
+    },
+    "pendingObserverBlocksSettlement": {
+      "const": true
+    }
+  }
+}

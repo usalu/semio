@@ -1,4 +1,5 @@
 //! 🔒️ Shared immutable values expose strong handles and retain their original issuer.
+pub const ORIGINAL_TRANSFER_WORK:u64=1;
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
 pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,RetireOwned,retirement,factory_ticket_demands,close_factory_ticket};
@@ -132,11 +133,13 @@ impl<T:Send+Sync+'static> SealedShared<T>{
  }
  /// 📤️ Transfers the same original value after one funded atomic strong-only unwrap.
  pub fn original_transfer_demand(&self)->Result<RetirementDemand,ValueError>{let source=self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original sealed value already transferred"))?;Ok(RetirementDemand{copy_bytes:(self.issuer.transfer_copy_bytes)(source.get()),release_bytes:Self::birth_bytes(),depth:1,..Default::default()})}
+/// 🧮️ The transfer quote and the actual unique-owner primitive share one declared work unit.
+ pub fn original_transfer_work_demand(&self)->Result<u64,ValueError>{self.original_transfer_demand()?;Ok(ORIGINAL_TRANSFER_WORK)}
  pub fn try_unwrap(mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<(T,RetainedCloneProgress),(ValueError,Self)>{let mut work=0;let result=(||{
   let demand=match self.original_transfer_demand(){Ok(demand)=>demand,Err(error)=>return Err((error,self))};
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original sealed value transfer is not funded"),self));}
   let Some(source)=self.source.take()else{return Err((ValueError::literal(ValueRefusalKind::InvalidValue,"original sealed value already transferred"),self));};
-  work=1;match source.try_owner(){Ok(mut owner)=>{let value=owner.take_value().expect("unique initialized original handback");Ok((value,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))},Err(source)=>{*self.source=Some(source);Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original sealed value still has live projections"),self))}}
+  work=ORIGINAL_TRANSFER_WORK;match source.try_owner(){Ok(mut owner)=>{let value=owner.take_value().expect("unique initialized original handback");Ok((value,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))},Err(source)=>{*self.source=Some(source);Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original sealed value still has live projections"),self))}}
  })();RetainedWorkOutcome{result,work}}
  pub fn identity(&self)->usize{self.source.as_ref().map_or(0,|source|source.identity())}
  pub fn get(&self)->&T{self.source.as_ref().expect("sealed shared source has transferred").get()}

@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "outcome": "success",
+      "ready": true,
+      "retryable": false
+    },
+    {
+      "outcome": "pending",
+      "ready": false,
+      "retryable": false
+    },
+    {
+      "outcome": "failure",
+      "ready": false,
+      "retryable": false
+    },
+    {
+      "outcome": "pre_effect_refusal",
+      "ready": false,
+      "retryable": true
+    }
+  ]
+}

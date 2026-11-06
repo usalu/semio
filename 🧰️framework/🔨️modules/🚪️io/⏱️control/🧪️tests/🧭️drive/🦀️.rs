@@ -17,7 +17,7 @@ fn close<T:semio_framework_value::retirement::RetireOwned>(value:T,caller:&mut O
  for index in 0..65536{if close.terminal_is_empty(){return}let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn_with_decoder(super::fixture_grant(),decoder,|cx|cx.with_original_retirement(|cx|{let d=close.selected_demand(super::fixture_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,d,|grant|{let result=close.step(grant);RetainedWorkOutcome{result,work:close.last_turn_work()}})?;Ok(())})));let p=caller.receipt();assert_eq!((born,freed),(p.retained_capacity_bytes,p.released_bytes));result.unwrap();assert!(index<65535);}
 }
 fn close_decoder(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant){
- for _ in 0..4096{if decoder.terminal_is_empty(){return}caller.turn(g,|cx|cx.with_original_retirement(|cx|{let demand=decoder.retirement_demands(g.maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|decoder.close_step(grant))?;Ok(())})).unwrap();}assert!(decoder.terminal_is_empty());
+ for _ in 0..4096{if decoder.terminal_is_empty(){return}caller.turn(g,|cx|cx.with_original_retirement(|cx|{let demand=decoder.retirement_demands(g.maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}assert!(decoder.terminal_is_empty());
 }
 #[test]
 fn snapshot_primitive_original_loan_precedes_effect_and_preserves_failed_work(){
@@ -70,7 +70,7 @@ fn snapshot_cursor_rich_outcome_conserves_original_work_causes_and_custody(){
   if let Some(pointers)=pointers{let failure=outcome.result.as_ref().err().unwrap().receiving_primary().unwrap();assert_eq!([failure.primary.as_ref(),failure.quote_refusal.as_ref(),failure.allocation_refusal.as_ref()].map(|error|error.map(|error|error.message.as_ptr())),pointers);}
   assert_eq!(outcome.result.is_ok(),!row["expected"]["cursorRetained"].as_bool().unwrap());
   close((cursor,original,outcome.result.err()),&mut caller,&mut decoder);
-  for index in 0..65536{if decoder.terminal_is_empty(){break}let d=decoder.retirement_demands(g.maximum_copy_bytes).unwrap();let release_only=d.copy_bytes==0&&d.release_bytes>0;let mut selected=g;if release_only{selected.maximum_copy_bytes=0;}let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(selected,|cx|cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|grant|decoder.close_step(grant))?;Ok(())})));let p=caller.receipt();assert_eq!((born,freed),(p.retained_capacity_bytes,p.released_bytes));result.unwrap();if release_only&&freed==frame_bytes{assert_eq!(p.copied_bytes,0);saw_release_only=true;}assert!(index<65535);}
+  for index in 0..65536{if decoder.terminal_is_empty(){break}let d=decoder.retirement_demands(g.maximum_copy_bytes).unwrap();let release_only=d.copy_bytes==0&&d.release_bytes>0;let mut selected=g;if release_only{selected.maximum_copy_bytes=0;}let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(selected,|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())})));let p=caller.receipt();assert_eq!((born,freed),(p.retained_capacity_bytes,p.released_bytes));result.unwrap();if release_only&&freed==frame_bytes{assert_eq!(p.copied_bytes,0);saw_release_only=true;}assert!(index<65535);}
   assert!(decoder.terminal_is_empty());caller.retire(g);
  }
  assert!(saw_release_only,"original decoder must physically release a terminal child without copy credit");

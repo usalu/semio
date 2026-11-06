@@ -1,0 +1,350 @@
+[
+  {
+    "required": [
+      {
+        "id": "a",
+        "phase": "editor"
+      },
+      {
+        "id": "b",
+        "phase": "viewer"
+      }
+    ],
+    "receipts": [
+      {
+        "id": "a",
+        "phase": "editor",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      },
+      {
+        "id": "b",
+        "phase": "viewer",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "viewer"
+        }
+      }
+    ],
+    "pass": true
+  },
+  {
+    "required": [
+      {
+        "id": "a",
+        "phase": "editor"
+      },
+      {
+        "id": "b",
+        "phase": "viewer"
+      }
+    ],
+    "receipts": [
+      {
+        "id": "a",
+        "phase": "editor",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      },
+      {
+        "id": "b",
+        "phase": "editor",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      }
+    ],
+    "pass": false
+  },
+  {
+    "required": [
+      {
+        "id": "a",
+        "phase": "editor"
+      },
+      {
+        "id": "b",
+        "phase": "viewer"
+      }
+    ],
+    "receipts": [
+      {
+        "id": "a",
+        "phase": "editor",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      },
+      {
+        "id": "b",
+        "phase": "viewer",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "unexecuted",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "viewer"
+        }
+      }
+    ],
+    "pass": false
+  },
+  {
+    "required": [
+      {
+        "id": "a",
+        "phase": "editor"
+      },
+      {
+        "id": "b",
+        "phase": "viewer"
+      }
+    ],
+    "receipts": [
+      {
+        "id": "a",
+        "phase": "editor",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      },
+      {
+        "id": "b",
+        "phase": "viewer",
+        "spaceId": "other",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "viewer"
+        }
+      }
+    ],
+    "pass": false
+  },
+  {
+    "required": [
+      {
+        "id": "a",
+        "phase": "editor"
+      },
+      {
+        "id": "b",
+        "phase": "viewer"
+      }
+    ],
+    "receipts": [
+      {
+        "id": "a",
+        "phase": "editor",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      },
+      {
+        "id": "a",
+        "phase": "editor",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      }
+    ],
+    "pass": false
+  },
+  {
+    "required": [
+      {
+        "id": "a",
+        "phase": "editor"
+      },
+      {
+        "id": "b",
+        "phase": "viewer"
+      }
+    ],
+    "receipts": [
+      {
+        "id": "a",
+        "phase": "editor",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      }
+    ],
+    "pass": false
+  },
+  {
+    "required": [
+      {
+        "id": "a",
+        "phase": "editor"
+      },
+      {
+        "id": "b",
+        "phase": "viewer"
+      }
+    ],
+    "receipts": [
+      {
+        "id": "a",
+        "phase": "editor",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      },
+      {
+        "id": "b",
+        "phase": "viewer",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      }
+    ],
+    "pass": false
+  },
+  {
+    "required": [
+      {
+        "id": "a",
+        "phase": "editor"
+      },
+      {
+        "id": "b",
+        "phase": "viewer"
+      },
+      {
+        "id": "c",
+        "phase": "cold"
+      }
+    ],
+    "receipts": [
+      {
+        "id": "a",
+        "phase": "editor",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      },
+      {
+        "id": "b",
+        "phase": "viewer",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "viewer"
+        }
+      },
+      {
+        "id": "c",
+        "phase": "cold",
+        "spaceId": "s",
+        "documentId": "d",
+        "status": "passed",
+        "evidence": [
+          "observed"
+        ],
+        "expectedActors": {
+          "a": "editor",
+          "b": "editor"
+        }
+      }
+    ],
+    "pass": true
+  }
+]

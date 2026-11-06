@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "held": 200,
+      "pending": 200,
+      "topUp": 100,
+      "oldCommit": 0,
+      "newCommit": 100,
+      "actual": 100,
+      "remaining": 200
+    },
+    {
+      "held": 200,
+      "pending": 200,
+      "topUp": 100,
+      "oldCommit": 150,
+      "newCommit": 100,
+      "actual": 250,
+      "remaining": 50
+    }
+  ],
+  "nearExhaustion": {
+    "available": 99,
+    "topUp": 100,
+    "admitted": false
+  },
+  "sameSerial": true,
+  "tombstoneTopUp": false,
+  "foreignSource": false,
+  "pendingObserverTopUp": false,
+  "wideItems": {
+    "items": 512,
+    "additional": 256,
+    "remaining": 768,
+    "stock": 2048
+  }
+}

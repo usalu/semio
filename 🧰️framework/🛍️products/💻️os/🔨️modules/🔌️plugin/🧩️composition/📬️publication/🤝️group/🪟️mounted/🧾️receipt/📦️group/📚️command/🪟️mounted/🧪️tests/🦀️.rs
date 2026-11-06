@@ -1,6 +1,6 @@
 /// 🧪️ Exercises the real mounted history consumer through its public application close ladder.
 #[doc(hidden)]
-pub fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>) {
+pub fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>,cx:&mut semio_framework_job::StepContext<'_>) {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let rows = fixture["cases"].as_array().unwrap().last().unwrap()["sequences"].as_array().unwrap();
     assert!(app.history.command_log.terminal_is_empty());
@@ -52,7 +52,7 @@ pub fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember + Membe
 
 /// 🧪️ Verifies actual held document IDs, shell retention and funded discarded owners through app maintenance.
 #[doc(hidden)]
-pub fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>) {
+pub fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>,cx:&mut semio_framework_job::StepContext<'_>) {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧹️pruning/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let row = &law["cases"][1];
     let held = app.stores.store.envelope().vcs.edits.last().unwrap().id.clone();
@@ -70,11 +70,11 @@ pub fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceMember +
         if !app.history.command_prune_requested() && app.history.pending_command_prune.is_none() { complete = true; break; }
         assert_eq!(app.history.command_log.iter().map(|entry| entry.seq).collect::<Vec<_>>(), before);
         let grant = app.mounted_policy.maintenance;
-        assert!(semio_plugin_ownership::bounded_ownership::plugin_grant_funds(app.maintenance_retirement_demands(grant.maximum_copy_bytes).unwrap(),grant));
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap());
+        assert!(semio_plugin_ownership::bounded_ownership::plugin_grant_funds(app.maintenance_retirement_demands(grant.maximum_copy_bytes,cx.fuel_remaining()).unwrap(),grant));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(cx,RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap());
         assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(grant).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(cx,grant).unwrap());
         assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     }
@@ -85,17 +85,17 @@ pub fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceMember +
     for _ in 0..100_000 {
         if app.history.command_log.pruned_terminal_is_empty() { break; }
         let demand = app.history.command_log.pruned_retirement_demands().unwrap().release_bytes;
-        let quoted = app.maintenance_retirement_demands(64).unwrap();
+        let quoted = app.maintenance_retirement_demands(64,cx.fuel_remaining()).unwrap();
         assert_eq!(quoted.release_bytes, demand);
         let grant = app.mounted_policy.maintenance;
         assert!(semio_plugin_ownership::bounded_ownership::plugin_grant_funds(quoted,grant));
         large_owner_seen |= demand == 65536;
         if demand > 0 {
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(RetainedCloneGrant { maximum_release_bytes: demand - 1, ..grant }).unwrap());
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(cx,RetainedCloneGrant { maximum_release_bytes: demand - 1, ..grant }).unwrap());
             assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(grant).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(cx,grant).unwrap());
         assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand, ..Default::default() }));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand));
     }

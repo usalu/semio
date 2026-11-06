@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "cleanup",
+    "semantic"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cleanup": {
+      "const": [
+        "Deallocate",
+        "CloseActorContext",
+        "CloseActorOutput",
+        "PublishActorFailure",
+        "ReadActorFailure",
+        "BorrowActorFailure",
+        "AcknowledgeActorFailure",
+        "AcknowledgeActorFailureChunk",
+        "CancelJob",
+        "CloseJobs",
+        "AcknowledgeJobOutput",
+        "AcknowledgeJobOutputChunk"
+      ]
+    },
+    "semantic": {
+      "const": [
+        "AdmitActorContext",
+        "AdmitActorInput",
+        "StartJob",
+        "StepJob",
+        "Poll",
+        "Restore"
+      ]
+    }
+  }
+}

@@ -26,6 +26,7 @@ name = "original-diagnostic"
 path = "../../⚠️diagnostic/🧪️tests/owning.rs"
 
 [dependencies]
+semio-framework-replication-retained-key = { path = "../../🔎️key/📦️packages/🦀️rust" }
 semio-framework-value-factory = { path = "../../../../../🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 semio-framework-mutation-diff = { path = "../../../🔺️diff/📦️packages/🦀️rust" }
 semio-framework-replication-retained-field = { path = "../../🪡️field/📦️packages/🦀️rust" }

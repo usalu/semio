@@ -65,7 +65,3 @@ impl<T> Drop for OriginalChildTurnReturn<T>{fn drop(&mut self){assert!(std::thre
 fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 fn narrowed_ceiling(cx:&StepContext<'_>,requested:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{let posted=delta(cx.reserved_return_progress,cx.retained_progress())?;if !posted.fits(cx.retained){return Err(refused("original child parent recipient already exceeds its incoming ceiling"))}let remaining=cx.retained_grant();let add=|paid:usize,wanted:usize,available:usize|paid.checked_add(wanted.min(available)).ok_or_else(||refused("original child loan ceiling overflow"));Ok(RetainedCloneGrant{maximum_items:add(posted.copied_items,requested.maximum_items,remaining.maximum_items)?,maximum_copy_bytes:add(posted.copied_bytes,requested.maximum_copy_bytes,remaining.maximum_copy_bytes)?,maximum_capacity_bytes:add(posted.retained_capacity_bytes,requested.maximum_capacity_bytes,remaining.maximum_capacity_bytes)?,maximum_release_bytes:add(posted.released_bytes,requested.maximum_release_bytes,remaining.maximum_release_bytes)?,maximum_depth:remaining.maximum_depth.min(requested.maximum_depth)})}
 
-
-
-
-

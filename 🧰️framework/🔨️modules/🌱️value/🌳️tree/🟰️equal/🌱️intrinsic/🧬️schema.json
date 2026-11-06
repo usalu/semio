@@ -6,7 +6,8 @@
     "version",
     "cases",
     "stock",
-    "bodyCopyBytes"
+    "bodyCopyBytes",
+    "maximumWorkUnits"
   ],
   "properties": {
     "version": {
@@ -74,6 +75,10 @@
       }
     },
     "bodyCopyBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumWorkUnits": {
       "type": "integer",
       "minimum": 1
     }

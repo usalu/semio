@@ -882,7 +882,7 @@ pub fn is_framework_reserved_action_id(action: &str) -> bool {
         || action == CANCEL_TYPED_OPERATION_ACTION_ID
         || action == semio_framework::HOST_EVENT_ACTION_ID
         || matches!(action, REVERT_TO_COMMAND_ACTION_ID | SET_HISTORY_COMMAND_FILTER_ACTION_ID | NOTE_SHELL_COMMAND_ACTION_ID | RECORD_TUTORIAL_ACTION_ID)
-        || matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID)
+        || matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::EXPORT_MEDIA_FILE_ACTION_ID | semio_framework::EXPORT_SNAPSHOT_FILE_ACTION_ID)
 }
 
 /// 📜️ Joins the app's declared bounded-first-step proofs to the live registry and its exact factory registrations.

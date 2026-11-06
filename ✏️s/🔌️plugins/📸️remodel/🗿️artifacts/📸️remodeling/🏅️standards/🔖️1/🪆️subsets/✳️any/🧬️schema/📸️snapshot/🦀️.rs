@@ -98,7 +98,7 @@ pub const REMODELING_DIALECT: semio_framework_artifact_reference::Dialect = semi
 mod asset_handles_and_durable_content;
 pub use asset_handles_and_durable_content::{
     committed_remodeling_asset_handle, durable_remodeling_asset, image_asset_child_handle, remodeling_asset, remodeling_asset_chunk_source, remodeling_asset_dimensions, remodeling_content_is_complete, remodeling_durable_chunk,
-    store_remodeling_asset, RemodelingAssetChild, RemodelingAssetChunkSource, RemodelingContentDigest, RemodelingContentKind, RemodelingDurableArtifact, RemodelingDurableArtifactStore, RemodelingMeshChild, REMODELING_DURABLE_CHUNK_RAW_BYTES,
+    store_remodeling_asset, RemodelingAssetChild, RemodelingAssetChunkSource, RemodelingContentDigest, RemodelingContentKind, RemodelingDurableArtifact, RemodelingDurableArtifactStore, RemodelingMeshChild, RemodelingOrderedAssetStore, RemodelingOrderedDurableArtifactStore, REMODELING_DURABLE_CHUNK_RAW_BYTES,
 };
 
 #[path = "🕸️mesh-handles/🦀️.rs"]
@@ -150,6 +150,19 @@ pub fn default_remodeling_scene() -> RemodelingSnapshot {
 //#endregion 🔖️Domain
 
 //#region 🔖️CanonicalOrder
+macro_rules! retained_stored_key {
+    ($row:ty, $field:ident) => {
+        impl store::RetainedKeyedRow for $row {
+            fn retained_key(&self) -> &String { &self.$field }
+        }
+    };
+}
+
+retained_stored_key!(MediaStream, id);
+retained_stored_key!(GroundControlPoint, id);
+retained_stored_key!(CameraCalibration, id);
+retained_stored_key!(RigExtrinsic, camera_id);
+
 /// 🔢️ Insertion point that keeps a keyed collection in ascending key order. Every collection this
 /// vocabulary addresses by key — `streams` and `gcps` by `id`, `calibration.cameras` by `id`,
 /// `calibration.rig` by `camera_id`, a stream's `frames` by `(index, asset_id)`, a GCP's

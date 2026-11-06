@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { JSDOM } from "jsdom";
 import Ajv2020 from "ajv/dist/2020";
+import Ajv from "ajv";
 import { mediaTransportLabels } from "../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts";
 import { collectMediaTransportBytes, type MediaTransportPort } from "../../🎬️media/🚚️lifecycle/🟦️.ts";
 import { mediaTransportPort } from "../../🎬️media/📡️channel/🟦️.ts";
@@ -31,7 +32,7 @@ function command(operation: BrowserMediaCommand["operation"], token = "accepted:
 function port(state: "complete" | "running" = "complete", calls: string[] = []): MediaTransportPort {
   return {
     submitMediaExport: async () => { calls.push("submit"); return handle; },
-    pollMediaExport: async () => { calls.push("poll"); return { handle, state, applied_progress: 1n, checkpoint_available: false, detail: "", descriptor: [], mime_type: "audio/wav", total_bytes: 4n }; },
+    pollMediaExport: async () => { calls.push("poll"); return { handle, state, applied_progress: 1n, checkpoint_available: false, detail: "", descriptor: [1], mime_type: "audio/wav", total_bytes: 4n }; },
     cancelMediaExport: async () => { calls.push("cancel"); },
     takeMediaExportChunk: async () => { calls.push("take"); return { handle, data: Uint8Array.from(fixture.bytes), terminal: true }; },
   };
@@ -148,7 +149,7 @@ describe("accepted browser media authority", () => {
     expect(calls).toEqual(["submit", "poll", "cancel"]);
   });
   it("uses the same channel adapter and strict Done reply as React", async () => {
-    const frames = { submitMediaExport: async () => [{ MediaExportSubmitted: { handle, in_reply_to: 1n } }], pollMediaExport: async () => [{ MediaExportStatus: { handle, in_reply_to: 1n, state: "complete", applied_progress: 0n, checkpoint_available: false, detail: "", descriptor: [], mime_type: "audio/wav", total_bytes: 4n } }], cancelMediaExport: async () => [], takeMediaExportChunk: async () => [{ MediaExportChunk: { handle, in_reply_to: 1n, data: fixture.bytes, terminal: true } }] };
+    const frames = { submitMediaExport: async () => [{ MediaExportSubmitted: { handle, in_reply_to: 1n } }], pollMediaExport: async () => [{ MediaExportStatus: { handle, in_reply_to: 1n, state: "complete", applied_progress: 0n, checkpoint_available: false, detail: "", descriptor: [1], mime_type: "audio/wav", total_bytes: 4n } }], cancelMediaExport: async () => [], takeMediaExportChunk: async () => [{ MediaExportChunk: { handle, in_reply_to: 1n, data: fixture.bytes, terminal: true } }] };
     const adapter = mediaTransportPort(() => frames as never);
     const bytes = await collectMediaTransportBytes({ instanceId: 17, parentDocumentId: "document-7", revision: handle.base_revision, generation: handle.generation, mediaType: "audio/wav", port: adapter, cancelled: () => false, progress: () => {} });
     expect(bytes?.chunks[0]).toEqual(Uint8Array.from(fixture.bytes));
@@ -283,7 +284,7 @@ describe("imperative media DOM host", () => {
     const create = vi.fn(() => "blob:media"); const revoke = vi.fn();
     vi.stubGlobal("URL", class extends URL { static createObjectURL = create; static revokeObjectURL = revoke; });
     let release!: () => void; const calls: string[] = [];
-    const source = { ...port("complete", calls), pollMediaExport: async () => { calls.push("poll"); await new Promise<void>((resolve) => { release = resolve; }); return { handle, state: "complete" as const, applied_progress: 0n, checkpoint_available: false, detail: "", descriptor: [], mime_type: "audio/wav", total_bytes: 4n }; } };
+    const source = { ...port("complete", calls), pollMediaExport: async () => { calls.push("poll"); await new Promise<void>((resolve) => { release = resolve; }); return { handle, state: "complete" as const, applied_progress: 0n, checkpoint_available: false, detail: "", descriptor: [1], mime_type: "audio/wav", total_bytes: 4n }; } };
     const root = document.createElement("div"); document.body.append(root);
     const overlay = createBrowserMediaOverlay(root, () => source);
     overlay.accept([slot()]); await turn(); overlay.accept([]); release(); await turn();
@@ -298,7 +299,7 @@ describe("trusted app document identity", () => {
   it("matches shared Rust vectors and independent Ajv/LEB128 without lossy u64 conversion", async () => {
     const vectors = JSON.parse(readFileSync(resolve(identityFixtureDirectory, "🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(channelDocumentIdentitySchemaUrl, "utf8"));
-    const validate = new Ajv2020().compile(schema);
+    const validate = new Ajv().compile(schema);
     const oracleModule = "@webassemblyjs/leb128/lib/leb.js";
     const { default: leb } = await import(oracleModule);
     const u64 = (value: bigint): number[] => { const input = Buffer.alloc(8); input.writeBigUInt64LE(value); return Array.from(leb.encodeUIntBuffer(input)); };
@@ -361,7 +362,7 @@ for (const kind of ["audio", "video"] as const) it(`runs the production browser 
       if (video) wave = Uint8Array.from(atob(video), (character) => character.charCodeAt(0));
       const owner = { app_instance_id: accepted.appInstanceId, parent_document_id: accepted.parentDocumentId, operation_id: 9n, base_revision: BigInt(accepted.props.revision), generation: BigInt(accepted.props.resource!.generation) };
       const calls: string[] = []; let offset = 0;
-      const port = { submitMediaExport: async () => { calls.push("submit"); return owner; }, pollMediaExport: async () => { calls.push("poll"); return { handle: owner, state: "complete", applied_progress: 0n, checkpoint_available: false, descriptor: [], mime_type: accepted.props.mediaType, total_bytes: BigInt(wave.length), detail: "" }; }, cancelMediaExport: async () => { calls.push("cancel"); }, takeMediaExportChunk: async () => { calls.push("take"); const data = wave.slice(offset, offset + 4096); offset += data.length; return { handle: owner, data, terminal: offset === wave.length }; } };
+      const port = { submitMediaExport: async () => { calls.push("submit"); return owner; }, pollMediaExport: async () => { calls.push("poll"); return { handle: owner, state: "complete", applied_progress: 0n, checkpoint_available: false, descriptor: [1], mime_type: accepted.props.mediaType, total_bytes: BigInt(wave.length), detail: "" }; }, cancelMediaExport: async () => { calls.push("cancel"); }, takeMediaExportChunk: async () => { calls.push("take"); const data = wave.slice(offset, offset + 4096); offset += data.length; return { handle: owner, data, terminal: offset === wave.length }; } };
       const nativeRevoke = URL.revokeObjectURL.bind(URL); let revoked = 0;
       URL.revokeObjectURL = (url) => { revoked++; nativeRevoke(url); };
       const host = (window as unknown as { MediaHostModule: { createBrowserMediaOverlay: typeof createBrowserMediaOverlay } }).MediaHostModule.createBrowserMediaOverlay(document.getElementById("root")!, () => port as MediaTransportPort);

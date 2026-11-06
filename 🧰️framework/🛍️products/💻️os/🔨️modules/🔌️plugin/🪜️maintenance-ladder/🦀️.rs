@@ -646,7 +646,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         }
     }
 
-    pub fn maintenance_unit_demand(&self, unit: MaintenanceUnit, body: usize) -> Result<Option<RetirementDemand>, ValueError> {
+    pub fn maintenance_unit_demand(&self, unit: MaintenanceUnit, body: usize,maximum_work_units:u64) -> Result<Option<RetirementDemand>, ValueError> {
         let present = |demand: RetirementDemand| (demand != RetirementDemand::default()).then_some(demand);
         Ok(match unit {
             MaintenanceUnit::AgentPreview=>self.tools.agent_lane_preview.as_ref().map(|state|state.retirement_demands(body,self.tools.tool_cancellations.handle())).transpose()?,
@@ -656,7 +656,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             MaintenanceUnit::PrivateChildGroup(operation) => Some(self.child_composition.private_child_group_operation_close_demands(operation, body)?),
             MaintenanceUnit::DirectIngress => Some(self.stores.window_config_store.direct_ingress_demands(body)?),
             MaintenanceUnit::GrantedMounted => Some(self.granted_mounted_retirement_demands(body)?),
-            MaintenanceUnit::ToolOverlay => Some(self.render_ref().tool_overlay_retirement_demand(body,false)?),
+            MaintenanceUnit::ToolOverlay => Some(self.render_ref().tool_overlay_retirement_demand(body,maximum_work_units)?),
             MaintenanceUnit::ToolRuns => present(self.tool_run_ref().tool_run_retirement_demand(body)?),
             MaintenanceUnit::TimeTravel => present(self.time_travel_ref().time_travel_retirement_demands(body)?),
             MaintenanceUnit::Pressure(stage) | MaintenanceUnit::Stage(stage) => self.maintenance_stage_demand(stage, body)?,
@@ -664,10 +664,10 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
     }
 
     /// 📏️ Quotes the first unit with work, in the exact order [`Self::maintenance_ladder_step`] visits them.
-    pub fn maintenance_ladder_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn maintenance_ladder_demands(&self, body: usize,maximum_work_units:u64) -> Result<RetirementDemand, ValueError> {
         for position in 0..MAINTENANCE_POSITIONS {
             let Some(unit) = self.maintenance_unit_at(position, self.maintenance.maintenance_stage) else { continue };
-            if let Some(demand) = self.maintenance_unit_demand(unit, body)?.filter(|demand| *demand != RetirementDemand::default()) {
+            if let Some(demand) = self.maintenance_unit_demand(unit, body,maximum_work_units)?.filter(|demand| *demand != RetirementDemand::default()) {
                 return Ok(demand);
             }
         }

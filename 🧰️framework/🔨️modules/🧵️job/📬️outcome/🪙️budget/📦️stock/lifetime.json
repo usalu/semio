@@ -1,0 +1,24 @@
+{
+  "events": [
+    {
+      "owner": "B",
+      "event": "born",
+      "bytes": 100
+    },
+    {
+      "owner": "A",
+      "event": "born",
+      "bytes": 100
+    },
+    {
+      "owner": "B",
+      "event": "retired",
+      "bytes": 100
+    }
+  ],
+  "owner": "A",
+  "liveBytes": 100,
+  "aggregateNewCapacity": 100,
+  "aggregateOldRelease": 100,
+  "refund": false
+}

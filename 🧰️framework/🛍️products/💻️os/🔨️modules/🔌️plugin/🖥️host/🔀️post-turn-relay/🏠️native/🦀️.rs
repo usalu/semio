@@ -1,7 +1,7 @@
 //! 🏠️ The admitting Source owns the real instance; immutable compiled/runtime parents are borrowed from their original cache.
 #[path="🌱️projection.rs"]
 mod projection;
-pub(crate) use projection::{with_frozen_history,reconcile_frozen_history,FrozenReceiptFrontier};
+pub use projection::{with_bootstrap_history_parts,attest_bootstrap_header_return,with_frozen_history_parts,attest_header_return,attest_actor_failure_if_needed,FrozenReceiptFrontier};
 use super::*;
 use semio_framework_job::{OriginalNativeRetirement,OriginalTurnFailure,StepContext};
 use semio_plugin_host_guest_runtime::CompiledHandle;
@@ -44,12 +44,14 @@ impl<T:NativeInstanceRetirement> OriginalNativeRetirement for NativeInstanceHome
 }
 impl<T:NativeInstanceRetirement> Drop for NativeInstanceHome<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native instance parent requires genuine Source-funded physical closure")}}
 #[derive(Default)]
-pub struct GuestRelayNativeState{pub(super) response:Option<GuestRelayNativeResponse>}
+pub struct GuestRelayNativeState{pub(super) controller:Option<crate::GuestRelayColdController>}
 impl NativeInstanceRetirement for GuestRelayNativeState{
- fn close_step(&mut self,_:&GuestRuntimes,_:&mut GuestInstance,_:&CompiledHandle,_:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.response.is_some(){return Err(native_refusal("guest response retained").into())}Ok(true)}
- fn close_unopened(&mut self,_:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.response.is_some(){return Err(native_refusal("unopened receiver has guest response").into())}Ok(true)}
- fn terminal_is_empty(&self)->bool{self.response.is_none()}
+ fn close_step(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,_:&CompiledHandle,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if let Some(owner)=self.controller.as_mut(){if !owner.terminal_is_empty(){owner.close_step(runtime,instance,cx)?;return Ok(false)}if !native_state_metadata(cx)?{return Ok(false)}self.controller.take();}Ok(true)}
+ fn close_unopened(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if let Some(owner)=self.controller.as_mut(){if !owner.terminal_is_empty(){owner.close_unopened(cx)?;return Ok(false)}if !native_state_metadata(cx)?{return Ok(false)}self.controller.take();}Ok(true)}
+ fn terminal_is_empty(&self)->bool{self.controller.is_none()}
+ fn close_requires_execution(&self)->bool{self.controller.as_ref().is_some_and(|owner|!owner.terminal_is_empty())}
 }
+fn native_state_metadata(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let bytes=std::mem::size_of::<Option<crate::GuestRelayColdController>>();let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0||cx.fuel_remaining()==0{return Ok(false)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 pub type GuestRelayNativeHome=NativeInstanceHome<GuestRelayNativeState>;
 fn native_metadata(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();let bytes=std::mem::size_of::<Option<GuestInstance>>();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 fn native_refusal(message:&'static str)->semio_framework_value::ValueError{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,message)}

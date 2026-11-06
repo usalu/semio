@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "rules"
+  ],
+  "properties": {
+    "cases": {
+      "const": [
+        {
+          "axis": "items",
+          "retained": true,
+          "marker": "none"
+        },
+        {
+          "axis": "copy",
+          "retained": true,
+          "marker": "none"
+        },
+        {
+          "axis": "capacity",
+          "retained": true,
+          "marker": "none"
+        },
+        {
+          "axis": "depth",
+          "retained": true,
+          "marker": "none"
+        },
+        {
+          "axis": "allocator",
+          "retained": true,
+          "marker": "zero"
+        },
+        {
+          "axis": "ready",
+          "retained": false,
+          "marker": "extent"
+        }
+      ]
+    },
+    "rules": {
+      "const": {
+        "allocateBeforeOwnerTransfer": true,
+        "inlineConstructorAllocations": 0,
+        "originalSlotPreservedOnFailure": true,
+        "oneActualMarker": true,
+        "realHeapConservation": true
+      }
+    }
+  }
+}

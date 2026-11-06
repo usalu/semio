@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "limits": [
+    0,
+    1,
+    2,
+    4,
+    32
+  ],
+  "cancellationTurns": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    8,
+    16
+  ],
+  "record": {
+    "text": "actual 源 🌱",
+    "values": [
+      "alpha",
+      "βeta",
+      "日",
+      ""
+    ]
+  },
+  "invariants": [
+    "zero work preserves original and every partial owner",
+    "quote never exceeds actual selected maximum",
+    "child receives remaining original work",
+    "cancellation closes real staged record fields"
+  ],
+  "sourceStock": {
+    "items": 4096,
+    "copyBytes": 16777216,
+    "capacityBytes": 16777216,
+    "releaseBytes": 16777216,
+    "depth": 128,
+    "fuel": 1000000
+  }
+}

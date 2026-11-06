@@ -41,6 +41,7 @@ name = "compile_cancellation_law"
 path = "../../🏠️workspace/🧪️tests/⏱️compile-cancellation-law/🦀️.rs"
 
 [dependencies]
+semio-os-mcp-process-arena = { path = "../../🌱️process-arena/📦️packages/🦀️rust" }
 semio-ui-contract-validation = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
@@ -75,6 +76,7 @@ semio-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", pa
 semio-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
 
 [dev-dependencies]
+semio-plugin-guest-contract = { path = "../../../🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
 framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
 semio-framework-async = { workspace = true }
@@ -95,3 +97,7 @@ semio-os-mcp-hub-remote = { path = "../../🌍️hub-remote/📦️packages/🦀
 
 [features]
 testkit = []
+
+[[test]]
+name = "default-first-response-policy"
+path = "../../🎚️config/🧪️tests/📥️first-response/🦀️.rs"

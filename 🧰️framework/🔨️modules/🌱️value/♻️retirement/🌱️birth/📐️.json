@@ -1,0 +1,41 @@
+{
+  "cases": [
+    {
+      "axis": "items",
+      "retained": true,
+      "marker": "none"
+    },
+    {
+      "axis": "copy",
+      "retained": true,
+      "marker": "none"
+    },
+    {
+      "axis": "capacity",
+      "retained": true,
+      "marker": "none"
+    },
+    {
+      "axis": "depth",
+      "retained": true,
+      "marker": "none"
+    },
+    {
+      "axis": "allocator",
+      "retained": true,
+      "marker": "zero"
+    },
+    {
+      "axis": "ready",
+      "retained": false,
+      "marker": "extent"
+    }
+  ],
+  "rules": {
+    "allocateBeforeOwnerTransfer": true,
+    "inlineConstructorAllocations": 0,
+    "originalSlotPreservedOnFailure": true,
+    "oneActualMarker": true,
+    "realHeapConservation": true
+  }
+}

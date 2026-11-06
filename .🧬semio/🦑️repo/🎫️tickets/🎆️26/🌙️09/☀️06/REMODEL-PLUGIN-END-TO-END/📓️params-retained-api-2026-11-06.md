@@ -1,0 +1,7 @@
+# Params retained API audit
+
+Current RetainedRowPatchFields trait at framework replication mutation retained/🩹️patch/🦀️.rs:32–43 returns (Fields, work) from new, exposes new_work_demand, requires maximum_work_units on demand, advance_work_demand and advance, and returns OriginalRetirementOutcome from advance/close. The macro binds both genuine source identities on its first turns and projects each field. Existing core patch unit test lines 13–40 uses old signatures and is stale; do not copy it verbatim. No current external product example was established in bounded search.
+
+RemodelingParamsDiff has eight Option facets matching ReconstructionParams; the latter derives RetainedClone and RetireOwned. Existing Remodel code uses semio_framework_pack_json::from_json_str with JsonMemberPolicy::Reject and to_json_string with ToValue. Fund and close cursor, original sources and owned results. No execution.
+
+Current OriginalOwnedEntry exposes next_demands(copy) and actual work in advance/close outcomes, but no work demand or maximum_work_units argument. UpdateCursor similarly quotes physical copy/capacity/depth and returns actual work after advancement without a pre-turn work quote. A parent cannot infer admission for an arbitrary remaining work budget from a post-effect receipt; phase 5 and close delegate retirement, so a truthful producer quote or proven bound is needed. Current params eight-field macro roster matches the schema; no additional concrete defect established. No execution.

@@ -1,0 +1,66 @@
+//! 🎟️ The original paid semantic result remains a small descriptor while payload headers stay inside the producer.
+use crate::RetainedJobPayload;
+use semio_framework_value_retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value_retained_clone::RetainedWorkOutcome;
+use std::mem::{MaybeUninit};
+
+/// 🚦️ See `README.md`.
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+pub enum JobOutcomeKind{Yield,PreviewReady,CheckpointReady{applied_progress:u64},Complete,Cancelled,Fault}
+
+/// 💼️ See `README.md`.
+#[derive(Debug)]
+pub struct OriginalOutcomeDescriptor<A>{kind:JobOutcomeKind,admission:A,original:[Option<usize>;2],acknowledged:bool}
+
+/// 🤝️ See `README.md`.
+#[derive(Debug)]
+pub enum OriginalOutcomeView<'a,A>{
+ Yield{admission:&'a A},
+ PreviewReady{payload:&'a RetainedJobPayload,admission:&'a A},
+ CheckpointReady{state:&'a RetainedJobPayload,applied_progress:u64,admission:&'a A},
+ Complete{state:Option<&'a RetainedJobPayload>,output:Option<&'a RetainedJobPayload>,admission:&'a A},
+ Cancelled{admission:&'a A},
+ Fault{detail:&'a RetainedJobPayload,admission:&'a A},
+}
+fn address(original:Option<&RetainedJobPayload>)->Option<usize>{original.map(|original|original as*const _ as usize)}
+fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"semantic descriptor requires its original paid result and same native payload")}
+
+impl<A> OriginalOutcomeDescriptor<A>{
+ pub fn from_original(kind:JobOutcomeKind,admission:A,original:[Option<&RetainedJobPayload>;2])->Self{Self{kind,admission,original:original.map(address),acknowledged:false}}
+ pub fn kind(&self)->JobOutcomeKind{self.kind}
+ pub fn admission(&self)->&A{&self.admission}
+ pub fn is_terminal(&self)->bool{matches!(self.kind,JobOutcomeKind::Complete|JobOutcomeKind::Cancelled|JobOutcomeKind::Fault)}
+ pub fn is_acknowledged(&self)->bool{self.acknowledged}
+ fn matches(&self,kind:JobOutcomeKind,original:[Option<&RetainedJobPayload>;2])->Result<(),ValueError>{if self.acknowledged||kind!=self.kind||original.map(address)!=self.original{return Err(invalid())}Ok(())}
+ pub fn yielded(&self)->Result<OriginalOutcomeView<'_,A>,ValueError>{self.matches(JobOutcomeKind::Yield,[None,None])?;Ok(OriginalOutcomeView::Yield{admission:&self.admission})}
+ pub fn preview<'a>(&'a self,payload:&'a RetainedJobPayload)->Result<OriginalOutcomeView<'a,A>,ValueError>{self.matches(JobOutcomeKind::PreviewReady,[Some(payload),None])?;Ok(OriginalOutcomeView::PreviewReady{payload,admission:&self.admission})}
+ pub fn checkpoint<'a>(&'a self,state:&'a RetainedJobPayload)->Result<OriginalOutcomeView<'a,A>,ValueError>{let JobOutcomeKind::CheckpointReady{applied_progress}=self.kind else{return Err(invalid())};self.matches(self.kind,[Some(state),None])?;Ok(OriginalOutcomeView::CheckpointReady{state,applied_progress,admission:&self.admission})}
+ pub fn complete<'a>(&'a self,state:Option<&'a RetainedJobPayload>,output:Option<&'a RetainedJobPayload>)->Result<OriginalOutcomeView<'a,A>,ValueError>{self.matches(JobOutcomeKind::Complete,[state,output])?;Ok(OriginalOutcomeView::Complete{state,output,admission:&self.admission})}
+ pub fn cancelled(&self)->Result<OriginalOutcomeView<'_,A>,ValueError>{self.matches(JobOutcomeKind::Cancelled,[None,None])?;Ok(OriginalOutcomeView::Cancelled{admission:&self.admission})}
+ pub fn fault<'a>(&'a self,detail:&'a RetainedJobPayload)->Result<OriginalOutcomeView<'a,A>,ValueError>{self.matches(JobOutcomeKind::Fault,[Some(detail),None])?;Ok(OriginalOutcomeView::Fault{detail,admission:&self.admission})}
+ /// 🔔️ See `README.md`.
+ pub fn acknowledge(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{if self.acknowledged{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.acknowledged=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()})),work:1}}
+}
+impl<A> Drop for OriginalOutcomeDescriptor<A>{fn drop(&mut self){assert!(std::thread::panicking()||self.acknowledged,"original semantic descriptor requires funded acknowledgement before resumption or closure");}}
+impl<A> OriginalOutcomeView<'_,A>{
+ pub fn admission(&self)->&A{match self{Self::Yield{admission}|Self::PreviewReady{admission,..}|Self::CheckpointReady{admission,..}|Self::Complete{admission,..}|Self::Cancelled{admission}|Self::Fault{admission,..}=>admission}}
+ pub fn is_terminal(&self)->bool{matches!(self,Self::Complete{..}|Self::Cancelled{..}|Self::Fault{..})}
+}
+
+/// 📬️ See `README.md`.
+pub struct OriginalOutcomeDescriptorSlot<A>{original:MaybeUninit<OriginalOutcomeDescriptor<A>>,present:bool}
+impl<A> OriginalOutcomeDescriptorSlot<A>{
+ pub unsafe fn initialize_empty(target:*mut Self){unsafe{std::ptr::addr_of_mut!((*target).present).write(false);}}
+ pub fn empty()->Self{Self{original:MaybeUninit::uninit(),present:false}}
+ pub fn is_empty(&self)->bool{!self.present}
+ pub fn original(&self)->Option<&OriginalOutcomeDescriptor<A>>{if self.present{Some(unsafe{self.original.assume_init_ref()})}else{None}}
+ pub fn retain(&mut self,original:OriginalOutcomeDescriptor<A>)->Result<(),OriginalOutcomeDescriptor<A>>{if self.present{return Err(original)}self.original.write(original);self.present=true;Ok(())}
+ pub fn retirement_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:0,depth:if self.original().is_some_and(|original|!original.is_acknowledged()){2}else{usize::from(self.present)},..Default::default()}}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  if !self.present{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let demand=self.retirement_demands();if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_depth<demand.depth{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  let original=unsafe{self.original.assume_init_mut()};if !original.is_acknowledged(){let turn=original.acknowledge(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
+  unsafe{self.original.assume_init_drop();}self.present=false;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()})),work:1}
+ }
+}
+impl<A> Drop for OriginalOutcomeDescriptorSlot<A>{fn drop(&mut self){assert!(std::thread::panicking()||self.is_empty(),"exclusive worker semantic descriptor requires original paid acknowledgement and removal");}}
+

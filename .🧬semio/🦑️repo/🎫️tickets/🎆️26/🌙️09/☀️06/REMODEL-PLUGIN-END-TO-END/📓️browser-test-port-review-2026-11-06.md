@@ -1,0 +1,7 @@
+# Browser Test Port Review — 2026-11-06
+
+OS dev 🧪️tests/👥️two-human/🟦️.ts:107–125 creates an artifact as A, opens that artifact by ID as B, awaits both mounts, and checks presence 2/2; its internal journey dispatch is at line 138. That is the concrete potential extension point. A failed presence check is recorded but does not itself abort execution, so a callback requiring the condition must explicitly gate on the actual result.
+
+Current 🔑️sessions/🟦️.ts exports Session with playwright BrowserContext and Page, and its public helpers accept Page. 🧭️journeys/🟦️.ts has an internal JourneyContext containing those sessions and likewise imports Page. OS dev 🧪️testing/🚶️journey/🟦️.ts imports Page. Repo library 🧪️testing/🌐️browser provides browser launch policy and preparation, not a UI driver capability interface. Bounded inspection of these relevant owned test/browser modules found no existing tool-neutral UI port or external plugin callback.
+
+For the proposed composition, the minimal long-term boundary would be a narrow first-party test UI capability contract and a private Playwright adapter at the A/B mount seam, passing only actual owned data, explicit cancellation and capabilities needed by the plugin. Plugin scenario logic remains under its owner. Existing helpers can be used internally by the adapter, but exporting Session, Page, or existing helper signatures would expose external types. This is a recommendation, not an assertion that such an interface currently exists or that any test passed.

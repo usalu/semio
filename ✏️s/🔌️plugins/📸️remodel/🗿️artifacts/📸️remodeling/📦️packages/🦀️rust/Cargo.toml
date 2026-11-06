@@ -43,6 +43,7 @@ semio-framework-value = { workspace = true }
 base64_codec = { workspace = true }
 number = { workspace = true }
 png = "0.17.16"
+gltf = { version = "1.4.1", default-features = false, features = ["utils"] }
 semio-framework = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }

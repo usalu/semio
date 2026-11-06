@@ -12,7 +12,7 @@ fn box_has_triangles() {
 #[test]
 fn glb_round_trip() {
     let mesh = mesh_uv_sphere(1.0, 8, 6);
-    let glb = mesh_to_glb(&mesh);
+    let glb = mesh_to_glb(&mesh).unwrap();
     let decoded = mesh_from_glb(&glb).expect("decode glb");
     assert_eq!(decoded.vertex_count(), mesh.vertex_count());
     assert_eq!(decoded.indices.len(), mesh.indices.len());

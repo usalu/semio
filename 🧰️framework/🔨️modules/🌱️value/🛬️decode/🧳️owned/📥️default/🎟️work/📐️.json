@@ -15,7 +15,7 @@
   ],
   "largeZeroSizedCount": 4097,
   "minimumLargeWork": 4097,
-  "emptyArrayRefuses": true,
+  "emptyArray": [],
   "cancelCuts": [
     0,
     1,
@@ -28,11 +28,11 @@
     "",
     false
   ],
-  "freshPayloadCopyBytes": {
-    "bool": 1,
-    "u64": 8,
-    "f64": 8,
-    "string": 0,
-    "unit": 0
+  "freshDefaultValues": {
+    "bool": false,
+    "u64": 0,
+    "f64": 0.0,
+    "string": "",
+    "unit": null
   }
 }

@@ -113,6 +113,9 @@ impl<F:for<'entry> FnMut(NativeAllocationInvocation<'entry>)->NativeAllocationIn
 #[cfg(target_arch="wasm32")]
 impl<F:for<'entry> FnMut(NativeAllocationInvocation<'entry>)->NativeAllocationInvocationResult+?Sized> NativeSendAllocationLoan for NativeAllocationAuthorityLoan<'_,F>{}
 
+#[path="🧺️backing/🦀️.rs"]
+pub mod backing;
+
 /// 📏️ Separates historical admission from a performed physical allocation.
 #[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
 pub struct NativeAllocationProgress{pub prior_admitted_bytes:Option<usize>,pub requested_bytes:Option<usize>,pub maximum_bytes:Option<usize>,pub admitted_bytes:usize,pub actual_capacity_bytes:Option<usize>}

@@ -1,0 +1,87 @@
+{
+  "type": "object",
+  "required": [
+    "stages",
+    "table",
+    "callbackOnSetup",
+    "setupMayProgress"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "stages": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "origin",
+          "table",
+          "items",
+          "copy",
+          "capacity",
+          "release",
+          "work"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "origin": {
+            "type": "boolean"
+          },
+          "table": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copy": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "release": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": [
+        "copy",
+        "capacity",
+        "work"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "copy": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "callbackOnSetup": {
+      "const": false
+    },
+    "setupMayProgress": {
+      "const": true
+    }
+  }
+}

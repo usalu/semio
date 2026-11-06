@@ -159,14 +159,14 @@ where
     S: Clone + RetireOwned + Send + Sync + 'static,
     M: Mutation<S> + ColdMutation<S> + ArtifactCanonicalJsonTree + RetireOwned + Send + Sync + 'static,
 {
-    fn advance(&mut self, _body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalRetirementFailure> {
+    fn advance(&mut self, _body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
         self.last_work=0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }
         let before=receiving.actual_work();
         let mut coordinated=false;
-        let result=(|| -> Result<ArtifactStoreOneItemPreparationStep,semio_framework_value::OriginalRetirementFailure>{
+        let result=(|| -> Result<ArtifactStoreOneItemPreparationStep,semio_framework_value::OriginalReceivingPrimary>{
         if self.owners.refused.is_some() {
             return Err((ValueError::literal(ValueRefusalKind::InvalidValue, "cold mutation preparation retains its original Store refusal")).into());
         }
@@ -471,7 +471,7 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static, M: Mutation<S> + ColdMutati
         Ok(RetirementDemand { copy_bytes: size_of::<S>(), capacity_bytes: size_of::<M>(), depth: 1, ..Default::default() })
     }
 
-    fn advance(&mut self, before: RetainedCloneRef<'_, S>, input: RetainedCloneRef<'_, M>, post: PagedOneItemPost<'_, S>, _body: usize, grant: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<SemanticEditStep<M>, ValueError> {
+    fn advance(&mut self, before: RetainedCloneRef<'_, S>, input: RetainedCloneRef<'_, M>, post: PagedOneItemPost<'_, S>, _body: usize, grant: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<SemanticEditStep<M>, semio_framework_value::OriginalReceivingPrimary> {
         self.last_work=0;
         let observed_before=receiving.actual_work();
         let result=(||{

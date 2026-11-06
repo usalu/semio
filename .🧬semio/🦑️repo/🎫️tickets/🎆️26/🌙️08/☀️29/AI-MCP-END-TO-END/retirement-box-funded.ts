@@ -1,0 +1,12 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";import{dirname,join}from"node:path";const t=dirname(import.meta.path),b="🧰️framework/🔨️modules/🌱️value/♻️retirement/";
+function edit(f:string,fn:(s:string)=>string){const s=readFileSync(f,"utf8"),n=fn(s),q=join(t,"🗑️generated/direct-box-"+Date.now()+".rs");writeFileSync(q,n);if(readFileSync(f,"utf8")!==s)throw Error("concurrent "+f);renameSync(q,f)}
+function rep(s:string,a:string,z:string){if(s.split(a).length!==2)throw Error("anchor "+a.slice(0,100));return s.replace(a,z)}
+edit(b+"🦀️.rs",s=>rep(s,"fn shared_original_birth_bytes(&self)->Option<usize> where Self:Sized+Sync{None}","fn shared_original_demands(&self)->Result<Option<crate::RetirementDemand>,crate::ValueError> where Self:Sized+Sync{Ok(None)}"));
+edit(b+"📦️box/🦀️.rs",s=>{
+s=rep(s,"pub(super) struct BoxedOwner","pub struct BoxedOwner");
+s=rep(s,'Ok(RetirementDemand{copy_bytes:2*size_of::<T>(),capacity_bytes:value.retirement_birth_bytes().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original boxed value has no typed retirement birth"))?,depth:1,..Default::default()})','super::retirement_child_demand(value,size_of::<BoxOriginal<T>>())');
+s=rep(s," fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{",' fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.next_demand(body)?;let Some(original)=self.original.as_ref()else{return Ok(0)};if !original.is_initialized(){return Ok(1)}let value=original.get();if value.boxed_original_demands()?.is_some(){return value.boxed_original_work_demand()?.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original boxed specialized cursor lacks a work quote"))}super::retirement_cursor_birth_work().checked_add(1).ok_or_else(||ValueError::invariant("boxed cursor work overflow"))}\n fn close_step(&mut self,grant:RetainedCloneGrant,actual:&mut Option<usize>)->RetirementStep{');
+s=rep(s,"T::boxed_original_retirement(&mut self.original,grant)","T::boxed_original_retirement(&mut self.original,grant,actual)");
+s=rep(s,"  let value=unsafe{original.take_whole()};let cursor=value.retirement();\n  RetirementStep::ChildProgress(cursor,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()},1)","  super::retirement_child_from::<T>(grant,actual,size_of::<BoxOriginal<T>>(),||unsafe{original.take_whole()})");
+return s});
+console.log("Unique Box full birth/work quotes and allocation-before-original take authored");

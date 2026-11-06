@@ -209,6 +209,7 @@ where
                 projected: ManuallyDrop::new(None),
                 post_read: OriginalPostRead::default(),
                 edit: E::default(),
+                edit_close_effect: Default::default(),
                 pending_inverse: ManuallyDrop::new(None),
                 inverse_retirement: ManuallyDrop::new(None),
                 outcome_messages: None,
@@ -268,6 +269,7 @@ struct PagedOneItemPreparation<S: SnapshotProjection<Output = S>, M: Send + Sync
     projected: ManuallyDrop<Option<S::Output>>,
     post_read: OriginalPostRead<S>,
     pub edit: E,
+    edit_close_effect: semio_framework_value::native_decoding::NativeReceivingEffect<semio_framework_value::OriginalRetirementFailure>,
     pending_inverse: ManuallyDrop<Option<Vec<M>>>,
     inverse_retirement: ManuallyDrop<Option<semio_framework_value_factory::vector::FactoryVectorRetirement<M>>>,
     outcome_messages: Option<protocol::MutationMessageLedgerRetirement>,
@@ -375,7 +377,7 @@ where
         Ok(self.record(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }))
     }
 
-    fn advance_body(&mut self,body:usize,grant:ArtifactStoreOneItemGrant,receiving:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>)->Result<ArtifactStoreOneItemPreparationStep,semio_framework_value::OriginalRetirementFailure>{
+    fn advance_body(&mut self,body:usize,maximum_work_units:u64,grant:ArtifactStoreOneItemGrant,receiving:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>)->Result<ArtifactStoreOneItemPreparationStep,semio_framework_value::OriginalReceivingPrimary>{
         let prefix = E::PREFIX;
         if !grant.permits_one() || self.cancelled || self.closing {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
@@ -446,11 +448,11 @@ where
                 let cursor=self.cursor.as_mut().ok_or_else(||fault(prefix,"projection"))?;
                 let source=self.source.as_ref().ok_or_else(||fault(prefix,"source"))?;
                 let original=source.try_borrow()?;
-                let mut demand=cursor.demands(original,body)?;
+                let mut demand=cursor.demands(original,body,maximum_work_units.checked_sub(2).unwrap_or(0))?;
                 demand.depth=demand.depth.checked_add(1).ok_or_else(||fault(prefix,"projection-depth"))?;
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(clone_grant,demand){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let child=RetainedCloneGrant{maximum_depth:clone_grant.maximum_depth-1,..clone_grant};
-                let step=capture_work(&mut self.last_work,cursor.advance(original,body,child))?;
+                let step=capture_work(&mut self.last_work,cursor.advance(original,body,maximum_work_units.checked_sub(2).unwrap_or(0),child))?;
                 let progress=semio_framework_value::retained_clone::admit_retained_clone_progress(child,step.progress(),"structural immutable snapshot projection")?;
                 if matches!(step,RetainedCloneStep::Complete(_)){
                     if !cursor.ready(){return Err((fault(prefix,"projection-ready")).into());}
@@ -500,7 +502,7 @@ where
                 let post=self.post_read.access(&mut self.post,mode)?;
                 let before=self.source.as_ref().ok_or_else(||fault(prefix,"before-source"))?.try_borrow()?;
                 let mutation=self.mutation_source.as_ref().ok_or_else(||fault(prefix,"mutation-source"))?.try_borrow()?;
-                let demand=self.edit.advance_demands(before,mutation,post.read(),body)?;
+                let demand=self.edit.advance_demands(before,mutation,post.read(),body,maximum_work_units)?;
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(clone_grant,demand){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let result=self.edit.advance(before,mutation,post,body,clone_grant,receiving.ok_or_else(||fault(prefix,"native-edit-control"))?);
                 self.last_work=self.last_work.saturating_add(self.edit.last_turn_work());
@@ -532,9 +534,12 @@ where
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(clone_grant,demand){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let child=RetainedCloneGrant{maximum_depth:clone_grant.maximum_depth-1,..clone_grant};
                 self.coordinated=true;
-                let result=self.edit.close_step(factory,child);self.last_work=self.last_work.checked_add(self.edit.last_turn_work()).ok_or_else(||fault(prefix,"edit-close-work-overflow"))?;let step=result?;
-                let receipt=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,self.edit.terminal_is_empty(),"structural original edit closure")?.progress();
-                Ok(self.record(receipt))
+                let control=receiving.ok_or_else(||fault(prefix,"edit-close-receiving"))?;
+                let selected=self.edit.close_work_demand(factory,child.maximum_copy_bytes)?;
+                let demand=self.edit.close_demands(factory,child.maximum_copy_bytes)?;
+                let turn=control.receive_retirement(demand,&mut self.edit_close_effect,demand.capacity_bytes!=0,selected,|issued,actual|{let mut no_allocation=None;let result=self.edit.close_step(factory,issued.restricted_by(child),actual.unwrap_or(&mut no_allocation));semio_framework_value::RetainedWorkOutcome{result,work:self.edit.last_turn_work()}});
+                self.last_work=self.last_work.checked_add(turn.work).ok_or_else(||fault(prefix,"edit-close-work-overflow"))?;
+                Ok(self.record(turn.result?))
             }
             Phase::TakeMutationSource => {
                 let source=self.mutation_source.as_mut().ok_or_else(||fault(prefix,"mutation-source"))?;
@@ -561,13 +566,13 @@ where
         }
     }
 
-    fn phase_work_demand(&self,body:usize)->Result<Option<u64>,ValueError>{
+    fn phase_work_demand(&self,body:usize,maximum_work_units:u64)->Result<Option<u64>,ValueError>{
         let work=match self.phase{
             Phase::MutationAuthority|Phase::TakeMutationPair=>Some(1),
             Phase::MutationSource=>Some(match self.mutation_admission.as_ref(){None=>1,Some(owner)if owner.phase()=="ready"=>1,Some(owner)=>owner.advance_work_demand()?}),
             Phase::Source=>Some(match self.source_admission.as_ref(){None=>1,Some(owner)if owner.phase()=="ready"=>1,Some(owner)=>owner.advance_work_demand()?}),
             Phase::Cursor=>Some(S::projection_birth_work_demand()?),
-            Phase::Project=>{let owner=self.cursor.as_ref().ok_or_else(||fault(E::PREFIX,"projection"))?;let source=self.source.as_ref().ok_or_else(||fault(E::PREFIX,"source"))?.try_borrow()?;Some(owner.advance_work_demand(source,body)?)},
+            Phase::Project=>{let owner=self.cursor.as_ref().ok_or_else(||fault(E::PREFIX,"projection"))?;let source=self.source.as_ref().ok_or_else(||fault(E::PREFIX,"source"))?.try_borrow()?;Some(owner.advance_work_demand(source,body,maximum_work_units.checked_sub(2).unwrap_or(0))?)},
             Phase::TakeProjection=>Some(self.cursor.as_ref().ok_or_else(||fault(E::PREFIX,"projection"))?.take_work_demand()?),
             Phase::PlaceProjection=>Some(1),
             Phase::CloseProjection=>{let owner=self.cursor.as_ref().ok_or_else(||fault(E::PREFIX,"projection"))?;Some(if owner.terminal_is_empty(){1}else{owner.close_work_demand(body)?})},
@@ -656,24 +661,24 @@ where
     M: ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     E: PagedOneItemEdit<S, M>,
 {
-    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalRetirementFailure> {
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
         self.last_work=0;self.coordinated=false;
         if !grant.permits_one()||self.cancelled||self.closing{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-        let quote=self.phase_work_demand(body)?;
+        let maximum_work_units=receiving.available_work_units()?;if maximum_work_units==0{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)}let quote=self.phase_work_demand(body,maximum_work_units)?;
         if let Some(work)=quote{
             if !receiving.has_retirement_failure_storage(){
                 let turn=receiving.prepare_failure_storage(grant.retained_grant());self.last_work=turn.work;
                 return turn.result.map(|step|ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,step.progress()));
             }
             let turn=receiving.run_prepared_work(work,|_|{
-                let result=self.advance_body(body,grant,None);
+                let result=self.advance_body(body,maximum_work_units,grant,None);
                 let actual=self.last_work.saturating_add(u64::from(self.coordinated));
                 semio_framework_value::RetainedWorkOutcome{result,work:actual}
             },|step|step.ownership_progress());
             return match turn{Some(turn)=>{self.last_work=turn.work;turn.result},None=>Ok(ArtifactStoreOneItemPreparationStep::Blocked)};
         }
         let before=receiving.actual_work();
-        let result=self.advance_body(body,grant,Some(receiving));
+        let result=self.advance_body(body,maximum_work_units,grant,Some(receiving));
         let observed=receiving.actual_work().saturating_sub(before);
         let reported=self.last_work.saturating_add(u64::from(self.coordinated));
         self.last_work=semio_os_store_one_item::original_one_item_turn_work(reported,observed,false)?;
@@ -707,6 +712,10 @@ where
         }
     }
 
+    fn has_pending_receiving_recovery(&self)->bool{self.edit_close_effect.has_pending_recovery()||self.edit.has_pending_receiving_recovery()}
+    fn pending_receiving_demand(&self)->Option<RetirementDemand>{self.edit_close_effect.pending_demand().or_else(||self.edit.pending_receiving_demand())}
+    fn pending_receiving_recovery(&mut self)->Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>>{if self.edit_close_effect.has_pending_recovery(){self.edit_close_effect.pending_recovery().map(semio_framework_value::native_decoding::construction::NativeRecoveryLoan::Retirement)}else{self.edit.pending_receiving_recovery()}}
+    fn finish_receiving_recovery(&mut self,control:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,semio_framework_value::OriginalReceivingPrimary>{if self.edit_close_effect.has_pending_recovery(){control.finish_retirement_receiving(&mut self.edit_close_effect)}else{self.edit.finish_receiving_recovery(control)}}
     fn begin_close(&mut self) {
         self.closing = true;
         self.edit.begin_close();
@@ -907,6 +916,7 @@ where
     pub fn terminal(&self) -> bool {
         self.closing
             && self.edit.terminal_is_empty()
+            && self.edit_close_effect.phase()==semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty
             && self.base.is_none()
             && self.source_admission.is_none()
             && self.source.is_none()

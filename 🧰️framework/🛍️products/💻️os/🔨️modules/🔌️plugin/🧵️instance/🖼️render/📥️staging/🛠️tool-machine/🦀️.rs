@@ -204,7 +204,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if !self.shared().tool_overlay_retirement_pending(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if self.shared().gesture_retirement_pending(){return self.gesture_retirement_step(grant);}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        let demand=self.shared().tool_overlay_retirement_demand(grant.maximum_copy_bytes,false)?;
+        let demand=self.shared().tool_overlay_retirement_demand(grant.maximum_copy_bytes,cx.fuel_remaining())?;
         if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(owner)=self.tool_machines.overlay_alias_retirement.as_mut(){
             if owner.terminal_is_empty(){drop(self.tool_machines.overlay_alias_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
@@ -321,13 +321,15 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
 
     fn tool_overlay_refold_owed(&self)->bool{self.tool_machines.refold_owed}
 
-    pub fn tool_overlay_retirement_demand(&self,body:usize,closing:bool)->Result<RetirementDemand,ValueError>{
+    pub fn tool_overlay_retirement_demand(&self,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.tool_overlay_demand(body,false,Some(maximum_work_units))}
+    pub fn tool_overlay_close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.tool_overlay_demand(body,true,None)}
+    fn tool_overlay_demand(&self,body:usize,closing:bool,maximum_work_units:Option<u64>)->Result<RetirementDemand,ValueError>{
         if closing{if let Some(owner)=self.tools.original_tool_tag_capture.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else{owner.close_demands(body)}}}
         if closing{if let Some(owner)=self.tools.original_tool_tag_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else{owner.close_demands(body)}}}
         if closing{if let Some(owner)=self.tools.original_scrub_dispatch.as_ref(){return if owner.terminal_is_empty(){Ok(semio_plugin_scrub_host::OriginalScrubDispatch::<PressLeaf<A::Mutation,A::ConfigMutation>>::shell_close_demands())}else{owner.close_demands(body)}}}
         if closing{if let Some(owner)=self.tools.original_press_settlement.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else{owner.close_demands(body)}}}
         if closing{if let Some(owner)=self.tools.original_typing_settlement.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else{owner.close_demands(body)}}}
-        if let Some(owner)=self.tools.original_tool_follow.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else if closing{owner.close_demands(&self.stores.store,&self.stores.config_store,&self.stores.window_config_store,&self.tool_machines)}else{owner.demands(&self.stores.store,&self.stores.config_store,&self.stores.window_config_store,&self.tool_machines)}}
+        if let Some(owner)=self.tools.original_tool_follow.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else if closing{owner.close_demands(&self.stores.store,&self.stores.config_store,&self.stores.window_config_store,&self.tool_machines)}else{owner.demands(&self.stores.store,&self.stores.config_store,&self.stores.window_config_store,&self.tool_machines,maximum_work_units.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"active tool projection requires its actual remaining work"))?)}}
 
         if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some(){return Ok(Default::default())}
         if self.gesture_retirement_pending(){return self.gesture_retirement_demand(body);}

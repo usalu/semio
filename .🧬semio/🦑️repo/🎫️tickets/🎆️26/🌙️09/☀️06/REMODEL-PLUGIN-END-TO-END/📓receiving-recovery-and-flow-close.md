@@ -1,0 +1,5 @@
+# Receiving recovery and Flow close
+
+NativeReceivingEffect recovery must preserve typed grant Result, allocation callback Result, child RetainedWorkOutcome, true allocation marker, work quote and settlement, and receipt Result. Frame APIs verify same original construction recipient and phase; work and allocation controls verify their own issuer or port identity. Effect take returns child and independently retained failures and progress. Existing construction/🧪️tests/🦀️.rs:90-121 and effect-frame.json exercise interrupted callbacks, foreign recipient refusal and original failure custody.
+
+RetainedCloneClose next_owner_work delegates active child computational work, quotes one for terminal child removal or supported new owner, and falls through binding close work. Preserve OriginalRetirementFailure and actual outcome. Direct FundedText close borrowers are Flow authoring widget, add, insert, synapse, identity, value, remove, connect, reorganize and procedural literal, patch, fold, move plus law; generic child macros require propagated queries too. No execution.

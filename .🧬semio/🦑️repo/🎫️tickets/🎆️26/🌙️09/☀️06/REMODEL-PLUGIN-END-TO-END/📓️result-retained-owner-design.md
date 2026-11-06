@@ -1,0 +1,11 @@
+# Result retained owner prerequisites
+
+The seven result leaves must decide from the actual bound payload and original snapshot. Sparse, dense and tracks treat equality as no-op; trajectory, geo and QC check absent-clear first; mesh validates an actual durable handle/content before equality. A changed decision must construct the sparse results patch and inverse from the actual displaced value. The neutral fixture and cold reference laws are in 📓️retained-results-cases.md; neither establishes retained behavior.
+
+The current RetainedSetFieldLeaf has three unmarked allocating turns: authored and displaced preparation Box births, and inverse Vec birth. The enclosing RetainedMutationOwner also uses Box::new for M::Preparation. Its traits currently expose neither original control nor actual-attempt marker. The concrete store PagedOneItem mutation caller owns NativeDecodeControl, but presently has no persistent typed semantic-effect frame or retained decision/inverse result slot across callback interruption. A correct repair must carry the same original construction and work issuers through these owners, preserve the actual allocation marker and all typed failure/receipt custody, and close children before owners.
+
+A further physical bound is not solved by replacing allocators: generic RetainedFieldPreparation<T> embeds Option<T>, so its header initialization and take can move an arbitrary-sized inline value. Large result bodies require a staged original backing/ownership path rather than an unfunded whole move. The isolated record-to-Box transfer created in the native lane demonstrates one possible backing handoff but is not integrated or natively tested.
+
+The current RetainedEqualityCursor demand/work_demand inspect source references before an admitted receipt. Browser owns a staged equality redesign; no result leaf may claim a funded comparison, use same-object identity as a shortcut, or be mounted on that interface until it is ready. The mesh leaf also needs genuine bounded durable-handle parsing and actual content validation on the original snapshot, not the fixture durable-status label.
+
+No retained leaf, generic marker path, or end-to-end test is complete as of this report. No source/admission/fixture success is a native test pass.

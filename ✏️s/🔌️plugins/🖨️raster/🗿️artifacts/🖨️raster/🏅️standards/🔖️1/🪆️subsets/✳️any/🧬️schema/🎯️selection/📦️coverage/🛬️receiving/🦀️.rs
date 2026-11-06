@@ -2,6 +2,7 @@
 use super::*;
 use semio_framework_value::{NativeDecodeControl,RetainedWorkOutcome,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneRef,retained_clone_grant_admits}};
 use semio_framework_value_native_owned::{OriginalReceivingPrimary,owned::{NativeListSource,NativeReceive,NativeReceiver,receiving_capacity}};
+use semio_framework_value::native_decoding::owned::{NativeClosePermit,NativeRecoveryLoan};
 use std::mem::ManuallyDrop;
 
 #[derive(Clone,Copy,PartialEq,Eq)]
@@ -52,7 +53,7 @@ impl<I:NativeListSource+?Sized> NativeReceiver<I,RasterSelectionSpans> for Raste
                 Phase::Initialize=>{*self.builder=Some(RasterSelectionSpansBuilder::new(self.count)?);self.phase=if self.count==0{Phase::Finish}else{Phase::RowBirth};},
                 Phase::RowBirth=>{*self.child=Some(<RasterSelectionSpan as NativeReceive<I::Row>>::receiver());self.phase=Phase::RowAdvance;},
                 Phase::RowAdvance=>{if self.child()?.output_ready(){self.phase=Phase::RowTake;}else{let source=self.source(original)?;let turn=self.child.as_mut().ok_or_else(invalid)?.advance(source,control,body,child_grant(grant));work=turn.work;return turn.result;}},
-                Phase::RowTake=>{let turn=self.child.as_mut().ok_or_else(invalid)?.take(child_grant(grant));work=turn.work;if let Some((row,p))=turn.result?{self.row=Some(row);self.child.as_mut().ok_or_else(invalid)?.begin_close();self.phase=Phase::RowClose;return Ok(RetainedCloneStep::Progress(p));}return Ok(RetainedCloneStep::Progress(Default::default()));},
+                Phase::RowTake=>{let turn=self.child.as_mut().ok_or_else(invalid)?.take(child_grant(grant));work=turn.work;if let Some((row,p))=turn.result?{self.row=Some(row);self.child.as_mut().ok_or_else(invalid)?.begin_close()?;self.phase=Phase::RowClose;return Ok(RetainedCloneStep::Progress(p));}return Ok(RetainedCloneStep::Progress(Default::default()));},
                 Phase::RowClose=>{if !self.child()?.terminal_is_empty(){let turn=self.child.as_mut().ok_or_else(invalid)?.close_step(child_grant(grant));let turn=control.receive_retained_work(grant,turn);work=turn.work;return turn.result;}drop(self.child.take());self.phase=Phase::Push;},
                 Phase::Push=>{let turn=self.builder.as_mut().ok_or_else(invalid)?.push(&mut self.row,grant);let turn=control.receive_retained_work(grant,RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work});work=turn.work;if self.row.is_none(){self.index+=1;self.phase=if self.index==self.count{Phase::Finish}else if self.builder()?.accepts_row(){Phase::RowBirth}else{Phase::Build};}return turn.result;},
                 Phase::Build=>{if self.builder()?.output_ready(){self.phase=Phase::Take;}else if self.builder()?.accepts_row(){self.phase=Phase::RowBirth;}else{let turn=self.builder.as_mut().ok_or_else(invalid)?.advance(grant);let turn=control.receive_retained_work(grant,turn);work=turn.work;return turn.result;}},
@@ -66,7 +67,10 @@ impl<I:NativeListSource+?Sized> NativeReceiver<I,RasterSelectionSpans> for Raste
     fn output_ready(&self)->bool{!self.closing&&self.phase==Phase::Ready&&self.output.is_some()}
     fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(invalid());}Ok(fixed(size_of::<RasterSelectionSpans>()))}
     fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RasterSelectionSpans,RetainedCloneProgress)>>{let result=(||{let d=self.take_demand()?;if !retained_clone_grant_admits(grant,d){return Ok(None);}self.phase=Phase::Spent;Ok(Some((self.output.take().ok_or_else(invalid)?,receipt(d))))})();let work=u64::from(result.as_ref().is_ok_and(Option::is_some));RetainedWorkOutcome{result,work}}
-    fn begin_close(&mut self){self.closing=true;if let Some(child)=self.child.as_mut(){child.begin_close();}if let Some(builder)=self.builder.as_mut(){builder.begin_close();}}
+    fn has_pending_recovery(&self)->bool{self.child.as_ref().is_some_and(|child|child.has_pending_recovery())}
+    fn pending_recovery(&mut self)->Option<NativeRecoveryLoan<'_>>{self.child.as_mut().and_then(|child|child.pending_recovery())}
+    fn resume_recovery(&mut self,control:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{if let Some(child)=self.child.as_mut(){if child.has_pending_recovery(){return child.resume_recovery(control)}}RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+    fn begin_close_admitted(&mut self,_permit:NativeClosePermit)->Result<(),ValueError>{if let Some(child)=self.child.as_mut(){child.begin_close()?;}if let Some(builder)=self.builder.as_mut(){builder.begin_close();}self.closing=true;Ok(())}
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if let Some(child)=self.child.as_ref(){return if child.terminal_is_empty(){Ok(fixed(size_of::<<RasterSelectionSpan as NativeReceive<I::Row>>::Receiver>()))}else{nested(child.close_demands(body)?)};}
         if let Some(builder)=self.builder.as_ref(){return if builder.terminal_is_empty(){Ok(fixed(size_of::<RasterSelectionSpansBuilder>()))}else{builder.close_demands(body)};}

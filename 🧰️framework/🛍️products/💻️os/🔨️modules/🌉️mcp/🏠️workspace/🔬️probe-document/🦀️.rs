@@ -279,3 +279,7 @@ pub fn close_probe_store_to_terminal(mut probe_store: ProbeStore) {
 }
 
 //#endregion 🔖️ProbeDocument
+
+#[path="📥️receiving/🦀️.rs"]
+mod original_mutation_receiving;
+pub use original_mutation_receiving::ProbeMutationReceiving;

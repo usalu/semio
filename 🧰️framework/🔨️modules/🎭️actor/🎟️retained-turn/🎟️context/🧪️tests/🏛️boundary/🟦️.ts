@@ -25,7 +25,7 @@ test("original Actor context is a public General owner with private binding", ()
     for (const node of tree.rootNode.namedChildren.filter(node => ["struct_item", "enum_item"].includes(node.type))) {
       db.query("INSERT INTO general_type VALUES(?,?)").run(node.childForFieldName("name")!.text, node.type);
     }
-    expect(db.query("SELECT name FROM general_type ORDER BY name").all()).toEqual([...fixture.types].sort().map(name => ({ name })));
+    expect(db.query("SELECT name FROM general_type ORDER BY name").all()).toEqual([...fixture.types].sort().map(name => ({ name })));expect(tree.rootNode.namedChildren.filter(node=>node.type==="type_item").map(node=>node.childForFieldName("name")!.text)).toEqual(fixture.aliases);
     expect(source).not.toContain("🛍️products");
     const slot = tree.rootNode.namedChildren.find(node => node.type === "struct_item" && node.childForFieldName("name")?.text === "OriginalActorContextSlot")!;
     expect(slot.childForFieldName("body")!.namedChildren.every(node => !node.namedChildren.some(child => child.type === "visibility_modifier"))).toBe(true);
@@ -54,3 +54,6 @@ test("original retirement binding advances only its same original source", () =>
     for(const row of original.closedContextCases){const fuel=original.work.fuel-3+(row.axis==="fuel"?row.increment:0),items=original.totalGrant[0]!-3+(row.axis==="items"?row.increment:0);expect(Boolean(db.query("SELECT 1 FROM remaining WHERE ?>=0 AND ?<=fuel AND ?>=0 AND ?<=items").get(fuel,fuel,items,items))).toBe(row.accepted);}
   } finally { db.close(); }
 });
+
+/** 🧳️ The closure carrier preserves both blocked DATA and an independent receipt owner. */
+test("closure retirement graph keeps each independent cause in the canonical owner",()=>{expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const source=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8"),tree=parser.parse(source),db=new Database(":memory:");try{const owner=tree.rootNode.namedChildren.find(node=>node.type==="enum_item"&&node.childForFieldName("name")?.text==="OriginalActorContextError")!;expect(owner.childForFieldName("body")!.namedChildren.filter(node=>node.type==="enum_variant").map(node=>node.childForFieldName("name")!.text).sort()).toEqual([...new Set(fixture.closureCauses.map(row=>row.variant))].sort());db.run("CREATE TABLE cause(id TEXT PRIMARY KEY,variant TEXT,owners INTEGER)");for(const row of fixture.closureCauses)db.run("INSERT INTO cause VALUES(?,?,?)",[row.id,row.variant,row.causes]);expect(db.query("SELECT sum(owners) AS total FROM cause").get()).toEqual({total:6});expect(db.query("SELECT owners FROM cause WHERE id=?").get("blocked-and-receipt")).toEqual({owners:2})}finally{tree.delete();db.close()}});

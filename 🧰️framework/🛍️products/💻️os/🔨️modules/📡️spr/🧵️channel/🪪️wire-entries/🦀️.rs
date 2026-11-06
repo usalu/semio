@@ -5,6 +5,7 @@ use super::malformed;
 /// 🪪️ A bounded document root identity read independently from authored renderer props.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct AppDocumentIdentity {
     pub app_instance_id: u32,
     #[serde(with = "identity_revision")]
@@ -23,6 +24,7 @@ fn deserialize_identity_document_id<'de, D: serde::Deserializer<'de>>(deserializ
 }
 //#region 🔖️MediaExportWire
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct MediaExportHandleWire {
     pub app_instance_id: u32,
     pub parent_document_id: String,
@@ -32,6 +34,7 @@ pub struct MediaExportHandleWire {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum MediaExportStateWire {
     Running,
     Complete,
@@ -67,6 +70,7 @@ impl MediaExportStateWire {
 /// would exist only until the process ended. `AppCommand::LoadChildren`/`AppFrame::Children` carry
 /// exactly these, keyed the way the parent's `ArtifactChild` handles name them.
 #[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ChildPackEntry {
     pub slot: String,
     pub child_id: String,
@@ -82,6 +86,7 @@ pub struct ChildPackEntry {
 /// 🪆️ One owned child's CURRENT content as its head snapshot pack (`ArtifactPack::encode_pack`), nested members included — what a
 /// reader that composes on read takes beside the parent (design §20.15), e.g. an inference request's `child:<slot>/<childId>` dependency.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ChildHeadPackEntry {
     pub slot: String,
     pub child_id: String,
@@ -96,6 +101,7 @@ pub struct ChildHeadPackEntry {
 //#region 🔖️WindowConfigPackEntry
 /// 🪟️ One concrete window's persisted-local configuration envelope.
 #[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct WindowConfigPackEntry {
     pub window_id: String,
     pub window_kind_id: String,

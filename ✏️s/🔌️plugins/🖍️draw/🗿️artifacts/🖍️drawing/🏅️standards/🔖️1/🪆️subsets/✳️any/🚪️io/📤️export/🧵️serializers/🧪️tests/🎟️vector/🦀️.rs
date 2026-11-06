@@ -14,7 +14,7 @@ impl VectorFixture<'_>{
   for _ in 0..max_turns{if closing.terminal_is_empty(){break}let copy=closing.next_copy_byte_demand().unwrap();let release=closing.next_release_byte_demand().unwrap();let d=RetirementDemand{copy_bytes:copy,capacity_bytes:closing.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),release_bytes:release,depth:closing.next_depth_demand().unwrap()};
    let(result,heap)=observe(||caller.turn_with_decoder(grant(d),&mut decoder,|cx|cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|g|closing.close_step(g)))));result.unwrap();assert!(!heap.overflowed);let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));
   }assert!(closing.terminal_is_empty());let((),heap)=observe(||drop(closing));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-  for _ in 0..max_turns{if decoder.terminal_is_empty(){break}caller.turn(issued,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(32768)?;close_original_retained_step(cx,d,|g|decoder.close_step(g))?;Ok(())})).unwrap();}assert!(decoder.terminal_is_empty());caller.retire(issued);
+  for _ in 0..max_turns{if decoder.terminal_is_empty(){break}caller.turn(issued,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(32768)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}assert!(decoder.terminal_is_empty());caller.retire(issued);
  }
 }
 pub fn prepare<'a>(document:&'a DrawingSnapshot,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits)->(VectorFixture<'a>,DocumentScenePlan){

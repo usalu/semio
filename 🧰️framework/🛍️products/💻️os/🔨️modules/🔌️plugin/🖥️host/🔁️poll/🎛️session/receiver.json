@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "driverOutsideNative": true,
+  "receiverInsideNative": true,
+  "renewSource": false,
+  "cases": [
+    {
+      "name": "accepted",
+      "events": [
+        "captured",
+        "receiverAccepted",
+        "captureRetired",
+        "receiverRetired",
+        "coreRetired",
+        "sourceClosed"
+      ],
+      "valid": true
+    },
+    {
+      "name": "pending resumes retained state",
+      "events": [
+        "captured",
+        "receiverPending",
+        "receiverAccepted",
+        "captureRetired",
+        "receiverRetired",
+        "coreRetired",
+        "sourceClosed"
+      ],
+      "valid": true
+    },
+    {
+      "name": "failed partial result requires real cause receiver",
+      "events": [
+        "captured",
+        "receiverFailed",
+        "causeReceived",
+        "receiverAccepted",
+        "captureRetired",
+        "receiverRetired",
+        "coreRetired",
+        "sourceClosed"
+      ],
+      "valid": true
+    },
+    {
+      "name": "failure discards unreceived result",
+      "events": [
+        "captured",
+        "receiverFailed",
+        "causeReceived",
+        "captureRetired",
+        "receiverRetired",
+        "coreRetired",
+        "sourceClosed"
+      ],
+      "valid": false
+    },
+    {
+      "name": "receiver retries before cause handoff",
+      "events": [
+        "captured",
+        "receiverFailed",
+        "receiverAccepted",
+        "causeReceived",
+        "captureRetired",
+        "receiverRetired",
+        "coreRetired",
+        "sourceClosed"
+      ],
+      "valid": false
+    },
+    {
+      "name": "source closes with partial receiver",
+      "events": [
+        "captured",
+        "receiverAccepted",
+        "captureRetired",
+        "coreRetired",
+        "sourceClosed"
+      ],
+      "valid": false
+    }
+  ]
+}

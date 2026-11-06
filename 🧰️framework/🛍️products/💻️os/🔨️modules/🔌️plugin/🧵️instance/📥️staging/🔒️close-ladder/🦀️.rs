@@ -47,7 +47,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             CloseRung::PrivateChildGroups => self.child_composition.private_child_group_close_demands(body),
             CloseRung::ToolRuns => self.tool_run_ref().tool_run_retirement_demand(body),
             CloseRung::TimeTravel => self.time_travel_ref().time_travel_retirement_demands(body),
-            CloseRung::ToolOverlay => self.render_ref().tool_overlay_retirement_demand(body,true),
+            CloseRung::ToolOverlay => self.render_ref().tool_overlay_close_demand(body),
             CloseRung::LocalQuery => self.interaction.local_interaction_query.as_ref().map_or(Ok(Default::default()), |query| if query.is_closing() { query.retirement_demands(body) } else { Ok(handoff_demand()) }),
             CloseRung::SnapshotReturns => self.ingest.snapshot_read_returns_demands(&self.stores, &self.interaction, body),
             CloseRung::PresenceLocalReads => self.stores.presence_store.maintenance_local_reads_demands(body),

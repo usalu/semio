@@ -9,6 +9,11 @@ pub struct RetainedFieldCursor<T: RetainedClone> {
     child_closing: bool,
 }
 
+impl<T:RetainedClone> RetainedFieldCursor<T>{
+    /// ⛽️ Quotes the four direct fields of an empty lazy field cursor.
+    pub fn embedded_birth_work()->Result<u64,ValueError>{Ok(4)}
+}
+
 impl<T: RetainedClone> Default for RetainedFieldCursor<T> {
     fn default() -> Self { Self { child: None, source: None, closing: false, child_closing:false } }
 }

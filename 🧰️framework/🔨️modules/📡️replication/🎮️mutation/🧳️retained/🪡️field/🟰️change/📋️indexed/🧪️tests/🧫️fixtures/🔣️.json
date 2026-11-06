@@ -1,5 +1,6 @@
 {
   "bodyBytes": 4096,
+  "workUnits": 4096,
   "cancelCuts": [
     0,
     1,

@@ -1,0 +1,54 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "capacity",
+    "cases",
+    "invariants"
+  ],
+  "properties": {
+    "capacity": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "invariants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 3
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ids",
+          "candidate",
+          "expected"
+        ],
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "candidate": {
+            "type": "string"
+          },
+          "expected": {
+            "enum": [
+              "admitted",
+              "duplicate",
+              "full"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

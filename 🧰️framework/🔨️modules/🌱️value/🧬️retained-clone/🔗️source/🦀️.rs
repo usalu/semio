@@ -1,7 +1,7 @@
 //! 🔗️ Immutable clone sources capture actual original authority and expose sealed projection leases.
 use super::{RetainedCloneBinding,RetainedCloneBirthDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneProjection,RetainedCloneRef,RetainedCloneStep,RetainedOwnedProjection,RETAINED_CLONE_SOURCE_IDS};
 use crate::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::{ControlledRetirement,RetainedOwnerGate}},shared_issuance::{SealedShared,SharedIssuer}};
-use std::{mem::ManuallyDrop,ptr::NonNull,sync::atomic::Ordering};
+use std::{mem::{ManuallyDrop,size_of},ptr::NonNull,sync::atomic::Ordering};
 
 pub(super) struct RetainedCloneLeaseOwner{pub(super) id:u64,payload:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>}
 /// 🧷️ Immutable projection leases expose their payload only after unique original transfer.

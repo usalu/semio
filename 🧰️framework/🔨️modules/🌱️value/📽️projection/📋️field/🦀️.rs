@@ -57,3 +57,4 @@ pub fn begin_close_paid(&mut self,grant:crate::RetainedCloneGrant)->crate::Retai
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.is_none()&&self.value.is_none()&&self.retirement.is_empty()}
 }
 impl<T:SnapshotProjection> Drop for ProjectionField<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.cursor.is_none()&&self.value.is_none()&&self.retirement.is_empty(),"immutable field projection retains its original owner");}}
+

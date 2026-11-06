@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/📦️packages/🦀️rust/Cargo.toml","-p","semio-framework-replication-command-ingress","--lib"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"codex-root-command-source-laws"}}

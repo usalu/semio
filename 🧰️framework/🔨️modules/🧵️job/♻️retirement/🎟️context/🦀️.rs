@@ -53,4 +53,3 @@ pub fn close_original_nested_step(cx:&mut StepContext<'_>,close:impl FnOnce(&mut
  fold_original_close(cx,RetainedWorkOutcome{result:Ok(InteractiveJobCloseStep::Pending{progress}),work:0})?;Ok(step)
 }
 
-

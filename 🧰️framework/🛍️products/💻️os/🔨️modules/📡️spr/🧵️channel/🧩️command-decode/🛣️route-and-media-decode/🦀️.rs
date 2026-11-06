@@ -25,6 +25,8 @@ pub(super) const fn route_field_plan(tag: u8) -> Option<(usize, bool, usize)> {
 /// admitted by its own reserved `PresenceCommandCursor` ingress (one exact page per peer), which the
 /// generic cursor refuses by kind before this decoder is ever reached.
 #[derive(Debug)]
+#[derive(semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
 pub(super) struct PagedRouteFieldsDecode {
     pub(super) tag: u8,
     pub(super) leading: usize,
@@ -112,6 +114,8 @@ impl PagedRouteFieldsDecode {
 }
 
 #[derive(Debug, Default)]
+#[derive(semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
 pub(super) struct PagedMediaExportHandleDecode {
     pub(super) stage: u8,
     pub(in super::super) app_instance_id: u32,

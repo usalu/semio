@@ -300,3 +300,7 @@ pub use lifted_view::*;
 #[path = "🛬️lifted/🧵️task/🦀️.rs"]
 mod lifted_task;
 pub use lifted_task::*;
+
+#[path = "🧮️census/🦀️.rs"]
+mod census;
+pub use census::{record_typed_operation_unit, typed_operation_unit_census, TypedOperationUnitCensus, TypedOperationUnitKind};

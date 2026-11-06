@@ -24,7 +24,7 @@ impl Drop for UiArenaFixture{
  fn drop(&mut self){
   if std::thread::panicking(){if let Some(lease)=self.lease.take(){std::mem::forget(lease)}if let Some(caller)=self.caller.take(){std::mem::forget(caller)}return}
   let stock=grant();let caller=self.caller.as_mut().unwrap();for _ in 0..100_000{let done=caller.turn(stock,|cx|{let grant=cx.retained_grant();let bytes=4096.min(grant.maximum_copy_bytes);if grant.maximum_items==0||bytes==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);close_ui_value_page_with_grant(1,bytes).map(|step|step.complete).map_err(|_|semio_framework_value::ValueError::invariant("test arena retirement refused").into())}).unwrap();if done{break}}
-  let lease=self.lease.as_mut().unwrap();for _ in 0..100_000{if lease.terminal_is_empty(){break}caller.turn(stock,|cx|lease.return_step(cx)).unwrap();}assert!(lease.terminal_is_empty());
+  for _ in 0..100_000{if self.lease.is_none(){break}caller.turn(stock,|cx|OriginalNativeLease::return_slot_step(&mut self.lease,cx)).unwrap();}assert!(self.lease.is_none());
   let mut closed=false;for _ in 0..100_000{if caller.turn(stock,|cx|cx.close_original_native_step()).unwrap(){closed=true;break}}assert!(closed);assert!(ui_value_arena_registry().borrow().is_err());self.lease.take();self.caller.take().unwrap().retire(stock);
  }
 }

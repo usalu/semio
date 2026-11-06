@@ -1,0 +1,3 @@
+/** 🧱️ Finite tuple phases reserve local metadata before a nested child can advance. */
+import{test,expect}from"bun:test";import Ajv from"ajv";import{Database}from"bun:sqlite";import corpus from"./work.json";import schema from"./work.schema.json";
+test("tuple nested work and atomic phase refusal match independent SQLite",()=>{expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);const db=new Database(":memory:");try{for(const r of corpus.cases){const got=db.query("SELECT CASE WHEN ? >= ? + ? THEN ? + ? ELSE 0 END AS work").get(r.budget,r.child,r.local,r.child,r.local)as{work:number};expect(got.work).toBe(r.expected);expect(got.work).toBeLessThanOrEqual(r.budget);if(r.budget===0)expect(got.work).toBe(0)}}finally{db.close()}});

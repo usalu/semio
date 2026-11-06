@@ -11,6 +11,8 @@ use semio_plugin::UiAssemblyResult;
 use semio_plugin::WindowEngagementSlot;
 use semio_plugin::WindowKindDefinition;
 use semio_plugin::WindowOptions;
+use semio_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::{kit::remodeling_window_action, terminology::RemodelingLabels};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
@@ -44,6 +46,12 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 //#endregion 🔖️Definition
+
+/** 🎚️ Publishes the report dataset for the addressed window's current config. */
+pub fn window_measures(config: &RemodelingReportWindowConfig, labels: &RemodelingLabels) -> Vec<WindowMeasure> {
+    let items = [("frames", labels.report_frames), ("cameras", labels.report_cameras), ("tracks", labels.report_tracks), ("gcps", labels.report_gcps), ("qcStages", labels.report_quality), ("matches", labels.report_matches)];
+    vec![WindowMeasure::Select { id: "remodeling-measure-report-table".into(), label: Some(labels.report_table.into()), value: config.report_table.clone(), items: items.into_iter().map(|(value, label)| MeasureSelectItem { id: format!("remodeling-measure-report-table-{value}"), value: value.into(), label: label.into() }).collect(), on_change: remodeling_window_action("setReportTable", None) }]
+}
 
 //#region 🔖️Scene
 /// 🏷️ One table column. `sortable` is always emitted: `TableHost` (`🧰️framework/…/📊️Table/🟦️.tsx`)

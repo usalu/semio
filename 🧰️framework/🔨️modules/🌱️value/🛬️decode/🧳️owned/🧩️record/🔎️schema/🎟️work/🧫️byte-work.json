@@ -1,0 +1,36 @@
+{
+  "cases": [
+    {
+      "id": "equal-ascii",
+      "key": "alpha",
+      "name": "alpha",
+      "equal": true,
+      "maximumBytesPerTurn": 1,
+      "deniedWork": 0
+    },
+    {
+      "id": "different-last-byte",
+      "key": "alphb",
+      "name": "alpha",
+      "equal": false,
+      "maximumBytesPerTurn": 1,
+      "deniedWork": 0
+    },
+    {
+      "id": "multibyte-equal",
+      "key": "é🙂",
+      "name": "é🙂",
+      "equal": true,
+      "maximumBytesPerTurn": 1,
+      "deniedWork": 0
+    },
+    {
+      "id": "empty-equal",
+      "key": "",
+      "name": "",
+      "equal": true,
+      "maximumBytesPerTurn": 1,
+      "deniedWork": 0
+    }
+  ]
+}

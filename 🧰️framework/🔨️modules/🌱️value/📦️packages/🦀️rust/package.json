@@ -19,7 +19,8 @@
     "test-retained-utf8-source": "repo run @semio-tech/value-rs:test-retained-utf8-source",
     "test-retained-utf8-native": "repo run @semio-tech/value-rs:test-retained-utf8-native",
     "test-retained-equality-source": "repo run @semio-tech/value-rs:test-retained-equality-source",
-    "test-retained-equality-native": "repo run @semio-tech/value-rs:test-retained-equality-native"
+    "test-retained-equality-native": "repo run @semio-tech/value-rs:test-retained-equality-native",
+    "test-paged-refusal-source": "repo run @semio-tech/value-rs:test-paged-refusal-source"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

@@ -1,7 +1,106 @@
-{"chunkBytes":4,"cases":[
- {"id":"unique","keys":["node-🧱-0001","node-🧱-0002","node-🧱-0003"],"needle":"node-🧱-0002","expectedIndices":[1]},
- {"id":"missing","keys":["alpha","beta"],"needle":"gamma","expectedIndices":[]},
- {"id":"duplicate","keys":["same","other","same"],"needle":"same","expectedIndices":[0,2]},
- {"id":"empty-key","keys":["first",""],"needle":"","expectedIndices":[1]},
- {"id":"empty-list","keys":[],"needle":"unused","expectedIndices":[]}
-]}
+{
+  "chunkBytes": 1,
+  "cases": [
+    {
+      "id": "unique",
+      "keys": [
+        "node-🧱-0001",
+        "node-🧱-0002",
+        "node-🧱-0003"
+      ],
+      "needle": "node-🧱-0002",
+      "expectedIndices": [
+        1
+      ]
+    },
+    {
+      "id": "missing",
+      "keys": [
+        "alpha",
+        "beta"
+      ],
+      "needle": "gamma",
+      "expectedIndices": []
+    },
+    {
+      "id": "duplicate",
+      "keys": [
+        "same",
+        "other",
+        "same"
+      ],
+      "needle": "same",
+      "expectedIndices": [
+        0,
+        2
+      ]
+    },
+    {
+      "id": "empty-key",
+      "keys": [
+        "first",
+        ""
+      ],
+      "needle": "",
+      "expectedIndices": [
+        1
+      ]
+    },
+    {
+      "id": "empty-list",
+      "keys": [],
+      "needle": "unused",
+      "expectedIndices": []
+    },
+    {
+      "id": "three-duplicates",
+      "keys": [
+        "a",
+        "a",
+        "a"
+      ],
+      "needle": "a",
+      "expectedIndices": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "utf8-distinct",
+      "keys": [
+        "é",
+        "é",
+        "🧱"
+      ],
+      "needle": "é",
+      "expectedIndices": [
+        1
+      ]
+    },
+    {
+      "id": "empty-duplicates",
+      "keys": [
+        "",
+        "x",
+        ""
+      ],
+      "needle": "",
+      "expectedIndices": [
+        0,
+        2
+      ]
+    },
+    {
+      "id": "long-shared-prefix",
+      "keys": [
+        "same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-a",
+        "same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-b"
+      ],
+      "needle": "same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-same-b",
+      "expectedIndices": [
+        1
+      ]
+    }
+  ],
+  "$schema": "../../🧬️schema/🔣️.json"
+}

@@ -1,0 +1,74 @@
+{
+  "cases": [
+    {
+      "name": "complete",
+      "received": true,
+      "quiescent": true,
+      "headerReturned": true,
+      "producerClosed": true,
+      "childrenReturned": true,
+      "historyRetired": true,
+      "closed": true
+    },
+    {
+      "name": "missing-received",
+      "received": false,
+      "quiescent": true,
+      "headerReturned": true,
+      "producerClosed": true,
+      "childrenReturned": true,
+      "historyRetired": true,
+      "closed": false
+    },
+    {
+      "name": "missing-quiescent",
+      "received": true,
+      "quiescent": false,
+      "headerReturned": true,
+      "producerClosed": true,
+      "childrenReturned": true,
+      "historyRetired": true,
+      "closed": false
+    },
+    {
+      "name": "missing-headerReturned",
+      "received": true,
+      "quiescent": true,
+      "headerReturned": false,
+      "producerClosed": true,
+      "childrenReturned": true,
+      "historyRetired": true,
+      "closed": false
+    },
+    {
+      "name": "missing-producerClosed",
+      "received": true,
+      "quiescent": true,
+      "headerReturned": true,
+      "producerClosed": false,
+      "childrenReturned": true,
+      "historyRetired": true,
+      "closed": false
+    },
+    {
+      "name": "missing-childrenReturned",
+      "received": true,
+      "quiescent": true,
+      "headerReturned": true,
+      "producerClosed": true,
+      "childrenReturned": false,
+      "historyRetired": true,
+      "closed": false
+    },
+    {
+      "name": "missing-historyRetired",
+      "received": true,
+      "quiescent": true,
+      "headerReturned": true,
+      "producerClosed": true,
+      "childrenReturned": true,
+      "historyRetired": false,
+      "closed": false
+    }
+  ]
+}

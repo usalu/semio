@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🌱️process-arena/📦️packages/🦀️rust/Cargo.toml","-p","semio-os-mcp-process-arena","--lib","process_arena"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"codex-root-process-arena"}}

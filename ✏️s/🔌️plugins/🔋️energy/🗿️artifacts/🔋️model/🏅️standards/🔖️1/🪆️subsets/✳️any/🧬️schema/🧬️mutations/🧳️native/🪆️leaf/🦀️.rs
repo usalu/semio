@@ -9,22 +9,27 @@ pub trait RowFieldPreparation:Send+'static{
  type Input:Send+Sync;type Inverse:Send;
  fn new()->Self;
  fn check(&self,input:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,original:RetainedCloneRef<'_,EnergyModelSnapshot>)->Result<(),ValueError>;
- fn demand(&self,input:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize)->Result<RetirementDemand,ValueError>;
- fn advance(&mut self,input:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ fn demand(&self,input:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>;
+ fn work_demand(&self,input:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>;
+ fn advance(&mut self,input:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome;
  fn ready(&self)->bool;fn outcome(&self)->Option<RowOutcome>;
  fn reference_index(&self)->Option<usize>{None}
  fn changed_diagnostic(&self)->Option<RetainedDiagnosticSpec>{None}
  fn take_demand(&self)->Result<RetirementDemand,ValueError>;
+ fn take_work_demand(&self)->Result<u64,ValueError>;
  fn take(&mut self,g:RetainedCloneGrant)->Result<Option<(EnergyModelDiff,RetainedCloneProgress)>,ValueError>;
  fn inverse_count(&self)->Result<usize,ValueError>{Ok(1)}
- fn inverse_demand(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn prepare_inverse(&mut self,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ fn inverse_demand(&self,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>;
+ fn inverse_work_demand(&self,body:usize,maximum_work_units:u64)->Result<u64,ValueError>;
+ fn prepare_inverse(&mut self,body:usize,maximum_work_units:u64,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome;
  fn inverse_ready(&self)->bool;
  fn take_inverse_demand(&self)->Result<RetirementDemand,ValueError>;
+ fn take_inverse_work_demand(&self)->Result<u64,ValueError>;
  fn take_inverse(&mut self,g:RetainedCloneGrant)->Result<Option<(Self::Inverse,RetainedCloneProgress)>,ValueError>;
  fn begin_close(&mut self);
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>;
+ fn close_step(&mut self,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome;
  fn terminal_is_empty(&self)->bool;
 }
 /// 🏷️ Schema leaves preserve their actual input/key projections, diagnostic policy and inverse constructor.

@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "keys",
+    "laws"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "keys": {
+      "type": "object",
+      "required": [
+        "snapshot",
+        "receiving",
+        "encode",
+        "decode",
+        "effect",
+        "nativeAllocation",
+        "allocationProgress",
+        "request",
+        "snapshotReceiving",
+        "snapshotRetirement"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "snapshot": {
+          "const": [
+            "cause",
+            "allocation",
+            "encodeEffect",
+            "receiptRefusal",
+            "contextRefusal",
+            "workRefusal",
+            "settlementRefusal",
+            "progress"
+          ]
+        },
+        "receiving": {
+          "const": [
+            "primary",
+            "quoteRefusal",
+            "allocationRefusal",
+            "workRefusal",
+            "retirementFailure",
+            "allocationFailure",
+            "nativeAllocation",
+            "receiptRefusal",
+            "retainedProgress"
+          ]
+        },
+        "encode": {
+          "const": [
+            "type",
+            "request",
+            "admitted",
+            "primary",
+            "forwardedQuote",
+            "scopedQuote",
+            "extentRefusal",
+            "forwardedRefusal",
+            "scopedRefusal",
+            "actual"
+          ]
+        },
+        "decode": {
+          "const": [
+            "type",
+            "request",
+            "admitted",
+            "primary",
+            "quoteRefusal",
+            "extentRefusal",
+            "settlementRefusal",
+            "actual"
+          ]
+        },
+        "effect": {
+          "const": [
+            "primary",
+            "invariant",
+            "physicalInvariant",
+            "capacityInvariant",
+            "work",
+            "local",
+            "physical",
+            "allocation"
+          ]
+        },
+        "nativeAllocation": {
+          "const": [
+            "primary",
+            "admission",
+            "forwardedAdmission",
+            "scopedAdmission",
+            "forwardedQuote",
+            "scopedQuote",
+            "forwardedPost",
+            "scopedPost",
+            "forwardedCancel",
+            "scopedCancel",
+            "receipt",
+            "extent",
+            "progress"
+          ]
+        },
+        "allocationProgress": {
+          "const": [
+            "priorAdmittedBytes",
+            "requestedBytes",
+            "maximumBytes",
+            "admittedBytes",
+            "actualCapacityBytes"
+          ]
+        },
+        "request": {
+          "const": [
+            "bytes",
+            "ownedBytes",
+            "nextOwnedBytes",
+            "maximumBytes"
+          ]
+        },
+        "snapshotReceiving": {
+          "const": [
+            "type",
+            "primary",
+            "quoteRefusal",
+            "allocationRefusal",
+            "workRefusal",
+            "retirementFailure",
+            "allocationFailure",
+            "nativeAllocation",
+            "receiptRefusal",
+            "progress"
+          ]
+        },
+        "snapshotRetirement": {
+          "const": [
+            "primary",
+            "workRefusal",
+            "receiptRefusal",
+            "progressOverride",
+            "child"
+          ]
+        }
+      }
+    },
+    "laws": {
+      "const": {
+        "borrowExactOriginal": true,
+        "retainIndependentSlots": true,
+        "retainNestedRetirement": true,
+        "retainAbsentSlots": true,
+        "allocateDiagnosticMirror": false
+      }
+    }
+  }
+}

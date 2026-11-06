@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 8,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["width", "left", "right", "expected"],
+    "properties": {
+      "width": { "enum": [32, 64] },
+      "left": { "type": "string", "pattern": "^(?:[0-9a-f]{8}|[0-9a-f]{16})$" },
+      "right": { "type": "string", "pattern": "^(?:[0-9a-f]{8}|[0-9a-f]{16})$" },
+      "expected": { "type": "boolean" }
+    }
+  }
+}

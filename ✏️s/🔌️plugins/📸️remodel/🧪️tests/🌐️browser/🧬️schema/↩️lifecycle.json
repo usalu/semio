@@ -1,0 +1,39 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "kind",
+      "flags",
+      "values",
+      "pass"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "kind": {
+        "enum": [
+          "abort",
+          "undo"
+        ]
+      },
+      "flags": {
+        "type": "array",
+        "items": {
+          "type": "boolean"
+        }
+      },
+      "values": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "pass": {
+        "type": "boolean"
+      }
+    }
+  }
+}

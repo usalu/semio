@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["check","--manifest-path","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📦️packages/🦀️rust/Cargo.toml","-p","semio-os-store-document"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"semio-mcp-launch"}}

@@ -1,0 +1,54 @@
+{
+  "axes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "work"
+  ],
+  "stock": [
+    64,
+    16384,
+    16384,
+    16384,
+    1000
+  ],
+  "held": [
+    10,
+    2000,
+    1024,
+    1024,
+    600
+  ],
+  "actual": [
+    2,
+    1000,
+    512,
+    400,
+    300
+  ],
+  "unused": [
+    3,
+    400,
+    128,
+    100,
+    50
+  ],
+  "remaining": [
+    5,
+    600,
+    384,
+    524,
+    250
+  ],
+  "finalActual": [
+    7,
+    1600,
+    896,
+    924,
+    550
+  ],
+  "foreignSource": false,
+  "repeatDebit": false,
+  "pendingObserverBlocksSettlement": true
+}

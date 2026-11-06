@@ -1,0 +1,1 @@
+const child=Bun.spawn(["repo","tools","exec","--light","bun","--",import.meta.dirname+"/repo-mcp.ts","tools/call","@"+import.meta.dirname+"/native-derived-expansion-test.json"],{env:{...process.env,SEMIO_TICKET_TIMEOUT_MS:"14400000"},stdout:"inherit",stderr:"inherit",stdin:"ignore"});process.exit(await child.exited);

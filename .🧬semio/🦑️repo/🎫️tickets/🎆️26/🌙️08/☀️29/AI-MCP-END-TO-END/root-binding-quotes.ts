@@ -1,0 +1,13 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";import{dirname}from"node:path";const t=dirname(import.meta.path);function edit(p:string,f:(s:string)=>string){const s=readFileSync(p,"utf8"),n=f(s),tmp=t+"/🗑️generated/root-binding-quotes-"+Math.random().toString(16).slice(2);if(n===s)throw Error("unchanged "+p);writeFileSync(tmp,n);if(readFileSync(p,"utf8")!==s)throw Error("CAS");renameSync(tmp,p)}
+edit("🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🪡️field/🦀️.rs",s=>s.replace("if !original.check_binding(&self.binding)?{1}else","if !original.check_binding(&self.binding)?{original.binding_work_demand(&self.binding)?}else").replace("RetainedCloneBinding::close_one(&mut self.binding,grant)","RetainedCloneBinding::close_one(&mut self.binding,grant,actual)"));
+edit("🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🦀️.rs",s=>{
+ s=s.replace("if !input.check_binding(&self.binding)?{return Ok(1)}","if !input.check_binding(&self.binding)?{return Ok(crate::owned::selected_native_work(input.binding_work_demand(&self.binding)?,maximum))}");
+ s=s.replaceAll("RetainedCloneBinding::close_one(&mut self.binding,g)","RetainedCloneBinding::close_one(&mut self.binding,g,actual)");
+ const anchor=" fn payload_work(&self,input:";if(!s.includes(anchor))throw Error("helper anchor");
+ s=s.replace(anchor," fn payload_capture()->usize{size_of::<Option<RetainedOwnedProjection<dyn NativeValueSource>>>()}\n fn payload_demand()->Result<RetirementDemand,ValueError>{nested(RetainedOwnedProjection::<dyn NativeValueSource>::constructor_demand(),Self::payload_capture())}\n"+anchor);
+ s=s.replace("return Ok(RetainedOwnedProjection::<dyn NativeValueSource>::constructor_demand())","return Self::payload_demand()");
+ s=s.replace("crate::owned::work_sum(self.payload_work(input)?,1)?","crate::owned::work_sum(self.payload_work(input)?,crate::owned::work_sum(RetainedOwnedProjection::<dyn NativeValueSource>::constructor_work_demand(),1)?)?");
+ s=s.replace("else{value.record_child(0)},g);RetainedWorkOutcome{result:turn.result.map(|(value,p)|{**slot=Some(value);RetainedCloneStep::Progress(p)}),work:access+turn.work}","else{value.record_child(0)},child_grant(g,Self::payload_capture()));let mut placed=false;let result=turn.result.map(|(value,mut p)|{**slot=Some(value);placed=true;p.copied_bytes+=Self::payload_capture();RetainedCloneStep::Progress(p)});RetainedWorkOutcome{result,work:access+turn.work+u64::from(placed)}");
+ s=s.replace("!self.closing&&!self.taken&&self.child_ready()","!self.closing&&!self.taken&&!self.has_pending_recovery()&&self.child_ready()");
+ return s;
+});console.log("Root bind, projection construction and retained recipient costs composed");

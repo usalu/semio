@@ -1,9 +1,12 @@
 //! 🧾️ Command owner of the paged command decoders: the decode state, the cursor and owner records, the owner implementation and the cursor shape. See [`super`].
 
 use super::*;
+use std::mem::size_of;
 
 //#region 🔖️PagedAppCommandDecode
 #[derive(Debug)]
+#[derive(semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
 pub(super) enum PagedAppCommandDecodeState {
     Header,
     ConfigCommand { seq: u64 },
@@ -42,75 +45,45 @@ pub(super) enum PagedAppCommandDecodeState {
     Faulted,
 }
 
-#[derive(Debug)]
 pub struct PagedAppCommandDecodeCursor {
     pub(super) reader: PagedCommandReader,
     pub(in super::super) state: PagedAppCommandDecodeState,
+    pub(super) original:super::original_cursor::OriginalCommandDecode,
+    pub(super) original_close:Option<super::original_cursor::OriginalCursorClose>,
+    pub(super) original_active:bool,
+    pub(super) original_retired:bool,
 }
 
 pub struct DecodedAppCommandOwner {
     pub(in super::super) command: Option<AppCommand>,
     pub(super) close_stage: u8,
     pub(super) archive_close: Option<PagedDocumentArchiveDecode>,
-    pub(super) text_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>,
-    pub(super) bytes_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<u8>>>,
+    pub(super) original_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<AppCommand>>,
 }
 
-impl std::fmt::Debug for DecodedAppCommandOwner{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("DecodedAppCommandOwner").field("command",&self.command).field("close_stage",&self.close_stage).field("archive_close",&self.archive_close).field("text_close",&self.text_close.is_some()).finish()}}
+impl std::fmt::Debug for DecodedAppCommandOwner{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("DecodedAppCommandOwner").field("command",&self.command).field("close_stage",&self.close_stage).field("archive_close",&self.archive_close).field("original_close",&self.original_close.is_some()).finish()}}
 
 impl DecodedAppCommandOwner {
     pub fn new(command: AppCommand) -> Self {
-        Self { command: Some(command), close_stage: 0, archive_close: None,text_close:None,bytes_close:None }
+        Self { command: Some(command), close_stage: 0, archive_close: None,original_close:None }
     }
 
     pub fn original_command(&self) -> Option<&AppCommand> { self.command.as_ref() }
     pub fn original_command_mut(&mut self) -> Option<&mut AppCommand> { self.command.as_mut() }
 
     pub fn close_original_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
-        if let Some(owner)=self.text_close.as_mut(){
-            if owner.terminal_is_empty(){drop(self.text_close.take());cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
-            if grant.maximum_copy_bytes<owner.next_copy_byte_demand()?||grant.maximum_capacity_bytes<owner.next_capacity_byte_demand(grant.maximum_copy_bytes)?||grant.maximum_release_bytes<owner.next_release_byte_demand()?||grant.maximum_depth<owner.next_depth_demand()?{return Ok(false)}
-            let step=owner.step(grant)?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);return Ok(false)
+        use semio_framework_value::{RetainedCloneProgress as P,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone_grant_admits};
+        let grant=cx.retained_grant();if cx.retirement_should_yield(){return Ok(false)}
+        if self.archive_close.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"command retirement cannot combine two active frontiers").into())}
+        if self.original_close.is_none(){
+            if self.command.is_none(){return Ok(true)}if !AppCommand::controlled_retirement_supported(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"command has no complete controlled field graph").into())}
+            let bytes=size_of::<Option<AppCommand>>()+size_of::<Option<ControlledRetirement<AppCommand>>>();let d=semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};if cx.fuel_remaining()<1||!retained_clone_grant_admits(grant,d){return Ok(false)}
+            cx.consume_retained(P{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);self.original_close=Some(ControlledRetirement::retain(self.command.take().unwrap()));return Ok(false)
         }
-        if let Some(owner)=self.bytes_close.as_mut(){
-            if owner.terminal_is_empty(){drop(self.bytes_close.take());cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
-            if grant.maximum_copy_bytes<owner.next_copy_byte_demand()?||grant.maximum_capacity_bytes<owner.next_capacity_byte_demand(grant.maximum_copy_bytes)?||grant.maximum_release_bytes<owner.next_release_byte_demand()?||grant.maximum_depth<owner.next_depth_demand()?{return Ok(false)}
-            let step=owner.step(grant)?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);return Ok(false)
-        }
-        let Some(command)=self.command.as_mut()else{return Ok(true)};
-        let bytes = match (self.close_stage, &mut *command) {
-            (0, AppCommand::MediaOut { request, .. }) => Some(request),
-            (0, AppCommand::Command { command, .. } | AppCommand::ArtifactCommand { command, .. }) => Some(command),
-            (1, AppCommand::Command { view_state, .. }) => Some(view_state),
-            _ => None,
-        };
-        if let Some(bytes) = bytes {
-            use semio_framework_value::retirement::RetireOwned as _;
-            let birth = bytes.retirement_birth_bytes().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original command bytes have no retirement factory"))?;
-            let copy = size_of::<Vec<u8>>();
-            if grant.maximum_copy_bytes < copy || grant.maximum_capacity_bytes < birth { return Ok(false) }
-            match semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(bytes)) {
-                Ok(owner) => { self.bytes_close = Some(owner); self.close_stage += 1; }
-                Err((failure, source)) => { *bytes = source; return Err(failure.into()) }
-            }
-            cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: copy, retained_capacity_bytes: birth, ..Default::default() })?;
-            cx.consume_fuel(1);
-            return Ok(false)
-        }
-        let field=match(self.close_stage,&mut*command){
-            (0,AppCommand::SubmitMediaExport{port,..})=>Some(port),
-            (1,AppCommand::SubmitMediaExport{expected_parent_document_id,..})=>Some(expected_parent_document_id),
-            (2,AppCommand::SubmitMediaExport{checkpoint_id,..})=>checkpoint_id.as_mut(),
-            (0,AppCommand::PollMediaExport{handle,..})=>Some(&mut handle.parent_document_id),
-            (1,AppCommand::MediaOut{port,..})=>Some(port),
-            (_,AppCommand::SubmitMediaExport{..}|AppCommand::PollMediaExport{..}|AppCommand::MediaOut{..}|AppCommand::Command{..}|AppCommand::ArtifactCommand{..})=>None,
-            _=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original command close requires an admitted payload carrier").into()),
-        };
-        if let Some(field)=field{
-            match semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(field)){Ok(owner)=>{self.text_close=Some(owner);self.close_stage+=1;},Err((failure,source))=>{*field=source;return Err(failure.into())}}
-        }else{drop(self.command.take());}
-        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(self.command.is_none())
+        let owner=self.original_close.as_mut().unwrap();
+        if owner.terminal_is_empty(){let bytes=size_of::<Option<ControlledRetirement<AppCommand>>>();let d=semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};if cx.fuel_remaining()<1||!retained_clone_grant_admits(grant,d){return Ok(false)}cx.consume_retained(P{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);self.original_close.take();return Ok(true)}
+        let demand=owner.next_demand(grant.maximum_copy_bytes)?;let work=owner.next_computational_work(grant.maximum_copy_bytes)?;if cx.fuel_remaining()<work||!retained_clone_grant_admits(grant,demand){return Ok(false)}
+        let result=owner.step(grant);cx.consume_fuel(owner.last_turn_work());match result{Ok(step)=>cx.consume_retained(step.progress())?,Err(failure)=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(failure,cx))}Ok(false)
     }
 
     pub fn take_for_dispatch(&mut self) -> Option<AppCommand> {
@@ -118,6 +91,7 @@ impl DecodedAppCommandOwner {
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if self.original_close.is_some(){return (false,0,0)}
         let Some(command) = self.command.as_mut() else {
             return (true, 0, 0);
         };
@@ -215,7 +189,7 @@ impl DecodedAppCommandOwner {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.command.is_none()&&self.text_close.is_none()&&self.bytes_close.is_none()
+        self.command.is_none()&&self.original_close.is_none()&&self.archive_close.is_none()
     }
 }
 
@@ -227,3 +201,5 @@ pub(super) enum CursorShape {
     Fault,
 }
 //#endregion 🔖️PagedAppCommandDecode
+
+impl std::fmt::Debug for PagedAppCommandDecodeCursor{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("PagedAppCommandDecodeCursor").field("reader",&self.reader).field("state",&self.state).field("original",&self.original).field("closing",&self.original_close.is_some()).finish()}}

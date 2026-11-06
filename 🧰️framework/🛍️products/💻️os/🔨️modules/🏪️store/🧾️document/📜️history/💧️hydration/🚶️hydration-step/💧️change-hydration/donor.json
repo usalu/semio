@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "id": "change-ä",
+      "editIds": [
+        "e1",
+        "e2"
+      ],
+      "description": null,
+      "savedAt": "2026-11-06T00:00:00Z"
+    },
+    {
+      "id": "empty",
+      "editIds": [],
+      "description": "kept",
+      "savedAt": "now"
+    }
+  ]
+}

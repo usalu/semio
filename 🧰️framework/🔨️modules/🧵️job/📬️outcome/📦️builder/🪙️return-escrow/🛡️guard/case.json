@@ -1,0 +1,97 @@
+{
+  "stock": {
+    "items": 8,
+    "copyBytes": 4096,
+    "work": 100
+  },
+  "guard": {
+    "items": 1,
+    "copyBytes": 51,
+    "work": 2
+  },
+  "metadata": {
+    "items": 1,
+    "copyBytes": 256,
+    "work": 1
+  },
+  "cases": [
+    {
+      "id": "spend-exact-prepaid-guard",
+      "spent": true,
+      "held": [
+        0,
+        0,
+        0
+      ],
+      "observed": [
+        3,
+        572,
+        4
+      ],
+      "available": [
+        5,
+        3524,
+        96
+      ]
+    },
+    {
+      "id": "release-unused-guard",
+      "spent": false,
+      "held": [
+        0,
+        0,
+        0
+      ],
+      "observed": [
+        2,
+        521,
+        2
+      ],
+      "available": [
+        6,
+        3575,
+        98
+      ]
+    }
+  ],
+  "identityCases": [
+    {
+      "id": "same-source-exact-header",
+      "source": 71,
+      "recipient": 91,
+      "pointer": 1000,
+      "expected": true
+    },
+    {
+      "id": "foreign-source",
+      "source": 72,
+      "recipient": 91,
+      "pointer": 1000,
+      "expected": false
+    },
+    {
+      "id": "foreign-recipient",
+      "source": 71,
+      "recipient": 92,
+      "pointer": 1000,
+      "expected": false
+    },
+    {
+      "id": "wrong-receipt",
+      "source": 71,
+      "recipient": 91,
+      "pointer": 1001,
+      "expected": false
+    }
+  ],
+  "observer": {
+    "items": 1,
+    "copyBytes": 265,
+    "work": 1
+  },
+  "freshAtSettlement": {
+    "items": 0,
+    "copyBytes": 0,
+    "work": 0
+  }
+}

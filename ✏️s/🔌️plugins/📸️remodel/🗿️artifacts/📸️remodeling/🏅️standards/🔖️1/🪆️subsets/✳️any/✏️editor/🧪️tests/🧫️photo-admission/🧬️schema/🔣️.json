@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "cases", "appendCases", "jpeg", "notice"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "cases": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["id", "mime", "base64", "frames"], "properties": { "id": { "type": "string" }, "mime": { "enum": ["image/png", "image/jpeg", "text/plain"] }, "base64": { "type": "string" }, "frames": { "const": 0 } } } },
+    "appendCases": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["id", "frameIndices", "assetIndices", "nextIndex"], "properties": { "id": { "type": "string" }, "frameIndices": { "$ref": "#/$defs/indices" }, "assetIndices": { "$ref": "#/$defs/indices" }, "existingStream": { "type": "boolean" }, "nextIndex": { "type": ["integer", "null"], "minimum": 0, "maximum": 4294967295 } } } },
+    "jpeg": { "type": "object", "additionalProperties": false, "required": ["width", "height", "quality", "rgba", "mime", "luma"], "properties": { "width": { "type": "integer", "minimum": 1 }, "height": { "type": "integer", "minimum": 1 }, "quality": { "type": "integer", "minimum": 0, "maximum": 100 }, "rgba": { "$ref": "#/$defs/bytes" }, "mime": { "const": "image/jpeg" }, "luma": { "$ref": "#/$defs/bytes" } } },
+    "notice": { "type": "object", "additionalProperties": false, "required": ["name", "locales", "batchTotal", "warningCount", "artifactMutations"], "properties": { "name": { "type": "string", "minLength": 1 }, "locales": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "object", "additionalProperties": false, "required": ["locale", "message"], "properties": { "locale": { "enum": ["en", "de"] }, "message": { "type": "string", "minLength": 1 } } } }, "batchTotal": { "const": 2 }, "warningCount": { "const": 1 }, "artifactMutations": { "const": 0 } } }
+  },
+  "$defs": { "indices": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 4294967295 } }, "bytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } } }
+}

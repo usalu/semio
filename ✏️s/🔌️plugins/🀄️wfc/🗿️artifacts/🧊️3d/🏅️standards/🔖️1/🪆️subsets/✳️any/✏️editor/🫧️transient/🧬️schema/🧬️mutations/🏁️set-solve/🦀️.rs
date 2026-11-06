@@ -48,4 +48,4 @@ where
 }
 }
 
-protocol::retained_set_record!(SetSolve => Wfc3dTransient, Wfc3dTransientDiff, Wfc3dTransientMutation { authored: SetSolve = |leaf| leaf, patch: |value: SetSolve| (Wfc3dTransientDiff { assignments: Some(value.assignments), contradiction: Some(value.contradiction), source_revision: Some(value.source_revision) },3), patch_work: |_: &SetSolve| Ok(3), inverse: |root: Wfc3dTransient| (SetSolve { assignments: root.assignments, contradiction: root.contradiction, source_revision: root.source_revision }.into(),4), inverse_work: |_: &Wfc3dTransient| Ok(4) });
+protocol::retained_set_record!(SetSolve => Wfc3dTransient, Wfc3dTransientDiff, Wfc3dTransientMutation { authored: SetSolve = |leaf| leaf, source_work: 1, patch: |value: SetSolve| (Wfc3dTransientDiff { assignments: Some(value.assignments), contradiction: Some(value.contradiction), source_revision: Some(value.source_revision) },3), patch_work: || Ok(3), inverse: |root: Wfc3dTransient| (SetSolve { assignments: root.assignments, contradiction: root.contradiction, source_revision: root.source_revision }.into(),4), inverse_work: || Ok(4) });

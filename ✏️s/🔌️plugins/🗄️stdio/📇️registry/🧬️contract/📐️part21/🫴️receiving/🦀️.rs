@@ -4,6 +4,7 @@ use semio_framework_value::{NativeDecodeControl,RetainedWorkOutcome,RetirementDe
 use semio_framework_value_native_owned::native_decoding::{NativeReceive,NativeReceiver,OriginalReceivingPrimary};
 use semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource;
 use semio_framework_value::retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,retained_clone_grant_admits};
+use semio_framework_value::native_decoding::owned::{NativeClosePermit,NativeRecoveryLoan};
 use std::mem::{ManuallyDrop,size_of};
 #[derive(semio_framework_value::RetireOwned,semio_framework_value::NativeReceive)]
 #[value(tag="kind",rename_all="camelCase",deny_unknown_fields)]
@@ -26,7 +27,10 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,Part21Value> for Part21ValueRe
  fn output_ready(&self)->bool{!self.closing&&!self.taken&&self.checked&&self.output.is_some()}
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(invalid());}Ok(RetirementDemand{copy_bytes:2*size_of::<Part21Value>()+size_of::<bool>(),depth:1,..Default::default()})}
  fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Part21Value,RetainedCloneProgress)>>{let result=(||{let demand=self.take_demand()?;if !retained_clone_grant_admits(grant,demand){return Ok(None);}let value=self.output.take().ok_or_else(invalid)?;self.taken=true;Ok(Some((value,receipt(demand.copy_bytes))))})();RetainedWorkOutcome{result,work:1}}
- fn begin_close(&mut self){self.closing=true;self.inner.begin_close();}
+ fn has_pending_recovery(&self)->bool{self.inner.has_pending_recovery()}
+ fn pending_recovery(&mut self)->Option<NativeRecoveryLoan<'_>>{if self.inner.has_pending_recovery(){return self.inner.pending_recovery()}None}
+ fn resume_recovery(&mut self,control:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{if self.inner.has_pending_recovery(){return self.inner.resume_recovery(control)}RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+ fn begin_close_admitted(&mut self,_permit:NativeClosePermit)->Result<(),ValueError>{self.inner.begin_close()?;self.closing=true;Ok(())}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<Part21Value>(false,&None,body);}if self.output.is_some(){return self.retirement.next_owner_demands::<Part21Value>(true,&None,body);}if !self.inner.terminal_is_empty(){return self.inner.close_demands(body);}RetainedCloneBinding::close_demand(&self.binding,body)}
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.retirement.is_empty(){return self.retirement.next_owner_work::<Part21Value>(false,&None,body)}if self.output.is_some(){return self.retirement.next_owner_work::<Part21Value>(true,&None,body)}if !self.inner.terminal_is_empty(){return self.inner.close_work_demand(body)}RetainedCloneBinding::close_work_demand(&self.binding,body)}
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{let mut work=1;let result=(||{if !self.closing{return Err(invalid());}if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work=turn.work;return turn.result;}if self.output.is_some(){let turn=self.retirement.begin_granted(&mut self.output,grant);work=turn.work;return turn.result?.ok_or_else(invalid);}if !self.inner.terminal_is_empty(){let turn=self.inner.close_step(grant);work=turn.work;return turn.result;}let turn=RetainedCloneBinding::close_one(&mut self.binding,grant);work=turn.work;turn.result})();RetainedWorkOutcome{result,work}}

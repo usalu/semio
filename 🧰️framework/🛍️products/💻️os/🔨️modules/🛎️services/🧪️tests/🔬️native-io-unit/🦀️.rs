@@ -46,7 +46,7 @@ impl Drop for OriginalIoFixture {
         let caller = self.caller.as_mut().unwrap();
         for _ in 0..16384{if let Some(_)=self.returned.as_ref(){let origin=&mut self.origin;let returned=&mut self.returned;caller.turn(fixture_native_io_grant(),|cx|origin.receive_outcome(cx,returned)).unwrap();continue}if let Some(_)=self.continuation.as_ref(){let origin=&mut self.origin;let continuation=&mut self.continuation;caller.turn(fixture_native_io_grant(),|cx|origin.receive_continuation(cx,continuation)).unwrap();continue}if self.origin.terminal_is_empty(){break}caller.turn(fixture_native_io_grant(),|cx|self.origin.close_step(cx)).unwrap();}
         assert!(self.returned.is_none()&&self.continuation.is_none()&&self.origin.terminal_is_empty());
-        for _ in 0..16384 { if self.decoder.terminal_is_empty() { break; } caller.turn(fixture_native_io_grant(), |cx| { let demand = self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?; semio_framework_job::close_original_retained_step(cx, demand, |grant| self.decoder.close_step(grant))?; Ok(()) }).unwrap(); }
+        for _ in 0..16384 { if self.decoder.terminal_is_empty() { break; } caller.turn(fixture_native_io_grant(), |cx| { let demand = self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?; self.decoder.close_on_source(cx)?; Ok(()) }).unwrap(); }
         assert!(self.decoder.terminal_is_empty());
         self.caller.take().unwrap().retire(fixture_native_io_grant());
     }

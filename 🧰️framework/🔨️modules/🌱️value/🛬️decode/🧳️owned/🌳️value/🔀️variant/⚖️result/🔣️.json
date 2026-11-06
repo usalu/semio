@@ -68,5 +68,6 @@
     "releaseBytes": 16777216,
     "depth": 128,
     "fuel": 1000000
-  }
+  },
+  "workQuantum": 64
 }

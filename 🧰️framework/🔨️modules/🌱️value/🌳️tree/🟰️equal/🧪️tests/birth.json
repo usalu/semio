@@ -1,0 +1,23 @@
+[
+  {
+    "id": "denied",
+    "admitted": false,
+    "allocationFails": false,
+    "constructed": false,
+    "marker": "none"
+  },
+  {
+    "id": "refused",
+    "admitted": true,
+    "allocationFails": true,
+    "constructed": false,
+    "marker": "failed"
+  },
+  {
+    "id": "born",
+    "admitted": true,
+    "allocationFails": false,
+    "constructed": true,
+    "marker": "bytes"
+  }
+]

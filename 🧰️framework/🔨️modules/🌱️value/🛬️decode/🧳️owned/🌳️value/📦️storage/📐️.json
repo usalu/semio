@@ -1,1 +1,62 @@
-{"count":3,"deniedWork":0,"nullWork":1,"birthWork":1,"cachedWork":0,"empty":[],"stock":{"items":100000,"copyBytes":33554432,"capacityBytes":33554432,"releaseBytes":33554432,"depth":64,"fuel":100000,"maximumTurns":100000}}
+{
+  "count": 3,
+  "deniedWork": 0,
+  "nullWork": 1,
+  "birthWork": 1,
+  "cachedWork": 0,
+  "empty": [],
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 100000,
+    "maximumTurns": 100000
+  },
+  "push": {
+    "value": 42,
+    "work": 3,
+    "cases": [
+      {
+        "maximum": 0,
+        "work": 0,
+        "accepted": false
+      },
+      {
+        "maximum": 1,
+        "work": 0,
+        "accepted": false
+      },
+      {
+        "maximum": 2,
+        "work": 0,
+        "accepted": false
+      },
+      {
+        "maximum": 3,
+        "work": 3,
+        "accepted": true
+      }
+    ]
+  },
+  "retainedHeader": "optional-storage",
+  "partialPush": [
+    {
+      "complete": false,
+      "childWork": 1,
+      "parentWork": 0,
+      "index": 0,
+      "phase": 3,
+      "donor": 42
+    },
+    {
+      "complete": true,
+      "childWork": 2,
+      "parentWork": 2,
+      "index": 1,
+      "phase": 4,
+      "donor": null
+    }
+  ]
+}

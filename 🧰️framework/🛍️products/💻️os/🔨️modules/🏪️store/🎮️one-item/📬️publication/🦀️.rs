@@ -434,13 +434,19 @@ pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
     /// 📨️ Borrows the semantic diagnostics owned by this exact structural preparation.
     fn outcome_messages(&self) -> &[semio_os_spr::MutationMessage] { &[] }
 
-    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalRetirementFailure>;
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary>;
     /// ⛽️ The entire latest advance reports actual work, including observed native work and failures, and resets on denial.
     fn last_turn_work(&self)->u64;
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint;
     fn prepared(&self) -> Option<&ArtifactStoreOneItemPrepared<P, Mutation>>;
     fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, Mutation>>;
     fn cancel(&mut self);
+    /// 🧷️ Exposes only the pending original decoder callback owned by this preparation.
+    fn has_pending_receiving_recovery(&self)->bool;
+    fn pending_receiving_demand(&self)->Option<semio_framework_value::RetirementDemand>;
+    fn pending_receiving_recovery(&mut self)->Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>>;
+    /// 🧾️ Settles the actual receiving frame through the same original decoder before close.
+    fn finish_receiving_recovery(&mut self,control:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,semio_framework_value::OriginalReceivingPrimary>;
     fn begin_close(&mut self);
     /// 🧷️ Native wire owners retain this exact original decoder cleanup capability across cancellation.
     fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:ArtifactStoreOneItemGrant)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{let g=grant.retained_grant();let demand=semio_framework_value::RetirementDemand{copy_bytes:self.next_close_copy_byte_demand()?,capacity_bytes:self.next_close_capacity_byte_demand(g.maximum_copy_bytes)?,release_bytes:self.next_close_release_byte_demand()?,depth:self.next_close_depth_demand()?};if !semio_framework_value::retained_clone::retained_clone_grant_admits(g,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}original.charge(demand.capacity_bytes)?;self.close_step(grant)}

@@ -1,3 +1,4 @@
+import "./📦️lifetime.ts";
 import "../../📦️acquisition/🧪️tests/🟦️.ts";
 import{createIssuedResourceControlV1 as artifactEntryControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";

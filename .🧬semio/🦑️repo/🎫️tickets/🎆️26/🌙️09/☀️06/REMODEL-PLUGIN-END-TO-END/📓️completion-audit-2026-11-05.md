@@ -2,6 +2,49 @@
 
 The goal is active and completion is unproven. The plugin must work through its real registered editor/viewer, component, media operations, reconstruction, persistence and user interactions. Source checks, compilation preparation and portable oracles do not establish that result.
 
+## Current Snapshot and Native Owner Recovery — 2026-11-06 04:29 UTC
+
+This section supersedes older pending/live tables. Full workspace 2188 and Hub 68614 actually failed before compiler allocation: semio-plugin-job's test/fixture closure was 262788 bytes, 644 above its unchanged 262144-byte bound. Image/JPG runs failed on the same owner. The fleet moved the operation census into its actual semio-plugin-operation owner, directly updated the instance consumer and canonical SDK facade, and independently reviewed the ownership change. No quota, guard or private proof admission was weakened. New job/test closure is 258779 bytes; other affected owners remain within their bounds. Native compilation remains unproven.
+
+Old root loader/parent processes, leases, waiters and capacity grants were checked absent. Three independent orphan unit-cache GC children remained and were left alone. One full unfiltered workspace replacement 1842 and Hub replacement 16974 are active. Component 97795 and current snapshot broker law 53182 remain active; these are not test/link passes. Native recovery owns presentation 26486, mesh broker 7285, GLB 1380, image 2747 and JPG 97387. Generic GLB source-extent drift and earlier source-budget failures are retained as actual failures, never converted into passes.
+
+The current Snapshot UI path is now wired explicitly for Remodel using the existing checked NativeSnapshotPackExportJob, declared port/format, real borrowed snapshot source, localized action and native guards. Native law first publishes AddStream, compares the entire decoded persistent record with the current state, verifies cancellation cuts under a reduced genuine original grant, and repeats the same unchanged snapshot across two operation handles to check canonical bytes. That native law has not executed. Raw BTreeMap projections remain unbounded, so paid original OrderedMap storage/mutation/retirement work is still required before this route can be called bounded.
+
+Fresh focused renderer 85138 passed two files/all 47 tests on mesh/snapshot routing, collector, delivery and existing playback source. A separate normal-admission SmartBuffer oracle passed 14 header cases (2 accepted, 12 refused) against the existing controlled TypeScript envelope decoder, with zero owned payload bytes. It validates framing and borrowed-body identity only; it does not parse the inner native Pack record. Native snapshot semantic/canonical tests, actual compiled component and live downloads remain required.
+
+Shared dependency lock 60752 actually passed. The sole sequential all-owner lock repair 85519 remains active for other affected scopes; full JS/mutation/descriptor/typecheck gates have not been requeued before that prerequisite is current. Browser code now has public same-artifact viewer switching, fresh-profile B cold reopen, phase-specific strict receipts and a conditional current-snapshot undo/redo witness. Narrow policy tests pass, while actual phase execution, full typechecking, all six window configurations and selected-image decoding are unproven. A scoped durable-content TS run passed all nine portable cases plus independent Ajv/fast-json-patch checks; no retained native mutation owner pass follows from that.
+
+## Latest Checked-Export Recovery — 2026-11-06
+
+This section supersedes earlier gate tables below. Root's full artifact workspace 2188, Hub library 68614 and component 97795 remain active without a main test/link verdict. Descriptor 30944, full Vitest 32016 and mutation-contract 76414 actually terminated with exit 1 before their bodies because the frozen shared dependency lock lacks the newly declared Bun test types. Browser recovery owns corrected declared-scope lock run 60752; prior package-scoped run 35480 failed with zero completed locks. No replacement descriptor/full JS/mutation gate has been launched before that repair succeeds.
+
+The genuine checked export gap is being implemented: the framework now exposes a static declared-output `exportMediaFile` action; Remodel mounts localized Export Mesh/Netz exportieren metadata for raw GLB. The UI resolves the exact addressed app instance, validates the declared port/representation, drives checked submit/poll/cancel/take, publishes task progress, and rechecks the saved document identity/revision before delivery. Native guards refuse forwarding that shell-owned action. The native resumable GLB cursor and snapshot source adapter are still drafts; the actual author producer is not wired, so the visible action does not yet establish a working export.
+
+Latest focused renderer gate 88853 passed both files and all 46 tests: 21 neutral schema/declaration/collector/delivery cases and 25 existing media/playback tests. Earlier 18027 genuinely failed two test issues, which were corrected; 61830 then passed 40 tests before the delivery extraction and six new cases. Parse/schema/import checks also passed. These receipts do not prove full semantic typechecking, a native producer, current component publication or a running Remodel download. See 📓️checked-export-ui-2026-11-06.md and 📓️media-route-review-2026-11-06.md.
+
+Browser driver scoped tests reached 3 files/18 tests, while the registered parent browser run 77217 exited 1 in repository infrastructure and its exact cause is being recovered. Real fifteen-scenario acceptance remains unexecuted. Displayed result rows, canvas variation and asset counts are kept as partial observations. Public UI archive downloads are being added for stronger abort/image evidence; whole-archive equality is not a semantic undo proof, and no existing JavaScript snapshot/history materializer or CLI was found in bounded review.
+
+Native presentation 26752 actually failed precompiler in Cargo fetch because process-arena appeared in both root/framework workspace member lists while its explicit package owner resolves to root. Native recovery is repairing that exact membership inconsistency without changing package ownership or peer work. Other native gates and the strengthened cold-store law still need actual compiler/test receipts. The shared phase/capacity waits are not themselves pass/failure evidence, and no healthy peer was stopped.
+
+## Authoritative Recovery Snapshot — 2026-11-06
+
+This snapshot supersedes historical pending/live wording below. Previous native and descriptor handles are unavailable, and retained terminal logs prove their failures. Actual old producer/descriptor process and JavaScript lease absence were checked; no peer process or custody was changed.
+
+| Gate | Current Handle | Current Evidence |
+|---|---|---|
+| Full unfiltered artifact workspace | 2188 | Normal one-job replacement, live; prior terminal manifest failure now current-source corrected |
+| Hub Remodel native library | 68614 | Normal one-job replacement, live; full Hub closure audit now 154 members/3697 manifests/two parsers/no issues |
+| WASM component wasm32-wasip2 | 97795 | Normal one-job replacement, live; no compile/link or provenance pass yet |
+| Owned descriptor generation | 30944 | Normal one-job replacement; actual current canonical route resolver accepts 195 routes/196 targets, including formerly missing producer target |
+| Worker native suites | 25767 / 26752 / 64546 / 71451 | Normal one-job JSON full serial, presentation diagnostic, image codec and JPG replacements; prior actual errors/current-source ownership inspected |
+| Full Vitest | 32016 | Prior 38976 actual terminal graph aggregate-stale before tests; canonical order-only repair independently validated, one full replacement pending |
+| Mutation differential contract | 76414 | Prior 64314 actual terminal aggregate-stale before scenario; same-case replacement after repair pending; oracle/subject/parity still required |
+| Plugin browser acceptance | Incomplete | Fifteen required scenarios; real saved-artifact callback/owned test port being integrated, no live host proof |
+| Window identity and driver focused tests | Actual narrow GREEN | Current scoped tool receipt: 2 files/8 tests, real surface SSR plus schema/accounting; normal renderer registration added, no live UI proof |
+| Relay | Narrow proofs retained | Current drain Node 5/5 and Chromium worker 1/1 pass; repeated Bun unit crash remains unresolved |
+
+Current root logs use suffix recovery-2026-11-06.log. See 📓️recovery-2026-11-06.md and the new fleet reports for exact provenance. Historical successes remain scoped; no full plugin acceptance or repository goal completion is claimed.
+
 ## Current Verification Jobs
 
 Root tracks actual terminal failures and their single current replacements below. Worker jobs below remain owned and observed by their assigned agents; their raw output is retained under the ticket generated directory.
@@ -16,7 +59,7 @@ Root tracks actual terminal failures and their single current replacements below
 | Root | Prepared React host on port 6063 | 64120 (terminal 1) | Actual dependency-build lease wait exceeded declared maximum; no prepared host or UI proof, prerequisite diagnosis continues |
 | Root | Shared browser policy regression | 53321 | Actual exit 0: 10 passed, 24 assertions; pinned Chromium provisioning and verification subsequently passed separately |
 | Engine | Image natural-file codec law | 34115 | Prior 73144 terminal CargoLockRefused testing-caller inheritance; current peer canonical binding verified by two parsers, old process retired, one exact replacement pending |
-| Engine | Presentation native receive/retirement law | 79804 | Prior4716 actual positive-case receiver assertion failure; same-budget diagnostic retry with exact case/error context pending |
+| Engine | Presentation native receive/retirement law | 79804 | Prior 4716 expected-valid row returned receiver error, exact row unknown; same-budget diagnostic retry with exact case/error context pending |
 | Engine | Presentation Ajv/SQLite oracle | 39624 | Actual exit0: 1pass/0fail/279assertions, all5SurfaceProps rows included |
 | Engine | Targeted Chromium setup/verify | 3046 / 41590 | Both actual exit0, pinned1248 ready and independently verified |
 | Engine | Real TCP and worker relay regression | 10406 / 90213 / 41414 | Actual Node 5 passed plus focused corrected input-prefix case; actual Chromium worker 1 passed/5 assertions; Bun 99940 repeats pre-verdict segmentation fault; real saved-artifact journey pending |
@@ -64,7 +107,7 @@ The full workspace7986 was deliberately resized from four admitted cores to a no
 
 - Shared browser policy53321: actual exit0,10tests passed, none failed,24expect calls. This covers canonical launch/path/probe contracts and module resolution; pinned Chromium provisioning and verification later passed, while worker route/offline behavior produced actual negative results.
 
-- Presentation fixture oracle39624: actual exit0, one test passed, none failed,279expect calls; existing Ajv+SQLite harness includes all181neutral rows and allfiveSurfaceProps cases. Root independently inspected retained terminal output. Native receive/retirement law 4716 failed a positive fixture; current diagnostic 79804 remains pending.
+- Presentation fixture oracle39624: actual exit0, one test passed, none failed,279expect calls; existing Ajv+SQLite harness includes all181neutral rows and allfiveSurfaceProps cases. Root independently inspected retained terminal output. Native receive/retirement law 4716 failed because an expected-valid row returned a receiver error; current diagnostic 79804 remains pending.
 
 - UI receiving law 83988: actual exit 0, one test passed, none failed, two filtered, in canonical semio-ui-contract-text with independent serde_json comparison.
 - Planning/capture regression suite: 89 passed, 169 assertions.
@@ -127,7 +170,7 @@ Current-source two-instance audit identified an explicit missing acceptance acti
 
 Latest prerequisite work: the two-human CLI now forwards its genuine invocation to canonical browser preparation and uses its cancellation signal; source/control review and parsing passed, runtime integration remains required. Targeted tool setup68921 passed its revised neutral selection regression; actual Chromium 3046 and verification 41590 both returned exit 0. Full CLI help suite has a retained cache-grow mismatch, so no full pass is claimed. JSON44530 failed on a new Float32 variant; canonical sink branch and exact-serde neutral law were independently reviewed, and full serial36168 is current. See the corresponding two-human-preparation, targeted-tool-setup-review and float32-sink-review reports.
 
-Latest actual failures: presentation4716 reached the receiver law and rejected a positive fixture without naming it; diagnostic79804 preserves all expectations/budgets and adds case/error context. Image50893 failed kernel identity direct native-owned resolution; Engine/root repaired the identity/base/media bindings after actual failure and owned-source preflight, without claiming additional compiler RED. Provisioned browser59209 disproved both proposed worker-disconnect shortcuts; an owned bounded context-proxy relay is being proven before journey integration. See kernel-native-dependencies and short-disconnect reports.
+Latest actual failures: presentation 4716 reached the receiver law and rejected an expected-valid fixture without naming it; diagnostic79804 preserves all expectations/budgets and adds case/error context. Image50893 failed kernel identity direct native-owned resolution; Engine/root repaired the identity/base/media bindings after actual failure and owned-source preflight, without claiming additional compiler RED. Provisioned browser59209 disproved both proposed worker-disconnect shortcuts; an owned bounded context-proxy relay is being proven before journey integration. See kernel-native-dependencies and short-disconnect reports.
 
 ## Detailed Evidence
 
@@ -146,3 +189,43 @@ Windows managed Bun setup 82568 and independent verify 7635 both actually comple
 The plugin-owned browser acceptance driver is under active source review with twelve required scenarios, explicit locale/argv/output contracts and strict nonzero incomplete-run handling. No host UI acceptance is claimed; see 📓️browser-contract-map-2026-11-05.md and 📓️browser-driver-review-2026-11-05.md.
 
 Actual frontend consumer failures: see 📓️dependency-wait-failures-2026-11-05.md. Full Vitest and prepared host are terminal failed on declared dependency lease-wait maximum, not passing or still active. Required scopes remain unchanged; shared producer termination is not inferred.
+
+Verified recovery diagnosis: root read both the actual presentation 4716 panic and the entire current receiver harness. Assertion !accepted is inside if let Err(error)=result, so an expected-valid row returned a receiver error. A brief recovery inference had inverted this branch and was corrected after direct source inspection. The exact row/error remains unknown; later 79804 failed compilation before its diagnostic body. Current 26752 must identify it. No receiver acceptance policy or budget was changed.
+
+## Browser And Cold-Persistence Follow-Up — 2026-11-06
+
+The plugin browser corpus now retains the original twelve scenarios plus explicit JPEG, corrupt-input and append requirements, and names the finite 45-frame AVI. Accounting, identity and actual surface SSR focused tests are green at their stated source hashes (two files/eight tests reported). Their receipt is tool-only and retained in browser-recovery report; no raw redirected output is claimed. Root independently read the helper, forwarding test, driver accounting and expanded corpus. Full Vitest 38976 remains a separate live run.
+
+The new body metadata uses data-surface-* to avoid collisions with existing dock selectors, resolves exact unique session owners and distinguishes window kind/instance. A saved-artifact acceptance entry must reuse genuine public two-human setup and pass owned UI test capabilities; a fresh unsigned --host page does not establish the required scope. The generic callback/port integration is under implementation and must not expose Playwright types or substitute invented state.
+
+Current source review also found a genuine cold persistence proof gap. Existing picker tests validate all 36 live durable images, and reconstruction tests validate live finalized geometry. The six-window test uses a real archive loader and fresh app, but leaves the old app alive and does not check orbit bytes or finalized mesh after closure. Native recovery is designing a real document_pack plus spr cold hydration law after paid closure/drop of the old app, with independent PNG checks. This new law will need its own actual execution and cannot be credited to a pre-edit workspace run.
+
+The actual current runs remain live with no native or full frontend verdict. No original acceptance requirement is removed or considered achieved by these narrow source/test results.
+
+## Cold Loader Trace Clarification
+
+Root independently read artifact_app_laws::load_document at its canonical fixture-dispatch/document-loading owner. Its input is ArtifactPackFiles, not a retained in-memory Document. It calls the production archive admission, maintenance, poll, acknowledge and terminal outcome path under the supplied genuine StepContext. Native/audit agents confirmed new_app_with_registry creates a fresh wrapper/store and settles its owner catalog. Earlier broad recovery wording that treated this helper as warm deserialization was inaccurate.
+
+The existing six-window law nevertheless leaves the old app alive and does not verify all 36 orbit image bytes or finalized mesh after closure. The required new law should reuse the canonical loader, paid-close/drop the old instance first, retain only serialized pack/spr plus expected values, construct a fresh registered app, and verify reopened durable leaves and geometry. The gap is the proof and lifecycle/content coverage, not a demonstrated absence of a production cold loader. No separate or compatibility hydration implementation is needed.
+
+At 01:34 UTC all six current coordinator handles were authoritatively re-polled live: 2188, 68614, 97795, 30944, 64314 and 38976. No compiler/test/descriptor completion is inferred. The paired Node/Bun destroy-end diagnostic passed at its bounded 128-cycle scope and did not reproduce the relay crash; see 📓️destroy-end-diagnostic-2026-11-06.md.
+
+Actual graph-order repair and current replacement provenance are in 📓️aggregate-ordering-repair-2026-11-06.md. No test or contract body ran in the failed graph attempts.
+
+## Final Cold Wire Comparison And Interface Test Checkpoint
+
+The cold law now retains deep Vec<Vec<u8>> copies of the existing bounded remodeling mesh chunk stream, not MeshData or Debug text, across paid closure. That stream covers its declared tags 0–11 (geometry, UV/edge/seam data and paint texture), not generic MeshData HistoryFoldIndex attributes/materials/textures or component references. Exact reopened chunk equality, mesh source and independent geometry/truth checks prove the intended bounded contract when executed; no broader generic mesh-field persistence is claimed. Final reported source SHA is 76d472ac7739204ad216f8df6b5cbe2b48c25afca0c99a45bbf0291aee62966d, with closure 28 files/239903 bytes/3272 active lines and rustfmt parse exit 0. Native execution remains pending.
+
+The browser owner reports current neutral interface receipt tests and SQLite/Ajv comparison passing, and a real managed Chromium local oracle passing 19 assertions including same-origin Blob MIME, revoked/other URL unknown outcomes, filename/content, interaction bounds and temporary-file deletion. These are local interface proofs, not the app. Ordinary OS-dev long/exhaustive registration is being validated through genuine-parent run 77217; a direct undeclared-parent attempt was correctly refused before the browser body. Cleanup settlement, partial-text indication and source type checks remain under review. The policy caps returned bytes rather than making an unsupported Chromium pre-write disk guarantee.
+
+## Owned Browser Interface Review — 2026-11-06
+
+Root independently read the public opened-artifact interfaces, private browser adapter, neutral schema/vectors and actual two-human callback seam. The public interface uses repo-owned and standard types; Playwright remains in the private implementation. The seam receives the actual space/document IDs and original signal after both real sessions open the artifact and presence reaches 2/2.
+
+Review requested and the owner reports fixes for: collision between a product check named complete and the runner summary; blank check IDs; silent text truncation; copying a download chunk before its size admission; cancellation returning before page closure and the operation's cleanup; and independent SQLite acceptance computation rather than shape validation alone. These final changes still need current-source runtime/type proof.
+
+The owner reports a scoped SQLite/Ajv and renderer/driver run with three files/twelve passing tests. An earlier local real-Chromium interface oracle reached one test/nineteen assertions including actual same-origin Blob MIME, revoked and non-Blob unknown results, real filename/bytes and temporary-path deletion. Later cleanup and text-limit edits mean that earlier browser result is not a current final-interface pass.
+
+Ordinary OS-dev registered-parent browser test 77217 and renderer owner typecheck 18881 are pending under the browser agent. They must complete through genuine invocation authority; the direct undeclared-parent attempt was refused before the browser body and is not an app failure. No real app media, lifecycle, viewer or cold-reopen acceptance is claimed.
+
+At 02:03 UTC coordinator handles 2188, 68614, 97795, 30944, 32016 and 76414 were authoritatively re-polled live. No native suite, component link, descriptor publication, full Vitest or mutation contract verdict is inferred from that wait.

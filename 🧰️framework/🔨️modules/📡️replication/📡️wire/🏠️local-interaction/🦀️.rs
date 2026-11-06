@@ -59,6 +59,7 @@ impl semio_framework_value::FromValue for LocalInteractionState {
 
 /// 🔐️ Publication authority binds exact interaction, document, and topology identities.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct LocalInteractionIdentity {
     pub app_instance_id: u32,
     pub generation: u64,
@@ -247,6 +248,7 @@ impl semio_framework_value::FromValue for LocalInteractionRestore {
 
 /// 🎨️ Query page transport; admission checks the fixed 4096-byte maximum before owning a page.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct LocalInteractionQueryToken {
     pub request_id: u64,
     pub query_generation: u64,
@@ -295,6 +297,7 @@ impl semio_framework_value::FromValue for LocalInteractionQueryToken {
 
 /// 📃️ Fixed-admission query page; generation distinguishes requests across app lifetime reuse.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct LocalInteractionPage {
     pub request_id: u64,
     pub query_generation: u64,

@@ -202,7 +202,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
 
     /// 🎟️ One Run-root actor turn lends the retained input and loan of one activation; the root takes the turn back before the Kernel installs the actor.
     async fn issue_activation_budget(&mut self)->Result<semio_framework::kernel::Budget,RunError>{
-        while !self.host_driver.admit_root_step().map_err(RunError::Original)?{semio_framework_async::yield_once().await;}
+        while !self.host_driver.admit_root_step().map_err(RunError::Admission)?{semio_framework_async::yield_once().await;}
         let scope=loop{if let Some(scope)=self.host_driver.begin_actor_turn(None).map_err(|error|RunError::Original(error.into()))?{break scope}semio_framework_async::yield_once().await;};
         let budget=self.host_driver.actor_budget(scope).map_err(|error|RunError::Original(error.into()))?;
         self.host_driver.dispatch_actor_step(scope,|cx|{cx.consume_fuel(1);Ok(())}).map_err(RunError::Original)?;
@@ -215,7 +215,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     async fn prepare_service_original(&mut self,plugin_id:&str,compiled:&semio_plugin_host::CompiledHandle)->Result<(semio_plugin_host::GuestInstance,semio_framework_actor::RetainedTurnInput),RunError>{
         use semio_framework_actor::retained_turn::{ActorGuestPhase,OriginalActorInput};
         use semio_plugin_interpreter_runtime::OwnedActorStartupStatus;
-        while !self.host_driver.admit_root_step().map_err(RunError::Original)?{semio_framework_async::yield_once().await;}
+        while !self.host_driver.admit_root_step().map_err(RunError::Admission)?{semio_framework_async::yield_once().await;}
         loop{
             let state=self.service_openings.as_mut().expect("original service actor is retained before opening");
             if let Some(receipt)=state.return_pending{if !self.host_driver.return_actor_turn(receipt).map_err(RunError::Original)?{semio_framework_async::yield_once().await;continue}state.return_pending=None;state.scope=None;state.returned=Some(receipt);}
@@ -480,7 +480,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
             self.kernel.kernel_mut().activate(PackageId(plugin_id.to_string()),plugin_ordinal,kind,Lane::Background,None,ActivationEvent::Manual,budget.retained,semio_framework_actor::OriginalActorTurnLoan{retained_policy:budget.retained_policy,work_fuel:budget.work_fuel,deadline_us:budget.deadline_us}).await
         };
         if self.service_openings.is_none(){
-            while !self.host_driver.admit_root_step().map_err(RunError::Original)?{semio_framework_async::yield_once().await;}
+            while !self.host_driver.admit_root_step().map_err(RunError::Admission)?{semio_framework_async::yield_once().await;}
             loop{
                 let Some(scope)=self.host_driver.begin_actor_turn(None).map_err(|error|RunError::Original(error.into()))?else{semio_framework_async::yield_once().await;continue};
                 self.host_driver.dispatch_actor_step(scope,|cx|{

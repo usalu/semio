@@ -22,15 +22,28 @@ workspace = true
 name = "semio_framework_job_receiving"
 path = "🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-value-call = { path = "../../../../🌱️value/♻️retirement/📦️call/📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path = "../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { workspace = true }
+semio-framework-job-return-budget = { path = "../../../📬️outcome/🪙️budget/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-job-context = { workspace = true, features = ["testkit"] }
 semio-framework-job-testing-caller = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+
+[[test]]
+name = "original-decoder-source-close"
+path = "../../♻️close/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-receiving-source"
+path = "../../🧪️tests/🦀️.rs"

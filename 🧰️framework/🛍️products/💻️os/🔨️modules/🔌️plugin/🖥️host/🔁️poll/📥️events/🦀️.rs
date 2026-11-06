@@ -9,10 +9,11 @@ use semio_framework_value::{Number,ValueError,ValueRefusalKind};
 pub struct EventJsonSource<'a>(pub &'a[Event]);
 
 /// 🎛️ Poll request data narrows the authenticated scalar loan and carries no Source identity.
-pub struct PollJsonSource<'a>{pub events:&'a[Event],pub limits:&'a semio_framework_kernel_identity::Budget}
+pub use semio_framework_kernel_identity::PollRequestLimits;
+pub struct PollJsonSource<'a>{pub events:&'a[Event],pub limits:&'a PollRequestLimits}
 
 #[derive(Clone,Copy)]
-enum Node<'a>{Poll(&'a PollJsonSource<'a>),Limits(&'a semio_framework_kernel_identity::Budget),Policy(semio_framework_value::RetainedCloneGrant),Null,Events(&'a[Event]),Event(&'a Event),Body(&'a Event),Bytes(&'a[u8]),Text(&'a str),UInt(u64),Quoted(u128),Bool(bool),Assets(&'a[(String,Vec<u8>)]),Asset(&'a(String,Vec<u8>)),Grants(&'a[BrokerCapabilityGrant]),Grant(&'a BrokerCapabilityGrant),Quota(&'a QuotaSchema),Activation(&'a ActivationEvent),ActivationBody(&'a ActivationEvent),Change(&'a CapabilityChange),ChangeBody(&'a CapabilityChange),Endpoint(&'a MessageEndpoint),EndpointBody(&'a MessageEndpoint),Outcome(&'a RequestOutcome),Open(ActorInstanceOpenRequest),Close(ActorInstanceCloseRequest),Lifetime(ActorInstanceLifetime),Receipt(ActorInstanceLifecycleReceipt),Ack(ActorInstanceLifecycleAck),Patch(ActorUiPatchReceipt),Cursor(&'a CommandPageCursor),ColdPage(&'a ColdDocumentPairPage),ColdHeader(&'a ColdDocumentPairHeader),Frontier(&'a ColdDocumentPairFrontier)}
+enum Node<'a>{Poll(&'a PollJsonSource<'a>),Limits(&'a PollRequestLimits),Policy(semio_framework_value::RetainedCloneGrant),Null,Events(&'a[Event]),Event(&'a Event),Body(&'a Event),Bytes(&'a[u8]),Text(&'a str),UInt(u64),Quoted(u128),Bool(bool),Assets(&'a[(String,Vec<u8>)]),Asset(&'a(String,Vec<u8>)),Grants(&'a[BrokerCapabilityGrant]),Grant(&'a BrokerCapabilityGrant),Quota(&'a QuotaSchema),Activation(&'a ActivationEvent),ActivationBody(&'a ActivationEvent),Change(&'a CapabilityChange),ChangeBody(&'a CapabilityChange),Endpoint(&'a MessageEndpoint),EndpointBody(&'a MessageEndpoint),Outcome(&'a RequestOutcome),Open(ActorInstanceOpenRequest),Close(ActorInstanceCloseRequest),Lifetime(ActorInstanceLifetime),Receipt(ActorInstanceLifecycleReceipt),Ack(ActorInstanceLifecycleAck),Patch(ActorUiPatchReceipt),Cursor(&'a CommandPageCursor),ColdPage(&'a ColdDocumentPairPage),ColdHeader(&'a ColdDocumentPairHeader),Frontier(&'a ColdDocumentPairFrontier)}
 
 fn absent()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed Event JSON path is absent")}
 fn uint<'a,T:Into<u64>>(value:T)->Node<'a>{Node::UInt(value.into())}
@@ -79,3 +80,6 @@ mod tests;
 fn at<'a>(mut node:Node<'a>,path:&[usize])->Result<Node<'a>,ValueError>{for index in path{validate(node)?;node=node.child(*index).ok_or_else(absent)?}validate(node)?;Ok(node)}
 fn validate(node:Node<'_>)->Result<(),ValueError>{if match node{Node::Open(v)=>!v.is_valid(),Node::Close(v)=>!v.is_valid(),Node::Lifetime(v)=>!v.is_valid(),Node::Receipt(v)=>!v.is_valid(),Node::Patch(v)=>!v.is_valid(),_=>false}{Err(ValueError::literal(ValueRefusalKind::InvalidValue,"borrowed Event has invalid lifecycle authority"))}else{Ok(())}}
 impl JsonWriteSource for PollJsonSource<'_>{fn node_at_path(&self,path:&[usize])->Result<JsonWriteNode<'_>,ValueError>{Ok(at(Node::Poll(self),path)?.view())}fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError>{at(Node::Poll(self),path)?.field(index).map(|(key,_)|key).ok_or_else(absent)}}
+
+pub(super) fn limits_node<'a>(limits:&'a PollRequestLimits,path:&[usize])->Result<JsonWriteNode<'a>,ValueError>{Ok(at(Node::Limits(limits),path)?.view())}
+pub(super) fn limits_key<'a>(limits:&'a PollRequestLimits,path:&[usize],index:usize)->Result<&'a str,ValueError>{at(Node::Limits(limits),path)?.field(index).map(|(key,_)|key).ok_or_else(absent)}

@@ -234,7 +234,7 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
             } else {
                 let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: live.envelope().id.clone(), dialect: live.envelope().dialect.clone().unwrap() };
                 let (operation, generation) = (semio_framework_job::OperationId(801), semio_framework_job::Generation(1));
-                let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_decoded_pack(initial, files.pack, live.envelope().vcs.genesis.facts().digest(), history, expected, None, "demo/v1".into(), complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(physical_test_close_grant())), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, actor);
+                let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_decoded_pack(initial, files.pack, live.envelope().vcs.genesis.facts().digest(), history, {let declared=expected;PersistedDocumentHydrationIdentity{id:declared.artifact_id,dialect:Some(declared.dialect)}}, None, "demo/v1".into(), complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(physical_test_close_grant())), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, actor);
                 let mut sequence = 0;
                 for _ in 0..1_000_000 {
                     let mut original_retained_progress_13=semio_framework_value::RetainedCloneProgress::default();

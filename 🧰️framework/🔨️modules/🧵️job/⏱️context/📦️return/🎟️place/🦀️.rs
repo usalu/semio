@@ -3,24 +3,18 @@ use crate::{StepContext,OriginalTurnFailure,OriginalSourceBinding};
 use crate::original_job_continuation::{OriginalReturnClaimCredit,OriginalReturnWitness,OriginalReturnPhase,claim_original_sized_return,receive_original_return_witness};
 use semio_framework_value_retained_clone::{ValueError,ValueRefusalKind};
 
-/// 📏️ Portable upper bound for one already-table-bound sized return claim.
-#[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub struct OriginalSizedClaimReserve{pub items:usize,pub immediate_copy_bytes:usize,pub lifetime_copy_bytes:usize,pub work:u64,pub depth:usize}
+pub use semio_framework_job_return_budget::OriginalSizedClaimReserve;
 /// 🪙️ See `README.md`.
 pub struct OriginalCallerReturnPlace{credit:Option<OriginalReturnClaimCredit>,witness:Option<OriginalReturnWitness>,identity:Option<OriginalSourceBinding>,destination:Option<(usize,usize)>}
 impl OriginalCallerReturnPlace{
  /// 🧮️ See `README.md`.
- pub fn core_wire_sized_claim_reserve(extent:usize)->Result<OriginalSizedClaimReserve,ValueError>{
-  use semio_framework_job_payload::OriginalReturnEscrowAccounting as A;
-  let actual=crate::original_job_continuation::source::original_return_claim_copy_bytes().checked_add(std::mem::size_of::<Option<OriginalSourceBinding>>()).and_then(|v|v.checked_add(std::mem::size_of::<Option<(usize,usize)>>())).and_then(|v|v.checked_add(2*A::UPDATE+A::FINAL)).ok_or_else(||ValueError::invariant("sized claim reserve overflow"))?;
-  if actual>512{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"sized claim target exceeds portable metadata ceiling"))}
-  Ok(OriginalSizedClaimReserve{items:3,immediate_copy_bytes:512,lifetime_copy_bytes:extent.checked_add(512).ok_or_else(||ValueError::invariant("sized claim reserve overflow"))?,work:3,depth:1})
- }
+ pub fn core_wire_sized_claim_reserve(extent:usize)->Result<OriginalSizedClaimReserve,ValueError>{OriginalSizedClaimReserve::for_target(extent,crate::original_job_continuation::source::original_return_claim_copy_bytes(),std::mem::size_of::<Option<OriginalSourceBinding>>(),std::mem::size_of::<Option<(usize,usize)>>())}
 
 pub const fn empty()->Self{Self{credit:None,witness:None,identity:None,destination:None}}
  pub fn terminal_is_empty(&self)->bool{self.credit.is_none()&&self.witness.is_none()&&self.identity.is_none()&&self.destination.is_none()}
  pub fn is_admitted(&self)->bool{self.credit.is_some()}
  /// 🔎️ See `README.md`.
+ pub(crate) fn qualify_preissued_budget(&self,budget:&crate::original_job_continuation::source::OriginalReturnBudget,destination:usize,extent:usize)->Result<(),ValueError>{if self.destination!=Some((destination,extent)){return Err(ValueError::invariant("exposure return destination changed"))}budget.qualify_preissued_destination(self.credit.as_ref().ok_or_else(||ValueError::invariant("exposure credit absent"))?,self.witness.as_ref().ok_or_else(||ValueError::invariant("exposure witness absent"))?,destination,extent)}
  pub fn qualify_sized(&self,cx:&StepContext<'_>,destination:usize,copy_bytes:usize)->Result<(),OriginalTurnFailure>{let credit=self.credit.as_ref().ok_or_else(||ValueError::invariant("return credit absent"))?;crate::original_job_continuation::source::qualify_original_return_source(credit,cx,self.identity.ok_or_else(||ValueError::invariant("identity absent"))?)?;if self.destination!=Some((destination,copy_bytes)){return Err(ValueError::invariant("sized return destination changed").into())}Ok(())}
  pub fn admit(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let destination=self as *mut Self as usize;self.admit_sized(cx,destination,0)}
  pub fn admit_sized(&mut self,cx:&mut StepContext<'_>,destination:usize,copy_bytes:usize)->Result<bool,OriginalTurnFailure>{self.admit_sized_inner(cx,destination,copy_bytes,None)}

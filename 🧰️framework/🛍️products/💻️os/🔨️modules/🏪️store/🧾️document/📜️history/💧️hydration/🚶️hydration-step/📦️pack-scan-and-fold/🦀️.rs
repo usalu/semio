@@ -5,7 +5,7 @@ use super::*;
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
     P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
     /// 🔍 Scans the retained pack for the next record.
     pub(super) fn step_scan_pack(&mut self, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {
@@ -41,12 +41,14 @@ where
     /// 🚦 Begins the hydration.
     pub(super) fn step_begin(&mut self, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {
         use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+        if self.target==PersistedDocumentHydrationTarget::Envelope{match self.bind_original_step(cx){Ok(true)=>{},Ok(false)=>return PersistedDocumentHydrationStep::Pending(self.progress()),Err(error)=>{*self.original_failure=Some(error);return self.reject(MemberOpenDiagnostic::Initialization)}}}
         if self.actor.0.trim().is_empty() { return self.reject(MemberOpenDiagnostic::Initialization); }
         let history = self.history.as_ref().expect("decoded history remains retained");
         let expected = self.expected.as_ref().expect("document identity remains retained");
         let schema = self.schema.as_ref().expect("document schema remains retained");
         let Some(composition) = history.composition.as_ref() else { return self.reject(MemberOpenDiagnostic::Identity) };
-        let dialect_matches = composition.dialect.as_ref().is_some_and(|(artifact_kind, standard, subset)| artifact_kind == &expected.dialect.artifact_kind && standard == &expected.dialect.standard && subset == &expected.dialect.subset);
+        let dialect=composition.dialect.as_ref().map(|(kind,standard,subset)|(kind.as_str(),standard.as_str(),subset.as_str()));
+        if self.owner.is_none()&&composition.owner.is_some(){return self.reject(MemberOpenDiagnostic::Owner)}
         let history_owner = match composition.owner.as_ref() {
             Some((parent, slot, child_id)) => match ArtifactRef::parse_uri(parent) {
                 Ok(parent) => Some(OwnerRef { parent, slot: slot.clone(), child_id: child_id.clone() }),
@@ -54,9 +56,10 @@ where
             },
             None => None,
         };
-        if history.doc_id != expected.artifact_id || history.schema != *schema || !dialect_matches || history_owner.as_ref() != self.owner.as_ref() {
+        if !expected.matches(&history.doc_id,dialect) || history.schema != *schema || history_owner.as_ref() != self.owner.as_ref() {
             return self.reject(MemberOpenDiagnostic::Identity);
         }
+        if self.target==PersistedDocumentHydrationTarget::Envelope{return self.begin_original_fold(cx)}
         if semio_os_io::publish_native_snapshot::<P>().is_err() { return self.reject(MemberOpenDiagnostic::Initialization); }
         *self.fold_job = Some(semio_os_spr::HistoryLog::fold_job(history.clone(), semio_os_spr::HistoryShape::Document));
         self.phase = Phase::Fold;
@@ -66,6 +69,7 @@ where
 
     /// 🪄 Folds the decoded records into the history.
     pub(super) fn step_fold(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
+        if self.target==PersistedDocumentHydrationTarget::Envelope{return self.advance_original_fold(cx)}
         let mut fold_grant = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
                         let body = fold_grant.maximum_copy_bytes;
     let job = self.fold_job.as_mut().expect("history fold job remains retained");
@@ -85,8 +89,7 @@ where
                 if !progress.fits(fold_grant) || !self.fold_job.as_ref().is_some_and(ErasedSnapshotRetirement::terminal_is_empty) { return self.reject(MemberOpenDiagnostic::Replay); }
                 if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
                 self.fold_job.take();
-                *self.initialization_catalog = Some(semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationOwnerCatalog::empty());
-                self.phase = Phase::AdmitInitializationCatalog;
+                if self.target==PersistedDocumentHydrationTarget::Envelope{self.phase=Phase::BindGenesis}else{*self.initialization_catalog = Some(semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationOwnerCatalog::empty());self.phase=Phase::AdmitInitializationCatalog;}
             }
             _ => return self.reject(MemberOpenDiagnostic::Replay),
         }
@@ -108,7 +111,7 @@ where
     /// 🌱 Binds the genesis snapshot.
     pub(super) fn step_bind_genesis(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
         if let Some(rows)=self.normalized_transitions.as_mut(){if !rows.is_empty(){let Some(ledger)=self.transition_ledger.as_mut()else{return self.reject(MemberOpenDiagnostic::Initialization)};let p=match ledger.admit_deque_front(rows,grant){Ok(p)=>p,Err(_)=>return self.reject(MemberOpenDiagnostic::Initialization)};if let Err(d)=semio_framework_os_store_member_open::record_member_step(cx,p){return self.reject(d)}return PersistedDocumentHydrationStep::Pending(self.progress())}match semio_os_store_read::artifact_retirement_admit_owned(&mut self.normalized_transitions,&mut self.active,grant).result {Ok(step)=>{if let Err(d)=semio_framework_os_store_member_open::record_member_step(cx,step.progress()){return self.reject(d)}},Err(_)=>return self.reject(MemberOpenDiagnostic::Initialization)}return PersistedDocumentHydrationStep::Pending(self.progress())}
-        if !self.initialization_catalog.as_ref().is_some_and(semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationOwnerCatalog::admission_is_complete) { return self.reject(MemberOpenDiagnostic::Initialization); }
+        if self.target!=PersistedDocumentHydrationTarget::Envelope&&!self.initialization_catalog.as_ref().is_some_and(semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationOwnerCatalog::admission_is_complete) { return self.reject(MemberOpenDiagnostic::Initialization); }
         let child = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
         let birth = match semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis::<P>::verified_pack_birth_demand() { Ok(birth) => birth, Err(_) => return self.reject(MemberOpenDiagnostic::Capacity) };
         if birth.admit(child).is_err() { return PersistedDocumentHydrationStep::Pending(self.progress()); }
@@ -123,23 +126,21 @@ where
         };
         let expected = self.expected.take().expect("document identity remains retained");
         let schema = self.schema.take().expect("document schema remains retained");
-        let mut envelope = crate::empty_document_envelope_from_genesis_owners::<P, M>(schema, expected.artifact_id, genesis, None);
-        envelope.dialect = Some(expected.dialect);
+        let mut envelope = crate::empty_document_envelope_from_genesis_owners::<P, M>(schema, expected.id, genesis, None);
+        envelope.dialect = expected.dialect;
         envelope.owner = self.owner.take();
         envelope.active_alternative_id = fold.alternative.take();
         envelope.viewer_checkpoint_id = history.viewer_checkpoint.take();
         envelope.cursor.as_mut().expect("new document retains its original cursor pages").checkpoint_id = fold.checkpoint.take();
         envelope.transitions = self.transition_ledger.take().expect("native transition ledger remains retained");
-        let supersessions = std::mem::take(&mut fold.supersessions);
         envelope.conflicts = self.normalized_conflicts.take().expect("normalized conflict owners remain retained");
-        let current = envelope.vcs.genesis.facts().share_snapshot();
-        let mut runtime = ArtifactStoreInitializationRuntime::new_with_owner_catalog(&envelope.id, &envelope.schema, current, initial_digest, semio_os_spr::ActorId(std::mem::take(&mut self.actor.0)), self.initialization_catalog.take().expect("fully admitted initialization catalog remains original"));
-        let installed = runtime.set_supersessions(supersessions);
-        *self.runtime = Some(runtime);
-        *self.envelope = Some(envelope);
-        if installed.is_err() {
-            return self.reject(MemberOpenDiagnostic::Initialization);
-        }
+        if self.target!=PersistedDocumentHydrationTarget::Envelope{
+            let supersessions=std::mem::take(&mut fold.supersessions);
+            let current=envelope.vcs.genesis.facts().share_snapshot();
+            let mut runtime=ArtifactStoreInitializationRuntime::new_with_owner_catalog(&envelope.id,&envelope.schema,current,initial_digest,semio_os_spr::ActorId(std::mem::take(&mut self.actor.0)),self.initialization_catalog.take().expect("fully admitted initialization catalog remains original"));
+            let installed=runtime.set_supersessions(supersessions);*self.runtime=Some(runtime);*self.envelope=Some(envelope);
+            if installed.is_err(){return self.reject(MemberOpenDiagnostic::Initialization)}
+        }else{*self.envelope=Some(envelope)}
         self.phase = Phase::AdmitEnvelope;
         self.operation_index = 0;
         if !progress.fits(child) { return self.reject(MemberOpenDiagnostic::Initialization); }

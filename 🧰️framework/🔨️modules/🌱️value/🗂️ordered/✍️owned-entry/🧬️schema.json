@@ -97,7 +97,9 @@
         "zeroWork",
         "firstByte",
         "zeroHex",
-        "oneHex"
+        "oneHex",
+        "oneByteWork",
+        "insufficientWork"
       ],
       "properties": {
         "key": {
@@ -118,6 +120,12 @@
         "oneHex": {
           "type": "string",
           "pattern": "^[0-9A-F]{2}$"
+        },
+        "oneByteWork": {
+          "const": 2
+        },
+        "insufficientWork": {
+          "const": 1
         }
       }
     }

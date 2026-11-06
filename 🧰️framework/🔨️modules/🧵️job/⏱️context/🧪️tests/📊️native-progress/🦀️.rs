@@ -12,7 +12,7 @@ fn checkpoint(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecod
  measured(caller,decoder,|cx|{cx.with_native_receiving::<_,ValueError>(|native|native.checkpoint())?;cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),RetainedCloneProgress::default())?;Ok(())});
 }
 fn close(mut caller:OriginalJobFixtureCaller,mut decoder:OriginalJobDecodeOwner){
- while !decoder.terminal_is_empty(){caller.turn(quantum(),|cx|cx.with_original_retirement(|cx|{let turn=decoder.close_step(cx.retained_grant());let step=turn.result?;cx.consume_retained(step.progress())?;cx.consume_fuel(turn.work);Ok(())})).unwrap();}caller.retire(quantum());
+ while !decoder.terminal_is_empty(){caller.turn(quantum(),|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(quantum());
 }
 #[test]
 fn actual_original_progress_observer_has_no_verdict_and_cancels_at_completed_256(){

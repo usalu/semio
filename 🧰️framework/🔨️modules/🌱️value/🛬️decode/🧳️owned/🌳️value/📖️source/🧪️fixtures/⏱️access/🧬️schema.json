@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "value",
+          "operation",
+          "expected",
+          "work"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "value": {},
+          "operation": {
+            "enum": [
+              "Boolean",
+              "Number",
+              "SequenceChild",
+              "RecordChild"
+            ]
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expected": {},
+          "work": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

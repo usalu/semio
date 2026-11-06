@@ -30,7 +30,7 @@ pub fn remodeling_io() -> AppIo {
     AppIo {
         artifact_schema: "remodeling.scene".into(),
         artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-        ports: vec![remodeling_photos_in_port(), remodeling_mesh_out_port()],
+        ports: vec![remodeling_photos_in_port(), remodeling_mesh_out_port(), semio_plugin::native_snapshot_export::snapshot_pack_output_port()],
         export_formats: vec![],
         import_formats: vec![],
         artifact: semio_plugin::ArtifactPresentation { id: "3d.remodeling".into(), name: "3D Remodeling".into(), dimension: "3d".into(), component_kind: "remodeling".into() },
@@ -117,9 +117,9 @@ semio_plugin::app_commands! {
 impl RemodelingCommand {
     /// 📥️ An import verb through the dispatching window's tool state (`🫧️transient`): its emission and the window's next
     /// partition; `None` for every other verb.
-    pub(super) fn import_in_window(&self, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>, window: &RemodelingWindowTransient) -> Option<Result<(Emit<RemodelingMutation, NoConfigMutation>, RemodelingWindowTransient), Fault>> {
+    pub(super) fn import_in_window(&self, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>, window: &RemodelingWindowTransient, view: Option<&semio_plugin::ViewModel>) -> Option<Result<(Emit<RemodelingMutation, NoConfigMutation>, RemodelingWindowTransient), Fault>> {
         match self {
-            Self::ImportFramePayload(payload) => Some(import_frame_payload::handle_in_window(payload, doc, cfg, window)),
+            Self::ImportFramePayload(payload) => Some(import_frame_payload::handle_in_window(payload, doc, cfg, window, view)),
             Self::ImportVideoFramePayload(payload) => Some(import_video_frame_payload::handle_in_window(payload, doc, window)),
             Self::ImportVideoDone(payload) => Some(import_video_done::handle_in_window(payload, doc, window)),
             Self::ImportAbort(payload) => Some(import_abort::handle_in_window(payload, doc, window)),

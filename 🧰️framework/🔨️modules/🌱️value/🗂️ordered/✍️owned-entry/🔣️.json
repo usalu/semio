@@ -111,6 +111,8 @@
     "zeroWork": 0,
     "firstByte": 97,
     "zeroHex": "",
-    "oneHex": "61"
+    "oneHex": "61",
+    "oneByteWork": 2,
+    "insufficientWork": 1
   }
 }

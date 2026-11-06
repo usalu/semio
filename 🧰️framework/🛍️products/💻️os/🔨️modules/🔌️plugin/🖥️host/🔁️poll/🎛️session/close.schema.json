@@ -1,0 +1,53 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "received",
+          "quiescent",
+          "headerReturned",
+          "producerClosed",
+          "childrenReturned",
+          "historyRetired",
+          "closed"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "received": {
+            "type": "boolean"
+          },
+          "quiescent": {
+            "type": "boolean"
+          },
+          "headerReturned": {
+            "type": "boolean"
+          },
+          "producerClosed": {
+            "type": "boolean"
+          },
+          "childrenReturned": {
+            "type": "boolean"
+          },
+          "historyRetired": {
+            "type": "boolean"
+          },
+          "closed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

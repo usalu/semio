@@ -53,7 +53,7 @@ impl PagedOneItemEdit<Document,DocumentMutation> for SourceProbeEdit{
     fn recognizes(_:&DocumentMutation)->bool{true}
     fn preflight(_:&DocumentMutation)->Result<usize,String>{Ok(1)}
     fn post_mode(&self)->PagedOneItemPostMode{PagedOneItemPostMode::Original}
-    fn advance_demands(&self,before:RetainedCloneRef<'_,Document>,mutation:RetainedCloneRef<'_,DocumentMutation>,post:PagedOneItemPostRead<'_,Document>,_:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:if self.before.is_none(){before.binding_copy_bytes()}else if self.mutation.is_none(){mutation.binding_copy_bytes()}else if self.post.is_none(){post.original()?.binding_copy_bytes()}else{0},depth:1,..Default::default()})}
+    fn advance_demands(&self,before:RetainedCloneRef<'_,Document>,mutation:RetainedCloneRef<'_,DocumentMutation>,post:PagedOneItemPostRead<'_,Document>,_:usize,_maximum_work_units:u64)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:if self.before.is_none(){before.binding_copy_bytes()}else if self.mutation.is_none(){mutation.binding_copy_bytes()}else if self.post.is_none(){post.original()?.binding_copy_bytes()}else{0},depth:1,..Default::default()})}
     fn advance(&mut self,before:RetainedCloneRef<'_,Document>,mutation:RetainedCloneRef<'_,DocumentMutation>,post:PagedOneItemPost<'_,Document>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<DocumentMutation>,ValueError>{
         self.last_work=0;
         let post=post.original()?;

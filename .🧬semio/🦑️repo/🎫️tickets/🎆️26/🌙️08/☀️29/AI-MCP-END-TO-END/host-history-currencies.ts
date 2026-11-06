@@ -1,0 +1,10 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";import{dirname}from"node:path";const t=dirname(import.meta.path),p="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📃️policy/📥️operation/🪙️guest/🌱️history.rs",s=readFileSync(p,"utf8");let n=s.replaceAll("[u64;17]","[u64;23]").replaceAll("[0;17]","[0;23]").replace("*17*8","*23*8").replaceAll("[[u64;3];3]","[[u64;3];5]").replaceAll("[[0;3];3]","[[0;3];5]");
+n=n.replaceAll("(length-48)%136","(length-48)%184").replaceAll("count*136","count*184").replaceAll("state.row_index*136","state.row_index*184").replaceAll("row*136","row*184");
+n=n.replaceAll("state.field==16","state.field==22").replaceAll("state.check==4","state.check==6").replace("2|3|4=>{let axis=state.check-2","2|3|4|5|6=>{let axis=state.check-2").replaceAll("r[11+axis]","r[13+axis]").replaceAll("r[14+axis]","r[18+axis]");
+n=n.replaceAll("field>=17","field>=23").replaceAll("field==17","field==23").replaceAll("field!=17","field!=23").replaceAll("field<17","field<23").replaceAll("field<20","field<28").replaceAll("field-17","field-23");
+n=n.replaceAll("check==4","check==6").replaceAll("check+1==4","check+1==6").replaceAll("claim_verify!=Some(4)","claim_verify!=Some(6)");
+n=n.replaceAll("axis>=3","axis>=5").replaceAll("axis==3","axis==5").replaceAll("axis!=3","axis!=5").replaceAll("axis==2","axis==4");
+n=n.replace("[0usize,1,4][state.axis]","[0usize,1,4,3,2][state.axis]");
+n=n.replace("capacity:0,release:0,work:totals[2][kind]","capacity:convert(totals[4][kind])?,release:convert(totals[3][kind])?,work:totals[2][kind]");
+n=n.replace("0=>Some(0),1=>Some(1),4=>Some(2),_=>None","0=>Some(0),1=>Some(1),2=>Some(4),3=>Some(3),4=>Some(2),_=>None");
+const tmp=t+"/🗑️generated/host-history-all-currencies.rs";writeFileSync(tmp,n);if(readFileSync(p,"utf8")!==s)throw Error("CAS");renameSync(tmp,p);console.log("Host retained history validates and reconciles five genuine currency axes");

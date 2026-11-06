@@ -8,7 +8,7 @@ fn native<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecode
 fn caller()->OriginalJobFixtureCaller{CLOCK.store(1000,Ordering::Relaxed);OriginalJobFixtureCaller::admit(OperationId(97146),Generation(17),RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:128*1024*1024,maximum_capacity_bytes:256*1024*1024,maximum_release_bytes:512*1024*1024,maximum_depth:4096},clock,1500,32768)}
 fn close(mut work:OriginalFloatFieldWork,caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant){
  work.begin_close();for turn in 0..100{if work.terminal_is_empty(){break}native(caller,decoder,g,|cx|cx.with_original_retirement(|cx|{let d=work.close_demands(g.maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|work.close_step(grant))?;Ok(())}));assert!(turn+1<100)}assert!(work.terminal_is_empty());drop(work);
- while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(g.maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|decoder.close_step(grant))?;Ok(())})).unwrap();}
+ while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(g.maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}
 }
 #[test]
 fn original_float_field_uses_same_200_call_fuel_stock_and_cancel_deadline_authority(){

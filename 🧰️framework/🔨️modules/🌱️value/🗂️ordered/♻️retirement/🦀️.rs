@@ -10,6 +10,7 @@ trait RootOwner<V>:Send {
     fn payload_ready(&self)->bool;
     fn work_demand(&self)->u64{u64::from(!self.is_empty())}
     fn last_turn_work(&self)->u64;
+    fn next_work_demand(&self)->u64;
     fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>;
     fn is_empty(&self)->bool;
     fn copy_demand(&self)->usize;
@@ -22,6 +23,7 @@ trait RootOwner<V>:Send {
 impl<V:RetireOwned+Sync> RootOwner<V> for Retirement<V> {
     fn payload_ready(&self)->bool{self.payload.is_some()&&self.key_bytes.as_ref().is_none_or(Vec::is_empty)}
     fn last_turn_work(&self)->u64{Retirement::last_turn_work(self)}
+    fn next_work_demand(&self)->u64{Retirement::next_work_demand(self)}
     fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>{self.advance(grant)}
     fn is_empty(&self)->bool{self.terminal_is_empty()}
     fn copy_demand(&self)->usize{self.next_copy_byte_demand()}
@@ -36,6 +38,7 @@ impl<V:RetireOwned+Sync> RootOwner<V> for UpdateCursor<V> {
     fn start_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{crate::retained_clone::start_retained_close(&mut self.state.closing,effect)}
     fn payload_ready(&self)->bool{self.state.retirement.payload.is_some()&&self.state.retirement.key_bytes.as_ref().is_none_or(Vec::is_empty)}
     fn last_turn_work(&self)->u64{self.last_close_work()}
+    fn next_work_demand(&self)->u64{self.next_close_work_demand()}
     fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>{self.close_step(grant)}
     fn is_empty(&self)->bool{self.terminal_is_empty()}
     fn copy_demand(&self)->usize{self.next_close_copy_byte_demand()}
@@ -49,6 +52,7 @@ impl<V:RetireOwned+Sync> RootOwner<V> for LookupCursor<V> {
     fn start_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{crate::retained_clone::start_retained_close(&mut self.state.closing,effect)}
     fn payload_ready(&self)->bool{self.state.retirement.payload.is_some()&&self.state.retirement.key_bytes.as_ref().is_none_or(Vec::is_empty)}
     fn last_turn_work(&self)->u64{self.last_close_work()}
+    fn next_work_demand(&self)->u64{u64::from(!self.terminal_is_empty())}
     fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>{self.close_step(grant)}
     fn is_empty(&self)->bool{self.terminal_is_empty()}
     fn copy_demand(&self)->usize{self.next_close_copy_byte_demand()}
@@ -63,6 +67,7 @@ pub struct SharedRoot<V> {last_work:u64,owner:SharedOwner<V>,value:ManuallyDrop<
 impl<V:RetireOwned+Sync> RootOwner<V> for SharedRoot<V> {
     fn payload_ready(&self)->bool{self.value.is_some()}
     fn last_turn_work(&self)->u64{self.last_work}
+    fn next_work_demand(&self)->u64{u64::from(!self.is_empty())}
     fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>{
         self.last_work=0;if self.is_empty(){return RetirementStep::Complete;}
         if grant.maximum_items==0{return RetirementStep::Blocked;}

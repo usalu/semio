@@ -1,0 +1,53 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "cases": [
+    {
+      "field": "ingest",
+      "member": "maxFrames",
+      "before": 200,
+      "after": 17
+    },
+    {
+      "field": "feature",
+      "member": "targetCount",
+      "before": 4000,
+      "after": 123
+    },
+    {
+      "field": "matching",
+      "member": "sequentialWindow",
+      "before": 8,
+      "after": 3
+    },
+    {
+      "field": "sfm",
+      "member": "ransacIterations",
+      "before": 1000,
+      "after": 64
+    },
+    {
+      "field": "dense",
+      "member": "maxPoints",
+      "before": 1000000,
+      "after": 31
+    },
+    {
+      "field": "mesh",
+      "member": "textureSize",
+      "before": 2048,
+      "after": 64
+    },
+    {
+      "field": "motion",
+      "member": "maxTracks",
+      "before": 1000,
+      "after": 13
+    },
+    {
+      "field": "geo",
+      "member": "orthoMaxPx",
+      "before": 4096,
+      "after": 128
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+# Paged selection design
+
+Reserve selects a page from capacity and page_items, then traverses the fixed-fanout tree and allocates at most one actual root, branch or leaf backing. Release scans children in reverse and frees an empty payload or metadata backing. Both existing preflight and effect traverse; their work must be admitted before selection itself.
+
+A persistent selection owner must retain operation and original list identity, frontier version or immutable capacity and allocation state, per-depth path and release scan position. Each child inspection and descent is paid; validate the original frontier against intervening mutations before the selected allocation or release. Closing or cancelling the selector retains the original list and page owners. None is used for zero-size no-attempt, Some(0) for failed nonzero allocation, and Some(actual) for real birth. Preserve one physical event per turn and existing reverse-release behavior.
+
+The managed matcher oracle was started; a Vitest process entered startup, with no terminal outcome at time of this report. No test pass claimed.
+A conservative atomic bound is possible from platform usize width and fixed fanout without traversing the page first: page-height shifts four bits at most ceil(usize::BITS/4), each reserve path examines at most one link per level, each release path examines at most 16 children per branch plus one node per level. Sum all actual preflight and effect passes and fixed/allocation work; actual reported work must count executed inspections. Current height() reads root.first(), so a tighter bound using height itself needs admission for that read. Conservative atomic admission may refuse small budgets indefinitely; a persistent selector supports incremental progress.

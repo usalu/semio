@@ -1,0 +1,77 @@
+{
+  "failedEpoch": 7,
+  "failedKind": 8,
+  "cases": [
+    {
+      "export": "PublishActorFailure",
+      "epoch": 7,
+      "kind": 8,
+      "allowed": true
+    },
+    {
+      "export": "ReadActorFailure",
+      "epoch": 7,
+      "kind": 8,
+      "allowed": true
+    },
+    {
+      "export": "BorrowActorFailure",
+      "epoch": 7,
+      "kind": 8,
+      "allowed": true
+    },
+    {
+      "export": "AcknowledgeActorFailureChunk",
+      "epoch": 7,
+      "kind": 8,
+      "allowed": true
+    },
+    {
+      "export": "AcknowledgeActorFailure",
+      "epoch": 7,
+      "kind": 8,
+      "allowed": true
+    },
+    {
+      "export": "Poll",
+      "epoch": 7,
+      "kind": 8,
+      "allowed": false
+    },
+    {
+      "export": "AdmitActorInput",
+      "epoch": 7,
+      "kind": 8,
+      "allowed": false
+    },
+    {
+      "export": "Deallocate",
+      "epoch": 7,
+      "kind": 8,
+      "allowed": false
+    },
+    {
+      "export": "AcknowledgeActorFailure",
+      "epoch": 6,
+      "kind": 8,
+      "allowed": false
+    },
+    {
+      "export": "AcknowledgeActorFailure",
+      "epoch": 7,
+      "kind": 21,
+      "allowed": false
+    }
+  ],
+  "acknowledgment": {
+    "readyExport": "AcknowledgeActorFailure",
+    "header": [
+      3600,
+      184
+    ],
+    "foreignHeader": [
+      2048,
+      144
+    ]
+  }
+}

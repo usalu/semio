@@ -29,7 +29,7 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
         if !admitted.mutations.is_empty() { return Err(Fault::from("restart command bypassed retained publication").into()); }
         let (mut artifact, mut ui, mut scopes, mut terminal, mut completions) = (0, 0, 0, 0, 0);
         for _ in 0..100_000 {
-            let demand = app.maintenance_retirement_demands(body)?;
+            let demand = app.maintenance_retirement_demands(body,cx.fuel_remaining())?;
             let grant = RetainedCloneGrant { maximum_items: items, ..plugin_demand_grant(demand) };
             if let Some(progress) = app.maintenance_step(cx,grant)?.progress() {
                 if !progress.fits(grant) { return Err(Fault::from("restart maintenance exceeded the exact grant").into()); }

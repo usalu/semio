@@ -100,7 +100,7 @@ pub use native::{ArtifactReplayPreparationRequest,ArtifactMutationSource};
 pub trait ArtifactReplayPreparation<P, M>: Send {
     /// ⛽️ The entire latest advance or close work survives CPU-only progress and partial failure.
     fn last_turn_work(&self)->u64;
-    fn advance_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
+    fn advance_demands(&self, body: usize, maximum_work_units:u64) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, semio_framework_value::OriginalRetirementFailure>;
     fn take_prepared(&mut self) -> Option<ArtifactReplayPrepared<P, M>>;
     fn cancel(&mut self);
@@ -164,10 +164,10 @@ impl<P, M> ArtifactReplayPreparationTask<P, M> {
     /// 🏁️ Keeps prepared owners in the exact producer until a separately granted task handoff.
     pub fn is_ready(&self)->bool{self.ready&&!self.cancelled}
 
-    pub fn demands(&self, generation: u64, revision: [u8; 32],body:usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub fn demands(&self, generation: u64, revision: [u8; 32],body:usize,maximum_work_units:u64) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if generation != self.context.generation || revision != self.context.base_revision { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history.operation.stale-preparation")); }
         if self.ready || self.cancelled { return Ok(Default::default()); }
-        self.cursor.advance_demands(body)
+        self.cursor.advance_demands(body,maximum_work_units)
     }
 
     pub fn take_prepared(&mut self) -> Option<ArtifactReplayPrepared<P, M>> { (self.ready && !self.cancelled).then(|| self.cursor.take_prepared()).flatten() }

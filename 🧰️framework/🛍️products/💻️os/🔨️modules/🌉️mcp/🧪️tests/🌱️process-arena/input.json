@@ -1,0 +1,9 @@
+{
+  "package": "semio-os-mcp-process-arena",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🌱️process-arena/📦️packages/🦀️rust/Cargo.toml",
+  "owner": ".",
+  "rootMember": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🌱️process-arena/📦️packages/🦀️rust",
+  "workspaceRelative": "../../../../../../../..",
+  "role": "framework",
+  "frameworkExclude": "🛍️products/💻️os/🔨️modules/🌉️mcp/🌱️process-arena/📦️packages/🦀️rust"
+}

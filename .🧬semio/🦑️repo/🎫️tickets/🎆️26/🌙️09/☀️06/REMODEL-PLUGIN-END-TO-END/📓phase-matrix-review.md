@@ -1,0 +1,3 @@
+# Receiver phase matrix review
+
+The native phase matrix matches current work signatures and identifies the generic accessor, matcher and NativeDefault contract gaps. Two precise qualifications: a zero-sized storage birth performs no allocation and therefore has no actual-attempt marker; Some(0) denotes a genuine failed nonzero allocation attempt. Take and close work queries have no maximum-work argument in current trait, so their callers must pre-admit via the same real outer work authority before invoking effects. Native and root notified. No execution.

@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "phase": "authored",
+      "grant": 0,
+      "attempt": false,
+      "marker": null,
+      "ownership": "original"
+    },
+    {
+      "phase": "authored",
+      "grant": 16,
+      "attempt": true,
+      "marker": 0,
+      "ownership": "original"
+    },
+    {
+      "phase": "authored",
+      "grant": 16,
+      "attempt": true,
+      "marker": 16,
+      "ownership": "new"
+    },
+    {
+      "phase": "displaced",
+      "grant": 0,
+      "attempt": false,
+      "marker": null,
+      "ownership": "original"
+    },
+    {
+      "phase": "displaced",
+      "grant": 16,
+      "attempt": true,
+      "marker": 0,
+      "ownership": "original"
+    },
+    {
+      "phase": "displaced",
+      "grant": 16,
+      "attempt": true,
+      "marker": 16,
+      "ownership": "new"
+    },
+    {
+      "phase": "inverse",
+      "grant": 0,
+      "attempt": false,
+      "marker": null,
+      "ownership": "original"
+    },
+    {
+      "phase": "inverse",
+      "grant": 16,
+      "attempt": true,
+      "marker": 0,
+      "ownership": "original"
+    },
+    {
+      "phase": "inverse",
+      "grant": 16,
+      "attempt": true,
+      "marker": 16,
+      "ownership": "new"
+    }
+  ]
+}

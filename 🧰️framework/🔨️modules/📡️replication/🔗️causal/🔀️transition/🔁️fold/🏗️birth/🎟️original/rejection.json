@@ -1,0 +1,48 @@
+{
+  "cases": [
+    {
+      "name": "producer pending",
+      "controlClosed": false,
+      "result": "pending",
+      "destinationEmpty": true,
+      "taken": false
+    },
+    {
+      "name": "successful output",
+      "controlClosed": true,
+      "result": "value",
+      "destinationEmpty": true,
+      "taken": false
+    },
+    {
+      "name": "occupied receiver",
+      "controlClosed": true,
+      "result": "failure",
+      "destinationEmpty": false,
+      "taken": false
+    },
+    {
+      "name": "actual closed failure",
+      "controlClosed": true,
+      "result": "failure",
+      "destinationEmpty": true,
+      "taken": true
+    }
+  ],
+  "stock": {
+    "items": 65536,
+    "copyBytes": 16777216,
+    "capacityBytes": 1048576,
+    "releaseBytes": 4194304,
+    "depth": 64,
+    "work": 100000
+  },
+  "cleanup": {
+    "items": 65536,
+    "copyBytes": 16777216,
+    "capacityBytes": 1048576,
+    "releaseBytes": 4194304,
+    "depth": 64,
+    "work": 100000
+  }
+}

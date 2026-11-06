@@ -49,6 +49,11 @@ pub trait ErasedMemberStoreOneItemPublication: Send {
     fn retirement_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     fn fault(&self) -> Option<&str>;
     fn preparation_refusal(&self) -> Option<&ValueError>;
+    fn requires_receiving_close(&self)->bool;
+    fn receiving_close_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>;
+    fn pending_receiving_recovery(&mut self)->Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>>;
+    fn close_receiving_native(&mut self,control:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>,body:usize,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,semio_framework_value::OriginalReceivingPrimary>;
+    fn receiving_preparation_refusal(&self) -> Option<&semio_framework_value::OriginalReceivingPrimary>;
     fn retry(&mut self) -> bool;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
@@ -106,6 +111,25 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedMemberStoreOneIte
 
     fn fault(&self) -> Option<&str> { self.publication.fault() }
     fn preparation_refusal(&self) -> Option<&ValueError> { self.publication.preparation_refusal() }
+    fn requires_receiving_close(&self)->bool{
+        if self.publication.preparation.as_ref().is_some_and(|owner|owner.has_pending_receiving_recovery()){return true}
+        self.publication.receiving_fault.is_some()||self.publication.receiving_fault_effect.has_pending_recovery()
+    }
+    fn receiving_close_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
+        if let Some(demand)=self.publication.receiving_fault_effect.pending_demand(){return Ok(demand)}
+        if let Some(demand)=self.publication.preparation.as_ref().and_then(|owner|owner.pending_receiving_demand()){return Ok(demand)}
+        self.publication.receiving_fault_demands(body)
+    }
+    fn pending_receiving_recovery(&mut self)->Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>>{
+        use semio_framework_value::native_decoding::construction::NativeRecoveryLoan;
+        if self.publication.receiving_fault_effect.has_pending_recovery(){return self.publication.receiving_fault_effect.pending_recovery().map(NativeRecoveryLoan::Retirement)}
+        self.publication.preparation.as_mut().and_then(|owner|owner.pending_receiving_recovery())
+    }
+    fn close_receiving_native(&mut self,control:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>,body:usize,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,semio_framework_value::OriginalReceivingPrimary>{
+        if self.publication.preparation.as_mut().is_some_and(|owner|owner.pending_receiving_recovery().is_some()){return self.publication.preparation.as_mut().expect("checked original preparation").finish_receiving_recovery(control)}
+        self.publication.close_receiving_fault_native(control,body,grant)
+    }
+    fn receiving_preparation_refusal(&self) -> Option<&semio_framework_value::OriginalReceivingPrimary> { self.publication.receiving_preparation_refusal() }
 
     fn retry(&mut self) -> bool {
         self.publication.retry()
@@ -318,6 +342,9 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
     pub cancel_requested: bool,
     pub close_started: bool,
     pub fault: Option<ValueError>,
+    pub receiving_fault: std::mem::ManuallyDrop<Option<semio_framework_value::OriginalReceivingPrimary>>,
+    pub receiving_fault_close: semio_framework_value::retained_clone::RetainedCloneClose,
+    pub receiving_fault_effect: semio_framework_value::native_decoding::NativeReceivingEffect<semio_framework_value::OriginalRetirementFailure>,
     pub refused_base: Option<SnapshotRead<P>>,
     pub refused_authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
     pub refused_issuers: [Option<semio_framework_value::FactoryAuthority>; 2],
@@ -336,6 +363,33 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
 }
 
 impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
+    /// 🧾️ Pays and settles the actual failure owner through the same original decoder.
+    pub fn close_receiving_fault_native(&mut self,control:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>,body:usize,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,semio_framework_value::OriginalReceivingPrimary>{
+        if self.receiving_fault_effect.phase()!=semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty{return control.finish_retirement_receiving(&mut self.receiving_fault_effect)}
+        let demand=match self.receiving_fault_demands(body){Ok(demand)=>demand,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};
+        let work=match self.receiving_fault_work(body){Ok(work)=>work,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};
+        let fault=&mut self.receiving_fault;let close=&mut self.receiving_fault_close;
+        control.receive_retirement(demand,&mut self.receiving_fault_effect,demand.capacity_bytes!=0,work,|issued,actual|{
+            let mut none=None;let actual=actual.unwrap_or(&mut none);let issued=issued.restricted_by(grant);
+            if close.is_empty(){let turn=close.begin_granted(fault,issued,actual);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work}}else{close.step_granted(issued,actual)}
+        })
+    }
+    /// ♻️ Quotes the owned original receiving failure without flattening its causes.
+    pub fn receiving_fault_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
+        self.receiving_fault_close.next_owner_demands::<semio_framework_value::OriginalReceivingPrimary>(self.receiving_fault.is_some(),&None,body)
+    }
+    /// ⛽️ Selects the exact next original failure-retirement work.
+    pub fn receiving_fault_work(&self,body:usize)->Result<u64,ValueError>{
+        self.receiving_fault_close.next_owner_work::<semio_framework_value::OriginalReceivingPrimary>(self.receiving_fault.is_some(),&None,body)
+    }
+    /// 🧳️ Retires only this actual failure with the caller's grant, work and allocation marker.
+    pub fn close_receiving_fault(&mut self,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant,actual:&mut Option<usize>)->semio_framework_value::OriginalRetirementOutcome{
+        let work=match self.receiving_fault_work(body){Ok(work)=>work,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};
+        if work==0||work>maximum_work_units{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+        if self.receiving_fault_close.is_empty(){let turn=self.receiving_fault_close.begin_granted(&mut self.receiving_fault,grant,actual);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work}}
+        self.receiving_fault_close.step_granted(grant,actual)
+    }
+
     /// ⛽️ Actual work of the latest original publication call; the next call clears it even when denied.
     pub fn last_turn_work(&self)->u64{self.turn_work}
     /// 🧷️ The same original decoder cleanup loan reaches wire preparation before every outer owner retires.
@@ -380,6 +434,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         if let Some(authority) = self.refused_authority.as_ref() { let birth = authority.retirement_birth_demand(); return nested(RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth, ..Default::default() }); }
         if let Some(issuer) = self.refused_issuers.iter().find_map(Option::as_ref) { return nested(issuer.demands(body)?); }
         if let Some(authority) = self.authority.as_ref() { let birth = authority.retirement_birth_demand(); return nested(RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth, ..Default::default() }); }
+        if self.receiving_fault.is_some()||!self.receiving_fault_close.is_empty(){return self.receiving_fault_demands(body);}
         if let Some(fault) = self.fault.as_ref() { let release_bytes=match &fault.message{std::borrow::Cow::Borrowed(_)=>0,std::borrow::Cow::Owned(text)=>text.capacity()};return Ok(RetirementDemand { release_bytes, depth: 1, ..Default::default() }); }
         if let Some(owner)=self.registry_retirement.as_ref(){return artifact_retirement_box_demands(owner,body);}
         if self.original_registry.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<SnapshotReadRegistryAliasRetirement>()+size_of::<Option<semio_framework_value_snapshot_read::snapshot_read_registry_handle::SnapshotReadRegistryHandle>>()+size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>(),capacity_bytes:size_of::<SnapshotReadRegistryAliasRetirement>(),depth:1,..Default::default()});}
@@ -482,10 +537,13 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         }
     }
 
-    pub fn fault(&self) -> Option<&str> { self.fault.as_ref().map(|fault|fault.message.as_ref()) }
+    pub fn fault(&self) -> Option<&str> { self.receiving_fault.as_ref().map(|fault|fault.message()).or_else(||self.fault.as_ref().map(|fault|fault.message.as_ref())) }
 
     /// 🚫️ Borrows the one original refusal and its actual consumed physical currencies.
     pub fn preparation_refusal(&self) -> Option<&ValueError> { self.fault.as_ref() }
+
+    /// 🧳️ Borrows every cause carried by the original receiving refusal.
+    pub fn receiving_preparation_refusal(&self) -> Option<&semio_framework_value::OriginalReceivingPrimary> { self.receiving_fault.as_ref() }
 
     pub fn retry(&mut self) -> bool {
         if self.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || self.attempts >= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES {
@@ -582,6 +640,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         if let Some(authority) = self.authority.take() {
             return match authority.retire(child) { Ok((owner, progress)) => { self.authority_retirement = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }, Err((error, original)) => { self.authority = Some(original); Err(error) } };
         }
+        if self.receiving_fault.is_some()||!self.receiving_fault_close.is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original receiving failure requires its funded close loan"));}
         if self.fault.take().is_some() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })); }
         if self.registry_retirement.is_some(){return artifact_retirement_box_close_step(&mut self.registry_retirement,grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
         if let Some(original)=self.original_registry.take(){return match admit_artifact_retirement(original,grant,SnapshotReadRegistryAliasRetirement::new){Ok((owner,mut progress))=>{progress.copied_bytes=demand.copy_bytes;self.registry_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{*self.original_registry=Some(original);Err(error)}};}
@@ -604,6 +663,9 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
             && self.refused_authority.is_none()
             && self.refused_issuers.iter().all(Option::is_none)
             && self.fault.is_none()
+            && self.receiving_fault.is_none()
+            && self.receiving_fault_close.is_empty()
+            && self.receiving_fault_effect.phase()==semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty
             && self.verb.is_none()
             && self.transaction.is_none()
             && self.transaction_close.is_none()
@@ -654,7 +716,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
 impl<P, Mutation> Drop for ArtifactStoreBatchPublication<P, Mutation> {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.terminal_is_empty()), "batched artifact-store publication reached Drop without its exact terminal-empty witness");
-        if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.original_registry);std::mem::ManuallyDrop::drop(&mut self.transaction);}}
+        if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.original_registry);std::mem::ManuallyDrop::drop(&mut self.transaction);std::mem::ManuallyDrop::drop(&mut self.receiving_fault);}}
     }
 }
 

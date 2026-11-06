@@ -89,6 +89,7 @@ impl std::ops::IndexMut<usize> for ArtifactEditMessageSlots {
 
 pub struct ArtifactEditMessageLedger {
     slots: ArtifactEditMessageSlots,
+    original_admission: Option<admission::OriginalMessageAdmission>,
     generations: Box<[u64]>,
     occupied: Box<[bool]>,
     next: Box<[u16]>,
@@ -123,6 +124,7 @@ impl ArtifactEditMessageLedgerRetirement {
 
     pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.active.is_some() { return retirement_owner_demands(&self.active, body); }
+        if self.original.original_admission.is_some(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<admission::OriginalMessageAdmission>>()+size_of::<admission::OriginalMessageAdmission>()+size_of::<Option<ArtifactStoreMessageLedgerRetirement>>(),depth:1,..Default::default()})}
         if self.original.len != 0 { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<protocol::EditMessages>(), depth: 1, ..Default::default() }); }
         macro_rules! extent { ($field:ident) => { if !self.original.$field.is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: std::mem::size_of_val(self.original.$field.as_ref()), depth: 1, ..Default::default() }); } }; }
         if !self.original.slots.is_empty() { return Ok(self.original.slots.release_demands()); }
@@ -141,6 +143,11 @@ impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRetirement {
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "message directory requires admitted original depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         if self.active.is_some() { return retirement_owner_close(&mut self.active, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(mut pending)=self.original.original_admission.take(){
+            let entry=pending.candidate.take().expect("original diagnostic candidate remains retained");
+            self.active=Some(ArtifactStoreMessageLedgerRetirement::new(entry.edit_id,entry.messages));
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));
+        }
         if let Some(entry) = self.original.pop() {
             self.active = Some(ArtifactStoreMessageLedgerRetirement::new(entry.edit_id, entry.messages));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
@@ -203,7 +210,7 @@ pub struct ArtifactEditMessageLedgerRejected {
 impl ArtifactEditMessageLedger {
     /// 🪶 Starts allocation-free fixed ticket admission without transferring any payload.
     pub fn empty() -> Self {
-        Self { slots: ArtifactEditMessageSlots::empty(), generations: Box::default(), occupied: Box::default(), next: Box::default(), previous: Box::default(), buckets: Box::default(), free: Box::default(), free_len: 0, head: ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE, tail: ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE, len: 0 }
+        Self { original_admission:None, slots: ArtifactEditMessageSlots::empty(), generations: Box::default(), occupied: Box::default(), next: Box::default(), previous: Box::default(), buckets: Box::default(), free: Box::default(), free_len: 0, head: ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE, tail: ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE, len: 0 }
     }
     /// 🧮 Quotes only the next original backing under independent caller policy.
     pub fn admission_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -236,6 +243,7 @@ impl ArtifactEditMessageLedger {
 
     pub fn new() -> Self {
         Self {
+            original_admission:None,
             slots: ArtifactEditMessageSlots::new(),
             generations: vec![0; ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY].into_boxed_slice(),
             occupied: vec![false; ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY].into_boxed_slice(),
@@ -405,11 +413,13 @@ impl ArtifactEditMessageLedger {
     }
 
     fn get_mut(&mut self, ticket: ArtifactEditMessageTicket) -> Option<&mut protocol::EditMessages> {
+        if self.original_admission.is_some(){return None}
         let slot = usize::from(ticket.slot);
         (slot < ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY && self.occupied[slot] && self.generations[slot] == ticket.generation).then(|| unsafe { self.slots[slot].assume_init_mut() })
     }
 
     pub fn try_push(&mut self, entry: protocol::EditMessages) -> Result<ArtifactEditMessageTicket, protocol::EditMessages> {
+        if self.original_admission.is_some(){return Err(entry)}
         if !self.admission_is_complete() || self.free_len == 0 || entry.edit_id.len() > ARTIFACT_EDIT_MESSAGE_ID_BYTES || Self::entry_bytes(&entry).is_none_or(|bytes| bytes > ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES) || self.find_ticket(&entry.edit_id).is_some() {
             return Err(entry);
         }
@@ -423,12 +433,14 @@ impl ArtifactEditMessageLedger {
 
     /// 🔐️ Admits one entry the diagnostic stage measured and bounded before any ownership moved: an entry of the same edit replaces the earlier one in place and hands it back for its funded retirement.
     pub fn admit_prepared(&mut self, entry: protocol::EditMessages) -> Result<Option<protocol::EditMessages>, protocol::EditMessages> {
+        if self.original_admission.is_some(){return Err(entry)}
         if let Some(existing) = self.get_mut_by_id(&entry.edit_id) { return Ok(Some(std::mem::replace(existing, entry))); }
         self.try_push(entry).map(|_| None)
     }
 
     /// 📨️ Transfers a premeasured original and returns any displaced diagnostic owner.
     pub fn admit_measured(&mut self, entry: protocol::EditMessages, bytes: usize) -> Result<Option<protocol::EditMessages>, protocol::EditMessages> {
+        if self.original_admission.is_some(){return Err(entry)}
         if !self.admits_measured(&entry.edit_id, bytes) { return Err(entry); }
         if let Some(ticket) = self.find_ticket(&entry.edit_id) {
             return Ok(Some(std::mem::replace(self.get_mut(ticket).expect("validated original diagnostic ticket"), entry)));
@@ -466,6 +478,7 @@ impl ArtifactEditMessageLedger {
     }
 
     pub fn pop(&mut self) -> Option<protocol::EditMessages> {
+        if self.original_admission.is_some(){return None}
         (self.tail != ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE).then(|| {
             let slot = usize::from(self.tail);
             self.remove(ArtifactEditMessageTicket { slot: slot as u16, generation: self.generations[slot] }).expect("validated artifact edit-message tail remains live")
@@ -473,6 +486,7 @@ impl ArtifactEditMessageLedger {
     }
 
     pub fn remove(&mut self, ticket: ArtifactEditMessageTicket) -> Option<protocol::EditMessages> {
+        if self.original_admission.is_some(){return None}
         self.get(ticket)?;
         let slot = usize::from(ticket.slot);
         let identity_bucket = self.reserved_identity_bucket(ticket.slot, &unsafe { self.slots[slot].assume_init_ref() }.edit_id).expect("artifact edit-message identity remains reserved while its slot is live");
@@ -480,6 +494,7 @@ impl ArtifactEditMessageLedger {
     }
 
     fn remove_at_bucket(&mut self,ticket:ArtifactEditMessageTicket,identity_bucket:usize)->Option<protocol::EditMessages>{
+        if self.original_admission.is_some(){return None}
         self.get(ticket)?;
         if self.buckets.get(identity_bucket).copied()!=Some(ticket.slot){return None}
         let slot=usize::from(ticket.slot);
@@ -510,9 +525,9 @@ impl ArtifactEditMessageLedger {
         self.remove(ticket)
     }
 
-    pub fn backing_is_empty(&self) -> bool { self.slots.is_empty() && self.generations.is_empty() && self.occupied.is_empty() && self.next.is_empty() && self.previous.is_empty() && self.buckets.is_empty() && self.free.is_empty() }
+    pub fn backing_is_empty(&self) -> bool { self.original_admission.is_none() && self.slots.is_empty() && self.generations.is_empty() && self.occupied.is_empty() && self.next.is_empty() && self.previous.is_empty() && self.buckets.is_empty() && self.free.is_empty() }
     pub fn terminal_is_empty(&self) -> bool {
-        self.len == 0 && (self.free_len == ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY || (self.free_len == 0 && self.backing_is_empty()))
+        self.original_admission.is_none() && self.len == 0 && (self.free_len == ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY || (self.free_len == 0 && self.backing_is_empty()))
     }
 }
 
@@ -594,3 +609,5 @@ mod replay_tests;
 #[path="🔁️replay/🦀️.rs"]
 mod replay;
 pub use replay::OriginalReplayDiagnostics;
+
+#[path="admission.rs"]mod admission;

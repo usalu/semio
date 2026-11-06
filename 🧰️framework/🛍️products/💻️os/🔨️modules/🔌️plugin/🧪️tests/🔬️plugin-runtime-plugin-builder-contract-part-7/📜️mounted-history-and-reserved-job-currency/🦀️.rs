@@ -12,6 +12,7 @@
     }
     #[semio_framework_async_macros::async_test]
     async fn mounted_command_history_original_pages_retain_exact_app_close_authority() {
+        let mut caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original mounted history caller");let mut context=caller.context();let cx=&mut context;
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
@@ -21,10 +22,11 @@
         let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
-        semio_plugin_tests_02::child_test_hosts::child_unit_2::test_mounted_command_history_pages(&mut app);
+        semio_plugin_tests_02::child_test_hosts::child_unit_2::test_mounted_command_history_pages(&mut app,cx);
     }
     #[semio_framework_async_macros::async_test]
     async fn mounted_command_history_document_replacement_keeps_original_held_rows() {
+        let mut caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original mounted history caller");let mut context=caller.context();let cx=&mut context;
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
@@ -35,7 +37,7 @@
 
         let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
         app.stores.test_store_mut().await.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.unwrap();
-        semio_plugin_tests_02::child_test_hosts::child_unit_2::test_mounted_command_history_replacement(&mut app);
+        semio_plugin_tests_02::child_test_hosts::child_unit_2::test_mounted_command_history_replacement(&mut app,cx);
     }
     #[semio_framework_async_macros::async_test]
     async fn mounted_private_child_frame_retains_exact_admission_and_close_authority() {

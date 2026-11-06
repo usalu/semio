@@ -25,7 +25,7 @@ mod original_float_field;
 pub use original_float_field::OriginalFloatFieldWork;
 #[path="🏭️construction/🦀️.rs"]
 mod original_construction;
-pub use original_construction::{OriginalConstructionDemand,admit_original_construction};
+pub use original_construction::{OriginalConstructionDemand,OriginalConstructionAdmission,OriginalConstructionStatus,OriginalConstructionFailure,original_construction_reserve,admit_original_construction};
 #[path="🚦️clock-stride-and-job-protocol/▶️drive/🦀️.rs"]
 mod original_driver;
 pub use original_driver::drive_step;

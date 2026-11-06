@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧭️routers/📦️packages/🦀️rust/Cargo.toml","-p","semio-plugin-host-routers","--lib","duplicate_live_identity_preserves_first_actual_request"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"codex-root-inference-identity"}}

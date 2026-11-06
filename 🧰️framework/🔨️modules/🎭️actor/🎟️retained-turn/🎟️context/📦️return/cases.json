@@ -1,0 +1,58 @@
+{
+  "cases": [
+    {
+      "name": "preissue-is-not-a-write",
+      "armed": true,
+      "written": false,
+      "sameSource": true,
+      "mayObserve": false
+    },
+    {
+      "name": "real-whole-target-return",
+      "armed": false,
+      "written": true,
+      "sameSource": true,
+      "mayObserve": true
+    },
+    {
+      "name": "foreign-observer",
+      "armed": false,
+      "written": true,
+      "sameSource": false,
+      "mayObserve": false
+    },
+    {
+      "name": "empty-owner-is-still-a-return",
+      "armed": false,
+      "written": true,
+      "sameSource": true,
+      "mayObserve": true
+    }
+  ],
+  "transitions": [
+    {
+      "name": "first-empty-lend",
+      "borrowed": false,
+      "preissued": true,
+      "mayReturn": false
+    },
+    {
+      "name": "armed-exact-return",
+      "borrowed": true,
+      "preissued": true,
+      "mayReturn": true
+    },
+    {
+      "name": "second-return-refused",
+      "borrowed": false,
+      "preissued": true,
+      "mayReturn": false
+    },
+    {
+      "name": "unfunded-return-refused",
+      "borrowed": true,
+      "preissued": false,
+      "mayReturn": false
+    }
+  ]
+}

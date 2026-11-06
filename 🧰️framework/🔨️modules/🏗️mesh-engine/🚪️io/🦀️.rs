@@ -53,7 +53,7 @@ impl MeshExporter for GlbExporter {
         "glb"
     }
     fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
-        Ok(mesh_to_glb(mesh))
+        mesh_to_glb(mesh)
     }
 }
 

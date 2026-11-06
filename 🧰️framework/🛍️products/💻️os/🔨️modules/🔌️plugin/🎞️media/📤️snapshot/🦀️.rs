@@ -15,6 +15,10 @@ pub const SNAPSHOT_PACK_PORT:&str="semio.snapshot.pack";
 pub const SNAPSHOT_PACK_TOOL:&str="export-media:semio.snapshot.pack";
 pub const SNAPSHOT_PACK_MIME:&str="application/vnd.semio.pack";
 pub const SNAPSHOT_PACK_SCHEMA:&str="semio.snapshot.pack.v1";
+/// 🔌️ Declares the existing checked current-snapshot producer as an app output.
+pub fn snapshot_pack_output_port() -> semio_framework::MediaPortSpec {
+ semio_framework::MediaPortSpec { id: SNAPSHOT_PACK_PORT.into(), label: "Snapshot".into(), direction: semio_framework::MediaPortDirection::Out, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Document }, kind_id: None, required: false, multiplicity: semio_framework::PortMultiplicity::Many }
+}
 pub const SNAPSHOT_PACK_CONTRACT:ToolExecutionContract=ToolExecutionContract::resumable(4096,4096,4096,ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES,2000,64,1);
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 fn demand(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}

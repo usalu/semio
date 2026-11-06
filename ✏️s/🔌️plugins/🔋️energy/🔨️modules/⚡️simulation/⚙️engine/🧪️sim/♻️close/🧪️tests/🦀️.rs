@@ -43,6 +43,6 @@ fn original_terminal_backings_are_retired_before_energy_authority_drop(){
  }
  assert!(close.as_ref().unwrap().terminal_is_empty());assert!(released>=bytes);
  let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(close.take()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- while !decoder.terminal_is_empty(){caller.turn(stock(),|cx|{let step=decoder.close_step(cx.retained_grant())?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);Ok(())}).unwrap();}
+ while !decoder.terminal_is_empty(){caller.turn(stock(),|cx|{decoder.close_on_source(cx)?;Ok(())}).unwrap();}
  caller.retire(stock());
 }

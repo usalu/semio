@@ -3,6 +3,7 @@ cargo-features = ["trim-paths"]
 [workspace]
 resolver = "2"
 members = [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🧪️components/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🎠️kernel/📤️return/🔤️json/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🎒️pack/🔤️json/🎟️source/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📦️packages/🦀️rust",
@@ -50,6 +51,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/⚙️plugin-runtime/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🌍️hub-remote/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🌐️inference-hub/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🌱️process-arena/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎛️shell-channel/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎯️server/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📐️schema-contract/📦️packages/🦀️rust",
@@ -615,6 +617,15 @@ members = [
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🦀️rust",
 ]
 exclude = [
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🎟️reservation/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🪡️field/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧳️slots/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧬️contract/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🍃️leaf/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/📦️packages/🦀️rust",
+
     "**/🏅️standards/**",
     "**/👽️guest/**",
     "**/🔮️oracles/**",
@@ -851,6 +862,10 @@ exclude = [
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔮️oracles/📦️package-boundary-classification/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🎟️root/📃️policy/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📥️input/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/📃️/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚠️failure/📦️packages/🦀️rust",
 ]
 
 [workspace.metadata.semio.repository]

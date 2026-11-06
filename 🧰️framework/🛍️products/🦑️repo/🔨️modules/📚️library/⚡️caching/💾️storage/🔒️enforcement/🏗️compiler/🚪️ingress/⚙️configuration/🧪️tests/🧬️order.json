@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"required":["order","forgedAccepted","retiredAccepted"],"properties":{"order":{"const":["mapping-read","publication-exclusive","recheck"]},"forgedAccepted":{"const":false},"retiredAccepted":{"const":false}}}

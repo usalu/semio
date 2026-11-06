@@ -129,6 +129,16 @@ fn begin_close_work_demand(&self)->Result<u64,crate::ValueError>{Ok(crate::retai
 fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<crate::retained_clone::RetainedCloneProgress>{crate::retained_clone::start_retained_close(&mut self.state.closing,effect)}
 fn close_started(&self)->bool{self.state.closing}
 fn output_ready(&self)->bool{self.state.phase==2&&self.state.target.is_some()}
+    fn advance_work_demand(&self,source:RetainedCloneRef<'_,DslValue>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{let selected=(||->Result<u64,crate::ValueError>{
+        self.demands(source,body)?;if maximum_work_units==0||self.state.phase==2{return Ok(0)}if self.state.source.is_none(){return Ok(1)}
+        if let Some(child)=self.state.child.as_ref(){if self.state.draining{return if !child.close_started(){child.begin_close_work_demand()}else if child.terminal_is_empty(){Ok(2+u64::from(size_of::<Self>()!=0)+u64::from(!self.state.closing))}else{child.close_work_demand(body)}}if self.state.child_value.is_some(){return Ok(1)}if child.output_ready(){return child.take_work_demand()?.checked_add(1).ok_or_else(||Self::refusal("dynamic child transfer work overflow"))}return child.advance_work_demand(self.child_source(source)?,body,maximum_work_units)}Ok(1)
+    })();selected.map(|work|if work<=maximum_work_units{work}else{0})}
+    fn take_work_demand(&self)->Result<u64,ValueError>{Ok(if self.output_ready(){2}else{0})}
+    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+        if !self.state.closing||self.terminal_is_empty(){return Ok(0)}let s=&self.state;
+        if let Some(child)=s.child.as_ref(){return if !child.close_started(){child.begin_close_work_demand()}else if child.terminal_is_empty(){Ok(2+u64::from(size_of::<Self>()!=0)+u64::from(!self.state.closing))}else{child.close_work_demand(body)}}
+        if !s.close.is_empty(){return s.close.next_owner_work::<DslValue>(false,&s.source,body)}if s.bytes.is_some(){return s.close.next_owner_work::<Vec<u8>>(true,&s.source,body)}if s.key.is_some(){return s.close.next_owner_work::<String>(true,&s.source,body)}if s.child_value.is_some(){return s.close.next_owner_work::<DslValue>(true,&s.source,body)}s.close.next_owner_work::<DslValue>(s.target.is_some(),&s.source,body)
+    }
     fn advance_demands(&self,source:RetainedCloneRef<'_,DslValue>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.demands(source,body)}
     fn advance(&mut self,source:RetainedCloneRef<'_,DslValue>,body: usize,maximum_work_units:u64, effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let maximum_work_units=maximum_work_units.min(effect.maximum_work_units());let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}

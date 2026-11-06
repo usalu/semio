@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️packages/🦀️rust/Cargo.toml","-p","semio-framework-job-failure","--test","original-turn-failure"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"codex-guest-failure-retirement"}}

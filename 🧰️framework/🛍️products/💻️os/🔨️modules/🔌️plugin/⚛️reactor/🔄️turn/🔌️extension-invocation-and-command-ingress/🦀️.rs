@@ -68,18 +68,37 @@ pub fn receive_retained_extension_invocation(index:usize,owner:RetainedExtension
 #[doc(hidden)]
 pub enum CommandIngressOwner {
     ReservedPresence { cursor: semio_framework::kernel::CommandPageCursor, admission: semio_plugin_peer::PresenceRosterAdmission, page: semio_framework::kernel::FixedCommandPage },
-    Presence { cursor: semio_framework::kernel::CommandPageCursor, publication_generation: u64 },
+    Presence { cursor:semio_framework::kernel::CommandPageCursor,publication_generation:u64,exchange:Option<semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>,exchange_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>>,terminal:bool,terminal_fault:Option<Vec<u8>> },
     PendingPresencePage { cursor: semio_framework::kernel::CommandPageCursor, publication_generation: u64, page: semio_framework::kernel::FixedCommandPage },
     GenericAssembly { cursor: semio_framework::kernel::CommandPageCursor, pages: semio_framework::kernel::CommandPageSet },
-    ClosingAssembly { cursor: semio_framework::kernel::CommandPageCursor, pages: semio_framework::kernel::CommandPageSet },
-    Generic { cursor: semio_framework::kernel::CommandPageCursor, command: semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress },
+    ClosingAssembly { cursor:semio_framework::kernel::CommandPageCursor,pages:Option<semio_framework::kernel::CommandPageSet>,retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework::kernel::CommandPageSet>> },
+    Generic { cursor:semio_framework::kernel::CommandPageCursor,command:Option<(u64,semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress)>,exchange:Option<semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>,exchange_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>>,output:Option<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>,output_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>> },
 }
 
 #[doc(hidden)]
 pub struct RetainedCommandIngress {
     pub key: instance_lifetime::NativeCloseKey,
-    pub state: CommandIngressOwner,
+    pub state: Option<CommandIngressOwner>,
 }
+pub(super) fn close_exchange_owner<T:semio_framework_value::RetireOwned>(owner:&mut Option<T>,closing:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+ if owner.is_none()&&closing.is_none(){return Ok(true)}let bytes=cx.retained_grant().maximum_copy_bytes;let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(owner,closing,bytes)?;let work=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_work_demand(owner,closing,bytes)?;cx.with_original_retirement(|cx|semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(owner,closing,grant)).map(|_|()))?;Ok(owner.is_none()&&closing.is_none())
+}
+
+pub(super) struct CommandIngressLoan{index:usize,entry:std::mem::ManuallyDrop<Option<RetainedCommandIngress>>,acquired:bool}
+impl CommandIngressLoan{
+ pub(super) fn empty(index:usize)->Self{Self{index,entry:std::mem::ManuallyDrop::new(None),acquired:false}}
+ pub(super) fn lend(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{COMMAND_INGRESS.with(|slots|slots.borrow_mut()[self.index].lend_step(&mut self.entry,&mut self.acquired,cx))}
+ pub(super) fn restore(&mut self)->Result<(),semio_framework_job::OriginalTurnFailure>{if self.acquired{COMMAND_INGRESS.with(|slots|slots.borrow_mut()[self.index].return_owner(&mut self.entry))?;self.acquired=false}Ok(())}
+ pub(super) fn state(&self)->Option<&CommandIngressOwner>{self.entry.as_ref().and_then(|entry|entry.state.as_ref())}
+ pub(super) fn state_mut(&mut self)->Option<&mut CommandIngressOwner>{self.entry.as_mut().and_then(|entry|entry.state.as_mut())}
+ pub(super) fn state_slot(&mut self)->Option<&mut Option<CommandIngressOwner>>{self.entry.as_mut().map(|entry|&mut entry.state)}
+ pub(super) fn take_state(&mut self)->Option<CommandIngressOwner>{self.entry.as_mut().and_then(|entry|entry.state.take())}
+ pub(super) fn put_state(&mut self,state:Option<CommandIngressOwner>){if let Some(entry)=self.entry.as_mut(){entry.state=state}else{assert!(state.is_none(),"command state retains its admitted entry")}}
+ pub(super) fn key(&self)->Option<instance_lifetime::NativeCloseKey>{self.entry.as_ref().map(|entry|entry.key)}
+ pub(super) fn admit_entry(&mut self,key:instance_lifetime::NativeCloseKey,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if let Some(entry)=self.entry.as_ref(){return Ok(entry.key==key)}let bytes=std::mem::size_of::<Option<RetainedCommandIngress>>();let grant=cx.retained_grant();if cx.should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}*self.entry=Some(RetainedCommandIngress{key,state:None});cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
+ pub(super) fn clear_empty_entry(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if self.entry.as_ref().is_none_or(|entry|entry.state.is_some()){return Ok(())}let bytes=std::mem::size_of::<Option<RetainedCommandIngress>>();let grant=cx.retained_grant();if cx.retirement_should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(())}self.entry.take();cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(())}
+}
+impl Drop for CommandIngressLoan{fn drop(&mut self){self.restore().expect("armed command return keeps its exact preissued Source target and pinned donor")}}
 
 /// 📥️ The cursor the retained owner is holding, whatever shape it holds it in — the one answer
 /// [`command_ingress_never_idle_while_owned`](crate::plugin::reactor::turn) needs to turn "this turn
@@ -109,26 +128,27 @@ pub(super) fn command_ingress_owner_cursor(owner: &CommandIngressOwner) -> semio
     }
 }
 
-fn retire_command_ingress(state: CommandIngressOwner,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<CommandIngressOwner>,semio_framework_job::OriginalTurnFailure> {
-    Ok(match state {
-        CommandIngressOwner::ReservedPresence { admission, .. } => {
-            admission.cancel.cancel_now();
-            None
-        }
-        CommandIngressOwner::Presence { .. } | CommandIngressOwner::PendingPresencePage { .. } => None,
-        CommandIngressOwner::GenericAssembly { cursor, mut pages } | CommandIngressOwner::ClosingAssembly { cursor, mut pages } => {
-            if pages.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).0 {
-                None
-            } else {
-                Some(CommandIngressOwner::ClosingAssembly { cursor, pages })
-            }
-        }
-        CommandIngressOwner::Generic { cursor, command } if matches!(command,semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{..}) => match command.retire_failed_step_on_original(cx){
-            semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Pending(command)=>Some(CommandIngressOwner::Generic{cursor,command}),
+pub(super) fn retire_command_ingress(slot:&mut Option<CommandIngressOwner>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+    if matches!(slot,Some(CommandIngressOwner::GenericAssembly{..})){
+        let bytes=std::mem::size_of::<Option<CommandIngressOwner>>();let p=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};if cx.retirement_should_yield()||cx.fuel_remaining()==0||cx.retained_grant().maximum_depth==0||!p.fits(cx.retained_grant()){return Ok(())}cx.retained_progress().checked_add(p)?;
+        let Some(CommandIngressOwner::GenericAssembly{cursor,pages})=slot.take()else{unreachable!()};*slot=Some(CommandIngressOwner::ClosingAssembly{cursor,pages:Some(pages),retirement:None});let posted=cx.consume_retained(p);cx.consume_fuel(1);posted?;return Ok(())
+    }
+    if let Some(CommandIngressOwner::ClosingAssembly{pages,retirement,..})=slot.as_mut(){if !close_exchange_owner(pages,retirement,cx)?{return Ok(())}let bytes=std::mem::size_of::<Option<CommandIngressOwner>>();let p=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};if cx.retirement_should_yield()||cx.fuel_remaining()==0||cx.retained_grant().maximum_depth==0||!p.fits(cx.retained_grant()){return Ok(())}cx.retained_progress().checked_add(p)?;slot.take();let posted=cx.consume_retained(p);cx.consume_fuel(1);posted?;return Ok(())}
+    if let Some(CommandIngressOwner::ReservedPresence{admission,..})=slot.as_mut(){admission.cancel.cancel_now();return Ok(())}
+    if let Some(CommandIngressOwner::Presence{exchange,exchange_close,..})=slot.as_mut(){if !close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}return Ok(())}
+    if matches!(slot,Some(CommandIngressOwner::PendingPresencePage{..})){return Ok(())}
+    if let Some(CommandIngressOwner::Generic{exchange,exchange_close,output,output_close,..})=slot.as_mut(){if !close_exchange_owner(output,output_close,cx)?||!close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}}
+    let Some(state)=slot.take()else{return Ok(())};*slot=match state {
+        original @ (CommandIngressOwner::ReservedPresence{..}|CommandIngressOwner::Presence{..}|CommandIngressOwner::PendingPresencePage{..})=>Some(original),
+        CommandIngressOwner::GenericAssembly{..}|CommandIngressOwner::ClosingAssembly{..}=>unreachable!("assembly Source retirement precedes owner extraction"),
+        CommandIngressOwner::Generic { cursor, command:Some((seq,command)),exchange,exchange_close,output,output_close } if matches!(command,semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{..}) => match command.retire_failed_step_on_original(cx){
+            semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Refused{owner,failure}=>{*slot=Some(CommandIngressOwner::Generic{cursor,command:Some((seq,owner)),exchange,exchange_close,output,output_close});return Err(failure)},semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Pending(command)=>Some(CommandIngressOwner::Generic{cursor,command:Some((seq,command)),exchange,exchange_close,output,output_close}),
             semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Failed(failure)=>return Err(failure),
+            semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Closed=>None,
         },
-        CommandIngressOwner::Generic { cursor, command } => command.retire_step().map(|command| CommandIngressOwner::Generic { cursor, command }),
-    })
+        CommandIngressOwner::Generic { cursor, command:Some((seq,command)),exchange,exchange_close,output,output_close } => match command.retire_original(cx){semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Refused{owner,failure}=>{*slot=Some(CommandIngressOwner::Generic{cursor,command:Some((seq,owner)),exchange,exchange_close,output,output_close});return Err(failure)},semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Pending(command)=>Some(CommandIngressOwner::Generic{cursor,command:Some((seq,command)),exchange,exchange_close,output,output_close}),semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Failed(failure)=>return Err(failure),semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Closed=>None},
+        CommandIngressOwner::Generic{command:None,..}=>None,
+    };Ok(())
 }
 
 /// 📥️ Which of the guest's two fixed ingress slots holds the owner the host is DRIVING, and which
@@ -156,47 +176,29 @@ pub const COMMAND_INGRESS_RETIRING_SLOT: usize = 0;
 /// 🧹️ One bounded close step for a superseded owner. It owns no ingress status: the host has no
 /// driver left for it, so anything this lane said would name a command the host cannot acknowledge.
 #[doc(hidden)]
-pub fn step_retiring_command_ingress(cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure> {
-    COMMAND_INGRESS.with(|ingress| {
-        let mut ingress = ingress.borrow_mut();
-        if let Some(entry) = ingress[COMMAND_INGRESS_RETIRING_SLOT].take() {
-            let key = entry.key;
-            ingress[COMMAND_INGRESS_RETIRING_SLOT] = retire_command_ingress(entry.state,cx)?.map(|state| RetainedCommandIngress { key, state });
-        }
-        Ok(())
-    })
+pub fn step_retiring_command_ingress(cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+ retire_command_slot(COMMAND_INGRESS_RETIRING_SLOT,cx)
 }
-
-pub(super) fn retiring_command_ingress_is_free() -> bool {
-    COMMAND_INGRESS.with(|ingress| ingress.borrow()[COMMAND_INGRESS_RETIRING_SLOT].is_none())
+fn retire_command_slot(index:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+ if !COMMAND_INGRESS.with(|slots|slots.borrow_mut()[index].settle_step(cx))?{return Ok(())}
+ if COMMAND_INGRESS.with(|slots|slots.borrow()[index].peek().is_none()){return Ok(())}
+ let mut loan=std::pin::pin!(CommandIngressLoan::empty(index));if !loan.lend(cx)?{return Ok(())}
+ if let Some(state)=loan.state_slot(){retire_command_ingress(state,cx)?;}
+ loan.clear_empty_entry(cx)?;loan.restore()
 }
-
-/// 🧹️ Moves a superseded owner into the retiring lane and takes its first close step there.
-pub(super) fn park_retiring_command_ingress(key: instance_lifetime::NativeCloseKey, state: CommandIngressOwner,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure> {
-    COMMAND_INGRESS.with(|ingress| {
-        ingress.borrow_mut()[COMMAND_INGRESS_RETIRING_SLOT] = retire_command_ingress(state,cx)?.map(|state| RetainedCommandIngress { key, state });
-        Ok(())
-    })
+pub(super) fn retiring_command_ingress_is_free()->bool{COMMAND_INGRESS.with(|slots|slots.borrow()[COMMAND_INGRESS_RETIRING_SLOT].peek().is_none())}
+pub(super) fn park_retiring_command_ingress(key:instance_lifetime::NativeCloseKey,state:&mut Option<CommandIngressOwner>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+ if !COMMAND_INGRESS.with(|slots|slots.borrow_mut()[COMMAND_INGRESS_RETIRING_SLOT].settle_step(cx))?{return Ok(false)}
+ if !retiring_command_ingress_is_free(){return Ok(false)}let mut loan=std::pin::pin!(CommandIngressLoan::empty(COMMAND_INGRESS_RETIRING_SLOT));if !loan.lend(cx)?||!loan.admit_entry(key,cx)?{return Ok(false)}
+ let bytes=2*std::mem::size_of::<Option<CommandIngressOwner>>();let grant=cx.retained_grant();if cx.should_yield()||cx.fuel_remaining()<2||grant.maximum_items<2||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
+ loan.put_state(state.take());cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:2,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(2);loan.restore()?;Ok(true)
 }
-
 #[doc(hidden)]
-pub fn close_command_ingress_step(key: instance_lifetime::NativeCloseKey,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-    COMMAND_INGRESS.with(|ingress| {
-        let mut ingress = ingress.try_borrow_mut().map_err(|_| reactor_close_fault("command ingress close authority busy"))?;
-        let Some(index) = ingress.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.key == key)) else { return Ok(true) };
-        let entry = ingress[index].take().expect("selected exact ingress owner");
-        ingress[index] = retire_command_ingress(entry.state,cx)?.map(|state| RetainedCommandIngress { key, state });
-        Ok(!ingress.iter().any(|entry| entry.as_ref().is_some_and(|entry| entry.key == key)))
-    })
+pub fn close_command_ingress_step(key:instance_lifetime::NativeCloseKey,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+ for index in 0..2{let selected=COMMAND_INGRESS.with(|slots|slots.borrow()[index].peek().is_some_and(|entry|entry.key==key));if selected{retire_command_slot(index,cx)?;}else{COMMAND_INGRESS.with(|slots|slots.borrow_mut()[index].settle_step(cx))?;}}
+ Ok(COMMAND_INGRESS.with(|slots|slots.borrow().iter().all(|slot|match slot.peek(){Some(entry)=>entry.key!=key,None=>slot.terminal_is_empty()})))
 }
-
-/// 🧮️ Occupied slots of the guest's retained command-ingress authority, out of its fixed two. A
-/// settled reactor holds none: an owner survives a turn only while its own command is still being
-/// assembled, dispatched or closed. This is what an ingress-saturation law reads between commands —
-/// a stream that leaves an owner behind pins the authority and backpressures every later command.
-pub fn retained_command_ingress_occupancy() -> usize {
-    COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().filter(|entry| entry.is_some()).count())
-}
+pub fn retained_command_ingress_occupancy()->usize{COMMAND_INGRESS.with(|slots|slots.borrow().iter().filter(|slot|slot.peek().is_some()).count())}
 
 /// 🔌️ Advances the retained extension invocation and the extension retirement under the mounted close policy; reports whether extension retirement still has work.
 ///

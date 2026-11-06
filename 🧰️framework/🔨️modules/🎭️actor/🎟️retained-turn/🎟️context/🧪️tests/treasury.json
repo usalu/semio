@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "initial": 100,
+      "scoped": 60,
+      "birth": 10,
+      "debt": 20,
+      "enter": 40,
+      "allowed": true
+    },
+    {
+      "initial": 100,
+      "scoped": 5,
+      "birth": 10,
+      "debt": 20,
+      "enter": 40,
+      "allowed": false
+    },
+    {
+      "initial": 100,
+      "scoped": 60,
+      "birth": 10,
+      "debt": 80,
+      "enter": 40,
+      "allowed": false
+    }
+  ]
+}

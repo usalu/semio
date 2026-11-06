@@ -14,6 +14,7 @@ app_labels! {
         default_example: native_en "Default", native_de "Standard", reuse_en "Default", reuse_de "Standard";
         reconstruction: native_en "Reconstruction", native_de "Rekonstruktion", reuse_en "Reconstruction", reuse_de "Rekonstruktion";
         error: native_en "error", native_de "Fehler", reuse_en "error", reuse_de "Fehler";
+        invalid_import: native_en "Cannot import {name}: unsupported or corrupt image or video data.", native_de "„{name}“ kann nicht importiert werden: nicht unterstützte oder beschädigte Bild- oder Videodaten.", reuse_en "Cannot import {name}: unsupported or corrupt image or video data.", reuse_de "„{name}“ kann nicht importiert werden: nicht unterstützte oder beschädigte Bild- oder Videodaten.";
         status: native_en "Status", native_de "Status", reuse_en "Status", reuse_de "Status";
         running: native_en "Running", native_de "Läuft", reuse_en "Running", reuse_de "Läuft";
         idle: native_en "Idle", native_de "Leerlauf", reuse_en "Idle", reuse_de "Leerlauf";
@@ -83,6 +84,15 @@ app_labels! {
         panel_qc: native_en "Quality", native_de "Qualität", reuse_en "Quality", reuse_de "Qualität";
         window_frames: native_en "Frames", native_de "Frames", reuse_en "Frames", reuse_de "Frames";
         window_report: native_en "Report", native_de "Bericht", reuse_en "Report", reuse_de "Bericht";
+        frame_stream: native_en "Stream", native_de "Stream", reuse_en "Stream", reuse_de "Stream";
+        frame_index: native_en "Frame", native_de "Bild", reuse_en "Frame", reuse_de "Bild";
+        report_table: native_en "Report table", native_de "Berichtstabelle", reuse_en "Report table", reuse_de "Berichtstabelle";
+        report_frames: native_en "Frames", native_de "Bilder", reuse_en "Frames", reuse_de "Bilder";
+        report_cameras: native_en "Cameras", native_de "Kameras", reuse_en "Cameras", reuse_de "Kameras";
+        report_tracks: native_en "Tracks", native_de "Spuren", reuse_en "Tracks", reuse_de "Spuren";
+        report_gcps: native_en "Ground control points", native_de "Passpunkte", reuse_en "Ground control points", reuse_de "Passpunkte";
+        report_quality: native_en "Quality", native_de "Qualität", reuse_en "Quality", reuse_de "Qualität";
+        report_matches: native_en "Matches", native_de "Zuordnungen", reuse_en "Matches", reuse_de "Zuordnungen";
         layers: native_en "Layers", native_de "Ebenen", reuse_en "Layers", reuse_de "Ebenen";
         layer_mesh: native_en "Mesh", native_de "Mesh", reuse_en "Mesh", reuse_de "Mesh";
         layer_dense: native_en "Dense cloud", native_de "Dichte Punktwolke", reuse_en "Dense cloud", reuse_de "Dichte Punktwolke";

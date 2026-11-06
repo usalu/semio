@@ -91,6 +91,13 @@ interface reactor {
     authority(actor-authority-refusal),
     semantic,
   }
+  enum actor-failure-call-kind { allocate, deallocate, channel-version, checkpoint, restore, describe, cancel-job, admit-actor-input, publish-actor-failure, read-actor-failure, borrow-actor-failure, acknowledge-actor-failure-chunk, acknowledge-actor-failure, start-job, step-job, read-job-output, acknowledge-job-output, close-jobs, borrow-job-output, acknowledge-job-output-chunk, poll, admit-actor-context, close-actor-context, close-actor-output, pack-schema-hash, genesis, print-mirror, apply-ops, replay-envelopes, sqlite-schema, sqlite-export, sqlite-import, sqlite-take-payload, sqlite-take-file, sqlite-close, sqlite-retirement }
+  record actor-failure-call-reference { failed-epoch: u64, call-kind: actor-failure-call-kind }
+  record actor-failure-outcome { reference: actor-failure-call-reference, byte-length: u64 }
+  record actor-failure-chunk { offset: u64, bytes: option<list<u8>>, output-closed: bool }
+  record actor-failure-publish-call { input: retained-turn-input, spent: retained-progress, work-units-spent: u64, reference: actor-failure-call-reference, outcome: option<actor-failure-outcome>, refusal: option<actor-call-failure> }
+  record actor-failure-read-call { input: retained-turn-input, spent: retained-progress, work-units-spent: u64, reference: actor-failure-call-reference, chunk: option<actor-failure-chunk>, refusal: option<actor-call-failure> }
+  record actor-failure-ack-call { input: retained-turn-input, spent: retained-progress, work-units-spent: u64, reference: actor-failure-call-reference, acknowledged: bool, refusal: option<actor-call-failure> }
   record actor-call-refusal {
     input: retained-turn-input,
     spent: retained-progress,
@@ -221,38 +228,12 @@ interface reactor {
     lifecycle-receipt: option<receipt>,
     ui-patch-receipt: option<ui-patch-receipt>,
   }
-  /// 📥️ Hands the next `poll` the ONE command-ingress page it may admit. Staged rather than passed
-  /// as a `poll` parameter, and carried as `bytes` rather than the fixed 64-block `byte-page.page`,
-  /// for one measured reason: an ASYNC-LIFTED export whose parameters exceed the canonical ABI's
-  /// 16 flat values is called through an indirect parameter area the caller allocates in guest
-  /// memory with `cabi_realloc` — and `wit-bindgen`'s async lift never deallocates it
-  /// (`wit-bindgen-core` `abi::call`, `if sig.indirect_params && !async_`). With the page by value
-  /// `poll`'s area was 4 360 B, leaked on EVERY turn: the whole 512 MiB guest budget in ~118 000
-  /// turns, which a browser boot reaches in about a minute (ticket
-  /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️guest-memory-retention-2026-09-10.md`). `cursor` plus a
-  /// `list<u8>` is 13 flat values, so this call is passed directly and the bytes cross as a list the
-  /// guest owns and drops.
-  ///
-  /// ⚖️ LAW: exactly one staged page per `poll`. Staging twice without an intervening turn is a host
-  /// defect and faults here rather than silently replacing the page the guest has not read yet.
-  stage-command-page: async func(cursor: command-page-cursor, bytes: list<u8>) -> result<_, plugin-error>;
-
-  /// 🧊️ Hands the next `poll` the ONE cold document-pair page it may admit — same staging contract
-  /// and the same reason as `stage-command-page`.
-  stage-cold-pair-page: async func(page: cold-document-pair-page) -> result<_, plugin-error>;
-
-  /// ▶️ One guest turn. Carries NO bulk payload: `list<event>` and `budget` flatten to seven values,
-  /// which the canonical ABI passes directly, so this call — the one the host makes hundreds of
-  /// thousands of times per session — allocates nothing in guest memory that outlives it.
+  /// 📥️ Tagged ActorInput admission owns every command, event and cold pair until its actual return proof.
   admit-actor-context: async func(budget: actor-context-budget) -> actor-admission-call;
   admit-actor-input: async func(wire: option<list<u8>>, budget: actor-context-budget) -> actor-input-admission-call;
   close-actor-context: async func(budget: actor-context-budget) -> actor-context-close-call;
   close-actor-output: async func(budget: actor-context-budget) -> actor-context-close-call;
-  /// ⚖️ LAW: `events` carries AT MOST ONE event. A turn serves one event slot and owns one pending output, and turn results
-  /// are not mergeable, so the host queues further events and delivers them one per `poll`; a guest refuses a longer list
-  /// with `a reactor turn admits at most one event`. The type stays a `list` only because a `list` crosses the canonical
-  /// ABI as two flat values where an inlined `option<event>` would exceed the 16-value flat limit and leak its indirect
-  /// parameter area (see the `stage-command-page` note above).
+  /// ▶️ Poll consumes only its already admitted tagged input under the same authenticated scope.
   poll: async func(budget: actor-context-budget) -> result<turn-result, actor-call-refusal>;
 
   /// 🤝️ The app-channel version this guest was compiled for (`CHANNEL_VERSION`). A host reads it exactly once, right after

@@ -5,6 +5,7 @@ use super::{AppDocumentIdentity, ChildHeadPackEntry, ChildPackEntry, DocumentArc
 //#region 🔖️AppFrame
 /// 📬️ One frame the app engine sends to its client.
 #[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum AppFrame {
     Done {
         in_reply_to: u64,

@@ -1,0 +1,56 @@
+{
+  "cases": [
+    {
+      "name": "ordered",
+      "ordinals": [
+        0,
+        1,
+        2
+      ],
+      "expected": [
+        2,
+        1,
+        0
+      ],
+      "accepted": true
+    },
+    {
+      "name": "permuted",
+      "ordinals": [
+        2,
+        0,
+        1
+      ],
+      "expected": [
+        2,
+        1,
+        0
+      ],
+      "accepted": true
+    },
+    {
+      "name": "duplicate",
+      "ordinals": [
+        0,
+        0
+      ],
+      "expected": [],
+      "accepted": false
+    },
+    {
+      "name": "gap",
+      "ordinals": [
+        0,
+        2
+      ],
+      "expected": [],
+      "accepted": false
+    },
+    {
+      "name": "empty",
+      "ordinals": [],
+      "expected": [],
+      "accepted": true
+    }
+  ]
+}

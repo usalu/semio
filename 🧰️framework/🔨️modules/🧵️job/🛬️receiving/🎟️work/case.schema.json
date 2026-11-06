@@ -10,14 +10,17 @@
     "postScopeAdditionalWork",
     "heap",
     "sameSource",
-    "scope"
+    "scope",
+    "childQuantum",
+    "sourcePlacementWork",
+    "sourceWork"
   ],
   "properties": {
     "version": {
       "const": 1
     },
     "quantum": {
-      "const": 1
+      "const": 3
     },
     "probe": {
       "const": [
@@ -44,6 +47,15 @@
     },
     "scope": {
       "const": "base-context-real-current-loan-native-admission-not-host-birth"
+    },
+    "childQuantum": {
+      "const": 1
+    },
+    "sourcePlacementWork": {
+      "const": 2
+    },
+    "sourceWork": {
+      "const": 3
     }
   }
 }

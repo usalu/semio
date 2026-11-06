@@ -1,0 +1,8 @@
+import fs from "node:fs";const base=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END";const call="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call";const changes=[
+[call+"/🧪️tests/🤝️admission/🦀️.rs",[
+["guest.admit_step(checked,policy,semio_framework_job::logical_now_us)","guest.admit_step(checked,semio_framework_job::StepBudget::new(checked.work.fuel,checked.work.absolute_deadline_us,policy),semio_framework_job::logical_now_us)"],
+["entry.admit_step(input,q,||Some(1))","entry.admit_step(input,semio_framework_job::StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,q),||Some(1))"],
+["maximum_items:1,maximum_copy_bytes:0,..incoming.grant","maximum_items:1,..incoming.grant"]]],
+[call+"/📤️output/🧪️tests/🦀️.rs",[["lane.entry.admit_step(input,lane.host.guest_policy(input).unwrap(),clock)","lane.entry.admit_step(input,semio_framework_job::StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,lane.host.guest_policy(input).unwrap()),clock)"]]],
+[call+"/💼️job/📤️output/🧪️tests/🦀️.rs",[["lane.entry.admit_step(input,lane.host.guest_policy(input).unwrap(),clock)","lane.entry.admit_step(input,semio_framework_job::StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,lane.host.guest_policy(input).unwrap()),clock)"]]]
+];for(const[p,reps]of changes){const before=fs.readFileSync(p,"utf8");let after=before;for(const[a,b]of reps){if(!after.includes(a))throw Error("missing "+a);after=after.replaceAll(a,b)}if(fs.readFileSync(p,"utf8")!==before)throw Error("concurrent "+p);const tmp=base+"/🗑️generated/admission-fixture-"+Math.random()+".tmp";fs.writeFileSync(tmp,after);fs.renameSync(tmp,p);console.log(p)}

@@ -16,7 +16,7 @@ fn controlled_forecast_stops_before_the_denied_field(){
 
 /// 🎟️ This finite lower-level loan exercises the actual native control, independently of job caller tests.
 struct DecodeLoan(u64);
-impl semio_framework_value::native_decoding::OriginalWorkRecipient for DecodeLoan{fn admits<'a>(&mut self,quote:semio_framework_value::native_decoding::OriginalWorkQuote<'a>,observed:u64,additional:u64)->semio_framework_value::native_decoding::OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(observed.checked_add(additional).is_some_and(|value|value<=self.0))})())}}
+impl semio_framework_value::native_decoding::NativeDecodeWorkRecipient for DecodeLoan{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|value|value<=self.0))}}
 struct EncodeLoan{limit:u64,posted:u64}
 impl semio_framework_value::native_encoding::NativeEncodeWorkRecipient for EncodeLoan{
  fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|value|value<=self.limit))}

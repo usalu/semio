@@ -1,0 +1,5 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";import{dirname,join}from"node:path";const t=dirname(import.meta.path),b="🧰️framework/🔨️modules/🌱️value/";
+function edit(f:string,fn:(s:string)=>string){const s=readFileSync(f,"utf8"),n=fn(s),q=join(t,"🗑️generated/projection-birth-"+Date.now()+".rs");if(n===s)throw Error("unchanged "+f);writeFileSync(q,n);if(readFileSync(f,"utf8")!==s)throw Error("concurrent "+f);renameSync(q,f)}
+for(const f of["📽️projection/🦀️.rs","📽️projection/📦️owned/🦀️.rs"]){edit(b+f,s=>s.replaceAll("fn begin_projection(grant:RetainedCloneGrant)->","fn begin_projection(grant:RetainedCloneGrant,actual:&mut Option<usize>)->").replaceAll("pub fn begin(grant:RetainedCloneGrant)->","pub fn begin(grant:RetainedCloneGrant,actual:&mut Option<usize>)->").replaceAll("Self::Projection::begin(grant)","Self::Projection::begin(grant,actual)"))}
+edit(b+"📽️projection/📋️field/🦀️.rs",s=>s.replaceAll("T::begin_projection(child)","T::begin_projection(child,actual)"));
+console.log("Projection candidate constructor accepts original actual marker including pure scalar specializations");

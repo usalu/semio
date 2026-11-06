@@ -139,3 +139,5 @@ impl<P:OriginalArtifactPackReceiving> OriginalArtifactPairReceiving<P> {
  pub fn terminal_is_empty(&self)->bool { self.closed&&self.history_source_birth.phase()==semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty&&self.snapshot.is_none()&&self.history.is_none()&&self.snapshot_output.terminal_is_empty()&&self.history_output.terminal_is_empty()&&self.history_partial.terminal_is_empty()&&self.history_fault.terminal_is_empty() }
 }
 impl<P:OriginalArtifactPackReceiving> Drop for OriginalArtifactPairReceiving<P> { fn drop(&mut self) { assert!(std::thread::panicking()||self.terminal_is_empty(),"original artifact pair abandoned source-dependent receivers or typed outputs");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.snapshot);ManuallyDrop::drop(&mut self.history);ManuallyDrop::drop(&mut self.history_source_birth)}} } }
+#[path="🫴️failure/🦀️.rs"]
+mod original_failure_projection;

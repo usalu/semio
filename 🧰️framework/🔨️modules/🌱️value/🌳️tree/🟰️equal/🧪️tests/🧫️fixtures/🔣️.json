@@ -57,8 +57,7 @@
         "kind": "f64",
         "word": "8000000000000000"
       },
-      "equal": true,
-      "retainedEqual": false
+      "equal": true
     },
     {
       "id": "nan-self",
@@ -70,8 +69,7 @@
         "kind": "f64",
         "word": "7ff8000000000000"
       },
-      "equal": false,
-      "retainedEqual": true
+      "equal": false
     },
     {
       "id": "unencoded-field",

@@ -10,6 +10,13 @@
     ]
   },
   "targets": {
+    "typecheck": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": ["default", "^default", "reads"],
+      "outputs": [],
+      "options": { "command": "repo ./📜️script.ts typecheck", "cwd": "{projectRoot}" }
+    },
     "browser-acceptance": {
       "executor": "repo:script",
       "cache": false,

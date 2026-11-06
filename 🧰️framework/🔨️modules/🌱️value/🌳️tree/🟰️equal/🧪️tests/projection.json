@@ -1,0 +1,30 @@
+[
+  {
+    "work": 0,
+    "leftMatches": false,
+    "rightMatches": false,
+    "reported": 0,
+    "failed": false
+  },
+  {
+    "work": 1,
+    "leftMatches": false,
+    "rightMatches": false,
+    "reported": 0,
+    "failed": false
+  },
+  {
+    "work": 4096,
+    "leftMatches": false,
+    "rightMatches": true,
+    "reported": 1,
+    "failed": true
+  },
+  {
+    "work": 4096,
+    "leftMatches": true,
+    "rightMatches": false,
+    "reported": 2,
+    "failed": true
+  }
+]

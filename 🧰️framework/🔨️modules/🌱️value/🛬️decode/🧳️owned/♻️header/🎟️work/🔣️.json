@@ -6,13 +6,13 @@
     "stock",
     "input",
     "cancelCuts",
-    "ownedCopyBytes",
     "moveWork",
     "freeWork",
     "deniedWork",
     "cachedWork",
     "poisonDropCalls",
-    "freshBoxAllocations"
+    "freshBoxAllocations",
+    "handoff"
   ],
   "properties": {
     "stock": {
@@ -63,11 +63,8 @@
         "minimum": 0
       }
     },
-    "ownedCopyBytes": {
-      "const": 0
-    },
     "moveWork": {
-      "const": 1
+      "const": 2
     },
     "freeWork": {
       "const": 1
@@ -83,6 +80,18 @@
     },
     "freshBoxAllocations": {
       "const": 0
+    },
+    "handoff": {
+      "const": [
+        {
+          "pointerBytes": 4,
+          "copyBytes": 13
+        },
+        {
+          "pointerBytes": 8,
+          "copyBytes": 25
+        }
+      ]
     }
   },
   "$defs": {

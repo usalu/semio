@@ -148,9 +148,11 @@ pub fn instance_source() -> String {
             "the only reason `hostEvent` may carry no factory is its host-driven, boxed arm at the head of `dispatch_action`"
         );
         assert!(
-            instance_source().split_whitespace().collect::<String>().contains("ifmatches!(action,semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID|semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID){returnErr(Fault::new(FaultOrigin::Framework,FaultCode::new(\"framework.document-transfer.shell-owned\")"),
+            instance_source().split_whitespace().collect::<String>().contains("ifmatches!(action,semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID|semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID|semio_framework::EXPORT_MEDIA_FILE_ACTION_ID|semio_framework::EXPORT_SNAPSHOT_FILE_ACTION_ID){returnErr(Fault::new(FaultOrigin::Framework,FaultCode::new(\"framework.document-transfer.shell-owned\")"),
             "the only reason the document transfer verbs may carry no factory is their shell-owned refusal at the head of `dispatch_action`"
         );
+        assert!(semio_plugin_job::is_framework_reserved_action_id(semio_framework::EXPORT_MEDIA_FILE_ACTION_ID));
+        assert!(semio_plugin_job::is_framework_reserved_action_id(semio_framework::EXPORT_SNAPSHOT_FILE_ACTION_ID));
         let platform_visible = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();
         assert_eq!(platform_visible, registered, "every activated factory key is joined on the platform bus under this controller, and nothing else is");
         let before = platform.action_bus.dispatch_count();

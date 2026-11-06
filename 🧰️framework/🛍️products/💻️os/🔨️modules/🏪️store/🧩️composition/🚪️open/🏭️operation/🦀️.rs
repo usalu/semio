@@ -560,7 +560,7 @@ where
                     self.genesis_pack.take().expect("admitted genesis Pack remains retained"),
                     *self.genesis_hasher.finalize().as_bytes(),
                     history,
-                    expected,
+                    {let declared=expected;semio_os_store_document::persisted_document_hydration::PersistedDocumentHydrationIdentity{id:declared.artifact_id,dialect:Some(declared.dialect)}},
                     owner,
                     schema.to_string(),
                     self.owners.take().expect("original admitted member owner catalog remains retained"),

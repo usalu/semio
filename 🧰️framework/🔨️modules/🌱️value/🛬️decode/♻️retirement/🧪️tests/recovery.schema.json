@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "work",
+    "maximumWork",
+    "newCapacity",
+    "cases",
+    "roles",
+    "newSemanticAdmission"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "work": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "maximumWork": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "newCapacity": {
+      "const": 0
+    },
+    "newSemanticAdmission": {
+      "const": false
+    },
+    "roles": {
+      "const": [
+        "allocation",
+        "retirement"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "phase",
+          "sameRecipient",
+          "accepted"
+        ],
+        "properties": {
+          "operation": {
+            "enum": [
+              "grant",
+              "allocation",
+              "receipt",
+              "finish"
+            ]
+          },
+          "phase": {
+            "enum": [
+              "grant-started",
+              "effect-started",
+              "receipt-started",
+              "effect-finished",
+              "settled"
+            ]
+          },
+          "sameRecipient": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

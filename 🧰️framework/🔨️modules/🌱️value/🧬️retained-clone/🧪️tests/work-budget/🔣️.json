@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "maximumWork": [
+    0,
+    1,
+    2,
+    4,
+    8,
+    32
+  ],
+  "actions": [
+    {
+      "kind": "binding",
+      "work": 1
+    },
+    {
+      "kind": "byte",
+      "work": 1
+    },
+    {
+      "kind": "childTransfer",
+      "childWork": 1,
+      "parentWork": 1,
+      "work": 2
+    },
+    {
+      "kind": "childCloseIntent",
+      "childWork": 1,
+      "parentWork": 1,
+      "work": 2
+    },
+    {
+      "kind": "sharedDuplicate",
+      "childWork": 1,
+      "parentWork": 1,
+      "work": 2
+    }
+  ],
+  "invariants": [
+    "zero budget preserves every owner",
+    "selected work must fit before mutation",
+    "child receives original selected budget",
+    "output transfer and close intent are separate turns"
+  ],
+  "samples": [
+    [],
+    [
+      "alpha",
+      "βeta",
+      "日🌱",
+      ""
+    ],
+    [
+      "retained child",
+      "another original"
+    ]
+  ],
+  "cancellationTurns": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    8,
+    16
+  ]
+}

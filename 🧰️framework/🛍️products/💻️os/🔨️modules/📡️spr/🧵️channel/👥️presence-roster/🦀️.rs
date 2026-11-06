@@ -9,6 +9,7 @@ pub const PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES: usize = 4_096;
 pub const PRESENCE_ROSTER_MAXIMUM_BYTES: usize = PRESENCE_ROSTER_MAXIMUM_ITEMS * PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES;
 
 #[derive(Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct PresenceRosterWire {
     pub(super) entries: [Option<Box<[u8]>>; PRESENCE_ROSTER_MAXIMUM_ITEMS],
     len: usize,

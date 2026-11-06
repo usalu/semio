@@ -136,7 +136,7 @@ async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestM
         if poll == semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready {
             break;
         }
-        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original maintenance demand");
+        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,cx.fuel_remaining()).expect("original maintenance demand");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
         assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
         let step = app.maintenance_step(cx,grant).expect("envelope decode maintenance");
@@ -202,7 +202,7 @@ async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll(
     assert!(!PluginApp::has_runnable_typed_operations(&app), "a retired decode is no longer runnable reactor-turn work");
     app.cancel_artifact_envelope_load(handle).expect("cancel envelope law decode before fixture close");
     for _ in 0..10_000 {
-        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original maintenance demand");
+        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,cx.fuel_remaining()).expect("original maintenance demand");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
         assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
         let step = app.maintenance_step(&mut cx,grant).expect("envelope law decode cancellation maintenance");

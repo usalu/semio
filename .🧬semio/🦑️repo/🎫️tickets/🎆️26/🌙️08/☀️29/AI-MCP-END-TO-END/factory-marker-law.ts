@@ -1,0 +1,13 @@
+import{readFileSync,writeFileSync,renameSync}from'node:fs';import{dirname,join}from'node:path';
+const ticket=dirname(import.meta.path),base='🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/';
+function edit(path:string,fn:(s:string)=>string){const file=base+path,old=readFileSync(file,'utf8'),next=fn(old),tmp=join(ticket,'🗑️generated/factory-marker-'+Date.now()+'.rs');writeFileSync(tmp,next);if(readFileSync(file,'utf8')!==old)throw Error('concurrent');renameSync(tmp,file)}
+function rep(s:string,a:string,b:string){if(s.split(a).length!==2)throw Error('anchor '+a);return s.replace(a,b)}
+edit('🧫️fixtures/🔗️source/🔣️.json',s=>{const data=JSON.parse(s);data.sourceAdmissionWork=12;data.markerClearItems=3;data.markerClearWork=3;return JSON.stringify(data,null,2)+'\n'});
+edit('🧫️fixtures/🔗️source/work.schema.json',s=>rep(s,'8','12'));
+edit('🧫️fixtures/🔗️source/work.test.ts',s=>s.replace('consume six actions','retain and independently clear three real allocation markers').replace('select 2+1+1+2+1+1 work','select 2+1+1+2+2+1+?1 work').replace('.get()).toEqual','.get(fixture.markerClearWork)).toEqual'));
+edit('🦀️.rs',s=>{
+ s=rep(s,'let mut receipt=RetainedCloneProgress::default();let mut work=0u64;','let mut receipt=RetainedCloneProgress::default();let mut work=0u64;let mut actual=None;let mut marker_items=law["markerClearItems"].as_u64().unwrap()as usize;let mut marker_work=law["markerClearWork"].as_u64().unwrap();let mut marker_copy=marker_items*std::mem::size_of::<Option<usize>>();');
+ s=rep(s,'while admission.phase()!="ready"{let quote=','while admission.phase()!="ready"||actual.is_some(){if actual.is_some(){assert!(marker_items>0&&marker_copy>=std::mem::size_of::<Option<usize>>()&&marker_work>0);assert!(work.checked_add(1).unwrap()<=law["sourceAdmissionWork"].as_u64().unwrap());actual=None;marker_items-=1;marker_copy-=std::mem::size_of::<Option<usize>>();marker_work-=1;work+=1;continue}let quote=');
+ s=rep(s,'let mut actual=None;let(turn,heap)=observe_retirement_allocations(||admission.advance(offered,&mut actual));','let(turn,heap)=observe_retirement_allocations(||admission.advance(offered,&mut actual));');
+ return rep(s,'assert!(work.checked_add(1).unwrap()<=law["sourceAdmissionWork"].as_u64().unwrap());let mut output=None;','assert!(actual.is_none());assert_eq!((marker_items,marker_copy,marker_work),(0,0,0));assert!(work.checked_add(1).unwrap()<=law["sourceAdmissionWork"].as_u64().unwrap());let mut output=None;');
+});console.log('Factory laws retain allocator markers and clear them against independent actual parent CPU/copy/item stock');

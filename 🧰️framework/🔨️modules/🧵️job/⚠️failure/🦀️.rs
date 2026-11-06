@@ -31,12 +31,15 @@ pub struct OriginalRetirementReceivingPrimary{
 /// 🧳️ The complete native refusal or application diagnostic keeps its original ownership.
 #[derive(Debug,semio_framework_value_derive::RetireOwned)]
 #[value(crate="::semio_framework_value_retained_clone")]
-pub enum OriginalTurnPrimary{Value(ValueError),Fault(Fault),Domain(OriginalDomainPrimary),Receiving(OriginalReceivingPrimary),Retirement(OriginalRetirementFailure),RetirementReceiving(OriginalRetirementReceivingPrimary)}
+pub enum OriginalTurnPrimary{Value(ValueError),Fault(Fault),Domain(OriginalDomainPrimary),Receiving(OriginalReceivingPrimary),NativeSource(semio_framework_job_receiving::OriginalNativeReceivingOutcome),NativeRetirementSource(semio_framework_job_receiving::OriginalNativeReceivingOutcome<Result<(),OriginalReceivingPrimary>>),Retirement(OriginalRetirementFailure),RetirementReceiving(OriginalRetirementReceivingPrimary)}
+fn native_retirement_child(original:&semio_framework_job_receiving::OriginalNativeReceivingOutcome<Result<(),OriginalReceivingPrimary>>)->Option<&OriginalReceivingPrimary>{
+ original.call.as_ref().ok().or_else(||original.call.as_ref().err().and_then(|failure|failure.output.as_ref())).and_then(|result|result.as_ref().err())
+}
 impl OriginalTurnPrimary{
  /// 📊️ Borrows the actual producer receipt independently of its diagnostic representation.
- pub fn retained_progress(&self)->RetainedCloneProgress{match self{Self::Value(error)=>error.retained_progress(),Self::Fault(fault)=>fault.retained_progress(),Self::Domain(original)=>original.retained_progress(),Self::Receiving(original)=>original.retained_progress(),Self::Retirement(original)=>original.retained_progress(),Self::RetirementReceiving(original)=>original.retirement.retained_progress()}}
+ pub fn retained_progress(&self)->RetainedCloneProgress{match self{Self::Value(error)=>error.retained_progress(),Self::Fault(fault)=>fault.retained_progress(),Self::Domain(original)=>original.retained_progress(),Self::Receiving(original)=>original.retained_progress(),Self::NativeSource(original)=>original.retained_progress(),Self::NativeRetirementSource(original)=>native_retirement_child(original).map_or_else(||original.retained_progress(),|child|child.retained_progress()),Self::Retirement(original)=>original.retained_progress(),Self::RetirementReceiving(original)=>original.retirement.retained_progress()}}
  /// 🗨️ Borrows the original semantic text without cloning or formatting.
- pub fn message(&self)->&str{match self{Self::Value(error)=>&error.message,Self::Fault(fault)=>&fault.message,Self::Domain(original)=>original.message(),Self::Receiving(original)=>original.message(),Self::Retirement(original)=>original.primary().or(original.work_refusal()).or(original.receipt_refusal()).map_or("Original retirement refused",|cause|cause.message.as_ref()),Self::RetirementReceiving(original)=>original.retirement.primary().or(original.retirement.work_refusal()).or(original.retirement.receipt_refusal()).map_or("Original retirement refused",|cause|cause.message.as_ref())}}
+ pub fn message(&self)->&str{match self{Self::Value(error)=>&error.message,Self::Fault(fault)=>&fault.message,Self::Domain(original)=>original.message(),Self::Receiving(original)=>original.message(),Self::NativeSource(original)=>original.message(),Self::NativeRetirementSource(original)=>native_retirement_child(original).map_or_else(||original.message(),|child|child.message()),Self::Retirement(original)=>original.primary().or(original.work_refusal()).or(original.receipt_refusal()).map_or("Original retirement refused",|cause|cause.message.as_ref()),Self::RetirementReceiving(original)=>original.retirement.primary().or(original.retirement.work_refusal()).or(original.retirement.receipt_refusal()).map_or("Original retirement refused",|cause|cause.message.as_ref())}}
 }
 impl From<ValueError> for OriginalTurnPrimary{fn from(primary:ValueError)->Self{Self::Value(primary)}}
 impl From<Fault> for OriginalTurnPrimary{fn from(primary:Fault)->Self{Self::Fault(primary)}}
@@ -87,3 +90,15 @@ impl From<semio_framework_value_native_owned::native_decoding::NativeConstructio
 
 
 impl From<OriginalTurnPrimary> for OriginalTurnFailure{fn from(primary:OriginalTurnPrimary)->Self{Self{effects:primary.retained_progress(),primary,receipt_refusal:None,context_refusal:None,work_refusal:None}}}
+
+#[path="📦️frame/🦀️.rs"]
+mod return_frame;
+pub use return_frame::{OriginalReturnFrame,OriginalReturnPayload};
+
+#[path="🫴️projection/📸️snapshot/🦀️.rs"]
+mod native_snapshot_projection;
+pub use native_snapshot_projection::{OriginalNativeSnapshotFailure,project_original_native_snapshot_failure,key_original_native_snapshot_failure};
+
+#[path="🫴️projection/🔤️json/🦀️.rs"]
+mod json_failure_projection;
+pub use json_failure_projection::{OriginalJsonFailure,project_original_json_failure,key_original_json_failure};

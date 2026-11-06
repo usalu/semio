@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "cancelled": false,
+      "retirement": false,
+      "yielded": false,
+      "allowed": true
+    },
+    {
+      "cancelled": false,
+      "retirement": false,
+      "yielded": true,
+      "allowed": false
+    },
+    {
+      "cancelled": false,
+      "retirement": true,
+      "yielded": false,
+      "allowed": true
+    },
+    {
+      "cancelled": false,
+      "retirement": true,
+      "yielded": true,
+      "allowed": false
+    },
+    {
+      "cancelled": true,
+      "retirement": false,
+      "yielded": false,
+      "allowed": false
+    },
+    {
+      "cancelled": true,
+      "retirement": false,
+      "yielded": true,
+      "allowed": false
+    },
+    {
+      "cancelled": true,
+      "retirement": true,
+      "yielded": false,
+      "allowed": true
+    },
+    {
+      "cancelled": true,
+      "retirement": true,
+      "yielded": true,
+      "allowed": false
+    }
+  ]
+}

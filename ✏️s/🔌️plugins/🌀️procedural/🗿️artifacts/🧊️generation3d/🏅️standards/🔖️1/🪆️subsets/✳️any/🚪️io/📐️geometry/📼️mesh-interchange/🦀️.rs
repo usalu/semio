@@ -119,7 +119,7 @@ impl Machine for ExportBinary {
                     let data = MeshData { positions: transfer.positions, normals: transfer.normals, colors: transfer.colors, indices: transfer.indices, uvs: transfer.uvs, ..MeshData::default() };
                     self.bytes = match self.format {
                         Binary::Stl => mesh_to_stl(&data),
-                        Binary::Glb => mesh_to_glb(&data),
+                        Binary::Glb => mesh_to_glb(&data).map_err(|error| export_fault(&error))?,
                     };
                     self.encoding = true;
                     Ok(Flow::Working(0.5))

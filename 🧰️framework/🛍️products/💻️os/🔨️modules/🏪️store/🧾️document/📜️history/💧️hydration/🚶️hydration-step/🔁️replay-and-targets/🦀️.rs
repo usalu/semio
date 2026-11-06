@@ -5,7 +5,7 @@ use super::*;
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
     P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
     /// 🎞 Prepares the replay.
     pub(super) fn step_prepare_replay(&mut self, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {

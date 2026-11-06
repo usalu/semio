@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-job-return-budget"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Typed original return-budget data, conservation and physical closure"
+
+[package.metadata.semio]
+role = "framework"
+id = "job-return-budget"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job-payload = { path = "../../../📦️builder/📦️packages/🦀️rust" }
+semio-framework-job-return-escrow-publication = { path = "../../../📤️publication/🪙️escrow/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = "1.0.140"

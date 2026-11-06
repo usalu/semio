@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "actionId",
+    "defaults",
+    "port",
+    "descriptor",
+    "rejectedFilenames",
+    "deliveryCases",
+    "snapshot"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "actionId": {
+      "const": "exportMediaFile"
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outputPort",
+        "filename",
+        "mediaType",
+        "formatKind"
+      ],
+      "properties": {
+        "outputPort": {
+          "type": "string",
+          "minLength": 1
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mediaType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "formatKind": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "port": {
+      "type": "object",
+      "required": [
+        "id",
+        "direction",
+        "mediaType"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "direction": {
+          "const": "out"
+        },
+        "mediaType": {
+          "$ref": "#/$defs/mediaType"
+        }
+      }
+    },
+    "descriptor": {
+      "type": "object",
+      "required": [
+        "portId",
+        "mediaType",
+        "wire"
+      ],
+      "properties": {
+        "portId": {
+          "type": "string"
+        },
+        "mediaType": {
+          "$ref": "#/$defs/mediaType"
+        },
+        "wire": {
+          "type": "object",
+          "required": [
+            "kind",
+            "format_kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "binary"
+            },
+            "format_kind": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "rejectedFilenames": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "deliveryCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "delivered",
+          "error",
+          "sink"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "complete",
+              "source-changed-after-drain",
+              "source-changed-before-delivery",
+              "cancelled-during-copy",
+              "owner-retired-during-copy",
+              "wrong-format"
+            ]
+          },
+          "delivered": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sink": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "open",
+                "write",
+                "close",
+                "abort"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actionId",
+        "defaults",
+        "port",
+        "descriptor"
+      ],
+      "properties": {
+        "actionId": {
+          "const": "exportSnapshotFile"
+        },
+        "defaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "outputPort",
+            "filename",
+            "mediaType",
+            "formatKind"
+          ],
+          "properties": {
+            "outputPort": {
+              "type": "string",
+              "minLength": 1
+            },
+            "filename": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mediaType": {
+              "type": "string",
+              "minLength": 1
+            },
+            "formatKind": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "port": {
+          "type": "object",
+          "required": [
+            "id",
+            "direction",
+            "mediaType"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "direction": {
+              "const": "out"
+            },
+            "mediaType": {
+              "$ref": "#/$defs/mediaType"
+            }
+          }
+        },
+        "descriptor": {
+          "type": "object",
+          "required": [
+            "portId",
+            "mediaType",
+            "wire"
+          ],
+          "properties": {
+            "portId": {
+              "type": "string"
+            },
+            "mediaType": {
+              "$ref": "#/$defs/mediaType"
+            },
+            "wire": {
+              "type": "object",
+              "required": [
+                "kind",
+                "format_kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "binary"
+                },
+                "format_kind": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "mediaType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class",
+        "form"
+      ],
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "form": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

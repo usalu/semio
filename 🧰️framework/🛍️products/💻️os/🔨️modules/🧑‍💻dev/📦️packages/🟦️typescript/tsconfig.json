@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": [
+      "DOM",
+      "DOM.AsyncIterable",
+      "DOM.Iterable",
+      "ESNext"
+    ],
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": [
+      "react",
+      "react-dom",
+      "vite/client",
+      "bun"
+    ]
+  },
+  "files": [
+    "../../🧪️tests/👥️two-human/🟦️.ts",
+    "../../🧪️tests/👥️two-human/🧩️opened/🧪️tests/🟦️.ts",
+    "../../🧪️tests/👥️two-human/🧩️opened/🧪️tests/🌐️browser.ts"
+  ]
+}

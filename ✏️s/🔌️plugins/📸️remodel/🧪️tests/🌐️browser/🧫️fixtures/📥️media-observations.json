@@ -1,0 +1,114 @@
+[
+  {
+    "before": [
+      1,
+      36
+    ],
+    "after": [
+      2,
+      39
+    ],
+    "peer": [
+      2,
+      39
+    ],
+    "frames": 3,
+    "prior": [
+      "old"
+    ],
+    "afterStreams": [
+      {
+        "id": "old",
+        "text": "old"
+      },
+      {
+        "id": "new",
+        "text": "Photos (Images, 3 frames, sync: 0.0ms)"
+      }
+    ],
+    "pass": true
+  },
+  {
+    "before": [
+      1,
+      36
+    ],
+    "after": [
+      2,
+      39
+    ],
+    "peer": [
+      1,
+      36
+    ],
+    "frames": 3,
+    "prior": [
+      "old"
+    ],
+    "afterStreams": [
+      {
+        "id": "old",
+        "text": "old"
+      },
+      {
+        "id": "new",
+        "text": "Photos (Images, 3 frames, sync: 0.0ms)"
+      }
+    ],
+    "pass": false
+  },
+  {
+    "before": [
+      1,
+      36
+    ],
+    "after": [
+      2,
+      39
+    ],
+    "peer": [
+      2,
+      39
+    ],
+    "frames": 3,
+    "prior": [
+      "old"
+    ],
+    "afterStreams": [
+      {
+        "id": "new",
+        "text": "Photos (Images, 3 frames, sync: 0.0ms)"
+      }
+    ],
+    "pass": false
+  },
+  {
+    "before": [
+      1,
+      36
+    ],
+    "after": [
+      2,
+      39
+    ],
+    "peer": [
+      2,
+      39
+    ],
+    "frames": 3,
+    "prior": [
+      "old"
+    ],
+    "afterStreams": [
+      {
+        "id": "old",
+        "text": "old"
+      },
+      {
+        "id": "",
+        "text": "Photos (Images, 3 frames, sync: 0.0ms)"
+      }
+    ],
+    "pass": false
+  }
+]

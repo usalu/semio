@@ -72,7 +72,7 @@ pub async fn with_turn_execution<T>(mut future: std::pin::Pin<&mut (impl std::fu
 pub async fn poll_kernel<PA: semio_plugin_reactor_app::PluginApp + 'static>(
     runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
     events: &mut Option<Event>,
-    command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
+    command_page: &mut Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
     cold_pair_page: Option<&semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
     identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
@@ -87,7 +87,7 @@ pub async fn poll_kernel<PA: semio_plugin_reactor_app::PluginApp + 'static>(
 pub async fn poll_kernel_output<PA: semio_plugin_reactor_app::PluginApp, T, Prepared>(
     runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
     events: &mut Option<Event>,
-    command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
+    command_page: &mut Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
     cold_pair_page: Option<&semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
@@ -98,23 +98,18 @@ pub async fn poll_kernel_output<PA: semio_plugin_reactor_app::PluginApp, T, Prep
     with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, prepare, publish, identity,cx))).await
 }
 
-/// 📏️ `plugin_exchange`'s future is 76 848 B — awaiting it INLINE made it the single largest local
-/// of the turn generator, so every `poll` boxed a task future two thirds of which was one callee
-/// that most turns never reach. Boxed here, the turn generator holds an 8-byte pointer and the
-/// exchange state is allocated only on the turns that actually run a command. See
-/// `📓️poll-task-leak-2026-09-10.md` §3.2.
-pub(super) fn plugin_exchange_boxed<'a, 'b, 'context, PA: semio_plugin_reactor_app::PluginApp>(
+/// 🔀️ Borrows the retained command and partial output; its data remains in the actual Source home.
+pub(super) async fn plugin_exchange_turn<'a, 'b, 'context, PA: semio_plugin_reactor_app::PluginApp>(
     runtime: &'a semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
     instance_id: u32,
-    command: Option<(u64, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress)>,
+    command: &'a mut Option<(u64, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress)>,
+    state:&'a mut semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState,
     identity: &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,
     cx:&'a mut semio_framework_job::StepContext<'context>,
-) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput, semio_framework_job::OriginalTurnFailure>> + 'a>> {
-    Box::pin(async move{
-        let mut output=semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,command,identity,cx).await?;
+) -> Result<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput,semio_framework_job::OriginalTurnFailure> {
+        let mut output=semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,command,state,identity,cx).await?;
         if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){return Err(retain_refused_publication(instance_id,output,refusal,cx));}
         Ok(output)
-    })
 }
 
 /// 📏️ The per-turn patch BYTE budget this turn admits against — the host's own declaration

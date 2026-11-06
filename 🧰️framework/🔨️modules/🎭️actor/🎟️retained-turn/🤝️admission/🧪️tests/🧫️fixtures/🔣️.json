@@ -4,18 +4,18 @@
   "generation": 3,
   "firstEpoch": 19,
   "originalGrant": [
-    32,
-    32,
-    4096,
-    4096,
-    8
+    100000,
+    16777216,
+    16777216,
+    16777216,
+    128
   ],
   "guestPolicy": [
     1,
-    0,
-    512,
-    512,
-    8
+    1048576,
+    1048576,
+    1048576,
+    64
   ],
   "hostInputBytes": 97,
   "phases": [
@@ -65,11 +65,11 @@
     }
   ],
   "remaining": [
-    27,
-    25,
-    3872,
-    4096,
-    8
+    99995,
+    16777209,
+    16776984,
+    16777216,
+    128
   ],
   "epochs": [
     19,
@@ -87,22 +87,22 @@
   "bodyPolicy": [
     1,
     7,
-    512,
-    512,
-    8
+    1048576,
+    1048576,
+    64
   ],
   "closePolicy": [
     1,
-    0,
-    512,
-    512,
-    8
+    1048576,
+    1048576,
+    1048576,
+    64
   ],
   "work": {
     "clockBinding": 1771,
     "absoluteDeadlineUs": 1000000,
-    "fuel": 64
+    "fuel": 1000000
   },
-  "remainingFuel": 59,
-  "slotRemainingItems": 26
+  "remainingFuel": 999995,
+  "slotRemainingItems": 99994
 }

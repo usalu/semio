@@ -149,7 +149,7 @@ fn close(fixture: &mut RunFixture) {
     assert!(job.terminal_is_empty(), "the run job close never completed");
     fixture.job.take();
     let caller = fixture.caller.as_mut().expect("original Energy source closes after run");
-    while !fixture.decoder.terminal_is_empty() { caller.turn(source_stock(), |cx| { let demand = fixture.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?; semio_framework_job::close_original_retained_step(cx, demand, |grant| fixture.decoder.close_step(grant))?; Ok(()) }).expect("same original Energy decoder close"); }
+    while !fixture.decoder.terminal_is_empty() { caller.turn(source_stock(), |cx| { let demand = fixture.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?; fixture.decoder.close_on_source(cx)?; Ok(()) }).expect("same original Energy decoder close"); }
     fixture.caller.take().expect("original Energy caller closes once").retire(source_stock());
 }
 

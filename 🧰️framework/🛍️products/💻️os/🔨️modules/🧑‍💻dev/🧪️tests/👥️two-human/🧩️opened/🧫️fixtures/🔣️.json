@@ -1,0 +1,121 @@
+[
+  {
+    "required": [
+      "a",
+      "b"
+    ],
+    "checks": [
+      {
+        "id": "a",
+        "status": "passed",
+        "evidence": [
+          "seen"
+        ]
+      },
+      {
+        "id": "b",
+        "status": "passed",
+        "evidence": [
+          "seen"
+        ]
+      }
+    ],
+    "pass": true
+  },
+  {
+    "required": [
+      "a",
+      "b"
+    ],
+    "checks": [
+      {
+        "id": "a",
+        "status": "passed",
+        "evidence": [
+          "seen"
+        ]
+      }
+    ],
+    "pass": false
+  },
+  {
+    "required": [
+      "a"
+    ],
+    "checks": [
+      {
+        "id": "a",
+        "status": "passed",
+        "evidence": [
+          "seen"
+        ]
+      },
+      {
+        "id": "a",
+        "status": "passed",
+        "evidence": [
+          "again"
+        ]
+      }
+    ],
+    "pass": false
+  },
+  {
+    "required": [
+      "a"
+    ],
+    "checks": [
+      {
+        "id": "a",
+        "status": "unsupported",
+        "evidence": [
+          "unavailable"
+        ]
+      }
+    ],
+    "pass": false
+  },
+  {
+    "required": [
+      "a"
+    ],
+    "checks": [
+      {
+        "id": "a",
+        "status": "passed",
+        "evidence": []
+      }
+    ],
+    "pass": false
+  },
+  {
+    "required": [
+      ""
+    ],
+    "checks": [
+      {
+        "id": "",
+        "status": "passed",
+        "evidence": [
+          "seen"
+        ]
+      }
+    ],
+    "pass": false
+  },
+  {
+    "required": [
+      " "
+    ],
+    "checks": [
+      {
+        "id": " ",
+        "status": "passed",
+        "evidence": [
+          "seen"
+        ]
+      }
+    ],
+    "pass": false
+  }
+]

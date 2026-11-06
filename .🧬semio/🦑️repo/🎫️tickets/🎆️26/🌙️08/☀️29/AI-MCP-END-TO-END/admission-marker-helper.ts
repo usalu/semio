@@ -1,0 +1,19 @@
+import{readFileSync,writeFileSync,renameSync}from'node:fs';import{dirname,join}from'node:path';
+const file='🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/🦀️.rs',old=readFileSync(file,'utf8');let s=old;
+const a=s.indexOf('pub fn capture<'),b=s.indexOf('\nstruct ConstructionLoan',a);if(a<0||b<0)throw Error('capture helper');
+const method=`pub fn capture<T:RetireOwned+Sync,W>(value:T,wallet:&mut W,loan:impl Fn(&W)->RetainedCloneGrant,available_work:impl Fn(&W)->u64,mut post:impl FnMut(&mut W,RetainedCloneProgress,u64,(usize,usize),RetainedCloneGrant))->RetainedCloneSource<T>{
+ let mut owner=RetainedCloneSource::admission_owned(value,());let mut actual=None;
+ for _ in 0..10000{
+  if actual.is_some(){let g=loan(wallet);let d=RetirementDemand{copy_bytes:std::mem::size_of::<Option<usize>>(),depth:1,..Default::default()};assert!(retained_clone::retained_clone_grant_admits(g,d));assert!(available_work(wallet)>=1);actual=None;post(wallet,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()},1,(0,0),g);continue}
+  if owner.phase()=="ready"{break}let g=loan(wallet);let maximum=available_work(wallet);let quoted=owner.advance_work_demand().unwrap();assert!(quoted<=maximum,"source fixture lacks its actual finite caller work");assert!(retained_clone::retained_clone_grant_admits(g,owner.next_demand().unwrap()));
+  let(turn,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||owner.advance(g,&mut actual));assert!(turn.work<=quoted);let p=turn.result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));if let Some(bytes)=actual{assert_eq!(bytes,heap.0)}else{assert_eq!(heap.0,0)}post(wallet,p,turn.work,heap,g);turn.result.unwrap();
+ }
+ assert!(actual.is_none());assert_eq!(owner.phase(),"ready","source fixture failed at its actual demand {:?}",owner.next_demand());let mut output=None;let g=loan(wallet);assert!(available_work(wallet)>=1);let(turn,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||owner.take_output(&mut output,g));assert!(turn.work<=1);let p=turn.result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));post(wallet,p,turn.work,heap,g);turn.result.unwrap();assert!(owner.terminal_is_empty());output.expect("paid source output remains in its actual caller slot")
+}
+`;
+s=s.slice(0,a)+method+s.slice(b);
+const anchor=' pub fn remaining(&self)->RetainedCloneGrant{self.left}';if(s.split(anchor).length!==2)throw Error('wallet view');s=s.replace(anchor,anchor+'\n pub fn work_remaining(&self)->u64{self.work}');
+const one='assert!(turn.work<=1);wallet.post(p,turn.work,grant,heap);';if(s.split(one).length!==2)throw Error('post actual work');s=s.replace(one,'assert!(turn.work<=wallet.work_remaining());wallet.post(p,turn.work,grant,heap);');
+const close='let d=owner.next_demand(body).unwrap();assert!(d.copy_bytes<=body);let g=wallet.loan(1,body);';if(s.split(close).length!==2)throw Error('close quote');s=s.replace(close,'let d=owner.next_demand(body).unwrap();let quoted=owner.next_computational_work(body).unwrap();assert!(quoted<=wallet.work_remaining());assert!(d.copy_bytes<=body);let g=wallet.loan(1,body);');
+const work='let work=owner.last_turn_work();post_step(wallet,';if(s.split(work).length!==2)throw Error('close actual');s=s.replace(work,'let work=owner.last_turn_work();assert!(work<=quoted);post_step(wallet,');
+const tmp=join(dirname(import.meta.path),'🗑️generated/admission-marker-'+Date.now()+'.rs');writeFileSync(tmp,s);if(readFileSync(file,'utf8')!==old)throw Error('concurrent');renameSync(tmp,file);console.log('Canonical fixture capture preserves actual marker and exact finite CPU preflights');

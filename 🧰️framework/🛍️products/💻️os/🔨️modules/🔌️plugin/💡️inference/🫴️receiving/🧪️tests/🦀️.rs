@@ -24,7 +24,7 @@ fn close_value<T: RetireOwned>(value: T, caller: &mut OriginalJobFixtureCaller, 
 }
 fn finish(caller: OriginalJobFixtureCaller, mut decoder: OriginalJobDecodeOwner) {
     let mut caller = caller;
-    while !decoder.terminal_is_empty() { caller.turn(stock(), |cx| { let step = decoder.close_step(cx.retained_grant())?; cx.consume_retained(step.progress())?; cx.consume_fuel(step.progress().copied_items as u64); Ok(()) }).unwrap(); }
+    while !decoder.terminal_is_empty() { caller.turn(stock(), |cx| { decoder.close_on_source(cx)?; Ok(()) }).unwrap(); }
     caller.retire(stock());
 }
 

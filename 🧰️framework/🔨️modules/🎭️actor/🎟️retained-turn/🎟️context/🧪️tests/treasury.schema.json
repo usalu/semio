@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "initial",
+          "scoped",
+          "birth",
+          "debt",
+          "enter",
+          "allowed"
+        ],
+        "properties": {
+          "initial": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "scoped": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "birth": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "debt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "enter": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "allowed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

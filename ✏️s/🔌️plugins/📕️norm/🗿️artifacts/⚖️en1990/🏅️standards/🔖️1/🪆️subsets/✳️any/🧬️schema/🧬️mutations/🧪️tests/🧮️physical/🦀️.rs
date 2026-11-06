@@ -43,7 +43,7 @@ impl Probe{
  }
  fn finish(mut self)->Option<Unpaid>{
   for _ in 0..100000{if self.decoder.terminal_is_empty(){let unpaid=self.unpaid.take();self.caller.retire(stock());return unpaid;}
-   self.caller.turn(stock(),|cx|cx.with_original_retirement(|cx|{let d=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,d,|g|self.decoder.close_step(g))?;Ok(())})).unwrap();
+   self.caller.turn(stock(),|cx|cx.with_original_retirement(|cx|{let d=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;self.decoder.close_on_source(cx)?;Ok(())})).unwrap();
   }panic!("original EN 1990 decoder did not retire");
  }
 }

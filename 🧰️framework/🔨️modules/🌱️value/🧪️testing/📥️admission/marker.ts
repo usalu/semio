@@ -1,0 +1,4 @@
+import{test,expect}from'bun:test';import{Database}from'bun:sqlite';import Ajv from'ajv/dist/2020';import law from'./marker.json';import schema from'./marker.schema.json';
+test('source admission retains each original allocation marker until its independently paid clear',()=>{
+ expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(':memory:');try{db.run('CREATE TABLE actions(name TEXT NOT NULL,work INTEGER NOT NULL)');for(const action of law.actions)db.run('INSERT INTO actions VALUES(?1,?2)',[action.name,action.work]);const result=db.query("SELECT sum(work) AS work,count(*) AS turns,sum(CASE WHEN name IN ('owner','payload','lease') THEN 1 ELSE 0 END) AS births FROM actions").get();expect(result).toEqual(law.expected);expect(law.actions.filter(a=>a.name.startsWith('clear-'))).toHaveLength(law.expected.births);}finally{db.close()}
+});

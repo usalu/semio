@@ -699,12 +699,53 @@ async fn reconstructs_the_synthetic_orbit_against_ground_truth() {
     let recovered: Vec<[f64; 3]> = poses.iter().map(|(_, center)| *center).collect();
     let (sim, _) = align_to_truth(&recovered, &truth.centers).expect("recovered cameras must admit a Sim(3) registration onto the truth orbit");
     let data = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &mesh.mesh).expect("the finalized mesh resolves");
+    assert!(data.attributes.is_empty() && data.materials.is_empty() && data.textures.is_empty() && data.component_references.is_empty(), "resolved bounded mesh has no unsupported generic fields");
     let vertices: Vec<[f64; 3]> = data.positions.chunks_exact(3).map(|p| sim.act([f64::from(p[0]), f64::from(p[1]), f64::from(p[2])])).collect();
     let (median, p90, completeness) = mesh_surface_errors(&vertices, &truth.points);
     println!("[mesh-truth] {} vertices: surface distance median {median:.3} / p90 {p90:.3} (cube half-sizes), truth points within {MESH_COMPLETENESS_RADIUS} of a vertex {:.1}%", vertices.len(), completeness * 100.0);
     assert!(median < MAX_MESH_MEDIAN_SURFACE_ERROR && p90 < MAX_MESH_P90_SURFACE_ERROR, "the mesh must lie on the cube: median {median:.3}, p90 {p90:.3} half-sizes off its surface");
     assert!(completeness >= MIN_MESH_COMPLETENESS, "the mesh must cover the cube: only {:.1}% of the truth points have a vertex within {MESH_COMPLETENESS_RADIUS}", completeness * 100.0);
+    let files = semio_plugin::PluginApp::document_pack(&app.0).await.expect("finalized document pack");
+    let mesh_count = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::bounded_remodeling_mesh_chunk_count(&scene.durable_artifacts, &scene.results.mesh.mesh).expect("finalized mesh chunks");
+    let expected_mesh: Vec<Vec<u8>> = (0..mesh_count).map(|index| semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::bounded_remodeling_mesh_chunk(&scene.durable_artifacts, &scene.results.mesh.mesh, index).expect("finalized mesh chunk").to_vec()).collect();
+    let expected_mesh_source = scene.results.mesh.source.clone();
+    drop(data);
+    drop(scene);
+    drop(imported);
     close(app);
+
+    let mut reopened = app_with_registry().await;
+    semio_plugin::PluginApp::bind_instance_id(&mut reopened.0, 89).await;
+    semio_plugin::artifact_app_laws::load_document(&mut reopened.0, &files, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx()).await.expect("cold archive hydration");
+    let cold = reopened.snapshot().expect("cold reopened snapshot");
+    let actual_frames: Vec<_> = cold.streams.iter().flat_map(|stream| stream.frames.iter()).collect();
+    assert_eq!(actual_frames.len(), frames().count(), "cold Store retains every imported frame");
+    for (frame, (_, committed)) in actual_frames.iter().zip(frames()) {
+        let source = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_asset_chunk_source(&cold, &frame.asset_id).expect("cold durable frame");
+        assert_eq!(source.mime, FRAME_MIME);
+        let bytes: Vec<u8> = source.leaves.iter().flat_map(|leaf| leaf.iter().copied()).collect();
+        assert_eq!(bytes.as_slice(), *committed, "{}: cold frame bytes", frame.asset_id);
+        let mut reader = png::Decoder::new(std::io::Cursor::new(&bytes)).read_info().expect("independent cold PNG header");
+        let mut pixels = vec![0; reader.output_buffer_size()];
+        let info = reader.next_frame(&mut pixels).expect("independent cold PNG pixels");
+        assert_eq!((info.color_type, info.bit_depth), (png::ColorType::Rgba, png::BitDepth::Eight));
+        let decoded = remodeling_image::decode_png(&bytes).expect("native cold PNG decode");
+        assert_eq!((source.width, source.height), (info.width, info.height));
+        assert_eq!((decoded.width, decoded.height), (info.width, info.height));
+        assert_eq!(decoded.data.as_slice(), &pixels[..info.buffer_size()]);
+    }
+    let cold_mesh = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&cold.durable_artifacts, &cold.results.mesh.mesh).expect("cold finalized mesh resolves");
+    assert!(cold_mesh.attributes.is_empty() && cold_mesh.materials.is_empty() && cold_mesh.textures.is_empty() && cold_mesh.component_references.is_empty(), "cold bounded mesh has no unsupported generic fields");
+    assert_eq!(cold.results.mesh.source, expected_mesh_source, "cold Store preserves finalized mesh provenance");
+    let cold_count = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::bounded_remodeling_mesh_chunk_count(&cold.durable_artifacts, &cold.results.mesh.mesh).expect("cold finalized mesh chunks");
+    let cold_chunks: Vec<Vec<u8>> = (0..cold_count).map(|index| semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::bounded_remodeling_mesh_chunk(&cold.durable_artifacts, &cold.results.mesh.mesh, index).expect("cold finalized mesh chunk").to_vec()).collect();
+    assert_eq!(cold_chunks, expected_mesh, "cold Store preserves the canonical finalized mesh chunks");
+    let cold_vertices: Vec<[f64; 3]> = cold_mesh.positions.chunks_exact(3).map(|p| sim.act([f64::from(p[0]), f64::from(p[1]), f64::from(p[2])])).collect();
+    let (median, p90, completeness) = mesh_surface_errors(&cold_vertices, &truth.points);
+    assert!(median < MAX_MESH_MEDIAN_SURFACE_ERROR && p90 < MAX_MESH_P90_SURFACE_ERROR);
+    assert!(completeness >= MIN_MESH_COMPLETENESS);
+    drop(cold);
+    close(reopened);
 }
 
 #[semio_framework_async_macros::async_test]

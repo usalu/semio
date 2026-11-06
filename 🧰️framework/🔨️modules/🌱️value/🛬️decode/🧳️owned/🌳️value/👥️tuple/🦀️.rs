@@ -1,6 +1,4 @@
-//! 👥️ Heterogeneous sequences retain one original typed child and separately settle every authored field.
-use crate::OriginalReceivingPrimary;
-use crate::RetainedWorkOutcome;
+//! 👥️ Heterogeneous sequences retain paid source selection and every typed child through cleanup.
 use super::*;
 macro_rules! native_tuple{
  ($cursor:ident,$count:literal,$($index:literal:$kind:ident:$slot:ident:$field:ident),+)=>{

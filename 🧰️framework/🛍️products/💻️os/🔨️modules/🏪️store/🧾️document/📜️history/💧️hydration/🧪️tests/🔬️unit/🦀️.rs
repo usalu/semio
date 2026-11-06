@@ -6,7 +6,7 @@ use semio_framework_job::{Generation, OperationId, StepContext};
 use std::mem::ManuallyDrop;
 use semio_framework_os_store_member_open::MemberOpenDiagnostic;
 use semio_os_spr::Mutation;
-use semio_os_store_document::persisted_document_hydration::{PersistedDocumentHydrationTarget, PersistedDocumentStoreHydrationStep, Phase, RetainedPersistedDocumentHydration, drive_hydration_retirement, drive_hydration_runtime, hydration_fold_byte_grant};
+use semio_os_store_document::persisted_document_hydration::{PersistedDocumentHydrationIdentity,PersistedDocumentHydrationTarget, PersistedDocumentStoreHydrationStep, Phase, RetainedPersistedDocumentHydration, drive_hydration_retirement, drive_hydration_runtime, hydration_fold_byte_grant};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::sync::{Arc, Mutex};
 
@@ -34,7 +34,7 @@ fn persisted_hydration_release_store_entry_refuses_foreign_target_without_consum
     let pack = fixture["pack"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
     let expected = semio_framework_pack_json::from_json_str::<ArtifactRef>(&fixture["expected"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut hydration = RetainedPersistedDocumentHydration::<Snapshot, Mutation>::from_decoded_pack(
-        Snapshot::default(), pack, [7; 32], semio_os_spr::HistoryLog::default(), expected, None, "demo/v1".into(),
+        Snapshot::default(), pack, [7; 32], semio_os_spr::HistoryLog::default(), {let declared=expected;PersistedDocumentHydrationIdentity{id:declared.artifact_id,dialect:Some(declared.dialect)}}, None, "demo/v1".into(),
         semio_os_store_testing_doubles::demo_closable_store_owners(), OperationId(811), Generation(1), u64::MAX,
         PersistedDocumentHydrationTarget::Envelope, semio_os_spr::ActorId("store-entry".into()),
     );
@@ -511,7 +511,7 @@ fn authority_hydration() -> (RetainedPersistedDocumentHydration<semio_os_store_t
     let pack = fixture["pack"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
     let expected = semio_framework_pack_json::from_json_str::<ArtifactRef>(&fixture["expected"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let hydration = RetainedPersistedDocumentHydration::from_decoded_pack(
-        Default::default(), pack, [7; 32], semio_os_spr::HistoryLog::default(), expected, None, "demo/v1".into(),
+        Default::default(), pack, [7; 32], semio_os_spr::HistoryLog::default(), {let declared=expected;PersistedDocumentHydrationIdentity{id:declared.artifact_id,dialect:Some(declared.dialect)}}, None, "demo/v1".into(),
         semio_os_store_testing_doubles::demo_closable_store_owners(), OperationId(811), Generation(1), u64::MAX,
         PersistedDocumentHydrationTarget::Envelope, semio_os_spr::ActorId("authority".into()),
     );
@@ -540,3 +540,4 @@ fn persisted_hydration_authority_is_the_stepping_job_identity_not_the_archive_lo
     assert!(step_under(false), "a slot-id authority differing from the job identity is Stale");
     assert!(!step_under(true), "authority bound to the stepping job identity is never Stale");
 }
+

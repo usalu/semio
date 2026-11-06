@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-value-native-schema"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original native record schema matching preserves the exact source binding and paid matcher frontier."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-native-schema"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-value-native-receiving-contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-reservation = { path = "../../../../🌳️value/🎟️reservation/📦️packages/🦀️rust" }
+semio-framework-value-native-source = { path = "../../../../🌳️value/📖️source/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-decoding = { path = "../../../../../📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../../♻️retirement/📦️packages/🦀️rust" }

@@ -4,7 +4,17 @@ use crate::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement};
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
-pub use semio_framework_value_call::NativeCallFailure;
+/// 🧳️ Retains an owned output or operation error together with an independent context refusal.
+#[derive(Debug)]
+pub struct NativeDecodeCallFailure<T,E>{pub output:Option<T>,pub operation:Option<E>,pub context:Option<ValueError>,pub receipt_refusal:Option<ValueError>}
+impl<T:crate::retirement::RetireOwned,E:crate::retirement::RetireOwned> crate::retirement::RetireOwned for NativeDecodeCallFailure<T,E>{
+ type Cursor=<(Option<T>,Option<E>,Option<ValueError>,Option<ValueError>) as crate::retirement::RetireOwned>::Cursor;
+ fn retirement_ready(&self)->bool{self.output.as_ref().is_none_or(crate::retirement::RetireOwned::retirement_ready)&&self.operation.as_ref().is_none_or(crate::retirement::RetireOwned::retirement_ready)&&self.context.as_ref().is_none_or(crate::retirement::RetireOwned::retirement_ready)&&self.receipt_refusal.as_ref().is_none_or(crate::retirement::RetireOwned::retirement_ready)}
+ fn retirement(self)->Self::Cursor{crate::retirement::RetireOwned::retirement((self.output,self.operation,self.context,self.receipt_refusal))}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::Cursor>())}
+ fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}
+ fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()&&path.supports::<E>()}
+}
 /// 🫴️ Loans one original local receipt and its actual retained recipient.
 pub struct NativeRetirementDecodeContinuation<'recipient>{receipt:Option<NativeDecodeContinuation>,recipient:&'recipient mut NativeDecodeRetirementRecipient}
 /// 🔐️ Detaches a consuming local receipt with its unique original recipient identity.

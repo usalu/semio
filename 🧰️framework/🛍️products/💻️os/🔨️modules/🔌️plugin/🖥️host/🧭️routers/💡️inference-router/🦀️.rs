@@ -174,15 +174,18 @@ impl ArtifactInferenceRouter {
         Ok(self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?.values().map(|(_, item)| item.clone()).collect())
     }
 
+    fn admit_live_identity(&self,cancellation_id:&str,revision:u64,generation:u64)->Result<(),PluginHostError>{
+        let mut live=self.live_commits.lock().map_err(|_|PluginHostError::LockPoisoned("artifact inference live commits"))?;
+        match live.entry(cancellation_id.to_owned()){
+            std::collections::btree_map::Entry::Vacant(entry)=>{entry.insert((revision,generation));Ok(())}
+            std::collections::btree_map::Entry::Occupied(_)=>Err(PluginHostError::Plugin(format!("inference cancellation identity {cancellation_id:?} is already active"))),
+        }
+    }
+
     pub async fn infer(&self, request: &[u8], cancel: &semio_framework_async::CancelToken, funding: &crate::GuestRelayWakeAuthority) -> Result<Vec<u8>, PluginHostError> {
         let request_text = std::str::from_utf8(request).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let identity: InferenceRouteRequest = semio_framework_pack_json::from_json_str(request_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        {
-            let mut live = self.live_commits.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference live commits"))?;
-            if live.insert(identity.cancellation_id.clone(), (identity.revision, identity.generation)).is_some() {
-                return Err(PluginHostError::Plugin(format!("inference cancellation identity {:?} is already active", identity.cancellation_id)));
-            }
-        }
+        self.admit_live_identity(&identity.cancellation_id,identity.revision,identity.generation)?;
         let result = self.infer_with_visited(request, &mut Vec::new(), cancel, funding).await;
         let live = self
             .live_commits
@@ -400,3 +403,7 @@ impl Default for ArtifactInferenceRouter {
     }
 }
 //#endregion 💡️InferenceRouter
+
+#[cfg(test)]
+#[path="🧪️tests/🔐️live-identity/🦀️.rs"]
+mod live_identity_tests;

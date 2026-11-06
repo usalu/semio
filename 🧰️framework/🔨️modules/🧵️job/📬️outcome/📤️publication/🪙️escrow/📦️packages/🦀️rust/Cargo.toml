@@ -23,3 +23,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-job-payload = { path = "../../../../📦️builder/📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path = "../../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }

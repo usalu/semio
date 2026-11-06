@@ -1,0 +1,3 @@
+# Browser phase seam source review
+
+Sessions open creates a context before awaiting newPage and only records it after page creation (two-human/🔑️sessions/🟦️.ts:19–35). A newPage failure leaves that context unowned; partial multi-session failures likewise need cleanup. The cold phase waits for two peer counts but does not establish an exact visible scoped editor body on both pages before callback (two-human/🟦️.ts:193–200). The viewer restore is skipped when the original signal is aborted; no restoration should be claimed in that case and teardown must own the context. Source-only review; no host execution.

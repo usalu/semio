@@ -2,6 +2,7 @@
 use super::*;
 use semio_framework_value::{RetainedWorkOutcome,RetirementDemand,retained_clone::{RetainedCloneBinding,RetainedCloneRef,retained_clone_grant_admits}};
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeReceive,NativeReceiver,OriginalReceivingPrimary,owned::{NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,NativeMappedReceiver,NativeReceiveMap,tree::{NativeReceiveSlot,NativeScalarReceiver,NativeScalarValue,NativeValueSource,add_receipt,child_grant,fixed,invalid,nested,receipt}}};
+use semio_framework_value::native_decoding::owned::{NativeClosePermit,NativeRecoveryLoan};
 use std::mem::size_of;
 
 /// ⚛️ A scalar source selects its atom kind by its actual original type; integers beyond `i64` are refused.
@@ -69,19 +70,17 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,Value> for NativeValueReceiver
    self.phase=5;work+=1;Ok(Some((value,receipt(demand))))
   })();RetainedWorkOutcome{result,work}
  }
- fn begin_close(&mut self){self.closing=true;self.atom.begin_close();self.dictionary.begin_close();}
+ fn has_pending_recovery(&self)->bool{self.atom.has_pending_recovery()||self.dictionary.has_pending_recovery()}
+ fn pending_recovery(&mut self)->Option<NativeRecoveryLoan<'_>>{if self.atom.has_pending_recovery(){return self.atom.pending_recovery()}if self.dictionary.has_pending_recovery(){return self.dictionary.pending_recovery()}None}
+ fn resume_recovery(&mut self,control:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{if self.atom.has_pending_recovery(){return self.atom.resume_recovery(control)}if self.dictionary.has_pending_recovery(){return self.dictionary.resume_recovery(control)}RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+ fn begin_close_admitted(&mut self,_permit:NativeClosePermit)->Result<(),ValueError>{self.atom.begin_close()?;self.dictionary.begin_close()?;self.closing=true;Ok(())}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.atom.terminal_is_empty(){return self.atom.close_demands(body)}
   if !self.dictionary.terminal_is_empty(){return self.dictionary.close_demands(body)}
   RetainedCloneBinding::close_demand(&self.binding,body)
  }
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.atom.terminal_is_empty(){return self.atom.close_work_demand(body)}if !self.dictionary.terminal_is_empty(){return self.dictionary.close_work_demand(body)}RetainedCloneBinding::close_work_demand(&self.binding,body)}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementOutcome{let grant=effect.grant();let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return RetainedWorkOutcome{result:Err(e.into()),work:0}};if !retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if !self.atom.terminal_is_empty(){return self.atom.close_step(effect)}if !self.dictionary.terminal_is_empty(){return self.dictionary.close_step(effect)}RetainedCloneBinding::close_one(&mut self.binding,effect)}
- fn requires_original_birth(&self)->bool{if !self.atom.terminal_is_empty(){return self.atom.requires_original_birth()}if !self.dictionary.terminal_is_empty(){return self.dictionary.requires_original_birth()}false}
- fn close_original_birth_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{if !self.atom.terminal_is_empty(){return self.atom.close_original_birth_step(original,grant)}self.dictionary.close_original_birth_step(original,grant)}
- fn requires_original_control(&self)->bool{if !self.atom.terminal_is_empty(){return self.atom.requires_original_control()}if !self.dictionary.terminal_is_empty(){return self.dictionary.requires_original_control()}false}
- fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementOutcome{if self.requires_original_birth(){return RetainedWorkOutcome{result:Err(ValueError::invariant("settle original birth first").into()),work:0}}if !self.atom.terminal_is_empty()&&self.atom.requires_original_control(){return self.atom.close_original_step(original,effect)}if !self.dictionary.terminal_is_empty()&&self.dictionary.requires_original_control(){return self.dictionary.close_original_step(original,effect)}self.close_step(effect)}
-
+ fn close_step(&mut self,grant:RetainedCloneGrant,actual:&mut Option<usize>)->semio_framework_value::OriginalRetirementOutcome{let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return RetainedWorkOutcome{result:Err(e.into()),work:0}};if !retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if !self.atom.terminal_is_empty(){return self.atom.close_step(grant,actual)}if !self.dictionary.terminal_is_empty(){return self.dictionary.close_step(grant,actual)}RetainedCloneBinding::close_one(&mut self.binding,grant,actual)}
  fn terminal_is_empty(&self)->bool{self.atom.terminal_is_empty()&&self.dictionary.terminal_is_empty()&&self.binding.is_none()}
 }
 impl<I:NativeValueSource+?Sized> Drop for NativeValueReceiver<I>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native value receiving requires funded closure")}}

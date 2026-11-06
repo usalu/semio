@@ -1,3 +1,5 @@
+import { OPENED_CHECKS_COMPLETE_V1, openedCheckNameV1, openedChecksPassV1, openedPhasesPassV1, openedViewerScopeV1, openedEditorsScopeV1, runOpenedChecksV1, type OpenedArtifactChecksV1, type OpenedPhaseCheckV1 } from "./🧩️opened/🟦️.ts";
+import { openedUiOwnerV1 } from "./🧩️opened/🔒️adapter/🟦️.ts";
 import { checkScriptInvocation, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { withPreparedBrowserV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🚀️startup/🟦️.ts";
 import {ensureRepositoryBrowserPathV1,prepareRepositoryBrowserV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
@@ -33,12 +35,12 @@ import reconnectPolicy from "./🧭️journeys/🧬️reconnect.json";
 //#region 🔖️TwoHuman
 /** 👥️ Runs the two-human journey over every selected creatable kind; the report is flushed after every kind and the
  * signal ends the run after the current kind. */
-export async function runTwoHuman(repoRoot: string, options: TwoHumanOptions): Promise<TwoHumanReport> {
+export async function runTwoHuman(repoRoot: string, options: TwoHumanOptions, opened?: OpenedArtifactChecksV1): Promise<TwoHumanReport> {
   const transport=options.journey==="reconnect"?await createDocumentTransportControl(options.hub,reconnectPolicy.maximumOfflineMs,options.serves):undefined;
-  try{return await runTwoHumanWithTransport(repoRoot,options,transport)}finally{await transport?.close()}
+  try{return await runTwoHumanWithTransport(repoRoot,options,transport,opened)}finally{await transport?.close()}
 }
 
-async function runTwoHumanWithTransport(repoRoot:string,options:TwoHumanOptions,transport?:Awaited<ReturnType<typeof createDocumentTransportControl>>):Promise<TwoHumanReport>{
+async function runTwoHumanWithTransport(repoRoot:string,options:TwoHumanOptions,transport?:Awaited<ReturnType<typeof createDocumentTransportControl>>,opened?:OpenedArtifactChecksV1):Promise<TwoHumanReport>{
   const pins = readMatrixPins();
   const outDir = join(options.outDir, options.tag);
   mkdirSync(outDir, { recursive: true });
@@ -49,7 +51,8 @@ async function runTwoHumanWithTransport(repoRoot:string,options:TwoHumanOptions,
   const launch=browserLaunchOptionsV1();
   const browser = await chromium.launch(transport?{...launch,args:[...launch.args,"--proxy-bypass-list=<-loopback>"]}:launch);
   const sessions = await openSessions(browser, options.serves, options.humans, browserLocale,transport?.proxyUrl).catch(async error=>{await browser.close();throw error});
-  const [A, B] = sessions as [Session, Session];
+  const A = sessions[0]!;
+  let B = sessions[1]!;
   const flush = (): void => {
     writeFileSync(join(outDir, "report.json"), JSON.stringify(report, null, 2));
     writeFileSync(join(outDir, "console.txt"), sessions.flatMap((session) => session.lines.map((line) => `${session.human.label} ${line}`)).join("\n"));
@@ -123,6 +126,98 @@ async function runTwoHumanWithTransport(repoRoot:string,options:TwoHumanOptions,
           return a.peers.length === 2 && b.peers.length === 2 ? { a: a.peerLabels, b: b.peerLabels } : null;
         }, 45_000);
         check("presence 2/2", presence !== null, presence ?? { a: (await readStatus(A.page)).peers, b: (await readStatus(B.page)).peers });
+        if (opened) {
+          const aOwner = openedUiOwnerV1(A.page, options.signal), bOwner = openedUiOwnerV1(B.page, options.signal);
+          const context = presence === null ? null : { spaceId, documentId: artifactId, locale: options.locale, signal: options.signal, a: aOwner.ui, b: bOwner.ui };
+          let checks;
+          try { checks = await runOpenedChecksV1(opened, context, options.signal); }
+          finally { await Promise.all([aOwner.finish(), bOwner.finish()]); }
+          const receipts: OpenedPhaseCheckV1[] = checks.map(result => ({ ...result, phase: "editor", spaceId, documentId: artifactId, expectedActors: { a: "editor", b: "editor" } }));
+          if (opened.viewer) {
+            const viewerA = openedUiOwnerV1(A.page, options.signal), viewerB = openedUiOwnerV1(B.page, options.signal);
+            let switched = false;
+            try {
+              if (presence === null) throw Error("Viewer phase requires both peers");
+              await viewerB.ui.press('[id="playground.navbar.roles.viewer"]', "Enter");
+              switched = true;
+              const attrs = ["data-surface-role", "data-surface-space-id", "data-surface-document-id", "data-surface-session-instance-id", "data-surface-window-id"];
+              const scope = (body: Awaited<ReturnType<typeof viewerB.ui.observe>>[number]) => ({ visible: body.visible, role: body.attributes["data-surface-role"] ?? "", space: body.attributes["data-surface-space-id"] ?? "", document: body.attributes["data-surface-document-id"] ?? "", instance: body.attributes["data-surface-session-instance-id"] ?? "", window: body.attributes["data-surface-window-id"] ?? "" });
+              const bound = await until(async () => {
+                options.signal.throwIfAborted();
+                const [aBodies, bBodies, aStatus, bStatus] = await Promise.all([viewerA.ui.observe("[data-surface-role]", attrs, false), viewerB.ui.observe("[data-surface-role]", attrs, false), readStatus(A.page), readStatus(B.page)]);
+                return aStatus.peers.length === 2 && bStatus.peers.length === 2 && openedViewerScopeV1(aBodies.map(scope), bBodies.map(scope), spaceId, artifactId) ? { aBodies, bBodies, aPeers: aStatus.peerLabels, bPeers: bStatus.peerLabels } : null;
+              }, 45_000);
+              check("viewer surface scope observed", bound !== null, { spaceId, documentId: artifactId, actor: "B", surface: "viewer", bound });
+              const context = bound === null ? null : { spaceId, documentId: artifactId, locale: options.locale, signal: options.signal, a: viewerA.ui, b: viewerB.ui };
+              const observed = await runOpenedChecksV1(opened.viewer, context, options.signal);
+              receipts.push(...observed.map(result => ({ ...result, phase: "viewer" as const, spaceId, documentId: artifactId, expectedActors: { a: "editor" as const, b: "viewer" as const } })));
+            } catch (error) {
+              receipts.push(...opened.viewer.required.map(id => ({ id, phase: "viewer" as const, spaceId, documentId: artifactId, expectedActors: { a: "editor" as const, b: "viewer" as const }, status: "unexecuted" as const, evidence: [String(error).slice(0, 500)] })));
+            } finally {
+              try {
+                if (switched && !options.signal.aborted) {
+                  await viewerB.ui.press('[id="playground.navbar.roles.editor"]', "Enter");
+                  const restored = await until(async () => {
+                    options.signal.throwIfAborted();
+                    const bodies = await viewerB.ui.observe('[data-surface-role="editor"]', ["data-surface-space-id", "data-surface-document-id"], false);
+                    return bodies.some(body => body.visible && body.attributes["data-surface-space-id"] === spaceId && body.attributes["data-surface-document-id"] === artifactId) ? true : null;
+                  }, 45_000);
+                  if (restored === null) throw Error("Editor surface was not restored");
+                }
+              }
+              finally { await Promise.all([viewerA.finish(), viewerB.finish()]); }
+            }
+          }
+          if (opened.cold) {
+            try {
+              options.signal.throwIfAborted();
+              const old = B;
+              await old.context.close();
+              options.signal.throwIfAborted();
+              const fresh = await openSessions(browser, [old.url], [old.human], browserLocale);
+              B = fresh[0]!;
+              for (const line of old.lines) B.lines.push(line);
+              sessions[1] = B;
+              let abortClose: Promise<void> | null = null;
+              const closeOnAbort = () => { abortClose ??= B.context.close().catch(() => undefined); };
+              options.signal.addEventListener("abort", closeOnAbort, { once: true });
+              if (options.signal.aborted) closeOnAbort();
+              try {
+                options.signal.throwIfAborted();
+                if (B.context === old.context) throw Error("Cold profile was reused");
+                await boot(B);
+                await signIn(B);
+                await settleHome(B);
+                await openSpace(B, spaceId, report.misses);
+                await waitRow(B.page, "artifact", artifactId, 90_000);
+                await clickRowAction(B.page, "artifact", artifactId, /^(open|öffnen)\b/iu);
+                await awaitMounted(B, options.mountBudgetMs);
+                const peers = await until(async () => { options.signal.throwIfAborted(); const [a, b] = await Promise.all([readStatus(A.page), readStatus(B.page)]); return a.peers.length === 2 && b.peers.length === 2 ? true : null; }, 45_000);
+                const coldA = openedUiOwnerV1(A.page, options.signal), coldB = openedUiOwnerV1(B.page, options.signal);
+                try {
+                  const attrs = ["data-surface-role", "data-surface-space-id", "data-surface-document-id", "data-surface-session-instance-id", "data-surface-window-id"];
+                  const bound = await until(async () => {
+                    options.signal.throwIfAborted();
+                    const [aBodies, bBodies] = await Promise.all([coldA.ui.observe("[data-surface-role]", attrs, false), coldB.ui.observe("[data-surface-role]", attrs, false)]);
+                    const scope = (body: typeof aBodies[number]) => ({ visible: body.visible, role: body.attributes["data-surface-role"] ?? "", space: body.attributes["data-surface-space-id"] ?? "", document: body.attributes["data-surface-document-id"] ?? "", instance: body.attributes["data-surface-session-instance-id"] ?? "", window: body.attributes["data-surface-window-id"] ?? "" });
+                    return openedEditorsScopeV1(aBodies.map(scope), bBodies.map(scope), spaceId, artifactId) ? { aBodies, bBodies } : null;
+                  }, 15_000);
+                  const ready = peers !== null && old.page.isClosed() && B.context !== old.context && bound !== null;
+                  check("cold profile reopened", ready, { actor: "B", spaceId, documentId: artifactId, previousPageClosed: old.page.isClosed(), peers: peers !== null, bound });
+                  const context = ready ? { spaceId, documentId: artifactId, locale: options.locale, signal: options.signal, a: coldA.ui, b: coldB.ui } : null;
+                  const observed = await runOpenedChecksV1(opened.cold, context, options.signal);
+                  receipts.push(...observed.map(result => ({ ...result, phase: "cold" as const, spaceId, documentId: artifactId, expectedActors: { a: "editor" as const, b: "editor" as const } })));
+                } finally { await Promise.all([coldA.finish(), coldB.finish()]); }
+              } finally { options.signal.removeEventListener("abort", closeOnAbort); if (abortClose !== null) await abortClose; }
+            } catch (error) {
+              receipts.push(...opened.cold.required.map(id => ({ id, phase: "cold" as const, spaceId, documentId: artifactId, expectedActors: { a: "editor" as const, b: "editor" as const }, status: "unexecuted" as const, evidence: [String(error).slice(0, 500)] })));
+            }
+          }
+          for (const result of receipts) check(openedCheckNameV1(result.id), result.status === "passed" && result.evidence.some(value => value.trim().length > 0), result);
+          const required = [...opened.required.map(id => ({ id, phase: "editor" as const })), ...(opened.viewer?.required ?? []).map(id => ({ id, phase: "viewer" as const })), ...(opened.cold?.required ?? []).map(id => ({ id, phase: "cold" as const }))];
+          check(OPENED_CHECKS_COMPLETE_V1, opened.viewer || opened.cold ? openedPhasesPassV1(required, receipts, spaceId, artifactId) : openedChecksPassV1(opened.required, checks), { required: required.length, observed: receipts.length });
+          options.signal.throwIfAborted();
+        }
         const windowCursor = [A.lines.length, B.lines.length] as const;
         const windowClicks:boolean[]=[];
         for (const session of [A, B])
@@ -137,6 +232,12 @@ async function runTwoHumanWithTransport(repoRoot:string,options:TwoHumanOptions,
         };
         await JOURNEYS[options.journey].run({ A, B, check, time, plugin, pins, options, spaceId, artifactId, misses: report.misses,transport });
       } catch (error) {
+        if (opened) {
+          const required = [...opened.required, ...(opened.viewer?.required ?? []), ...(opened.cold?.required ?? [])];
+          const observed = required.filter(id => openedCheckNameV1(id) in row.checks).length;
+          for (const id of required) if (!(openedCheckNameV1(id) in row.checks)) check(openedCheckNameV1(id), false, { status: "unexecuted", evidence: [String(error).slice(0, 500)] });
+          if (!(OPENED_CHECKS_COMPLETE_V1 in row.checks)) check(OPENED_CHECKS_COMPLETE_V1, false, { required: required.length, observed });
+        }
         check("journey", false, String(error instanceof Error ? error.message : error).slice(0, 600));
         await shot(A, `${kind.kindId}-fail`);
         await shot(B, `${kind.kindId}-fail`);
@@ -190,7 +291,7 @@ function readHumans(segments: readonly string[]): readonly [Human, Human] {
  * `--mount-budget-ms`, default 15 min, for the document to mount; the latency bounds judge it), writes `report.json`,
  * `console.txt` and failure screenshots under `<out>/<tag>/`, publishes the acceptance record, exits non-zero unless every
  * kind passes. */
-export async function runTwoHumanCli(invocation: ScriptInvocation, repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
+export async function runTwoHumanCli(invocation: ScriptInvocation, repoRoot: string, defaultOutDir: string, segments: readonly string[], opened?: OpenedArtifactChecksV1): Promise<void> {
   checkScriptInvocation(invocation);
   invocation.control.signal.throwIfAborted();
   const hub = flagValue(segments, "--hub");
@@ -220,7 +321,7 @@ export async function runTwoHumanCli(invocation: ScriptInvocation, repoRoot: str
       adminCapabilityFile: flagValue(segments, "--admin-capability") ?? null,
       mountBudgetMs: Number(flagValue(segments, "--mount-budget-ms") ?? 900_000),
       signal: invocation.control.signal,
-    });
+    }, opened);
     const passed = report.rows.filter((row) => row.pass).length;
     const total = report.rows.length;
     const failing = report.rows.filter((row) => !row.pass).map((row) => `${row.kindId}: ${Object.entries(row.checks).filter(([, entry]) => !entry.pass).map(([name]) => name).join(", ") || "faults"}`);
@@ -256,7 +357,8 @@ export async function runTwoHumanCli(invocation: ScriptInvocation, repoRoot: str
   };
   await withAcceptanceRecord(repoRoot, check, async () => {
     await withPreparedBrowserV1(invocation, current => prepareRepositoryBrowserV1(repoRoot, current), async () => {
-      await served(serve, (serveUrl) => (serveB === serve ? body(serveUrl, serveUrl) : served(serveB, (serveBUrl) => body(serveUrl, serveBUrl))));
+      if (opened) await body(serve, serveB);
+      else await served(serve, (serveUrl) => (serveB === serve ? body(serveUrl, serveUrl) : served(serveB, (serveBUrl) => body(serveUrl, serveBUrl))));
     });
   });
 }

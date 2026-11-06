@@ -7,18 +7,21 @@ use std::mem::{ManuallyDrop,size_of};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original owned map entry changed its retained frontier")}
 struct Fields<V>{base:Option<OrderedMap<V>>,key:Option<String>,value:Option<V>,shared_key:Option<SharedOwner<String>>,shared_value:Option<SharedOwner<V>>,update:Option<UpdateCursor<V>>}
 /// 📝️ Owns the original map and entry without an alternate update algorithm or borrowed source mirror.
-pub struct OriginalOwnedEntry<V:RetireOwned+Sync>{fields:ManuallyDrop<Fields<V>>,retirement:RetainedCloneClose,phase:u8,closing:bool,progress:RetainedCloneProgress,last_work:u64}
+pub struct OriginalOwnedEntry<V:RetireOwned+Sync>{fields:ManuallyDrop<Fields<V>>,retirement:RetainedCloneClose,phase:u8,closing:bool,progress:RetainedCloneProgress,last_work:u64,last_allocation_attempt:Option<usize>}
 impl<V:RetireOwned+Sync> OriginalOwnedEntry<V>{
  /// 🌱️ Transfers actual original owners inline before any header allocation is admitted.
- pub fn new(base:OrderedMap<V>,key:String,value:V)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:Some(key),value:Some(value),shared_key:None,shared_value:None,update:None}),retirement:Default::default(),phase:0,closing:false,progress:Default::default(),last_work:0}}
+ pub fn new(base:OrderedMap<V>,key:String,value:V)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:Some(key),value:Some(value),shared_key:None,shared_value:None,update:None}),retirement:Default::default(),phase:0,closing:false,progress:Default::default(),last_work:0,last_allocation_attempt:None}}
  /// 🔗️ Transfers the already-issued immutable value and admits only the original new key header.
- pub fn from_shared_value(base:OrderedMap<V>,key:String,value:SharedOwner<V>)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:Some(key),value:None,shared_key:None,shared_value:Some(value),update:None}),retirement:Default::default(),phase:0,closing:false,progress:Default::default(),last_work:0}}
+ pub fn from_shared_value(base:OrderedMap<V>,key:String,value:SharedOwner<V>)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:Some(key),value:None,shared_key:None,shared_value:Some(value),update:None}),retirement:Default::default(),phase:0,closing:false,progress:Default::default(),last_work:0,last_allocation_attempt:None}}
  /// 📥️ Transfers both actual immutable entry headers without allocating replacement authority.
- pub fn from_shared(base:OrderedMap<V>,key:SharedOwner<String>,value:SharedOwner<V>)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:None,value:None,shared_key:Some(key),shared_value:Some(value),update:None}),retirement:Default::default(),phase:2,closing:false,progress:Default::default(),last_work:0}}
+ pub fn from_shared(base:OrderedMap<V>,key:SharedOwner<String>,value:SharedOwner<V>)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:None,value:None,shared_key:Some(key),shared_value:Some(value),update:None}),retirement:Default::default(),phase:2,closing:false,progress:Default::default(),last_work:0,last_allocation_attempt:None}}
  /// ♻️ Identifies the actual existing updater closure selected during normal advancement.
  pub fn advancing_retirement(&self)->bool{!self.closing&&self.phase==5&&(!self.retirement.is_empty()||self.fields.update.is_some())}
  pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
  pub fn last_turn_work(&self)->u64{self.last_work}
+ pub fn last_allocation_attempt(&self)->Option<usize>{self.last_allocation_attempt}
+ /// ⛽️ Quotes the selected updater or real retirement producer before any effects.
+ pub fn next_work_demand(&self,copy:usize)->Result<u64,ValueError>{if self.closing{return self.next_close_work_demand(copy)}match self.phase{3=>self.fields.update.as_ref().ok_or_else(invalid)?.next_work_demand(copy),5 if !self.retirement.is_empty()||self.fields.update.is_some()=>self.retirement.next_owner_work::<UpdateCursor<V>>(self.fields.update.is_some(),&None,copy),7=>Ok(0),_=>Ok(1)}}
  /// 🪙️ Quotes the same original header, AVL event or retained close that the next advance selects.
  pub fn next_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if self.closing{return self.next_close_demands(copy)}
@@ -33,7 +36,7 @@ impl<V:RetireOwned+Sync> OriginalOwnedEntry<V>{
  }
  /// ⏱️ Returns the defining producer's actual work on success, denial and failure.
  pub fn advance(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<OrderedMap<V>>,OriginalRetirementFailure>{
-  self.progress=Default::default();self.last_work=0;if effect.maximum_work_units()<self.advance_work_demand(effect.grant().maximum_copy_bytes).unwrap_or(u64::MAX){return RetainedWorkOutcome{result:Ok(None),work:0}}let result=self.advance_original(effect).map_err(|error|error.with_retained_progress(self.progress));RetainedWorkOutcome{result,work:self.last_work}
+  self.progress=Default::default();self.last_work=0;self.last_allocation_attempt=None;if effect.maximum_work_units()<self.advance_work_demand(effect.grant().maximum_copy_bytes).unwrap_or(u64::MAX){return RetainedWorkOutcome{result:Ok(None),work:0}}let result=self.advance_original(effect).map_err(|error|error.with_retained_progress(self.progress));RetainedWorkOutcome{result,work:self.last_work}
  }
  fn advance_original(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->Result<Option<OrderedMap<V>>,OriginalRetirementFailure>{let grant=effect.grant();
   if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original owned map entry is closing").into())}
@@ -45,7 +48,7 @@ impl<V:RetireOwned+Sync> OriginalOwnedEntry<V>{
    0=>{let fields=&mut*self.fields;let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<u8>(),..grant};let turn=SharedOwner::admit_into(&mut fields.key,&mut fields.shared_key,&mut effect.reborrow(child,effect.maximum_work_units())?);self.last_work=turn.work;self.progress=Default::default();if let Some(mut progress)=turn.result?{progress.copied_bytes+=size_of::<u8>();self.progress=progress;self.phase=1}},
    1=>{if self.fields.shared_value.is_some()||self.fields.value.is_none(){self.phase=2;self.progress.copied_bytes=size_of::<u8>()}else{let fields=&mut*self.fields;let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<u8>(),..grant};let turn=SharedOwner::admit_into(&mut fields.value,&mut fields.shared_value,&mut effect.reborrow(child,effect.maximum_work_units())?);self.last_work=turn.work;self.progress=Default::default();if let Some(mut progress)=turn.result?{progress.copied_bytes+=size_of::<u8>();self.progress=progress;self.phase=2}}},
    2=>{let fields=&mut*self.fields;fields.update=Some(UpdateCursor::new(fields.base.take().ok_or_else(invalid)?,fields.shared_key.take().ok_or_else(invalid)?,fields.shared_value.take()));self.phase=3},
-   3=>{let update=self.fields.update.as_mut().ok_or_else(invalid)?;let outcome=update.advance(&mut effect.reborrow(grant,effect.maximum_work_units())?);self.last_work=outcome.work;self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|step|step.progress());outcome.result?;if update.is_complete(){self.phase=4}},
+   3=>{let update=self.fields.update.as_mut().ok_or_else(invalid)?;let outcome=update.advance(grant,effect.maximum_work_units());self.last_work=outcome.work;self.last_allocation_attempt=update.last_allocation_attempt();self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|step|step.progress());outcome.result?;if update.is_complete(){self.phase=4}},
    4=>{self.fields.base=self.fields.update.as_mut().ok_or_else(invalid)?.take_result();if self.fields.base.is_none(){return Err(invalid().into())}self.phase=5},
    5=>{self.phase=6},
    6=>{self.phase=7;return Ok(self.fields.base.take())},
@@ -63,9 +66,13 @@ impl<V:RetireOwned+Sync> OriginalOwnedEntry<V>{
   macro_rules! owner{($field:ident,$type:ty)=>{if self.fields.$field.is_some(){return self.retirement.next_owner_demands::<$type>(true,&None,copy)}}}
   owner!(base,OrderedMap<V>);owner!(key,String);owner!(value,V);owner!(shared_key,SharedOwner<String>);owner!(shared_value,SharedOwner<V>);owner!(update,UpdateCursor<V>);Ok(Default::default())
  }
+ /// ⛽️ Quotes the actual selected retained owner or child retirement.
+ pub fn next_close_work_demand(&self,copy:usize)->Result<u64,ValueError>{if !self.retirement.is_empty(){return self.retirement.next_owner_work::<OrderedMap<V>>(false,&None,copy)}
+  macro_rules! owner{($field:ident,$type:ty)=>{if self.fields.$field.is_some(){return self.retirement.next_owner_work::<$type>(true,&None,copy)}}}
+  owner!(base,OrderedMap<V>);owner!(key,String);owner!(value,V);owner!(shared_key,SharedOwner<String>);owner!(shared_value,SharedOwner<V>);owner!(update,UpdateCursor<V>);Ok(0)}
  /// 🧹️ Preserves the complete original close outcome, including work performed before refusal.
  pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
-  self.progress=Default::default();self.last_work=0;let outcome=self.close_original_with(effect,|retirement,effect|retirement.step_granted(effect));self.last_work=outcome.work;self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|step|step.progress());outcome
+  self.progress=Default::default();self.last_work=0;self.last_allocation_attempt=None;let outcome=self.close_original_with(effect,|retirement,effect|retirement.step_granted(effect));self.last_work=outcome.work;self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|step|step.progress());outcome
  }
  fn close_original_with(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,invoke:impl FnOnce(&mut RetainedCloneClose,&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{let grant=effect.grant();if effect.maximum_work_units()<self.close_work_demand(grant.maximum_copy_bytes).unwrap_or(u64::MAX){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
   if self.retirement.requires_original_control(){return invoke(&mut self.retirement,effect)}

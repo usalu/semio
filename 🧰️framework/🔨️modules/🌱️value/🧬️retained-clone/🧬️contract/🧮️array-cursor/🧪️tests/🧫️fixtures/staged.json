@@ -1,0 +1,10 @@
+[
+  {"name":"body-refuses-first-byte","length":7,"index":1,"width":1,"wordBytes":8,"body":8,"work":64,"count":0,"copy":0,"spent":0},
+  {"name":"one-byte-exact-budget","length":7,"index":1,"width":1,"wordBytes":8,"body":9,"work":9,"count":1,"copy":9,"spent":9},
+  {"name":"one-byte-short-work","length":7,"index":1,"width":1,"wordBytes":8,"body":9,"work":8,"count":0,"copy":0,"spent":0},
+  {"name":"page-item-ceiling","length":8194,"index":0,"width":1,"wordBytes":8,"body":4096,"work":4096,"count":1024,"copy":1032,"spent":3078},
+  {"name":"work-limits-page","length":8194,"index":0,"width":1,"wordBytes":8,"body":4096,"work":20,"count":4,"copy":12,"spent":18},
+  {"name":"zero-width-work-limit","length":10000,"index":0,"width":0,"wordBytes":8,"body":0,"work":64,"count":29,"copy":8,"spent":64},
+  {"name":"four-byte-exact-budget","length":7,"index":1,"width":4,"wordBytes":4,"body":8,"work":12,"count":1,"copy":8,"spent":12},
+  {"name":"last-four-elements","length":8194,"index":8190,"width":1,"wordBytes":8,"body":4096,"work":64,"count":4,"copy":12,"spent":18}
+]

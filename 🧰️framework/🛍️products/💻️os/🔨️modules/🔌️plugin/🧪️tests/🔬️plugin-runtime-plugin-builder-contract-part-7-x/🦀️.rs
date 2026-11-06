@@ -87,7 +87,7 @@ fn reactor_turn_future_bytes() -> usize {
     let budget = Budget::from_retained(semio_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 64, 16, 65536, 16);
     let mut identity = semio_plugin_testing_laws::artifact_app_laws::fixture_identity();
     let mut context = semio_plugin_testing_laws::artifact_app_laws::fixture_step_context();
-    let future = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, None, None, budget, &mut identity, &mut context);
+    let future = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, &mut None, None, budget, &mut identity, &mut context);
     let bytes = size_of_val(&future);
     drop(future);
     bytes

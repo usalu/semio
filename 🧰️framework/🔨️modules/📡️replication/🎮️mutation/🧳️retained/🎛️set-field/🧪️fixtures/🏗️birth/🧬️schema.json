@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "grant",
+          "attempt",
+          "marker",
+          "ownership"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "authored",
+              "displaced",
+              "inverse"
+            ]
+          },
+          "grant": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "attempt": {
+            "type": "boolean"
+          },
+          "marker": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "ownership": {
+            "enum": [
+              "original",
+              "new"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

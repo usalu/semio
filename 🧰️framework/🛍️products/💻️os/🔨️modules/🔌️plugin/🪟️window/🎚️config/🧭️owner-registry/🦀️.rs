@@ -85,7 +85,7 @@ impl WindowConfigOwnerRegistry {
     pub fn borrow_preview<'a>(&'a self,kind:&str,window:&'a str)->Option<WindowConfigBorrow<'a>>{self.owners.get(kind)?.borrow_preview(window,self.preview_visible_epoch)}
     /// 🧬️ Retains the actual press projection for one native semantic preview leaf.
     /// 📏️ Quotes one original leaf without finishing or publishing its window prefix.
-    pub fn preview_leaf_demands(&self,kind:&str,window:&str,epoch:u64,body:usize)->Result<RetirementDemand,ValueError>{self.owners.get(kind).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window preview owner is absent"))?.preview_leaf_demands(window,epoch,body)}
+    pub fn preview_leaf_demands(&self,kind:&str,window:&str,epoch:u64,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.owners.get(kind).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window preview owner is absent"))?.preview_leaf_demands(window,epoch,body,maximum_work_units)}
     /// 🪜️ Advances only the issued original leaf while the complete candidate remains private.
     pub fn preview_leaf_step(&mut self,kind:&str,window:&str,epoch:u64,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(bool,RetainedCloneProgress),ValueError>{self.owners.get_mut(kind).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window preview owner is absent"))?.preview_leaf_step(window,epoch,body,grant,receiving)}
     /// ✅️ The complete leaf has returned its original input and semantic source aliases.

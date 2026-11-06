@@ -6,11 +6,10 @@
     "operation",
     "generation",
     "value",
-    "work",
     "deniedWork",
     "cachedWork",
-    "copyBytes",
-    "stock"
+    "stock",
+    "minimumWork"
   ],
   "properties": {
     "operation": {
@@ -22,19 +21,10 @@
     "value": {
       "const": 17
     },
-    "work": {
-      "const": [
-        1,
-        1
-      ]
-    },
     "deniedWork": {
       "const": 0
     },
     "cachedWork": {
-      "const": 0
-    },
-    "copyBytes": {
       "const": 0
     },
     "stock": {
@@ -47,6 +37,9 @@
         "fuel": 10000,
         "maximumTurns": 10000
       }
+    },
+    "minimumWork": {
+      "const": 3
     }
   }
 }

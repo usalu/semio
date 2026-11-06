@@ -1,0 +1,94 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "expectedId",
+          "actualId",
+          "expected",
+          "actual",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "expectedId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "actualId": {
+            "type": "string"
+          },
+          "expected": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "artifactKind",
+                  "standard",
+                  "subset"
+                ],
+                "properties": {
+                  "artifactKind": {
+                    "type": "string"
+                  },
+                  "standard": {
+                    "type": "string"
+                  },
+                  "subset": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "actual": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "artifactKind",
+                  "standard",
+                  "subset"
+                ],
+                "properties": {
+                  "artifactKind": {
+                    "type": "string"
+                  },
+                  "standard": {
+                    "type": "string"
+                  },
+                  "subset": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+# Native encoding library law inventory
+
+The currently mounted library test tree declares 34 native tests: effect 7, allocation slot 5, allocation 13, receipt integrity 1, unwind 3, root pause 1, turn ceiling 3 and continuation 1. The six typed-retirement and eleven action tests are separate integration test files; the two paged tests are also separate from this library count. These are source declaration counts, not run results.
+
+Three repeated local close helpers need marker-aware steps: `🛫️encode/🎟️effect/🧪️tests/🦀️.rs:14`, `🛫️encode/🛂️allocation/📦️slot/🧪️tests/🦀️.rs:5` and `🛫️encode/🛂️allocation/🧪️tests/🪢️unwind.rs:9` call one-argument `step`. Correction: current controlled-retirement source defines both `new(value)` and `retain(value)`; their use alone is not a stale-constructor defect. Preserve actual owner, finite custody and observed allocations rather than replacing calls with an unbounded or synthetic grant.
+
+Separately, `🛫️encode/🛂️allocation/🧪️tests/🦀️.rs:67` implements the old erased `close_step(grant)` signature, and line 76 calls recipient close without its actual marker. The same file has direct recipient close paths needing inspection. Cursor-size assertions must use the actual associated typed cursor and observed heap rather than assume a boxed cursor. The authored integration action helper at `🛫️encode/🎟️action/🧪️tests/🦀️.rs:8` also uses the old step form, but is outside this --lib gate.
+
+This is a source inventory; the live compiler gate supplies authoritative diagnostics and no additional test was launched.
+
+The existing per-turn grants can remain unchanged while each helper uses an initially empty actual marker, checks `next_computational_work` against a finite 32,768-unit test stock and debits `last_turn_work` after each admitted step. This is a proposed bounded harness, not proof that every fixture fits that stock. The effect cases include real failure/state owners and 8- and 16-byte output; the other helpers close actual outcomes and errors. The existing pending-allocation effect case first settles its original callback before closing. A pending original-controlled child must be returned to its real issuer, not forced through a generic close. A zero-work/no-progress or unaffordable quote should fail the law explicitly rather than spin or invent work.

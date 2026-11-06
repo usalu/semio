@@ -3,6 +3,7 @@
   "owner": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context",
   "types": [
     "OriginalActorAdmission",
+    "OriginalActorFailureCall",
     "OriginalActorContextError",
     "OriginalActorContext",
     "OriginalActorCall",
@@ -17,14 +18,14 @@
   "binding": {
     "totalGrant": [
       64,
-      0,
+      1048576,
       0,
       0,
       1
     ],
     "callPolicy": [
       1,
-      0,
+      65536,
       0,
       0,
       1
@@ -87,5 +88,35 @@
         "accepted": false
       }
     ]
-  }
+  },
+  "aliases": [
+    "OriginalActorAdmissionFailure"
+  ],
+  "closureCauses": [
+    {
+      "id": "refused",
+      "variant": "Refused",
+      "causes": 1
+    },
+    {
+      "id": "blocked",
+      "variant": "Cancellation",
+      "causes": 1
+    },
+    {
+      "id": "cancel-refused",
+      "variant": "Cancellation",
+      "causes": 1
+    },
+    {
+      "id": "original",
+      "variant": "Original",
+      "causes": 1
+    },
+    {
+      "id": "blocked-and-receipt",
+      "variant": "CancellationReceipt",
+      "causes": 2
+    }
+  ]
 }

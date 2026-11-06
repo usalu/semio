@@ -17,6 +17,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-plugin-actor-input = { path = "../../../⚛️reactor/🎟️context/🌉️call/📥️input/📦️packages/🦀️rust" }
+semio-framework-actor-receipt = { path = "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📤️receipt/📦️packages/🦀️rust" }
+semio-framework-actor-job-state = { path = "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/💼️job/🏠️state/📦️packages/🦀️rust" }
 semio-framework-pack-json-source = { workspace = true }
 semio-framework-kernel-json = { workspace = true }
 semio-framework = { workspace = true }

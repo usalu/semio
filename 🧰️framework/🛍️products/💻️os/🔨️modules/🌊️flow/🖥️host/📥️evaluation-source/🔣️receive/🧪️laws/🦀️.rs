@@ -30,7 +30,7 @@ use semio_framework_value::retained_clone::RetainedCloneClose;
    assert!(field.terminal_is_empty());drop(field);
    let mut retirement=RetainedCloneClose::default();
    for index in 0..200_000{if output.is_none()&&retirement.is_empty(){break}turn(&mut caller,&mut decoder,grant,|cx|cx.with_original_retirement(|cx|{let demand=retirement.next_owner_demands::<semio_framework_artifact_flow_flow::FlowHostSnapshot>(output.is_some(),&None,4096)?;close_original_retained_step(cx,demand,|grant|if retirement.is_empty(){let issued=retirement.begin_granted(&mut output,grant);semio_framework_value::RetainedWorkOutcome{result:issued.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:issued.work}}else{retirement.step_granted(grant)})?;Ok(())}));assert!(index+1<200_000);}
-   while !decoder.terminal_is_empty(){caller.turn(grant,|cx|cx.with_original_retirement(|cx|{let demand=decoder.retirement_demands(4096)?;close_original_retained_step(cx,demand,|grant|decoder.close_step(grant))?;Ok(())})).unwrap();}caller.retire(grant);
+   while !decoder.terminal_is_empty(){caller.turn(grant,|cx|cx.with_original_retirement(|cx|{let demand=decoder.retirement_demands(4096)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(grant);
   }original.retire_cold();
  }
 

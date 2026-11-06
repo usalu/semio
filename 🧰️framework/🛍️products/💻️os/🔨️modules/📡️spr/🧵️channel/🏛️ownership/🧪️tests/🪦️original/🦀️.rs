@@ -1,0 +1,20 @@
+//! 🪦️ Complete binary command/frame owners retire every original backing under independent budgets.
+use semio_os_channel::*;
+use semio_framework_value::{RetainedCloneGrant,retirement::{RetireOwned,controlled::ControlledRetirement}};
+#[global_allocator]
+static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+fn close<T:RetireOwned>(value:T,input_bytes:usize){
+ assert!(T::controlled_retirement_supported());let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ControlledRetirement::new(value).ok().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:256};let(mut born,mut freed)=(input_bytes,0);
+ for _ in 0..200000{if owner.terminal_is_empty(){assert_eq!(born,freed);return}let demand=owner.next_demand(grant.maximum_copy_bytes).unwrap();let mut denied=Vec::new();denied.push(RetainedCloneGrant{maximum_items:0,..grant});denied.push(RetainedCloneGrant{maximum_depth:0,..grant});if demand.copy_bytes>0{denied.push(RetainedCloneGrant{maximum_copy_bytes:0,..grant});}if demand.capacity_bytes>0{denied.push(RetainedCloneGrant{maximum_capacity_bytes:0,..grant});}if demand.release_bytes>0{denied.push(RetainedCloneGrant{maximum_release_bytes:0,..grant});}for denied in denied{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(denied));let step=result.unwrap();assert_eq!(step.progress(),Default::default());assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,0);}
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(grant));let step=result.unwrap();assert_eq!(heap.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(heap.released_bytes,step.progress().released_bytes);born+=heap.requested_bytes;freed+=heap.released_bytes;
+ }panic!("bounded original command/frame retirement did not finish")
+}
+#[test]
+fn original_commands_and_frames_close_actual_owned_graphs(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();for row in law["cases"].as_array().unwrap(){let payload=row["bytes"].as_u64().unwrap()as usize;match(row["kind"].as_str().unwrap(),row["name"].as_str().unwrap()){
+ ("command","text")=>{let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||AppCommand::CommandText{seq:1,line:String::from_utf8(vec![b'x';17]).unwrap()});assert!(heap.requested_bytes>=payload);close(value,heap.requested_bytes);}
+ ("command","presence")=>{let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let mut peers=PresenceRosterWire::empty();peers.try_push(vec![1;3]).unwrap();peers.try_push(vec![2;4]).unwrap();AppCommand::Presence{seq:1,own_color:None,peers}});assert!(heap.requested_bytes>=payload);close(value,heap.requested_bytes-heap.released_bytes);}
+ ("frame","invocation")=>{let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||AppFrame::Invocation{in_reply_to:1,output:vec![1;2],diagnostics:vec![2;3],ui_scope:vec![3;5],history_patch:vec![4;7],messages:vec![5;11],mutations:vec![6;13],inverse_group:vec![7;17]});assert_eq!(heap.requested_bytes,payload);close(value,heap.requested_bytes);}
+ ("frame","archive")=>{let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||AppFrame::DocumentArchive{in_reply_to:1,archive:DocumentArchivePack{parent_pack:vec![1;3],parent_spr:vec![2;5],members:vec![OwnedDocumentMemberPackEntry{envelope_pack:vec![3;7],..Default::default()}]}});assert!(heap.requested_bytes>=payload);close(value,heap.requested_bytes);}
+ _=>panic!("unknown shared ownership case")}}
+}

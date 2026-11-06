@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-os-mcp-process-arena"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "os-mcp-process-arena"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-ui-values = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", package = "semio-ui-contract-values" }
+semio-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
+semio-os-mcp-port = { path = "../../../🔌️channel-port/📦️packages/🦀️rust" }
+semio-plugin-host-wake = { path = "../../../../🔌️plugin/🖥️host/🔔️wake/📦️packages/🦀️rust" }
+semio-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

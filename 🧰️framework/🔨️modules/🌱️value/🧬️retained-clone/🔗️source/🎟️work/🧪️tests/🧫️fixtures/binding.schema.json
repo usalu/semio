@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "bound",
+      "matching",
+      "work",
+      "physical",
+      "reported",
+      "outcome"
+    ],
+    "properties": {
+      "bound": {
+        "type": "boolean"
+      },
+      "matching": {
+        "type": "boolean"
+      },
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "physical": {
+        "type": "boolean"
+      },
+      "reported": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "outcome": {
+        "enum": [
+          "denied",
+          "unbound",
+          "matched",
+          "mismatch"
+        ]
+      }
+    }
+  }
+}

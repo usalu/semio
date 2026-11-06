@@ -95,7 +95,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
             }
             Self::physical(cx,demand::<semio_os_store_replay_operation::ArtifactReplayPrepared<P,M>>(),|_|{let mut prepared=owner.prepared.take().ok_or_else(||invalid("native initialization result owner absent"))?;if !matches!(&prepared.inverse,Ok(rows)if rows.terminal_is_empty())||prepared.messages.capacity()!=0||prepared.apply_refusal.is_some()||prepared.input_refusal.is_some(){*owner.prepared=Some(prepared);return Err(invalid("native initialization producer left unsettled result fields"));}self.next=prepared.next.take();owner.cancel();self.phase=4;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<semio_os_store_replay_operation::ArtifactReplayPrepared<P,M>>(),..Default::default()})})?;return Ok(false);
         }
-        let grant=cx.retained_grant();let quote=owner.demands(cx.generation().0,self.revision,grant.maximum_copy_bytes)?;
+        let grant=cx.retained_grant();let quote=owner.demands(cx.generation().0,self.revision,grant.maximum_copy_bytes,cx.fuel_remaining())?;
         if cx.should_yield()||!retained_clone_grant_admits(grant,quote){return Ok(false);}
         let generation=cx.generation().0;let clock=cx.clock_source();let deadline=cx.deadline_us();
         let result=cx.with_native_receiving(|control|owner.step(generation,self.revision,grant.maximum_copy_bytes,grant,control,&mut||clock().is_none_or(|now|now>=deadline)));

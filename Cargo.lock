@@ -4511,6 +4511,7 @@ dependencies = [
 name = "semio-framework-actor"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-actor-failure",
  "semio-framework-actor-job-publication",
  "semio-framework-actor-pack",
  "semio-framework-actor-retained-context",
@@ -4524,6 +4525,14 @@ dependencies = [
  "semio-framework-value-derive",
  "serde",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-actor-failure"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-framework-value-derive",
 ]
 
 [[package]]
@@ -4542,13 +4551,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-actor-job-state"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor",
+ "semio-framework-job",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-actor-pack"
 version = "0.1.0"
+
+[[package]]
+name = "semio-framework-actor-receipt"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor",
+ "semio-framework-job-return-escrow-publication",
+ "semio-framework-value",
+]
 
 [[package]]
 name = "semio-framework-actor-retained-context"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-actor-failure",
  "semio-framework-actor-retained-turn",
  "semio-framework-async",
  "semio-framework-job",
@@ -5579,6 +5607,8 @@ dependencies = [
  "semio-framework-job-outcome-borrow",
  "semio-framework-job-payload",
  "semio-framework-job-receiving",
+ "semio-framework-job-return-budget",
+ "semio-framework-job-return-escrow-publication",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -5593,6 +5623,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
+ "semio-framework-io-control",
+ "semio-framework-job-payload",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-retained-clone",
@@ -5669,6 +5702,15 @@ name = "semio-framework-job-receiving"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-native-owned",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
+name = "semio-framework-job-return-budget"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-payload",
+ "semio-framework-job-return-escrow-publication",
  "semio-framework-value-retained-clone",
 ]
 
@@ -8399,6 +8441,7 @@ dependencies = [
  "semio-framework-io-control",
  "semio-framework-io-sqlite-snapshot",
  "semio-framework-job",
+ "semio-framework-job-testing-caller",
  "semio-framework-replication",
  "semio-framework-trace",
  "semio-framework-trace-memory-testing",
@@ -11051,6 +11094,7 @@ dependencies = [
  "semio-os-mcp-plugin-runtime",
  "semio-os-mcp-port",
  "semio-os-mcp-probe-document",
+ "semio-os-mcp-process-arena",
  "semio-os-mcp-routing",
  "semio-os-mcp-schema",
  "semio-os-mcp-server",
@@ -11060,6 +11104,7 @@ dependencies = [
  "semio-os-mcp-wire",
  "semio-os-mcp-workspace",
  "semio-plugin",
+ "semio-plugin-guest-contract",
  "semio-plugin-host",
  "semio-plugin-host-wake",
  "semio-ui-contract-validation",
@@ -11322,6 +11367,20 @@ dependencies = [
  "semio-os-kernel",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-os-mcp-process-arena"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-mcp-foundation",
+ "semio-os-mcp-port",
+ "semio-plugin-host",
+ "semio-plugin-host-wake",
+ "semio-ui-contract-values",
 ]
 
 [[package]]
@@ -12057,6 +12116,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-replication",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
  "semio-os-io",
  "semio-os-pack",
@@ -12077,6 +12137,7 @@ dependencies = [
  "semio-os-store-space-schema",
  "semio-os-store-text-io",
  "semio-os-vcs",
+ "serde_json",
 ]
 
 [[package]]
@@ -14023,6 +14084,7 @@ dependencies = [
  "semio-framework-job-publication",
  "semio-framework-job-worker",
  "semio-framework-job-worker-authority",
+ "semio-framework-kernel-identity",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-replication",
@@ -14161,6 +14223,20 @@ dependencies = [
  "semio-plugin-abi",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-plugin-actor-input"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-actor",
+ "semio-framework-job",
+ "semio-framework-job-native-decode",
+ "semio-framework-pack-json",
+ "semio-framework-pack-json-output-receiving",
+ "semio-framework-value",
+ "semio-plugin-abi",
 ]
 
 [[package]]
@@ -14691,6 +14767,7 @@ dependencies = [
  "semio-plugin-operation",
  "semio-plugin-ownership",
  "semio-ui-contract",
+ "serde_json",
 ]
 
 [[package]]
@@ -14735,6 +14812,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-actor",
+ "semio-framework-actor-job-state",
+ "semio-framework-actor-receipt",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
@@ -14750,6 +14829,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-plugin-abi",
+ "semio-plugin-actor-input",
  "semio-ui-contract",
  "semio-ui-contract-values",
  "serde",
@@ -14793,6 +14873,19 @@ dependencies = [
  "serde",
  "serde_json",
  "wasmtime",
+]
+
+[[package]]
+name = "semio-plugin-host-actor-failure"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor",
+ "semio-framework-job",
+ "semio-framework-job-payload",
+ "semio-framework-value",
+ "semio-plugin-guest-contract",
+ "semio-plugin-host-guest-runtime",
+ "semio-plugin-host-wake",
 ]
 
 [[package]]
@@ -14948,6 +15041,7 @@ dependencies = [
  "semio-plugin-guest-contract",
  "semio-plugin-host-guest-runtime",
  "semio-plugin-host-post-turn-relay",
+ "semio-plugin-host-wake",
  "semio-plugin-interpreter-runtime",
  "serde_json",
  "wasmtime",
@@ -14973,6 +15067,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-plugin-guest-contract",
+ "semio-plugin-host-actor-failure",
  "semio-plugin-host-engine",
  "semio-plugin-host-guest-runtime",
  "semio-plugin-host-shard",

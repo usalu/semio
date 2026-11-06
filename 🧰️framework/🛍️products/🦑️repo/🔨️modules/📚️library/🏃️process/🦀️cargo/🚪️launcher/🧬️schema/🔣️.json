@@ -21,7 +21,9 @@
         "jobserverDirectoryPrefix",
         "pass",
         "swapSampleMilliseconds",
-        "progressMilliseconds"
+        "progressMilliseconds",
+        "isolatedLifetimeMode",
+        "isolatedSweepMode"
       ],
       "properties": {
         "version": {
@@ -137,6 +139,12 @@
           "type": "integer",
           "minimum": 100,
           "maximum": 60000
+        },
+        "isolatedLifetimeMode": {
+          "const": "shared"
+        },
+        "isolatedSweepMode": {
+          "const": "exclusive"
         }
       }
     },
@@ -476,7 +484,9 @@
         "jobserverDirectoryPrefix": "jobserver-",
         "pass": "repo-cargo",
         "swapSampleMilliseconds": 1000,
-        "progressMilliseconds": 1000
+        "progressMilliseconds": 1000,
+        "isolatedLifetimeMode": "shared",
+        "isolatedSweepMode": "exclusive"
       }
     }
   }

@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "name": "copy refused",
+      "items": 1,
+      "copy": 63,
+      "requiredCopy": 64,
+      "capacity": 32,
+      "requiredCapacity": 32,
+      "depth": 1,
+      "admitted": false
+    },
+    {
+      "name": "capacity refused",
+      "items": 1,
+      "copy": 64,
+      "requiredCopy": 64,
+      "capacity": 31,
+      "requiredCapacity": 32,
+      "depth": 1,
+      "admitted": false
+    },
+    {
+      "name": "zero items",
+      "items": 0,
+      "copy": 64,
+      "requiredCopy": 64,
+      "capacity": 32,
+      "requiredCapacity": 32,
+      "depth": 1,
+      "admitted": false
+    },
+    {
+      "name": "exact row",
+      "items": 1,
+      "copy": 64,
+      "requiredCopy": 64,
+      "capacity": 32,
+      "requiredCapacity": 32,
+      "depth": 1,
+      "admitted": true
+    }
+  ]
+}

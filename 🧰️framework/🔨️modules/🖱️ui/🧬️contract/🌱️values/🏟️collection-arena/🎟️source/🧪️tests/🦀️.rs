@@ -15,7 +15,7 @@ fn ui_arena_lifetime_owns_every_partial_allocation_before_publication(){
   for _ in 0..100{let(result,heap)=observe(||caller.turn(grant,|cx|UiArenaLifetime::admit_source(&mut input,&mut lease,cx)));let receipt=caller.receipt();assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;if result.unwrap(){break}}
   assert!(input.is_none()&&lease.is_some());assert!(REGISTRY.borrow().is_err());assert!(foreign.turn(grant,|cx|UiArenaLifetime::advance_on_source(lease.as_mut().unwrap(),cx)).is_err());
   for at in 0..100000{if prefix==Some(at){break}let(result,heap)=observe(||caller.turn(grant,|cx|UiArenaLifetime::advance_on_source(lease.as_mut().unwrap(),cx)));let receipt=caller.receipt();assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;if result.unwrap(){assert!(prefix.is_none());assert!(REGISTRY.borrow().unwrap().is_some());break}assert!(at<99999)}
-  caller.cancel().cancel_now();while !lease.as_ref().unwrap().terminal_is_empty(){caller.turn(grant,|cx|lease.as_mut().unwrap().return_step(cx)).unwrap();}
+  caller.cancel().cancel_now();while lease.is_some(){caller.turn(grant,|cx|semio_framework_job::OriginalNativeLease::return_slot_step(&mut lease,cx)).unwrap();}
   for at in 0..100000{let(result,heap)=observe(||caller.turn(grant,|cx|cx.close_original_native_step()));let receipt=caller.receipt();assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;if result.unwrap(){break}assert!(at<99999)}assert!(REGISTRY.borrow().is_err());assert_eq!(born,freed);drop(lease);caller.retire(grant);foreign.retire(grant);
  }
 }

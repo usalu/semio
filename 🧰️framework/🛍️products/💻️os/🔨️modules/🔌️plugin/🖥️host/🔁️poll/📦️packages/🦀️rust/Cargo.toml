@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-plugin-host-actor-failure = { path = "../../../⚠️failure/📦️packages/🦀️rust" }
 semio-framework-kernel = { path = "../../../../../../../../🔨️modules/🎠️kernel/📦️packages/🦀️rust" }
 semio-framework-kernel-identity = { path = "../../../../../../../../🔨️modules/🎠️kernel/🪪️identity/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
@@ -29,6 +30,8 @@ semio-framework-value-native-owned = { path = "../../../../../../../../🔨️mo
 semio-plugin-guest-contract = { workspace = true }
 semio-plugin-host-guest-runtime = { path = "../../../🎭️guest-runtime/📦️packages/🦀️rust" }
 semio-plugin-host-post-turn-relay = { path = "../../../🔀️post-turn-relay/📦️packages/🦀️rust" }
+semio-plugin-host-wake = { path = "../../../🔔️wake/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true }
 
 [dev-dependencies]
 semio-os-kernel = { workspace = true }

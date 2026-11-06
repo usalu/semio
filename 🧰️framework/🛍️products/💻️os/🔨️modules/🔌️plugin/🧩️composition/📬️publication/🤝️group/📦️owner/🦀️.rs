@@ -165,6 +165,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
         let step = lane.advance(member, visibility, body, grant, receiving).map_err(|error|plugin_sdk_fault(error.to_string()))?;
         Ok((false, step.ownership_progress()))
     }
+    pub fn requires_native_source_close(&self)->bool{self.lane.as_ref().is_some_and(|lane|lane.requires_native_source_close())}
     pub fn terminal_is_empty(&self) -> bool { self.input.terminal_is_empty() && self.source.is_none() && self.metadata.is_none() && self.request.is_none() && self.opening_source.is_none() && self.open.is_none() && self.member.is_none() && self.raw.is_none() && self.lane.is_none() && self.identity.is_none() && self.entry.is_none() && self.slot.is_none() && self.admission.is_none() }
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
@@ -208,8 +209,9 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
         if let Some(lane) = self.lane.as_mut() {
             let key = self.metadata.as_ref().and_then(PrivateChildMemberMetadata::parts).unwrap().key.borrowed();
             let member = if let Some(member) = self.member.as_mut() { member } else { &mut registry.member_mut(key).ok_or_else(|| plugin_sdk_fault("private cancellation lost exact member owner"))?.member };
-            let step = lane.close_step(member,cx,child).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, lane.terminal_is_empty(), "private row publication lane").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+            let lane_grant=if lane.requires_native_source_close(){RetainedCloneGrant{maximum_depth:child.maximum_depth,..grant}}else{child};
+            let step = lane.close_step(member,cx,lane_grant).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(lane_grant, step, lane.terminal_is_empty(), "private row publication lane").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
             if lane.terminal_is_empty() { self.lane = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
@@ -690,14 +692,15 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(lane) = self.parent_lane.as_mut() {
-            let step = lane.close_step(parent,cx,child).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, lane.terminal_is_empty(), "private parent lane").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+            let lane_grant=if lane.requires_native_source_close(){RetainedCloneGrant{maximum_depth:child.maximum_depth,..grant}}else{child};
+            let step = lane.close_step(parent,cx,lane_grant).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(lane_grant, step, lane.terminal_is_empty(), "private parent lane").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
             if lane.terminal_is_empty() { self.parent_lane = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(index) = self.rows[..self.count].iter().position(Option::is_some) {
             let row = self.rows[index].as_mut().unwrap();
-            if !row.terminal_is_empty() { return row.close(registry,cx,child); }
+            if !row.terminal_is_empty() { let row_grant=if row.requires_native_source_close(){RetainedCloneGrant{maximum_depth:child.maximum_depth,..grant}}else{child};return row.close(registry,cx,row_grant); }
             self.rows[index].take();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: Self::row_birth_bytes(), ..empty }));
         }
@@ -732,6 +735,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         self.complete = true;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
     }
+    pub fn requires_native_source_close(&self)->bool{self.parent_lane.as_ref().is_some_and(|lane|lane.requires_native_source_close())||self.rows.iter().flatten().any(|row|row.requires_native_source_close())}
     pub fn terminal_is_empty(&self) -> bool { self.complete && self.origins.is_none()&&self.origins_retirement.is_empty() && self.parent_source.is_none() && self.sources.is_none() && self.original_metadata.is_none() && self.parent_metadata.is_none() && self.parent_lane.is_none() && self.parent_issuer.terminal_is_empty() && self.rows.iter().all(Option::is_none) && self.graph.is_none() && self.parent_read.is_none() && self.future.is_none() && self.displaced.iter().all(Option::is_none) && self.visibility.is_none() && self.visibility_owner.is_none() }
 }
 

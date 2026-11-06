@@ -31,7 +31,7 @@ fn packed_owned_flat_wire_preserves_rows_and_cancelled_frontiers(){
             }else{caller.cancel().cancel_now();}
             for _ in 0..100_000{if cursor.terminal_is_empty(){break;}caller.turn(loan(),|cx|{let demand=cursor.close_demands(32768)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let turn=cursor.close_step(grant);RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}})?;Ok(())}).unwrap();}
             assert!(cursor.terminal_is_empty());
-            for _ in 0..100_000{if decoder.terminal_is_empty(){break;}caller.turn(loan(),|cx|{let demand=decoder.retirement_demands(32768)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|decoder.close_step(grant))?;Ok(())}).unwrap();}
+            for _ in 0..100_000{if decoder.terminal_is_empty(){break;}caller.turn(loan(),|cx|{let demand=decoder.retirement_demands(32768)?;decoder.close_on_source(cx)?;Ok(())}).unwrap();}
             assert!(decoder.terminal_is_empty());if let Some(input)=input{retire(&mut caller,input);}caller.retire(stock());
         }
     }

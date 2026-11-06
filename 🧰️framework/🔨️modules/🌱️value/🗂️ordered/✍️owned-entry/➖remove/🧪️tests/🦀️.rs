@@ -10,15 +10,15 @@ fn original_owned_removal_preserves_aliases_finite_stock_denials_and_cancellatio
   for turn in 0..policy["maximumTurns"].as_u64().unwrap(){
    if cut==Some(turn){break}
    let d=work.next_demands(4096).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert!(retained_clone_grant_admits(bank,d));
-   for denied in denied(d,g){let(step,heap)=crate::observe_retirement_allocations(||work.advance(denied));assert_eq!(step.work,0);assert_eq!(heap,(0,0));match step.result{Ok(value)=>assert!(value.is_none()),Err(error)=>assert_eq!(error.retained_progress(),Default::default())}assert_eq!(work.next_demands(4096).unwrap(),d)}
-   let(step,heap)=crate::observe_retirement_allocations(||work.advance(g));let p=work.step_progress();assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));post(&mut bank,&mut fuel,p,step.work);output=step.result.unwrap();if output.is_some(){break}
+   for denied in denied(d,g){let(step,heap)=crate::observe_retirement_allocations(||work.advance(denied,fuel));assert_eq!(step.work,0);assert_eq!(heap,(0,0));match step.result{Ok(value)=>assert!(value.is_none()),Err(error)=>assert_eq!(error.retained_progress(),Default::default())}assert_eq!(work.next_demands(4096).unwrap(),d)}
+   let(step,heap)=crate::observe_retirement_allocations(||work.advance(g,fuel));let p=work.step_progress();assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));post(&mut bank,&mut fuel,p,step.work);output=step.result.unwrap();if output.is_some(){break}
   }
   if cut.is_none(){let actual:Vec<_>=output.as_ref().unwrap().iter().map(|(key,value)|(key.clone(),*value)).collect();let expected:Vec<(String,u64)>=serde_json::from_value(case["expected"].clone()).unwrap();assert_eq!(actual,expected)}
   let actual:Vec<_>=alias.iter().map(|(key,value)|(key.clone(),*value)).collect();let expected:Vec<(String,u64)>=serde_json::from_value(case["base"].clone()).unwrap();assert_eq!(actual,expected);
   work.begin_close();
   for _ in 0..10000{if work.terminal_is_empty(){break}let d=work.next_close_demands(4096).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert!(retained_clone_grant_admits(bank,d));
-   for denied in denied(d,g){let(step,heap)=crate::observe_retirement_allocations(||work.close_step(denied));assert_eq!(step.work,0);assert_eq!(heap,(0,0));match step.result{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert_eq!(error.retained_progress(),Default::default())}assert_eq!(work.next_close_demands(4096).unwrap(),d)}
-   let(step,heap)=crate::observe_retirement_allocations(||work.close_step(g));let p=step.result.unwrap().progress();assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));post(&mut bank,&mut fuel,p,step.work);
+   for denied in denied(d,g){let(step,heap)=crate::observe_retirement_allocations(||work.close_step(denied,fuel));assert_eq!(step.work,0);assert_eq!(heap,(0,0));match step.result{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert_eq!(error.retained_progress(),Default::default())}assert_eq!(work.next_close_demands(4096).unwrap(),d)}
+   let(step,heap)=crate::observe_retirement_allocations(||work.close_step(g,fuel));let p=step.result.unwrap().progress();assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));post(&mut bank,&mut fuel,p,step.work);
   }assert!(work.terminal_is_empty());drop(work);if let Some(output)=output{close(output,&mut bank,&mut fuel)}close(alias,&mut bank,&mut fuel)
  }}
 }

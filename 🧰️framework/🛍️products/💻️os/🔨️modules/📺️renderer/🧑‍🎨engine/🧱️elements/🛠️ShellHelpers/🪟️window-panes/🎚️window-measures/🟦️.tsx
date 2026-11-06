@@ -37,6 +37,7 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
   return (
     <Slider
       id={measure.id}
+      {...(measure.label === undefined ? {} : { "aria-label": uiDataLabel(measure.label) })}
       data-published-value={String(measure.value)}
       value={[measure.value]}
       min={measure.min}

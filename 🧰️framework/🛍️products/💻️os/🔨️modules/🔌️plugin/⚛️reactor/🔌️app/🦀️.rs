@@ -86,7 +86,7 @@ pub trait PluginApp: Send + 'static {
     /// 📏️ Exact physical allocation needed by the currently retained close authority.
     fn close_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
     /// 🌱️ Exact physical allocation needed by the selected live maintenance authority.
-    fn maintenance_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
+    fn maintenance_retirement_demands(&self, body: usize,maximum_work_units:u64) -> Result<RetirementDemand, ValueError>;
     /// 📏️ Quotes only the maintenance job's still-retained original sources before its caller may return.
     fn maintenance_source_close_demands(&self,body:usize,cx:&semio_framework_job::StepContext<'_>)->Result<RetirementDemand,ValueError>;
     /// 🧷️ Drains those sources under their unchanged original maintenance caller and decoder.
@@ -387,13 +387,13 @@ pub trait PluginApp: Send + 'static {
     /// dependencies of an inference request on this document.
     async fn child_head_packs(&self) -> Result<Vec<protocol::ChildHeadPackEntry>, Fault>;
     /// 🎟️ Transfers one recursive archive owner into a fixed operation slot before decode.
-    fn begin_document_archive_load(&mut self, _operation: u64, _archive: protocol::DocumentArchivePack) -> Result<(), Fault> {
-        Err(document_load_fault(DOCUMENT_LOAD_UNAVAILABLE_CODE, "recursive document archive loading is unavailable for this app"))
+    fn begin_document_archive_load(&mut self, _operation:u64, _archive:&mut protocol::DocumentArchivePack, _admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission, _cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+        Err(document_load_fault(DOCUMENT_LOAD_UNAVAILABLE_CODE, "recursive document archive loading is unavailable for this app").into())
     }
     /// 🔀️ Admits a read-back of the document this program already shows as a MERGE (design §22.22): its events join the
     /// log, nothing is replaced. Polled, cancelled and acknowledged like a load under the same operation.
-    fn begin_document_archive_merge(&mut self, _operation: u64, _archive: protocol::DocumentArchivePack) -> Result<(), Fault> {
-        Err(document_load_fault(DOCUMENT_LOAD_UNAVAILABLE_CODE, "recursive document archive merging is unavailable for this app"))
+    fn begin_document_archive_merge(&mut self, _operation:u64, _archive:&mut protocol::DocumentArchivePack, _admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission, _cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+        Err(document_load_fault(DOCUMENT_LOAD_UNAVAILABLE_CODE, "recursive document archive merging is unavailable for this app").into())
     }
     /// 📬️ Advances and observes one exact retained recursive archive operation.
     async fn poll_document_archive_load(&mut self, operation: u64, _identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {

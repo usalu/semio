@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
+semio-plugin-host-wake-policy = { path = "../../🎟️root/📃️policy/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path = "../../../../../../../../🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
@@ -67,3 +68,7 @@ semio-plugin-interpreter = { workspace = true }
 [[test]]
 name = "original_host_root"
 path = "../../🎟️root/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-wake-public"
+path = "../../🧪️tests/public.rs"

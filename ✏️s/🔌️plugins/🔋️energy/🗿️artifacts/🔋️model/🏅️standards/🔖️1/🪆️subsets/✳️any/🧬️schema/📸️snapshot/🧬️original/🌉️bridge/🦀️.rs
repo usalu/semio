@@ -2,7 +2,7 @@
 use semio_framework_value::{DslValue,ValueError,ValueRefusalKind};
 use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneGrant,RetainedCloneSourceTake,StagedSourceAdmission}};
 use semio_framework_value_native_owned::OriginalReceivingPrimary;
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeControl,NativeDecodeRetirementRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,NativeReceive,NativeReceiver};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeControl,NativeDecodeRetirementRecipient,NativeDecodeWorkRecipient,NativeReceive,NativeReceiver};
 use semio_framework_value::{RetainedCloneProgress,RetirementDemand,retained_clone::retained_clone_grant_admits};
 
 const BRIDGE_STEPS:usize=1<<24;
@@ -20,8 +20,8 @@ pub fn retire_stepped<T:RetireOwned>(value:T)->Result<(),ValueError>{
 
 /// 🎟️ One finite work loan per bridge step that admits observed plus additional native effects.
 struct StepWork{quantum:u64}
-impl OriginalWorkRecipient for StepWork{
- fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.quantum))})())}
+impl NativeDecodeWorkRecipient for StepWork{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.quantum;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}
+ fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.quantum))}
 }
 
 /// 🏗️ One funded step wallet that admits each construction demand once against the bounded step grant.

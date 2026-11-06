@@ -40,12 +40,12 @@ fn ordered_set_wire_matches_serde_btree_oracle_and_retirement_uses_tiny_grants()
 fn ordered_set_insert_cursor_uses_existing_map_authority_and_keeps_array_wire() {
     let base = OrderedSet::from(["a".into()]);
     let mut cursor = base.begin_insert("🧵".repeat(1100));
-    while !cursor.is_complete() { cursor.advance(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:cursor.next_capacity_byte_demand().unwrap(),maximum_release_bytes:0,maximum_depth:cursor.next_depth_demand()}).result.unwrap(); }
+    while !cursor.is_complete() { cursor.advance(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:cursor.next_capacity_byte_demand().unwrap(),maximum_release_bytes:0,maximum_depth:cursor.next_depth_demand()},u64::MAX).result.unwrap(); }
     let result = OrderedSet::from_map(cursor.take_result().unwrap());
     assert_eq!(result.len(), 2);
     assert_eq!(serde_json::to_value(&result).unwrap().as_array().unwrap().len(), 2);
     cursor.begin_close();
-    while !matches!(cursor.close_step(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:cursor.next_close_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand()}), RetirementStep::Complete) {}
+    while !matches!(cursor.close_step(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:cursor.next_close_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand()},u64::MAX), RetirementStep::Complete) {}
     base.retire_cold(); result.retire_cold();
 }
 //#endregion 🧪️SetLaws

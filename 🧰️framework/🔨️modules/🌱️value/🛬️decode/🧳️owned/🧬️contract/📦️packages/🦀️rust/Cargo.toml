@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-native-receiving-contract"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "value-native-receiving-contract"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-decoding = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }

@@ -1,0 +1,169 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "stock",
+    "cleanup",
+    "turn"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "source",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "expected": {}
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "accepted": {
+                  "const": true
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "expected"
+              ],
+              "properties": {
+                "expected": {}
+              }
+            }
+          }
+        ]
+      }
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "fuel"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "fuel"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "turn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "work"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

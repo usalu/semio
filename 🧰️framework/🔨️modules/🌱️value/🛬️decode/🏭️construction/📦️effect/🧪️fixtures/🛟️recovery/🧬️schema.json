@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "closeAllowed",
+          "outputAllowed"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "Empty",
+              "GrantStarted",
+              "Granted",
+              "EffectStarted",
+              "EffectFinished",
+              "ReceiptStarted",
+              "Settled"
+            ]
+          },
+          "closeAllowed": {
+            "type": "boolean"
+          },
+          "outputAllowed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

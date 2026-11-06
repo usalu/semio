@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "axes",
+    "frames",
+    "requiredProofs",
+    "replayObservedUnchanged"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "axes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "work"
+      ]
+    },
+    "frames": {
+      "const": [
+        {
+          "kind": "SAB1",
+          "sequence": 1,
+          "returned": 0,
+          "actual": [
+            40,
+            400,
+            16384,
+            0,
+            50
+          ],
+          "prepaid": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "held": [
+            1,
+            2,
+            0,
+            0,
+            1
+          ],
+          "observed": [
+            40,
+            400,
+            16384,
+            0,
+            50
+          ],
+          "outstanding": [
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "kind": "SAB1",
+          "sequence": 2,
+          "returned": 1,
+          "actual": [
+            41,
+            402,
+            0,
+            0,
+            51
+          ],
+          "prepaid": [
+            1,
+            2,
+            0,
+            0,
+            1
+          ],
+          "held": [
+            1,
+            2,
+            0,
+            0,
+            1
+          ],
+          "observed": [
+            81,
+            802,
+            16384,
+            0,
+            101
+          ],
+          "outstanding": [
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "kind": "SBT1",
+          "sequence": 0,
+          "returned": 2,
+          "actual": [
+            100,
+            2048,
+            32768,
+            0,
+            500
+          ],
+          "prepaid": [
+            1,
+            2,
+            0,
+            0,
+            1
+          ],
+          "held": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "observed": [
+            182,
+            2852,
+            49152,
+            0,
+            602
+          ],
+          "outstanding": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "requiredProofs": {
+      "const": [
+        "sameActualSource",
+        "sameNativeProducer",
+        "exactIssuerBudget",
+        "actualPreviousDeallocate",
+        "exactPreviousSequence",
+        "exactHeldCurrency"
+      ]
+    },
+    "replayObservedUnchanged": {
+      "const": true
+    }
+  }
+}

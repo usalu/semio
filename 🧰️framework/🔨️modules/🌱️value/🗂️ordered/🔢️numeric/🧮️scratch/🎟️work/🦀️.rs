@@ -21,28 +21,29 @@ impl<K:Copy+Ord,V> NumericWorkInsertCursor<K,V>{
  pub fn last_turn_work(&self)->u64{self.last_turn_work}
  pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
  pub fn take_previous(&mut self)->Option<V>{assert!(self.is_complete());self.previous.take()}
- fn step(&mut self,index:&mut NumericIndex<K,V>,work:&mut RetainedWorkLedger)->Result<NumericWorkStep,ValueError>{
+ fn step(&mut self,index:&mut NumericIndex<K,V>,work:&mut RetainedWorkLedger,actual:&mut Option<usize>)->Result<NumericWorkStep,ValueError>{
   match self.phase{
    0=>{self.current=index.root;self.phase=1;},
    1=>{if let Some(current)=self.current{match self.key.cmp(&index.node(current).key){
     Ordering::Equal=>{let generation=index.generation;let node=index.node_mut(current);self.previous=node.value.replace(self.value.take().ok_or_else(||ValueError::invariant("value absent"))?);node.generation=generation;self.phase=3;},
     order=>{self.parent=Some(current);self.current=if order==Ordering::Less{index.node(current).left}else{index.node(current).right};},
    }}else{self.phase=2;}},
-   2=>{if !work.slot(&mut index.nodes)?{return Ok(NumericWorkStep::Pending);}let placed=index.nodes.len();let node=Node{key:self.key,value:self.value.take(),generation:index.generation,count_generation:index.generation,count:1,height:1,left:None,right:None,parent:self.parent};work.push(&mut index.nodes,node).map_err(|(error,_)|ValueError::invariant(error))?;if let Some(parent)=self.parent{if self.key<index.node(parent).key{index.node_mut(parent).left=Some(placed)}else{index.node_mut(parent).right=Some(placed)}}else{index.root=Some(placed)}self.current=self.parent;self.phase=3;},
+   2=>{if !work.slot(&mut index.nodes,actual).map_err(ValueError::invariant)?{return Ok(NumericWorkStep::Pending);}let placed=index.nodes.len();let node=Node{key:self.key,value:self.value.take(),generation:index.generation,count_generation:index.generation,count:1,height:1,left:None,right:None,parent:self.parent};work.push(&mut index.nodes,node).map_err(|(error,_)|ValueError::invariant(error))?;if let Some(parent)=self.parent{if self.key<index.node(parent).key{index.node_mut(parent).left=Some(placed)}else{index.node_mut(parent).right=Some(placed)}}else{index.root=Some(placed)}self.current=self.parent;self.phase=3;},
    3=>{if let Some(current)=self.current{self.current=repair_one(index,current);}else{self.phase=4;}},
    _=>return Ok(NumericWorkStep::Pending),
   }Ok(if self.phase==4{NumericWorkStep::Complete}else{NumericWorkStep::Progress})
  }
- pub fn advance(&mut self,index:&mut NumericIndex<K,V>,items:usize,work:&mut RetainedWorkLedger)->Result<bool,ValueError>{
+ pub fn advance(&mut self,index:&mut NumericIndex<K,V>,items:usize,work:&mut RetainedWorkLedger,actual:&mut Option<usize>)->Result<bool,ValueError>{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if items==0{return Err(ValueError::invariant("numeric original work requires positive items"));}let d=self.pending;
   if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.is_complete());}
   let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.is_complete());};
-  let result=(||{for _ in 0..items{if self.is_complete()||!work.can_step(){break;}let before=work.receipt();let result=self.step(index,work);let semantic=matches!(&result,Ok(NumericWorkStep::Complete)|Err(_));let actual=!matches!(&result,Ok(NumericWorkStep::Pending))||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.last_turn_semantic_work+=1;}self.pending=work.next_demand();result?;if work.blocked(){break;}}Ok(self.is_complete())})();work.exit();result
+  let result=(||{for _ in 0..items{if self.is_complete()||!work.can_step(){break;}let before=work.receipt();let result=self.step(index,work,actual);let semantic=matches!(&result,Ok(NumericWorkStep::Complete)|Err(_));let actual=!matches!(&result,Ok(NumericWorkStep::Pending))||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.last_turn_semantic_work+=1;}self.pending=work.next_demand();result?;if work.blocked(){break;}}Ok(self.is_complete())})();work.exit();result
  }
 }
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for NumericWorkInsertCursor<K,V>{
- fn retirement(self)->Box<dyn RetirementCursor>{use crate::retirement::{sequence,deferred};sequence(vec![deferred(self.key),deferred(self.value),deferred(self.previous),deferred(self.current),deferred(self.parent),deferred(self.phase)])}
- fn retirement_birth_bytes(&self)->Option<usize>{use crate::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.key),deferred_birth_bytes_for(&self.value),deferred_birth_bytes_for(&self.previous),deferred_birth_bytes_for(&self.current),deferred_birth_bytes_for(&self.parent),deferred_birth_bytes_for(&self.phase)])}
+ type Retirement=<(K,Option<V>,Option<V>,Option<usize>,Option<usize>,u8)as RetireOwned>::Retirement;
+ fn retirement(self)->Self::Retirement{(self.key,self.value,self.previous,self.current,self.parent,self.phase).retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::Retirement>())}
  fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }
 /// 🧹️ Tombstones one actual key while retaining its former payload through paid ancestor repair.
@@ -58,20 +59,21 @@ impl<K:Copy+Ord,V> NumericWorkRemoveCursor<K,V>{
   match self.phase{
    0=>{self.current=index.root;self.phase=1;},
    1=>{if let Some(current)=self.current{match self.key.cmp(&index.node(current).key){Ordering::Equal=>self.phase=2,order=>self.current=if order==Ordering::Less{index.node(current).left}else{index.node(current).right}}}else{self.phase=4;}},
-   2=>{let current=self.current.ok_or("current absent")?;if index.node(current).generation==index.generation{self.value=index.node_mut(current).value.take();self.phase=3;}else{self.phase=4;}},
+   2=>{let current=self.current.ok_or_else(||ValueError::invariant("current absent"))?;if index.node(current).generation==index.generation{self.value=index.node_mut(current).value.take();self.phase=3;}else{self.phase=4;}},
    3=>{if let Some(current)=self.current{self.current=repair_one(index,current);}else{self.phase=4;}},
    _=>return Ok(NumericWorkStep::Pending),
   }Ok(if self.phase==4{NumericWorkStep::Complete}else{NumericWorkStep::Progress})
  }
  pub fn advance(&mut self,index:&mut NumericIndex<K,V>,items:usize,work:&mut RetainedWorkLedger)->Result<bool,ValueError>{
-  self.last_turn_work=0;self.last_turn_semantic_work=0;if items==0{return Err("numeric original removal requires positive items");}let d=self.pending;
+  self.last_turn_work=0;self.last_turn_semantic_work=0;if items==0{return Err(ValueError::invariant("numeric original removal requires positive items"));}let d=self.pending;
   if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.is_complete());}
   let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.is_complete());};
   let result=(||{for _ in 0..items{if self.is_complete()||!work.can_step(){break;}let before=work.receipt();let result=self.step(index,work);let semantic=matches!(&result,Ok(NumericWorkStep::Complete)|Err(_));let actual=!matches!(&result,Ok(NumericWorkStep::Pending))||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.last_turn_semantic_work+=1;}self.pending=work.next_demand();result?;if work.blocked(){break;}}Ok(self.is_complete())})();work.exit();result
  }
 }
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for NumericWorkRemoveCursor<K,V>{
- fn retirement(self)->Box<dyn RetirementCursor>{use crate::retirement::{sequence,deferred};sequence(vec![deferred(self.key),deferred(self.value),deferred(self.current),deferred(self.phase)])}
- fn retirement_birth_bytes(&self)->Option<usize>{use crate::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.key),deferred_birth_bytes_for(&self.value),deferred_birth_bytes_for(&self.current),deferred_birth_bytes_for(&self.phase)])}
+ type Retirement=<(K,Option<V>,Option<usize>,u8)as RetireOwned>::Retirement;
+ fn retirement(self)->Self::Retirement{(self.key,self.value,self.current,self.phase).retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::Retirement>())}
  fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }

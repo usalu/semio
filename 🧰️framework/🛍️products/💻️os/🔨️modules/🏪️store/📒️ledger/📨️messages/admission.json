@@ -1,0 +1,39 @@
+{
+  "capacity": 8,
+  "cases": [
+    {
+      "ids": [
+        "a",
+        "b"
+      ],
+      "candidate": "c",
+      "expected": "admitted"
+    },
+    {
+      "ids": [
+        "same"
+      ],
+      "candidate": "same",
+      "expected": "duplicate"
+    },
+    {
+      "ids": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h"
+      ],
+      "candidate": "i",
+      "expected": "full"
+    }
+  ],
+  "invariants": [
+    "donor retained until complete destination grant",
+    "pending candidate blocks other writers",
+    "failure retains candidate for actual ledger retirement"
+  ]
+}

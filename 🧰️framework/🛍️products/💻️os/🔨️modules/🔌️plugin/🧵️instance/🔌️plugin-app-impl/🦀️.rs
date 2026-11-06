@@ -166,8 +166,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         self.close_ladder_demand(body)
     }
 
-    fn maintenance_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        self.ladder_ref().maintenance_ladder_demands(body)
+    fn maintenance_retirement_demands(&self, body: usize,maximum_work_units:u64) -> Result<RetirementDemand, ValueError> {
+        self.ladder_ref().maintenance_ladder_demands(body,maximum_work_units)
     }
 
     fn maintenance_source_close_demands(&self,body:usize,cx:&semio_framework_job::StepContext<'_>)->Result<RetirementDemand,ValueError>{
@@ -176,7 +176,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         if self.owns_original_reserved_permit(cx){return if self.reserved_permit_waits(cx){Ok(Default::default())}else{self.media.original_tool_lease_close_demands(&self.tools,body)}}
         if self.host_event_routing_ref().owns_original_host_event_source(cx){return self.host_event_routing_ref().original_host_event_close_demands(body)}
         if !self.host_event_routing_ref().owns_original_command_scope(cx){return Ok(Default::default())}
-        if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some()||self.tools.original_tool_follow.is_some(){return self.render_ref().tool_overlay_retirement_demand(body,true)}
+        if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some()||self.tools.original_tool_follow.is_some(){return self.render_ref().tool_overlay_close_demand(body)}
         if self.original_typed_tag.is_some()||!self.original_typed_tag_close.is_empty(){return self.original_typed_tag_close_demands(body)}
         if self.original_typed_command.pending(){return semio_plugin_instance_dispatch::dispatch_runtime_command::original_typed_source_close_demands(&self.original_typed_command,body)}
         if self.original_typing.pending(){return self.original_typing.close_demands()}
@@ -680,15 +680,9 @@ let operations=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter_map(|index| {
 
     async fn child_head_packs(&self) -> Result<Vec<protocol::ChildHeadPackEntry>, Fault> { self.child_composition.child_head_packs().await }
 
-    fn begin_document_archive_load(&mut self, operation: u64, archive: protocol::DocumentArchivePack) -> Result<(), Fault> { self.begin_document_archive_load(operation, archive) }
+    fn begin_document_archive_load(&mut self,operation:u64,archive:&mut protocol::DocumentArchivePack,admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.begin_document_archive_load(operation,archive,admission,false,cx)}
+    fn begin_document_archive_merge(&mut self,operation:u64,archive:&mut protocol::DocumentArchivePack,admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.begin_document_archive_load(operation,archive,admission,true,cx)}
 
-    fn begin_document_archive_merge(&mut self, operation: u64, archive: protocol::DocumentArchivePack) -> Result<(), Fault> {
-        PluginApp::begin_document_archive_load(self, operation, archive)?;
-        self.ingest.document_archive_loads.get_mut(operation).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive merge admission changed before it was flagged"))?.merge = true;
-        Ok(())
-    }
-
-    /// 📬️ Observes the original mounted load; its registered maintenance job drives retained work.
     async fn poll_document_archive_load(&mut self, operation: u64, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
         if self.ingest.document_archive_loads.get(operation).is_some_and(ActiveDocumentArchiveLoad::awaits_merge) {
             self.command_ctx().merge_document_archive(operation, identity, cx).await?;

@@ -49,5 +49,5 @@ impl semio_framework_value_control_contract::OriginalRetirementClosePort for Nat
 }
 impl NativeRetirementDecodeControl<'_, '_>{
  /// 🫴️ Loans the exact actual decoder identity and already admitted cleanup callback through neutral erasure.
- pub fn with_original_close<T>(&mut self,operation:impl FnOnce(&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>)->Result<T,ValueError>)->Result<T,ValueError>{let ledger=self.ledger_identity();let recipient=self.retirement_recipient_identity();let mut original=unsafe{semio_framework_value_control_contract::OriginalRetirementCloseLoan::from_original(ledger,recipient,self)};operation(&mut original)}
+ pub fn with_original_close<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>)->Result<T,E>)->Result<T,E>{let ledger=self.ledger_identity();let recipient=self.retirement_recipient_identity();let mut original=unsafe{semio_framework_value_control_contract::OriginalRetirementCloseLoan::from_original(ledger,recipient,self)};operation(&mut original)}
 }

@@ -1,0 +1,22 @@
+[
+  {
+    "started": false,
+    "physical": false,
+    "changed": false
+  },
+  {
+    "started": false,
+    "physical": true,
+    "changed": true
+  },
+  {
+    "started": true,
+    "physical": false,
+    "changed": false
+  },
+  {
+    "started": true,
+    "physical": true,
+    "changed": false
+  }
+]

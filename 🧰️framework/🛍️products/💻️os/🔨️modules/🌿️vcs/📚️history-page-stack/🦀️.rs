@@ -162,6 +162,33 @@ impl<T> HistoryPageStack<T> {
         self.len < self.capacity() || self.pages < u32::MAX
     }
 
+    /// \u{1f39f}\uFE0F Prices the exact next slot, page, directory and bounded initialization path before donor transfer.
+    pub fn retained_push_demand(&self)->Result<(semio_framework_value::RetirementDemand,u64),ValueError>{
+        let error=||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"history push extent overflowed or its native page is too large");
+        if self.detached.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history push cannot reopen a retiring detached page"))}
+        let fresh=self.len==self.capacity();if fresh&&self.pages==u32::MAX{return Err(error())}
+        let hops=self.len/ARTIFACT_HISTORY_PAGE_SLOTS/ARTIFACT_HISTORY_DIRECTORY_PAGES;
+        let directory=fresh&&self.pages as usize%ARTIFACT_HISTORY_DIRECTORY_PAGES==0;
+        let slots=size_of::<Option<T>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS).ok_or_else(error)?;
+        if slots>ARTIFACT_HISTORY_CONTIGUOUS_CEILING{return Err(error())}
+        let mut copy=size_of::<Self>().checked_add(2usize.checked_mul(size_of::<Option<T>>()).ok_or_else(error)?).ok_or_else(error)?;
+        let mut capacity=0usize;let mut work=1usize.checked_add(hops).ok_or_else(error)?;
+        if fresh{capacity=slots.checked_add(size_of::<HistoryValuePage<T>>()).ok_or_else(error)?;copy=copy.checked_add(capacity).and_then(|n|n.checked_add(size_of::<Option<Box<HistoryValuePage<T>>>>()+size_of::<u16>())).ok_or_else(error)?;work=work.checked_add(ARTIFACT_HISTORY_PAGE_SLOTS+2).and_then(|n|n.checked_add(hops)).ok_or_else(error)?;}
+        if directory{capacity=capacity.checked_add(size_of::<HistoryPageChunk<T>>()).ok_or_else(error)?;copy=copy.checked_add(size_of::<HistoryPageChunk<T>>()).ok_or_else(error)?;work=work.checked_add(ARTIFACT_HISTORY_DIRECTORY_PAGES+1).ok_or_else(error)?;}
+        Ok((semio_framework_value::RetirementDemand{copy_bytes:copy,capacity_bytes:capacity,depth:hops.checked_add(2).ok_or_else(error)?,..Default::default()},u64::try_from(work).map_err(|_|error())?))
+    }
+    /// \u{1f4e5}\uFE0F Keeps the original donor until the actual next-push currencies and work admit its complete physical path.
+    pub fn push_retained(&mut self,input:&mut Option<T>,grant:semio_framework_value::RetainedCloneGrant,maximum_work:u64)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress>{
+        use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome};
+        if input.is_none(){return RetainedWorkOutcome{result:Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history push lost its original donor")),work:0}}
+        let(demand,work)=match self.retained_push_demand(){Ok(q)=>q,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+        if maximum_work<work||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_depth<demand.depth{return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+        match self.try_push(input.take().unwrap()){
+            Ok(())=>RetainedWorkOutcome{result:Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}),work},
+            Err(value)=>{*input=Some(value);let progress=RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<Option<T>>(),..Default::default()};RetainedWorkOutcome{result:Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"history push refused its admitted original slot").with_retained_progress(progress)),work:1}}
+        }
+    }
+
     pub fn push(&mut self, value: T) {
         if self.try_push(value).is_err() { panic!("history catalog admits the entry"); }
     }
@@ -480,4 +507,26 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for HistoryPageSta
         let values = Vec::<T>::deserialize(deserializer)?;
         Ok(values.into())
     }
+}
+
+#[cfg(test)]
+mod retained_push_laws{
+ use super::*;
+ #[test]
+ fn real_stack_push_matches_portable_quotes_and_denial_preserves_the_original_donor(){
+  let law:serde_json::Value=serde_json::from_str(include_str!("push.json")).unwrap();
+  let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096};
+  for row in law["cases"].as_array().unwrap().iter().filter(|row|row["word"].as_u64()==Some(size_of::<usize>()as u64)){
+   let mut stack=HistoryPageStack::empty();for _ in 0..row["len"].as_u64().unwrap(){stack.push(String::new())}
+   let(demand,work)=stack.retained_push_demand().unwrap();assert_eq!(demand.copy_bytes,row["copy"].as_u64().unwrap()as usize);assert_eq!(demand.capacity_bytes,row["capacity"].as_u64().unwrap()as usize);assert_eq!(demand.depth,row["depth"].as_u64().unwrap()as usize);assert_eq!(work,row["work"].as_u64().unwrap());
+   let mut input=Some("original".to_owned());let pointer=input.as_ref().unwrap().as_ptr();let length=stack.len();
+   for denied in [semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:0,..grant},semio_framework_value::RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant}]{
+    if demand.capacity_bytes==0&&denied.maximum_copy_bytes!=0{continue}
+    let(turn,allocated,released)=crate::test_allocation::observe_backing(||stack.push_retained(&mut input,denied,work));assert_eq!((allocated,released),(0,0));assert_eq!(turn.result.unwrap(),Default::default());assert_eq!(turn.work,0);assert_eq!(stack.len(),length);assert_eq!(input.as_ref().unwrap().as_ptr(),pointer);
+   }
+   let(turn,allocated,released)=crate::test_allocation::observe_backing(||stack.push_retained(&mut input,grant,0));assert_eq!((allocated,released),(0,0));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap(),Default::default());assert!(input.is_some());
+   let(turn,allocated,released)=crate::test_allocation::observe_backing(||stack.push_retained(&mut input,grant,work));let progress=turn.result.unwrap();assert_eq!(allocated,demand.capacity_bytes);assert_eq!(released,0);assert_eq!(progress.retained_capacity_bytes,allocated);assert_eq!(turn.work,work);assert!(input.is_none());assert_eq!(stack.get(length).unwrap().as_ptr(),pointer);
+   let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::new(stack).ok().unwrap();for _ in 0..100000{if close.terminal_is_empty(){break}close.step(grant).unwrap();}assert!(close.terminal_is_empty());
+  }
+ }
 }

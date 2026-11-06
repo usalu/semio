@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["check","--manifest-path","🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/Cargo.toml","-p","semio-framework-value-shared-issuance","--lib"],"configuration":"prototype","store":"isolated","parallelism":1,"language":"en","agent":"codex-root-sealed-fixed-frame"}}

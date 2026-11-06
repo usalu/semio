@@ -1,6 +1,16 @@
 //! 🧬️ Hydration types, constructors and drive: the hydration grants, the retirement and runtime drives, the target, output, progress and step types, the phase, the replayed edits and the hydration constructors with the active drive. See [`super`].
 
+
+
 use super::*;
+
+/// 🪪️ A constructor declares the exact identity and optional artifact dialect; absence is compared, never inferred.
+#[derive(Clone,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
+pub struct PersistedDocumentHydrationIdentity{pub id:String,pub dialect:Option<semio_framework_artifact_reference::ArtifactDialect>}
+impl PersistedDocumentHydrationIdentity{
+ pub fn matches(&self,id:&str,dialect:Option<(&str,&str,&str)>)->bool{self.id==id&&match(self.dialect.as_ref(),dialect){(None,None)=>true,(Some(expected),Some((kind,standard,subset)))=>expected.artifact_kind==kind&&expected.standard==standard&&expected.subset==subset,_=>false}}
+}
+
 
 pub fn hydration_fold_byte_grant(logical_bytes: usize, demand: usize) -> Option<usize> {
     let grant = logical_bytes.max(demand);
@@ -56,7 +66,7 @@ pub enum PersistedDocumentHydrationTarget {
 pub enum PersistedDocumentHydrationOutput<P, M>
 where
     P: semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
     Store(Box<ArtifactStore<P, M>>),
     Envelope(ArtifactEnvelope<P, M>),
@@ -71,7 +81,7 @@ pub struct PersistedDocumentHydrationProgress {
 pub enum PersistedDocumentHydrationStep<P, M>
 where
     P: semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
     Pending(PersistedDocumentHydrationProgress),
     Ready(PersistedDocumentHydrationOutput<P, M>),
@@ -82,7 +92,7 @@ where
 pub enum PersistedDocumentStoreHydrationStep<P, M>
 where
     P: semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
     Pending(PersistedDocumentHydrationProgress),
     Ready(Box<ArtifactStore<P, M>>),
@@ -141,9 +151,21 @@ impl<M> semio_os_store_replay::ReplayEdits<M> for HydratedReplayEdits<'_, M> {
 pub struct RetainedPersistedDocumentHydration<P, M>
 where
     P: semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
     pub actor: ManuallyDrop<semio_os_spr::ActorId>,
+    pub(super) original_source:Option<semio_framework_job::OriginalSourceBinding>,
+    pub(super) original_meta:OwnedSlot<semio_os_spr::MutationMeta>,
+    pub(super) empty_messages:OwnedSlot<semio_os_spr::EditMessages>,
+    pub(super) fold_output:OwnedSlot<semio_os_spr::history::RetainedHistoryFold>,
+    pub(super) fold_protocol:OwnedSlot<protocol::ProtocolError>,
+    pub(super) mutation_domain:OwnedSlot<M::DomainFailure>,
+    pub(super) metadata_message:usize,
+    pub(super) semantic_index:usize,
+    pub(super) mutation_receiving:ManuallyDrop<Option<Box<M::Receiving>>>,
+    pub(super) mutation_output:OwnedSlot<M>,
+    pub original_failure:ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
+    pub original_context_failure:ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
     pub pack: ManuallyDrop<Option<Vec<u8>>>,
     pub initial: ManuallyDrop<Option<P>>,
     pub history: ManuallyDrop<Option<std::sync::Arc<semio_os_spr::HistoryLog>>>,
@@ -165,7 +187,7 @@ where
     pub fold_completed: u64,
     pub progress_high_water: std::cell::Cell<u64>,
     pub fold: ManuallyDrop<Option<semio_os_spr::HistoryFold>>,
-    pub expected: ManuallyDrop<Option<ArtifactRef>>,
+    pub expected: ManuallyDrop<Option<PersistedDocumentHydrationIdentity>>,
     pub owner: ManuallyDrop<Option<OwnerRef>>,
     pub schema: ManuallyDrop<Option<String>>,
     pub envelope: ManuallyDrop<Option<ArtifactEnvelope<P, M>>>,
@@ -196,14 +218,14 @@ where
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
     P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
     pub fn from_decoded_pack(
         initial: P,
         pack: Vec<u8>,
         digest: [u8; 32],
         history: semio_os_spr::HistoryLog,
-        expected: ArtifactRef,
+        expected: PersistedDocumentHydrationIdentity,
         owner: Option<OwnerRef>,
         schema: String,
         owners: DocumentStoreOwners<P, M>,
@@ -212,7 +234,7 @@ where
         expires_at_us: u64,
         target: PersistedDocumentHydrationTarget,
         actor: semio_os_spr::ActorId,
-    ) -> Self {
+    ) -> Self where M:protocol::OpBinaryReceiving {
         let mut hydration = Self::new(Some(pack), Some(initial), history, expected, owner, schema, owners, operation, generation, expires_at_us, target, Phase::Begin, actor);
         hydration.pack_digest = Some(digest);
         hydration
@@ -221,7 +243,7 @@ where
     pub fn from_pack(
         pack: Vec<u8>,
         history: semio_os_spr::HistoryLog,
-        expected: ArtifactRef,
+        expected: PersistedDocumentHydrationIdentity,
         owner: Option<OwnerRef>,
         schema: String,
         owners: DocumentStoreOwners<P, M>,
@@ -230,7 +252,7 @@ where
         expires_at_us: u64,
         target: PersistedDocumentHydrationTarget,
         actor: semio_os_spr::ActorId,
-    ) -> Self {
+    ) -> Self where M:protocol::OpBinaryReceiving {
         Self::new(Some(pack), None, history, expected, owner, schema, owners, operation, generation, expires_at_us, target, Phase::ScanPack, actor)
     }
 
@@ -238,7 +260,7 @@ where
         pack: Option<Vec<u8>>,
         initial: Option<P>,
         history: semio_os_spr::HistoryLog,
-        expected: ArtifactRef,
+        expected: PersistedDocumentHydrationIdentity,
         owner: Option<OwnerRef>,
         schema: String,
         owners: DocumentStoreOwners<P, M>,
@@ -248,9 +270,11 @@ where
         target: PersistedDocumentHydrationTarget,
         phase: Phase,
         actor: semio_os_spr::ActorId,
-    ) -> Self {
+    ) -> Self where M:protocol::OpBinaryReceiving {
         Self {
             actor: ManuallyDrop::new(actor),
+            original_source:None,original_meta:OwnedSlot::default(),empty_messages:OwnedSlot::default(),fold_output:OwnedSlot::default(),fold_protocol:OwnedSlot::default(),mutation_domain:OwnedSlot::default(),metadata_message:0,semantic_index:0,
+            mutation_receiving:ManuallyDrop::new(None),mutation_output:OwnedSlot::default(),original_failure:ManuallyDrop::new(None),original_context_failure:ManuallyDrop::new(None),
             pack: ManuallyDrop::new(pack),
             initial: ManuallyDrop::new(initial),
             history: ManuallyDrop::new(Some(std::sync::Arc::new(history))),
@@ -301,7 +325,50 @@ where
         }
     }
 
+
+    pub(super) fn bind_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        if let Some(binding)=self.original_source{return if binding.matches(cx){Ok(true)}else{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"hydration changed its actual original Source").into())}}
+        let bytes=std::mem::size_of_val(&self.original_source);let grant=cx.retained_grant();
+        if cx.should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+        self.original_source=Some(semio_framework_job::OriginalSourceBinding::borrow(cx));cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;Ok(false)
+    }
+    /// 🧾️ The actual Source receives the untouched mutation-domain cause into its own retained recipient.
+    pub fn receive_original_mutation_domain_step(&mut self,cx:&mut StepContext<'_>,receive:impl FnOnce(&mut Option<M::DomainFailure>,&mut StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        if cx.operation()!=self.operation||cx.generation()!=self.generation||!self.original_source.is_some_and(|source|source.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"mutation domain receiver changed its original Source").into())}
+        if self.mutation_domain.value.is_none(){
+            if let Some(cursor)=self.mutation_receiving.as_mut(){
+                if cursor.domain_failure().is_some(){
+                    let demand=cursor.domain_failure_demand()?;let work=cursor.domain_failure_work_demand()?;let grant=cx.retained_grant();
+                    if cx.retirement_should_yield()||cx.fuel_remaining()<work||grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(false)}
+                    let turn=cursor.take_domain_failure_into(&mut self.mutation_domain.value,grant);cx.consume_fuel(turn.work);
+                    match turn.result{Ok(progress)=>cx.consume_retained(progress)?,Err(error)=>{let progress=error.retained_progress();let receipt=cx.consume_retained(progress);let mut failure=semio_framework_job::OriginalTurnFailure::from(error);failure.effects=progress;failure.receipt_refusal=receipt.err();return Err(failure)}}
+                    if turn.work>work{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"mutation domain transfer exceeded its original work quote").into())}
+                }
+            }
+        }
+        if self.mutation_domain.value.is_some(){receive(&mut self.mutation_domain.value,cx)?}
+        Ok(self.mutation_domain.terminal_is_empty()&&!self.mutation_receiving.as_ref().is_some_and(|cursor|cursor.domain_failure().is_some()))
+    }
+
+    /// 🪢️ The caller takes the complete actual fold protocol cause before its constructor can retire.
+    pub fn receive_original_fold_protocol_step(&mut self,cx:&mut StepContext<'_>,receive:impl FnOnce(&mut Option<protocol::ProtocolError>,&mut StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        if cx.operation()!=self.operation||cx.generation()!=self.generation||!self.original_source.is_some_and(|source|source.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fold protocol receiver changed its actual original Source").into())}
+        if self.fold_protocol.value.is_some(){receive(&mut self.fold_protocol.value,cx)?}
+        Ok(self.fold_protocol.terminal_is_empty())
+    }
+
+    /// 🧯️ An actual receiving callback takes complete producer and context failures before their owner can close.
+    pub fn receive_original_failures_step(&mut self,cx:&mut StepContext<'_>,receive:impl FnOnce(&mut Option<semio_framework_job::OriginalTurnFailure>,&mut Option<semio_framework_job::OriginalTurnFailure>,&mut StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        if cx.operation()!=self.operation||cx.generation()!=self.generation{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"hydration failure receiver changed its original operation").into())}
+        receive(&mut self.original_failure,&mut self.original_context_failure,cx)?;
+        Ok(self.original_failure.is_none()&&self.original_context_failure.is_none())
+    }
     pub fn check_authority(&self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+        if self.original_source.is_some_and(|source|!source.matches(cx)){return Err(MemberOpenDiagnostic::Stale)}
         if cx.operation() != self.operation || cx.generation() != self.generation {
             return Err(MemberOpenDiagnostic::Stale);
         }
@@ -314,14 +381,6 @@ where
         Ok(())
     }
 
-    pub fn decode_operation(payload: &semio_os_spr::OpPayload) -> Result<M, MemberOpenDiagnostic> {
-        match (&payload.binary, &payload.text) {
-            (Some(bytes), _) => M::decode_op(bytes).map_err(|_| MemberOpenDiagnostic::Replay),
-            (None, Some(text)) => M::parse_op(text).map_err(|_| MemberOpenDiagnostic::Replay),
-            (None, None) => Err(MemberOpenDiagnostic::Malformed),
-        }
-    }
-
     pub fn reject(&mut self, diagnostic: MemberOpenDiagnostic) -> PersistedDocumentHydrationStep<P, M> {
         self.diagnostic.get_or_insert(diagnostic);
         self.phase = Phase::Rejected;
@@ -330,9 +389,10 @@ where
 
     pub fn progress(&self) -> PersistedDocumentHydrationProgress {
         let total = self.history.as_ref().map_or(1, |history| history.edits.len() + history.transitions.len() + history.conflicts.len() + 1);
-        let completed = self.progress_high_water.get().max(self.fold_completed.saturating_add(self.record_index as u64));
+        let fold_completed=self.fold_job.as_ref().map_or(self.fold_completed,|job|job.completed());
+        let completed = self.progress_high_water.get().max(fold_completed.saturating_add(self.record_index as u64));
         self.progress_high_water.set(completed);
-        PersistedDocumentHydrationProgress { completed, total: completed.max(self.fold_completed.saturating_add(total as u64)) }
+        PersistedDocumentHydrationProgress { completed, total: completed.max(fold_completed.saturating_add(total as u64)) }
     }
 
     pub fn drive_active(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<bool, MemberOpenDiagnostic> {
@@ -379,9 +439,21 @@ where
 
 impl<P,M> RetainedPersistedDocumentHydration<P,M>
 where P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-M: Clone + semio_os_spr::ColdMutation<P> + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static {
+M: protocol::OpBinaryReceiving + Clone + semio_os_spr::ColdMutation<P> + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static {
     pub(super) fn loaded_replay_retirement(&self, owners: &DocumentStoreOwners<P, M>) -> semio_os_store_read::ArtifactHistoryReadRetirement<P, M> {
         semio_os_store_read::ArtifactHistoryReadRetirement {derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None), preview: ManuallyDrop::new(None), replay: ManuallyDrop::new(None), loaded_replay: ManuallyDrop::new(None), finished: ManuallyDrop::new(None), active: ManuallyDrop::new(None), plan_retirement: ManuallyDrop::new(None), draft_retirement: ManuallyDrop::new(None), registry_retirement: ManuallyDrop::new(None), snapshots: ManuallyDrop::new(Some(owners.initial_snapshot_retirement.clone())), mutations: ManuallyDrop::new(Some(owners.mutation_retirement.clone())), factory_retirement:std::array::from_fn(|_|None) }
     }
+
+}
+
+#[cfg(test)]
+mod identity_source_laws{
+ use super::*;
+#[test]
+fn declared_optional_hydration_identity_matches_the_portable_corpus(){
+    let law:serde_json::Value=serde_json::from_str(include_str!("../identity.json")).unwrap();
+    let dialect=|value:&serde_json::Value|if value.is_null(){None}else{Some(semio_framework_artifact_reference::ArtifactDialect{artifact_kind:value["artifactKind"].as_str().unwrap().into(),standard:value["standard"].as_str().unwrap().into(),subset:value["subset"].as_str().unwrap().into()})};
+    for row in law["cases"].as_array().unwrap(){let expected=PersistedDocumentHydrationIdentity{id:row["expectedId"].as_str().unwrap().into(),dialect:dialect(&row["expected"])};let actual=dialect(&row["actual"]);assert_eq!(expected.matches(row["actualId"].as_str().unwrap(),actual.as_ref().map(|value|(value.artifact_kind.as_str(),value.standard.as_str(),value.subset.as_str()))),row["accepted"].as_bool().unwrap());}
+}
 
 }

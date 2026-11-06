@@ -1,0 +1,3 @@
+# Retained set-field births
+
+Decision phase 2 and inverse phase 0 use infallible boxed field preparation; inverse phase 2 uses Vec::with_capacity(1). They do not expose actual attempt markers; vector capacity may exceed the quoted one-element layout. Marker-aware nearby examples are record boxed_record_field/equality_box and indexed replacement using exact backing allocation. A genuine original construction frame must own the marker and interrupted settlement, with leaf and aggregate interfaces forwarding it. Tracked macro users include WFC 2d, bitmap, 3d and grid3d transient solve, procedural generation2d/3d editor preview, generation3d viewer preview, and wp1-window macro owner. Source-only; no native execution.

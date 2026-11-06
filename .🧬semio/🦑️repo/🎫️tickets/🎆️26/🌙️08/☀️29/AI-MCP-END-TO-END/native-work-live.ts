@@ -1,0 +1,13 @@
+import{readFileSync,writeFileSync,renameSync,appendFileSync}from'node:fs';import{dirname,join}from'node:path';
+const ticket=dirname(import.meta.path),rows=JSON.parse(readFileSync(join(ticket,'🗑️generated/native-work-view-unresolved.json'),'utf8'))as{file:string,body:string}[];
+function edit(file:string,body:string,method:string){const old=readFileSync(file,'utf8');if(old.split(body).length!==2)throw Error('fresh anchor '+file);const next=old.replace(body,body.replace('{','{'+method)),tmp=join(ticket,'🗑️generated/live-work-'+Date.now()+'.rs');writeFileSync(tmp,next);if(readFileSync(file,'utf8')!==old)throw Error('concurrent '+file);renameSync(tmp,file);console.log(file)}
+for(const row of rows){if(row.file.includes('🧪️tests')||row.file.includes('shared-slots'))continue;let method='';
+ if(row.body.includes('for ActualWork')||row.body.includes('for OriginalMemberWork'))method='fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{self.turn.with(|cx,_|if !paused(cx,self.closing)&&(self.closing||!cx.is_cancelled()){cx.fuel_remaining().checked_sub(observed).unwrap_or(0)}else{0})}';
+ else if(row.body.includes('for NativeCurrentWork'))method='fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{Ok(if !self.cancel.is_cancelled_now()&&(self.now)().is_some_and(|now|now<*self.deadline){self.fuel.checked_sub(observed).unwrap_or(0)}else{0})}';
+ else if(row.body.includes('for NativeRetirementWork'))method='fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{Ok(if *self.retirement||(self.now)().is_some_and(|now|now<*self.deadline){self.fuel.checked_sub(observed).unwrap_or(0)}else{0})}';
+ else if(row.body.includes('for StepWork'))method='fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let cx=self.0.actual.try_lock().map_err(|_|ValueError::invariant("original archive caller is already borrowed"))?;let paused=if self.0.closing{cx.retirement_should_yield()}else{cx.should_yield()};Ok(if !paused&&(self.0.closing||!cx.is_cancelled()){cx.fuel_remaining().checked_sub(observed).unwrap_or(0)}else{0})}';
+ else throw Error('unowned production '+row.file);
+ edit(row.file,row.body,method);
+}
+appendFileSync(join(ticket,'native-work-view-2026-11-06.md'),'\n## Live Caller View\n\nThe required view now borrows the actual native decoder loan. Current and cleanup job turns, original history/member turns, and the archive maintenance caller preserve their actual cancellation, yield, deadline and remaining-fuel gates. Observed scoped work is deducted from that same caller budget; no byte-derived CPU ceiling or unlimited fallback was introduced. This is authored source, pending native qualification.\n');
+appendFileSync(join(ticket,'semio-client-input.jsonl'),JSON.stringify({control:'close'})+'\n');

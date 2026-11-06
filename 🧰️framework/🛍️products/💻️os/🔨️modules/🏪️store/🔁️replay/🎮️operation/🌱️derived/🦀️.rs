@@ -68,12 +68,12 @@ impl<P,M:Sync> Drop for ArtifactDerivedOperation<P,M> {
 
 impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
     /// 📏️ Quotes one original semantic, settlement or cleanup action under its actual body hint.
-    pub fn demands(&self,generation:u64,revision:[u8;32],body:usize)->Result<RetirementDemand,ValueError> {
+    pub fn demands(&self,generation:u64,revision:[u8;32],body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError> {
         if self.terminal_is_empty(){return Ok(Default::default())}
         if self.base.is_some(){return Ok(if self.closing{header::<SnapshotRead<P>>()}else{self.producer.as_ref().ok_or_else(||refusal("derived request lost its original producer issuer"))?.preparation_birth_demand()});}
         if let Some(task)=self.task.as_ref(){
             if self.closing||self.ready{return Ok(RetirementDemand{copy_bytes:size_of::<ArtifactReplayPreparationTask<P,M>>()+if self.ready&&!self.closing{size_of::<ArtifactReplayPrepared<P,M>>()}else{0},depth:1,..Default::default()});}
-            return task.demands(generation,revision,body);
+            return task.demands(generation,revision,body,maximum_work_units);
         }
         if let Some(close)=self.task_close.as_ref(){return if close.terminal_is_empty(){Ok(header::<ArtifactReplayPreparationRetirement<P,M>>())}else{close.next_demand(body)};}
         if self.retirement.is_some(){return semio_framework_value::factory_ticket_demands(self.retirement.as_ref().unwrap(),body);}
@@ -107,7 +107,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
     pub fn step(&mut self,generation:u64,revision:[u8;32],body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{self.step_turn(generation,revision,grant,DerivedOperationTurn::Advance(receiving,body),deadline).result}
     fn close_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{if !self.closing{return semio_framework_value::RetainedWorkOutcome{result:Err(refusal("derived closure requires its original cancellation").into()),work:0};}self.step_turn(self.context.generation,self.context.base_revision,grant,DerivedOperationTurn::Close(None),&mut||false)}
     fn step_turn(&mut self,generation:u64,revision:[u8;32],grant:RetainedCloneGrant,mut turn:DerivedOperationTurn<'_,'_>,deadline:&mut dyn FnMut()->bool)->semio_framework_value::OriginalRetirementOutcome {self.last_work=0;let mut work=0u64;let result=(||->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
-        let idle=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(idle))}if deadline(){return Ok(RetainedCloneStep::Progress(idle));}let body=match &turn{DerivedOperationTurn::Advance(_,body)=>*body,DerivedOperationTurn::Close(_)|DerivedOperationTurn::Original(_)=>grant.maximum_copy_bytes};let demand=self.demands(generation,revision,body)?;if !funded(grant,demand){return Ok(RetainedCloneStep::Progress(idle));}
+        let idle=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(idle))}if deadline(){return Ok(RetainedCloneStep::Progress(idle));}let body=match &turn{DerivedOperationTurn::Advance(_,body)=>*body,DerivedOperationTurn::Close(_)|DerivedOperationTurn::Original(_)=>grant.maximum_copy_bytes};let maximum_work_units=match &mut turn{DerivedOperationTurn::Advance(control,_)=>control.available_work_units()?,_=>0};let demand=self.demands(generation,revision,body,maximum_work_units)?;if !funded(grant,demand){return Ok(RetainedCloneStep::Progress(idle));}
         if matches!(turn,DerivedOperationTurn::Close(None))&&self.requires_original_control(){return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"derived semantic retirement requires its original decoding custody")).into());}
         if let Some(task)=self.task.as_ref(){match &mut turn{DerivedOperationTurn::Close(Some(control))=>task.validate_retirement_control(&**control)?,DerivedOperationTurn::Original(original)=>task.validate_retirement_control(&**original)?,_=>{}}}
         let progress=if self.base.is_some(){

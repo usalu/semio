@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases",
+    "retirementCases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "callSucceeded",
+          "sourceRefusal",
+          "expectedKeys"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "callSucceeded": {
+            "type": "boolean"
+          },
+          "outputPresent": {
+            "type": "boolean"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "context": {
+            "type": "string"
+          },
+          "receiptRefusal": {
+            "type": "string"
+          },
+          "sourceRefusal": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "retirementCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "callSucceeded",
+          "sourceRefusal",
+          "expectedKeys"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "callSucceeded": {
+            "type": "boolean"
+          },
+          "outputPresent": {
+            "type": "boolean"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "context": {
+            "type": "string"
+          },
+          "receiptRefusal": {
+            "type": "string"
+          },
+          "childSucceeded": {
+            "type": "boolean"
+          },
+          "childReceiving": {
+            "type": "string"
+          },
+          "sourceRefusal": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    }
+  }
+}

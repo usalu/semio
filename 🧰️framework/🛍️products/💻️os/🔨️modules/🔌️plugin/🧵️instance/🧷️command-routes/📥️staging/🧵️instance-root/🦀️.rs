@@ -47,7 +47,7 @@ pub fn framework_reserved_action_kind(action: &str) -> Option<ActionKind> {
     if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID || action == CANCEL_TYPED_OPERATION_ACTION_ID {
         return Some(ActionKind::View);
     }
-    if action == NOTE_SHELL_COMMAND_ACTION_ID || matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID) {
+    if action == NOTE_SHELL_COMMAND_ACTION_ID || matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::EXPORT_MEDIA_FILE_ACTION_ID | semio_framework::EXPORT_SNAPSHOT_FILE_ACTION_ID) {
         return Some(ActionKind::Shell);
     }
     Some(ActionKind::History)

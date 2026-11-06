@@ -26,44 +26,17 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         Ok(false)
     }
 
-    pub(super) fn begin_document_archive_load(&mut self, operation: u64, mut archive: protocol::DocumentArchivePack) -> Result<(), Fault> {
-        if archive.members.len() > protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
-            return Err(document_load_fault(DOCUMENT_LOAD_TOO_MANY_MEMBERS_CODE, "document archive exceeds its fixed 1024-member authority").with_param("count", archive.members.len().to_string()).with_param("maximum", protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS.to_string()));
-        }
-        let archive_payload_bytes = archive.members.iter().fold(archive.parent_pack.len().checked_add(archive.parent_spr.len()), |total, entry| total.and_then(|total| total.checked_add(entry.envelope_pack.len())));
-        if archive_payload_bytes.is_none_or(|bytes| bytes > protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES) {
-            return Err(document_load_fault(DOCUMENT_LOAD_TOO_LARGE_CODE, "document archive typed payload exceeds its fixed byte authority").with_param("bytes", archive_payload_bytes.unwrap_or(usize::MAX).to_string()).with_param("maximum", protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES.to_string()));
-        }
-        if !self.ingest.document_archive_loads.can_insert(operation) {
-            return Err(document_load_fault(DOCUMENT_LOAD_BUSY_CODE, "document archive operation identity is already live or its fixed slot is occupied"));
-        }
-        if archive.parent_pack.is_empty() || archive.parent_spr.is_empty() {
-            return Err(document_load_fault(DOCUMENT_LOAD_INCOMPLETE_CODE, "document archive parent pack and SPR must both be present"));
-        }
-        archive.members.sort_by_key(|entry| entry.ordinal);
-        for (ordinal, entry) in archive.members.iter().enumerate() {
-            let fields = [
-                entry.reference.artifact_id.as_str(),
-                entry.reference.artifact_kind.as_str(),
-                entry.reference.standard.as_str(),
-                entry.reference.subset.as_str(),
-                entry.owner.parent.artifact_id.as_str(),
-                entry.owner.parent.artifact_kind.as_str(),
-                entry.owner.parent.standard.as_str(),
-                entry.owner.parent.subset.as_str(),
-                entry.owner.slot.as_str(),
-                entry.owner.child_id.as_str(),
-            ];
-            if usize::try_from(entry.ordinal).ok() != Some(ordinal)
-                || entry.envelope_pack.is_empty()
-                || fields.iter().any(|field| field.is_empty() || field.len() > store::MEMBER_OPEN_IDENTITY_BYTES || field.chars().any(char::is_control))
-            {
-                return Err(document_load_fault(DOCUMENT_LOAD_MEMBER_INVALID_CODE, "document archive member ordinal, identity, owner, or envelope is invalid").with_param("ordinal", (ordinal + 1).to_string()));
-            }
-        }
-        archive.members.reverse();
-        let history = document_archive_history_decoder(archive.parent_spr.len()).map_err(|error| document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, error.to_string()))?;
-        self.ingest.document_archive_loads.insert_admitted(operation, ActiveDocumentArchiveLoad::new(operation, archive, history));
-        Ok(())
+    pub(super) fn begin_document_archive_load(&mut self,operation:u64,archive:&mut protocol::DocumentArchivePack,admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,merge:bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if admission.completed(){admission.validate_step(operation,archive,cx)?;return if self.ingest.document_archive_loads.get(operation).is_some_and(|entry|entry.merge==merge){Ok(true)}else{Err(plugin_sdk_fault("completed archive admission lost its actual registry recipient").into())}}
+        if !self.ingest.document_archive_loads.can_insert(operation){return Err(document_load_fault(DOCUMENT_LOAD_BUSY_CODE,"document archive operation identity is already live or its fixed slot is occupied").into())}
+        if !admission.validate_step(operation,archive,cx)?{return Ok(false)}
+        let capacity=std::mem::size_of::<protocol::DocumentArchivePack>();let bytes=std::mem::size_of::<ActiveDocumentArchiveLoad<A::Snapshot,A::Mutation>>()+capacity+std::mem::size_of::<u64>();
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items<2||grant.maximum_copy_bytes<bytes+std::mem::size_of_val(admission)||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<capacity||grant.maximum_depth<2||cx.fuel_remaining()<2{return Ok(false)}
+        admission.transfer_step(cx,|cx|{
+            let history=document_archive_history_decoder(archive.parent_spr.len()).map_err(|error|document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE,error.to_string()))?;
+            let mut active=ActiveDocumentArchiveLoad::new(operation,std::mem::take(archive),history);active.merge=merge;
+            self.ingest.document_archive_loads.insert_admitted(operation,active);
+            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:capacity,..Default::default()})?;cx.consume_fuel(1);Ok(())
+        })
     }
 }

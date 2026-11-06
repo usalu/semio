@@ -26,10 +26,7 @@ impl Session {
             let decoder = &mut self.decoder;
             self.caller
                 .turn(original_grant(), |cx| {
-                    let turn = decoder.close_step(cx.retained_grant());
-                    let step = turn.result?;
-                    cx.consume_retained(step.progress())?;
-                    cx.consume_fuel(turn.work);
+                    decoder.close_on_source(cx)?;
                     Ok(())
                 })
                 .expect("fixture decode owner closes");

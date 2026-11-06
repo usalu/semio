@@ -56,31 +56,28 @@ impl OriginalFailureStorage{
 }
 impl Drop for OriginalFailureStorage{fn drop(&mut self){assert!(std::thread::panicking(),"original failure storage requires paid release or transfer");unsafe{std::mem::ManuallyDrop::drop(&mut self.0)}}}
 
-/// 🧺️ A prepaid intrusive spare list retains each physical node until reuse or paid release.
+/// 🧺️ One preborn spare remains in its actual recipient slot through success and unwinding.
 #[derive(Default)]
-pub struct OriginalFailureStoragePool{head:Option<Box<MaybeUninit<OriginalRetirementFailure>>>}
+pub struct OriginalFailureStoragePool{slot:Option<OriginalFailureStorage>}
 impl OriginalFailureStoragePool{
- pub fn is_empty(&self)->bool{self.head.is_none()}
- pub fn put(&mut self,storage:OriginalFailureStorage){
-  assert!(std::mem::size_of::<OriginalRetirementFailure>()>=std::mem::size_of::<Option<Box<MaybeUninit<OriginalRetirementFailure>>>>());
-  assert!(std::mem::align_of::<OriginalRetirementFailure>()>=std::mem::align_of::<Option<Box<MaybeUninit<OriginalRetirementFailure>>>>());
-  let mut storage=std::mem::ManuallyDrop::new(storage);let mut node=unsafe{std::mem::ManuallyDrop::take(&mut storage.0)};
-  let next=node.as_mut_ptr().cast::<Option<Box<MaybeUninit<OriginalRetirementFailure>>>>();let previous=std::mem::replace(&mut self.head,Some(node));unsafe{next.write(previous)};
- }
- pub fn take(&mut self)->Option<OriginalFailureStorage>{let mut node=self.head.take()?;self.head=unsafe{node.as_mut_ptr().cast::<Option<Box<MaybeUninit<OriginalRetirementFailure>>>>().read()};Some(OriginalFailureStorage(std::mem::ManuallyDrop::new(node)))}
- pub fn release_one(&mut self,grant:usize)->Result<RetainedCloneProgress,ValueError>{if grant<OriginalFailureStorage::birth_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"failure node release exceeds admitted grant"))}match self.take(){Some(storage)=>match storage.release(grant){Ok(progress)=>Ok(progress),Err(storage)=>{self.put(storage);Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"failure node release exceeds admitted grant"))}},None=>Ok(Default::default())}}
+ pub fn is_empty(&self)->bool{self.slot.is_none()}
+ pub fn spare_slot(&mut self)->&mut Option<OriginalFailureStorage>{&mut self.slot}
+ pub fn spare_destination(&self)->(usize,usize){(std::ptr::from_ref(&self.slot)as usize,std::mem::size_of::<Option<OriginalFailureStorage>>())}
+ pub fn spare_payload_destination(&self)->Option<(usize,usize)>{self.slot.as_ref().map(|node|(node.0.as_ptr()as usize,OriginalFailureStorage::birth_bytes()))}
+ pub fn put(&mut self,storage:OriginalFailureStorage){assert!(self.slot.is_none(),"original failure spare recipient is already occupied");self.slot=Some(storage)}
+ pub fn take(&mut self)->Option<OriginalFailureStorage>{self.slot.take()}
+ pub fn release_demand(&self)->crate::RetirementDemand{if self.slot.is_none(){Default::default()}else{crate::RetirementDemand{copy_bytes:std::mem::size_of::<Option<OriginalFailureStorage>>()+std::mem::size_of::<OriginalFailureStorage>(),release_bytes:OriginalFailureStorage::birth_bytes(),depth:1,..Default::default()}}}
+ pub fn release_work_demand(&self)->u64{if self.slot.is_none(){0}else{3}}
+ pub fn release_step(&mut self,grant:crate::RetainedCloneGrant,maximum:u64)->RetainedWorkOutcome{let d=self.release_demand();if self.slot.is_none(){return RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(Default::default())),work:0}}if maximum<3||!crate::retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Progress(Default::default())),work:0}}let storage=self.slot.take().expect("funded original spare remains in its slot");let mut storage=std::mem::ManuallyDrop::new(storage);unsafe{std::mem::ManuallyDrop::drop(&mut storage.0)};RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:3}}
+ pub fn release_one(&mut self,grant:usize)->Result<RetainedCloneProgress,ValueError>{if grant<OriginalFailureStorage::birth_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"failure node release exceeds admitted grant"))}match self.slot.take(){Some(storage)=>match storage.release(grant){Ok(progress)=>Ok(progress),Err(storage)=>{self.slot=Some(storage);Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"failure node release exceeds admitted grant"))}},None=>Ok(Default::default())}}
 }
-impl Drop for OriginalFailureStoragePool{fn drop(&mut self){assert!(std::thread::panicking()||self.head.is_none(),"original failure pool retains unpaid nodes");while let Some(mut node)=self.head.take(){self.head=unsafe{node.as_mut_ptr().cast::<Option<Box<MaybeUninit<OriginalRetirementFailure>>>>().read()};}}}
-
-struct OriginalFailureNodeSlot<'a>{slot:&'a mut Option<OriginalFailureStorage>,node:std::mem::ManuallyDrop<OriginalFailureStorage>,consumed:bool}
-impl OriginalFailureNodeSlot<'_>{fn attach(mut self,child:OriginalRetirementFailure,refusal:ValueError)->OriginalRetirementFailure{self.consumed=true;let node=unsafe{std::mem::ManuallyDrop::take(&mut self.node)};node.attach(child,refusal)}}
-impl Drop for OriginalFailureNodeSlot<'_>{fn drop(&mut self){if !self.consumed{*self.slot=Some(unsafe{std::mem::ManuallyDrop::take(&mut self.node)})}}}
+impl Drop for OriginalFailureStoragePool{fn drop(&mut self){assert!(std::thread::panicking()||self.slot.is_none(),"original failure pool retains an unpaid spare");}}
 /// 🧾️ Reserves failure custody before one effect and its actual work settlement.
 pub fn run_with_failure_storage_transaction<T:Copy>(storage:&mut Option<OriginalFailureStorage>,action:impl FnOnce()->(RetainedWorkOutcome<T,OriginalRetirementFailure>,Result<(),ValueError>),effects:impl FnOnce(&T)->RetainedCloneProgress)->Option<RetainedWorkOutcome<T,OriginalRetirementFailure>>{
- let node=storage.take()?;let lease=OriginalFailureNodeSlot{slot:storage,node:std::mem::ManuallyDrop::new(node),consumed:false};let(turn,settlement)=action();let result=match(turn.result,settlement){
+ if storage.is_none(){return None}let(turn,settlement)=action();let result=match(turn.result,settlement){
   (result,Ok(()))=>result,
   (Ok(value),Err(refusal))=>Err(OriginalRetirementFailure::from_work_refusal(refusal.with_retained_progress(effects(&value)))),
-  (Err(child),Err(refusal))=>match child.with_work_refusal(refusal){Ok(failure)=>Err(failure),Err((child,refusal))=>Err(lease.attach(child,refusal))},
+  (Err(child),Err(refusal))=>match child.with_work_refusal(refusal){Ok(failure)=>Err(failure),Err((child,refusal))=>Err(storage.take().expect("disjoint original failure slot remains available").attach(child,refusal))},
  };Some(RetainedWorkOutcome{result,work:turn.work})
 }
 /// 🧮️ Runs a child and its settlement using the same reserved failure custody.

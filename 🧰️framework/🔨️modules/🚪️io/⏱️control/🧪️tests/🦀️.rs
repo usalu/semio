@@ -270,9 +270,9 @@ fn encoder_effect_quote_posts_after_mutation_even_when_work_and_receipt_refuse()
 #[test]
 fn decoder_effect_quote_denial_precedes_mutation_and_refusal_retains_effect(){
  use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
- use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient};
  struct Work(bool);
- impl OriginalWorkRecipient for Work{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,_:u64,_:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(self.0)})())}}
+ impl NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=if self.0{1_000_000}else{0};limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(self.0&&observed.checked_add(additional).is_some_and(|total|total<=1_000_000))}}
  struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
  impl NativeDecodeConstructionRecipient for Physical{
   fn submitted(&self)->RetainedCloneProgress{self.submitted}
@@ -292,9 +292,9 @@ fn decoder_effect_quote_denial_precedes_mutation_and_refusal_retains_effect(){
 #[test]
 fn cursor_handoff_quote_denial_keeps_the_original_cursor_with_its_caller(){
  use semio_framework_value::{ValueError,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
- use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,NativeDecodeRetirementRecipient};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
  struct Work;
- impl OriginalWorkRecipient for Work{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,_:u64,_:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(true)})())}}
+ impl NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=1_000_000;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=1_000_000))}}
  struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,quotes:usize}
  impl NativeDecodeConstructionRecipient for Physical{
   fn submitted(&self)->RetainedCloneProgress{self.submitted}
@@ -311,9 +311,9 @@ fn cursor_handoff_quote_denial_keeps_the_original_cursor_with_its_caller(){
 #[test]
 fn cursor_handoff_receipt_refusal_keeps_the_moved_original_in_the_retained_frame(){
  use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
- use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,NativeDecodeRetirementRecipient};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
  struct Work;
- impl OriginalWorkRecipient for Work{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,_:u64,_:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(true)})())}}
+ impl NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=1_000_000;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=1_000_000))}}
  struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,receipts:usize}
  impl NativeDecodeConstructionRecipient for Physical{
   fn submitted(&self)->RetainedCloneProgress{self.submitted}
@@ -330,9 +330,9 @@ fn cursor_handoff_receipt_refusal_keeps_the_moved_original_in_the_retained_frame
 #[test]
 fn frame_work_denial_performs_no_allocation_or_callback(){
  use semio_framework_value::{ValueError,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
- use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,NativeDecodeRetirementRecipient};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
  struct Work;
- impl OriginalWorkRecipient for Work{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,_:u64,_:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(false)})())}}
+ impl NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=0;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(false)}}
  struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
  impl NativeDecodeConstructionRecipient for Physical{
   fn submitted(&self)->RetainedCloneProgress{self.submitted}
@@ -368,9 +368,9 @@ fn frame_work_post_refusal_still_publishes_its_actual_birth(){
 #[test]
 fn frame_slot_cancellation_does_not_charge_an_unborn_frame(){
  use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
- use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,NativeDecodeRetirementRecipient};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
  struct Work;
- impl OriginalWorkRecipient for Work{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,_:u64,_:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(true)})())}}
+ impl NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=1_000_000;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=1_000_000))}}
  struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
  impl NativeDecodeConstructionRecipient for Physical{
   fn submitted(&self)->RetainedCloneProgress{self.submitted}
@@ -398,9 +398,9 @@ fn borrowed_producer_keeps_owned_input_in_caller_slot_on_preflight_refusal(){
 #[test]
 fn borrowed_snapshot_producer_unwind_parks_its_populated_frame_for_paid_close(){
  use semio_framework_value::{ValueError,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
- use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,NativeDecodeRetirementRecipient};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
  struct Work;
- impl OriginalWorkRecipient for Work{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,_:u64,_:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(true)})())}}
+ impl NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=1_000_000;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=1_000_000))}}
  struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
  impl NativeDecodeConstructionRecipient for Physical{
   fn submitted(&self)->RetainedCloneProgress{self.submitted}
@@ -421,9 +421,9 @@ fn borrowed_snapshot_producer_unwind_parks_its_populated_frame_for_paid_close(){
 #[test]
 fn publication_slot_keeps_original_output_when_post_refuses(){
  use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,retirement::controlled::ControlledRetirement};
- use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,NativeDecodeRetirementRecipient};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
  struct Work;
- impl OriginalWorkRecipient for Work{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,_:u64,_:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(true)})())}}
+ impl NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=1_000_000;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=1_000_000))}}
  struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,quotes:usize,posts:usize,mode:u8}
  impl NativeDecodeConstructionRecipient for Physical{
   fn submitted(&self)->RetainedCloneProgress{self.submitted}
@@ -465,9 +465,9 @@ fn work_only_guard_preserves_actual_effect_and_post_refusal_on_unwind(){
 #[test]
 fn original_owner_move_keeps_pointer_and_retains_post_refusal(){
  use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,retirement::controlled::ControlledRetirement};
- use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient};
  struct Work;
- impl OriginalWorkRecipient for Work{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,_:u64,_:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(true)})())}}
+ impl NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=1_000_000;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=1_000_000))}}
  struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,mode:u8}
  impl NativeDecodeConstructionRecipient for Physical{
   fn submitted(&self)->RetainedCloneProgress{self.submitted}

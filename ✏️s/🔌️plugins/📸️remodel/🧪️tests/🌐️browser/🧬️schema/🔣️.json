@@ -1,7 +1,7 @@
 {
   "type": "array",
-  "minItems": 12,
-  "maxItems": 12,
+  "minItems": 15,
+  "maxItems": 15,
   "uniqueItems": true,
   "items": {
     "type": "object",
@@ -17,6 +17,9 @@
           "locales-and-modes",
           "examples",
           "import-images",
+          "import-jpeg",
+          "import-corrupt",
+          "import-append",
           "import-video",
           "import-cancel",
           "run-controls-and-abort",
@@ -34,7 +37,7 @@
       },
       "assets": {
         "type": "array",
-        "minItems": 3,
+        "minItems": 1,
         "maxItems": 3,
         "uniqueItems": true,
         "items": {
@@ -58,7 +61,83 @@
         },
         "then": {
           "properties": {
-            "assets": {}
+            "assets": {
+              "minItems": 3,
+              "maxItems": 3,
+              "type": "array"
+            }
+          },
+          "required": [
+            "assets"
+          ]
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "id": {
+              "const": "import-jpeg"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "then": {
+          "properties": {
+            "assets": {
+              "minItems": 1,
+              "maxItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "assets"
+          ]
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "id": {
+              "const": "import-corrupt"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "then": {
+          "properties": {
+            "assets": {
+              "minItems": 1,
+              "maxItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "assets"
+          ]
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "id": {
+              "const": "import-video"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "then": {
+          "properties": {
+            "assets": {
+              "minItems": 1,
+              "maxItems": 1,
+              "type": "array"
+            }
           },
           "required": [
             "assets"
@@ -113,6 +192,45 @@
         "properties": {
           "id": {
             "const": "import-images"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "import-jpeg"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "import-corrupt"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "import-append"
           }
         },
         "required": [

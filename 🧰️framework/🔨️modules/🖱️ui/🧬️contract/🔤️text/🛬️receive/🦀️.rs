@@ -4,6 +4,7 @@ use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedClone
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
 use semio_framework_value::retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneRef,retained_clone_grant_admits};
 use semio_framework_value::native_decoding::{NativeReceive,NativeReceiver,OriginalReceivingPrimary,owned::{NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,tree::{NativeValueSource,fixed,receipt,invalid}}};
+use semio_framework_value::native_decoding::owned::{NativeClosePermit,NativeRecoveryLoan};
 use std::mem::ManuallyDrop;
 
 pub(crate) struct TextRetirement(pub(crate) Option<UiText>);
@@ -45,10 +46,13 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,UiText> for UiTextNativeReceiv
  fn output_ready(&self)->bool{self.ready&&!self.closing}
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{if self.output_ready(){Ok(fixed(size_of::<UiText>()))}else{Err(invalid())}}
  fn take(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(UiText,RetainedCloneProgress)>>{let d=fixed(size_of::<UiText>());if !self.output_ready()||!retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(None),work:0}}self.ready=false;self.closing=true;RetainedWorkOutcome{result:Ok(self.output.take().map(|value|(value,receipt(d)))),work:1}}
- fn begin_close(&mut self){self.closing=true;}
+ fn has_pending_recovery(&self)->bool{false}
+ fn pending_recovery(&mut self)->Option<NativeRecoveryLoan<'_>>{None}
+ fn resume_recovery(&mut self,_control:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+ fn begin_close_admitted(&mut self,_permit:NativeClosePermit)->Result<(),ValueError>{self.closing=true;Ok(())}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty()||self.output.is_some(){self.retirement.next_owner_demands::<UiText>(self.output.is_some(),&None,body)}else{RetainedCloneBinding::close_demand(&self.binding,body)}}
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.retirement.is_empty()||self.output.is_some(){self.retirement.next_owner_work::<UiText>(self.output.is_some(),&None,body)}else{RetainedCloneBinding::close_work_demand(&self.binding,body)}}
- fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.retirement.is_empty(){return self.retirement.step_granted(g)}if self.output.is_some(){let turn=self.retirement.begin_granted(&mut self.output,g);return RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}RetainedCloneBinding::close_one(&mut self.binding,g)}
+ fn close_step(&mut self,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid().into()),work:0}}if !self.retirement.is_empty(){return self.retirement.step_granted(g)}if self.output.is_some(){let turn=self.retirement.begin_granted(&mut self.output,g);return RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work}}RetainedCloneBinding::close_one(&mut self.binding,g)}
  fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
 }
 impl<I:NativeValueSource+?Sized> Drop for UiTextNativeReceiver<I>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"UI text receiving reached Drop before funded closure")}}

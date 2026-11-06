@@ -11,7 +11,8 @@
     "invalidReadWork",
     "cachedCloseWork",
     "axes",
-    "sourceAdmissionWork"
+    "sourceAdmissionWork",
+    "construction"
   ],
   "properties": {
     "stock": {
@@ -32,10 +33,10 @@
       "const": 0
     },
     "bindingWork": {
-      "const": 1
+      "const": 6
     },
     "readWork": {
-      "const": 1
+      "const": 2
     },
     "invalidReadWork": {
       "const": 1
@@ -53,7 +54,10 @@
       ]
     },
     "sourceAdmissionWork": {
-      "const": 6
+      "const": 12
+    },
+    "construction": {
+      "const": "optional-u64-placement"
     }
   }
 }

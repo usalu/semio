@@ -1,0 +1,1 @@
+{"contract":"semio.sealed-original-source-slot/v1","value":73,"work":{"storage":4,"sealed":7},"events":["allocation","source-take","payload-write","target-place"],"denied":["items","copy","capacity","depth"],"expected":{"sourceRetained":true,"targetEmpty":true,"work":0,"allocation":null}}

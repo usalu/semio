@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml","-p","semio-framework-value-native-decoding","--test","original-work-view"],"configuration":"prototype","store":"isolated","parallelism":1,"language":"en","agent":"codex-root-original-work-view"}}

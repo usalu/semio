@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "child",
+          "parent",
+          "maxWork",
+          "selected"
+        ],
+        "properties": {
+          "action": {
+            "enum": [
+              "bind",
+              "field",
+              "place",
+              "close-intent",
+              "release-field"
+            ]
+          },
+          "child": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "parent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maxWork": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "selected": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

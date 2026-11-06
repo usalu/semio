@@ -1,0 +1,24 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "started",
+      "physical",
+      "changed"
+    ],
+    "properties": {
+      "started": {
+        "type": "boolean"
+      },
+      "physical": {
+        "type": "boolean"
+      },
+      "changed": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# Browser Phase Review — 2026-11-06
+
+OriginalSnapshotPackView public source chain is semio_os_kernel::os_store::serialization: OS kernel reexports store component, store serialization reexports semio_os_store_text_io, and its root publicly reexports OriginalSnapshotPackView. This is source resolution, not an actual compiler verdict.
+
+Current multi-phase draft gates editor checks on A/B presence, binds receipts to actual space/document and phase, revokes and finishes UI port owners, and strict aggregate requires unique complete passed checks with nonblank evidence. Spectator transition now restricts to newly created author space and refuses any visible conflicting B editor body; this does not itself prove hidden session retirement or server authorization. Plugin spectator check remains unexecuted until actual durable witness.
+
+Owner corrected initial cleanup issues by recording restoration obligation before role POST and using a fresh 30-second cleanup signal. Remaining distributed ordering uncertainty: cancelled spectator POST may still be accepted after the independent author restore POST. setSharedSpaceRoleV1 uses unique unrelated command IDs and the inspected helper has no server receipt/settlement fence or readback ordering proof; HTTP abort is not proof of noncommit. A successful restore response alone does not prove no later spectator commit. Browser owner was notified. Scoped tests reported by owner do not exercise real phase seam.
+
+## Third Spectator Fixture Feasibility
+
+openSessions accepts arbitrary human/url arrays and creates isolated contexts; signIn performs actual UI login. Current two-human options and readHumans remain a tuple of two, reading USER1/2, first two --users entries or two development defaults. Bounded OS dev tests and directory testkit expose sign-in and membership upsert but no generated account helper; an upsert is not proof C has credentials or signed in. Hub auth operator credential set can create absent users against explicit server-owned OS_HUB_DATA or reset existing credentials and sessions; safe test-owned generation and live database concurrency are not established. Third-context cleanup, exact C identity, spectator membership, same artifact and independent editor B must be observed.
+
+Current generic export funnel resolves the target and checks loaded handle, sealed instance, current effect owner and exact controller before invoking exportMediaFile for either media or snapshot action. The declaration resolver chooses metadata only from the named action and one declared output port, ignoring invocation-provided values. Current source inspection does not establish final snapshot producer registration or actual runtime result.

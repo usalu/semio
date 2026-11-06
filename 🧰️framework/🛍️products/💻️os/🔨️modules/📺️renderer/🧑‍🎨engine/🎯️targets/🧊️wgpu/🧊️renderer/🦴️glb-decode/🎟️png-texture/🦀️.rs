@@ -104,7 +104,7 @@ mod tests{
   let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||step(cx));let after=cx.retained_progress();
   assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));result
  }
- fn close_decoder(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){while !decoder.terminal_is_empty(){caller.turn(stock(),|cx|{close_original_retained_step(cx,decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?,|grant|decoder.close_step(grant))?;Ok(())}).unwrap();}}
+ fn close_decoder(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){while !decoder.terminal_is_empty(){caller.turn(stock(),|cx|{decoder.close_on_source(cx)?;Ok(())}).unwrap();}}
  #[test]
  fn original_png_texture_heap_witness_observes_real_allocations(){
   let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||std::hint::black_box(vec![3u8;173]));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(173,0));

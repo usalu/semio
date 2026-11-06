@@ -1,0 +1,26 @@
+[
+  {
+    "left": "aa",
+    "right": "aa",
+    "members": 1,
+    "status": "passed"
+  },
+  {
+    "left": "aa",
+    "right": "aa",
+    "members": 0,
+    "status": "unexecuted"
+  },
+  {
+    "left": "aa",
+    "right": "bb",
+    "members": 1,
+    "status": "failed"
+  },
+  {
+    "left": "",
+    "right": "",
+    "members": 1,
+    "status": "unexecuted"
+  }
+]

@@ -32,3 +32,11 @@ serde_json = "1.0.140"
 semio-framework-io-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }
 
+
+[[test]]
+name = "original-native-failure"
+path = "../../🧾️failure/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "typed-settlement"
+path = "../../🧪️tests/♻️settlement/🦀️.rs"

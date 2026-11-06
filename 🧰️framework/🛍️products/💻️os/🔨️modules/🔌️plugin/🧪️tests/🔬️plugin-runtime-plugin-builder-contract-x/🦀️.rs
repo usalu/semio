@@ -376,7 +376,7 @@ pub async fn reactor_native_lifecycle_poll(runtime: &semio_plugin_reactor_lifecy
     assert!(events.len() <= 1, "a reactor turn admits at most one event");
     for attempt in 0..64 {
         let mut event = events.first().cloned();
-        match semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut event, None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await {
+        match semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut event, &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await {
             Ok(result) => return result,
             Err(failure) if failure.primary_fault().is_some_and(|fault| fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable) => {
                 eprintln!("retained lifecycle exact-event deadline retry={} events={:?}", attempt + 1, events);
@@ -576,7 +576,7 @@ pub async fn drive_single_document_archive(app: &mut SingleDocumentAppUnderTest,
         if matches!(status.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             return status;
         }
-        let demand = PluginApp::maintenance_retirement_demands(app, store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).expect("single-document archive maintenance quote");
+        let demand = PluginApp::maintenance_retirement_demands(app, store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES,cx.fuel_remaining()).expect("single-document archive maintenance quote");
         let _ = PluginApp::maintenance_step(app,cx, RetainedCloneGrant { maximum_depth: semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_depth, ..plugin_demand_grant(demand) }).expect("single-document archive maintenance step");
         semio_framework_async::yield_once().await;
     }

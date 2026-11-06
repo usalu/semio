@@ -12,6 +12,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-actor-failure = { path = "../../../⚠️failure/📦️packages/🦀️rust" }
 serde = { version = "1.0.228", features = ["derive"] }
 semio-framework-actor-retained-turn = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }

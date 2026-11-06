@@ -3,6 +3,8 @@ use super::{OriginalTurnFailure,OriginalTurnPrimary,OriginalFailureContext,Value
 use semio_framework_value_retained_clone::{RetirementDemand,RetainedWorkOutcome,ValueRefusalKind,retained_clone::{RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement}};
 pub use semio_framework_dsl_record::native_encoding::{FieldProjectionSource as OriginalDomainProjection,FieldProjectionView as OriginalDomainView};
 
+fn publication_yields(cx:&impl OriginalFailureContext)->Result<bool,OriginalTurnFailure>{Ok(if cx.original_retirement_is_active()?{cx.retirement_should_yield()}else{cx.should_yield()||cx.is_cancelled()})}
+
 /// 🧬️ Domain implementations lend their complete original fields and actual failed effects.
 pub trait OriginalDomainFailure:RetireOwned+Sync+OriginalDomainProjection+std::fmt::Debug{
  fn domain_code(&self)->&str;
@@ -37,7 +39,7 @@ impl<T:OriginalDomainFailure> OriginalDomainProjection for DomainPayload<T>{
  fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{
   if !self.expanded(){return self.original.as_ref().ok_or_else(projection_refused)?.projection_key(path,index)}
   let Some((&field,rest))=path.split_first()else{return self.field(index)};
-  match self.field(field)?{"original"=>self.original.as_ref().ok_or_else(projection_refused)?.projection_key(rest,index),"callbackRefusal"=>super::key_original_turn_failure(self.callback_refusal.as_ref().ok_or_else(projection_refused)?,rest,index),"captureRefusal"=>super::key_original_turn_failure(self.capture_refusal.as_ref().ok_or_else(projection_refused)?,rest),"publicationRefusal"=>super::key_original_turn_failure(self.publication_refusal.as_ref().ok_or_else(projection_refused)?,rest,index),_=>Err(projection_refused())}
+  match self.field(field)?{"original"=>self.original.as_ref().ok_or_else(projection_refused)?.projection_key(rest,index),"callbackRefusal"=>super::key_original_turn_failure(self.callback_refusal.as_ref().ok_or_else(projection_refused)?,rest,index),"captureRefusal"=>super::key_original_turn_failure(self.capture_refusal.as_ref().ok_or_else(projection_refused)?,rest,index),"publicationRefusal"=>super::key_original_turn_failure(self.publication_refusal.as_ref().ok_or_else(projection_refused)?,rest,index),_=>Err(projection_refused())}
  }
 }
 struct DomainFrame<T:OriginalDomainFailure>{owner:ControlledRetirement<DomainPayload<T>>}
@@ -99,9 +101,9 @@ impl<T:OriginalDomainFailure> OriginalDomainReservation<T>{
  pub fn pending(&self)->bool{self.frame.as_ref().and_then(|frame|frame.owner.original()).is_some_and(DomainPayload::pending)}
  pub fn terminal_is_empty(&self)->bool{self.frame.is_none()}
  pub fn prepare(&mut self,cx:&mut impl OriginalFailureContext)->Result<bool,OriginalTurnFailure>{
-  let identity=Self::identity(cx)?;if self.closing||cx.is_cancelled(){return Ok(false)}if self.frame.is_some(){return Ok(self.source==Some(identity))}
+  let identity=Self::identity(cx)?;if self.closing||publication_yields(cx)?{return Ok(false)}if self.frame.is_some(){return Ok(self.source==Some(identity))}
   if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original domain requires its controlled producer").into())}
-  let d=original_domain_failure_demand::<T>();if cx.should_yield()||!cx.retained_work_can_enter(d){return Ok(false)}
+  let d=original_domain_failure_demand::<T>();if !cx.retained_work_can_enter(d){return Ok(false)}
   let layout=std::alloc::Layout::new::<DomainFrame<T>>();let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<DomainFrame<T>>());cx.consume_fuel(1);
   let Some(pointer)=pointer else{return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"original domain frame allocation refused").into())};
   let frame=DomainFrame{owner:ControlledRetirement::retain(DomainPayload{original:None,callback_refusal:None,capture_refusal:None,publication_refusal:None})};
@@ -118,7 +120,7 @@ impl<T:OriginalDomainFailure> OriginalDomainReservation<T>{
  }
  /// \u{1faf4}\uFE0F Captures a retained typed cause even after its callback refusal, only after the original source funds the header move.
  pub fn capture_original(&mut self,cx:&mut impl OriginalFailureContext,take:impl FnOnce()->T)->Result<bool,OriginalTurnFailure>{
-  if !self.ready()||!self.matches(cx)?||cx.should_yield()||cx.is_cancelled(){return Ok(false)}
+  if !self.ready()||!self.matches(cx)?||publication_yields(cx)?{return Ok(false)}
   let demand=RetirementDemand{copy_bytes:size_of::<T>()+size_of::<Option<T>>(),depth:1,..Default::default()};if cx.original_total_retained_grant().maximum_items<=1||cx.original_total_fuel_remaining()<=1||!cx.retained_work_can_enter(demand){return Ok(false)}
   let payload=self.frame.as_mut().ok_or_else(||ValueError::invariant("ready domain frame"))?.owner.original_mut().ok_or_else(||ValueError::invariant("unretired domain payload"))?;if payload.original.is_some(){return Err(ValueError::invariant("original domain cause is already occupied").into())}
   payload.original=Some(take());let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};cx.consume_fuel(1);if let Err(error)=cx.consume_retained(progress){if payload.capture_refusal.is_none(){payload.capture_refusal=Some(error.into())}}Ok(true)
@@ -156,12 +158,8 @@ impl<T:OriginalDomainFailure> RetireOwned for OriginalDomainReservation<T>{
 
 /// 📤️ Moves one prepaid frame without allocating, cloning or reposting its already received body effects.
 pub fn admit_original_domain_failure<T:OriginalDomainFailure>(reservation:&mut OriginalDomainReservation<T>,cx:&mut impl OriginalFailureContext)->Result<Option<OriginalTurnFailure>,OriginalTurnFailure>{
- if !reservation.ready()||!reservation.pending()||cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(RetirementDemand{depth:1,..Default::default()}){return Ok(None)}
- if !reservation.matches(cx)?{
-  let payload=reservation.frame.as_mut().ok_or_else(||ValueError::invariant("pending domain frame"))?.owner.original_mut().ok_or_else(||ValueError::invariant("pending domain payload"))?;if payload.publication_refusal.is_none(){
-   payload.publication_refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original domain reservation requires its initiating source").into());let progress=RetainedCloneProgress{copied_items:1,..Default::default()};let receipt=cx.consume_retained(progress).err();cx.consume_fuel(1);let context=cx.original_failure_identity().err();let failure=payload.publication_refusal.as_mut().ok_or_else(||ValueError::invariant("recorded original source refusal"))?;failure.effects=progress;failure.receipt_refusal=receipt;failure.context_refusal=context;
-  }return Ok(None)
- }
+ if !reservation.ready()||!reservation.pending()||publication_yields(cx)?||!cx.retained_work_can_enter(RetirementDemand{depth:1,..Default::default()}){return Ok(None)}
+ if !reservation.matches(cx)?{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original domain reservation requires its initiating source").into())}
  let owner=reservation.frame.take().ok_or_else(||ValueError::invariant("pending prepaid domain frame"))?;reservation.source=None;cx.consume_fuel(1);
  let mut failure=OriginalTurnFailure::from(OriginalTurnPrimary::Domain(OriginalDomainPrimary{owner}));
  failure.receipt_refusal=cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}).err();Ok(Some(failure))

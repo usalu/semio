@@ -26,7 +26,7 @@ fn original_job_receives_and_retires_fem_rows(){
   let work=output.as_ref().unwrap().work;let progress=cx.receiving_child_progress();if let Some(grant)=cx.receiving_issued_grant(){cx.consume_receiving_retained(grant,progress)?}cx.consume_fuel(work);Ok(())
  }));outer.unwrap();let receipt=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));assert_eq!(caller.stock(),stock());
  let turn=output.unwrap();assert!(turn.work>0);turn.result.unwrap();let snapshot=published.take().unwrap();assert_eq!(snapshot.nodes.len(),1);assert_eq!(snapshot.nodes.get(0).unwrap().id.as_str(),"a");close(&mut caller,snapshot);
- while !decoder.terminal_is_empty(){retire_turn(&mut caller,|cx|{let turn=decoder.close_step(cx.retained_grant());let step=turn.result?;cx.consume_retained(step.progress())?;cx.consume_fuel(turn.work);Ok(())});}
+ while !decoder.terminal_is_empty(){retire_turn(&mut caller,|cx|{decoder.close_on_source(cx)?;Ok(())});}
  if let Some(source)=source{close(&mut caller,source)}caller.retire(stock());
 }
 
@@ -37,7 +37,7 @@ fn original_cancelled_caller_preserves_the_failure_and_source(){
  let mut source=Some(Fem2dSnapshotValue::default());source.as_mut().unwrap().nodes.push(FemNodeValue{id:"a".into(),x:0.,y:0.,});let mut outcome=None;let mut published=None;
  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(stock(),&mut decoder,|cx|{let grant=cx.retained_grant();let native_result=cx.with_native_receiving::<_,ValueError>(|native|{let mut owner=semio_os_kernel::NativeSnapshotDecodeOwner::new(native,grant);outcome=Some(Fem2dSnapshot::receive_authoring(&mut source,&mut published,&mut owner));Ok(())});let work=outcome.as_ref().map_or(0,|turn|turn.work);let progress=cx.receiving_child_progress();if let Some(grant)=cx.receiving_issued_grant(){cx.consume_receiving_retained(grant,progress)?}cx.consume_fuel(work);if let Err(error)=native_result{assert!(outcome.is_none());outcome=Some(RetainedWorkOutcome{result:Err(error.into()),work:0});}Ok(())}));
  result.unwrap();let receipt=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));let turn=outcome.unwrap();let error=turn.result.unwrap_err();assert_eq!(error.kind(),semio_framework_value::ValueRefusalKind::Canceled);assert!(source.is_some());assert!(published.is_none());close(&mut caller,error);caller.return_alias(token,stock());
- while !decoder.terminal_is_empty(){retire_turn(&mut caller,|cx|{let turn=decoder.close_step(cx.retained_grant());let step=turn.result?;cx.consume_retained(step.progress())?;cx.consume_fuel(turn.work);Ok(())});}
+ while !decoder.terminal_is_empty(){retire_turn(&mut caller,|cx|{decoder.close_on_source(cx)?;Ok(())});}
  if let Some(source)=source{close(&mut caller,source)}caller.retire(stock());
 }
 
@@ -47,7 +47,7 @@ fn original_zero_grant_retains_the_unadmitted_authoring_owner(){
  let mut source=Some(Fem2dSnapshotValue::default());source.as_mut().unwrap().nodes.push(FemNodeValue{id:"original".into(),x:1.,y:2.,});let mut outcome=None;let mut published=None;
  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(RetainedCloneGrant::default(),&mut decoder,|cx|{let grant=cx.retained_grant();let received=cx.with_native_receiving::<_,ValueError>(|native|{let mut owner=semio_os_kernel::NativeSnapshotDecodeOwner::new(native,grant);outcome=Some(Fem2dSnapshot::receive_authoring(&mut source,&mut published,&mut owner));Ok(())});let work=outcome.as_ref().map_or(0,|turn|turn.work);let progress=cx.receiving_child_progress();if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,progress)?}cx.consume_fuel(work);if let Err(error)=received{assert!(outcome.is_none());outcome=Some(RetainedWorkOutcome{result:Err(error.into()),work:0});}Ok(())}));
  result.unwrap();let receipt=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));assert_eq!(caller.stock(),stock());let turn=outcome.unwrap();assert_eq!(turn.work,0);let error=turn.result.unwrap_err();assert_eq!(error.kind(),semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(source.as_ref().unwrap().nodes[0].id,"original");assert!(published.is_none());close(&mut caller,error);
- while !decoder.terminal_is_empty(){retire_turn(&mut caller,|cx|{let turn=decoder.close_step(cx.retained_grant());let step=turn.result?;cx.consume_retained(step.progress())?;cx.consume_fuel(turn.work);Ok(())});}if let Some(source)=source{close(&mut caller,source)}caller.retire(stock());
+ while !decoder.terminal_is_empty(){retire_turn(&mut caller,|cx|{decoder.close_on_source(cx)?;Ok(())});}if let Some(source)=source{close(&mut caller,source)}caller.retire(stock());
 }
 
 #[test]
@@ -56,5 +56,5 @@ fn original_job_receives_typed_record_into_caller_slot(){
  let mut source=Fem2dSnapshotValue::default();source.nodes.push(FemNodeValue{id:"node".into(),x:1.,y:2.,});let record=source.__dsl_to_record();let(mut output,mut outcome)=(None,None);
  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(stock(),&mut decoder,|cx|{let grant=cx.retained_grant();cx.with_native_receiving::<_,ValueError>(|native|{let mut owner=semio_os_kernel::NativeSnapshotDecodeOwner::new(native,grant);outcome=Some(Fem2dSnapshot::receive_exchange_record(&record,&mut output,&mut owner));Ok(())})?;let work=outcome.as_ref().unwrap().work;let progress=cx.receiving_child_progress();if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,progress)?}cx.consume_fuel(work);Ok(())}));
  result.unwrap();let receipt=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));let turn=outcome.unwrap();assert!(turn.work>0);turn.result.unwrap();let snapshot=output.take().unwrap();assert_eq!(snapshot.nodes.len(),1);assert_eq!(snapshot.nodes.get(0).unwrap().id.as_str(),"node");close(&mut caller,snapshot);
- while !decoder.terminal_is_empty(){retire_turn(&mut caller,|cx|{let turn=decoder.close_step(cx.retained_grant());let step=turn.result?;cx.consume_retained(step.progress())?;cx.consume_fuel(turn.work);Ok(())});}close(&mut caller,record);close(&mut caller,source);caller.retire(stock());
+ while !decoder.terminal_is_empty(){retire_turn(&mut caller,|cx|{decoder.close_on_source(cx)?;Ok(())});}close(&mut caller,record);close(&mut caller,source);caller.retire(stock());
 }

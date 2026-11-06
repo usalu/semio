@@ -37,6 +37,21 @@ impl<T> SharedOwner<T> {
         *effect.actual()=Some(Self::allocation_bytes());let slot=Arc::get_mut(&mut storage).expect("new shared storage is uniquely owned");slot.write(input.take().expect("checked original shared input remains resident"));*output=Some(Self{value:ManuallyDrop::new(Some(unsafe{storage.assume_init()}))});
         crate::RetainedWorkOutcome{result:Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:Self::allocation_bytes(),..Default::default()})),work:1}
     }
+    pub fn source_admission_demand()->Result<crate::RetirementDemand,ValueError>{
+     let mut d=crate::retirement::arc_custody::shared_uninitialized_demand::<T>()?;
+     d.copy_bytes=d.copy_bytes.checked_add(std::mem::size_of::<Option<T>>()).and_then(|n|n.checked_add(std::mem::size_of::<T>())).and_then(|n|n.checked_add(std::mem::size_of::<Option<Self>>())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"ordered shared original copy extent overflow"))?;Ok(d)
+    }
+    pub const fn source_admission_work_demand()->u64{4}
+    pub fn admit_from(input:&mut Option<T>,output:&mut Option<Self>,grant:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome{
+     use crate::retained_clone::RetainedCloneStep;
+     if output.is_some()||actual.is_some(){return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("ordered shared original recipient or allocation marker occupied")),work:0}}
+     if input.is_none(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+     let d=match Self::source_admission_demand(){Ok(d)=>d,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};if !semio_framework_value_control_contract::retained_clone_grant_admits(grant,d){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+     let turn=crate::retirement::arc_custody::try_uninitialized_arc::<T>(grant,actual);let mut storage=match turn.result{Ok((storage,_))=>storage,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:turn.work}};
+     let value=input.take().expect("ordered shared original validated before allocation");Arc::get_mut(&mut storage).expect("fresh shared allocation has one owner").write(value);*output=Some(Self{value:ManuallyDrop::new(Some(unsafe{storage.assume_init()}))});
+     crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})),work:turn.work+3}
+    }
+    }
 
     /// 🧊️ Constructs one shared allocation at an explicitly synchronous boundary.
     pub fn from_cold(value: T) -> Self { Self {value:ManuallyDrop::new(Some(Arc::new(value)))} }
@@ -54,6 +69,18 @@ impl<T> SharedOwner<T> {
         let value=Arc::into_inner(match self.value.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("value absent").into()),work:0}});let released_bytes=if value.is_some(){bytes}else{0};crate::RetainedWorkOutcome{result:Ok(SharedRelease{value,progress:RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}}),work:1}
     }
 
+}
+
+impl SharedOwner<()>{
+ pub fn unit_admission_demand()->Result<crate::RetirementDemand,ValueError>{let mut d=crate::retirement::arc_custody::shared_uninitialized_demand::<()>()?;d.copy_bytes=d.copy_bytes.checked_add(std::mem::size_of::<Option<Self>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"shared unit recipient extent overflow"))?;Ok(d)}
+ pub const fn unit_admission_work_demand()->u64{3}
+ pub fn admit_unit(output:&mut Option<Self>,grant:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome{
+  use crate::retained_clone::RetainedCloneStep;
+  if output.is_some()||actual.is_some(){return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("shared unit recipient or allocation marker occupied")),work:0}}
+  let d=match Self::unit_admission_demand(){Ok(d)=>d,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};if !semio_framework_value_control_contract::retained_clone_grant_admits(grant,d){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  let turn=crate::retirement::arc_custody::try_uninitialized_arc::<()>(grant,actual);let mut storage=match turn.result{Ok((storage,_))=>storage,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:turn.work}};Arc::get_mut(&mut storage).expect("fresh shared unit has one owner").write(());*output=Some(Self{value:ManuallyDrop::new(Some(unsafe{storage.assume_init()}))});
+  crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})),work:turn.work+2}
+ }
 }
 
 impl<T> Clone for SharedOwner<T> {

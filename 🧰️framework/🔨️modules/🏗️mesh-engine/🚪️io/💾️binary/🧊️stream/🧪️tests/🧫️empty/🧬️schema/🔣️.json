@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "positions",
+    "indices",
+    "document"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "positions": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "indices": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "document": {
+      "const": {
+        "asset": {
+          "version": "2.0"
+        },
+        "scene": 0,
+        "scenes": [
+          {}
+        ]
+      }
+    }
+  }
+}

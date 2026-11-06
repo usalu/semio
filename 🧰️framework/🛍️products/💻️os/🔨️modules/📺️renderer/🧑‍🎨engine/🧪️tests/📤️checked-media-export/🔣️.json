@@ -1,0 +1,176 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "instanceId": 17,
+  "documentId": "saved-mesh-document",
+  "revision": "23",
+  "generation": "71",
+  "outputPort": "mesh:out",
+  "mediaType": "model/gltf-binary",
+  "chunks": [
+    [
+      103,
+      108
+    ],
+    [
+      84,
+      70
+    ]
+  ],
+  "cases": [
+    {
+      "id": "complete",
+      "fault": "none",
+      "calls": [
+        "submit",
+        "poll",
+        "poll",
+        "take",
+        "take",
+        "take"
+      ],
+      "outcome": "complete",
+      "error": null
+    },
+    {
+      "id": "cancel-before-submit",
+      "fault": "cancel-before-submit",
+      "calls": [],
+      "outcome": "cancelled",
+      "error": null
+    },
+    {
+      "id": "cancel-running",
+      "fault": "cancel-running",
+      "calls": [
+        "submit",
+        "poll",
+        "cancel"
+      ],
+      "outcome": "cancelled",
+      "error": null
+    },
+    {
+      "id": "foreign-submit",
+      "fault": "foreign-submit",
+      "calls": [
+        "submit"
+      ],
+      "outcome": "refused",
+      "error": "media-export.owner"
+    },
+    {
+      "id": "foreign-status",
+      "fault": "foreign-status",
+      "calls": [
+        "submit",
+        "poll",
+        "cancel"
+      ],
+      "outcome": "refused",
+      "error": "media-export.status-owner"
+    },
+    {
+      "id": "poll-fault",
+      "fault": "poll-fault",
+      "calls": [
+        "submit",
+        "poll",
+        "cancel"
+      ],
+      "outcome": "refused",
+      "error": "fixture-fault"
+    },
+    {
+      "id": "progress-regression",
+      "fault": "progress-regression",
+      "calls": [
+        "submit",
+        "poll",
+        "poll",
+        "cancel"
+      ],
+      "outcome": "refused",
+      "error": "media-export.progress-regression"
+    },
+    {
+      "id": "foreign-chunk",
+      "fault": "foreign-chunk",
+      "calls": [
+        "submit",
+        "poll",
+        "poll",
+        "take",
+        "take",
+        "take"
+      ],
+      "outcome": "refused",
+      "error": "media-export.chunk-owner"
+    },
+    {
+      "id": "wrong-length",
+      "fault": "wrong-length",
+      "calls": [
+        "submit",
+        "poll",
+        "poll",
+        "take",
+        "take",
+        "take"
+      ],
+      "outcome": "refused",
+      "error": "media-export.length"
+    },
+    {
+      "id": "deadline",
+      "fault": "deadline",
+      "calls": [
+        "submit",
+        "poll",
+        "cancel"
+      ],
+      "outcome": "refused",
+      "error": "media-export.deadline"
+    },
+    {
+      "id": "take-fault",
+      "fault": "take-fault",
+      "calls": [
+        "submit",
+        "poll",
+        "poll",
+        "take",
+        "cancel"
+      ],
+      "outcome": "refused",
+      "error": "fixture-take-fault"
+    },
+    {
+      "id": "descriptor-empty",
+      "fault": "descriptor-empty",
+      "calls": [
+        "submit",
+        "poll",
+        "poll",
+        "take",
+        "take",
+        "take"
+      ],
+      "outcome": "refused",
+      "error": "media-export.descriptor-capacity"
+    },
+    {
+      "id": "descriptor-too-large",
+      "fault": "descriptor-too-large",
+      "calls": [
+        "submit",
+        "poll",
+        "poll",
+        "take",
+        "take",
+        "take"
+      ],
+      "outcome": "refused",
+      "error": "media-export.descriptor-capacity"
+    }
+  ]
+}

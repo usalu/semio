@@ -1,0 +1,42 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "work",
+      "physical",
+      "fails",
+      "outcome",
+      "reported",
+      "copiedItems"
+    ],
+    "properties": {
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "physical": {
+        "type": "boolean"
+      },
+      "fails": {
+        "type": "boolean"
+      },
+      "outcome": {
+        "enum": [
+          "denied",
+          "projected",
+          "failure"
+        ]
+      },
+      "reported": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "copiedItems": {
+        "const": 0
+      }
+    }
+  }
+}

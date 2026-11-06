@@ -23,7 +23,7 @@ use std::mem::ManuallyDrop;
 mod hydration_types_constructors_and_drive;
 pub use hydration_types_constructors_and_drive::{
     drive_hydration_retirement, drive_hydration_runtime, hydration_fold_byte_grant,
-    PersistedDocumentHydrationOutput, PersistedDocumentHydrationProgress,
+    PersistedDocumentHydrationIdentity, PersistedDocumentHydrationOutput, PersistedDocumentHydrationProgress,
     PersistedDocumentHydrationStep, PersistedDocumentHydrationTarget,
     PersistedDocumentStoreHydrationStep, Phase, RetainedPersistedDocumentHydration,
 };
@@ -36,3 +36,13 @@ mod hydration_step;
 
 #[path = "🧹️hydration-retirement-drop-and-completion/🦀️.rs"]
 mod hydration_retirement_drop_and_completion;
+
+#[path="📥️mutation/🦀️.rs"]
+mod original_mutation;
+use protocol::{OpBinaryReceiving,OpBinaryReceivingCursor};
+use semio_framework_dsl_record::receiving::OwnedSlot;
+
+#[path="📥️metadata/🦀️.rs"]
+mod original_metadata;
+
+#[path="📥️fold/🦀️.rs"]mod original_fold;

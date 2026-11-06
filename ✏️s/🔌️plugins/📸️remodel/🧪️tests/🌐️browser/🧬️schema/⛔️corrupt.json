@@ -1,0 +1,44 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "alert",
+      "sameArchive",
+      "before",
+      "after",
+      "peer",
+      "pass"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "alert": {
+        "type": "string"
+      },
+      "sameArchive": {
+        "type": "boolean"
+      },
+      "before": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "after": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "peer": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "pass": {
+        "type": "boolean"
+      }
+    }
+  }
+}

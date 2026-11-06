@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "cases"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "member",
+          "before",
+          "after"
+        ],
+        "properties": {
+          "field": {
+            "enum": [
+              "ingest",
+              "feature",
+              "matching",
+              "sfm",
+              "dense",
+              "mesh",
+              "motion",
+              "geo"
+            ]
+          },
+          "member": {
+            "type": "string",
+            "minLength": 1
+          },
+          "before": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "after": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      }
+    }
+  }
+}

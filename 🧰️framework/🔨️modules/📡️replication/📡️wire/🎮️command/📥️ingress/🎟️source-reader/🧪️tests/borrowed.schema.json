@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "cases",
+    "canonicalVarints"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "offset",
+          "length",
+          "work",
+          "copyBody",
+          "chunk"
+        ],
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copyBody": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "chunk": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "canonicalVarints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wire",
+          "canonical"
+        ],
+        "properties": {
+          "wire": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "canonical": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

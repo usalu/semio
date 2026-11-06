@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "instanceId",
+    "documentId",
+    "revision",
+    "generation",
+    "outputPort",
+    "mediaType",
+    "chunks",
+    "cases"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "instanceId": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "documentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "generation": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "outputPort": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mediaType": {
+      "type": "string",
+      "minLength": 1
+    },
+    "chunks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fault",
+          "calls",
+          "outcome",
+          "error"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "cancel-before-submit",
+              "cancel-running",
+              "foreign-submit",
+              "foreign-status",
+              "poll-fault",
+              "progress-regression",
+              "foreign-chunk",
+              "wrong-length",
+              "deadline",
+              "take-fault",
+              "descriptor-empty",
+              "descriptor-too-large"
+            ]
+          },
+          "calls": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "submit",
+                "poll",
+                "take",
+                "cancel"
+              ]
+            }
+          },
+          "outcome": {
+            "enum": [
+              "complete",
+              "cancelled",
+              "refused"
+            ]
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

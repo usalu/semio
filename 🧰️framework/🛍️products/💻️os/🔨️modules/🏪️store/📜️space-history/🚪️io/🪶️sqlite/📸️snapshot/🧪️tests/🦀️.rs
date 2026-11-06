@@ -42,7 +42,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             saved.pack.clone(),
             *semio_framework_hash::hash(&saved.pack).as_bytes(),
             history,
-            semio_framework_artifact_reference::ArtifactRef { artifact_id: "sqlite-history-registration".into(), dialect: dialect() },
+            {let declared=semio_framework_artifact_reference::ArtifactRef { artifact_id: "sqlite-history-registration".into(), dialect: dialect() };semio_os_store_document::persisted_document_hydration::PersistedDocumentHydrationIdentity{id:declared.artifact_id,dialect:Some(declared.dialect)}},
             None,
             S_SPACE_HISTORY_SCHEMA.into(),
             semio_os_store_test_support::plain_document_store_owners(),

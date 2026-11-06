@@ -1,7 +1,6 @@
 //! 🔗️ Shared immutable owners retain Arc backing custody until aliases and weak leases close.
 
-#[path="📦️original/🦀️.rs"]
-pub mod original;
+pub use semio_framework_value_allocation_return::original;
 
 use super::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement};
 use crate::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
@@ -18,10 +17,10 @@ impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {
     pub fn terminal_is_empty(&self)->bool {self.source.is_none()&&self.owned.is_none()}
     /// 🎟️ One original shared lease or one original controlled payload supplies the complete action quote.
     pub fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
-        if let Some(source)=self.source.as_ref(){return Ok(crate::RetirementDemand{release_bytes:if (self.lease_only||Arc::strong_count(source)==1)&&Arc::weak_count(source)==0{arc_bytes::<T>()}else{0},depth:1,..Default::default()});}
-        self.owned.as_ref().map_or(Ok(Default::default()),|owner|owner.next_demand(body))
-    }    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.owned.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand)}
-    pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.owned.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(copy))}
+        if let Some(source)=self.source.as_ref(){return Ok(crate::RetirementDemand{release_bytes:if (self.lease_only||Arc::strong_count(source)==1)&&Arc::weak_count(source)==0{arc_bytes::<T>()}else{0},copy_bytes:size_of::<Option<Arc<T>>>()+size_of::<Option<ControlledRetirement<T>>>(),depth:1,..Default::default()});}
+        self.owned.as_ref().map_or(Ok(Default::default()),|owner|if owner.terminal_is_empty(){Ok(crate::RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<T>>>(),depth:1,..Default::default()})}else{owner.next_demand(body)})
+    }    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.next_demand(0).map(|d|d.copy_bytes)}
+    pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.next_demand(copy).map(|d|d.capacity_bytes)}
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {if let Some(source)=self.source.as_ref(){return Ok(if (self.lease_only||Arc::strong_count(source)==1)&&Arc::weak_count(source)==0{arc_bytes::<T>()}else{0});}self.owned.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand)}
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {self.owned.as_ref().map_or(Ok(usize::from(self.source.is_some())),ControlledRetirement::next_depth_demand)}
     /// ⛽️ Quotes the original shared handoff, child step or owner clearance.
@@ -40,13 +39,13 @@ impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {
                 let extent=if Arc::weak_count(source)==0{arc_bytes::<T>()}else{0};
                 if grant.maximum_release_bytes<extent{return Ok(RetainedCloneStep::Progress(empty));}
                 self.last_work=1;let value=Arc::into_inner(self.source.take().ok_or_else(||ValueError::invariant("source absent"))?);
-                let released_bytes=if let Some(value)=value{*self.owned=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted shared payload refused: {error}")));extent}else{0};
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes,..empty}));
+                let released_bytes=if let Some(value)=value{*self.owned=Some(ControlledRetirement::retain(value));extent}else{0};
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:size_of::<Option<Arc<T>>>()+size_of::<Option<ControlledRetirement<T>>>(),released_bytes,..empty}));
             }
             let extent=if Arc::weak_count(source)==0{arc_bytes::<T>()}else{0};
             if grant.maximum_release_bytes<extent||Arc::strong_count(source)!=1{return Ok(RetainedCloneStep::Progress(empty));}
             self.last_work=1;let source=self.source.take().ok_or_else(||ValueError::invariant("source absent"))?;
-            match Arc::try_unwrap(source){Ok(value)=>{*self.owned=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted shared payload refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:extent,..empty}));},Err(source)=>{*self.source=Some(source);return Ok(RetainedCloneStep::Progress(empty));}}
+            match Arc::try_unwrap(source){Ok(value)=>{*self.owned=Some(ControlledRetirement::retain(value));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:size_of::<Option<Arc<T>>>()+size_of::<Option<ControlledRetirement<T>>>(),released_bytes:extent,..empty}));},Err(source)=>{*self.source=Some(source);return Ok(RetainedCloneStep::Progress(empty));}}
         }
         if self.owned.as_ref().is_some_and(|owner|owner.terminal_is_empty()){self.last_work=1;*self.owned=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}Ok(RetainedCloneStep::Complete(empty))
 })();crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result,work:self.last_work})
@@ -114,4 +113,4 @@ pub fn arc_bytes<T>()->usize {shared_retirement_allocation_bytes::<T>()}
 #[path="🔐️unique/🧪️tests/🦀️.rs"]
 mod shared_unique_tests;
 
-pub use semio_framework_value_allocation_return::{admit_shared_allocation,shared_allocation_bytes,try_uninitialized_arc,SharedAllocation};
+pub use semio_framework_value_allocation_return::{admit_shared_allocation,admit_shared_allocation_from,shared_allocation_bytes,shared_uninitialized_demand,shared_allocation_value_demand,shared_allocation_slot_demand,try_uninitialized_arc,SharedAllocation};

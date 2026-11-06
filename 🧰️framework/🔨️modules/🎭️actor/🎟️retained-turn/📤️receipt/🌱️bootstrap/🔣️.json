@@ -1,0 +1,386 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "extent",
+    "cases",
+    "reserve"
+  ],
+  "properties": {
+    "extent": {
+      "const": 304
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "budget",
+          "actual",
+          "prepaid",
+          "held",
+          "sequence",
+          "returned",
+          "status",
+          "phase",
+          "refusal"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "budget": {
+            "type": "array",
+            "minItems": 19,
+            "maxItems": 19,
+            "items": [
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "enum": [
+                  "0",
+                  "1"
+                ]
+              }
+            ],
+            "additionalItems": false
+          },
+          "actual": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "items",
+              "copy",
+              "capacity",
+              "release",
+              "work"
+            ],
+            "properties": {
+              "items": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "copy": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "capacity": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "release": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "work": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              }
+            }
+          },
+          "prepaid": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "items",
+              "copy",
+              "capacity",
+              "release",
+              "work"
+            ],
+            "properties": {
+              "items": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "copy": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "capacity": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "release": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "work": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              }
+            }
+          },
+          "held": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "items",
+              "copy",
+              "capacity",
+              "release",
+              "work"
+            ],
+            "properties": {
+              "items": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "copy": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "capacity": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "release": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "work": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              }
+            }
+          },
+          "sequence": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "returned": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "status": {
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "phase": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "refusal": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": 0
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "phase": {
+                  "const": 0
+                },
+                "refusal": {
+                  "const": 0
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": 1
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "phase": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 4
+                },
+                "refusal": {
+                  "const": 0
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": 2
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "refusal": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 8
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "reserve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normalProducerItems",
+        "headerWords",
+        "headerBookkeeping",
+        "heldReturn",
+        "clock",
+        "fault",
+        "observer",
+        "birth",
+        "bootstrapItems",
+        "cases"
+      ],
+      "properties": {
+        "normalProducerItems": {
+          "const": 32
+        },
+        "headerWords": {
+          "const": 38
+        },
+        "headerBookkeeping": {
+          "const": 3
+        },
+        "heldReturn": {
+          "const": 1
+        },
+        "clock": {
+          "const": 1
+        },
+        "fault": {
+          "const": 1
+        },
+        "observer": {
+          "const": 1
+        },
+        "birth": {
+          "const": 1
+        },
+        "bootstrapItems": {
+          "const": 46
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "items",
+              "accepted"
+            ],
+            "properties": {
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

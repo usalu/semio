@@ -1,0 +1,3 @@
+/** 🧯️ Independent SQL checks retained-failure cleanup authorization gates. */
+import{test,expect}from"bun:test";import{Database}from"bun:sqlite";import Ajv from"ajv";import rows from"./retirement-gate.json";import schema from"./retirement-gate.schema.json";
+test("cancelled failure handback requires authentic retirement and remaining work",()=>{expect(new Ajv({strict:true}).compile(schema)(rows)).toBe(true);const db=new Database(":memory:");try{for(const row of rows.cases)expect(Boolean((db.query("SELECT NOT ? AND (NOT ? OR ?) AS allowed").get(Number(row.yielded),Number(row.cancelled),Number(row.retirement))as{allowed:number}).allowed)).toBe(row.allowed);}finally{db.close()}});

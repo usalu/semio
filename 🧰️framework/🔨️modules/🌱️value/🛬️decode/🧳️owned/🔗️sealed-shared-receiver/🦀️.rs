@@ -11,15 +11,18 @@ impl<T:super::NativeRecordFields+Send+Sync+'static> super::NativeRecordFields fo
 
 /// 🪆️ Root construction keeps the same original decoder and receiving recipient.
 pub trait NativeSharedRoot<T:crate::retirement::RetireOwned+Send+Sync+'static>:crate::retirement::RetireOwned+Send+Sync+'static+Sized{
+ fn birth_work_demand(owner:&super::NativeSharedSlots<T,Self>)->Result<u64,ValueError>;
  fn birth_demand(owner:&super::NativeSharedSlots<T,Self>)->RetirementDemand;
  fn receive(control:&mut NativeDecodeControl<'_>,owner:&mut super::NativeSharedSlots<T,Self>)->crate::RetainedWorkOutcome<RetainedCloneProgress,crate::OriginalReceivingPrimary>;
 }
 impl<T:crate::retirement::RetireOwned+Send+Sync+'static>NativeSharedRoot<T>for SealedShared<T>{
  fn birth_demand(owner:&super::NativeSharedSlots<T,Self>)->RetirementDemand{owner.demand()}
+ fn birth_work_demand(owner:&super::NativeSharedSlots<T,Self>)->Result<u64,ValueError>{owner.advance_work_demand()}
  fn receive(control:&mut NativeDecodeControl<'_>,owner:&mut super::NativeSharedSlots<T,Self>)->crate::RetainedWorkOutcome<RetainedCloneProgress,crate::OriginalReceivingPrimary>{owner.advance(control,SharedIssuer::owned())}
 }
 impl<T:crate::retirement::RetireOwned+Send+Sync+'static>NativeSharedRoot<T>for std::sync::Arc<T>{
  fn birth_demand(owner:&super::NativeSharedSlots<T,Self>)->RetirementDemand{owner.demand()}
+ fn birth_work_demand(owner:&super::NativeSharedSlots<T,Self>)->Result<u64,ValueError>{owner.advance_work_demand()}
  fn receive(control:&mut NativeDecodeControl<'_>,owner:&mut super::NativeSharedSlots<T,Self>)->crate::RetainedWorkOutcome<RetainedCloneProgress,crate::OriginalReceivingPrimary>{owner.advance(control)}
 }
 impl<T:super::NativeRecordFields>super::NativeRecordFields for std::sync::Arc<T>{
@@ -41,7 +44,7 @@ impl<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static>NativeReceive<I>
 enum Phase{Bind,Birth,Receive,Take,Close,Release,Seal,Ready,Spent}
 /// 🧳️ The original input binding, boxed child and unpublished payload remain independently closeable.
 pub struct NativeSharedReceiver<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static,R:NativeSharedRoot<T>=SealedShared<T>>{
- binding:Option<RetainedCloneBinding>,child:semio_framework_value_native_storage::NativeOwnedStorage<T::Receiver>,retired_header:Option<Box<T::Receiver>>,raw:ManuallyDrop<Option<T>>,output:ManuallyDrop<Option<R>>,slots:super::NativeSharedSlots<T,R>,retirement:RetainedCloneClose,phase:Phase,closing:bool,subset:bool,input:std::marker::PhantomData<fn(&I)>,
+ binding:Option<RetainedCloneBinding>,child:semio_framework_value_native_storage::NativeOwnedStorage<T::Receiver>,retired_header:Option<Box<T::Receiver>>,raw:ManuallyDrop<Option<T>>,output:ManuallyDrop<Option<R>>,slots:super::NativeSharedSlots<T,R>,retirement:RetainedCloneClose,effect:crate::native_decoding::construction::NativeReceivingEffect,retirement_effect:crate::native_decoding::construction::NativeReceivingEffect<crate::OriginalRetirementFailure>,phase:Phase,closing:bool,subset:bool,input:std::marker::PhantomData<fn(&I)>,
 }
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original shared receiving owner is closed, foreign or already transferred")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
@@ -49,7 +52,7 @@ fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copi
 fn nested(mut d:RetirementDemand,copy:usize)->Result<RetirementDemand,ValueError>{d.copy_bytes=d.copy_bytes.checked_add(copy).ok_or_else(invalid)?;d.depth=d.depth.checked_add(1).ok_or_else(invalid)?;Ok(d)}
 fn child_grant(g:RetainedCloneGrant,copy:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-copy,maximum_depth:g.maximum_depth-1,..g}}
 impl<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static,R:NativeSharedRoot<T>> NativeSharedReceiver<I,T,R>{
- fn new(subset:bool)->Self{Self{binding:None,child:semio_framework_value_native_storage::NativeOwnedStorage::empty(),retired_header:None,raw:ManuallyDrop::new(None),output:ManuallyDrop::new(None),slots:Default::default(),retirement:Default::default(),phase:Phase::Bind,closing:false,subset,input:std::marker::PhantomData}}
+ fn new(subset:bool)->Self{Self{binding:None,child:semio_framework_value_native_storage::NativeOwnedStorage::empty(),retired_header:None,raw:ManuallyDrop::new(None),output:ManuallyDrop::new(None),slots:Default::default(),retirement:Default::default(),effect:Default::default(),retirement_effect:Default::default(),phase:Phase::Bind,closing:false,subset,input:std::marker::PhantomData}}
  pub fn shared_admission(&mut self)->&mut crate::native_decoding::NativeSharedAdmission<T>{self.slots.admission()}
  fn child(&self)->Result<&T::Receiver,ValueError>{self.child.get().ok_or_else(invalid)}
 }

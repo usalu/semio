@@ -15,7 +15,7 @@ test("native recipient vectors agree with independent relational custody",()=>{
    else if(event==="foreignBorrow")actual.push("refused");
    else if(event==="cancel")actual.push("retained");
    else if(event==="dropCaller"){db.run("UPDATE recipient SET owner=0,children=0");actual.push("captured");}
-   else if(event==="return"){db.run("UPDATE recipient SET owner=CASE WHEN children=0 THEN 0 ELSE owner END,children=MAX(0,children-1)");actual.push("acknowledged");}
+   else if(event==="return"){db.run("UPDATE recipient SET owner=CASE WHEN children=0 THEN 0 ELSE owner END,children=MAX(0,children-1)");actual.push("returned");}
    else{db.run("UPDATE recipient SET owner=0");const {children}=db.query("SELECT children FROM recipient").get() as {children:number};actual.push(children?"blocked":"closed");if(!children)db.run("UPDATE recipient SET root=0");}
   }
   expect(actual).toEqual(row.outputs);db.close();

@@ -2,7 +2,7 @@
 
 use super::*;
 #[path="🛬️receive/🦀️.rs"]mod receive;
-#[cfg(test)]pub(crate)use receive::tests::run as check_native_receiving;
+
 
 #[derive(Debug, PartialEq)]
 pub struct UiFixedMap<V> {

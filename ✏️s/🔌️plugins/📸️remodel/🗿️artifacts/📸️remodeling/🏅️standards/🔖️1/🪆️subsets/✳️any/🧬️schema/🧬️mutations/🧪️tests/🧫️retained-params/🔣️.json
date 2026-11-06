@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 24,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["facet", "change", "expected"],
+    "properties": {
+      "facet": { "enum": ["ingest", "feature", "matching", "sfm", "dense", "mesh", "motion", "geo"] },
+      "change": {
+        "type": "object",
+        "additionalProperties": { "oneOf": [{ "type": "number" }, { "type": "boolean" }, { "const": "non-finite" }] },
+        "maxProperties": 1
+      },
+      "expected": { "enum": ["unchanged", "admitted", "refused"] }
+    }
+  }
+}

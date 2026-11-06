@@ -30,8 +30,8 @@ impl<'a,'source> ActualTurn<'a,'source>{
 struct ActualDecodeFrame<'slot,'control,'turn,'call,'source>{frame:NativeForwardedDecodeFrame<'slot,'control>,turn:&'turn ActualTurn<'call,'source>,before:u64}
 impl Drop for ActualDecodeFrame<'_,'_,'_,'_,'_>{fn drop(&mut self){if std::thread::panicking(){let work=self.frame.control().actual_work().saturating_sub(self.before);self.turn.with(|cx,_|cx.consume_fuel(work)).expect("original decoder work return requires its same unborrowed caller")}}}
 struct ActualWork<'a,'turn,'source>{turn:&'a ActualTurn<'turn,'source>,closing:bool}
-impl semio_framework_value_native_owned::native_decoding::OriginalWorkRecipient for ActualWork<'_,'_,'_>{
- fn admits<'a>(&mut self,quote:semio_framework_value_native_owned::native_decoding::OriginalWorkQuote<'a>,observed:u64,additional:u64)->semio_framework_value_native_owned::native_decoding::OriginalWorkQuoteComplete<'a>{quote.complete((||{
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for ActualWork<'_,'_,'_>{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{self.turn.with(|cx,_|if !paused(cx,self.closing)&&(self.closing||!cx.is_cancelled()){cx.fuel_remaining().checked_sub(observed).unwrap_or(0)}else{0})}
+ fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{
   self.turn.with(|cx,_|!paused(cx,self.closing)&&(self.closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))
  })())}
 }

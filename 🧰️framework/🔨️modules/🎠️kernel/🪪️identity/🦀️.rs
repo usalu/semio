@@ -400,6 +400,41 @@ pub enum ActivationEvent {
 //#endregion 🔖️ActivationEvent
 //#region 🔖️Budget
 
+/// ⛽️ Caller-requested ceilings contain no Source identity or authority.
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate="::semio_framework_value",rename_all = "camelCase", deny_unknown_fields)]
+pub struct PollRequestLimits {
+    pub retained_policy: semio_framework_value::RetainedCloneGrant,
+    pub work_fuel: u64,
+    pub fuel: u64,
+    pub deadline_us: u64,
+    pub max_effects: u32,
+    pub max_patch_bytes: u32,
+    pub max_frames: u32,
+}
+impl PollRequestLimits {
+    /// 🔒️ Narrows requested data against the actual authenticated scalar loan.
+    pub fn narrow(self, authority: semio_framework_actor::OriginalJobBudget) -> Budget {
+        let requested = self.retained_policy;
+        let granted = authority.retained_policy;
+        Budget {
+            retained: authority.input,
+            retained_policy: semio_framework_value::RetainedCloneGrant {
+                maximum_items: requested.maximum_items.min(granted.maximum_items),
+                maximum_copy_bytes: requested.maximum_copy_bytes.min(granted.maximum_copy_bytes),
+                maximum_capacity_bytes: requested.maximum_capacity_bytes.min(granted.maximum_capacity_bytes),
+                maximum_release_bytes: requested.maximum_release_bytes.min(granted.maximum_release_bytes),
+                maximum_depth: requested.maximum_depth.min(granted.maximum_depth),
+            },
+            work_fuel: self.work_fuel.min(authority.fuel),
+            fuel: self.fuel.min(authority.fuel),
+            deadline_us: self.deadline_us.min(authority.deadline_us),
+            max_effects: self.max_effects, max_patch_bytes: self.max_patch_bytes, max_frames: self.max_frames,
+        }
+    }
+}
+
 /// ⛽️ Per-turn resource ceiling handed to `reactor::poll` — `📜️wit/📜️reactor.wit`'s `budget`
 /// record.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

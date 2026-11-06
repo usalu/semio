@@ -6,8 +6,9 @@ import { SEGMENTED_DOWNLOAD_CONTRACT } from "../../📤️SegmentedDownload/🟦
 import type { AppDocumentIdentity, MediaExportHandle, MediaExportStatus } from "@semio-tech/framework/wire-contracts";
 import type { InputOutcomeV1, ShellInputActionV1 } from "../🎯️input-ledger/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import mediaExportPolicy from "../../../🎬️media/🚚️lifecycle/🧬️schema/🔣️.json" with { type: "json" };
 
-const exportOperationPolicy = schema.$defs.ExportOperationPolicy.const;
+const exportOperationPolicy = mediaExportPolicy.const;
 export type AgentArtifactTimingV1 = Readonly<{ now: () => number; yieldTurn: (delayMs: number) => Promise<void> }>;
 const defaultTiming: AgentArtifactTimingV1 = { now: () => globalThis.performance.now(), yieldTurn: delayMs => new Promise(resolve => globalThis.setTimeout(resolve, delayMs)) };
 

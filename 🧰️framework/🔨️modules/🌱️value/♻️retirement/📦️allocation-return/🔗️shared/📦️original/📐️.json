@@ -1,0 +1,49 @@
+{
+  "work": {
+    "prepare": {
+      "allocator": 1,
+      "aliases": 1,
+      "wrapper": 1,
+      "total": 3
+    },
+    "publication": {
+      "sourceClear": 1,
+      "payload": 1,
+      "aliases": 1,
+      "wrapper": 1,
+      "total": 4
+    },
+    "duplicate": {
+      "logicalCount": 1,
+      "physicalCount": 1,
+      "wrapper": 1,
+      "total": 3
+    },
+    "retireOriginal": {
+      "sourceClear": 1,
+      "logicalCount": 1,
+      "wrapper": 1,
+      "total": 3
+    },
+    "retireAlias": {
+      "sourceClear": 1,
+      "logicalCount": 1,
+      "physicalCount": 1,
+      "wrapper": 1,
+      "total": 4
+    },
+    "takeValue": {
+      "sourceClear": 1,
+      "initialized": 1,
+      "payload": 1,
+      "physicalClose": 1,
+      "total": 4
+    }
+  },
+  "rules": {
+    "originalRetainedBeforeAllocatorSuccess": true,
+    "uninitializedPayloadCopied": false,
+    "publicationUsesExistingBacking": true,
+    "duplicateAllocations": 0
+  }
+}

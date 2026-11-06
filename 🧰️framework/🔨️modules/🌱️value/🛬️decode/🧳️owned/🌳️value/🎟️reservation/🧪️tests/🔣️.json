@@ -1,0 +1,184 @@
+{
+  "cases": [
+    {
+      "id": "already-satisfied",
+      "rows": 0,
+      "extraReserveSteps": 0,
+      "limit": 0,
+      "kind": "none",
+      "depth": 0,
+      "selectionWork": 1,
+      "reserveWork": 0,
+      "stagedSelectionWork": 1,
+      "work": [
+        4,
+        5
+      ]
+    },
+    {
+      "id": "empty-root",
+      "rows": 0,
+      "extraReserveSteps": 0,
+      "limit": 1,
+      "kind": "metadata",
+      "depth": 3,
+      "selectionWork": 4,
+      "reserveWork": 5,
+      "stagedSelectionWork": 3,
+      "work": [
+        4,
+        7,
+        6,
+        2,
+        4,
+        7,
+        8,
+        2,
+        4,
+        5
+      ]
+    },
+    {
+      "id": "empty-leaf-payload",
+      "rows": 0,
+      "extraReserveSteps": 1,
+      "limit": 1,
+      "kind": "payload",
+      "depth": 3,
+      "selectionWork": 4,
+      "reserveWork": 7,
+      "stagedSelectionWork": 3,
+      "work": [
+        4,
+        7,
+        8,
+        2,
+        4,
+        5
+      ]
+    },
+    {
+      "id": "grow-root",
+      "rows": 1,
+      "extraReserveSteps": 0,
+      "limit": 2,
+      "kind": "metadata",
+      "depth": 4,
+      "selectionWork": 4,
+      "reserveWork": 22,
+      "stagedSelectionWork": 2,
+      "work": [
+        4,
+        6,
+        23,
+        2,
+        4,
+        9,
+        8,
+        2,
+        4,
+        9,
+        10,
+        2,
+        4,
+        5
+      ]
+    },
+    {
+      "id": "existing-branch",
+      "rows": 2,
+      "extraReserveSteps": 0,
+      "limit": 3,
+      "kind": "metadata",
+      "depth": 4,
+      "selectionWork": 7,
+      "reserveWork": 7,
+      "stagedSelectionWork": 5,
+      "work": [
+        4,
+        9,
+        8,
+        2,
+        4,
+        9,
+        10,
+        2,
+        4,
+        5
+      ]
+    },
+    {
+      "id": "second-level-root",
+      "rows": 16,
+      "extraReserveSteps": 0,
+      "limit": 17,
+      "kind": "metadata",
+      "depth": 5,
+      "selectionWork": 5,
+      "reserveWork": 22,
+      "stagedSelectionWork": 2,
+      "work": [
+        4,
+        6,
+        23,
+        2,
+        4,
+        9,
+        24,
+        2,
+        4,
+        11,
+        10,
+        2,
+        4,
+        11,
+        12,
+        2,
+        4,
+        5
+      ]
+    },
+    {
+      "id": "nested-metadata",
+      "rows": 17,
+      "extraReserveSteps": 0,
+      "limit": 18,
+      "kind": "metadata",
+      "depth": 5,
+      "selectionWork": 10,
+      "reserveWork": 9,
+      "stagedSelectionWork": 7,
+      "work": [
+        4,
+        11,
+        10,
+        2,
+        4,
+        11,
+        12,
+        2,
+        4,
+        5
+      ]
+    },
+    {
+      "id": "nested-payload",
+      "rows": 17,
+      "extraReserveSteps": 1,
+      "limit": 18,
+      "kind": "payload",
+      "depth": 5,
+      "selectionWork": 10,
+      "reserveWork": 11,
+      "stagedSelectionWork": 7,
+      "work": [
+        4,
+        11,
+        12,
+        2,
+        4,
+        5
+      ]
+    }
+  ]
+}

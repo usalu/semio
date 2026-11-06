@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "remaining": 12,
+      "available": 8,
+      "capacity": 12,
+      "copy": 19,
+      "metadata": 16,
+      "work": 8,
+      "items": 1,
+      "depth": 1,
+      "chunk": 3
+    },
+    {
+      "remaining": 12,
+      "available": 8,
+      "capacity": 12,
+      "copy": 30,
+      "metadata": 16,
+      "work": 3,
+      "items": 1,
+      "depth": 1,
+      "chunk": 2
+    },
+    {
+      "remaining": 12,
+      "available": 8,
+      "capacity": 12,
+      "copy": 30,
+      "metadata": 16,
+      "work": 9,
+      "items": 0,
+      "depth": 1,
+      "chunk": 0
+    },
+    {
+      "remaining": 12,
+      "available": 8,
+      "capacity": 12,
+      "copy": 30,
+      "metadata": 16,
+      "work": 9,
+      "items": 1,
+      "depth": 0,
+      "chunk": 0
+    },
+    {
+      "remaining": 12,
+      "available": 8,
+      "capacity": 12,
+      "copy": 16,
+      "metadata": 16,
+      "work": 9,
+      "items": 1,
+      "depth": 1,
+      "chunk": 0
+    },
+    {
+      "remaining": 12,
+      "available": 8,
+      "capacity": 12,
+      "copy": 30,
+      "metadata": 16,
+      "work": 0,
+      "items": 1,
+      "depth": 1,
+      "chunk": 0
+    }
+  ],
+  "pageReleaseBytes": 4096,
+  "zeroReleaseClosesPage": false,
+  "physicalOwnerMetadataPaid": true
+}

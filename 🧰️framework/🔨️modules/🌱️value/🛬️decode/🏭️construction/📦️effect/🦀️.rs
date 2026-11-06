@@ -12,11 +12,17 @@ fn marker_mismatch(actual:Option<usize>,progress:RetainedCloneProgress)->Option<
 /// 🚦️ Each pending callback requires its original recipient to resolve its actual outcome.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum NativeReceivingEffectPhase{Empty,GrantStarted,Granted,EffectStarted,EffectFinished,ReceiptStarted,Settled}
+/// 🎯️ Projects one actual preborn typed child slot without issuing Source metadata authority.
+#[derive(Debug,PartialEq,Eq)]
+pub struct NativeEffectCapturePlan{frame:usize,child:usize,extent:usize,error:std::any::TypeId,phase:NativeReceivingEffectPhase}
+impl NativeEffectCapturePlan{pub fn frame_identity(&self)->usize{self.frame}pub fn child_destination(&self)->(usize,usize){(self.child,self.extent)}pub fn error_type(&self)->std::any::TypeId{self.error}pub fn phase(&self)->NativeReceivingEffectPhase{self.phase}}
 pub use semio_framework_value_native_outcome::{NativeReceivingEffectError,NativeReceivingEffectFailure};
 /// 🧳️ Keeps actual work and every original callback authority outside the operation stack.
 pub struct NativeReceivingEffect<E:NativeReceivingEffectError=ValueError>{phase:NativeReceivingEffectPhase,maximum_work:Option<u64>,producer:ManuallyDrop<Option<OriginalEffectAction<RetainedCloneStep,E>>>,producer_reply:ManuallyDrop<Option<Result<RetainedCloneStep,E>>>,producer_refusal:ManuallyDrop<Option<ValueError>>,recipient:Option<OriginalConstructionIssuerIdentity>,action:Option<OriginalConstructionAction>,demand:RetirementDemand,grant:Option<RetainedCloneGrant>,actual:Option<usize>,unallocated_started:bool,work_settled:bool,work_commit_pending:bool,work_reported:u128,retiring:bool,actual_work:u128,performed:Option<semio_framework_value_control_contract::OriginalWorkPerformedReceipt>,partial_work:ManuallyDrop<Option<semio_framework_value_control_contract::OriginalWorkPartialOutcome>>,work_claim:ManuallyDrop<Option<Result<u128,ValueError>>>,work_proof:Option<semio_framework_value_control_contract::OriginalWorkActionProof>,work_action:Option<semio_framework_value_control_contract::OriginalWorkActionIdentity>,work_issuer:Option<semio_framework_value_control_contract::OriginalWorkIssuerIdentity>,allocation:ManuallyDrop<Option<NativeDecodeAllocationProgress>>,outcome:ManuallyDrop<Option<NativeDecodeAllocationOutcome>>,child:ManuallyDrop<Option<RetainedWorkOutcome<RetainedCloneStep,E>>>,grant_refusal:ManuallyDrop<Option<ValueError>>,effect_refusal:ManuallyDrop<Option<ValueError>>,work_refusal:ManuallyDrop<Option<ValueError>>,work_reporting:ManuallyDrop<Option<ValueError>>,work_overrun:ManuallyDrop<Option<ValueError>>,receipt_refusal:ManuallyDrop<Option<ValueError>>}
 impl<E:NativeReceivingEffectError> Default for NativeReceivingEffect<E>{fn default()->Self{Self{phase:NativeReceivingEffectPhase::Empty,maximum_work:None,producer:ManuallyDrop::new(None),producer_reply:ManuallyDrop::new(None),producer_refusal:ManuallyDrop::new(None),recipient:None,action:None,demand:Default::default(),grant:None,actual:None,unallocated_started:false,work_settled:false,work_commit_pending:false,work_reported:0,retiring:false,actual_work:0,performed:None,partial_work:ManuallyDrop::new(None),work_claim:ManuallyDrop::new(None),work_proof:None,work_action:None,work_issuer:None,allocation:ManuallyDrop::new(None),outcome:ManuallyDrop::new(None),child:ManuallyDrop::new(None),grant_refusal:ManuallyDrop::new(None),effect_refusal:ManuallyDrop::new(None),work_refusal:ManuallyDrop::new(None),work_reporting:ManuallyDrop::new(None),work_overrun:ManuallyDrop::new(None),receipt_refusal:ManuallyDrop::new(None)}}}
 impl<E:NativeReceivingEffectError> NativeReceivingEffect<E>{
+ pub fn capture_plan(&self)->NativeEffectCapturePlan{NativeEffectCapturePlan{frame:std::ptr::from_ref(self)as usize,child:std::ptr::from_ref(&*self.child)as usize,extent:std::mem::size_of::<Option<RetainedWorkOutcome<RetainedCloneStep,E>>>(),error:std::any::TypeId::of::<E>(),phase:self.phase}}
+ pub fn validate_capture_plan(&self,plan:&NativeEffectCapturePlan)->Result<(),ValueError>{if self.capture_plan().eq(plan){Ok(())}else{Err(ValueError::invariant("native capture declaration differs from its actual retained frame"))}}
  /// 🧾️ Settles only the actual claimed partial receipt through its original Source producer.
  pub fn settle_partial_work(&mut self,control:&mut NativeDecodeControl<'_>)->Result<bool,ValueError>{
   self.reconcile_performed(control)?;if !self.same_work(control){return Err(Self::invalid())}
@@ -56,7 +62,12 @@ impl<E:NativeReceivingEffectError> NativeReceivingEffect<E>{
 
  /// 🔭️ Returns the precise callback boundary held by the original frame.
  pub fn phase(&self)->NativeReceivingEffectPhase{self.phase}
+ /// 🛟️ Loans the actual unsettled frame so its original control can resolve callbacks before close.
+ pub fn has_pending_recovery(&self)->bool{self.phase!=NativeReceivingEffectPhase::Empty}
+ pub fn pending_recovery(&mut self)->Option<&mut Self>{if self.has_pending_recovery(){Some(self)}else{None}}
  /// 📏️ Checks the exact demand retained before the original grant callback.
+ /// 📏️ Borrows the retained original demand without inspecting the source.
+ pub fn pending_demand(&self)->Option<RetirementDemand>{self.has_pending_recovery().then_some(self.demand)}
  pub fn matches_demand(&self,demand:RetirementDemand)->bool{self.demand==demand}
  /// 📏️ Returns the actual effect marker retained through an unwind.
  pub fn actual(&self)->Option<usize>{self.actual}
@@ -136,6 +147,9 @@ impl<E:NativeReceivingEffectError> crate::retirement::RetirementCursor for Nativ
  fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::retirement::RetirementStep{let _=effect.grant();if self.phase==NativeReceivingEffectPhase::Empty{crate::retirement::RetirementStep::Complete(0)}else{crate::retirement::RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original receiving callbacks and child work must settle before retirement").into(),0)}}
  fn terminal_is_empty(&self)->bool{self.phase==NativeReceivingEffectPhase::Empty}
 }
+/// ♻️ Retains the same receiving frame until its original callbacks have settled.
+pub struct NativeReceivingEffectRetirement<E:NativeReceivingEffectError>{frame:Option<NativeReceivingEffect<E>>}
+impl<E:NativeReceivingEffectError> Drop for NativeReceivingEffectRetirement<E>{fn drop(&mut self){assert!(std::thread::panicking()||self.frame.is_none(),"original receiving frame retirement requires paid closure")}}
 impl<E:NativeReceivingEffectError> crate::retirement::RetireOwned for NativeReceivingEffect<E>{
  type RetirementCursor=Self;
  fn retirement_seed(self)->Self{self}

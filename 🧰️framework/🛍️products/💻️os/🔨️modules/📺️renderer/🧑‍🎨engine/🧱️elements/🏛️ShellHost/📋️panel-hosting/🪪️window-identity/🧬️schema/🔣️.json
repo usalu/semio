@@ -1,0 +1,64 @@
+{
+  "type": "array",
+  "minItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "app",
+      "role",
+      "instance",
+      "window",
+      "kind",
+      "document"
+    ],
+    "properties": {
+      "app": {
+        "type": "string",
+        "minLength": 1
+      },
+      "role": {
+        "enum": [
+          "editor",
+          "viewer"
+        ]
+      },
+      "instance": {
+        "type": "integer"
+      },
+      "window": {
+        "type": "string",
+        "minLength": 1
+      },
+      "kind": {
+        "type": "string",
+        "minLength": 1
+      },
+      "document": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "spaceId",
+              "documentId"
+            ],
+            "properties": {
+              "spaceId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "documentId": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

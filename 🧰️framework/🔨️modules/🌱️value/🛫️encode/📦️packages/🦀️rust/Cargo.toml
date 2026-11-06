@@ -31,3 +31,11 @@ semio-framework-value-retirement = { path="../../../♻️retirement/📦️pack
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
+[[test]]
+name = "typed-retirement"
+path = "../../♻️retirement/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "action-work"
+path = "../../🧪️tests/🥣️action/🦀️.rs"

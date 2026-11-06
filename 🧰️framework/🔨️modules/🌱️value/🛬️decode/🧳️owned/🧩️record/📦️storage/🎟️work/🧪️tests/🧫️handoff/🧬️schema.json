@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "fields",
+          "initialized",
+          "work",
+          "canCommit"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "fields": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "initialized": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "canCommit": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

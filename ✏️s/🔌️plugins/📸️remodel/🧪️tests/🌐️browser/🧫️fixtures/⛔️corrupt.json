@@ -1,0 +1,70 @@
+[
+  {
+    "alert": "invalid PNG image",
+    "sameArchive": true,
+    "before": [
+      1,
+      3
+    ],
+    "after": [
+      1,
+      3
+    ],
+    "peer": [
+      1,
+      3
+    ],
+    "pass": true
+  },
+  {
+    "alert": "invalid PNG image",
+    "sameArchive": false,
+    "before": [
+      1,
+      3
+    ],
+    "after": [
+      1,
+      3
+    ],
+    "peer": [
+      1,
+      3
+    ],
+    "pass": false
+  },
+  {
+    "alert": "image loaded",
+    "sameArchive": true,
+    "before": [
+      1,
+      3
+    ],
+    "after": [
+      1,
+      3
+    ],
+    "peer": [
+      1,
+      3
+    ],
+    "pass": false
+  },
+  {
+    "alert": "invalid PNG image",
+    "sameArchive": true,
+    "before": [
+      1,
+      3
+    ],
+    "after": [
+      1,
+      4
+    ],
+    "peer": [
+      1,
+      4
+    ],
+    "pass": false
+  }
+]

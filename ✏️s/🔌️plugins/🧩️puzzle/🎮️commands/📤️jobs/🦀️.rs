@@ -428,7 +428,7 @@ pub mod testing {
             while !self.decoder.terminal_is_empty() {
                 caller.turn(fixture_stock(), |cx| {
                     let demand = self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
-                    semio_framework_job::close_original_retained_step(cx, demand, |grant| self.decoder.close_step(grant))?;
+                    self.decoder.close_on_source(cx)?;
                     Ok(())
                 }).expect("original Puzzle decoder close");
             }

@@ -78,6 +78,22 @@ pub const IMPORT_ARTIFACT_DOCUMENT_ACTION_ID: &str = "importArtifactDocument";
 /// 💾️ The shell-intercepted action that writes the focused editor's declared natural file bytes.
 pub const SAVE_ARTIFACT_FILE_ACTION_ID: &str = "saveArtifactFile";
 
+/// 📤️ The shell-intercepted action that downloads a declared output through the checked media broker.
+pub const EXPORT_MEDIA_FILE_ACTION_ID: &str = "exportMediaFile";
+
+/// 📸️ The shell-intercepted action that downloads the current materialized snapshot through its declared broker port.
+pub const EXPORT_SNAPSHOT_FILE_ACTION_ID: &str = "exportSnapshotFile";
+
+/// 🔌️ Declares a binary output download with static representation metadata and localized chrome.
+pub fn media_file_export_action_definition(action_id: &str, label: LocalizedLabel, output_port: &str, filename: &str, media_type: &str, format_kind: &str) -> ActionDefinition {
+    let args = [("outputPort", output_port), ("filename", filename), ("mediaType", media_type), ("formatKind", format_kind)].map(|(id, value)| {
+        let mut argument = ActionArgDef::text(id, LocalizedLabel::native(id, id)).default_value(&value);
+        argument.presentation = Some(ArgPresentation::Hidden);
+        argument
+    });
+    ActionDefinition { in_palette: true, ..ActionDefinition::resumable_framework(action_id, label, ActionKind::Shell, "export").with_category("transfer").with_args(args).audience(CapabilityAudience::Chrome) }
+}
+
 /// 📂️ The shell-intercepted action that opens one declared natural file as a new document owner.
 pub const OPEN_ARTIFACT_FILE_ACTION_ID: &str = "openArtifactFile";
 

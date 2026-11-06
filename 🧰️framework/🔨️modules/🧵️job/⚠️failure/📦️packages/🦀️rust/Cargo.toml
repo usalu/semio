@@ -23,6 +23,11 @@ name = "semio_framework_job_failure"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-job-receiving = { path = "../../../🛬️receiving/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+semio-framework-io-control = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-framework-value-retained-clone = { path = "../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { workspace = true }
@@ -49,3 +54,11 @@ path = "../../📦️domain/🎟️reservation/🧪️tests/owning.rs"
 [[test]]
 name = "original-work-failure"
 path = "../../🎟️work/🧪️tests/owning.rs"
+
+[[test]]
+name = "original-native-snapshot-projection"
+path = "../../🫴️projection/📸️snapshot/🧪️tests.rs"
+
+[[test]]
+name = "original-json-failure-projection"
+path = "../../🫴️projection/🔤️json/🧪️tests.rs"

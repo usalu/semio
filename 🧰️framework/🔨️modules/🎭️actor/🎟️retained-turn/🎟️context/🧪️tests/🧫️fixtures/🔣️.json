@@ -1,19 +1,25 @@
 {
   "operation": 71,
   "generation": 3,
-  "totalGrant": [64, 4096, 65536, 262144, 64],
+  "totalGrant": [
+    100000,
+    16777216,
+    16777216,
+    16777216,
+    128
+  ],
   "admissionGrant": [
     1,
-    0,
-    4096,
-    4096,
-    8
+    1048576,
+    1048576,
+    1048576,
+    64
   ],
   "bodyGrant": [
     1,
-    4096,
-    65536,
-    262144,
+    1048576,
+    1048576,
+    1048576,
     64
   ],
   "originalInputCapacity": 97,
@@ -68,6 +74,6 @@
   "work": {
     "clockBinding": 1371,
     "absoluteDeadlineUs": 1000000,
-    "fuel": 64
+    "fuel": 1000000
   }
 }

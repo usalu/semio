@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "outcome",
+          "ready",
+          "retryable"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "outcome": {
+            "enum": [
+              "success",
+              "pending",
+              "failure",
+              "pre_effect_refusal"
+            ]
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "retryable": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

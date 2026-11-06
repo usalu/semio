@@ -582,6 +582,16 @@
                       "additionalProperties": false
                     }
                   ]
+                },
+                "retirementFailure": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/OriginalRetirementFailure"
+                    }
+                  ]
                 }
               }
             },

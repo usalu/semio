@@ -22,6 +22,7 @@ name = "original-retained-receiving"
 path = "../../🎟️retained-turn/🫴️receiving/🧪️tests/📬️public/🦀️.rs"
 
 [dependencies]
+semio-framework-actor-failure = { path = "../../🎟️retained-turn/⚠️failure/📦️packages/🦀️rust" }
 semio-framework-actor-retained-context = { path = "../../🎟️retained-turn/🎟️context/📦️packages/🦀️rust" }
 semio-framework-actor-pack = { path = "../../🧵️pack/📦️packages/🦀️rust" }
 semio-framework-actor-retained-turn = { path = "../../🎟️retained-turn/📦️packages/🦀️rust" }

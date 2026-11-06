@@ -7,6 +7,7 @@ use crate::original_job_continuation::{OriginalReturnSource,OriginalReturnSource
 #[path="🏠️native/🦀️.rs"]
 mod native;
 pub use native::{ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
+const SOURCE_CONTROL_WORK:u64=1;
 static ORIGINAL_RETURN_BIRTH:std::sync::atomic::AtomicU32=std::sync::atomic::AtomicU32::new(1);
 struct SourceClock{owner:ManuallyDrop<Option<Box<dyn semio_framework_job_clock::OriginalErasedHostClock>>>,action:ManuallyDrop<Option<semio_framework_job_clock::OriginalClockAction>>,decision:ManuallyDrop<semio_framework_job_clock::OriginalClockDecisionFrame>,reading:ManuallyDrop<Option<Result<semio_framework_job_clock::OriginalClockObservation,ValueError>>>,refusal:ManuallyDrop<Option<ValueError>>,reading_transferred:bool,action_turn:Option<OriginalSourceTurnIdentity>,decision_turn:Option<OriginalSourceTurnIdentity>}
 impl SourceClock{fn empty()->Self{Self{owner:ManuallyDrop::new(None),action:ManuallyDrop::new(None),decision:ManuallyDrop::new(semio_framework_job_clock::OriginalClockDecisionFrame::new()),reading:ManuallyDrop::new(None),refusal:ManuallyDrop::new(None),reading_transferred:false,action_turn:None,decision_turn:None}}fn terminal_is_empty(&self)->bool{self.owner.is_none()&&self.action.is_none()&&self.decision.terminal_is_empty()&&self.reading.is_none()&&self.refusal.is_none()&&!self.reading_transferred&&self.action_turn.is_none()&&self.decision_turn.is_none()}}
@@ -21,7 +22,7 @@ impl SourceRetirement{
  fn new(roots:SourceRoots)->Self{Self{authority:roots.authority,cancel:CancelTokenRetirement::from_token(roots.cancel),returns:roots.returns,clock:roots.clock}}
  fn terminal_is_empty(&self)->bool{self.authority.terminal_is_empty()&&self.cancel.terminal_is_empty()&&self.returns.terminal_is_empty()&&match self.clock.try_lock(){Ok(clock)=>clock.terminal_is_empty(),Err(std::sync::TryLockError::Poisoned(error))=>error.into_inner().terminal_is_empty(),Err(std::sync::TryLockError::WouldBlock)=>false}}
  fn demands(&self)->Result<RetirementDemand,ValueError>{if let Some(demand)=self.clock_demand()?{return Ok(demand)}if !self.authority.terminal_is_empty(){Ok(self.authority.retirement_demands())}else if !self.cancel.terminal_is_empty(){self.cancel.retirement_demands()}else{self.returns.retirement_demands()}}
- fn work_demand(&self)->Result<u64,ValueError>{if let Some(work)=self.clock_work()?{return Ok(work)}if !self.authority.terminal_is_empty(){Ok(self.authority.retirement_work_demand())}else if !self.cancel.terminal_is_empty(){Ok(self.cancel.retirement_work_demand())}else{self.returns.retirement_work_demand()}}
+ fn retirement_work_demand(&self)->Result<u64,ValueError>{if let Some(work)=self.clock_work()?{return Ok(work)}if !self.authority.terminal_is_empty(){self.authority.retirement_work_demand()}else if !self.cancel.terminal_is_empty(){self.cancel.retirement_work_demand()}else{self.returns.retirement_work_demand()}}
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{if !self.authority.terminal_is_empty(){return self.authority.close_step(grant)}if self.cancel.terminal_is_empty(){return self.returns.close_step(grant)}let turn=self.cancel.close_step(grant);RetainedWorkOutcome{result:turn.result.map_err(cancel_refusal),work:turn.work}}
 }
 impl RetireOwned for SourceRoots{
@@ -31,9 +32,9 @@ impl RetireOwned for SourceRoots{
  fn controlled_retirement_supported()->bool{true}
 }
 impl RetirementCursor for SourceRetirement{
- fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{self.work_demand()}
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{self.retirement_work_demand()}
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{self.demands()}
- fn close_step(&mut self,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>)->RetirementStep{if let Some(poll)=self.close_clock(effect){return semio_framework_value_retained_clone::retirement::erased_cursor_turn(poll)}if self.terminal_is_empty(){return RetirementStep::Complete(0)}let work=match self.work_demand(){Ok(work)=>work,Err(error)=>return RetirementStep::Failure(error.into(),0)};if effect.maximum_work_units()<work{return RetirementStep::BudgetExhausted}let turn=Self::close_step(self,effect.grant());match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error.into(),turn.work)}}
+ fn close_step(&mut self,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>)->RetirementStep{if let Some(poll)=self.close_clock(effect){return semio_framework_value_retained_clone::retirement::erased_cursor_turn(poll)}if self.terminal_is_empty(){return RetirementStep::Complete(0)}let work=match self.retirement_work_demand(){Ok(work)=>work,Err(error)=>return RetirementStep::Failure(error.into(),0)};if effect.maximum_work_units()<work{return RetirementStep::BudgetExhausted}let turn=Self::close_step(self,effect.grant());match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error.into(),turn.work)}}
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.depth)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.copy_bytes)}
@@ -50,7 +51,6 @@ impl OriginalCallerSourceParent{
 
  /// 🪪️ See `README.md`.
  pub fn source_identity(&self)->Result<usize,ValueError>{Ok(self.original.as_ref().ok_or_else(||refused("original source identity has entered physical retirement"))?.identity())}
- pub fn guards_header_pointer(&self,pointer:usize)->Result<bool,ValueError>{self.return_source()?.guards_header_pointer(pointer)}
  pub fn payload_authority_identity(&self)->Result<OriginalPayloadSourceIdentity,ValueError>{self.original.as_ref().and_then(|source|source.get().authority.identity()).ok_or_else(||refused("original payload source identity has entered physical retirement"))}
  pub fn cancellation(&self)->Result<&CancelToken,ValueError>{Ok(&self.original.as_ref().ok_or_else(||refused("original parent cancellation has entered physical retirement"))?.get().cancel)}
  pub fn admission_demand()->RetirementDemand{RetirementDemand{capacity_bytes:SealedShared::<SourceRoots>::birth_bytes(),depth:1,..Default::default()}}
@@ -118,6 +118,8 @@ impl OriginalCallerSourceParent{
   if let Some(original)=self.original.as_ref(){return original.original_transfer_demand();}
   self.retiring.as_ref().map_or(Ok(Default::default()),|retiring|if retiring.terminal_is_empty()||self.borrowed_cancel&&retiring.authority.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{retiring.demands()})
  }
+ /// 🧮️ The selected parent close quote delegates every live child to its actual retirement owner.
+ pub fn retirement_work_demand(&self)->Result<u64,ValueError>{if self.terminal_is_empty(){return Ok(0)}if self.native_sources_pending()||self.original.as_ref().is_some_and(|source|source.get().returns.retains_claims()){return Ok(0)}if self.lending_open||self.pending_roots.is_some(){return Ok(SOURCE_CONTROL_WORK)}if let Some(original)=self.original.as_ref(){return original.original_transfer_work_demand()}let Some(retiring)=self.retiring.as_ref()else{return Ok(0)};if retiring.terminal_is_empty(){return Ok(SOURCE_CONTROL_WORK)}if self.borrowed_cancel&&retiring.authority.terminal_is_empty()&&!retiring.cancel.terminal_is_empty(){return retiring.cancel.return_alias_work_demand()}retiring.retirement_work_demand()}
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
   if self.borrowed_source{return RetainedWorkOutcome{result:Err(refused("original borrowed parent must return its paid source loan to its issuer")),work:0};}
   if self.borrowed_cancel&&!self.terminal_is_empty(){return RetainedWorkOutcome{result:Err(refused("child source physical close requires its still-retained original parent witness")),work:0};}
@@ -129,14 +131,14 @@ impl OriginalCallerSourceParent{
   if self.native_sources_pending()||self.original.as_ref().is_some_and(|source|source.get().returns.retains_claims()){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
   let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
   if !semio_framework_value_retained_clone::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
-  if self.lending_open{self.lending_open=false;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1};}
+  if self.lending_open{self.lending_open=false;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:SOURCE_CONTROL_WORK};}
   if let Some(original)=self.original.take(){
    let turn=original.try_unwrap(grant);let result=match turn.result{Ok((roots,progress))=>{*self.pending_roots=Some(roots);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{*self.original=Some(original);Err(error)}};
    return RetainedWorkOutcome{result,work:turn.work};
   }
-  if let Some(roots)=self.pending_roots.take(){*self.retiring=Some(SourceRetirement::new(roots));return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1};}
+  if let Some(roots)=self.pending_roots.take(){*self.retiring=Some(SourceRetirement::new(roots));return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:SOURCE_CONTROL_WORK};}
   let retiring=match self.retiring.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("retiring absent").into()),work:0}};
-  if retiring.terminal_is_empty(){self.retiring.take();self.clock_authority=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(metadata())),work:1};}
+  if retiring.terminal_is_empty(){self.retiring.take();self.clock_authority=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(metadata())),work:SOURCE_CONTROL_WORK};}
   let turn=if self.borrowed_cancel&&retiring.authority.terminal_is_empty()&&!retiring.cancel.terminal_is_empty(){let turn=retiring.cancel.return_alias_step(match witness{Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("witness absent").into()),work:0}},grant);RetainedWorkOutcome{result:turn.result.map_err(cancel_refusal),work:turn.work}}else{retiring.close_step(grant)};
   RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}
  }
@@ -185,11 +187,4 @@ fn cancel_refusal(error:CancelTokenRetirementError)->ValueError{match error{Canc
 #[path="👶️child/🦀️.rs"]
 mod child_source;
 pub use child_source::{OriginalCallerChildSource,OriginalChildTurnReturn};
-
-
-
-
-
-
-
 

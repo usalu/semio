@@ -5,7 +5,7 @@ use super::*;
 //#region 🔖️PagedAppCommandDecode
 impl PagedAppCommandDecodeCursor {
     pub fn new(command: PagedCommand) -> Self {
-        Self { reader: PagedCommandReader::new(command), state: PagedAppCommandDecodeState::Header }
+        Self { reader: PagedCommandReader::new(command), state: PagedAppCommandDecodeState::Header,original:Default::default(),original_close:None,original_active:false,original_retired:false }
     }
 
     pub fn kind(&self) -> u8 {
@@ -325,6 +325,7 @@ impl PagedAppCommandDecodeCursor {
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        if self.original_active||self.original_close.is_some(){return (false,0)}
         if let PagedAppCommandDecodeState::LoadDocumentArchive { decode, .. } = &mut self.state {
             let (empty, released) = decode.close_step(maximum_bytes);
             if !empty || released != 0 {
@@ -429,7 +430,7 @@ impl PagedAppCommandDecodeCursor {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        matches!(self.state, PagedAppCommandDecodeState::Terminal) && self.reader.terminal_is_empty()
+        matches!(self.state, PagedAppCommandDecodeState::Terminal) && self.reader.terminal_is_empty() && !self.original_active && self.original_close.is_none()
     }
 }
 //#endregion 🔖️PagedAppCommandDecode

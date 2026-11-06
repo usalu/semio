@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-os-kernel = { workspace = true }
@@ -28,8 +29,9 @@ semio-s-artifact-remodel-remodeling-model-diff = { workspace = true }
 serde = { workspace = true }
 
 [dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-trace-memory-testing = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
-semio-framework-diagnostic = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-artifact-remodel-remodeling-mutations = { workspace = true }
 semio-s-artifact-remodel-remodeling-mut-vectors = { workspace = true }

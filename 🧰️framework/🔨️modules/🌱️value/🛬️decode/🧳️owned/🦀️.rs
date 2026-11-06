@@ -34,6 +34,8 @@ pub trait NativeRecordFields{
 }
 
 pub use semio_framework_value_native_receiver_protocol::{NativeAdvanceSelection,NativeReceiver};
+pub use crate::native_decoding::construction::NativeRecoveryLoan;
+pub use semio_framework_value_native_receiving_contract::{NativeClosePermit,native_work_limit,work_sum,selected_native_work};
 
 
 

@@ -2,10 +2,10 @@ use super::*;
 use semio_framework_value::retirement::RetireOwned;
 use super::*;
 use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant};
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeRetirementRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeRetirementRecipient,NativeDecodeWorkRecipient};
 /// 🎟️ Finite lower-level work loan; job caller behavior is tested separately.
 struct Loan;
-impl OriginalWorkRecipient for Loan {fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(observed.checked_add(additional).is_some_and(|total|total<=10_000_000))})())}}
+impl NativeDecodeWorkRecipient for Loan {fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=10_000_000;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=10_000_000))}}
 fn checked<T>(turn:semio_framework_value::RetainedWorkOutcome<T,store::NativeSnapshotFailure>,fuel:&mut u64)->Result<T,store::NativeSnapshotFailure>{*fuel=fuel.checked_sub(turn.work).expect("finite test work loan");turn.result}
 fn failure_kind(error:store::NativeSnapshotFailure)->ValueRefusalKind{let kind=error.kind();drain(error);kind}
 use semio_s_fem_node::planar::FemNodeValue;

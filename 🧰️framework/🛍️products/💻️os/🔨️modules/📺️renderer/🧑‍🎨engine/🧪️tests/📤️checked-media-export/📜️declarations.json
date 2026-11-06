@@ -1,0 +1,130 @@
+{
+  "$schema": "./🧬️schema/📜️declarations.json",
+  "actionId": "exportMediaFile",
+  "defaults": {
+    "outputPort": "mesh:out",
+    "filename": "remodeling-mesh.glb",
+    "mediaType": "model/gltf-binary",
+    "formatKind": "glb"
+  },
+  "port": {
+    "id": "mesh:out",
+    "label": "Mesh",
+    "direction": "out",
+    "kindId": "3d.mesh",
+    "mediaType": {
+      "class": "threeD",
+      "form": "mesh"
+    },
+    "required": false,
+    "multiplicity": "many"
+  },
+  "descriptor": {
+    "portId": "mesh:out",
+    "mediaType": {
+      "class": "threeD",
+      "form": "mesh"
+    },
+    "wire": {
+      "kind": "binary",
+      "format_kind": "glb"
+    }
+  },
+  "rejectedFilenames": [
+    "../mesh.glb",
+    "mesh/part.glb",
+    "mesh\\part.glb",
+    "CON.glb",
+    "NUL",
+    "mesh.glb.",
+    "mesh.glb ",
+    ""
+  ],
+  "deliveryCases": [
+    {
+      "id": "complete",
+      "delivered": true,
+      "error": null,
+      "sink": [
+        "open",
+        "write",
+        "write",
+        "close"
+      ]
+    },
+    {
+      "id": "source-changed-after-drain",
+      "delivered": false,
+      "error": "media-export.source-changed",
+      "sink": []
+    },
+    {
+      "id": "source-changed-before-delivery",
+      "delivered": false,
+      "error": "media-export.source-changed",
+      "sink": [
+        "open",
+        "write",
+        "write",
+        "abort"
+      ]
+    },
+    {
+      "id": "cancelled-during-copy",
+      "delivered": false,
+      "error": null,
+      "sink": [
+        "open",
+        "write",
+        "abort"
+      ]
+    },
+    {
+      "id": "owner-retired-during-copy",
+      "delivered": false,
+      "error": null,
+      "sink": [
+        "open",
+        "write",
+        "abort"
+      ]
+    },
+    {
+      "id": "wrong-format",
+      "delivered": false,
+      "error": "media-export.descriptor-mismatch",
+      "sink": []
+    }
+  ],
+  "snapshot": {
+    "actionId": "exportSnapshotFile",
+    "defaults": {
+      "outputPort": "semio.snapshot.pack",
+      "filename": "remodeling-snapshot.pack",
+      "mediaType": "application/vnd.semio.pack",
+      "formatKind": "semio.snapshot.pack.v1"
+    },
+    "port": {
+      "id": "semio.snapshot.pack",
+      "label": "Snapshot",
+      "direction": "out",
+      "mediaType": {
+        "class": "data",
+        "form": "document"
+      },
+      "required": false,
+      "multiplicity": "many"
+    },
+    "descriptor": {
+      "portId": "semio.snapshot.pack",
+      "mediaType": {
+        "class": "data",
+        "form": "document"
+      },
+      "wire": {
+        "kind": "binary",
+        "format_kind": "semio.snapshot.pack.v1"
+      }
+    }
+  }
+}

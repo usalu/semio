@@ -30,3 +30,7 @@ semio-framework-value-retained-clone = { path = "../../../../🧬️retained-clo
 semio-framework-value-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+
+[[test]]
+name = "original-source-marker"
+path = "../../marker.rs"

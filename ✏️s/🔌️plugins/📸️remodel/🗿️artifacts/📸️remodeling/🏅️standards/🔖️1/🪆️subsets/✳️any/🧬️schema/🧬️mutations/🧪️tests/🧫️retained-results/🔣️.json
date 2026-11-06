@@ -1,0 +1,654 @@
+{
+  "cases": [
+    {
+      "field": "sparse",
+      "original": null,
+      "replacement": null,
+      "status": "no-op",
+      "inverse": null,
+      "code": "mutation.no-op",
+      "message": "Sparse results already have this value."
+    },
+    {
+      "field": "sparse",
+      "original": null,
+      "replacement": {
+        "points": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null
+      },
+      "status": "changed",
+      "inverse": null
+    },
+    {
+      "field": "sparse",
+      "original": {
+        "points": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null
+      },
+      "replacement": null,
+      "status": "changed",
+      "inverse": {
+        "points": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null
+      }
+    },
+    {
+      "field": "sparse",
+      "original": {
+        "points": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null
+      },
+      "replacement": {
+        "points": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null
+      },
+      "status": "no-op",
+      "inverse": {
+        "points": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null
+      },
+      "code": "mutation.no-op",
+      "message": "Sparse results already have this value."
+    },
+    {
+      "field": "dense",
+      "original": null,
+      "replacement": null,
+      "status": "no-op",
+      "inverse": null,
+      "code": "mutation.no-op",
+      "message": "Dense results already have this value."
+    },
+    {
+      "field": "dense",
+      "original": null,
+      "replacement": {
+        "positions": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null,
+        "confidence": null,
+        "classification": null
+      },
+      "status": "changed",
+      "inverse": null
+    },
+    {
+      "field": "dense",
+      "original": {
+        "positions": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null,
+        "confidence": null,
+        "classification": null
+      },
+      "replacement": null,
+      "status": "changed",
+      "inverse": {
+        "positions": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null,
+        "confidence": null,
+        "classification": null
+      }
+    },
+    {
+      "field": "dense",
+      "original": {
+        "positions": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null,
+        "confidence": null,
+        "classification": null
+      },
+      "replacement": {
+        "positions": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null,
+        "confidence": null,
+        "classification": null
+      },
+      "status": "no-op",
+      "inverse": {
+        "positions": {
+          "kind": "inline",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        },
+        "colors": null,
+        "confidence": null,
+        "classification": null
+      },
+      "code": "mutation.no-op",
+      "message": "Dense results already have this value."
+    },
+    {
+      "field": "trajectory",
+      "original": null,
+      "replacement": null,
+      "status": "missing",
+      "inverse": null,
+      "target": "document",
+      "code": "mutation.target-missing",
+      "message": "There is no trajectory to clear."
+    },
+    {
+      "field": "trajectory",
+      "original": null,
+      "replacement": {
+        "poses": [
+          {
+            "cameraId": "camera-1",
+            "rotationWxyz": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "status": "changed",
+      "inverse": null
+    },
+    {
+      "field": "trajectory",
+      "original": {
+        "poses": [
+          {
+            "cameraId": "camera-1",
+            "rotationWxyz": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "replacement": null,
+      "status": "changed",
+      "inverse": {
+        "poses": [
+          {
+            "cameraId": "camera-1",
+            "rotationWxyz": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "field": "trajectory",
+      "original": {
+        "poses": [
+          {
+            "cameraId": "camera-1",
+            "rotationWxyz": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "replacement": {
+        "poses": [
+          {
+            "cameraId": "camera-1",
+            "rotationWxyz": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "status": "no-op",
+      "inverse": {
+        "poses": [
+          {
+            "cameraId": "camera-1",
+            "rotationWxyz": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "code": "mutation.no-op",
+      "message": "Trajectory is already up to date."
+    },
+    {
+      "field": "geo",
+      "original": null,
+      "replacement": null,
+      "status": "missing",
+      "inverse": null,
+      "target": "document",
+      "code": "mutation.target-missing",
+      "message": "There are no geo products to clear."
+    },
+    {
+      "field": "geo",
+      "original": null,
+      "replacement": {
+        "dsmAssetId": "dsm",
+        "dtmAssetId": null,
+        "orthoAssetId": null
+      },
+      "status": "changed",
+      "inverse": null
+    },
+    {
+      "field": "geo",
+      "original": {
+        "dsmAssetId": "dsm",
+        "dtmAssetId": null,
+        "orthoAssetId": null
+      },
+      "replacement": null,
+      "status": "changed",
+      "inverse": {
+        "dsmAssetId": "dsm",
+        "dtmAssetId": null,
+        "orthoAssetId": null
+      }
+    },
+    {
+      "field": "geo",
+      "original": {
+        "dsmAssetId": "dsm",
+        "dtmAssetId": null,
+        "orthoAssetId": null
+      },
+      "replacement": {
+        "dsmAssetId": "dsm",
+        "dtmAssetId": null,
+        "orthoAssetId": null
+      },
+      "status": "no-op",
+      "inverse": {
+        "dsmAssetId": "dsm",
+        "dtmAssetId": null,
+        "orthoAssetId": null
+      },
+      "code": "mutation.no-op",
+      "message": "Geo products are already up to date."
+    },
+    {
+      "field": "qc",
+      "original": null,
+      "replacement": null,
+      "status": "missing",
+      "inverse": null,
+      "target": "document",
+      "code": "mutation.target-missing",
+      "message": "There is no QC report to clear."
+    },
+    {
+      "field": "qc",
+      "original": null,
+      "replacement": {
+        "reprojectionRmsPx": 0.5,
+        "gcpCheckpointRmse": null,
+        "watertight": null,
+        "meanTrackLength": 0,
+        "registeredFrameRatio": 0,
+        "denseCoverageRatio": 0,
+        "warnings": []
+      },
+      "status": "changed",
+      "inverse": null
+    },
+    {
+      "field": "qc",
+      "original": {
+        "reprojectionRmsPx": 0.5,
+        "gcpCheckpointRmse": null,
+        "watertight": null,
+        "meanTrackLength": 0,
+        "registeredFrameRatio": 0,
+        "denseCoverageRatio": 0,
+        "warnings": []
+      },
+      "replacement": null,
+      "status": "changed",
+      "inverse": {
+        "reprojectionRmsPx": 0.5,
+        "gcpCheckpointRmse": null,
+        "watertight": null,
+        "meanTrackLength": 0,
+        "registeredFrameRatio": 0,
+        "denseCoverageRatio": 0,
+        "warnings": []
+      }
+    },
+    {
+      "field": "qc",
+      "original": {
+        "reprojectionRmsPx": 0.5,
+        "gcpCheckpointRmse": null,
+        "watertight": null,
+        "meanTrackLength": 0,
+        "registeredFrameRatio": 0,
+        "denseCoverageRatio": 0,
+        "warnings": []
+      },
+      "replacement": {
+        "reprojectionRmsPx": 0.5,
+        "gcpCheckpointRmse": null,
+        "watertight": null,
+        "meanTrackLength": 0,
+        "registeredFrameRatio": 0,
+        "denseCoverageRatio": 0,
+        "warnings": []
+      },
+      "status": "no-op",
+      "inverse": {
+        "reprojectionRmsPx": 0.5,
+        "gcpCheckpointRmse": null,
+        "watertight": null,
+        "meanTrackLength": 0,
+        "registeredFrameRatio": 0,
+        "denseCoverageRatio": 0,
+        "warnings": []
+      },
+      "code": "mutation.no-op",
+      "message": "QC report is already up to date."
+    },
+    {
+      "field": "tracks",
+      "original": [],
+      "replacement": [],
+      "status": "no-op",
+      "inverse": [],
+      "code": "mutation.no-op",
+      "message": "Tracks already have this value."
+    },
+    {
+      "field": "tracks",
+      "original": [],
+      "replacement": [
+        {
+          "id": "track-1",
+          "length": 2,
+          "class": "static",
+          "meanSpeedMS": 0
+        }
+      ],
+      "status": "changed",
+      "inverse": []
+    },
+    {
+      "field": "tracks",
+      "original": [
+        {
+          "id": "track-1",
+          "length": 2,
+          "class": "static",
+          "meanSpeedMS": 0
+        }
+      ],
+      "replacement": [],
+      "status": "changed",
+      "inverse": [
+        {
+          "id": "track-1",
+          "length": 2,
+          "class": "static",
+          "meanSpeedMS": 0
+        }
+      ]
+    },
+    {
+      "field": "tracks",
+      "original": [
+        {
+          "id": "track-1",
+          "length": 2,
+          "class": "static",
+          "meanSpeedMS": 0
+        }
+      ],
+      "replacement": [
+        {
+          "id": "track-1",
+          "length": 2,
+          "class": "static",
+          "meanSpeedMS": 0
+        }
+      ],
+      "status": "no-op",
+      "inverse": [
+        {
+          "id": "track-1",
+          "length": 2,
+          "class": "static",
+          "meanSpeedMS": 0
+        }
+      ],
+      "code": "mutation.no-op",
+      "message": "Tracks already have this value."
+    },
+    {
+      "field": "mesh",
+      "original": {
+        "childId": "remodeling-mesh-constant-box",
+        "handle": "remodeling-mesh-constant:box",
+        "source": "placeholder",
+        "textureAssetId": null
+      },
+      "replacement": {
+        "childId": "remodeling-mesh-constant-box",
+        "handle": "remodeling-mesh-constant:box",
+        "source": "placeholder",
+        "textureAssetId": null
+      },
+      "status": "no-op",
+      "inverse": {
+        "childId": "remodeling-mesh-constant-box",
+        "handle": "remodeling-mesh-constant:box",
+        "source": "placeholder",
+        "textureAssetId": null
+      },
+      "durable": "none",
+      "code": "mutation.no-op",
+      "message": "Mesh result is already up to date."
+    },
+    {
+      "field": "mesh",
+      "original": {
+        "childId": "remodeling-mesh-constant-box",
+        "handle": "remodeling-mesh-constant:box",
+        "source": "placeholder",
+        "textureAssetId": null
+      },
+      "replacement": {
+        "childId": "remodeling-mesh-constant-box",
+        "handle": "remodeling-mesh-constant:box",
+        "source": "imported",
+        "textureAssetId": null
+      },
+      "status": "changed",
+      "inverse": {
+        "childId": "remodeling-mesh-constant-box",
+        "handle": "remodeling-mesh-constant:box",
+        "source": "placeholder",
+        "textureAssetId": null
+      },
+      "durable": "none"
+    },
+    {
+      "field": "mesh",
+      "original": {
+        "childId": "mesh-content-1",
+        "handle": "remodeling-mesh-content:1",
+        "source": "placeholder",
+        "textureAssetId": null
+      },
+      "replacement": {
+        "childId": "mesh-content-1",
+        "handle": "remodeling-mesh-content:1",
+        "source": "placeholder",
+        "textureAssetId": null
+      },
+      "status": "mismatch",
+      "inverse": {
+        "childId": "mesh-content-1",
+        "handle": "remodeling-mesh-content:1",
+        "source": "placeholder",
+        "textureAssetId": null
+      },
+      "durable": "incomplete",
+      "target": "mesh-content-1",
+      "code": "mutation.target-mismatch",
+      "message": "The mesh names durable content that is not complete."
+    },
+    {
+      "field": "mesh",
+      "original": {
+        "childId": "mesh-content-1",
+        "handle": "remodeling-mesh-content:1",
+        "source": "placeholder",
+        "textureAssetId": null
+      },
+      "replacement": {
+        "childId": "mesh-content-1",
+        "handle": "remodeling-mesh-content:1",
+        "source": "placeholder",
+        "textureAssetId": null
+      },
+      "status": "no-op",
+      "inverse": {
+        "childId": "mesh-content-1",
+        "handle": "remodeling-mesh-content:1",
+        "source": "placeholder",
+        "textureAssetId": null
+      },
+      "durable": "complete",
+      "code": "mutation.no-op",
+      "message": "Mesh result is already up to date."
+    }
+  ],
+  "ieeeCases": [
+    {
+      "field": "sparse",
+      "sample": "NaN",
+      "selfEqual": false,
+      "status": "changed"
+    }
+  ]
+}

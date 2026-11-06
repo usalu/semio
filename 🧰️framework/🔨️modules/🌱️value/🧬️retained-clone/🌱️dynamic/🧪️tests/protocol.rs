@@ -1,3 +1,4 @@
+const MAXIMUM_CLONE_WORK:u64=4096;
 use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::{Number,observe_retirement_allocations as observe};
@@ -67,8 +68,8 @@ pub(super) fn advance_original(source:&RetainedCloneSource<DslValue>,cursor:&mut
     let root=source.borrow().get()as*const DslValue as usize;let mut actual=Advanced{complete:false,turns:0,born:0,freed:0};
     for _ in 0..100000{
         if cancelled==Some(actual.turns){break;}
-        let(demand,heap)=observe(||cursor.demands(source.borrow(),64).unwrap());assert_eq!(heap,(0,0));let admitted=grant(demand,64);
-        for denied in denied(admitted,demand){binding(cursor,true);let(result,heap)=observe(||cursor.advance(source.borrow(),64,denied));check_denied(result,heap,denied,demand);binding(cursor,false);assert_eq!(cursor.demands(source.borrow(),64).unwrap(),demand);assert_eq!(source.borrow().get()as*const DslValue as usize,root);}
-        let(result,heap)=observe(||cursor.advance(source.borrow(),64,admitted));let work=result.work;let done=matches!(&result.result,Ok(RetainedCloneStep::Complete(_)));let progress=check(result,heap,admitted);assert!(work>0);assert_eq!(progress.copied_items,1);actual.born+=heap.0;actual.freed+=heap.1;actual.turns+=1;if done{actual.complete=true;break;}
+        let(demand,heap)=observe(||cursor.demands(source.borrow(),64,MAXIMUM_CLONE_WORK).unwrap());assert_eq!(heap,(0,0));let admitted=grant(demand,64);
+        for denied in denied(admitted,demand){binding(cursor,true);let(result,heap)=observe(||cursor.advance(source.borrow(),64,MAXIMUM_CLONE_WORK,denied));check_denied(result,heap,denied,demand);binding(cursor,false);assert_eq!(cursor.demands(source.borrow(),64,MAXIMUM_CLONE_WORK).unwrap(),demand);assert_eq!(source.borrow().get()as*const DslValue as usize,root);}
+        let(result,heap)=observe(||cursor.advance(source.borrow(),64,MAXIMUM_CLONE_WORK,admitted));let work=result.work;let done=matches!(&result.result,Ok(RetainedCloneStep::Complete(_)));let progress=check(result,heap,admitted);assert!(work>0);assert_eq!(progress.copied_items,1);actual.born+=heap.0;actual.freed+=heap.1;actual.turns+=1;if done{actual.complete=true;break;}
     }actual
 }

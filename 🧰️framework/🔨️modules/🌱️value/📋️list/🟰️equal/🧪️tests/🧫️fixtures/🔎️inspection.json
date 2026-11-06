@@ -1,0 +1,32 @@
+[
+  {
+    "id": "no-work",
+    "work": 0,
+    "physical": true,
+    "inspected": false
+  },
+  {
+    "id": "one-work",
+    "work": 1,
+    "physical": true,
+    "inspected": false
+  },
+  {
+    "id": "two-work",
+    "work": 2,
+    "physical": true,
+    "inspected": false
+  },
+  {
+    "id": "denied-physical",
+    "work": 3,
+    "physical": false,
+    "inspected": false
+  },
+  {
+    "id": "admitted",
+    "work": 3,
+    "physical": true,
+    "inspected": true
+  }
+]

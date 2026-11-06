@@ -1,0 +1,3 @@
+# Mesh index bound review
+
+The resolver validates 512 vertices and 512 triangles with matching scalar counts at snapshot mesh-handles/🦀️.rs:131–153, so 1536 position, normal and index scalar capacities are domain-backed. 87,582 total nonempty bytes bound permits up to that many tiny/tag-only leaves, below the packed location 20-bit leaf capacity; 12-bit offsets cover the 4096-byte leaf. UTF-8 is checked per chunk by the existing resolver too. Resolver accepts empty constant mesh whereas export index only handles box and rejects empty; whether empty export should be supported is a product contract question. Current Remodel retained key implementations directly borrow stored id, camera_id or key fields. No runtime execution.

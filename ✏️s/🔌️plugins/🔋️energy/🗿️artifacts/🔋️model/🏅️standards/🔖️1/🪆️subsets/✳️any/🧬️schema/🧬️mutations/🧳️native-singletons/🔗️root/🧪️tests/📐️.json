@@ -4,6 +4,12 @@
   "required": [
     "contract",
     "bodyBytes",
+    "comparisonWorkUnits",
+    "checkDeniedProjectionWork",
+    "checkPinInspectionWork",
+    "checkZeroBodyDenial",
+    "checkOwnerPartialDenialWork",
+    "ownerWorkUnits",
     "capacityBytes",
     "cancelAt",
     "wideCharacters",
@@ -15,6 +21,24 @@
       "const": "semio.energy.original-root-links.v1"
     },
     "bodyBytes": {
+      "const": 4096
+    },
+    "comparisonWorkUnits": {
+      "const": 16
+    },
+    "checkDeniedProjectionWork": {
+      "const": true
+    },
+    "checkPinInspectionWork": {
+      "const": true
+    },
+    "checkZeroBodyDenial": {
+      "const": true
+    },
+    "checkOwnerPartialDenialWork": {
+      "const": true
+    },
+    "ownerWorkUnits": {
       "const": 4096
     },
     "capacityBytes": {

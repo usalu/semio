@@ -115,7 +115,7 @@ pub enum OwnedSemioExport {
 }
 
 impl OwnedSemioExport {
-    pub const MAX_SCALAR_ARGUMENTS:usize=22;
+    pub const MAX_SCALAR_ARGUMENTS:usize=23;
     pub const ALL: [Self; 36] = [
         Self::Allocate,
         Self::Deallocate,
@@ -202,10 +202,13 @@ impl OwnedSemioExport {
             Self::Allocate => FunctionType { parameters: vec![ValueType::I32], results: vec![ValueType::I32] },
             Self::Deallocate => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![] },
             Self::ChannelVersion => FunctionType { parameters: vec![], results: vec![ValueType::I32] },
-            Self::StartJob | Self::PublishActorFailure | Self::ReadActorFailure | Self::AcknowledgeActorFailure | Self::StepJob | Self::ReadJobOutput | Self::AcknowledgeJobOutput | Self::CancelJob => FunctionType{parameters:vec![ValueType::I64;20],results:vec![ValueType::I64]},
+            Self::StartJob | Self::StepJob | Self::ReadJobOutput | Self::AcknowledgeJobOutput | Self::CancelJob => FunctionType{parameters:vec![ValueType::I64;20],results:vec![ValueType::I64]},
+            Self::PublishActorFailure | Self::ReadActorFailure | Self::AcknowledgeActorFailure => FunctionType{parameters:vec![ValueType::I64;21],results:vec![ValueType::I64]},
             Self::CloseJobs => FunctionType{parameters:vec![ValueType::I64;19],results:vec![ValueType::I64]},
-            Self::BorrowJobOutput | Self::BorrowActorFailure=>FunctionType{parameters:vec![ValueType::I64;5],results:vec![ValueType::I64]},
-            Self::AcknowledgeJobOutputChunk | Self::AcknowledgeActorFailureChunk=>FunctionType{parameters:vec![ValueType::I64;22],results:vec![ValueType::I64]},
+            Self::BorrowJobOutput=>FunctionType{parameters:vec![ValueType::I64;5],results:vec![ValueType::I64]},
+            Self::BorrowActorFailure=>FunctionType{parameters:vec![ValueType::I64;6],results:vec![ValueType::I64]},
+            Self::AcknowledgeJobOutputChunk=>FunctionType{parameters:vec![ValueType::I64;22],results:vec![ValueType::I64]},
+            Self::AcknowledgeActorFailureChunk=>FunctionType{parameters:vec![ValueType::I64;23],results:vec![ValueType::I64]},
             Self::AdmitActorInput=>FunctionType{parameters:[vec![ValueType::I32,ValueType::I32],vec![ValueType::I64;19]].concat(),results:vec![ValueType::I64]},
             Self::Checkpoint | Self::Describe | Self::Restore | Self::Poll | Self::AdmitActorContext | Self::CloseActorContext | Self::CloseActorOutput | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport | Self::SqliteRetirement | Self::SqliteClose | Self::SqliteTakeFile | Self::SqliteTakePayload => {
                 FunctionType { parameters: vec![ValueType::I64;19], results: vec![ValueType::I64] }
@@ -342,3 +345,14 @@ impl OwnedSemioInstance {
     }
 }
 //#endregion 🧠️OwnedSemioBoundary
+
+#[cfg(test)]
+mod actor_failure_arity_tests{
+ use super::*;
+ #[test]
+ fn actual_owned_exports_keep_actor_failure_selectors_distinct_from_jobs(){
+  let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/📡️failure-arity/🔣️.json")).unwrap();
+  for row in law["cases"].as_array().unwrap(){let export=OwnedSemioExport::ALL.into_iter().find(|value|format!("{value:?}")==row["export"].as_str().unwrap()).unwrap();let ty=export.core_type();assert_eq!(ty.parameters.len(),row["arguments"].as_u64().unwrap()as usize);assert!(ty.parameters.iter().all(|value|*value==ValueType::I64));}
+  assert_eq!(OwnedSemioExport::MAX_SCALAR_ARGUMENTS,law["maximumScalars"].as_u64().unwrap()as usize);assert_eq!(OwnedSemioExport::ALL.into_iter().map(|export|export.core_type().parameters.len()).max().unwrap(),OwnedSemioExport::MAX_SCALAR_ARGUMENTS);
+ }
+}

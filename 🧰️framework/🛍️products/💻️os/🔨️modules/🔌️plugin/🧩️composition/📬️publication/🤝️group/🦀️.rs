@@ -65,13 +65,17 @@ pub struct PrivateOwnedPublicationLane {
         pub phase: PrivateOwnedPublicationPhase,
         pub grouped: bool,
         pub origins_assigned:bool,
+        native_scope:ManuallyDrop<Option<semio_framework_job::OriginalNativeReceivingOutcome<Result<(),semio_framework_value::OriginalReceivingPrimary>>>>,
     }
 
     impl PrivateOwnedPublicationLane {
         /// 🪪️ Retains one original typed source and its independently admitted metadata.
-        pub fn new(request: store::MemberStoreOwnedBatchRequest) -> Self { Self { request: ManuallyDrop::new(Some(request)), publication: ManuallyDrop::new(None), metadata: None, phase: PrivateOwnedPublicationPhase::Admission, grouped: false,origins_assigned:false } }
+        pub fn new(request: store::MemberStoreOwnedBatchRequest) -> Self { Self { request: ManuallyDrop::new(Some(request)), publication: ManuallyDrop::new(None), metadata: None, phase: PrivateOwnedPublicationPhase::Admission, grouped: false,origins_assigned:false,native_scope:ManuallyDrop::new(None) } }
         pub fn request(&self) -> Option<&store::MemberStoreOwnedBatchRequest> { self.request.as_ref() }
+        pub fn requires_native_source_close(&self)->bool{self.native_scope.is_some()||self.publication.as_ref().is_some_and(|publication|publication.requires_receiving_close())}
         pub fn publication_mut(&mut self) -> Option<&mut (dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication + 'static)> { self.publication.as_deref_mut() }
+        /// 🧷️ Loans the actual interrupted original receiving frame to its issuer for resolution.
+        pub fn pending_receiving_recovery(&mut self)->Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>>{self.publication.as_deref_mut().and_then(|publication|publication.pending_receiving_recovery())}
         pub fn staged(&self) -> bool { self.phase == PrivateOwnedPublicationPhase::Staged }
         pub fn prepared_for_staging(&self) -> bool { self.phase == PrivateOwnedPublicationPhase::Staging }
         pub fn prepared_edit_id(&self) -> Option<&str> { self.prepared_for_staging().then(|| self.publication.as_ref()?.prepared_edit_id()).flatten() }
@@ -127,17 +131,39 @@ pub struct PrivateOwnedPublicationLane {
         pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
             use semio_framework_value::RetirementDemand;
             let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private publication retirement depth overflow"))?; Ok(demand) };
+            if self.native_scope.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_framework_job::OriginalNativeReceivingOutcome<Result<(),semio_framework_value::OriginalReceivingPrimary>>>>().checked_mul(2).ok_or_else(||ValueError::invariant("original native outcome close extent overflow"))?,depth:1,..Default::default()})}
+            if let Some(publication)=self.publication.as_ref(){if publication.requires_receiving_close(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Source close requires its selected escrow quote"))}}
+
             if let Some(publication) = self.publication.as_ref() { return if publication.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of_val(publication.as_ref()), depth: 1, ..Default::default() }) } else { nested(publication.retirement_demands(body)?) }; }
             if let Some(request) = self.request.as_ref() { return if request.mutations.terminal_is_empty() { Ok(RetirementDemand { depth: 1, ..Default::default() }) } else { nested(request.mutations.next_demands(body)?) }; }
             Ok(self.metadata.as_ref().map_or(Default::default(), |metadata| RetirementDemand { release_bytes: metadata.next_close_byte_demand(), depth: 2, ..Default::default() }))
         }
         /// ♻️ Returns staged authority before retiring original sources and whole physical frames.
-        pub fn close_step(&mut self, member: &mut impl SpaceMember,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        pub fn close_step(&mut self, member: &mut impl SpaceMember,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_job::OriginalTurnFailure> {
             use semio_framework_value::retained_clone::RetainedCloneProgress;
             if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
             if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            if self.native_scope.is_some(){
+                let bytes=size_of::<Option<semio_framework_job::OriginalNativeReceivingOutcome<Result<(),semio_framework_value::OriginalReceivingPrimary>>>>().checked_mul(2).ok_or_else(||ValueError::invariant("original native outcome handoff overflow"))?;
+                let work=u64::try_from(bytes).ok().and_then(|n|n.checked_add(1)).ok_or_else(||ValueError::invariant("original native outcome handoff work overflow"))?;
+                if grant.maximum_copy_bytes<bytes||grant.maximum_depth==0||cx.fuel_remaining()<work{return Ok(RetainedCloneStep::Progress(Default::default()))}
+                let progress=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};
+                let outcome=self.native_scope.take().expect("checked native Source outcome");
+                let failure=!outcome.call.as_ref().is_ok_and(|child|child.is_ok())||outcome.source_refusal.is_some();
+                cx.consume_fuel(work);let receipt=cx.consume_retained(progress);
+                if failure{let mut failure=semio_framework_job::OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::NativeRetirementSource(outcome));failure.effects=progress;failure.receipt_refusal=receipt.err();return Err(failure)}
+                receipt?;return Ok(RetainedCloneStep::Progress(progress))
+            }
+            if let Some(publication)=self.publication.as_mut(){
+                if publication.requires_receiving_close(){
+                    let before=cx.retained_progress();let called=cx.with_native_retirement_receiving_value(&mut self.native_scope,|native,issued|{let turn=publication.close_receiving_native(native,issued.maximum_copy_bytes,issued);Ok(turn.result.map(|_|()))})?;
+                    if !called{return Ok(RetainedCloneStep::Progress(Default::default()))}
+                    let after=cx.retained_progress();let progress=RetainedCloneProgress{copied_items:after.copied_items.checked_sub(before.copied_items).ok_or_else(||ValueError::invariant("original Source item receipt regressed"))?,copied_bytes:after.copied_bytes.checked_sub(before.copied_bytes).ok_or_else(||ValueError::invariant("original Source copy receipt regressed"))?,retained_capacity_bytes:after.retained_capacity_bytes.checked_sub(before.retained_capacity_bytes).ok_or_else(||ValueError::invariant("original Source capacity receipt regressed"))?,released_bytes:after.released_bytes.checked_sub(before.released_bytes).ok_or_else(||ValueError::invariant("original Source release receipt regressed"))?};
+                    return Ok(RetainedCloneStep::Progress(progress))
+                }
+            }
             let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
-            if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private publication exceeds admitted retirement depth")); }
+            if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private publication exceeds admitted retirement depth").into()); }
             if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
             self.phase = PrivateOwnedPublicationPhase::Closing;
@@ -156,10 +182,10 @@ pub struct PrivateOwnedPublicationLane {
             self.phase = PrivateOwnedPublicationPhase::Complete;
             Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
         }
-        pub fn terminal_is_empty(&self) -> bool { self.phase == PrivateOwnedPublicationPhase::Complete && self.request.is_none() && self.publication.is_none() && self.metadata.is_none() }
+        pub fn terminal_is_empty(&self) -> bool { self.phase == PrivateOwnedPublicationPhase::Complete && self.request.is_none() && self.publication.is_none() && self.metadata.is_none() && self.native_scope.is_none() }
     }
 
-    impl Drop for PrivateOwnedPublicationLane { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "private typed publication retains its original source and staged authority until bounded terminal close"); } }
+    impl Drop for PrivateOwnedPublicationLane { fn drop(&mut self) { let empty=self.terminal_is_empty();assert!(std::thread::panicking() || empty, "private typed publication retains its original source and staged authority until bounded terminal close");if empty{unsafe{ManuallyDrop::drop(&mut self.native_scope);ManuallyDrop::drop(&mut self.request);ManuallyDrop::drop(&mut self.publication);}} } }
 }
 
 pub use crate::group::private_publication_group::owner::{PrivateChildGroupSource, PrivateChildPublicationGroup};

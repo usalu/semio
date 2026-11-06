@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "sameSource": true,
+      "retirement": true,
+      "cancelled": true,
+      "work": 1,
+      "minimum": 1,
+      "admitted": true
+    },
+    {
+      "sameSource": false,
+      "retirement": true,
+      "cancelled": true,
+      "work": 1,
+      "minimum": 1,
+      "admitted": false
+    },
+    {
+      "sameSource": true,
+      "retirement": false,
+      "cancelled": true,
+      "work": 1,
+      "minimum": 1,
+      "admitted": false
+    },
+    {
+      "sameSource": true,
+      "retirement": true,
+      "cancelled": true,
+      "work": 0,
+      "minimum": 1,
+      "admitted": false
+    }
+  ],
+  "semanticAdmission": false,
+  "callback": "owned-retirement",
+  "marker": "original-allocation-frame"
+}

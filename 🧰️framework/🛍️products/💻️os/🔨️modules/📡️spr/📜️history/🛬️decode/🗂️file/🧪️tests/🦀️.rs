@@ -29,9 +29,9 @@ async fn original_bytes(law:&serde_json::Value,conflicts:&serde_json::Value,tran
  }}}
 }
 struct DriverWork{remaining:u64,quantum:u64}
-impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for DriverWork{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,semio_framework_value::ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.quantum.min(self.remaining)))}}
-struct CancelledTurn(std::sync::atomic::AtomicBool);
-impl super::super::RetainedHistoryTurn for CancelledTurn{fn should_yield(&self)->bool{false}fn is_cancelled(&self)->bool{self.0.load(std::sync::atomic::Ordering::Relaxed)}}
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for DriverWork{fn available_work(&mut self,observed:u64)->Result<u64,semio_framework_value::ValueError>{let limit:u64=self.quantum.min(self.remaining);limit.checked_sub(observed).ok_or_else(||semio_framework_value::ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,semio_framework_value::ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.quantum.min(self.remaining)))}}
+struct CancelledTurn(std::cell::Cell<bool>);
+impl super::super::RetainedHistoryTurn for CancelledTurn{fn should_yield(&self)->bool{false}fn is_cancelled(&self)->bool{self.0.get()}}
 fn assert_corpus_log(value:&HistoryLog,law:&serde_json::Value){
  let expected=&law["expected"];assert_eq!(value.doc_id,expected["docId"].as_str().unwrap());assert_eq!(value.schema,expected["schema"].as_str().unwrap());assert_eq!(value.edits.len(),2);
  for(index,edit)in value.edits.iter().enumerate(){assert_eq!(edit.id,expected["editIds"][index].as_str().unwrap());assert_eq!(edit.actor.as_ref().map(|a|a.as_str()),expected["actors"][index].as_str());assert_eq!(edit.ops[0].binary.as_ref().unwrap(),&hex(expected["binaryOpsHex"][index].as_str().unwrap()));assert_eq!(edit.meta.as_ref().unwrap()[0].base_version,expected["baseVersions"][index].as_u64().unwrap());}

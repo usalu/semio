@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "variants": [
+    [
+      "Native",
+      "kind",
+      "original"
+    ],
+    [
+      "UnexpectedEof",
+      "kind"
+    ],
+    [
+      "UnexpectedByte",
+      "kind",
+      "found",
+      "offset"
+    ],
+    [
+      "InvalidNumber",
+      "kind",
+      "offset"
+    ],
+    [
+      "InvalidEscape",
+      "kind",
+      "offset"
+    ],
+    [
+      "InvalidUnicodeEscape",
+      "kind",
+      "offset"
+    ],
+    [
+      "UnpairedSurrogate",
+      "kind",
+      "offset"
+    ],
+    [
+      "ControlCharacterInString",
+      "kind",
+      "byte",
+      "offset"
+    ],
+    [
+      "InvalidUtf8",
+      "kind"
+    ],
+    [
+      "TrailingData",
+      "kind",
+      "offset"
+    ],
+    [
+      "MaxDepthExceeded",
+      "kind",
+      "depth"
+    ],
+    [
+      "DuplicateMember",
+      "kind",
+      "name",
+      "offset"
+    ]
+  ],
+  "name": "duplicate 源",
+  "offset": 73
+}

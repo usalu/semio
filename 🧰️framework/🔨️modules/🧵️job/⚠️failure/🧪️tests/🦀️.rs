@@ -59,7 +59,7 @@ fn original_prepared_native_work_preserves_child_and_overrun_with_prepaid_custod
   let body=cx.retained_grant().maximum_copy_bytes;let demand=retirement.next_owner_demands::<OriginalTurnFailure>(failure.is_some(),&None,body)?;let work=retirement.next_owner_work::<OriginalTurnFailure>(failure.is_some(),&None,body)?;
   semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|{if !retirement.is_empty(){return retirement.step_granted(grant)}let turn=retirement.begin_granted(&mut failure,grant);RetainedWorkOutcome{result:turn.result.map_err(Into::into).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}})?;Ok(())
  }).unwrap();assert!(turn<99999);}assert!(failure.is_none()&&retirement.is_empty());
- for turn in 0..100000{if decoder.terminal_is_empty(){break}caller.turn(stock,|cx|{let demand=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,demand,|grant|decoder.close_step(grant))?;Ok(())}).unwrap();assert!(turn<99999);}assert!(decoder.terminal_is_empty());caller.retire(stock);
+ for turn in 0..100000{if decoder.terminal_is_empty(){break}caller.turn(stock,|cx|{let demand=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())}).unwrap();assert!(turn<99999);}assert!(decoder.terminal_is_empty());caller.retire(stock);
 }
 #[test]
 fn original_retirement_turn_failure_retains_nested_causes_override_and_original_funded_close(){
@@ -230,3 +230,53 @@ fn original_fault_scope_box_has_fallible_zero_copy_custody_and_exact_backing_clo
 }
 
 #[test]fn retained_retirement_allocation_is_not_projected_without_its_original_vault(){use semio_framework_job::project_original_retirement_failure;use semio_framework_value_retained_clone::{NativeAllocationRefusal,NativeAllocationRefusalVault,OriginalRetirementFailure};let mut vault=NativeAllocationRefusalVault::default();let original=ValueError::new(ValueRefusalKind::Canceled,"original retained job allocation".to_owned());let pointer=original.message.as_ptr();let handle=vault.retain(original).unwrap();let retirement=OriginalRetirementFailure::from_allocation_refusal(NativeAllocationRefusal::Retained(handle));let(projected,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||project_original_retirement_failure(&retirement,&[]));let error=match projected{Err(error)=>error,Ok(_)=>panic!("unresolved original handle projected")};assert_eq!(error.kind,ValueRefusalKind::UnsupportedOwner);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(_,_,_,allocation,child,progress_override)=retirement.into_parts();assert!(child.is_none()&&progress_override.is_none());let NativeAllocationRefusal::Retained(handle)=allocation.unwrap() else{unreachable!()};let original=vault.take(handle).unwrap();assert_eq!(original.message.as_ptr(),pointer);let stock=grant(&corpus()["closeGrant"]);for value in [error,original]{let mut owner=ControlledRetirement::retain(value);for turn in 0..100000{if owner.terminal_is_empty(){break}owner.step(stock).unwrap();assert!(turn<99999)}assert!(owner.terminal_is_empty())}}
+#[test]
+fn cancelled_domain_cause_is_captured_and_published_only_in_actual_retirement(){
+ use semio_framework_job::{OriginalDomainReservation,admit_original_domain_failure};use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
+ fn funded(caller:&mut OriginalJobFixtureCaller,grant:RetainedCloneGrant,body:impl FnOnce(&mut StepContext<'_>)->Result<(),OriginalTurnFailure>){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,body));result.unwrap();let receipt=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));}
+ let stock=failure_source_stock();let mut caller=OriginalJobFixtureCaller::admit(OperationId(73),Generation(3),stock,||Some(1000),1500,32768);let mut foreign=OriginalJobFixtureCaller::admit(OperationId(73),Generation(3),stock,||Some(1000),1500,32768);let mut reservation=OriginalDomainReservation::<DomainFixture>::new();let mut original=Some(DomainFixture{code:String::new(),message:String::new(),operand:73,retained:Default::default()});let mut published=None;
+ caller.cancel().cancel_now();funded(&mut caller,stock,|cx|{let before=cx.retained_progress();assert!(!reservation.prepare(cx)?);assert_eq!(cx.retained_progress(),before);assert!(cx.with_original_retirement(|cx|reservation.prepare(cx))?);let mut ran=false;assert!(cx.with_original_retirement(|cx|reservation.with_body(cx,|_,_|{ran=true;Ok(())}))?.is_none());assert!(!ran);assert!(!reservation.capture_original(cx,||original.take().unwrap())?);assert!(original.is_some());assert!(cx.with_original_retirement(|cx|reservation.capture_original(cx,||original.take().unwrap()))?);assert!(admit_original_domain_failure(&mut reservation,cx)?.is_none());assert!(reservation.pending_original().is_some());Ok(())});
+ let frame=reservation.allocation_identity();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||foreign.turn(stock,|cx|cx.with_original_retirement(|cx|admit_original_domain_failure(&mut reservation,cx))));assert!(matches!(result,Err(error)if error.primary_value().is_some_and(|error|error.kind==ValueRefusalKind::InvariantViolated)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(foreign.receipt(),RetainedCloneProgress::default());assert_eq!(reservation.allocation_identity(),frame);assert_eq!(reservation.pending_original().unwrap().operand,73);foreign.retire(stock);
+ funded(&mut caller,stock,|cx|{published=cx.with_original_retirement(|cx|admit_original_domain_failure(&mut reservation,cx))?;assert!(reservation.terminal_is_empty());Ok(())});
+ let mut closing=Some(ControlledRetirement::retain(published.take().unwrap()));for turn in 0..10000{if closing.as_ref().unwrap().terminal_is_empty(){break}funded(&mut caller,stock,|cx|cx.with_original_retirement(|cx|{let owner=closing.as_mut().unwrap();semio_framework_job::close_original_retained_step(cx,owner.selected_demand(stock.maximum_copy_bytes)?,|grant|owner.step(grant))?;Ok(())}));assert!(turn<9999)}assert!(closing.as_ref().unwrap().terminal_is_empty());drop(closing.take());caller.retire(stock);
+}
+
+#[test]
+fn native_source_original_projection_keeps_all_independent_causes(){
+ use semio_framework_job::{OriginalNativeReceivingOutcome,OriginalTurnPrimary,OriginalJobFixtureCaller,key_original_turn_failure};
+ use semio_framework_value::native_decoding::NativeDecodeCallFailure;
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️fixtures/🛬️native-source/🔣️.json")).unwrap();
+ for (index,case) in corpus["cases"].as_array().unwrap().iter().enumerate(){
+  let value=|key:&str|case[key].as_str().map(|message|ValueError::new(ValueRefusalKind::InvariantViolated,message.to_owned()));
+  let call=if case["callSucceeded"].as_bool().unwrap(){Ok(())}else{Err(NativeDecodeCallFailure{output:case["outputPresent"].as_bool().unwrap().then_some(()),operation:value("operation"),context:value("context"),receipt_refusal:value("receiptRefusal")})};
+  let original=OriginalNativeReceivingOutcome{call,source_refusal:value("sourceRefusal")};
+  let failure=OriginalTurnFailure::from(OriginalTurnPrimary::NativeSource(original));
+  let expected=case["expectedKeys"].as_array().unwrap();
+  for (ordinal,key) in expected.iter().enumerate(){assert_eq!(key_original_turn_failure(&failure,&[0,1],ordinal).unwrap(),key.as_str().unwrap());}
+  assert!(key_original_turn_failure(&failure,&[0,1],expected.len()).is_err());
+  let stock=failure_source_stock();let mut caller=OriginalJobFixtureCaller::admit(OperationId(91200+index as u64),Generation(7),stock,||Some(1),u64::try_from(stock.maximum_copy_bytes).unwrap(),stock.maximum_items);
+  let mut owner=ControlledRetirement::retain(failure);
+  for _ in 0..stock.maximum_items{if owner.terminal_is_empty(){break}caller.turn(stock,|cx|{let demand=owner.next_demand(7)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;Ok(())}).unwrap();}
+  assert!(owner.terminal_is_empty());caller.retire(stock);
+ }
+}
+
+#[test]
+fn native_retirement_source_projection_keeps_child_and_source_together(){
+ use semio_framework_job::{OriginalNativeReceivingOutcome,OriginalTurnPrimary,OriginalJobFixtureCaller,key_original_turn_failure};
+ use semio_framework_value::native_decoding::{NativeDecodeCallFailure,OriginalReceivingPrimary};
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️fixtures/🛬️native-source/🔣️.json")).unwrap();
+ for (index,case) in corpus["retirementCases"].as_array().unwrap().iter().enumerate(){
+  let value=|key:&str|case[key].as_str().map(|message|ValueError::new(ValueRefusalKind::InvariantViolated,message.to_owned()));
+  let child=if case["childSucceeded"].as_bool().unwrap(){Ok(())}else{Err(OriginalReceivingPrimary::from(value("childReceiving").unwrap()))};
+  let call=if case["callSucceeded"].as_bool().unwrap(){Ok(child)}else{Err(NativeDecodeCallFailure{output:case["outputPresent"].as_bool().unwrap().then_some(child),operation:value("operation"),context:value("context"),receipt_refusal:value("receiptRefusal")})};
+  let original=OriginalNativeReceivingOutcome{call,source_refusal:value("sourceRefusal")};
+  let failure=OriginalTurnFailure::from(OriginalTurnPrimary::NativeRetirementSource(original));
+  let expected=case["expectedKeys"].as_array().unwrap();for (ordinal,key) in expected.iter().enumerate(){assert_eq!(key_original_turn_failure(&failure,&[0,1],ordinal).unwrap(),key.as_str().unwrap());}
+  assert!(key_original_turn_failure(&failure,&[0,1],expected.len()).is_err());
+  let stock=failure_source_stock();let mut caller=OriginalJobFixtureCaller::admit(OperationId(91300+index as u64),Generation(7),stock,||Some(1),u64::try_from(stock.maximum_copy_bytes).unwrap(),stock.maximum_items);
+  let mut owner=ControlledRetirement::retain(failure);
+  for _ in 0..stock.maximum_items{if owner.terminal_is_empty(){break}caller.turn(stock,|cx|{let demand=owner.next_demand(7)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;Ok(())}).unwrap();}
+  assert!(owner.terminal_is_empty());caller.retire(stock);
+ }
+}

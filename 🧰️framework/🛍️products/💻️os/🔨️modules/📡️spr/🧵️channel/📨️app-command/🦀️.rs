@@ -6,6 +6,7 @@ use super::{ChildPackEntry, DocumentArchivePack, MediaExportHandleWire, Presence
 /// 📨️ One frame a client (UI or headless runner) sends to the app engine.
 #[derive(Debug, PartialEq)]
 #[expect(clippy::large_enum_variant, reason = "Presence commands transfer the admitted fixed roster slots inline without another channel allocation.")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum AppCommand {
     ConfigCommand {
         seq: u64,

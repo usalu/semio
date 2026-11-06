@@ -5,7 +5,7 @@ import { decodePackValue } from "@semio-tech/framework/packs";
 import { decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { DOCUMENT_ARCHIVE_FILE_EXTENSION, DOCUMENT_ARCHIVE_MEDIA_TYPE, documentArchiveFileNameV1, beginDocumentTransferV1, naturalFileNameV1, naturalFileFormatV1, naturalMediaDescriptorMatchesV1, openNaturalFileOwnerV1, bytesOfDataUrlV1, documentTransferNoticeTextV1, documentTransferNoticeCodeV1, type DocumentTransferNoticeV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
-import { NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1, NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, readBlobBytesBoundedV1, requestFileSelectionV1, downloadMediaExportBytes, requestFileOpen } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1, NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, readBlobBytesBoundedV1, requestFileSelectionV1, downloadMediaExportBytes, shellSegmentedDownloadSinkFactory, requestFileOpen } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import { buildSpacePanelState, parsePanelState, studioPanelFocusingSpawned } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import { documentTransferTasksV1, type TaskManagerDocumentTransferV1 } from "../../../🧵️TaskManager/🟦️.tsx";
@@ -20,6 +20,7 @@ import { LOCAL_CATALOG_WRITE_DEADLINE_MS_V1, sameLocalDocumentArchiveV1 } from "
 import { awaitVerifiedReadbackV1 } from "../../🗂️local-catalog/💾️acknowledgment/🟦️.ts";
 import { readOwnedDocumentArchiveV1 } from "../../🗄️shell-uri-documents/🔸️open-document/🔏️archive-owner/🟦️.ts";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
+import { declaredMediaFileExportV1, downloadDeclaredMediaFileV1, type MediaFileExportActionIdV1 } from "../../../../🎬️media/📤️file/🟦️.ts";
 
 /** 🔷 Builds scope, localDocumentOwnerRegistry, hostMode, dispatch of useDocumentTransferAndTabs. */
 export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDriverSettings }) {
@@ -269,6 +270,27 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       transferInFlightRef.current = false;
     }
   };
+  /** 📤️ Downloads one declared output from the exact app and saved revision captured by the input funnel. */
+  const exportMediaFile = async (target: ActiveSession, current: () => boolean, actionId: MediaFileExportActionIdV1): Promise<void> => {
+    const declaration = declaredMediaFileExportV1(target.app, actionId);
+    const handle = core.loadedPluginsRef.current.find(entry => entry.handle.pluginId === target.pluginId)?.handle;
+    const file = declaration?.filename ?? "";
+    if (declaration === null || handle === undefined) throw new Error("media-export.declaration-unavailable");
+    if (!beginDocumentTransferV1(transferInFlightRef)) return notifyDocumentTransfer("transfer-busy", file, "info");
+    const task = trackDocumentTransfer(file, target.pluginId);
+    const held = (): boolean => current() && core.loadedPluginsRef.current.some(entry => entry.handle === handle) && !core.pluginOpInFlightRef.current.has(handle.pluginId);
+    try {
+      if (await downloadDeclaredMediaFileV1({ instanceId: target.instanceId, declaration, port: handle, signal: task.signal, current: held, progress: task.progress, sinkFactory: shellSegmentedDownloadSinkFactory })) notifyDocumentTransfer("exported", file, "info");
+    } catch (error) {
+      if (!task.signal.aborted && held()) {
+        notifyDocumentTransfer("export-failed", file, "error");
+        throw error;
+      }
+    } finally {
+      task.finish();
+      transferInFlightRef.current = false;
+    }
+  };
   const saveNaturalFile = async (): Promise<void> => {
     const owned = documentTransferTarget();
     if (owned === null) return notifyDocumentTransfer("no-document", "", "info");
@@ -423,5 +445,5 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       },
     });
   };
-  return { openKeptFile, exportDocumentArchive, importDocumentArchive, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer, dispatch, agentBridge, session, focusedApp, focusedWindowInstancesRef, activeWindowIdRef, focusedSpawnedId, effectiveModeLayoutRef, uiKeybindingOverrides, activeUtilityByWindowIdRef, onAction, utilityGenerationFor, activeToolIdRef, toolGeneration, appLabelsOverlay, uiTerminology, uiLocale, showTransientNotice, clipboardFragmentRef, actionPaneExpandedByWindowIdRef, actionPaneStagedArgsByKeyRef, scope, openDocumentSessionsRef, localDocumentOwnerRegistry, panel, foldSpaceDirectoryRef, browserActorUiByRuntimeKeyRef, browserActorUiVersion, onBrowserActorIntent, onActionStable, focusedPanelBodyStores, treeWindowHost, panelTreeConfigCacheRef, hostMode, hostAppId, openWithFocusRole, openArtifactWithAppRef, dispatchClearDefaultApp, dispatchSetDefaultApp, openWithEntries, treeWindowGeneration, frameworkSettingsTab };
+  return { openKeptFile, exportDocumentArchive, importDocumentArchive, exportMediaFile, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer, dispatch, agentBridge, session, focusedApp, focusedWindowInstancesRef, activeWindowIdRef, focusedSpawnedId, effectiveModeLayoutRef, uiKeybindingOverrides, activeUtilityByWindowIdRef, onAction, utilityGenerationFor, activeToolIdRef, toolGeneration, appLabelsOverlay, uiTerminology, uiLocale, showTransientNotice, clipboardFragmentRef, actionPaneExpandedByWindowIdRef, actionPaneStagedArgsByKeyRef, scope, openDocumentSessionsRef, localDocumentOwnerRegistry, panel, foldSpaceDirectoryRef, browserActorUiByRuntimeKeyRef, browserActorUiVersion, onBrowserActorIntent, onActionStable, focusedPanelBodyStores, treeWindowHost, panelTreeConfigCacheRef, hostMode, hostAppId, openWithFocusRole, openArtifactWithAppRef, dispatchClearDefaultApp, dispatchSetDefaultApp, openWithEntries, treeWindowGeneration, frameworkSettingsTab };
 }

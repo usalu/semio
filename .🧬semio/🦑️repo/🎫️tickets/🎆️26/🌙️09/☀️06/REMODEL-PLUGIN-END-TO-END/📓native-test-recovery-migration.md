@@ -1,0 +1,3 @@
+# Native test recovery migration
+
+Updated PoisonHeader test receiver to explicit empty recovery and fallible close, recursive test caller and Norm bridge-fatigue native receiver close. The handwritten Receiving fixture owns two NativeIntrinsicSharedField values and needs immutable and mutable pending-recovery forwarding from that field owner before its required trait implementation can be migrated truthfully. Native owner notified. No tests run.

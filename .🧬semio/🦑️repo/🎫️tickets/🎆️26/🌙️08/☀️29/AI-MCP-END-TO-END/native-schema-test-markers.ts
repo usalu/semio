@@ -1,0 +1,8 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";const p="🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🎟️work/🧪️tests/🦀️.rs",t=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END",o=readFileSync(p,"utf8");let s=o;
+s=s.replace("cursor.demands(source.borrow(),4096)","cursor.demands(source.borrow(),4096,fuel)");
+for(const g of["denied","g"]){const before="cursor.advance(source.borrow(),&mut control,4096,"+g+")";const after="crate::source_fixture::receive(&mut control,"+g+",crate::source_fixture::WorkLoan::new(&fuel,fuel),|native|{let maximum=native.available_work_units().unwrap();cursor.advance(source.borrow(),native,4096,maximum,"+g+")})";if(!s.includes(before))throw Error("advance "+g);s=s.replaceAll(before,after)}
+s=s.replace("cursor.begin_close();","cursor.begin_close();let mut actual=None;");
+s=s.replace("if cursor.terminal_is_empty(){break}","if cursor.terminal_is_empty()&&actual.is_none(){break}").replace("if source.terminal_is_empty(){break}","if source.terminal_is_empty()&&actual.is_none(){break}");
+const g="RetainedCloneGrant{maximum_items:1,..bank}";
+s=s.replace("cursor.close_step("+g+")","crate::source_fixture::close_step(&mut actual,"+g+",fuel,cursor.close_demands(4096),cursor.close_work_demand(4096),|g,a|cursor.close_step(g,a))").replace("source.close_step("+g+")","crate::source_fixture::close_step(&mut actual,"+g+",fuel,source.next_close_demand(4096),source.next_close_work_demand(4096),|g,a|source.close_step(g,a))");
+if(readFileSync(p,"utf8")!==o)throw Error("changed");const temp=t+"/🗑️generated/schema-test.tmp";writeFileSync(temp,s);renameSync(temp,p);

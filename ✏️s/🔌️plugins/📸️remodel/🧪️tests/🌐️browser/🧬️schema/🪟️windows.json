@@ -1,0 +1,39 @@
+{
+  "type": "array",
+  "minItems": 3,
+  "maxItems": 3,
+  "items": {
+    "type": "object",
+    "required": [
+      "mode",
+      "kind",
+      "measure",
+      "control"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "mode": {
+        "enum": [
+          "model",
+          "capture",
+          "analyze"
+        ]
+      },
+      "kind": {
+        "type": "string",
+        "minLength": 1
+      },
+      "measure": {
+        "type": "string",
+        "minLength": 1
+      },
+      "control": {
+        "enum": [
+          "toggle",
+          "slider",
+          "select"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "keys": {
+    "snapshot": [
+      "cause",
+      "allocation",
+      "encodeEffect",
+      "receiptRefusal",
+      "contextRefusal",
+      "workRefusal",
+      "settlementRefusal",
+      "progress"
+    ],
+    "receiving": [
+      "primary",
+      "quoteRefusal",
+      "allocationRefusal",
+      "workRefusal",
+      "retirementFailure",
+      "allocationFailure",
+      "nativeAllocation",
+      "receiptRefusal",
+      "retainedProgress"
+    ],
+    "encode": [
+      "type",
+      "request",
+      "admitted",
+      "primary",
+      "forwardedQuote",
+      "scopedQuote",
+      "extentRefusal",
+      "forwardedRefusal",
+      "scopedRefusal",
+      "actual"
+    ],
+    "decode": [
+      "type",
+      "request",
+      "admitted",
+      "primary",
+      "quoteRefusal",
+      "extentRefusal",
+      "settlementRefusal",
+      "actual"
+    ],
+    "effect": [
+      "primary",
+      "invariant",
+      "physicalInvariant",
+      "capacityInvariant",
+      "work",
+      "local",
+      "physical",
+      "allocation"
+    ],
+    "nativeAllocation": [
+      "primary",
+      "admission",
+      "forwardedAdmission",
+      "scopedAdmission",
+      "forwardedQuote",
+      "scopedQuote",
+      "forwardedPost",
+      "scopedPost",
+      "forwardedCancel",
+      "scopedCancel",
+      "receipt",
+      "extent",
+      "progress"
+    ],
+    "allocationProgress": [
+      "priorAdmittedBytes",
+      "requestedBytes",
+      "maximumBytes",
+      "admittedBytes",
+      "actualCapacityBytes"
+    ],
+    "request": [
+      "bytes",
+      "ownedBytes",
+      "nextOwnedBytes",
+      "maximumBytes"
+    ],
+    "snapshotReceiving": [
+      "type",
+      "primary",
+      "quoteRefusal",
+      "allocationRefusal",
+      "workRefusal",
+      "retirementFailure",
+      "allocationFailure",
+      "nativeAllocation",
+      "receiptRefusal",
+      "progress"
+    ],
+    "snapshotRetirement": [
+      "primary",
+      "workRefusal",
+      "receiptRefusal",
+      "progressOverride",
+      "child"
+    ]
+  },
+  "laws": {
+    "borrowExactOriginal": true,
+    "retainIndependentSlots": true,
+    "retainNestedRetirement": true,
+    "retainAbsentSlots": true,
+    "allocateDiagnosticMirror": false
+  }
+}

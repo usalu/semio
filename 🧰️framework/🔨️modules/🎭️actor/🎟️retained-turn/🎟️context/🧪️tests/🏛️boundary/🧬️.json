@@ -8,7 +8,9 @@
     "productIndependent",
     "privateBinding",
     "sourceAdmission",
-    "binding"
+    "binding",
+    "aliases",
+    "closureCauses"
   ],
   "properties": {
     "version": {
@@ -19,12 +21,13 @@
     },
     "types": {
       "type": "array",
-      "minItems": 8,
-      "maxItems": 8,
+      "minItems": 9,
+      "maxItems": 9,
       "uniqueItems": true,
       "items": {
         "enum": [
           "OriginalActorAdmission",
+          "OriginalActorFailureCall",
           "OriginalActorContextError",
           "OriginalActorContext",
           "OriginalActorCall",
@@ -173,6 +176,47 @@
                 "type": "boolean"
               }
             }
+          }
+        }
+      }
+    },
+    "aliases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "const": "OriginalActorAdmissionFailure"
+      }
+    },
+    "closureCauses": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "variant",
+          "causes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "variant": {
+            "enum": [
+              "Refused",
+              "Cancellation",
+              "Original",
+              "CancellationReceipt"
+            ]
+          },
+          "causes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
           }
         }
       }

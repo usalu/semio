@@ -184,7 +184,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if source.original_tool_dispatch==Some(true){self.original_emission.admit_empty(action,source_meta,cx)?;return Ok(None)}
         let meta=source_meta.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing restored no action metadata"))?;
         let args=source.assembled.as_ref().or(source.prepared.as_ref()).or(source.args.as_ref());
-        if matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID) {
+        if matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::EXPORT_MEDIA_FILE_ACTION_ID | semio_framework::EXPORT_SNAPSHOT_FILE_ACTION_ID) {
             return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("framework.document-transfer.shell-owned"), format!("{action} is performed by the shell, never by the program"))).into());
         }
         if X::claims_action(action) {

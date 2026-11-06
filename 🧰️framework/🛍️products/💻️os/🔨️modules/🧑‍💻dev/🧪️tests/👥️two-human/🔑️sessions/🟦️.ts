@@ -18,8 +18,10 @@ export const short = (text: string): string => (text.length <= 160 ? text : `${t
 
 export async function openSessions(browser: Browser, urls: readonly string[], humans: readonly Human[], locale: string, firstProxy?:string): Promise<Session[]> {
   const sessions: Session[] = [];
-  for (const [index, human] of humans.entries()) {
+  const contexts: BrowserContext[] = [];
+  try { for (const [index, human] of humans.entries()) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale, ...(index===0&&firstProxy?{proxy:{server:firstProxy}}:{}) });
+    contexts.push(context);
     const page = await context.newPage();
     const lines: string[] = [];
     page.on("console", (message) => {
@@ -33,7 +35,7 @@ export async function openSessions(browser: Browser, urls: readonly string[], hu
       if (request.url().includes("/directory/event-page/v1?after=0")) lines.push(`${ms()} request /directory/event-page/v1?after=0`);
     });
     sessions.push({ human, url: urls[index] ?? urls[0]!, context, page, lines });
-  }
+  } } catch (error) { await Promise.allSettled(contexts.map(context => context.close())); throw error; }
   return sessions;
 }
 

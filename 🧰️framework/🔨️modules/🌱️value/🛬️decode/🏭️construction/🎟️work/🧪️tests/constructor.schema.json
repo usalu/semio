@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "work",
+    "capacity",
+    "cases",
+    "view",
+    "forbidden"
+  ],
+  "properties": {
+    "work": {
+      "const": 1
+    },
+    "capacity": {
+      "const": 8
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pendingWork",
+          "maximumWork",
+          "maximumCapacity",
+          "entered"
+        ],
+        "properties": {
+          "pendingWork": {
+            "type": "boolean"
+          },
+          "maximumWork": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maximumCapacity": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "entered": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "view": {
+      "const": [
+        "checkpoint",
+        "available_work_units",
+        "ledger_identity",
+        "retirement_recipient_identity",
+        "retained_grant",
+        "with_limits"
+      ]
+    },
+    "forbidden": {
+      "const": [
+        "charge",
+        "admit_turn_capacity",
+        "prepare_work",
+        "commit_work",
+        "receive_allocation"
+      ]
+    }
+  }
+}

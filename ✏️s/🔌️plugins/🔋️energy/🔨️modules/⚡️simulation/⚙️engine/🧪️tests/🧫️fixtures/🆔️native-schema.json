@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "required": ["wrapperWork", "cases"], "additionalProperties": false,
+  "properties": {
+    "wrapperWork": { "const": 1 },
+    "cases": { "type": "array", "minItems": 1, "items": { "type": "object", "required": ["wire", "expected"], "additionalProperties": false,
+      "properties": { "wire": { "type": "integer", "minimum": 0 }, "expected": { "type": ["integer", "null"], "minimum": 0, "maximum": 4294967295 } } } }
+  }
+}

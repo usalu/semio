@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "phase": "reserve",
+      "quote": 1,
+      "available": 0,
+      "advance": false
+    },
+    {
+      "phase": "reserve",
+      "quote": 1,
+      "available": 1,
+      "advance": true
+    },
+    {
+      "phase": "child",
+      "quote": 7,
+      "available": 6,
+      "advance": false
+    },
+    {
+      "phase": "child",
+      "quote": 7,
+      "available": 7,
+      "advance": true
+    },
+    {
+      "phase": "retire",
+      "quote": 5,
+      "available": 4,
+      "advance": false
+    },
+    {
+      "phase": "retire",
+      "quote": 5,
+      "available": 5,
+      "advance": true
+    },
+    {
+      "phase": "terminal",
+      "quote": 0,
+      "available": 5,
+      "advance": false
+    }
+  ]
+}

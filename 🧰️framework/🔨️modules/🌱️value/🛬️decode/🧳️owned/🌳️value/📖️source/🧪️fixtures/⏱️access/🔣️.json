@@ -1,0 +1,35 @@
+{
+  "cases": [
+    {
+      "value": true,
+      "operation": "Boolean",
+      "expected": true,
+      "work": 1
+    },
+    {
+      "value": 42,
+      "operation": "Number",
+      "expected": 42,
+      "work": 1
+    },
+    {
+      "value": [
+        3,
+        5
+      ],
+      "operation": "SequenceChild",
+      "index": 1,
+      "expected": 5,
+      "work": 1
+    },
+    {
+      "value": {
+        "alpha": 7
+      },
+      "operation": "RecordChild",
+      "index": 0,
+      "expected": 7,
+      "work": 1
+    }
+  ]
+}

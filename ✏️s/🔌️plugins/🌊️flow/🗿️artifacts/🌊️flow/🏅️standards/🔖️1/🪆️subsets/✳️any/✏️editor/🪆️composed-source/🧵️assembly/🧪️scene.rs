@@ -20,7 +20,7 @@ fn original_composed_scene_alias_preserves_stable_source_and_one_fuel_physical_c
    }
    let live=owner.as_ref().or(alias.as_ref());assert_eq!(usize::from(owner.is_some())+usize::from(alias.is_some()),count.as_u64().unwrap()as usize);if let Some(live)=live{assert_eq!(Some(live.source().source_identity()),identity)}
   }
-  assert!(original.is_none()&&owner.is_none()&&alias.is_none()&&retirement.is_empty());while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(g.maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|decoder.close_step(grant))?;Ok(())})).unwrap();}caller.retire(g);
+  assert!(original.is_none()&&owner.is_none()&&alias.is_none()&&retirement.is_empty());while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(g.maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(g);
  }}
 }
 
@@ -44,6 +44,6 @@ fn original_composed_source_refuses_distinct_real_callers_with_identical_busines
  let failure=native(&mut second,&mut second_decode,g,|cx|Ok(work.step(parent_source.try_borrow()?,Some(child_source.try_borrow()?),cx))).unwrap_err();assert_eq!(second.receipt(),RetainedCloneProgress::default());assert_eq!(failure.primary_value().unwrap().kind,ValueRefusalKind::InvariantViolated);assert_eq!((work.phase,work.index,work.binding.map(|binding|(binding.parent_reference,binding.child_reference,binding.document,binding.schema,binding.schema_length,binding.child,binding.nodes,binding.node_count,binding.edges,binding.edge_count))),before);assert_eq!(work.original_binding(),Some(binding));failure.retire_cold();
  work.begin_close();for turn in 0..10000{if work.terminal_is_empty(){break}native(&mut first,&mut first_decode,g,|cx|cx.with_original_retirement(|cx|{work.close_step(cx)?;Ok(())}));assert!(turn+1<10000)}assert!(work.terminal_is_empty());drop(work);
  for turn in 0..10000{if parent_source.terminal_is_empty()&&child_source.terminal_is_empty(){break}native(&mut first,&mut first_decode,g,|cx|cx.with_original_retirement(|cx|{let turn=if !child_source.terminal_is_empty(){child_source.close_step(cx.retained_grant())}else{parent_source.close_step(cx.retained_grant())};semio_framework_job::receive_original_retained_work(cx,turn)?;Ok(())}));assert!(turn+1<10000)}assert!(parent_source.terminal_is_empty()&&child_source.terminal_is_empty());drop(parent_source);drop(child_source);
- for(caller,decoder)in[(&mut first,&mut first_decode),(&mut second,&mut second_decode)]{while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(g.maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|decoder.close_step(grant))?;Ok(())})).unwrap();}caller.retire(g);}
+ for(caller,decoder)in[(&mut first,&mut first_decode),(&mut second,&mut second_decode)]{while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(g.maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(g);}
  parent.retire_cold();child.retire_cold();
 }

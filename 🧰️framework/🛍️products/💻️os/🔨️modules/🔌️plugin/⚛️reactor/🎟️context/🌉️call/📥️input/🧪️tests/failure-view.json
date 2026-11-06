@@ -1,0 +1,195 @@
+{
+  "cases": [
+    {
+      "present": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "keys": []
+    },
+    {
+      "present": [
+        true,
+        false,
+        false,
+        false
+      ],
+      "keys": [
+        "outcomeValue"
+      ]
+    },
+    {
+      "present": [
+        false,
+        true,
+        false,
+        false
+      ],
+      "keys": [
+        "outcomeReceiving"
+      ]
+    },
+    {
+      "present": [
+        true,
+        true,
+        false,
+        false
+      ],
+      "keys": [
+        "outcomeValue",
+        "outcomeReceiving"
+      ]
+    },
+    {
+      "present": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "keys": [
+        "settlementValue"
+      ]
+    },
+    {
+      "present": [
+        true,
+        false,
+        true,
+        false
+      ],
+      "keys": [
+        "outcomeValue",
+        "settlementValue"
+      ]
+    },
+    {
+      "present": [
+        false,
+        true,
+        true,
+        false
+      ],
+      "keys": [
+        "outcomeReceiving",
+        "settlementValue"
+      ]
+    },
+    {
+      "present": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "keys": [
+        "outcomeValue",
+        "outcomeReceiving",
+        "settlementValue"
+      ]
+    },
+    {
+      "present": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "keys": [
+        "settlementReceiving"
+      ]
+    },
+    {
+      "present": [
+        true,
+        false,
+        false,
+        true
+      ],
+      "keys": [
+        "outcomeValue",
+        "settlementReceiving"
+      ]
+    },
+    {
+      "present": [
+        false,
+        true,
+        false,
+        true
+      ],
+      "keys": [
+        "outcomeReceiving",
+        "settlementReceiving"
+      ]
+    },
+    {
+      "present": [
+        true,
+        true,
+        false,
+        true
+      ],
+      "keys": [
+        "outcomeValue",
+        "outcomeReceiving",
+        "settlementReceiving"
+      ]
+    },
+    {
+      "present": [
+        false,
+        false,
+        true,
+        true
+      ],
+      "keys": [
+        "settlementValue",
+        "settlementReceiving"
+      ]
+    },
+    {
+      "present": [
+        true,
+        false,
+        true,
+        true
+      ],
+      "keys": [
+        "outcomeValue",
+        "settlementValue",
+        "settlementReceiving"
+      ]
+    },
+    {
+      "present": [
+        false,
+        true,
+        true,
+        true
+      ],
+      "keys": [
+        "outcomeReceiving",
+        "settlementValue",
+        "settlementReceiving"
+      ]
+    },
+    {
+      "present": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "keys": [
+        "outcomeValue",
+        "outcomeReceiving",
+        "settlementValue",
+        "settlementReceiving"
+      ]
+    }
+  ]
+}

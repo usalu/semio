@@ -4,7 +4,7 @@
   "maximumBytes": 4096,
   "firstScalarMaximumAllocations": 2,
   "firstScalarMaximumAllocationBytes": 8192,
-  "ownerWords": 7,
+  "ownerWords": 8,
   "scalar": 7,
   "growthPayloadBytes": [
     8194,

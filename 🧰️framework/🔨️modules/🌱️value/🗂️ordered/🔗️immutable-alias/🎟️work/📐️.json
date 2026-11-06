@@ -2,7 +2,7 @@
   "value": "Ordered owner🧱",
   "deniedWork": 0,
   "nullWork": 1,
-  "admitWork": 1,
+  "admitWork": 2,
   "releaseWork": 1,
   "cachedWork": 0,
   "stock": {
@@ -20,5 +20,13 @@
     "strongCounter",
     "weakCounter",
     "destinationOption"
-  ]
+  ],
+  "slotWork": 4,
+  "slotDenials": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "slotPreservesOriginal": true
 }

@@ -11,6 +11,8 @@ pub(super) const APP_COMMAND_FIELD_MAXIMUM_BYTES: usize = COMMAND_MAXIMUM_BYTES;
 pub(super) const PURE_COMMAND_FIELDS: usize = 2;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
 pub(super) enum DocumentArchiveDecodePhase {
     ParentPack,
     ParentSpr,
@@ -31,6 +33,8 @@ pub(super) enum DocumentArchiveDecodePhase {
 }
 
 #[derive(Debug, Default)]
+#[derive(semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
 pub(super) struct PartialDocumentArchiveMember {
     pub(in super::super) ordinal: u32,
     pub(in super::super) reference: DocumentArchiveArtifactRef,
@@ -39,6 +43,8 @@ pub(super) struct PartialDocumentArchiveMember {
 }
 
 #[derive(Debug)]
+#[derive(semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
 pub(super) struct PagedDocumentArchiveDecode {
     pub(in super::super) archive: DocumentArchivePack,
     pub(super) partial: PartialDocumentArchiveMember,

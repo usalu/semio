@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "schema": "note.config",
+      "kind": "rename-note",
+      "displayName": "Rename Note",
+      "semanticKind": "note.config#rename-note"
+    },
+    {
+      "schema": "schema.ä",
+      "kind": "öffnen",
+      "displayName": "Öffnen",
+      "semanticKind": "schema.ä#öffnen"
+    }
+  ]
+}

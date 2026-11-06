@@ -165,13 +165,11 @@ impl PluginArtifactChannel {
         let Some(payload) = shell_app_frame_payload(instance, effect) else {
             return;
         };
-        let Ok(frame) = ::semio_framework_async::poll::resolve_ready(store::decode_app_frame(payload)) else {
-            return;
-        };
-        if matches!(frame, store::AppFrame::Done { .. }) && pending.response.holds_frame() {
+        let Some(prefix)=store::app_frame_reply_prefix(payload)else{return};
+        if prefix.done && pending.response.holds_frame() {
             return;
         }
-        if app_frame_reply_seq(&frame) == Some(seq) || (app_frame_reply_seq(&frame).is_none() && app_frame_is_transaction_terminal(&frame)) {
+        if prefix.answers(seq) {
             pending.response.admit_frame(payload);
         }
     }
@@ -198,10 +196,8 @@ impl PluginArtifactChannel {
                 let Some(payload) = shell_app_frame_payload(instance, effect) else {
                     continue;
                 };
-                let Ok(frame) = ::semio_framework_async::poll::resolve_ready(store::decode_app_frame(payload)) else {
-                    continue;
-                };
-                if app_frame_reply_seq(&frame) == Some(seq) || (app_frame_reply_seq(&frame).is_none() && app_frame_is_transaction_terminal(&frame)) {
+                let Some(prefix)=store::app_frame_reply_prefix(payload)else{continue};
+                if prefix.answers(seq) {
                     response.admit_frame(payload);
                 }
             }

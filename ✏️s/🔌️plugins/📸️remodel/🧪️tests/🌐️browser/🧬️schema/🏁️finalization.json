@@ -1,0 +1,59 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "baseline",
+      "before",
+      "after",
+      "peerBefore",
+      "peerAfter",
+      "finalized",
+      "pass"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "baseline": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "before": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "after": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "peerBefore": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "peerAfter": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "finalized": {
+        "type": "boolean"
+      },
+      "pass": {
+        "type": "boolean"
+      }
+    }
+  }
+}

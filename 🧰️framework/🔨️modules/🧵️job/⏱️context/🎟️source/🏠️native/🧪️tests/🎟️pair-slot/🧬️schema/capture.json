@@ -1,0 +1,54 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "deniedCopyBytes",
+    "slotClearItems",
+    "captureExtent",
+    "states"
+  ],
+  "properties": {
+    "deniedCopyBytes": {
+      "const": 0
+    },
+    "slotClearItems": {
+      "const": 1
+    },
+    "captureExtent": {
+      "const": 1
+    },
+    "states": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "token",
+          "bank",
+          "closed"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "live",
+              "captured",
+              "observed"
+            ]
+          },
+          "token": {
+            "type": "boolean"
+          },
+          "bank": {
+            "type": "boolean"
+          },
+          "closed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

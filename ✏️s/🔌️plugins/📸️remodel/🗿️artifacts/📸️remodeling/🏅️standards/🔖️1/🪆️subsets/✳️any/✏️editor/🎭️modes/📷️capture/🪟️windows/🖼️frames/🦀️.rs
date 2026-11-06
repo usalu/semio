@@ -11,6 +11,8 @@ use semio_plugin::UtilityRef;
 use semio_plugin::WindowEngagementSlot;
 use semio_plugin::WindowKindDefinition;
 use semio_plugin::WindowOptions;
+use semio_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::{kit::remodeling_window_action, terminology::RemodelingLabels};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
@@ -44,6 +46,21 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 //#endregion 🔖️Definition
+
+/** 🎚️ Publishes frame selection for the addressed window's current cursor. */
+pub fn window_measures(scene: &RemodelingSnapshot, config: &RemodelingFramesWindowConfig, labels: &RemodelingLabels) -> Vec<WindowMeasure> {
+    let cursor = &config.frame_cursor;
+    let selected = cursored_frame(scene, cursor);
+    let stream = selected.map(|(stream, _)| stream);
+    let index = selected.map_or(cursor.frame_index, |(_, index)| index);
+    let stream_id = stream.map(|stream| stream.id.clone());
+    let args = semio_framework_value::DslValue::object([("frameIndex".to_string(), semio_framework_value::DslValue::uint(u64::from(index)))]);
+    let index_args = semio_framework_value::DslValue::object([("streamId".to_string(), stream_id.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String))]);
+    vec![
+        WindowMeasure::Select { id: "remodeling-measure-frame-stream".into(), label: Some(labels.frame_stream.into()), value: stream_id.unwrap_or_default(), items: scene.streams.iter().map(|stream| MeasureSelectItem { id: format!("remodeling-measure-frame-stream-{}", stream.id), value: stream.id.clone(), label: if stream.name.is_empty() { stream.id.clone() } else { stream.name.clone() } }).collect(), on_change: remodeling_window_action("setFrameCursor", Some(args)) },
+        WindowMeasure::Slider { id: "remodeling-measure-frame-index".into(), label: Some(labels.frame_index.into()), value: f64::from(index), min: 0.0, max: stream.and_then(|stream| stream.frames.iter().map(|frame| frame.index).max()).map_or(0.0, f64::from), step: Some(1.0), ready: None, loading: None, waiting: None, disabled: Some(!stream.is_some_and(|stream| !stream.frames.is_empty())), on_change: remodeling_window_action("setFrameCursor", Some(index_args)) },
+    ]
+}
 
 //#region 🔖️Scene
 /// 🎯️ Half-side of a ground-control-point marker, in frame pixels. The host draws a `circle` layer

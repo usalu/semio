@@ -1,0 +1,154 @@
+[
+  {
+    "kind": "abort",
+    "flags": [
+      true,
+      true,
+      true
+    ],
+    "values": [
+      [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ],
+      [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ],
+      [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ]
+    ],
+    "pass": true
+  },
+  {
+    "kind": "abort",
+    "flags": [
+      true,
+      true,
+      true
+    ],
+    "values": [
+      [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ],
+      [
+        "b",
+        "b",
+        "b",
+        "b",
+        "b"
+      ],
+      [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ]
+    ],
+    "pass": false
+  },
+  {
+    "kind": "undo",
+    "flags": [
+      true
+    ],
+    "values": [
+      [
+        "b",
+        "b",
+        "b",
+        "b",
+        "b"
+      ],
+      [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ],
+      [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ],
+      [
+        "b",
+        "b",
+        "b",
+        "b",
+        "b"
+      ],
+      [
+        "b",
+        "b",
+        "b",
+        "b",
+        "b"
+      ]
+    ],
+    "pass": true
+  },
+  {
+    "kind": "undo",
+    "flags": [
+      true
+    ],
+    "values": [
+      [
+        "b",
+        "b",
+        "b",
+        "b",
+        "b"
+      ],
+      [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ],
+      [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ],
+      [
+        "b",
+        "b",
+        "b",
+        "b",
+        "b"
+      ],
+      [
+        "other",
+        "other",
+        "other",
+        "other",
+        "other"
+      ]
+    ],
+    "pass": false
+  }
+]

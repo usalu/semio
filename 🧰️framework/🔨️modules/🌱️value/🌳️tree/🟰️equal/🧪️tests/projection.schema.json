@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "work",
+      "leftMatches",
+      "rightMatches",
+      "reported",
+      "failed"
+    ],
+    "properties": {
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "leftMatches": {
+        "type": "boolean"
+      },
+      "rightMatches": {
+        "type": "boolean"
+      },
+      "reported": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "failed": {
+        "type": "boolean"
+      }
+    }
+  }
+}

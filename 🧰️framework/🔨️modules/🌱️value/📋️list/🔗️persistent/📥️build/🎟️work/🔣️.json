@@ -6,7 +6,8 @@
     "counts",
     "cancelPrefixes",
     "stock",
-    "rules"
+    "rules",
+    "scanCases"
   ],
   "properties": {
     "counts": {
@@ -47,6 +48,22 @@
         "sameFiniteBank": true,
         "completedFinishDeclarationReadonly": true
       }
+    },
+    "scanCases": {
+      "const": [
+        {
+          "remainingRanks": 1,
+          "selectedWork": 1
+        },
+        {
+          "remainingRanks": 2,
+          "selectedWork": 2
+        },
+        {
+          "remainingRanks": 5,
+          "selectedWork": 5
+        }
+      ]
     }
   }
 }

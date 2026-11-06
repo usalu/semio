@@ -1,0 +1,20 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-plugin-interpreter-fixtures"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Canonical current Owned ABI test components"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-interpreter-fixtures"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-plugin-interpreter = { workspace = true }

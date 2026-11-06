@@ -24,7 +24,7 @@ async fn sqlite_snapshot_framework_space_builtin_creation_and_reload_publish_io_
         let initial_digest = store::artifact_initial_digest_of_pack(&saved.pack);
         let mut open = store::RetainedPersistedDocumentHydration::<SpaceSnapshot, SpaceMutation>::from_decoded_pack(
             source.clone(), saved.pack, initial_digest, history,
-            semio_framework_artifact_reference::ArtifactRef { artifact_id: "sqlite-builtin".into(), dialect: dialect() }, None, S_SPACE_SCHEMA.into(),
+            {let declared=semio_framework_artifact_reference::ArtifactRef { artifact_id: "sqlite-builtin".into(), dialect: dialect() };store::PersistedDocumentHydrationIdentity{id:declared.artifact_id,dialect:Some(declared.dialect)}}, None, S_SPACE_SCHEMA.into(),
             store::test_support::plain_document_store_owners(), semio_framework_job::OperationId(1), semio_framework_job::Generation(1),
             u64::MAX, store::PersistedDocumentHydrationTarget::Store { generation: 0 },
             store::os_spr::ActorId("actor:sqlite-retained-registration-fixture".into()),

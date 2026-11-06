@@ -75,7 +75,7 @@ pub use store_replacement_initializer_and_retirement::{AppProjectionCache, Artif
 
 #[path = "🗄️document-archive-load/🦀️.rs"]
 mod document_archive_load;
-pub use document_archive_load::{document_archive_history_decoder, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, PendingDocumentArchiveMember};
+pub use document_archive_load::{OriginalDocumentArchiveAdmission,document_archive_history_decoder, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, PendingDocumentArchiveMember};
 
 pub use semio_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
 
@@ -88,3 +88,7 @@ pub mod media_operation_refusal;
 #[path = "🛬️lifted/🧩️app/🦀️.rs"]
 pub mod lifted_app;
 pub use lifted_app::*;
+
+#[cfg(test)]
+#[global_allocator]
+static DOCUMENT_ADMISSION_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

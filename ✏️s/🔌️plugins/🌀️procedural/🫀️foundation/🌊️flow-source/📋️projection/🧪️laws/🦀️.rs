@@ -37,7 +37,7 @@ fn projected_native_fields_preserve_original_receipts_and_prefix_custody(){
   while !source.terminal_is_empty(){calls+=1;assert!(calls<=200);caller.turn_with_decoder(stock,&mut decoder,|cx|observed(cx,|cx|cx.with_original_retirement(|cx|{
    for _ in 0..512{if source.terminal_is_empty()||cx.should_yield(){break}let d=source.next_close_demand(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_step(cx,d,|g|source.close_step(g))?;if step.progress()==Default::default(){break}}Ok(())
   }))).unwrap()}
-  while !decoder.terminal_is_empty(){calls+=1;assert!(calls<=200);caller.turn(stock,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,d,|g|decoder.close_step(g))?;Ok(())})).unwrap()}
+  while !decoder.terminal_is_empty(){calls+=1;assert!(calls<=200);caller.turn(stock,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())})).unwrap()}
   assert_eq!(caller.stock(),stock);assert!(caller.cumulative_receipt().fits(stock));assert!(policy["fuel"].as_u64().unwrap()-caller.fuel_remaining()<32000);caller.retire(stock);
  }}
 }

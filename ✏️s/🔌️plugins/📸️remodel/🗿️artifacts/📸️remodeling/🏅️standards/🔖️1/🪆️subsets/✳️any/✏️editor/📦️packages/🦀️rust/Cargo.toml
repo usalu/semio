@@ -24,10 +24,13 @@ semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰�
 semio-framework-2d-compute = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-publication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-mesh-engine = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-plugin = { workspace = true }
 semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-ordered = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-s-artifact-remodel-remodeling-cmd-ingest = { workspace = true }
 semio-s-artifact-remodel-remodeling-cmd-workflow = { workspace = true }
 semio-s-artifact-remodel-remodeling-editor-kit = { workspace = true }
@@ -39,3 +42,6 @@ semio-s-artifact-remodel-remodeling-mutations = { workspace = true }
 semio-s-artifact-remodel-remodeling-panels = { workspace = true }
 semio-s-artifact-remodel-remodeling-schema = { workspace = true }
 semio-s-artifact-remodel-remodeling-session = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

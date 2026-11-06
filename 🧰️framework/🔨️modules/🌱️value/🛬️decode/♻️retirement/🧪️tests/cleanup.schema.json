@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "semanticAdmission",
+    "callback",
+    "marker"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sameSource",
+          "retirement",
+          "cancelled",
+          "work",
+          "minimum",
+          "admitted"
+        ],
+        "properties": {
+          "sameSource": {
+            "type": "boolean"
+          },
+          "retirement": {
+            "type": "boolean"
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minimum": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "admitted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "semanticAdmission": {
+      "const": false
+    },
+    "callback": {
+      "const": "owned-retirement"
+    },
+    "marker": {
+      "const": "original-allocation-frame"
+    }
+  }
+}

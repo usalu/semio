@@ -1,0 +1,116 @@
+{
+  "pageItems": 1,
+  "maximumRows": 4096,
+  "cases": [
+    {
+      "id": "empty",
+      "rows": 0,
+      "extraReleaseSteps": 0,
+      "kind": "none",
+      "depth": 0,
+      "selectionWork": 1,
+      "releaseWork": 0,
+      "retainedEmptyMetadata": false
+    },
+    {
+      "id": "single-payload",
+      "rows": 1,
+      "extraReleaseSteps": 0,
+      "kind": "payload",
+      "depth": 3,
+      "selectionWork": 3,
+      "releaseWork": 7,
+      "retainedEmptyMetadata": false
+    },
+    {
+      "id": "single-metadata",
+      "rows": 1,
+      "extraReleaseSteps": 1,
+      "kind": "metadata",
+      "depth": 2,
+      "selectionWork": 3,
+      "releaseWork": 5,
+      "retainedEmptyMetadata": false
+    },
+    {
+      "id": "last-of-two",
+      "rows": 2,
+      "extraReleaseSteps": 0,
+      "kind": "payload",
+      "depth": 4,
+      "selectionWork": 20,
+      "releaseWork": 9,
+      "retainedEmptyMetadata": false
+    },
+    {
+      "id": "metadata-of-two",
+      "rows": 2,
+      "extraReleaseSteps": 1,
+      "kind": "metadata",
+      "depth": 3,
+      "selectionWork": 20,
+      "releaseWork": 7,
+      "retainedEmptyMetadata": false
+    },
+    {
+      "id": "full-branch-tail",
+      "rows": 16,
+      "extraReleaseSteps": 0,
+      "kind": "payload",
+      "depth": 4,
+      "selectionWork": 6,
+      "releaseWork": 9,
+      "retainedEmptyMetadata": false
+    },
+    {
+      "id": "nested-tail",
+      "rows": 17,
+      "extraReleaseSteps": 0,
+      "kind": "payload",
+      "depth": 5,
+      "selectionWork": 38,
+      "releaseWork": 11,
+      "retainedEmptyMetadata": false
+    },
+    {
+      "id": "nested-empty-branch",
+      "rows": 17,
+      "extraReleaseSteps": 2,
+      "kind": "metadata",
+      "depth": 3,
+      "selectionWork": 36,
+      "releaseWork": 23,
+      "retainedEmptyMetadata": false
+    },
+    {
+      "id": "fully-released",
+      "rows": 1,
+      "extraReleaseSteps": 2,
+      "kind": "none",
+      "depth": 0,
+      "selectionWork": 1,
+      "releaseWork": 0,
+      "retainedEmptyMetadata": false
+    },
+    {
+      "id": "retained-empty-root-backing",
+      "rows": 1,
+      "extraReleaseSteps": 1,
+      "kind": "metadata",
+      "depth": 2,
+      "selectionWork": 3,
+      "releaseWork": 5,
+      "retainedEmptyMetadata": true
+    },
+    {
+      "id": "retained-empty-child-backing",
+      "rows": 2,
+      "extraReleaseSteps": 1,
+      "kind": "metadata",
+      "depth": 3,
+      "selectionWork": 20,
+      "releaseWork": 7,
+      "retainedEmptyMetadata": true
+    }
+  ]
+}

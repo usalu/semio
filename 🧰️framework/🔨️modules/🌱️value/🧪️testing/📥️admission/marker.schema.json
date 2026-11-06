@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "value", "stock", "actions", "expected"],
+  "properties": {
+    "version": {"const": 1}, "value": {"type": "integer", "minimum": 0},
+    "stock": {"type": "object", "additionalProperties": false, "required": ["items", "copyBytes", "capacityBytes", "releaseBytes", "depth", "fuel"], "properties": {"items": {"type": "integer", "minimum": 1}, "copyBytes": {"type": "integer", "minimum": 1}, "capacityBytes": {"type": "integer", "minimum": 1}, "releaseBytes": {"type": "integer", "minimum": 1}, "depth": {"type": "integer", "minimum": 1}, "fuel": {"type": "integer", "minimum": 1}}},
+    "actions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["name", "work"], "properties": {"name": {"type": "string", "minLength": 1}, "work": {"type": "integer", "minimum": 1}}}},
+    "expected": {"type": "object", "additionalProperties": false, "required": ["work", "turns", "births"], "properties": {"work": {"type": "integer", "minimum": 0}, "turns": {"type": "integer", "minimum": 0}, "births": {"type": "integer", "minimum": 0}}}
+  }
+}

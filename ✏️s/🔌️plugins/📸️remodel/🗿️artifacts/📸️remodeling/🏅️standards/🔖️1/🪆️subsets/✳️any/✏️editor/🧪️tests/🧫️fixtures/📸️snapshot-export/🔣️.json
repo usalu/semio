@@ -1,0 +1,11 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "actionId": "exportSnapshotFile",
+  "port": "semio.snapshot.pack",
+  "schema": "semio.snapshot.pack.v1",
+  "envelopeId": "remodeling.remodeling",
+  "mimeType": "application/vnd.semio.pack",
+  "filename": "remodeling-snapshot.pack",
+  "streamName": "snapshot-current-state-witness",
+  "cancelAfterTurns": [0, 1]
+}

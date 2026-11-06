@@ -52,8 +52,8 @@ fn retained_corpus() -> (serde_json::Value, protocol::codec::HistoryReadLimits, 
 }
 
 struct TurnWork(u64);
-impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for TurnWork{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.0.min(4096)))}}
-fn settle_work(turn:&FlaggedTurn,work:u64){assert!(work<=turn.work.load(std::sync::atomic::Ordering::Relaxed).min(4096));turn.work.store(turn.work.load(std::sync::atomic::Ordering::Relaxed)-work,std::sync::atomic::Ordering::Relaxed)}
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for TurnWork{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0.min(4096);limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.0.min(4096)))}}
+fn settle_work(turn:&FlaggedTurn,work:u64){assert!(work<=turn.work.get().min(4096));turn.work.set(turn.work.get()-work)}
 
 fn paid_turn(decode: &mut RetainedHistoryDecode, bytes: &[u8], turn: &FlaggedTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>) -> RetainedHistorySourceStep {
     let outcome = decode.step(bytes, turn, grant, history, &mut TurnWork(turn.work.load(std::sync::atomic::Ordering::Relaxed)));

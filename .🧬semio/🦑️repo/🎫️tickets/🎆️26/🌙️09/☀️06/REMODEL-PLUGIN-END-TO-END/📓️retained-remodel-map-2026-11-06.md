@@ -1,0 +1,5 @@
+# Retained Remodel composition source map
+
+Core retained mutation preparation interface (framework replication mutation retained/🦀️.rs:40–54) requires independently funded decision, inverse and close, with maximum_work_units in decision and inverse. Central retained diff interface (retained/🔺️diff/🦀️.rs:28–41) requires immutable preflight and capability-gated unpublished commit plus paid close. Core retained set-field/🦀️.rs:175–220 supplies RetainedPatchDiffApply, retained_patch_diff and retained_set_field for actual sparse whole-field patches.
+
+Remodel diff schema/🔺️diff/🦀️.rs:44–63 contains nine top-level fields, including keyed streams/assets/content/gcps deltas and nested calibration/params/results, which are not equivalent to replacing fields from Option values. Existing mutation unit census asserts 36 kinds. Each authored leaf needs correct decision, refusal and inverse, or a genuinely shared bounded semantic composition; cold whole mutation/diff is not a metered retained shortcut. Existing retained sequence, receiving and set-field unit tests exercise paid work and closure. No execution.

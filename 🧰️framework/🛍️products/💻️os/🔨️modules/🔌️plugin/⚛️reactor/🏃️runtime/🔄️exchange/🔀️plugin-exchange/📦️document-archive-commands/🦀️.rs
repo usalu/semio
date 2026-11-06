@@ -7,18 +7,14 @@ pub(super) async fn arm_load_document_archive<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
-    command: protocol::AppCommand,
-) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    command: &mut protocol::AppCommand,
+    admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,
+    cx:&mut semio_framework_job::StepContext<'_>,
+) -> Result<bool, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::LoadDocumentArchive { seq, archive } = command else { unreachable!("arm_load_document_archive is dispatched only for its own command") };
-    let admitted = with_instances_mut(runtime, |list| {
-        let mut instance = find_instance(list, instance_id)?;
-        instance.app.begin_document_archive_load(seq, archive)
-    });
-    match admitted.await {
-        Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
-    }
-    Ok(())
+    let seq=*seq;
+    let admitted=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;Ok(instance.app.begin_document_archive_load(seq,archive,admission,cx)?)}).await?;
+    if admitted{frames.push(protocol::AppFrame::Done{in_reply_to:seq});}Ok(admitted)
 }
 
 /// 🧩️ Starts merging a document archive.
@@ -26,18 +22,14 @@ pub(super) async fn arm_merge_document_archive<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
-    command: protocol::AppCommand,
-) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    command: &mut protocol::AppCommand,
+    admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,
+    cx:&mut semio_framework_job::StepContext<'_>,
+) -> Result<bool, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::MergeDocumentArchive { seq, archive } = command else { unreachable!("arm_merge_document_archive is dispatched only for its own command") };
-    let admitted = with_instances_mut(runtime, |list| {
-        let mut instance = find_instance(list, instance_id)?;
-        instance.app.begin_document_archive_merge(seq, archive)
-    });
-    match admitted.await {
-        Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
-    }
-    Ok(())
+    let seq=*seq;
+    let admitted=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;Ok(instance.app.begin_document_archive_merge(seq,archive,admission,cx)?)}).await?;
+    if admitted{frames.push(protocol::AppFrame::Done{in_reply_to:seq});}Ok(admitted)
 }
 
 /// 📊️ Polls the progress of an archive load.
@@ -48,12 +40,13 @@ pub(super) async fn arm_poll_document_archive_load<PA: PluginApp>(
     cx: &mut semio_framework_job::StepContext<'_>,
     frames: &mut Vec<protocol::AppFrame>,
     flags: &mut ExchangeFlags,
-    command: protocol::AppCommand,
+    command: &mut protocol::AppCommand,
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::PollDocumentArchiveLoad { seq, operation } = command else { unreachable!("arm_poll_document_archive_load is dispatched only for its own command") };
+    let seq=*seq;
     let status = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        drive_self_waking_ready(instance.app.poll_document_archive_load(operation, identity, cx))
+        drive_self_waking_ready(instance.app.poll_document_archive_load(*operation, identity, cx))
     });
     match status.await {
         Ok(status) => {
@@ -70,12 +63,13 @@ pub(super) async fn arm_cancel_document_archive_load<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
-    command: protocol::AppCommand,
+    command: &mut protocol::AppCommand,
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::CancelDocumentArchiveLoad { seq, operation } = command else { unreachable!("arm_cancel_document_archive_load is dispatched only for its own command") };
+    let seq=*seq;
     let cancelled = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        instance.app.cancel_document_archive_load(operation)
+        instance.app.cancel_document_archive_load(*operation)
     });
     match cancelled.await {
         Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
@@ -89,12 +83,13 @@ pub(super) async fn arm_acknowledge_document_archive_load<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
-    command: protocol::AppCommand,
+    command: &mut protocol::AppCommand,
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation } = command else { unreachable!("arm_acknowledge_document_archive_load is dispatched only for its own command") };
+    let seq=*seq;
     let acknowledged = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        instance.app.acknowledge_document_archive_load(operation)
+        instance.app.acknowledge_document_archive_load(*operation)
     });
     match acknowledged.await {
         Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
@@ -109,9 +104,10 @@ pub(super) async fn arm_read_document_identity<PA: PluginApp>(
     instance_id: u32,
     identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     frames: &mut Vec<protocol::AppFrame>,
-    command: protocol::AppCommand,
+    command: &mut protocol::AppCommand,
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ReadDocumentIdentity { seq } = command else { unreachable!("arm_read_document_identity is dispatched only for its own command") };
+    let seq=*seq;
     let read = with_instances_mut(runtime, |list| {
         let instance = find_instance(list, instance_id)?;
         let parent_document_id = instance.app.document_identity();
@@ -130,9 +126,10 @@ pub(super) async fn arm_read_document_archive<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
-    command: protocol::AppCommand,
+    command: &mut protocol::AppCommand,
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ReadDocumentArchive { seq } = command else { unreachable!("arm_read_document_archive is dispatched only for its own command") };
+    let seq=*seq;
     let read = with_instances_mut(runtime, |list| {
         let instance = find_instance(list, instance_id)?;
         ::semio_framework_async::poll::resolve_ready(instance.app.document_archive())

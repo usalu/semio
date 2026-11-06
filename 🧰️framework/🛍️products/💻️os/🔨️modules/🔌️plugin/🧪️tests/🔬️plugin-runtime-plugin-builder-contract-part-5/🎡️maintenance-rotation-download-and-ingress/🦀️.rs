@@ -94,7 +94,7 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: ReferenceSpaceMember 
         let mut carried = Some(page);
         let mut turns = 0;
         loop {
-            let result = semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut None, carried.take(), None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+            let result = semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut None, &mut carried, None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
             turns += 1;
             match result.command_ingress {
                 semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns),

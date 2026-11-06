@@ -135,7 +135,7 @@ async fn mounted_boot_publishes_the_emblem_pixels_on_the_composite_assets_lane()
     let entry = assets.get("semio-emblem").unwrap_or_else(|| panic!("the published assets lane names the emblem: {}", scene.assets_json));
     assert_eq!(entry.get("mime").and_then(Value::as_str), Some("image/png"));
     let data = entry.get("data").and_then(Value::as_str).expect("the emblem's base64 payload");
-    let bytes = base64_codec::base64_standard_decode(data.as_bytes()).expect("the emblem payload is valid base64");
+    let bytes = semio_framework_io_base64::base64_standard_decode(data.as_bytes()).expect("the emblem payload is valid base64");
     assert!(bytes.len() > 8 * 1_024, "the emblem's payload is a real image, got {} bytes", bytes.len());
     let width = u32::from_be_bytes([bytes[16], bytes[17], bytes[18], bytes[19]]);
     let height = u32::from_be_bytes([bytes[20], bytes[21], bytes[22], bytes[23]]);

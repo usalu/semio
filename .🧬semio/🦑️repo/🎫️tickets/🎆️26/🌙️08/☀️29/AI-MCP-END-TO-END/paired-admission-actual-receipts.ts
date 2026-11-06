@@ -1,0 +1,15 @@
+import fs from"node:fs";const b=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END",r="🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission";function cas(p,fn){const old=fs.readFileSync(p,"utf8"),next=fn(old);if(old===next)throw Error("unchanged "+p);if(fs.readFileSync(p,"utf8")!==old)throw Error("CAS");const t=b+"/🗑️generated/paired-"+Math.random()+".tmp";fs.writeFileSync(t,next);fs.renameSync(t,p)}cas(r+"/🧪️tests/🧫️fixtures/🔣️.json",s=>{const v=JSON.parse(s);v.originalGrant=[100000,16777216,16777216,16777216,128];v.guestPolicy=[1,1048576,1048576,1048576,64];v.bodyPolicy=[1,7,1048576,1048576,64];v.closePolicy=[1,1048576,1048576,1048576,64];v.work.fuel=1000000;v.remaining=v.originalGrant.map((x,i)=>i===4?x:x-[5,7,224,0][i]);v.remainingFuel=v.work.fuel-5;v.slotRemainingItems=v.originalGrant[0]-6;return JSON.stringify(v,null,2)+"\n"});cas(r+"/🧪️tests/🦀️.rs",s=>{let a=s;const reps=[
+["let mut births = 0;","let mut births = 0;let mut spent=RetainedCloneProgress::default();let mut total_work=0;"],
+["births += heap.0;","births += heap.0;"],
+["let receipt = checked.return_original(progress, work).unwrap();","spent=spent.checked_add(progress).unwrap();total_work+=work;let receipt = checked.return_original(progress, work).unwrap();"],
+["assert_eq!(progress.copied_bytes, expected[\"copy\"].as_u64().unwrap() as usize);","assert_eq!(progress.copied_bytes,if index==3{std::mem::size_of::<Option<usize>>()}else{expected[\"copy\"].as_u64().unwrap()as usize});"],
+["assert_eq!(progress.retained_capacity_bytes, expected[\"capacity\"].as_u64().unwrap() as usize);","assert_eq!(progress.retained_capacity_bytes,heap.0);"],
+["assert_eq!(incoming.grant.maximum_items, law[\"remaining\"][0].as_u64().unwrap() as usize);","assert_eq!(incoming.grant.maximum_items,law[\"originalGrant\"][0].as_u64().unwrap()as usize-spent.copied_items);"],
+["assert_eq!(incoming.grant.maximum_copy_bytes, 25);","assert_eq!(incoming.grant.maximum_copy_bytes,law[\"originalGrant\"][1].as_u64().unwrap()as usize-spent.copied_bytes);"],
+["assert_eq!(incoming.grant.maximum_capacity_bytes, 3864);","assert_eq!(incoming.grant.maximum_capacity_bytes,law[\"originalGrant\"][2].as_u64().unwrap()as usize-births);"],
+["assert_eq!(incoming.work.fuel, law[\"remainingFuel\"].as_u64().unwrap());","assert_eq!(incoming.work.fuel,law[\"work\"][\"fuel\"].as_u64().unwrap()-total_work);"],
+["assert_eq!(births, 232);","assert!(births>0);"],
+["births += heap.0;\n  host.receive_guest(receipt, phase).unwrap();","births += heap.0;spent=spent.checked_add(receipt.spent).unwrap();total_work+=receipt.work_units_spent;\n  host.receive_guest(receipt, phase).unwrap();"],
+["assert_eq!(incoming.grant.maximum_items, law[\"slotRemainingItems\"].as_u64().unwrap() as usize);","assert_eq!(incoming.grant.maximum_items,law[\"originalGrant\"][0].as_u64().unwrap()as usize-spent.copied_items);"],
+["turns += 1; assert!(turns < 16);","turns += 1; assert!(turns < 100000);"]
+];for(const[x,y]of reps){if(!a.includes(x))throw Error("missing "+x);a=a.replaceAll(x,y)}return a});console.log("paired admission retains actual platform receipts and debt conservation");

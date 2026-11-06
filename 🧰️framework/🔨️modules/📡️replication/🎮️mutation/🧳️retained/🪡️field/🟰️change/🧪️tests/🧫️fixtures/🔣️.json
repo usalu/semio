@@ -6655,14 +6655,14 @@
       "type": "f64",
       "authored": "nan",
       "original": "nan",
-      "unchanged": true
+      "unchanged": false
     },
     {
       "id": "plain-signed-zero",
       "type": "f64",
       "authored": "-0",
       "original": "+0",
-      "unchanged": false
+      "unchanged": true
     },
     {
       "id": "plain-number-set",

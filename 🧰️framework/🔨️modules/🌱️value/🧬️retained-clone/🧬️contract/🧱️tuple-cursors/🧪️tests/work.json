@@ -1,0 +1,88 @@
+{
+  "cases": [
+    {
+      "phase": "binding",
+      "budget": 0,
+      "child": 1,
+      "local": 0,
+      "expected": 0
+    },
+    {
+      "phase": "binding",
+      "budget": 1,
+      "child": 1,
+      "local": 0,
+      "expected": 1
+    },
+    {
+      "phase": "advance",
+      "budget": 1,
+      "child": 1,
+      "local": 0,
+      "expected": 1
+    },
+    {
+      "phase": "advance",
+      "budget": 3,
+      "child": 3,
+      "local": 0,
+      "expected": 3
+    },
+    {
+      "phase": "handoff",
+      "budget": 1,
+      "child": 1,
+      "local": 1,
+      "expected": 0
+    },
+    {
+      "phase": "handoff",
+      "budget": 2,
+      "child": 1,
+      "local": 1,
+      "expected": 2
+    },
+    {
+      "phase": "closeStart",
+      "budget": 2,
+      "child": 2,
+      "local": 1,
+      "expected": 0
+    },
+    {
+      "phase": "closeStart",
+      "budget": 3,
+      "child": 2,
+      "local": 1,
+      "expected": 3
+    },
+    {
+      "phase": "assemblePair",
+      "budget": 3,
+      "child": 0,
+      "local": 4,
+      "expected": 0
+    },
+    {
+      "phase": "assemblePair",
+      "budget": 4,
+      "child": 0,
+      "local": 4,
+      "expected": 4
+    },
+    {
+      "phase": "assembleTriple",
+      "budget": 4,
+      "child": 0,
+      "local": 5,
+      "expected": 0
+    },
+    {
+      "phase": "assembleTriple",
+      "budget": 5,
+      "child": 0,
+      "local": 5,
+      "expected": 5
+    }
+  ]
+}

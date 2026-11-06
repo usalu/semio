@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "order",
+    "requiredBefore"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "order": {
+      "const": [
+        "aggregateOrigins",
+        "aggregatePurposes",
+        "validateOriginScopes",
+        "redeemBootstrapTransition",
+        "applyIssuerLedger",
+        "commitJournal"
+      ]
+    },
+    "requiredBefore": {
+      "const": [
+        [
+          "aggregateOrigins",
+          "aggregatePurposes"
+        ],
+        [
+          "aggregatePurposes",
+          "validateOriginScopes"
+        ],
+        [
+          "validateOriginScopes",
+          "applyIssuerLedger"
+        ],
+        [
+          "redeemBootstrapTransition",
+          "applyIssuerLedger"
+        ],
+        [
+          "applyIssuerLedger",
+          "commitJournal"
+        ]
+      ]
+    }
+  }
+}

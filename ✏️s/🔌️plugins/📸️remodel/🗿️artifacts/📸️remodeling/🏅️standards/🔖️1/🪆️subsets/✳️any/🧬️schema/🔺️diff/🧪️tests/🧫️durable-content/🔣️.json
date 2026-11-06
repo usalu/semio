@@ -1,0 +1,13 @@
+{
+  "cases": [
+    { "id": "create", "initial": [], "rows": [{ "operation": "create", "chunks": ["a", "b"] }], "expected": ["a", "b"] },
+    { "id": "append", "initial": ["a"], "rows": [{ "operation": "append", "chunks": ["b"] }], "expected": ["a", "b"] },
+    { "id": "truncate", "initial": ["a", "b"], "rows": [{ "operation": "truncate", "from": 1 }], "expected": ["a"] },
+    { "id": "remove", "initial": ["a"], "rows": [{ "operation": "truncate", "from": 0 }], "expected": [] },
+    { "id": "duplicate", "initial": ["a"], "rows": [{ "operation": "create", "chunks": ["b"] }], "refused": true },
+    { "id": "missing", "initial": [], "rows": [{ "operation": "append", "chunks": ["a"] }], "refused": true },
+    { "id": "sequential", "initial": [], "rows": [{ "operation": "create", "chunks": ["a"] }, { "operation": "append", "chunks": ["b"] }], "expected": ["a", "b"] },
+    { "id": "rollback", "initial": ["a"], "rows": [{ "operation": "append", "chunks": ["b"] }, { "operation": "create", "chunks": ["c"] }], "refused": true },
+    { "id": "empty-existing", "initial": [], "present": true, "rows": [{ "operation": "append", "chunks": ["a"] }], "expected": ["a"] }
+  ]
+}

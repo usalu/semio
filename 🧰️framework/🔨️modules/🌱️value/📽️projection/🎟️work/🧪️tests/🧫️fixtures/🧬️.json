@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["value", "maximumTurns", "maximumCpuWork", "stock", "expected"],
+  "properties": {
+    "value": {"type": "integer", "minimum": 0},
+    "maximumTurns": {"type": "integer", "minimum": 1},
+    "maximumCpuWork": {"type": "integer", "minimum": 1},
+    "stock": {"type": "object", "additionalProperties": false, "required": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"], "properties": {"maximumItems": {"type": "integer", "minimum": 1}, "maximumCopyBytes": {"type": "integer", "minimum": 1}, "maximumCapacityBytes": {"type": "integer", "minimum": 1}, "maximumReleaseBytes": {"type": "integer", "minimum": 1}, "maximumDepth": {"type": "integer", "minimum": 1}}},
+    "expected": {"type": "object", "additionalProperties": false, "required": ["deniedCpu", "birthCpu", "bindingCpu", "copyCpu", "rootCpu", "captureCpu", "takeCpu", "cachedCpu", "closeStartCpu", "repeatedCloseStartCpu"], "properties": {"deniedCpu": {"const": 0}, "birthCpu": {"const": 1}, "bindingCpu": {"const": 1}, "copyCpu": {"const": 2}, "rootCpu": {"const": 1}, "captureCpu": {"const": 1}, "takeCpu": {"const": 1}, "cachedCpu": {"const": 0}, "closeStartCpu": {"const": 1}, "repeatedCloseStartCpu": {"const": 0}}}
+  }
+}

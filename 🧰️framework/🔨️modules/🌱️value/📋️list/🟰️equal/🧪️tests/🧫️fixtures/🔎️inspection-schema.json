@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "work",
+      "physical",
+      "inspected"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "physical": {
+        "type": "boolean"
+      },
+      "inspected": {
+        "type": "boolean"
+      }
+    }
+  }
+}

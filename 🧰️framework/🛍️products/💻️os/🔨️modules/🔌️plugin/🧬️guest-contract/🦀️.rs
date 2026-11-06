@@ -10,6 +10,7 @@ use std::sync::Arc;
 pub use semio_plugin_abi::{operation_authority, return_walk_template, sqlite_wire};
 #[path = "🎟️original-actor-context/🦀️.rs"]
 pub mod original_actor_context;
+pub use semio_plugin_actor_input as original_input;
 
 /// 🧮️ The heap witness the crate's allocation laws read through `semio_framework_trace::observe_heap_allocations_on_this_thread`.
 #[cfg(test)]

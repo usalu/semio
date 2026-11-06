@@ -164,3 +164,4 @@ impl NativeEncodeControl<'_>{
  /// 🧳️ Places a completed original allocation outcome in the caller-owned slot before later callbacks.
  pub fn allocate_effect_into(&mut self,bytes:usize,actual:&mut Option<usize>,progress:&mut Option<NativeEncodeAllocationProgress>,outcome:&mut Option<NativeEncodeAllocationOutcome>,operation:&mut impl FnMut(&mut Option<usize>,&mut semio_framework_value_control_contract::OriginalWorkTurn<'_,'_>)->Result<bool,ValueError>)->Result<bool,ValueError>{if outcome.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native allocation outcome slot is occupied"))}*outcome=self.allocate_effect(bytes,actual,progress,operation)?;Ok(outcome.is_some())}
 }
+

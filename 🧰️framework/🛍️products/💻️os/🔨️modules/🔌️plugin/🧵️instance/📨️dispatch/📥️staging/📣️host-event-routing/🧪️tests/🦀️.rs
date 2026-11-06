@@ -23,7 +23,7 @@ fn scope_fences_the_original_decoder_until_pending_work_closes() {
         while !decoder.terminal_is_empty() {
             caller.turn(grant(), |cx| cx.with_original_retirement(|cx| {
                 let demand = decoder.retirement_demands(32768)?;
-                semio_framework_job::close_original_retained_step(cx, demand, |grant| decoder.close_step(grant))?;
+                decoder.close_on_source(cx)?;
                 Ok(())
             })).unwrap();
         }

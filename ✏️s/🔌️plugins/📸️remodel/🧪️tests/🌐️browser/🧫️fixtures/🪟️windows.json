@@ -1,0 +1,20 @@
+[
+  {
+    "mode": "model",
+    "kind": "remodeling-main",
+    "measure": "remodeling-measure-layer-mesh",
+    "control": "toggle"
+  },
+  {
+    "mode": "capture",
+    "kind": "remodeling-frames",
+    "measure": "remodeling-measure-frame-index",
+    "control": "slider"
+  },
+  {
+    "mode": "analyze",
+    "kind": "remodeling-report",
+    "measure": "remodeling-measure-report-table",
+    "control": "select"
+  }
+]

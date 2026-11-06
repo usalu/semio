@@ -2,79 +2,22 @@
 use crate::*;
 use semio_framework_pack_json as json;
 
+#[path="🧊️stream/🦀️.rs"]
+pub mod stream;
+
 //#region Glb
-pub fn mesh_to_glb(mesh: &MeshData) -> Vec<u8> {
-    let positions = f32_slice_to_bytes(&mesh.positions);
-    let normals = if mesh.normals.len() == mesh.positions.len() {
-        f32_slice_to_bytes(&mesh.normals)
-    } else {
-        let mut copy = mesh.clone();
-        copy.compute_normals();
-        f32_slice_to_bytes(&copy.normals)
-    };
-    let indices = u32_slice_to_bytes(&mesh.indices);
-    let bin = [positions.as_slice(), normals.as_slice(), indices.as_slice()].concat();
-    let padded_bin = pad_to_4(bin);
-    let positions_len = positions.len();
-    let normals_len = normals.len();
-    let indices_len = indices.len();
-    let positions_offset = 0usize;
-    let normals_offset = positions_offset + positions_len;
-    let indices_offset = normals_offset + normals_len;
-    let json = format!(
-        r#"{{
-  "asset": {{"version": "2.0"}},
-  "scene": 0,
-  "scenes": [{{"nodes": [0]}}],
-  "nodes": [{{"mesh": 0}}],
-  "meshes": [{{
-    "primitives": [{{
-      "attributes": {{"POSITION": 0, "NORMAL": 1}},
-      "indices": 2,
-      "mode": 4
-    }}]
-  }}],
-  "accessors": [
-    {{"bufferView": 0, "componentType": 5126, "count": {}, "type": "VEC3", "min": {}, "max": {}}},
-    {{"bufferView": 1, "componentType": 5126, "count": {}, "type": "VEC3"}},
-    {{"bufferView": 2, "componentType": 5125, "count": {}, "type": "SCALAR"}}
-  ],
-  "bufferViews": [
-    {{"buffer": 0, "byteOffset": {}, "byteLength": {}}},
-    {{"buffer": 0, "byteOffset": {}, "byteLength": {}}},
-    {{"buffer": 0, "byteOffset": {}, "byteLength": {}}}
-  ],
-  "buffers": [{{"byteLength": {}}}]
-}}"#,
-        mesh.vertex_count(),
-        json_vec3_min(&mesh.positions),
-        json_vec3_max(&mesh.positions),
-        mesh.vertex_count(),
-        mesh.indices.len(),
-        positions_offset,
-        positions_len,
-        normals_offset,
-        normals_len,
-        indices_offset,
-        indices_len,
-        padded_bin.len()
-    );
-    let mut json_bytes = json.into_bytes();
-    while json_bytes.len() % 4 != 0 {
-        json_bytes.push(b' ');
+const EMPTY_SCENE_JSON: &[u8] = br#"{"asset":{"version":"2.0"},"scene":0,"scenes":[{}]}"#;
+
+pub fn mesh_to_glb(mesh: &MeshData) -> Result<Vec<u8>, String> {
+    let mut cursor = stream::GlbCursor::new(mesh).map_err(str::to_owned)?;
+    let mut normals = if mesh.normals.len() == mesh.positions.len() { Vec::new() } else { vec![[0.0; 3]; mesh.positions.len() / 3] };
+    let mut bytes = Vec::new();
+    loop {
+        let mut byte = [0];
+        let turn = cursor.advance(mesh, &mut normals, &mut byte, 1, usize::MAX, 1, u64::MAX).map_err(|error| error.reason.to_owned())?;
+        if turn.written != 0 { bytes.push(byte[0]); }
+        if turn.complete { return Ok(bytes); }
     }
-    let total_len = 12 + 8 + json_bytes.len() + 8 + padded_bin.len();
-    let mut out = Vec::with_capacity(total_len);
-    out.extend_from_slice(b"glTF");
-    out.extend_from_slice(&(2u32).to_le_bytes());
-    out.extend_from_slice(&(total_len as u32).to_le_bytes());
-    out.extend_from_slice(&(json_bytes.len() as u32).to_le_bytes());
-    out.extend_from_slice(b"JSON");
-    out.extend_from_slice(&json_bytes);
-    out.extend_from_slice(&(padded_bin.len() as u32).to_le_bytes());
-    out.extend_from_slice(b"BIN\x00");
-    out.extend_from_slice(&padded_bin);
-    out
 }
 
 pub(crate) type GlbMatrix = [[f32; 4]; 4];

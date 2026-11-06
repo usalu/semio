@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "source", "instance", "rounds", "blocked", "before", "after", "preserves", "births", "work"],
+  "properties": {
+    "version": {"const": 1},
+    "source": {"const": "same actual producer Source"},
+    "instance": {"const": "same actual guest instance"},
+    "rounds": {"type": "integer", "minimum": 2},
+    "blocked": {"type": "array", "minItems": 8, "uniqueItems": true, "items": {"enum": ["unopened", "zero-items", "zero-copy", "zero-work", "pending-cause", "unsettled-return", "cancelled", "retiring"]}},
+    "before": {"const": "Complete"},
+    "after": {"const": "Encode"},
+    "preserves": {"type": "array", "minItems": 5, "uniqueItems": true, "items": {"enum": ["source-binding", "frame-address", "receiver", "guest-context", "guest-state"]}},
+    "births": {"const": 0},
+    "work": {"const": 1}
+  }
+}

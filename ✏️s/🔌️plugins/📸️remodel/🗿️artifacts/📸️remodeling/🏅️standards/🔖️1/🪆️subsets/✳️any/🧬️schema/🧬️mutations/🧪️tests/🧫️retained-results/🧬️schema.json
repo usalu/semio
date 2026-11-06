@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases",
+    "ieeeCases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 28,
+      "items": {
+        "type": "object",
+        "required": [
+          "field",
+          "original",
+          "replacement",
+          "status",
+          "inverse"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "enum": [
+              "sparse",
+              "dense",
+              "trajectory",
+              "geo",
+              "qc",
+              "tracks",
+              "mesh"
+            ]
+          },
+          "original": {},
+          "replacement": {},
+          "status": {
+            "enum": [
+              "changed",
+              "no-op",
+              "missing",
+              "mismatch"
+            ]
+          },
+          "inverse": {},
+          "durable": {
+            "enum": [
+              "none",
+              "complete",
+              "incomplete"
+            ]
+          },
+          "target": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ieeeCases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "field",
+          "sample",
+          "selfEqual",
+          "status"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "const": "sparse"
+          },
+          "sample": {
+            "const": "NaN"
+          },
+          "selfEqual": {
+            "const": false
+          },
+          "status": {
+            "const": "changed"
+          }
+        }
+      }
+    }
+  }
+}

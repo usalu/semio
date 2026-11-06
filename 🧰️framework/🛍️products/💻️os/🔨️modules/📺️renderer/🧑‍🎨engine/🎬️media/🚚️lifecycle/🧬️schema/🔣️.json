@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Checked Media Export Operation Policy",
+  "const": { "maximumDurationMs": 300000, "pollIntervalMs": 10, "maximumDescriptorBytes": 16384 }
+}

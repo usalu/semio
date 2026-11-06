@@ -41,7 +41,7 @@ fn effect_unwind_posts_actual_progress_into_the_caller_failure_slot(){
  use semio_framework_value::{RetirementDemand,ValueError};
  use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
  struct Work;
- impl OriginalWorkRecipient for Work{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,_:u64,_:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(true)})())}}
+ impl NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{1_000_000u64.checked_sub(observed).ok_or_else(||ValueError::invariant("observed test work exceeds its finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool>{Ok(additional<=self.available_work(observed)?)}}
  struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
  impl NativeDecodeConstructionRecipient for Physical{
   fn submitted(&self)->RetainedCloneProgress{self.submitted}

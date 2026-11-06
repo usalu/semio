@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "cleanup": [
+    "Deallocate",
+    "CloseActorContext",
+    "CloseActorOutput",
+    "PublishActorFailure",
+    "ReadActorFailure",
+    "BorrowActorFailure",
+    "AcknowledgeActorFailure",
+    "AcknowledgeActorFailureChunk",
+    "CancelJob",
+    "CloseJobs",
+    "AcknowledgeJobOutput",
+    "AcknowledgeJobOutputChunk"
+  ],
+  "semantic": [
+    "AdmitActorContext",
+    "AdmitActorInput",
+    "StartJob",
+    "StepJob",
+    "Poll",
+    "Restore"
+  ]
+}

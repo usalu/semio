@@ -1,0 +1,3 @@
+/** 🎟️ Independent SQL reconciles the retained origin after every command ownership frontier. */
+import{test,expect}from"bun:test";import{Database}from"bun:sqlite";import Ajv from"ajv";import corpus from"./cases.json";import schema from"./🔣️.json";
+test("command descendants keep their real Source origin until paid return",()=>{expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);const db=new Database(":memory:");try{for(const row of corpus.cases){expect(db.query("SELECT (NOT ? AND ?=0) AS mayClose").get(Number(row.sourceHeld),row.descendants)).toEqual({mayClose:Number(row.mayClose)});}}finally{db.close()}});

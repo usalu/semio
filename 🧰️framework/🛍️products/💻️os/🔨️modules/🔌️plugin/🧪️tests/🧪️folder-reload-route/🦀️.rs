@@ -561,6 +561,7 @@ async fn a_whole_document_load_reports_the_work_it_did_and_never_goes_back() {
 /// host's next poll finds it cancelled, and the document is the one the program held.
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a_host_poll() {
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original maintenance caller");let mut context=caller.context();let cx=&mut context;
     let fixture = route_fixture();
     let mut findings = RouteFindings::default();
     let (mut source, archive) = program_with_history(24).await;
@@ -577,8 +578,8 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
     findings.holds(target.ingest.document_loading_refusal(&target.tools, "undo").is_none(), || "a verb still waits for the cancelled load".to_string());
     let mut turns = 0usize;
     while target.ingest.document_archive_loads.get(62).is_some_and(|load| !load.terminal()) && turns < 100_000 {
-        let demand = PluginApp::maintenance_retirement_demands(&target, store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).expect("a quoted maintenance demand");
-        PluginApp::maintenance_step(&mut target, plugin_demand_grant(demand)).expect("a maintenance turn");
+        let demand = PluginApp::maintenance_retirement_demands(&target, store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES,cx.fuel_remaining()).expect("a quoted maintenance demand");
+        PluginApp::maintenance_step(&mut target,cx, plugin_demand_grant(demand)).expect("a maintenance turn");
         turns += 1;
     }
     findings.holds(target.ingest.document_archive_loads.get(62).is_some_and(|load| load.terminal()), || format!("the cancelled load did not retire in {turns} maintenance turns without a host poll"));

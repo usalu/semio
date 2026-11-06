@@ -6,20 +6,20 @@ use semio_plugin_host_wake::GuestRelayAdmissionFailure;
 pub struct GuestRelayOutputHome{bytes:ManuallyDrop<Vec<u8>>,expected:Option<usize>,sealed:bool}
 impl GuestRelayOutputHome{
  pub fn empty()->Self{Self{bytes:ManuallyDrop::new(Vec::new()),expected:None,sealed:false}}
- /// 📏️ See `README.md`.
+ /// 📏️ Admits one exact result backing before any page changes its actual source-owned length.
  pub fn prepare(&mut self,length:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if length>semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES{return Err(refused("guest result exceeds the declared operation payload extent").into())}if let Some(expected)=self.expected{if expected!=length{return Err(refused("guest result changed its admitted output extent").into())}return Ok(true)}
   let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<length||grant.maximum_copy_bytes<size_of::<Option<usize>>(){return Ok(false)}
   self.bytes.try_reserve_exact(length).map_err(|_|refused("guest result backing allocation failed"))?;self.expected=Some(length);
   cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<usize>>(),retained_capacity_bytes:self.bytes.capacity(),..Default::default()})?;cx.consume_fuel(1);Ok(true)
  }
- /// 📄️ See `README.md`.
+ /// 📄️ Copies only the next paid span of an actual frozen guest page and retains the cursor on refusal.
  pub fn append_page(&mut self,offset:usize,page:&[u8],cursor:&mut usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let expected=self.expected.ok_or_else(||refused("guest output has no admitted backing"))?;if self.sealed||*cursor>page.len()||offset.checked_add(*cursor)!=Some(self.bytes.len())||offset.checked_add(page.len()).is_none_or(|end|end>expected){return Err(refused("guest page changes its original offset, extent or sealed receiver").into())}if *cursor==page.len(){return Ok(true)}
   let grant=cx.retained_grant();let metadata=2*size_of::<usize>();let count=(page.len()-*cursor).min(grant.maximum_copy_bytes.saturating_sub(metadata)).min(usize::try_from(cx.fuel_remaining().saturating_sub(1)).unwrap_or(usize::MAX));if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||count==0{return Ok(false)}
   cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count+metadata,..Default::default()})?;cx.consume_fuel(u64::try_from(count).unwrap_or(u64::MAX)+1);self.bytes.extend_from_slice(&page[*cursor..*cursor+count]);*cursor+=count;Ok(*cursor==page.len())
  }
- /// 🔒️ See `README.md`.
+ /// 🔒️ Publishes only the fully copied result after the caller has received its real guest protocol acknowledgement.
  pub fn seal(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.sealed{return Ok(true)}if self.expected!=Some(self.bytes.len()){return Err(refused("guest output cannot seal before its exact admitted extent is received").into())}let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<bool>()||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()})?;cx.consume_fuel(1);self.sealed=true;Ok(true)
  }
@@ -38,22 +38,25 @@ impl OriginalNativeRetirement for GuestRelayOutputHome{
 impl Drop for GuestRelayOutputHome{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"guest result backing requires its actual Source-funded return");if self.bytes.is_empty()&&self.bytes.capacity()==0{unsafe{ManuallyDrop::drop(&mut self.bytes)}}}}
 pub struct GuestRelayOutput{pub(super) native:Option<OriginalNativeLease<GuestRelayOutputHome>>}
 impl GuestRelayOutput{
- /// 🪢️ See `README.md`.
+ /// 🪢️ Transfers an existing paid result lease only after its actual producer sealed the complete bytes.
  pub fn take_sealed_step(native:&mut Option<OriginalNativeLease<GuestRelayOutputHome>>,cx:&mut StepContext<'_>)->Result<Option<Self>,OriginalTurnFailure>{
   let lease=native.as_mut().ok_or_else(||refused("guest result capsule has no original Source lease"))?;let mut sealed=false;if !lease.with_native(cx,|home,_|{sealed=home.is_sealed();Ok(())})?||!sealed{return Ok(None)}let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<Self>()||grant.maximum_depth==0{return Ok(None)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Self>(),..Default::default()})?;cx.consume_fuel(1);Ok(Some(Self{native:native.take()}))
  }
- /// 👁️ See `README.md`.
+ /// 👁️ A receiving callback borrows frozen bytes on their exact original Source and cannot return an owned semantic value.
  pub fn with_bytes(&mut self,cx:&mut StepContext<'_>,receive:impl FnOnce(&[u8],&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{
   self.native.as_mut().ok_or_else(||refused("guest output capsule was already returned"))?.with_native(cx,|home,cx|receive(home.bytes()?,cx))
  }
- pub fn return_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let Some(native)=self.native.as_mut()else{return Ok(true)};if !native.return_step(cx)?{return Ok(false)}let bytes=size_of::<Option<OriginalNativeLease<GuestRelayOutputHome>>>();let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);self.native.take();Ok(true)}
+ pub fn return_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{OriginalNativeLease::return_slot_step(&mut self.native,cx)}
  pub fn terminal_is_empty(&self)->bool{self.native.is_none()}
 }
-/// 🧯️ See `README.md`.
+/// 🧯️ Full original causes stay in the admitting Source instead of escaping as formatted strings.
 pub struct GuestRelayFaultHome{failure:Option<semio_framework_value::retirement::controlled::ControlledRetirement<GuestRelayAdmissionFailure>>}
 impl GuestRelayFaultHome{
  pub fn empty()->Self{Self{failure:None}}
- /// 📥️ See `README.md`.
+ pub fn has_failure(&self)->bool{self.failure.as_ref().is_some_and(|failure|failure.original().is_some())}
+ pub fn with_failure(&self,cx:&mut StepContext<'_>,receive:impl FnOnce(&GuestRelayAdmissionFailure,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<(),OriginalTurnFailure>{receive(self.failure.as_ref().and_then(|failure|failure.original()).ok_or_else(||refused("original fault has not been captured"))?,cx)}
+
+ /// 📥️ Captures the complete original callback failure.
  pub fn capture_turn_failure_step(&mut self,failure:&mut Option<OriginalTurnFailure>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.failure.is_some()||failure.is_none(){return Err(refused("one original fault required").into())}if !capsule_metadata(cx,size_of::<Self>(),true)?{return Ok(false)}self.failure=Some(semio_framework_value::retirement::controlled::ControlledRetirement::retain(GuestRelayAdmissionFailure::from(failure.take().unwrap())));Ok(true)}
  pub fn capture_step(&mut self,failure:&mut Option<GuestRelayAdmissionFailure>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.failure.is_some()||failure.is_none(){return Err(refused("one original fault required").into())}if !capsule_metadata(cx,size_of::<Self>(),true)?{return Ok(false)}self.failure=Some(semio_framework_value::retirement::controlled::ControlledRetirement::retain(failure.take().unwrap()));Ok(true)}
 }
@@ -62,17 +65,17 @@ impl OriginalNativeRetirement for GuestRelayFaultHome{
  fn terminal_is_empty(&self)->bool{self.failure.is_none()}
 }
 impl Drop for GuestRelayFaultHome{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original fault requires its paid Source retirement")}}
-pub enum GuestRelayFault{Native{native:Option<OriginalNativeLease<GuestRelayFaultHome>>},Guest(GuestRelayOutput)}
+pub enum GuestRelayFault{Native{native:Option<OriginalNativeLease<GuestRelayFaultHome>>},Guest(GuestRelayOutput),ActorFailure(crate::actor_failure::ActorFailureCapsule)}
 impl GuestRelayFault{
  pub fn take_captured_step(native:&mut Option<OriginalNativeLease<GuestRelayFaultHome>>,cx:&mut StepContext<'_>)->Result<Option<Self>,OriginalTurnFailure>{let mut ready=false;if !native.as_mut().ok_or_else(||refused("fault capsule requires its original lease"))?.with_native(cx,|home,_|{ready=home.failure.as_ref().is_some_and(|failure|failure.original().is_some());Ok(())})?||!ready||!capsule_metadata(cx,size_of::<Self>(),true)?{return Ok(None)}Ok(Some(Self::Native{native:native.take()}))}
- /// 📩️ See `README.md`.
+ /// 📩️ The actual failed job hands over its complete sealed producer bytes without a host-side copy or interpretation.
  pub fn take_guest_failure_step(native:&mut Option<OriginalNativeLease<GuestRelayOutputHome>>,cx:&mut StepContext<'_>)->Result<Option<Self>,OriginalTurnFailure>{if !capsule_metadata(cx,size_of::<Self>(),false)?{return Ok(None)}Ok(GuestRelayOutput::take_sealed_step(native,cx)?.map(Self::Guest))}
  pub fn with_fault(&mut self,cx:&mut StepContext<'_>,receive:impl FnOnce(&GuestRelayAdmissionFailure,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{let Self::Native{native}=self else{return Err(refused("guest fault bytes require their original typed receiving path").into())};native.as_mut().ok_or_else(||refused("fault capsule was already returned"))?.with_native(cx,|home,cx|receive(home.failure.as_ref().and_then(|failure|failure.original()).ok_or_else(||refused("fault recipient lost its original cause"))?,cx))}
- pub fn with_guest_fault_bytes(&mut self,cx:&mut StepContext<'_>,receive:impl FnOnce(&[u8],&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{let Self::Guest(output)=self else{return Err(refused("native fault retains its complete original causes").into())};output.with_bytes(cx,receive)}
- pub fn return_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{match self{Self::Guest(output)=>output.return_step(cx),Self::Native{native}=>{let Some(lease)=native.as_mut()else{return Ok(true)};if !lease.return_step(cx)?||!capsule_metadata(cx,size_of::<Self>(),true)?{return Ok(false)}native.take();Ok(true)}}}
- pub fn terminal_is_empty(&self)->bool{match self{Self::Guest(output)=>output.terminal_is_empty(),Self::Native{native}=>native.is_none()}}
+ pub fn with_guest_fault_bytes(&mut self,cx:&mut StepContext<'_>,receive:impl FnOnce(&[u8],&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{match self{Self::Guest(output)=>output.with_bytes(cx,receive),Self::ActorFailure(fault)=>fault.with_bytes(cx,receive),Self::Native{..}=>Err(refused("native fault retains its complete original causes").into())}}
+ pub fn return_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{match self{Self::Guest(output)=>output.return_step(cx),Self::ActorFailure(fault)=>fault.return_step(cx),Self::Native{native}=>OriginalNativeLease::return_slot_step(native,cx)}}
+ pub fn terminal_is_empty(&self)->bool{match self{Self::Guest(output)=>output.terminal_is_empty(),Self::ActorFailure(fault)=>fault.terminal_is_empty(),Self::Native{native}=>native.is_none()}}
 }
-/// 📬️ See `README.md`.
+/// 📬️ The caller receives exactly one existing Source lease and retains its producer until that lease returns.
 pub enum GuestRelayResult{Success(GuestRelayOutput),Failure(GuestRelayFault)}
 impl GuestRelayResult{
  pub fn return_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{match self{Self::Success(output)=>output.return_step(cx),Self::Failure(fault)=>fault.return_step(cx)}}
@@ -102,7 +105,7 @@ mod tests{
  fn fault_capsule_preserves_all_original_causes_until_paid_return(){
   let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["fault"]["expectedCauses"],3);
   use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};use semio_framework_value::RetainedCloneGrant;fn clock()->Option<u64>{Some(1000)}let grant=RetainedCloneGrant{maximum_items:10000,maximum_copy_bytes:1048576,maximum_capacity_bytes:4194304,maximum_release_bytes:4194304,maximum_depth:64};let mut caller=OriginalJobFixtureCaller::admit(OperationId(71),Generation(3),grant,clock,1000000,1000000);let mut input=Some(GuestRelayFaultHome::empty());let mut native=None;for _ in 0..64{caller.turn(grant,|cx|cx.admit_original_native(&mut input,&mut native)).unwrap();if native.is_some(){break}}
-  let mut primary=OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::InvalidValue,"body"));primary.receipt_refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"receipt"));let mut original=Some(GuestRelayAdmissionFailure{primary:Some(primary),settlement:Some(ValueError::literal(ValueRefusalKind::WorkLimit,"settlement").into())});caller.turn(grant,|cx|native.as_mut().unwrap().with_native(cx,|home,cx|{assert!(home.capture_step(&mut original,cx)?);Ok(())})).unwrap();assert!(original.is_none());let mut fault=caller.turn(grant,|cx|GuestRelayFault::take_captured_step(&mut native,cx)).unwrap().unwrap();assert!(native.is_none());caller.turn(grant,|cx|fault.with_fault(cx,|failure,_|{assert_eq!(failure.primary.as_ref().unwrap().primary_value().unwrap().kind,ValueRefusalKind::InvalidValue);assert_eq!(failure.primary.as_ref().unwrap().receipt_refusal.as_ref().unwrap().kind,ValueRefusalKind::InvariantViolated);assert_eq!(failure.settlement.as_ref().unwrap().primary_value().unwrap().kind,ValueRefusalKind::WorkLimit);Ok(())})).unwrap();
+  let mut primary=OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::InvalidValue,"body"));primary.receipt_refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"receipt"));let mut original=Some(GuestRelayAdmissionFailure{closure:None,primary:Some(primary),settlement:Some(ValueError::literal(ValueRefusalKind::WorkLimit,"settlement").into())});caller.turn(grant,|cx|native.as_mut().unwrap().with_native(cx,|home,cx|{assert!(home.capture_step(&mut original,cx)?);Ok(())})).unwrap();assert!(original.is_none());let mut fault=caller.turn(grant,|cx|GuestRelayFault::take_captured_step(&mut native,cx)).unwrap().unwrap();assert!(native.is_none());caller.turn(grant,|cx|fault.with_fault(cx,|failure,_|{assert_eq!(failure.primary.as_ref().unwrap().primary_value().unwrap().kind,ValueRefusalKind::InvalidValue);assert_eq!(failure.primary.as_ref().unwrap().receipt_refusal.as_ref().unwrap().kind,ValueRefusalKind::InvariantViolated);assert_eq!(failure.settlement.as_ref().unwrap().primary_value().unwrap().kind,ValueRefusalKind::WorkLimit);Ok(())})).unwrap();
   caller.cancel().cancel_now();for _ in 0..64{if caller.turn(grant,|cx|cx.with_original_retirement(|cx|fault.return_step(cx))).unwrap(){break}}assert!(fault.terminal_is_empty());let mut closed=false;for _ in 0..256{let(done,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,|cx|cx.close_original_native_step()).unwrap());assert_eq!(caller.receipt().released_bytes,heap.released_bytes);if done{closed=true;break}}assert!(closed);caller.retire(grant);
  }
 

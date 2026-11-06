@@ -15,4 +15,4 @@ impl<T:NativeDefault> NativeDefaultSlot<T>{
  pub fn terminal_is_empty(&self)->bool{self.cursor.terminal_is_empty()&&self.retired_header.is_none()&&self.output.is_none()&&self.retirement.is_empty()&&self.action.terminal_is_empty()}
 }
 impl<T:NativeDefault> Default for NativeDefaultSlot<T>{fn default()->Self{Self::new()}}
-impl<T:NativeDefault> Drop for NativeDefaultSlot<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"native default slot requires funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.output);}}}}
+impl<T:NativeDefault> Drop for NativeDefaultSlot<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"native default slot requires funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.output);ManuallyDrop::drop(&mut self.pending_cursor);}}}}

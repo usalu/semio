@@ -34,7 +34,7 @@ pub async fn set_merge_policy_frames<PA: PluginApp>(app: &mut PA, seq: u64, poli
 }
 /// ⚔️ Executes the channel's conflict-resolution command and returns the authoritative report and open projection.
 #[doc(hidden)]
-pub async fn resolve_conflict_frames<PA: PluginApp>(app: &mut PA, seq: u64, conflict_id: String, resolution: u8) -> Result<Vec<protocol::AppFrame>, Fault> {
+pub async fn resolve_conflict_frames<PA: PluginApp>(app: &mut PA, seq: u64, conflict_id: &str, resolution: u8) -> Result<Vec<protocol::AppFrame>, Fault> {
     let resolution = match resolution {
         0 => protocol::ConflictResolution::Accept,
         1 => protocol::ConflictResolution::Discard,

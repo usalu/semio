@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "source": [
+    0,
+    65,
+    195,
+    169,
+    240,
+    159,
+    166,
+    128,
+    90
+  ],
+  "cases": [
+    {
+      "offset": 1,
+      "length": 8,
+      "work": 0,
+      "copyBody": 8,
+      "chunk": 0
+    },
+    {
+      "offset": 1,
+      "length": 8,
+      "work": 1,
+      "copyBody": 8,
+      "chunk": 0
+    },
+    {
+      "offset": 1,
+      "length": 8,
+      "work": 4,
+      "copyBody": 8,
+      "chunk": 3
+    },
+    {
+      "offset": 4,
+      "length": 5,
+      "work": 8,
+      "copyBody": 2,
+      "chunk": 2
+    },
+    {
+      "offset": 1,
+      "length": 8,
+      "work": 20,
+      "copyBody": 8,
+      "chunk": 8
+    }
+  ],
+  "canonicalVarints": [
+    {
+      "wire": [
+        0
+      ],
+      "canonical": true
+    },
+    {
+      "wire": [
+        128,
+        0
+      ],
+      "canonical": false
+    },
+    {
+      "wire": [
+        128,
+        1
+      ],
+      "canonical": true
+    },
+    {
+      "wire": [
+        129,
+        0
+      ],
+      "canonical": false
+    }
+  ]
+}

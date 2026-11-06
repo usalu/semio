@@ -99,11 +99,12 @@ pub struct OrderedMap<V> { root: ManuallyDrop<Root<V>> }
 impl<V> Default for OrderedMap<V> { fn default() -> Self { Self { root: ManuallyDrop::new(None) } } }
 impl<V> Clone for OrderedMap<V> { fn clone(&self) -> Self { Self { root: self.root.clone() } } }
 impl<V:crate::retirement::RetireOwned+Sync> semio_framework_value_retained_clone::RetainedAlias for OrderedMap<V>{
-    fn alias_demand(&self)->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:2*size_of::<Self>(),depth:1,..Default::default()}}
-    fn alias_work_demand(&self)->u64{1}
-    fn admit_alias(&self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress)>{let mut work=0;let result=(||{let d=semio_framework_value_retained_clone::RetainedAlias::alias_demand(self);if !crate::retained_clone::retained_clone_grant_admits(grant,d){return Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"original ordered alias requires its complete header quote"))}work=1;Ok((self.clone(),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})();crate::RetainedWorkOutcome{result,work}}
+    const INSPECTION_WORK:u64=2;
+    fn alias_demand(&self)->crate::RetirementDemand{crate::RetirementDemand{depth:1,..Default::default()}}
+    fn alias_work_demand(&self)->u64{2}
+    fn admit_alias(&self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress)>{let mut work=1;let result=(||{let d=semio_framework_value_retained_clone::RetainedAlias::alias_demand(self);if !crate::retained_clone::retained_clone_grant_admits(grant,d){return Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"original ordered alias requires its complete header quote"))}work+=1;Ok((self.clone(),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})();crate::RetainedWorkOutcome{result,work}}
 }
-impl<V:crate::retirement::RetireOwned+Sync> semio_framework_value_retained_clone::RetainedClone for OrderedMap<V>{type Cursor=semio_framework_value_retained_clone::RetainedAliasCursor<Self>;fn retained_clone_cursor()->Self::Cursor{Default::default()}}
+impl<V:crate::retirement::RetireOwned+Sync> semio_framework_value_retained_clone::RetainedClone for OrderedMap<V>{type Cursor=semio_framework_value_retained_clone::RetainedAliasCursor<Self>;fn cursor_birth_work()->Result<u64,ValueError>{Ok(Self::Cursor::birth_work())}fn retained_clone_cursor()->Self::Cursor{Default::default()}}
 impl<V> Drop for OrderedMap<V> {
     fn drop(&mut self) { if !std::thread::panicking() { assert!(self.root.is_none(), "ordered-map root must be explicitly retired before drop"); } }
 }
@@ -154,7 +155,7 @@ impl<V> OrderedMap<V> {
     /// ⚡️ Completes a synchronous convenience upsert; retained jobs must use begin_set and advance.
     pub fn insert(&mut self, key: String, value: V) -> Option<V> {
         let mut cursor = self.begin_set(key, value);
-        while !cursor.is_complete() && cursor.advance_cold().result.is_ok() {}
+        while !cursor.is_complete() && cursor.advance(cold_update_grant(&cursor),u64::MAX).result.is_ok() {}
         let removed = cursor.take_removed(); if let Some(result) = cursor.take_result() { retire_cold(std::mem::replace(self, result).retire()); } close_cold(&mut cursor); removed.and_then(release_cold)
     }
     /// 🏪️ Completes a synchronous convenience removal; retained jobs must use begin_remove and advance.
@@ -162,7 +163,7 @@ impl<V> OrderedMap<V> {
     /// alive, so only [`Removal::Owned`] hands the value over and [`Removal::Shared`] reports that another owner retains it.
     pub fn remove(&mut self, key: &str) -> Option<Removal<V>> {
         let mut cursor = self.begin_remove(key.to_owned());
-        while !cursor.is_complete() && cursor.advance_cold().result.is_ok() {}
+        while !cursor.is_complete() && cursor.advance(cold_update_grant(&cursor),u64::MAX).result.is_ok() {}
         let removed = cursor.take_removed(); if let Some(result) = cursor.take_result() { retire_cold(std::mem::replace(self, result).retire()); } close_cold(&mut cursor);
         removed.map(|shared| release_cold(shared).map_or(Removal::Shared, Removal::Owned))
     }
@@ -245,14 +246,14 @@ struct UpdateState<V> {
     base: OrderedMap<V>, key: Option<SharedOwner<String>>, value: Option<SharedOwner<V>>, current: Root<V>, path: InlineStack<Parent<V>,MAX_AVL_HEIGHT>,
     successor_path: InlineStack<Arc<Node<V>>,MAX_AVL_HEIGHT>, retired:InlineStack<Arc<Node<V>>,UPDATE_RETIRED_ROOTS>, removed_node: Root<V>, successor_entry: Option<Arc<Entry<V>>>,
     replacement: Root<V>, removed: Option<SharedOwner<V>>, result: Option<OrderedMap<V>>, phase: Phase, insert:bool,
-    offset: usize, left_byte: Option<u8>, ordering: Option<Ordering>, retirement: Retirement<V>, closing: bool, last_close_work:u64, last_compared_bytes:usize,pending_entry:Option<EntryBuilder<V>>,entry_arc:Option<Arc<Entry<V>>>,pending_node:Option<NodeBuilder<V>>,plan:Option<BalancePlan<V>>,
+    offset: usize, left_byte: Option<u8>, ordering: Option<Ordering>, retirement: Retirement<V>, closing: bool, last_close_work:u64, last_compared_bytes:usize,last_allocation_attempt:Option<usize>,pending_entry:Option<EntryBuilder<V>>,entry_arc:Option<Arc<Entry<V>>>,pending_node:Option<NodeBuilder<V>>,plan:Option<BalancePlan<V>>,
 }
 
 impl<V> UpdateState<V> {
     fn new(base: OrderedMap<V>, key: SharedOwner<String>, value: Option<SharedOwner<V>>) -> Self {
         let insert=value.is_some();
         Self { insert,current: (*base.root).clone(), base, key: Some(key), value, path: InlineStack::default(), successor_path: InlineStack::default(), retired:InlineStack::default(), removed_node: None,
-            successor_entry: None, replacement: None, removed: None, result: None, phase: Phase::Search, offset: 0, left_byte: None, ordering: None, retirement: Retirement::default(), closing: false, last_close_work:0,last_compared_bytes:0,pending_entry:None,entry_arc:None,pending_node:None,plan:None }
+            successor_entry: None, replacement: None, removed: None, result: None, phase: Phase::Search, offset: 0, left_byte: None, ordering: None, retirement: Retirement::default(), closing: false, last_close_work:0,last_compared_bytes:0,last_allocation_attempt:None,pending_entry:None,entry_arc:None,pending_node:None,plan:None }
     }
 
     fn compare(&mut self, maximum_bytes: usize) -> usize {
@@ -268,10 +269,10 @@ impl<V> UpdateState<V> {
             Phase::RebuildSuccessor=>self.successor_path.front().map_or_else(||{let Some(removed)=self.removed_node.as_ref()else{return usize::MAX};let left=&removed.left;usize::from(left.is_some())+BalancePlan::new_aliases(left,&self.replacement)},|parent|1+usize::from(parent.right.is_some())+BalancePlan::new_aliases(&self.replacement,&parent.right)),Phase::Complete=>0,
         }
     }
-    fn advance(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let grant=effect.grant();
-        self.last_compared_bytes=0;
-        if let Some(staged)=self.pending_entry.as_mut(){let value=Entry{key:match staged.key.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("key absent").into()),work:0}},value:match staged.value.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("value absent").into()),work:0}}};let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant,effect.actual());let result=match turn.result{Ok((entry,p))=>{self.entry_arc=Some(entry);self.pending_entry.take();Ok(RetainedCloneStep::Progress(p))},Err((error,value))=>{staged.key=Some(value.key);staged.value=Some(value.value);Err(error)}};return crate::RetainedWorkOutcome{result,work:turn.work}}
-        if let Some(staged)=self.pending_node.as_mut(){let Some(value)=staged.take_node()else{return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("pending node entry absent").into()),work:0}};let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant,effect.actual());let result=match turn.result{Ok((node,p))=>{match self.plan.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("plan absent").into()),work:0}}.accept(node);self.pending_node.take();Ok(RetainedCloneStep::Progress(p))},Err((error,node))=>{staged.restore(node);Err(error)}};return crate::RetainedWorkOutcome{result,work:turn.work}}
+    fn advance(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{
+        self.last_compared_bytes=0;self.last_allocation_attempt=None;
+        if let Some(staged)=self.pending_entry.as_mut(){let value=Entry{key:match staged.key.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("key absent").into()),work:0}},value:match staged.value.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("value absent").into()),work:0}}};let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant,&mut self.last_allocation_attempt);let result=match turn.result{Ok((entry,p))=>{self.entry_arc=Some(entry);self.pending_entry.take();Ok(RetainedCloneStep::Progress(p))},Err((error,value))=>{staged.key=Some(value.key);staged.value=Some(value.value);Err(error)}};return crate::RetainedWorkOutcome{result,work:turn.work}}
+        if let Some(staged)=self.pending_node.as_mut(){let Some(value)=staged.take_node()else{return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("pending node entry absent").into()),work:0}};let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant,&mut self.last_allocation_attempt);let result=match turn.result{Ok((node,p))=>{match self.plan.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("plan absent").into()),work:0}}.accept(node);self.pending_node.take();Ok(RetainedCloneStep::Progress(p))},Err((error,node))=>{staged.restore(node);Err(error)}};return crate::RetainedWorkOutcome{result,work:turn.work}}
         if let Some(plan)=self.plan.as_mut(){if plan.ready(){let root=plan.take_result();let after=plan.after;self.plan.take();self.replacement=root;self.phase=after;}else{self.pending_node=Some(match plan.prepare(){Ok(node)=>node,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error.into()),work:0}});if let Err(error)=match self.pending_node.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("pending_node absent").into()),work:0}}.validate(){return crate::RetainedWorkOutcome{result:Err(error.with_retained_progress(RetainedCloneProgress{copied_items:1,copied_bytes:self.last_compared_bytes,..Default::default()})),work:1}}}return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:self.last_compared_bytes,..Default::default()})),work:1}}
         match self.phase{
             Phase::Search=>{
@@ -285,7 +286,7 @@ impl<V> UpdateState<V> {
             Phase::Rebuild=>{if let Some(parent)=self.path.pop_front(){let left=if parent.left{self.replacement.take()}else{parent.node.left.clone()};let right=if parent.left{parent.node.right.clone()}else{self.replacement.take()};self.plan=Some(BalancePlan::balanced(Arc::clone(&parent.node.entry),left,right,Phase::Rebuild,&mut self.retired));self.retired.push_front(parent.node);}else{self.result=Some(OrderedMap{root:ManuallyDrop::new(self.replacement.take())});self.phase=Phase::Complete;}},
             Phase::Complete=>return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0},
         }
-        crate::RetainedWorkOutcome{result:Ok(if self.is_complete(){RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:self.last_compared_bytes,..Default::default()})}else{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:self.last_compared_bytes,..Default::default()})}),work:1}
+        crate::RetainedWorkOutcome{result:Ok(if self.is_complete(){RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:self.last_compared_bytes,..Default::default()})}else{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:self.last_compared_bytes,..Default::default()})}),work:1+self.last_compared_bytes as u64}
     }
 
     pub fn is_complete(&self) -> bool { matches!(self.phase, Phase::Complete) }
@@ -338,18 +339,35 @@ impl<V> UpdateCursor<V> {
     pub fn next_capacity_byte_demand(&self)->Result<usize,ValueError>{if self.state.closing||self.state.is_complete(){return Ok(0)}Ok(if self.state.pending_entry.is_some(){crate::retirement::arc_custody::shared_allocation_bytes::<Entry<V>>()}else if self.state.pending_node.is_some(){crate::retirement::arc_custody::shared_allocation_bytes::<Node<V>>()}else{0})}
     pub fn next_depth_demand(&self)->usize{if self.state.closing||self.state.is_complete(){0}else{self.state.retained_depth().saturating_add(self.state.admission_growth()).max(1)}}
     pub fn last_compared_bytes(&self)->usize{self.state.last_compared_bytes}
+    pub fn last_allocation_attempt(&self)->Option<usize>{self.state.last_allocation_attempt}
+    /// ⛽️ Quotes the exact maximum metadata and byte reads for the selected update turn.
+    pub fn next_work_demand(&self,copy:usize)->Result<u64,ValueError>{
+        let state=&self.state;
+        if state.closing||state.is_complete()||copy<self.next_copy_byte_demand(){return Ok(0)}
+        if state.pending_entry.is_none()&&state.pending_node.is_none()&&state.plan.is_none()&&matches!(state.phase,Phase::Search)&&state.ordering.is_none(){
+            if let(Some(node),Some(key))=(state.current.as_ref(),state.key.as_ref()){
+                let remaining=key.len().min(node.entry.key.len()).saturating_sub(state.offset).saturating_mul(2).saturating_sub(usize::from(state.left_byte.is_some()));
+                return Ok(1+copy.min(64).min(remaining) as u64)
+            }
+        }
+        Ok(1)
+    }
     /// ⏩️ Every selected metadata probe or actual shared allocation is independently funded before effects.
-    fn advance_cold(&mut self)->crate::RetainedWorkOutcome{let grant=cold_update_grant(self);let mut actual=None;self.advance(&mut crate::RetainedAllocationEffect::new(grant,1,&mut actual))}
-    pub fn advance(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let grant=effect.grant();if effect.maximum_work_units()<1{return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-        self.state.last_compared_bytes=0;if self.state.closing{return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if self.state.is_complete(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let capacity=match self.next_capacity_byte_demand(){Ok(capacity)=>capacity,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};if grant.maximum_items==0||grant.maximum_capacity_bytes<capacity||grant.maximum_copy_bytes<self.next_copy_byte_demand(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if grant.maximum_depth<self.next_depth_demand(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered update exceeds admitted metadata depth")),work:0}}self.state.advance(effect)
+    pub fn advance(&mut self,grant:RetainedCloneGrant,maximum_work_units:u64)->crate::RetainedWorkOutcome{
+        let work=match self.next_work_demand(grant.maximum_copy_bytes){Ok(work)=>work,Err(error)=>{self.state.last_compared_bytes=0;self.state.last_allocation_attempt=None;return crate::RetainedWorkOutcome{result:Err(error),work:0}}};if work>maximum_work_units{self.state.last_compared_bytes=0;self.state.last_allocation_attempt=None;return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.state.last_compared_bytes=0;self.state.last_allocation_attempt=None;if self.state.closing{return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if self.state.is_complete(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let capacity=match self.next_capacity_byte_demand(){Ok(capacity)=>capacity,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};if grant.maximum_items==0||grant.maximum_capacity_bytes<capacity||grant.maximum_copy_bytes<self.next_copy_byte_demand(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if grant.maximum_depth<self.next_depth_demand(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered update exceeds admitted metadata depth")),work:0}}self.state.advance(grant)
     }
     /// 🛬️ Native receiving folds the actual child work and all physical refusals after retaining its real state.
+    pub fn advance_insert_controlled(&mut self,grant:RetainedCloneGrant,control:&mut crate::NativeDecodeControl<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,semio_framework_value_native_decoding::native_decoding::OriginalReceivingPrimary>{
+        let maximum_work_units=match self.next_work_demand(grant.maximum_copy_bytes){Ok(work)=>work,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error.into()),work:0}};
+        if !self.state.insert{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue,"controlled native ordered update requires an insert").into()),work:0}}let capacity=match self.next_capacity_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error.into()),work:0}};if self.state.closing||self.state.is_complete()||grant.maximum_items==0||grant.maximum_capacity_bytes<capacity||grant.maximum_copy_bytes<self.next_copy_byte_demand()||grant.maximum_depth<self.next_depth_demand(){let turn=self.advance(grant,maximum_work_units);return crate::RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}}if control.owned_bytes().checked_add(capacity).is_none_or(|next|next>control.maximum_bytes()){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"native decoding ownership exceeds caller limit").into()),work:0}}if let Err(error)=control.checkpoint(){return crate::RetainedWorkOutcome{result:Err(error.into()),work:0}}let turn=self.advance(grant,maximum_work_units);control.receive_retained_work(grant,turn)
+    }
     pub fn is_complete(&self) -> bool { self.state.is_complete() }
     pub fn take_result(&mut self) -> Option<OrderedMap<V>> { self.state.take_result() }
     /// 📤️ Explicit shared-value handoff; the recipient owns its eventual domain retirement.
     pub fn take_removed(&mut self) -> Option<SharedOwner<V>> { self.state.take_removed() }
     pub fn begin_close(&mut self) { self.state.begin_close(); }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep<V> { self.state.close_step(grant) }
+    pub fn next_close_work_demand(&self)->u64{if !self.state.closing||self.state.terminal_is_empty(){0}else if !self.state.retirement.is_empty(){self.state.retirement.next_work_demand()}else{1}}
+    pub fn close_step(&mut self, grant: RetainedCloneGrant, maximum_work_units:u64) -> RetirementStep<V> { if self.next_close_work_demand()>maximum_work_units{self.state.last_close_work=0;return RetirementStep::Blocked} self.state.close_step(grant) }
     pub fn last_close_work(&self)->u64{self.state.last_close_work}
     pub fn next_close_byte_demand(&self)->Result<usize,ValueError>{self.state.retirement.next_close_byte_demand()}
     pub fn next_close_copy_byte_demand(&self)->usize{self.state.retirement.next_copy_byte_demand()}
@@ -487,6 +505,7 @@ impl<V> Retirement<V> {
     pub fn next_copy_byte_demand(&self)->usize {0}
     /// ⏱️ Reads actual work from this defining close producer, including child failure.
     pub fn last_turn_work(&self)->u64{self.last_work}
+    pub fn next_work_demand(&self)->u64{u64::from(!self.is_empty())}
     pub fn advance(&mut self, grant: RetainedCloneGrant) -> RetirementStep<V> {
         self.last_work=0;
         if self.is_empty(){return RetirementStep::Complete;}
@@ -531,7 +550,7 @@ fn retire_cold<V>(mut retirement: Retirement<V>) {
 /// 📪️ Cold-only convenience cleanup; explicit synchronous APIs cannot earn interactive credit.
 fn close_cold<V>(cursor: &mut UpdateCursor<V>) {
     cursor.begin_close();
-    loop {let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:cursor.next_close_byte_demand().expect("ordered cold close release demand"),maximum_depth:cursor.next_close_depth_demand()};match cursor.close_step(grant) { RetirementStep::OwnedValue(value) => drop(value), RetirementStep::Complete => break, RetirementStep::Failure(error)=>panic!("ordered cold close refused: {error}"), _ => {} } }
+    loop {let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:cursor.next_close_byte_demand().expect("ordered cold close release demand"),maximum_depth:cursor.next_close_depth_demand()};match cursor.close_step(grant,u64::MAX) { RetirementStep::OwnedValue(value) => drop(value), RetirementStep::Complete => break, RetirementStep::Failure(error)=>panic!("ordered cold close refused: {error}"), _ => {} } }
 }
 
 fn release_cold<T>(mut value:SharedOwner<T>)->Option<T>{value.release_step(RetainedCloneGrant::one_release_turn(value.next_release_byte_demand(),1)).result.expect("cold shared release").value}

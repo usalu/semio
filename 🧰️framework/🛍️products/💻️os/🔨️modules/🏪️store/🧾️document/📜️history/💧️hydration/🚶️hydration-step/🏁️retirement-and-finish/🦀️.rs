@@ -5,7 +5,7 @@ use super::*;
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
     P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    M: semio_os_spr::StoreMutationFor<P>,
+    M: semio_os_spr::StoreMutationFor<P>+protocol::OpBinaryReceiving,
 {
     /// 🧹 Retires the history runtime.
     pub(super) fn step_retire_history(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
@@ -17,6 +17,7 @@ where
         retire!(pin_refs);
         retire!(edit_lookup);
         retire!(fold);
+        if self.target==PersistedDocumentHydrationTarget::Envelope&&self.actor.0.has_owner(){if !owned_frame_funded::<semio_framework_value::SharedUtf8>(grant){return PersistedDocumentHydrationStep::Pending(self.progress())}let actor=std::mem::take(&mut self.actor.0);if let Err(error)=self.admit_active(actor,cx,grant){return self.reject(error)}return PersistedDocumentHydrationStep::Pending(self.progress())}
         self.phase = Phase::RetirePack;
         cx.consume_fuel(1);
         PersistedDocumentHydrationStep::Pending(self.progress())
@@ -35,6 +36,7 @@ where
 
     /// 🔒 Closes the envelope runtime.
     pub(super) fn step_close_envelope_runtime(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
+        if self.runtime.is_none(){self.phase=Phase::CloseEnvelopeOwners;cx.consume_fuel(1);return PersistedDocumentHydrationStep::Pending(self.progress())}
         let runtime = self.runtime.as_mut().expect("envelope hydration runtime remains retained");
         let owners = self.owners.as_ref().expect("envelope hydration owner catalog remains retained");
         match drive_hydration_runtime(runtime, &owners.initial_snapshot_retirement, cx, grant) {

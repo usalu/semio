@@ -1,0 +1,11 @@
+# Window Identity Reactivity — 2026-11-06
+
+Current mode-windows computes primaryScope and spawnedScope on each render from openDocumentSessionsRef.current and includes both values in the modeWindows useMemo dependency array. The helper returns the unique matching entry scope by pluginId, appId and instanceId, otherwise null; window attributes omit document identity when null. Therefore a render observing a different scope object invalidates that memo, even though the ref itself is stable. The earlier ref-only concern does not describe current bytes.
+
+useOpenDocument constructs a fresh shared scope from hub spaceId and requested documentId, creates a new client ID and entry, and parks the replacement in the map before async attachment. Foreground commit dispatches SET_SYNC_BACKBONE_URI to the runtime key and clears the sync card; background commit skips those dispatches. Close deletes the entry and also calls retirement and several state setters, some of which can return the existing state. Browser actor patch/mount messages maintain browserActorUiVersion. The map mutation by itself is not a React notification; this review does not establish that every background, abort, or close path necessarily causes a render. Nor does it prove a stale visible window in a concrete same-actor switch. A real user-path test or notification audit is needed for that stronger claim.
+
+## App and Controller Identity
+
+The committed component 🔣️.json manifest declares editor id and controllerId both s.remodel.remodeling@1/*#editor and role editor; viewer id and controllerId both s.remodel.remodeling@1/*#viewer and role viewer. The component exports the composition plugin; composition 🦀️.rs uses PluginBuilder.declare_artifact for remodeling, and the editor bounded tool proof names the editor controller. ShellHost panel-hosting/🔶️brand/🟦️.tsx:119 emits global chip data-app-id from session.app.id; mode-windows emits that same app.id on window identity. The checked descriptor predates current source and is not proof of successful publication or actual live host identity.
+
+Descriptor recovery log at 01:21:56 UTC still reports repository:command running; it logs Windows process-tree memory sampling fallback to resident set, not a terminal descriptor error or success.

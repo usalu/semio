@@ -1,0 +1,54 @@
+{
+  "capacity": 24,
+  "overhead": 40,
+  "cases": [
+    {
+      "name": "exact",
+      "items": 1,
+      "depth": 2,
+      "copy": 40,
+      "capacity": 24,
+      "accepted": true
+    },
+    {
+      "name": "no items",
+      "items": 0,
+      "depth": 2,
+      "copy": 40,
+      "capacity": 24,
+      "accepted": false
+    },
+    {
+      "name": "no child depth",
+      "items": 1,
+      "depth": 1,
+      "copy": 40,
+      "capacity": 24,
+      "accepted": false
+    },
+    {
+      "name": "short copy",
+      "items": 1,
+      "depth": 2,
+      "copy": 39,
+      "capacity": 24,
+      "accepted": false
+    },
+    {
+      "name": "short capacity",
+      "items": 1,
+      "depth": 2,
+      "copy": 40,
+      "capacity": 23,
+      "accepted": false
+    },
+    {
+      "name": "surplus",
+      "items": 3,
+      "depth": 9,
+      "copy": 90,
+      "capacity": 80,
+      "accepted": true
+    }
+  ]
+}

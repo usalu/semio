@@ -55,7 +55,7 @@ export type RepositoryCargoLaunchV1=Readonly<{version:1;store:"shared"|"isolated
 /** 🧺️ Names one invocation's private target, build and temporary namespaces inside the issued compiler store. */
 export type RepositoryCargoIsolatedStoreV1=Readonly<{root:string;target:string;build:string;temporary:string}>;
 /** 📐️ The authored launcher policy. */
-export type RepositoryCargoLaunchPolicyV1=Readonly<typeof authored>;
+export type RepositoryCargoLaunchPolicyV1=Readonly<Omit<typeof authored,"isolatedLifetimeMode"|"isolatedSweepMode">&{isolatedLifetimeMode:"shared";isolatedSweepMode:"exclusive"}>;
 
 /** 🛂️ Validates one value against a named launcher schema definition. */
 function admit<T>(definition:keyof typeof schema.definitions,value:unknown):T{const errors=validateJsonSchemaSubset(schema.definitions[definition],value,schema);if(errors.length)throw Error(`Invalid repository Cargo launch ${definition}: ${errors.join("; ")}`);return value as T;}
@@ -80,15 +80,15 @@ export function readRepositoryCargoLaunchV1(argv:readonly string[],environment:R
  return Object.freeze(admit<RepositoryCargoLaunchV1>("Request",{version:1,store,configuration,parallelism:parallelism===undefined?policy.parallelism:Number(parallelism),kind,cargo:Object.freeze([...cargo])}));
 }
 
-/** 🔏️ Holds a kernel-released exclusive claim on one private store, removes it on every settlement and first sweeps stores whose owner died. */
+/** 🔏️ A live namespace reader excludes maintenance; atomic directory birth admits its unique writer. */
 export async function withRepositoryCargoIsolatedStoreV1<T>(options:Readonly<{storage:NativeStorageReservationV1;base:string;control:ResourceLeaseControl}>,body:(store:RepositoryCargoIsolatedStoreV1)=>Promise<T>):Promise<T>{
  requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();
  const directory=requireNativeStoragePathV1(options.storage.backing.root,join(options.base,policy.isolatedDirectory)),pattern=new RegExp(policy.isolatedNoncePattern,"u");mkdirSync(directory,{recursive:true});
- const claim=(nonce:string)=>acquireResourceLease({directory,resource:nonce,mode:"exclusive",signal:options.control.signal,control:options.control,timeoutMs:0});
+ const claim=(nonce:string,mode:"shared"|"exclusive")=>acquireResourceLease({directory,resource:nonce,mode,signal:options.control.signal,control:options.control,timeoutMs:0});
  const retire=async(nonce:string,lease:ResourceLease)=>{let failed=false,failure:unknown;try{rmSync(join(directory,nonce),{recursive:true,force:true});}catch(error){failed=true;failure=error;}try{lease.release();}catch(error){if(!failed){failed=true;failure=error;}}try{await retireResourceLeaseV1(directory,nonce,options.control,0);}catch(error){if(!failed){failed=true;failure=error;}}if(failed)throw failure;};
- for(const nonce of readdirSync(directory).filter(name=>pattern.test(name))){let lease:ResourceLease;try{lease=await claim(nonce);}catch(error){if(error instanceof Error&&error.message.startsWith("Resource lease timed out: "))continue;throw error;}await retire(nonce,lease);process.stderr.write(`[repo cargo] swept isolated store ${nonce} of a settled owner\n`);}
- const nonce=randomBytes(6).toString("hex"),lease=await claim(nonce),root=join(directory,nonce),store=Object.freeze({root,target:join(root,"target"),build:join(root,"build"),temporary:join(root,"tmp")});let result:T|undefined,failed=false,failure:unknown;
- try{for(const path of[store.target,store.build,store.temporary]){requireNativeStoragePathV1(options.storage.backing.root,path);mkdirSync(path,{recursive:true});}result=await body(store);}catch(error){failed=true;failure=error;}try{await retire(nonce,lease);}catch(error){if(!failed){failed=true;failure=error;}}if(failed)throw failure;return result as T;
+ for(const nonce of readdirSync(directory).filter(name=>pattern.test(name))){let lease:ResourceLease;try{lease=await claim(nonce,policy.isolatedSweepMode);}catch(error){if(error instanceof Error&&error.message.startsWith("Resource lease timed out: "))continue;throw error;}await retire(nonce,lease);process.stderr.write(`[repo cargo] swept isolated store ${nonce} of a settled owner\n`);}
+ const nonce=randomBytes(6).toString("hex"),lease=await claim(nonce,policy.isolatedLifetimeMode),root=join(directory,nonce),store=Object.freeze({root,target:join(root,"target"),build:join(root,"build"),temporary:join(root,"tmp")});let result:T|undefined,failed=false,failure:unknown,born=false;
+ try{mkdirSync(root);born=true;for(const path of[store.target,store.build,store.temporary]){requireNativeStoragePathV1(options.storage.backing.root,path);mkdirSync(path,{recursive:true});}result=await body(store);}catch(error){failed=true;failure=error;}try{if(born)await retire(nonce,lease);else lease.release();}catch(error){if(failed&&!Object.is(failure,error))throw new AggregateError([failure,error],"Isolated Cargo body and namespace retirement failed");failed=true;failure=error;}if(failed)throw failure;return result as T;
 }
 
 /** 🛤️ One private lane of the pool inside the issued compiler store: a target and build directory held by one process at a time, so no two Cargo processes ever share a build directory and Cargo's unit locks can never form a cycle between processes. The lane of the same crate set is preferred (its incremental state is still warm), a new lane starts empty and fills from the shared content-addressed unit cache, and the idle lanes are trimmed to the pool bounds. */

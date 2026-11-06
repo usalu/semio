@@ -1,0 +1,19 @@
+{
+  "name": "cargo",
+  "arguments": {
+    "command": [
+      "test",
+      "--manifest-path",
+      "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml",
+      "--features",
+      "testkit",
+      "--test",
+      "original-native-pair-slot"
+    ],
+    "configuration": "prototype",
+    "store": "shared",
+    "parallelism": 2,
+    "language": "en",
+    "agent": "semio-mcp-native-source"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "stock": {
+    "items": 10000,
+    "copyBytes": 16777216,
+    "capacityBytes": 16777216,
+    "releaseBytes": 16777216,
+    "depth": 64,
+    "fuel": 1000000
+  },
+  "string": "",
+  "emptyArray": [],
+  "placement": "actual-option-layout",
+  "work": 1
+}

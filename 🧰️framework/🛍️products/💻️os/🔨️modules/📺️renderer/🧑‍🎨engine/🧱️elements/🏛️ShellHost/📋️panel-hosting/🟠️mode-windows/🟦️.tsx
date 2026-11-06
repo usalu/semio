@@ -1,4 +1,6 @@
 /** 🟠️ The mode windows phase of usePanelHosting. */
+import { windowDocumentScopeV1, windowIdentityAttributesV1 } from "../🪪️window-identity/🟦️.ts";
+import type { ShellCoreAfterDockAssembly } from "../../🏗️dock-assembly/🟦️.ts";
 import { CurrentDocumentUnsavedMarker } from "../../🚪️close-guard/🟦️.tsx";
 import { type CSSProperties, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { type AppDefinition, type LocalizedLabel } from "@semio-tech/framework";
@@ -24,7 +26,9 @@ import { PENDING_WINDOW_UI_NODE, withLocalizedWindowKindLabels } from "../../�
 import type { useBrandState } from "../🔶️brand/🟦️.tsx";
 
 /** 🟡 Builds modeWindows of usePanelHosting. */
-export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWindowId, actionPaneStagedArgsByKey, activeUtilityByWindowId, introductionActionWindowSegment, actionPaneFoldedByWindowId, introductionUtilityWindowId, introductionMeasureWindowId, dispatch, hostMode, activeSpawnedEntry, activeSpawnedApp, focusedSpawnedId, localDocumentOwnerRegistry, world3dWindowViewRegistry, appLabelsOverlay, uiTerminology, uiLocale, spawnedWindowEngagements, spawnedWindowMeasures, onActionStable, utilityGenerationFor, spawnedWindowActivityByWindowId, builtNodeStoreCacheRef, windowIconsById, timeTravelIndicator, introductionUtilityId, localPrograms, selectedSpaceArtifactKinds, onIntentStable, spawnedWindowFault, currentBrowserActorUi, builtNodeStoreFor, windowMeasuresByWindowId, windowEngagementsByWindowId, windowTitlesById, windowUiByWindowId, primaryWorld3dOwner, world3dWindowViews, instanceFault, windowTreeContext, currentLocalDocumentOwner, currentDocumentRuntimeKey, onBrowserActorIntent, extraWindowInstances, registerRevision, browserActorUiVersion, panel }: Pick<ReturnType<typeof useBrandState>, "session" | "loadedPlugins" | "actionPaneExpandedByWindowId" | "actionPaneStagedArgsByKey" | "activeUtilityByWindowId" | "introductionActionWindowSegment" | "actionPaneFoldedByWindowId" | "introductionUtilityWindowId" | "introductionMeasureWindowId" | "dispatch" | "hostMode" | "activeSpawnedEntry" | "activeSpawnedApp" | "focusedSpawnedId" | "localDocumentOwnerRegistry" | "world3dWindowViewRegistry" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "spawnedWindowEngagements" | "spawnedWindowMeasures" | "onActionStable" | "utilityGenerationFor" | "spawnedWindowActivityByWindowId" | "builtNodeStoreCacheRef" | "windowIconsById" | "timeTravelIndicator" | "introductionUtilityId" | "localPrograms" | "selectedSpaceArtifactKinds" | "onIntentStable" | "spawnedWindowFault" | "currentBrowserActorUi" | "builtNodeStoreFor" | "windowMeasuresByWindowId" | "windowEngagementsByWindowId" | "windowTitlesById" | "windowUiByWindowId" | "primaryWorld3dOwner" | "world3dWindowViews" | "instanceFault" | "windowTreeContext" | "currentLocalDocumentOwner" | "currentDocumentRuntimeKey" | "onBrowserActorIntent" | "extraWindowInstances" | "registerRevision" | "browserActorUiVersion" | "panel">) {
+export function useModeWindows({ openDocumentSessionsRef, session, loadedPlugins, actionPaneExpandedByWindowId, actionPaneStagedArgsByKey, activeUtilityByWindowId, introductionActionWindowSegment, actionPaneFoldedByWindowId, introductionUtilityWindowId, introductionMeasureWindowId, dispatch, hostMode, activeSpawnedEntry, activeSpawnedApp, focusedSpawnedId, localDocumentOwnerRegistry, world3dWindowViewRegistry, appLabelsOverlay, uiTerminology, uiLocale, spawnedWindowEngagements, spawnedWindowMeasures, onActionStable, utilityGenerationFor, spawnedWindowActivityByWindowId, builtNodeStoreCacheRef, windowIconsById, timeTravelIndicator, introductionUtilityId, localPrograms, selectedSpaceArtifactKinds, onIntentStable, spawnedWindowFault, currentBrowserActorUi, builtNodeStoreFor, windowMeasuresByWindowId, windowEngagementsByWindowId, windowTitlesById, windowUiByWindowId, primaryWorld3dOwner, world3dWindowViews, instanceFault, windowTreeContext, currentLocalDocumentOwner, currentDocumentRuntimeKey, onBrowserActorIntent, extraWindowInstances, registerRevision, browserActorUiVersion, panel }: Pick<ReturnType<typeof useBrandState>, "session" | "loadedPlugins" | "actionPaneExpandedByWindowId" | "actionPaneStagedArgsByKey" | "activeUtilityByWindowId" | "introductionActionWindowSegment" | "actionPaneFoldedByWindowId" | "introductionUtilityWindowId" | "introductionMeasureWindowId" | "dispatch" | "hostMode" | "activeSpawnedEntry" | "activeSpawnedApp" | "focusedSpawnedId" | "localDocumentOwnerRegistry" | "world3dWindowViewRegistry" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "spawnedWindowEngagements" | "spawnedWindowMeasures" | "onActionStable" | "utilityGenerationFor" | "spawnedWindowActivityByWindowId" | "builtNodeStoreCacheRef" | "windowIconsById" | "timeTravelIndicator" | "introductionUtilityId" | "localPrograms" | "selectedSpaceArtifactKinds" | "onIntentStable" | "spawnedWindowFault" | "currentBrowserActorUi" | "builtNodeStoreFor" | "windowMeasuresByWindowId" | "windowEngagementsByWindowId" | "windowTitlesById" | "windowUiByWindowId" | "primaryWorld3dOwner" | "world3dWindowViews" | "instanceFault" | "windowTreeContext" | "currentLocalDocumentOwner" | "currentDocumentRuntimeKey" | "onBrowserActorIntent" | "extraWindowInstances" | "registerRevision" | "browserActorUiVersion" | "panel"> & Pick<ShellCoreAfterDockAssembly, "openDocumentSessionsRef">) {
+  const primaryScope = session === null ? null : windowDocumentScopeV1(openDocumentSessionsRef.current.values(), { pluginId: session.pluginId, appId: session.app.id, instanceId: session.instanceId });
+  const spawnedScope = activeSpawnedEntry === undefined || activeSpawnedEntry === null ? null : windowDocumentScopeV1(openDocumentSessionsRef.current.values(), { pluginId: activeSpawnedEntry.pluginId, appId: activeSpawnedEntry.appId, instanceId: activeSpawnedEntry.instanceId });
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
     const primaryMediaHandle = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
@@ -78,7 +82,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
           status: spawnedWindowActivityByWindowId[windowId],
           skeleton: <WindowBodySkeleton />,
           children: (
-            <ChromeAwareWindowScrollSurface id={childElementId("framework.window", windowId)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(spawnedApp, windowId)} {...windowHostEventHandlersV1(spawnedApp.controllerId, windowId, onActionStable)}>
+            <ChromeAwareWindowScrollSurface {...windowIdentityAttributesV1({ app: spawnedApp.id, role: spawnedApp.role, instance: spawned.instanceId, window: windowId, kind: windowKind.id, document: spawnedScope })} id={childElementId("framework.window", windowId)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(spawnedApp, windowId)} {...windowHostEventHandlersV1(spawnedApp.controllerId, windowId, onActionStable)}>
               <World3dWindowViewStoreContext.Provider key={`${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`} value={spawnedWorld3dViews}>
                 <WindowInstanceIdContext.Provider value={windowId}>
                   <ShellFaultBoundary boundaryId={`window-${windowId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
@@ -115,7 +119,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
         status: browserActorStore?.getState().root === null ? windowUiByWindowId[kind.id]?.activity : browserActorStore?.getState().nodes.get(browserActorStore.getState().root!)?.activity ?? windowUiByWindowId[kind.id]?.activity,
         skeleton: <WindowBodySkeleton />,
         children: (
-          <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)} {...windowHostEventHandlersV1(session.app.controllerId, kind.id, onActionStable)}>
+          <ChromeAwareWindowScrollSurface {...windowIdentityAttributesV1({ app: session.app.id, role: session.app.role, instance: session.instanceId, window: kind.id, kind: kind.id, document: primaryScope })} id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)} {...windowHostEventHandlersV1(session.app.controllerId, kind.id, onActionStable)}>
             <World3dWindowViewStoreContext.Provider key={primaryWorld3dOwner} value={world3dWindowViews}>
               <WindowInstanceIdContext.Provider value={kind.id}>
                 <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
@@ -156,6 +160,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
           skeleton: <WindowBodySkeleton />,
           children: (
             <ChromeAwareWindowScrollSurface
+              {...windowIdentityAttributesV1({ app: session.app.id, role: session.app.role, instance: session.instanceId, window: instance.id, kind: kind.id, document: primaryScope })}
               id={childElementId("framework.window", instance.id)}
               data-element-alias={childElementId("framework.window", kind.id)}
               className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
@@ -191,6 +196,8 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
     builtNodeStoreFor,
     currentBrowserActorUi,
     currentDocumentRuntimeKey,
+    primaryScope,
+    spawnedScope,
     currentLocalDocumentOwner,
     extraWindowInstances,
     introductionActionWindowSegment,

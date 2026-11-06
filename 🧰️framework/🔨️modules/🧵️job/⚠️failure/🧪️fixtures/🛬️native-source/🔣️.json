@@ -1,0 +1,78 @@
+{
+  "cases": [
+    {
+      "callSucceeded": true,
+      "sourceRefusal": null,
+      "expectedKeys": [
+        "callSucceeded"
+      ]
+    },
+    {
+      "callSucceeded": true,
+      "sourceRefusal": "source receipt refused",
+      "expectedKeys": [
+        "callSucceeded",
+        "sourceRefusal"
+      ]
+    },
+    {
+      "callSucceeded": false,
+      "outputPresent": true,
+      "operation": "child",
+      "context": "context",
+      "receiptRefusal": "receipt",
+      "sourceRefusal": "source",
+      "expectedKeys": [
+        "callSucceeded",
+        "outputPresent",
+        "operation",
+        "context",
+        "receiptRefusal",
+        "sourceRefusal"
+      ]
+    }
+  ],
+  "retirementCases": [
+    {
+      "callSucceeded": true,
+      "childSucceeded": true,
+      "sourceRefusal": null,
+      "expectedKeys": [
+        "callSucceeded",
+        "childSucceeded"
+      ]
+    },
+    {
+      "callSucceeded": true,
+      "childSucceeded": false,
+      "childReceiving": "child",
+      "sourceRefusal": "source",
+      "expectedKeys": [
+        "callSucceeded",
+        "sourceRefusal",
+        "childSucceeded",
+        "childReceiving"
+      ]
+    },
+    {
+      "callSucceeded": false,
+      "outputPresent": true,
+      "operation": "operation",
+      "context": "context",
+      "receiptRefusal": "receipt",
+      "childSucceeded": false,
+      "childReceiving": "child",
+      "sourceRefusal": "source",
+      "expectedKeys": [
+        "callSucceeded",
+        "outputPresent",
+        "operation",
+        "context",
+        "receiptRefusal",
+        "sourceRefusal",
+        "childSucceeded",
+        "childReceiving"
+      ]
+    }
+  ]
+}

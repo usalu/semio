@@ -1,0 +1,6 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";import{dirname}from"node:path";const t=dirname(import.meta.path),p="🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/👯️pair/🦀️.rs",s=readFileSync(p,"utf8");let n=s;
+for(const [child,slot,phase,copy]of [["first_child","first","1","first_capture"],["second_child","second","3","second_capture"]]){
+const a="let t="+child+".take(child_grant(grant,Self::"+copy+"()));return RetainedWorkOutcome{result:t.result.map(|v|if let Some((v,mut p))=v{**"+slot+"=Some(v);*phase="+phase+";p.copied_bytes+=Self::"+copy+"();RetainedCloneStep::Progress(p)}else{RetainedCloneStep::Progress(Default::default())}),work:t.work+2}";
+const b="let t="+child+".take(child_grant(grant,Self::"+copy+"()));let mut placed=false;let result=t.result.map(|v|if let Some((v,mut p))=v{**"+slot+"=Some(v);*phase="+phase+";placed=true;p.copied_bytes+=Self::"+copy+"();RetainedCloneStep::Progress(p)}else{RetainedCloneStep::Progress(Default::default())});return RetainedWorkOutcome{result,work:t.work+2*u64::from(placed)}";
+if(!n.includes(a))throw Error("anchor "+child);n=n.replace(a,b)}
+const tmp=t+"/🗑️generated/default-pair-real-work.rs";writeFileSync(tmp,n);if(readFileSync(p,"utf8")!==s)throw Error("CAS");renameSync(tmp,p);

@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "axis": "items",
+      "admitted": false
+    },
+    {
+      "axis": "copy",
+      "admitted": false
+    },
+    {
+      "axis": "capacity",
+      "admitted": false
+    },
+    {
+      "axis": "release",
+      "admitted": false
+    },
+    {
+      "axis": "depth",
+      "admitted": false
+    }
+  ]
+}

@@ -29,9 +29,10 @@
       ]
     }
   ],
-  "nullWork": 1,
+  "nullWork": 2,
   "deniedWork": 0,
   "cachedWork": 0,
+  "workUnits": 8192,
   "maximumTurns": 10000,
   "laws": {
     "actualFieldNull": true,
@@ -43,7 +44,8 @@
   },
   "compoundTraversal": {
     "zeroArrayLength": 4097,
-    "reserveCloseItems": 1,
+    "reserveCloseItems": 8,
+    "reserveCloseWork": 8,
     "wholeInlineCollapse": false,
     "callerStockRenewed": false
   }

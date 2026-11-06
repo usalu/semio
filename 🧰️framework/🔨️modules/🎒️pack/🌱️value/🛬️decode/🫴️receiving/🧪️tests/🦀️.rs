@@ -202,7 +202,9 @@ fn original_record_receiving_preserves_null_attempt_work_without_phantom_native_
 }
 
 struct RecordWorkStock{units:u64}
-impl semio_framework_value_native_owned::native_decoding::OriginalWorkRecipient for RecordWorkStock{type Context<'turn,'source>=() where 'source:'turn;fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}fn admits<'a,'turn,'source>(&mut self,_:&mut (),quote:semio_framework_value_native_owned::native_decoding::OriginalWorkQuote<'a>,observed:u64,additional:u64)->semio_framework_value_native_owned::native_decoding::OriginalWorkQuoteComplete<'a>where 'source:'turn{quote.complete(Ok(observed.checked_add(additional).is_some_and(|work|work<=self.units)))}}
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for RecordWorkStock{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.units;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}
+ fn admits(&mut self,observed_since_scope:u64,additional:u64)->Result<bool,ValueError>{Ok(observed_since_scope.checked_add(additional).is_some_and(|work|work<=self.units))}
+}
 fn with_record_native_work<T>(native:&mut NativeDecodeControl<'_>,operation:impl FnOnce(&mut NativeDecodeControl<'_>)->T)->T{
  let law:serde_json::Value=serde_json::from_str(include_str!("🎟️work/case.json")).unwrap();let mut original=semio_framework_value_native_owned::native_decoding::OriginalWorkAuthority::new(RecordWorkStock{units:law["workUnits"].as_u64().unwrap()});original.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native|Ok::<_,ValueError>(operation(native)))).unwrap().unwrap()
 }

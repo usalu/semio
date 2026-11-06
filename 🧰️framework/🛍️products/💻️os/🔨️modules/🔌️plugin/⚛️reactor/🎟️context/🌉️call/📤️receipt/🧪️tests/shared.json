@@ -1,1 +1,138 @@
-{"lifecycle":{"extent":144,"events":[{"operation":"produce","offset":0,"length":144,"accepted":true,"known":true,"bodyCalls":1},{"operation":"produce","offset":0,"length":144,"accepted":false,"known":true,"bodyCalls":1},{"operation":"return","offset":1,"length":144,"accepted":false,"known":true,"bodyCalls":1},{"operation":"return","offset":0,"length":143,"accepted":false,"known":true,"bodyCalls":1},{"operation":"return","offset":0,"length":144,"accepted":true,"known":true,"bodyCalls":1},{"operation":"return","offset":0,"length":144,"accepted":false,"known":true,"bodyCalls":1},{"operation":"return","offset":144,"length":144,"accepted":false,"known":false,"bodyCalls":1},{"operation":"produce","offset":0,"length":144,"accepted":true,"known":true,"bodyCalls":2},{"operation":"return","offset":0,"length":144,"accepted":true,"known":true,"bodyCalls":2}]},"escrow":{"source":101,"birth":1,"recipient":202,"revision":7,"acknowledged":6,"rows":[[101,1,202,303,0,1,5,1,3,200,9,1,50,2,0,0,0],[101,1,202,404,16,2,6,2,1,64,3,1,64,3,0,0,0]]}}
+{
+  "lifecycle": {
+    "extent": 144,
+    "events": [
+      {
+        "operation": "produce",
+        "offset": 0,
+        "length": 144,
+        "accepted": true,
+        "known": true,
+        "bodyCalls": 1
+      },
+      {
+        "operation": "produce",
+        "offset": 0,
+        "length": 144,
+        "accepted": false,
+        "known": true,
+        "bodyCalls": 1
+      },
+      {
+        "operation": "return",
+        "offset": 1,
+        "length": 144,
+        "accepted": false,
+        "known": true,
+        "bodyCalls": 1
+      },
+      {
+        "operation": "return",
+        "offset": 0,
+        "length": 143,
+        "accepted": false,
+        "known": true,
+        "bodyCalls": 1
+      },
+      {
+        "operation": "return",
+        "offset": 0,
+        "length": 144,
+        "accepted": true,
+        "known": true,
+        "bodyCalls": 1
+      },
+      {
+        "operation": "return",
+        "offset": 0,
+        "length": 144,
+        "accepted": false,
+        "known": true,
+        "bodyCalls": 1
+      },
+      {
+        "operation": "return",
+        "offset": 144,
+        "length": 144,
+        "accepted": false,
+        "known": false,
+        "bodyCalls": 1
+      },
+      {
+        "operation": "produce",
+        "offset": 0,
+        "length": 144,
+        "accepted": true,
+        "known": true,
+        "bodyCalls": 2
+      },
+      {
+        "operation": "return",
+        "offset": 0,
+        "length": 144,
+        "accepted": true,
+        "known": true,
+        "bodyCalls": 2
+      }
+    ]
+  },
+  "escrow": {
+    "source": 101,
+    "birth": 1,
+    "recipient": 202,
+    "revision": 7,
+    "acknowledged": 6,
+    "rows": [
+      [
+        101,
+        1,
+        202,
+        303,
+        0,
+        1,
+        5,
+        1,
+        3,
+        200,
+        9,
+        0,
+        0,
+        1,
+        50,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        101,
+        1,
+        202,
+        404,
+        16,
+        2,
+        6,
+        2,
+        1,
+        64,
+        3,
+        0,
+        0,
+        1,
+        64,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  }
+}

@@ -1,6 +1,7 @@
 //! 📄️ Document operations, codecs, archive loads, backbone bindings and codec registration.
 
 use semio_plugin_decl_app::ArtifactApp;
+pub use semio_plugin_document_media::OriginalDocumentArchiveAdmission;
 use semio_framework::kernel::{Effect, MessageEndpoint};
 use semio_framework::{Fault, FaultFrom};
 use semio_framework_value::{FromValue, ToValue};
@@ -168,12 +169,10 @@ pub async fn plugin_document_load_archive<PA: PluginApp>(runtime: &PluginRuntime
 }
 /// 🛬️ Admits one whole-document archive load under `operation` on instance `instance_id` (`📓️api-stepped-document-load.md`)
 /// — the in-guest twin of `AppCommand::LoadDocumentArchive`.
-pub async fn plugin_begin_document_archive_load<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operation: u64, archive: protocol::DocumentArchivePack) -> Result<(), Fault> {
-    with_instances_mut(runtime, |list| {
-        let mut instance = find_instance(list, instance_id)?;
-        instance.app.begin_document_archive_load(operation, archive)
-    })
-    .await
+pub async fn plugin_begin_document_archive_load<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,operation:u64,archive:&mut protocol::DocumentArchivePack,admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let cell=crate::ops_wire_limits::runtime_instance_cell(runtime,instance_id)?;
+    let mut instance=cell.host_instance().ok_or_else(||plugin_internal_fault("archive admission requires its exact available instance"))?;
+    instance.app.begin_document_archive_load(operation,archive,admission,cx)
 }
 /// 📊️ Advances one whole-document archive load for at most one poll wall and answers its status — the in-guest twin of
 /// `AppCommand::PollDocumentArchiveLoad`.

@@ -55,6 +55,7 @@ semio-plugin-host-operation = { path = "../../../🚪️io/🎛️operation/📦
 semio-plugin-host-wit = { path = "../../../🔗️wit-bindings/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-plugin-host-guest-runtime = { path = ".", features = ["testkit"] }
 serde_json = "1.0.140"
 semio-plugin-host-engine = { path = "../../../🔧️engine/📦️packages/🦀️rust", features = ["testkit"] }
 semio-plugin-host-operation = { path = "../../../🚪️io/🎛️operation/📦️packages/🦀️rust", features = ["testkit"] }
@@ -68,3 +69,7 @@ semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/
 semio-framework-async = { workspace = true, features = ["testkit"] }
 semio-framework-async-sync = { workspace = true }
 semio-framework-trace = { workspace = true }
+
+[[test]]
+name = "mock-guest-runtime"
+path = "../../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs"

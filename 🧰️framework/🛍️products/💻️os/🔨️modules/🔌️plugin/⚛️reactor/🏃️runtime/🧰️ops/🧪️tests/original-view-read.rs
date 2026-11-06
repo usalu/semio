@@ -39,13 +39,13 @@ impl Rig{
  }
  fn close_foreign_decoder(&mut self,decoder:&mut OriginalJobDecodeOwner){
   while !decoder.terminal_is_empty(){self.calls+=1;let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.caller.turn(self.stock,|cx|cx.with_original_retirement(|cx|{
-   for _ in 0..512{if decoder.terminal_is_empty()||cx.retirement_should_yield(){break}let d=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_step(cx,d,|g|decoder.close_step(g))?;if step.progress()==Default::default(){break}}Ok(())
+   for _ in 0..512{if decoder.terminal_is_empty()||cx.retirement_should_yield(){break}let d=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let step=decoder.close_on_source(cx)?;if step.progress()==Default::default(){break}}Ok(())
   })));assert!(!heap.overflowed);let p=self.caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));self.born+=heap.requested_bytes;self.released+=heap.released_bytes;result.unwrap();}
  }
  fn finish(mut self){
   while !self.decoder.terminal_is_empty(){
    self.calls+=1;let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.caller.turn(self.stock,|cx|cx.with_original_retirement(|cx|{
-    for _ in 0..512{if self.decoder.terminal_is_empty()||cx.retirement_should_yield(){break}let d=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_step(cx,d,|g|self.decoder.close_step(g))?;if step.progress()==Default::default(){break}}Ok(())
+    for _ in 0..512{if self.decoder.terminal_is_empty()||cx.retirement_should_yield(){break}let d=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let step=self.decoder.close_on_source(cx)?;if step.progress()==Default::default(){break}}Ok(())
    })));
    assert!(!heap.overflowed);let p=self.caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));self.born+=heap.requested_bytes;self.released+=heap.released_bytes;result.unwrap()
   }

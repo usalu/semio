@@ -14,7 +14,7 @@ fn borrowed_scalar_original_work_preserves_invalid_and_denied_receipts(){
   let mut errors=semio_framework_value::retirement::controlled::ControlledRetirement::retain(captured.take().unwrap());
   for _ in 0..4096{if errors.terminal_is_empty(){break}caller.turn(g,|cx|cx.with_original_retirement(|cx|{let demand=errors.selected_demand(g.maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=errors.step(grant);RetainedWorkOutcome{result,work:errors.last_turn_work()}})?;Ok(())})).unwrap();}
   assert!(errors.terminal_is_empty());
-  for _ in 0..4096{if decoder.terminal_is_empty(){break}caller.turn(g,|cx|cx.with_original_retirement(|cx|{let demand=decoder.retirement_demands(g.maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|decoder.close_step(grant))?;Ok(())})).unwrap();}
+  for _ in 0..4096{if decoder.terminal_is_empty(){break}caller.turn(g,|cx|cx.with_original_retirement(|cx|{let demand=decoder.retirement_demands(g.maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}
   assert!(decoder.terminal_is_empty());caller.retire(g);
  }
 }

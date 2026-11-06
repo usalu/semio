@@ -132,6 +132,7 @@ export type ShellForwardSlots = {
     exportDocumentArchive: () => Promise<void>;
     importDocumentArchive: () => Promise<void>;
     saveNaturalFile: () => Promise<void>;
+    exportMediaFile: (target: ActiveSession, current: () => boolean, actionId: import("../../../🎬️media/📤️file/🟦️.ts").MediaFileExportActionIdV1) => Promise<void>;
     openNaturalFile: () => Promise<void>;
     trackDocumentTransfer: (file: string, pluginId: string) => { readonly signal: AbortSignal; readonly progress: (completed: number, total: number | null) => void; readonly finish: () => void };
     notifyDocumentTransfer: (notice: DocumentTransferNoticeV1, file: string, kind: Severity) => void;

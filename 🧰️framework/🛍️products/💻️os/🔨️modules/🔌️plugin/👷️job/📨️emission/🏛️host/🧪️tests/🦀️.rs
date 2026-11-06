@@ -19,7 +19,7 @@ fn close(mut source:Option<Box<OriginalHostConfiguration<String>>>,mut output:Op
         }));assert!(step<999999,"native host owner close stalled");
     }
     if let Some(value)=output.as_ref(){let d=RetirementDemand{copy_bytes:size_of::<Option<String>>(),release_bytes:value.capacity(),depth:1,..Default::default()};turn(&mut caller,decoder,g,|cx|cx.with_original_retirement(|cx|{close_original_retained_step(cx,d,|_|{drop(output.take());Ok(RetainedCloneStep::Complete(receipt(d)))})?;Ok(())}));}
-    while !decoder.terminal_is_empty(){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(32768)?;close_original_retained_step(cx,d,|grant|decoder.close_step(grant))?;Ok(())})));let progress=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));result.unwrap();}caller.retire(g);
+    while !decoder.terminal_is_empty(){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(32768)?;decoder.close_on_source(cx)?;Ok(())})));let progress=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));result.unwrap();}caller.retire(g);
 }
 #[test]
 fn original_host_configuration_matches_all_neutral_policies_with_actual_native_custody(){

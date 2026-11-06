@@ -131,6 +131,8 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                     + dispatch(&mut app, RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "cameras".into() }), &report_left, scope.cx()).await?
                     + dispatch(&mut app, RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "gcps".into() }), &report_right, scope.cx()).await?;
                 if publications != 6 { return Err(format!("Remodel exact-window lane count changed: {publications}")); }
+                let measures = serde_json::to_value(app.window_measures(&view).await).map_err(|error| format!("{error:?}"))?;
+                if measures["remodel-frames-left"][1]["value"] != 0.0 || measures["remodel-frames-right"][1]["value"] != 9.0 || measures["remodel-report-left"][0]["value"] != "cameras" || measures["remodel-report-right"][0]["value"] != "gcps" { return Err(format!("Remodel window measures did not retain distinct instance configs: {measures}")); }
                 let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Remodel window commands changed document bytes".into()); }
                 let stored_model_left = artifact_app_laws::capture_fixture_window_config::<RemodelingModelWindowConfigOwner, _, _>(&mut *app, &model_left)

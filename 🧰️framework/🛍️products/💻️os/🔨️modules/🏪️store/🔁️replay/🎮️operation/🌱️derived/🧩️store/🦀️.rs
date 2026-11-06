@@ -27,8 +27,8 @@ where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P> {
         let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};owner.record(progress);*slot=Some(owner);Ok(Some(progress))
     }
     /// 📏️ Requires this Store's original issuer before exposing the next retained work frontier.
-    pub fn derived_operation_demands(&self,owner:&ArtifactDerivedOperation<P,M>,body:usize)->Result<RetirementDemand,ValueError>{
-        if !owner.registry.as_ref().is_none_or(|registry|registry.ptr_eq(&self.owners.snapshot_read_leases)){return Err(refusal("foreign derived operation issuer"));}owner.demands(self.generation(),self.content_revision(),body)
+    pub fn derived_operation_demands(&self,owner:&ArtifactDerivedOperation<P,M>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
+        if !owner.registry.as_ref().is_none_or(|registry|registry.ptr_eq(&self.owners.snapshot_read_leases)){return Err(refusal("foreign derived operation issuer"));}owner.demands(self.generation(),self.content_revision(),body,maximum_work_units)
     }
     /// 🧳️ Keeps a refused replay request's original read, projection and exact issuers for paid closure.
     pub(crate) fn retain_refused_replay_request(&self,request:ArtifactReplayPreparationRequest<P,M>)->ArtifactDerivedOperation<P,M>{

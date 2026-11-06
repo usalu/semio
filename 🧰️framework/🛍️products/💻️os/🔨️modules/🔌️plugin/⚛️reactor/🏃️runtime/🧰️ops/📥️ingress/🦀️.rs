@@ -14,6 +14,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_plugin_job::{TransactionProposalDraft, TypedOperationResultPage};
 use serde_json::Value;
 use crate::ops_typed_operations::drive_self_waking_ready;
+pub use semio_plugin_reactor_lifecycle::instance_lifetime::OriginalCommandOrigin;
 use crate::ops_wire_limits::find_instance;
 use semio_plugin_runtime_instances::inst_wire_frames::{instance_actor, with_instances_turn_mut};
 use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
@@ -61,7 +62,7 @@ async fn relay_opening_command(action_id: &'static str, arguments: Value) -> Res
     Ok(Effect::ReplayShellCommand { action_id: action_id.into(), args: Some(DslValue::from(&arguments)) })
 }
 #[doc(hidden)]
-pub async fn relay_open_artifact(artifact_ref: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
+pub async fn relay_open_artifact(artifact_ref: &str, role_wire: u8, plugin_id: &str, app_id: &str) -> Result<Effect, Fault> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
     let role = opening_role(role_wire).await?;
     let (dialect, artifact_role) = semio_framework::parse_surface_app_id(&artifact_ref).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-artifact-ref"), error))?;
@@ -81,9 +82,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     relay_opening_command("os.open-artifact", serde_json::json!({ "artifactRef": artifact_ref, "role": role_wire, "pluginId": plugin_id, "appId": app_id })).await
 }
 #[doc(hidden)]
-pub async fn relay_set_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
+pub async fn relay_set_default_app(artifact_kind: &str, standard: &str, subset: &str, role_wire: u8, plugin_id: &str, app_id: &str) -> Result<Effect, Fault> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
-    let dialect = opening_dialect(artifact_kind.clone(), standard.clone(), subset.clone()).await?;
+    let dialect = opening_dialect(artifact_kind.into(), standard.into(), subset.into()).await?;
     let role = opening_role(role_wire).await?;
     if plugin_id.trim().is_empty() {
         return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-app-ref"), "plugin_id must be non-empty when setting a default app"));
@@ -95,8 +96,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     relay_opening_command("os.set-default-app", serde_json::json!({ "artifactKind": artifact_kind, "standard": standard, "subset": subset, "role": role_wire, "pluginId": plugin_id, "appId": app_id })).await
 }
 #[doc(hidden)]
-pub async fn relay_clear_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8) -> Result<Effect, Fault> {
-    opening_dialect(artifact_kind.clone(), standard.clone(), subset.clone()).await?;
+pub async fn relay_clear_default_app(artifact_kind: &str, standard: &str, subset: &str, role_wire: u8) -> Result<Effect, Fault> {
+    opening_dialect(artifact_kind.into(), standard.into(), subset.into()).await?;
     opening_role(role_wire).await?;
     relay_opening_command("os.clear-default-app", serde_json::json!({ "artifactKind": artifact_kind, "standard": standard, "subset": subset, "role": role_wire })).await
 }
@@ -139,19 +140,51 @@ use crate::ops_ingress::original_manifest_receiving::OriginalManifestCommandRece
 /// 🧪️ Qualifies the canonical receiving body without mounting unrelated app fixture suites.
 pub fn original_manifest_receiving_law(){original_manifest_receiving::tests::original_manifest_fields_keep_paid_source_and_denied_transfer()}
 
-fn admit_place<T:semio_framework_job::OriginalDomainFailure>(place:&mut semio_framework_job::OriginalDomainReservation<T>,pending:&mut Option<T>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{if !place.ready(){place.prepare(cx)?;return Ok(None)}if !place.pending(){place.with_body(cx,|_,slot|{*slot=pending.take();Ok(())})?;}semio_framework_job::admit_original_domain_failure(place,cx)}
+fn admit_place<T:semio_framework_job::OriginalDomainFailure>(place:&mut semio_framework_job::OriginalDomainReservation<T>,pending:&mut Option<T>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{if !place.ready(){place.prepare(cx)?;return Ok(None)}if !place.pending(){if pending.is_none(){return Ok(None)}if !place.capture_original(cx,||pending.take().expect("retained original cause precedes capture"))?{return Ok(None)}}semio_framework_job::admit_original_domain_failure(place,cx)}
 pub enum PluginCommandIngress {
     Encoded(semio_framework::kernel::PagedCommand),
-    Decoding(protocol::PagedAppCommandDecodeCursor),
+    Decoding(OriginalCommandDecode),
     Decoded(OriginalDecodedPluginCommand),
+    RetiringDecoded(OriginalDecodedPluginCommand),
     Closing { cursor: protocol::PagedAppCommandDecodeCursor, fault: Fault },
     ClosingDecoded { owner: OriginalDecodedPluginCommand, fault: Fault },
     FailedDecoded{owner:OriginalDecodedPluginCommand,failure:Option<semio_framework_job::OriginalTurnFailure>,identity:(semio_framework_job::OperationId,semio_framework_job::Generation),close_failure:Option<semio_framework_job::OriginalTurnFailure>,compound:Option<semio_framework_job::OriginalClosureFailure>,raw_media:Option<MediaArtifactError>},
 }
+pub struct OriginalCommandDecode{cursor:protocol::PagedAppCommandDecodeCursor,output:Option<protocol::DecodedAppCommandOwner>,failure:Option<semio_framework_job::OriginalTurnFailure>,closing:bool}
+enum OriginalCommandDecodeStep{Pending,Ready(protocol::DecodedAppCommandOwner),Refused(semio_framework_job::OriginalTurnFailure),Failed(semio_framework_job::OriginalTurnFailure),Closed}
+impl OriginalCommandDecode{
+ fn new(cursor:protocol::PagedAppCommandDecodeCursor)->Self{Self{cursor,output:None,failure:None,closing:false}}
+ fn save_failure(&mut self,failure:semio_framework_job::OriginalTurnFailure){assert!(self.failure.is_none(),"original decoder retains its first full cause");self.failure=Some(failure);self.closing=true}
+ fn step_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->OriginalCommandDecodeStep{
+  if !self.closing&&self.output.is_none(){match self.cursor.step_original(&mut self.output,cx){Ok(_)=>{},Err(failure)=>{self.closing=true;return OriginalCommandDecodeStep::Refused(failure)}}return OriginalCommandDecodeStep::Pending}
+  if self.closing{if let Some(output)=self.output.as_mut(){match cx.with_original_retirement(|cx|output.close_original_step(cx)){Ok(false)=>return OriginalCommandDecodeStep::Pending,Err(failure)=>return OriginalCommandDecodeStep::Refused(failure),Ok(true)=>{}}let bytes=std::mem::size_of::<Option<protocol::DecodedAppCommandOwner>>();match original_ingress_metadata(cx,bytes){Ok(true)=>{},Ok(false)=>return OriginalCommandDecodeStep::Pending,Err(failure)=>return OriginalCommandDecodeStep::Refused(failure)}self.output.take();return OriginalCommandDecodeStep::Pending}}
+  match cx.with_original_retirement(|cx|self.cursor.close_original_step(cx)){Ok(false)=>return OriginalCommandDecodeStep::Pending,Err(failure)=>return OriginalCommandDecodeStep::Refused(failure),Ok(true)=>{}}
+  if self.closing{if self.failure.is_none(){return OriginalCommandDecodeStep::Closed}match original_ingress_metadata(cx,std::mem::size_of::<Option<semio_framework_job::OriginalTurnFailure>>()){Ok(true)=>{},Ok(false)=>return OriginalCommandDecodeStep::Pending,Err(failure)=>return OriginalCommandDecodeStep::Refused(failure)}return OriginalCommandDecodeStep::Failed(self.failure.take().expect("original decoder closes before returning its full cause"))}
+  match original_ingress_metadata(cx,std::mem::size_of::<Option<protocol::DecodedAppCommandOwner>>()){Ok(true)=>{},Ok(false)=>return OriginalCommandDecodeStep::Pending,Err(failure)=>return OriginalCommandDecodeStep::Refused(failure)}OriginalCommandDecodeStep::Ready(self.output.take().expect("actual original cursor retained its output until close"))
+ }
+}
+fn original_ingress_metadata(cx:&mut semio_framework_job::StepContext<'_>,bytes:usize)->Result<bool,semio_framework_job::OriginalTurnFailure>{let grant=cx.retained_grant();if cx.retirement_should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
+#[derive(semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
+pub struct OriginalCommandExchangeState{
+ pub frames:Vec<protocol::AppFrame>,pub effects:Vec<Vec<u8>>,pub events:Vec<Vec<u8>>,
+ pub frame_bytes:Vec<Vec<u8>>,pub pending_effects:Option<Vec<Effect>>,
+ pub dispatch:Option<protocol::AppCommand>,
+ pub manifest:Option<(u64,InvocationResult)>,pub preview:Option<(InvocationResult,semio_plugin_job::EmitWire)>,pub configuration:Option<InvocationResult>,
+ pub archive_admission:semio_plugin_document_media::OriginalDocumentArchiveAdmission,
+ pub media_artifact:Option<semio_plugin_decl_app::MediaArtifact>,pub media_input:Option<(protocol::AppCommand,semio_plugin_decl_app::MediaArtifactDescriptor)>,
+ pub typed_output:Option<PluginExchangeOutput>,pub typed_leftover:Option<semio_plugin_job::TypedOperationLeftover>,
+ pub applied:bool,pub mutated:bool,pub started_operation:Option<u64>,pub effects_done:bool,pub typed_done:bool,pub snapshots_done:bool,
+}
+impl OriginalCommandExchangeState{
+ pub const fn empty()->Self{Self{frames:Vec::new(),effects:Vec::new(),events:Vec::new(),frame_bytes:Vec::new(),pending_effects:None,dispatch:None,manifest:None,preview:None,configuration:None,archive_admission:semio_plugin_document_media::OriginalDocumentArchiveAdmission::empty(),media_artifact:None,media_input:None,typed_output:None,typed_leftover:None,applied:false,mutated:false,started_operation:None,effects_done:false,typed_done:false,snapshots_done:false}}
+}
 #[doc(hidden)]
-pub enum OriginalCommandIngressRetirement{Pending(PluginCommandIngress),Failed(semio_framework_job::OriginalTurnFailure)}
+pub enum OriginalCommandIngressRetirement{Refused{owner:PluginCommandIngress,failure:semio_framework_job::OriginalTurnFailure},Pending(PluginCommandIngress),Failed(semio_framework_job::OriginalTurnFailure),Closed}
 #[doc(hidden)]
 pub enum PluginCommandIngressStep {
+    Refused{owner:PluginCommandIngress,failure:semio_framework_job::OriginalTurnFailure},
+    Closed,
     Pending(PluginCommandIngress),
     Ready(OriginalDecodedPluginCommand),
     TerminalFault(Fault),
@@ -171,36 +204,43 @@ pub enum PluginCommandIngressStep {
 #[doc(hidden)]
 pub const COMMAND_INGRESS_MOVES_PER_TURN: usize = semio_framework::kernel::COMMAND_MAXIMUM_PAGES + 8;
 impl PluginCommandIngress {
+    pub fn retire_original(self,cx:&mut semio_framework_job::StepContext<'_>)->OriginalCommandIngressRetirement{let transition=matches!(&self,Self::Encoded(_)|Self::Decoded(_))||matches!(&self,Self::Decoding(decode)if !decode.closing);let progress=RetainedCloneProgress{copied_items:usize::from(transition),copied_bytes:if transition{std::mem::size_of::<Self>()}else{0},..Default::default()};if transition{if cx.retirement_should_yield()||cx.fuel_remaining()==0||cx.retained_grant().maximum_depth==0||!progress.fits(cx.retained_grant()){return OriginalCommandIngressRetirement::Pending(self)}if let Err(error)=cx.retained_progress().checked_add(progress){return OriginalCommandIngressRetirement::Refused{owner:self,failure:error.into()}}}let closing=match self{Self::Encoded(command)=>{let mut decode=OriginalCommandDecode::new(protocol::PagedAppCommandDecodeCursor::new(command));decode.closing=true;Self::Decoding(decode)},Self::Decoding(mut decode)=>{decode.closing=true;Self::Decoding(decode)},Self::Decoded(owner)=>Self::RetiringDecoded(owner),owner=>owner};if transition{let posted=cx.consume_retained(progress);cx.consume_fuel(1);if let Err(error)=posted{return OriginalCommandIngressRetirement::Refused{owner:closing,failure:error.into()}}}match closing.advance_original(1,cx){PluginCommandIngressStep::Refused{owner,failure}=>OriginalCommandIngressRetirement::Refused{owner,failure},PluginCommandIngressStep::Pending(owner)=>OriginalCommandIngressRetirement::Pending(owner),PluginCommandIngressStep::TerminalOriginalFailure(failure)=>OriginalCommandIngressRetirement::Failed(failure),PluginCommandIngressStep::TerminalFault(fault)=>OriginalCommandIngressRetirement::Failed(fault.into()),PluginCommandIngressStep::Ready(owner)=>OriginalCommandIngressRetirement::Pending(Self::RetiringDecoded(owner)),PluginCommandIngressStep::Closed=>OriginalCommandIngressRetirement::Closed}}
     pub fn retire_failed_step_on_original(self,cx:&mut semio_framework_job::StepContext<'_>)->OriginalCommandIngressRetirement{
         if !matches!(self,Self::FailedDecoded{..}){return OriginalCommandIngressRetirement::Pending(self)}
-        match self.advance_original(1,cx){PluginCommandIngressStep::Pending(owner)=>OriginalCommandIngressRetirement::Pending(owner),PluginCommandIngressStep::TerminalOriginalFailure(failure)=>OriginalCommandIngressRetirement::Failed(failure),_=>unreachable!("failed original source only closes and returns its full original cause")}
+        match self.advance_original(1,cx){PluginCommandIngressStep::Refused{owner,failure}=>OriginalCommandIngressRetirement::Refused{owner,failure},PluginCommandIngressStep::Pending(owner)=>OriginalCommandIngressRetirement::Pending(owner),PluginCommandIngressStep::TerminalOriginalFailure(failure)=>OriginalCommandIngressRetirement::Failed(failure),_=>unreachable!("failed original source only closes and returns its full original cause")}
     }
 
     pub fn advance_original(self,moves:usize,cx:&mut semio_framework_job::StepContext<'_>)->PluginCommandIngressStep{
         if let Self::FailedDecoded{mut owner,mut failure,identity,mut close_failure,mut compound,mut raw_media}=self{
-            if identity!=(cx.operation(),cx.generation())||cx.should_yield(){return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})}
+            if identity!=(cx.operation(),cx.generation())||cx.retirement_should_yield(){return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})}
+            if let Some(actual)=close_failure.take(){return PluginCommandIngressStep::Refused{owner:Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media},failure:actual}}
             if raw_media.is_some()||!owner.media_place.terminal_is_empty(){
-                match admit_place(&mut owner.media_place,&mut raw_media,cx){Ok(Some(original))=>failure=Some(original),Ok(None)=>{},Err(refusal)=>close_failure=Some(refusal)}
+                match cx.with_original_retirement(|cx|admit_place(&mut owner.media_place,&mut raw_media,cx)){Ok(Some(original))=>{if failure.is_none(){failure=Some(original)}else{close_failure=Some(original)}},Ok(None)=>{},Err(actual)=>return PluginCommandIngressStep::Refused{owner:Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media},failure:actual}}
                 return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})
             }
             if compound.is_some()||!owner.compound_place.terminal_is_empty(){
-                match admit_place(&mut owner.compound_place,&mut compound,cx){Ok(Some(original))=>failure=Some(original),Ok(None)=>{},Err(refusal)=>close_failure=Some(refusal)}
+                match cx.with_original_retirement(|cx|admit_place(&mut owner.compound_place,&mut compound,cx)){Ok(Some(original))=>{if failure.is_none(){failure=Some(original)}else{close_failure=Some(original)}},Ok(None)=>{},Err(actual)=>return PluginCommandIngressStep::Refused{owner:Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media},failure:actual}}
                 return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})
             }
             let grant=cx.retained_grant();
-            if close_failure.is_some(){
-                if grant.maximum_items>0&&grant.maximum_depth>0{compound=Some(semio_framework_job::OriginalClosureFailure{initial:failure.take().expect("failed decoded initial source remains original"),closure:close_failure.take().expect("original closure cause remains original")});cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}).expect("original closure donation was preflighted");cx.consume_fuel(1)}
-                return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})
-            }
             if !owner.terminal_is_empty(){
-                match owner.close_original_step(cx){Ok(_)=>{},Err(refusal)=>close_failure=Some(refusal)}
+                match owner.close_original_step(cx){Ok(_)=>{},Err(actual)=>return PluginCommandIngressStep::Refused{owner:Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media},failure:actual}}
                 return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})
             }
             if grant.maximum_items>0&&grant.maximum_depth>0{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}).expect("original failure donation was preflighted");cx.consume_fuel(1);return PluginCommandIngressStep::TerminalOriginalFailure(failure.take().expect("failed decoded initial source remains original"))}
             PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})
-        }else{self.advance(moves)}
+        }else{let mut current=self;for _ in 0..moves{current=match current{
+            Self::Encoded(command)=>{let bytes=std::mem::size_of::<Self>();let progress=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};if cx.should_yield()||cx.is_cancelled()||cx.fuel_remaining()==0||cx.retained_grant().maximum_depth==0||!progress.fits(cx.retained_grant()){return PluginCommandIngressStep::Pending(Self::Encoded(command))}if let Err(error)=cx.retained_progress().checked_add(progress){return PluginCommandIngressStep::Refused{owner:Self::Encoded(command),failure:error.into()}}let next=Self::Decoding(OriginalCommandDecode::new(protocol::PagedAppCommandDecodeCursor::new(command)));let posted=cx.consume_retained(progress);cx.consume_fuel(1);if let Err(error)=posted{return PluginCommandIngressStep::Refused{owner:next,failure:error.into()}}next},
+            Self::Decoding(mut decode)=>match decode.step_original(cx){OriginalCommandDecodeStep::Refused(failure)=>return PluginCommandIngressStep::Refused{owner:Self::Decoding(decode),failure},OriginalCommandDecodeStep::Pending=>Self::Decoding(decode),OriginalCommandDecodeStep::Ready(wire)=>return PluginCommandIngressStep::Ready(OriginalDecodedPluginCommand::from_wire(wire)),OriginalCommandDecodeStep::Failed(failure)=>return PluginCommandIngressStep::TerminalOriginalFailure(failure),OriginalCommandDecodeStep::Closed=>return PluginCommandIngressStep::Closed},
+            Self::Decoded(owner)=>return PluginCommandIngressStep::Ready(owner),
+            Self::RetiringDecoded(mut owner)=>match cx.with_original_retirement(|cx|owner.close_original_step(cx)){Ok(true)=>return PluginCommandIngressStep::Closed,Ok(false)=>Self::RetiringDecoded(owner),Err(failure)=>Self::FailedDecoded{owner,failure:Some(failure),identity:(cx.operation(),cx.generation()),close_failure:None,compound:None,raw_media:None}},
+            Self::Closing{cursor,fault}=>{let mut decode=OriginalCommandDecode::new(cursor);decode.save_failure(fault.into());Self::Decoding(decode)},
+            Self::ClosingDecoded{mut owner,fault}=>match cx.with_original_retirement(|cx|owner.close_original_step(cx)){Ok(true)=>return PluginCommandIngressStep::TerminalFault(fault),Ok(false)=>Self::ClosingDecoded{owner,fault},Err(failure)=>Self::FailedDecoded{owner,failure:Some(fault.into()),identity:(cx.operation(),cx.generation()),close_failure:Some(failure),compound:None,raw_media:None}},
+            failed@Self::FailedDecoded{..}=>return failed.advance_original(1,cx),
+        };if cx.retirement_should_yield(){break}}PluginCommandIngressStep::Pending(current)}
     }
     /// 📥️ Drives the owner until it is dispatchable, terminal, or the turn's move grant is spent.
+    #[cfg(test)]
     pub fn advance(self, moves: usize) -> PluginCommandIngressStep {
         let mut owner = self;
         for _ in 0..moves {
@@ -211,23 +251,29 @@ impl PluginCommandIngress {
         }
         PluginCommandIngressStep::Pending(owner)
     }
+    #[cfg(test)]
     pub fn retire_step(self) -> Option<Self> {
         if matches!(self,Self::FailedDecoded{..}){return Some(self)}
         match self.cancel(plugin_internal_fault("command lifetime is closing")).step() {
             PluginCommandIngressStep::Pending(owner) => Some(owner),
             PluginCommandIngressStep::TerminalFault(_) => None,
+            PluginCommandIngressStep::Refused{..}=>unreachable!("ordinary fixture retirement cannot invoke an original refusal"),PluginCommandIngressStep::Closed=>None,
             PluginCommandIngressStep::TerminalOriginalFailure(_)=>unreachable!("whole failed decoded sources require their original retirement caller"),
             PluginCommandIngressStep::Ready(_) => unreachable!("cancelled ingress cannot dispatch"),
         }
     }
+    #[cfg(test)]
     pub fn cancel(self, fault: Fault) -> Self {
         match self {
             Self::Encoded(command) => Self::Closing { cursor: protocol::PagedAppCommandDecodeCursor::new(command), fault },
-            Self::Decoding(cursor) | Self::Closing { cursor, .. } => Self::Closing { cursor, fault },
+            Self::Decoding(mut decode)=>{decode.save_failure(fault.into());Self::Decoding(decode)},
+            Self::Closing { cursor, .. } => Self::Closing { cursor, fault },
             Self::Decoded(owner) | Self::ClosingDecoded { owner, .. } => match owner.receiving.as_ref(){Some(receiving)=>Self::FailedDecoded{identity:receiving.identity(),owner,failure:Some(fault.into()),close_failure:None,compound:None,raw_media:None},None=>Self::ClosingDecoded { owner, fault }},
             original @ Self::FailedDecoded{..}=>original,
+            original @ Self::RetiringDecoded(_)=>original,
         }
     }
+    #[cfg(test)]
     pub fn step(self) -> PluginCommandIngressStep {
         match self {
             Self::Encoded(encoded) => {
@@ -235,16 +281,17 @@ impl PluginCommandIngress {
                 if cursor.kind() == 28 {
                     PluginCommandIngressStep::Pending(Self::Closing { cursor, fault: plugin_internal_fault("Presence commands require the reserved presence ingress authority") })
                 } else {
-                    PluginCommandIngressStep::Pending(Self::Decoding(cursor))
+                    PluginCommandIngressStep::Pending(Self::Decoding(OriginalCommandDecode::new(cursor)))
                 }
             }
-            Self::Decoding(mut cursor) => match cursor.step() {
+            Self::Decoding(mut decode) => match decode.cursor.step() {
                 Ok(Some(command)) => PluginCommandIngressStep::Pending(Self::Decoded(OriginalDecodedPluginCommand::new(command))),
-                Ok(None) => PluginCommandIngressStep::Pending(Self::Decoding(cursor)),
-                Err(fault) => PluginCommandIngressStep::Pending(Self::Closing { cursor, fault }),
+                Ok(None) => PluginCommandIngressStep::Pending(Self::Decoding(decode)),
+                Err(fault) => PluginCommandIngressStep::Pending(Self::Closing { cursor:decode.cursor, fault }),
             },
             Self::Decoded(owner) => PluginCommandIngressStep::Ready(owner),
             original @ Self::FailedDecoded{..}=>PluginCommandIngressStep::Pending(original),
+            original @ Self::RetiringDecoded(_)=>PluginCommandIngressStep::Pending(original),
             Self::Closing { mut cursor, fault } => {
                 let (complete, _) = cursor.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
                 if complete && cursor.terminal_is_empty() {
@@ -266,7 +313,8 @@ impl PluginCommandIngress {
 }
 #[cfg(test)]
 include!("../../../../🧪️tests/🔬️plugin-runtime-paged-command-ingress/🦀️.rs");
-#[derive(Default)]
+#[derive(Default,semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
 pub struct PluginExchangeOutput {
     pub original_receiving:Option<OriginalPublicationReceiving>,
     pub constructor_receipt: Option<(semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind, semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase, RetainedCloneGrant, RetainedCloneProgress)>,
@@ -277,7 +325,6 @@ pub struct PluginExchangeOutput {
     pub frames: Vec<Vec<u8>>,
     pub effects: Vec<Vec<u8>>,
     pub events: Vec<Vec<u8>>,
-    pub retry_command: Option<(u64, PluginCommandIngress)>,
     pub command_terminal_fault: Option<Vec<u8>>,
     pub presence_pending: Option<u64>,
     pub presence_terminal: Option<u64>,
@@ -287,9 +334,11 @@ pub struct PluginExchangeOutput {
 /// 🏷️ Names the one actual producer whose full physical receipt was posted in the initiating context.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum OriginalPublicationFamily{Constructor,Preparation,Retirement,History,Tool}
+semio_framework_value::artifact_retire_leaf!(OriginalPublicationFamily);
 /// 🧾️ Captures actual already-posted effects, exact initiating grant and recipient before another loan.
 #[derive(Clone,Copy)]
 pub struct OriginalPublicationReceiving{pub family:Option<OriginalPublicationFamily>,pub before:RetainedCloneProgress,pub posted:RetainedCloneProgress,pub grant:RetainedCloneGrant,pub recipient:usize}
+semio_framework_value::artifact_retire_leaf!(OriginalPublicationReceiving);
 
 #[cfg(test)]
 #[path="../../🎞️command/📥️custody/🧪️tests/🦀️.rs"]

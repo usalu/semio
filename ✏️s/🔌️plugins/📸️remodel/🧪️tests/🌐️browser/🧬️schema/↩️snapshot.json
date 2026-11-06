@@ -1,0 +1,35 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "before",
+      "final",
+      "undo",
+      "redo",
+      "pass"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "before": {
+        "type": "string",
+        "pattern": "^([0-9a-f]{2})+$"
+      },
+      "final": {
+        "type": "string",
+        "pattern": "^([0-9a-f]{2})+$"
+      },
+      "undo": {
+        "type": "string",
+        "pattern": "^([0-9a-f]{2})+$"
+      },
+      "redo": {
+        "type": "string",
+        "pattern": "^([0-9a-f]{2})+$"
+      },
+      "pass": {
+        "type": "boolean"
+      }
+    }
+  }
+}

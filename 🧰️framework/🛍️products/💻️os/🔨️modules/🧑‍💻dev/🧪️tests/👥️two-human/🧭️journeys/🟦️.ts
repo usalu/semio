@@ -312,6 +312,7 @@ export async function seedSharedSpaceThroughHub(hub: string, owner: Human, membe
   return spaceId;
 }
 
+
 /** 🗺️ The journeys a run can drive: how the shared space is set up (the Home dialogs, or the hub's directory commands), the
  * role B is invited with, and how many checks a kind passes with. */
 export const JOURNEYS: Readonly<Record<TwoHumanJourney, Readonly<{ run: (context: JourneyContext) => Promise<void>; seed: "ui" | "hub"; shareRole: RegExp; memberRole: DirectorySpaceRole; checks: number; check: string; required?:readonly string[] }>>> = {

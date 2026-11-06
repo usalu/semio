@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_artifact_flow_flow::{FlowMutation,WidgetDescriptor};
 use semio_os_flow_host_core::authoring_layout::DagLayoutOptions;
 #[path="📦️storage/🦀️.rs"]mod storage;
-#[path="📑️text/🦀️.rs"]mod text;
+use semio_framework_job_owned_text as text;
 #[path="🔎️compare/🦀️.rs"]mod compare;
 #[path="🗑️remove/🦀️.rs"]mod remove;
 #[path="💎️value/🦀️.rs"]mod value;

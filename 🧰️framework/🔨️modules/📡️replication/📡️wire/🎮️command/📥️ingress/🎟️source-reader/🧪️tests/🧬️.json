@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "version",
+    "cases",
+    "pageReleaseBytes",
+    "zeroReleaseClosesPage",
+    "physicalOwnerMetadataPaid"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "remaining",
+          "available",
+          "capacity",
+          "copy",
+          "metadata",
+          "work",
+          "items",
+          "depth",
+          "chunk"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "remaining": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "available": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copy": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "metadata": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "chunk": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "pageReleaseBytes": {
+      "const": 4096
+    },
+    "zeroReleaseClosesPage": {
+      "const": false
+    },
+    "physicalOwnerMetadataPaid": {
+      "const": true
+    }
+  }
+}

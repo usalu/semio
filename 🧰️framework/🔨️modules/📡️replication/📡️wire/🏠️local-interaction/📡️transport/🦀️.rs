@@ -4,6 +4,7 @@ use super::{LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQuer
 
 //#region 🧬️Transport
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum LocalInteractionQueryCommand {
     Read { request_id: u64 },
     Acknowledge { token: LocalInteractionQueryToken },
@@ -59,6 +60,7 @@ impl semio_framework_value::FromValue for LocalInteractionQueryCommand {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum LocalInteractionQueryRejection { Busy, Closed, GenerationExhausted, SourceFailed }
 
 /// 🧰️ Hand-written, not derived — same reason as `LocalInteractionQueryCommand` above.
@@ -91,6 +93,7 @@ impl semio_framework_value::FromValue for LocalInteractionQueryRejection {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum LocalInteractionQueryReply {
     Started { token: LocalInteractionQueryToken },
     Page { page: LocalInteractionPage },

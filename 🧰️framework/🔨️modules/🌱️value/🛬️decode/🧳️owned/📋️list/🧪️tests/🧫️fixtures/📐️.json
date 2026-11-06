@@ -88,35 +88,203 @@
     "storage": "stable-owned-allocation",
     "rows": [
       {
-        "event": "birth",
+        "event": "reserve",
+        "childBytes": 0,
+        "pointerBytes": 4,
+        "childOptionBytes": 1,
+        "copyBytes": 4,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "initialize",
+        "childBytes": 0,
+        "pointerBytes": 4,
+        "childOptionBytes": 1,
+        "copyBytes": 2,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "take-box",
+        "childBytes": 0,
+        "pointerBytes": 4,
+        "childOptionBytes": 1,
+        "copyBytes": 9,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "release-box",
+        "childBytes": 0,
+        "pointerBytes": 4,
+        "childOptionBytes": 1,
+        "copyBytes": 4,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "release-raw",
+        "childBytes": 0,
+        "pointerBytes": 4,
+        "childOptionBytes": 1,
+        "copyBytes": 4,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "reserve",
         "childBytes": 1024,
-        "copyBytes": 0,
+        "pointerBytes": 4,
+        "childOptionBytes": 1028,
+        "copyBytes": 4,
         "capacityBytes": 1024,
         "releaseBytes": 0,
         "work": 1
       },
       {
-        "event": "terminal-release",
+        "event": "initialize",
         "childBytes": 1024,
-        "copyBytes": 0,
+        "pointerBytes": 4,
+        "childOptionBytes": 1028,
+        "copyBytes": 2053,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "take-box",
+        "childBytes": 1024,
+        "pointerBytes": 4,
+        "childOptionBytes": 1028,
+        "copyBytes": 9,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "release-box",
+        "childBytes": 1024,
+        "pointerBytes": 4,
+        "childOptionBytes": 1028,
+        "copyBytes": 4,
         "capacityBytes": 0,
         "releaseBytes": 1024,
         "work": 1
       },
       {
-        "event": "birth",
+        "event": "release-raw",
+        "childBytes": 1024,
+        "pointerBytes": 4,
+        "childOptionBytes": 1028,
+        "copyBytes": 4,
+        "capacityBytes": 0,
+        "releaseBytes": 1024,
+        "work": 1
+      },
+      {
+        "event": "reserve",
         "childBytes": 0,
-        "copyBytes": 0,
+        "pointerBytes": 8,
+        "childOptionBytes": 1,
+        "copyBytes": 8,
         "capacityBytes": 0,
         "releaseBytes": 0,
         "work": 1
       },
       {
-        "event": "terminal-release",
+        "event": "initialize",
         "childBytes": 0,
-        "copyBytes": 0,
+        "pointerBytes": 8,
+        "childOptionBytes": 1,
+        "copyBytes": 2,
         "capacityBytes": 0,
         "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "take-box",
+        "childBytes": 0,
+        "pointerBytes": 8,
+        "childOptionBytes": 1,
+        "copyBytes": 17,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "release-box",
+        "childBytes": 0,
+        "pointerBytes": 8,
+        "childOptionBytes": 1,
+        "copyBytes": 8,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "release-raw",
+        "childBytes": 0,
+        "pointerBytes": 8,
+        "childOptionBytes": 1,
+        "copyBytes": 8,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "reserve",
+        "childBytes": 1024,
+        "pointerBytes": 8,
+        "childOptionBytes": 1032,
+        "copyBytes": 8,
+        "capacityBytes": 1024,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "initialize",
+        "childBytes": 1024,
+        "pointerBytes": 8,
+        "childOptionBytes": 1032,
+        "copyBytes": 2057,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "take-box",
+        "childBytes": 1024,
+        "pointerBytes": 8,
+        "childOptionBytes": 1032,
+        "copyBytes": 17,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "work": 1
+      },
+      {
+        "event": "release-box",
+        "childBytes": 1024,
+        "pointerBytes": 8,
+        "childOptionBytes": 1032,
+        "copyBytes": 8,
+        "capacityBytes": 0,
+        "releaseBytes": 1024,
+        "work": 1
+      },
+      {
+        "event": "release-raw",
+        "childBytes": 1024,
+        "pointerBytes": 8,
+        "childOptionBytes": 1032,
+        "copyBytes": 8,
+        "capacityBytes": 0,
+        "releaseBytes": 1024,
         "work": 1
       }
     ]

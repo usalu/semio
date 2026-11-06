@@ -119,6 +119,8 @@ pub async fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default
         "setActiveTool",
         semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
         semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+        semio_framework::EXPORT_MEDIA_FILE_ACTION_ID,
+        semio_framework::EXPORT_SNAPSHOT_FILE_ACTION_ID,
         "interactionSelect",
         "interactionHover",
         "clearSelection",

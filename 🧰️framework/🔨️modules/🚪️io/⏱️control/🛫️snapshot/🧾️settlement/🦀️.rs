@@ -8,7 +8,7 @@ pub struct NativeSnapshotEncodeSettlement{original:Option<NativeEncodeEffectSett
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 impl NativeSnapshotEncodeSettlement{
  /// 🧾️ Stores actual caller-owned effects before original post callbacks.
- pub fn record_effect(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{self.original.as_mut().ok_or_else(||invalid("original effect quote is absent"))?.record_effect(progress)}
+ pub fn record_effect(&mut self,progress:RetainedCloneProgress,actual_work:u64)->Result<(),ValueError>{self.original.as_mut().ok_or_else(||invalid("original effect quote is absent"))?.record_effect(progress,actual_work)}
  /// 🪢️ Borrows the original settlement for cursor binding and recovery.
  pub fn original(&self)->Option<&NativeEncodeEffectSettlement>{self.original.as_ref()}
  /// 🪢️ Reconciles one started post on the original borrowed authorities.
@@ -35,20 +35,16 @@ impl NativeSnapshotEncodeSettlement{
  pub fn take_receipt(slot:&mut Option<Self>)->Result<NativeEncodeEffectReceipt,ValueError>{let state=slot.as_mut().ok_or_else(||invalid("snapshot settlement is absent"))?;if !state.local_done||state.local_failure.is_some(){return Err(invalid("snapshot wallet settlement is not accepted"))}let receipt=NativeEncodeEffectSettlement::take_receipt(&mut state.original)?;if state.operation_unwind.is_none(){slot.take();}Ok(receipt)}
 }
 impl Drop for NativeSnapshotEncodeSettlement{fn drop(&mut self){assert!(std::thread::panicking()||self.retirement_ready(),"original snapshot settlement remains unresolved")}}
-struct PendingSnapshotSettlement(NativeSnapshotEncodeSettlement);
-impl semio_framework_value::retirement::RetirementCursor for PendingSnapshotSettlement{
- fn close_step(&mut self,_:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{semio_framework_value::retirement::RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"snapshot settlement requires original recovery").into(),0)}
- fn terminal_is_empty(&self)->bool{false}
-}
 impl RetireOwned for NativeSnapshotEncodeSettlement{
+ type Retirement=semio_framework_value::native_encoding::NativeEncodeRetirement<Self,<(Option<NativeEncodeEffectSettlement>,(Option<ValueError>,())) as RetireOwned>::Retirement>;
  fn retirement_ready(&self)->bool{self.operation_unwind.is_none()&&self.original.as_ref().is_none_or(RetireOwned::retirement_ready)}
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;if !self.retirement_ready(){Box::new(PendingSnapshotSettlement(self))}else{let mut state=self;sequence(vec![deferred(state.original.take()),deferred(state.local_failure.take())])}}
- fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;if !self.retirement_ready(){None}else{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.original),deferred_birth_bytes_for(&self.local_failure)])}}
+ fn retirement(self)->Self::Retirement{use semio_framework_value::native_encoding::NativeEncodeRetirement;if !self.retirement_ready(){NativeEncodeRetirement::Pending(Some(self))}else{let mut state=self;NativeEncodeRetirement::Ready(semio_framework_value::artifact_retirement_sequence!(state.original.take(),state.local_failure.take()))}}
+ fn retirement_birth_bytes(&self)->Option<usize>{self.retirement_ready().then_some(std::mem::size_of::<Self::Retirement>())}
  fn controlled_retirement_supported()->bool{true}
 }
 impl NativeSnapshotEncodeOwner<'_,'_>{
  /// 🎫️ Retains the caller wallet and original callback authority before quoting an effect.
- pub fn begin_original_settlement(&mut self,slot:&mut Option<NativeSnapshotEncodeSettlement>,demand:RetainedCloneGrant)->Result<(),ValueError>{if slot.is_some()||!self.progress.fits(self.grant)||!(RetainedCloneProgress{copied_items:demand.maximum_items,copied_bytes:demand.maximum_copy_bytes,retained_capacity_bytes:demand.maximum_capacity_bytes,released_bytes:demand.maximum_release_bytes}).fits(self.remaining_grant())||demand.maximum_depth>self.grant.maximum_depth{return Err(invalid("snapshot settlement exceeds original wallet"))}*slot=Some(NativeSnapshotEncodeSettlement{original:None,grant:self.grant,before:self.progress,local_done:false,local_failure:None,operation_unwind:None});let result=self.native.begin_effect_settlement(&mut slot.as_mut().unwrap().original,semio_framework_value::RetirementDemand{copy_bytes:demand.maximum_copy_bytes,capacity_bytes:demand.maximum_capacity_bytes,release_bytes:demand.maximum_release_bytes,depth:demand.maximum_depth});if result.is_err()&&slot.as_ref().is_some_and(|state|state.original.is_none()){slot.take();}result}
+ pub fn begin_original_settlement(&mut self,slot:&mut Option<NativeSnapshotEncodeSettlement>,demand:RetainedCloneGrant,work_quote:u64)->Result<(),ValueError>{if slot.is_some()||!self.progress.fits(self.grant)||!(RetainedCloneProgress{copied_items:demand.maximum_items,copied_bytes:demand.maximum_copy_bytes,retained_capacity_bytes:demand.maximum_capacity_bytes,released_bytes:demand.maximum_release_bytes}).fits(self.remaining_grant())||demand.maximum_depth>self.grant.maximum_depth{return Err(invalid("snapshot settlement exceeds original wallet"))}*slot=Some(NativeSnapshotEncodeSettlement{original:None,grant:self.grant,before:self.progress,local_done:false,local_failure:None,operation_unwind:None});let result=self.native.begin_effect_settlement(&mut slot.as_mut().unwrap().original,semio_framework_value::RetirementDemand{copy_bytes:demand.maximum_copy_bytes,capacity_bytes:demand.maximum_capacity_bytes,release_bytes:demand.maximum_release_bytes,depth:demand.maximum_depth},work_quote);if result.is_err()&&slot.as_ref().is_some_and(|state|state.original.is_none()){slot.take();}result}
  /// 🪢️ Reconciles an interrupted original quote without replay.
  pub fn resolve_original_quote(&mut self,slot:&mut Option<NativeSnapshotEncodeSettlement>,result:&mut Option<Result<RetainedCloneGrant,ValueError>>)->Result<(),ValueError>{let state=slot.as_mut().ok_or_else(||invalid("snapshot settlement is absent"))?;if state.grant!=self.grant||state.before!=self.progress{return Err(invalid("snapshot original wallet changed"))}let result=self.native.resolve_effect_quote(&mut state.original,result);if result.is_err()&&state.original.is_none(){slot.take();}result}
  /// 🎟️ Resumes work admission after reconciling an original quote.

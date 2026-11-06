@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-actor-job-state"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "actor-job-state"
+rust-source-boundary = { maxSourceBytes = 262144, maxSourceFiles = 32, maxActiveLines = 4000 }
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-actor = { path = "../../../../../📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../🧵️job/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }

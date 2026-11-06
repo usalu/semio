@@ -23,7 +23,7 @@ impl OriginalFixture{
  fn turn<T>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->T{self.caller.turn_with_decoder(grant,&mut self.decoder,run).expect("same original staged payload turn")}
  fn close_writer(&mut self,writer:&mut RetainedPayloadBuilder){while !writer.terminal_is_empty(){let d=writer.retirement_demands().unwrap();self.turn(exact(d),|cx|close_original_retained_step(cx,d,|g|writer.close_step_granted(g)));}}
  fn close_payload(&mut self,payload:&mut RetainedJobPayload){while !payload.terminal_is_empty(){let d=payload.retirement_demands().unwrap();self.turn(exact(d),|cx|close_original_retained_step(cx,d,|g|payload.close_step(g)));}}
- fn finish(mut self){while !self.decoder.terminal_is_empty(){let d=self.decoder.retirement_demands(4096).unwrap();self.caller.turn(exact(d),|cx|close_original_retained_step(cx,d,|g|self.decoder.close_step(g))).unwrap();}self.caller.retire(Self::STOCK);}
+ fn finish(mut self){while !self.decoder.terminal_is_empty(){let d=self.decoder.retirement_demands(4096).unwrap();self.caller.turn(exact(d),|cx|self.decoder.close_on_source(cx)).unwrap();}self.caller.retire(Self::STOCK);}
 }
 fn exact(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}}
 fn observe<T>(run:impl FnOnce()->T)->(T,(usize,usize)){let(v,h)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);assert!(!h.overflowed);(v,(h.requested_bytes,h.released_bytes))}

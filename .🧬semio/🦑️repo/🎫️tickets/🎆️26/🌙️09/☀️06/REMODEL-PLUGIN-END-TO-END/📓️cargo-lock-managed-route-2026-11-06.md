@@ -1,0 +1,3 @@
+# Managed Cargo lock route
+
+Repository cargo launcher policy admits generate-lockfile as a lock-kind subcommand. Launcher/🟦️.ts:232–237 routes lock to withRepositoryCargoResolutionV1 rather than compiler input preparation. Cargo dependencies/🟦️.ts:68–71,86–88 explicitly owns exclusive registry writer custody for resolution without first fetching a stale locked graph. The public managed form is repo cargo --store=shared --configuration=prototype -- generate-lockfile --manifest-path followed by the actual workspace Cargo.toml. Select each affected workspace explicitly. This is source verification only; no lockfile was changed or command executed.

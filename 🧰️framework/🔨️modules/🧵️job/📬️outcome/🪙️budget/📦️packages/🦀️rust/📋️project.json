@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/job-return-budget-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

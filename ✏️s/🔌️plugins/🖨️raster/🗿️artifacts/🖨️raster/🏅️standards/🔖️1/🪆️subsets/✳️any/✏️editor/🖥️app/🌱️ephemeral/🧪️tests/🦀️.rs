@@ -18,6 +18,6 @@ fn real_raster_ephemeral_lanes_preserve_authored_values_and_original_roots(){
   caller.cancel().cancel_now();for _ in 0..65536{if source.as_ref().unwrap().terminal_is_empty(){break}turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|source.as_mut().unwrap().close_step(cx)));}assert!(source.as_ref().unwrap().terminal_is_empty());
   let d=Source::boxed_release_demands();turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|_|{source=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}})?;Ok(())}));
   if let Some(stores)=stores.as_mut(){for _ in 0..65536{if stores.terminal_is_empty(){break}turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|stores.close_step(cx)));}assert!(stores.terminal_is_empty());}
-  while !decoder.terminal_is_empty(){caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(32768)?;semio_framework_job::close_original_retained_step(cx,d,|g|decoder.close_step(g))?;Ok(())})).unwrap();}caller.retire(stock());
+  while !decoder.terminal_is_empty(){caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(32768)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(stock());
  }
 }

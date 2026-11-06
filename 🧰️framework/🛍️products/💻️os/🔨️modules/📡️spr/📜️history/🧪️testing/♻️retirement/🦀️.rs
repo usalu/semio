@@ -11,7 +11,7 @@ pub struct NativeWorkWallet{remaining:u64,quantum:u64}
 impl NativeWorkWallet{
  pub fn new(remaining:u64,quantum:u64)->Self{Self{remaining,quantum}}
 }
-impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for NativeWorkWallet{
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for NativeWorkWallet{fn available_work(&mut self,observed:u64)->Result<u64,semio_framework_value::ValueError>{let limit:u64=self.remaining.min(self.quantum);limit.checked_sub(observed).ok_or_else(||semio_framework_value::ValueError::invariant("native observed work exceeds its actual finite scope"))}
  fn admits(&mut self,observed:u64,additional:u64)->Result<bool,semio_framework_value::ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.remaining.min(self.quantum)))}
 }
 /// 🔬️ Observes only the actual native counter under the same wallet; it makes no claim about nonnative callback work.

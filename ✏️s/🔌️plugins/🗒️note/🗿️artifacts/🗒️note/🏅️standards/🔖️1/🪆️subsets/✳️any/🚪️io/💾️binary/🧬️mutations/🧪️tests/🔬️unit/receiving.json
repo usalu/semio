@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "name": "remove title",
+      "newTitle": null
+    },
+    {
+      "name": "unicode title",
+      "newTitle": "Notiz 🌱 标题"
+    }
+  ]
+}

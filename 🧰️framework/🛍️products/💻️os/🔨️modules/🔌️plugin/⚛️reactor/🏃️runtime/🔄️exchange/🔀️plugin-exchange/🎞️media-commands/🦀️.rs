@@ -9,10 +9,11 @@ pub(super) async fn arm_media_in<PA: PluginApp>(
     cx: &mut semio_framework_job::StepContext<'_>,
     frames: &mut Vec<protocol::AppFrame>,
     flags: &mut ExchangeFlags,
-    command: protocol::AppCommand,
+    command: &mut protocol::AppCommand,
     media_descriptor: semio_plugin_decl_app::MediaArtifactDescriptor,
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::MediaIn { seq, port, descriptor, data } = command else { unreachable!("arm_media_in is dispatched only for its own command") };
+    let seq=*seq;
     assert!(descriptor.is_empty(),"original descriptor bytes must be donated before media dispatch");
     match plugin_consume_media(runtime, instance_id, seq, &port, media_descriptor, data, cx).await {
         Ok(None) => {
@@ -29,9 +30,10 @@ pub(super) async fn arm_media_in<PA: PluginApp>(
 pub(super) async fn arm_submit_media_export(
     frames: &mut Vec<protocol::AppFrame>,
     owner: &mut semio_framework_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand,
-    command: protocol::AppCommand,
+    command: &mut protocol::AppCommand,
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::SubmitMediaExport { seq, .. } = command else { unreachable!("arm_submit_media_export is dispatched only for its own command") };
+    let seq=*seq;
     let handle=owner.take_media_submission().expect("original media submission is complete before command donation");
     frames.push(protocol::AppFrame::MediaExportSubmitted{in_reply_to:seq,handle:media_export_handle_into_wire(handle)});
     Ok(())
@@ -41,9 +43,10 @@ pub(super) async fn arm_submit_media_export(
 pub(super) async fn arm_poll_media_export(
     frames: &mut Vec<protocol::AppFrame>,
     owner: &mut semio_framework_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand,
-    command: protocol::AppCommand,
+    command: &mut protocol::AppCommand,
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::PollMediaExport { seq, handle } = command else { unreachable!("arm_poll_media_export is dispatched only for its own command") };
+    let seq=*seq;
     let handle = media_export_handle_from_wire(handle);
     if let Some(status)=owner.take_media_status(){
         let descriptor=semio_plugin_decl_app::MediaArtifactDescriptor{edge_id:None,port_id:Some(status.port),kind_id:None,media_type:Some(status.media_type),wire:semio_framework::MediaWireFormat::Binary{format_kind:status.schema},blob_hash:None};
@@ -94,9 +97,10 @@ pub(super) async fn arm_cancel_media_export<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
-    command: protocol::AppCommand,
+    command: &mut protocol::AppCommand,
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::CancelMediaExport { seq, handle } = command else { unreachable!("arm_cancel_media_export is dispatched only for its own command") };
+    let seq=*seq;
     let handle = media_export_handle_from_wire(handle);
     match plugin_cancel_media_export(runtime, instance_id, &handle).await {
         Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
@@ -110,9 +114,10 @@ pub(super) async fn arm_media_fingerprint<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
-    command: protocol::AppCommand,
+    command: &mut protocol::AppCommand,
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::MediaFingerprint { seq, port } = command else { unreachable!("arm_media_fingerprint is dispatched only for its own command") };
+    let seq=*seq;
     let fingerprint = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
         ::semio_framework_async::poll::resolve_ready(instance.app.media_fingerprint(&port)).map_err(|error| plugin_internal_fault(error.to_string()))

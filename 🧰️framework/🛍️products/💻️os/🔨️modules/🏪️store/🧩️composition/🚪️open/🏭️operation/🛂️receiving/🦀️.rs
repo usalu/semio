@@ -78,8 +78,8 @@ fn invariant(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKi
 
 
 struct OriginalMemberWork<'a,'turn,'source>{turn:&'a BorrowedOriginalTurn<'turn,'source>,closing:bool}
-impl semio_framework_value_native_owned::native_decoding::OriginalWorkRecipient for OriginalMemberWork<'_,'_,'_>{
- fn admits<'a>(&mut self,quote:semio_framework_value_native_owned::OriginalWorkQuote<'a>,observed:u64,additional:u64)->semio_framework_value_native_owned::OriginalWorkQuoteComplete<'a>{quote.complete(self.turn.with(|cx|!paused(cx,self.closing)&&(self.closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining())))}
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for OriginalMemberWork<'_,'_,'_>{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{self.turn.with(|cx,_|if !paused(cx,self.closing)&&(self.closing||!cx.is_cancelled()){cx.fuel_remaining().checked_sub(observed).unwrap_or(0)}else{0})}
+ fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{self.turn.with(|cx,_|!paused(cx,self.closing)&&(self.closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))}
 }
 fn paused(cx:&StepContext<'_>,closing:bool)->bool{if closing{cx.retirement_should_yield()}else{cx.should_yield()}}
 fn with_original_control<T>(receipt:&mut Option<NativeForwardedDecodeReceipt>,recipient:&mut NativeDecodeRetirementRecipient,allocation:&mut MemberHistoryAllocation,maximum:usize,cx:&mut StepContext<'_>,closing:bool,run:impl FnOnce(&mut NativeDecodeControl<'_>)->T)->Result<(T,u64),OriginalTurnFailure>{

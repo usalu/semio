@@ -1,0 +1,29 @@
+{
+  "cases": [
+    {
+      "id": "cp-ä",
+      "changeIds": [
+        "c1",
+        "c2"
+      ],
+      "parentId": "base",
+      "authors": [
+        {
+          "id": "a1",
+          "name": "Änne",
+          "avatar": null
+        }
+      ],
+      "message": null,
+      "timestamp": "now"
+    },
+    {
+      "id": "empty",
+      "changeIds": [],
+      "parentId": null,
+      "authors": [],
+      "message": "kept",
+      "timestamp": "later"
+    }
+  ]
+}

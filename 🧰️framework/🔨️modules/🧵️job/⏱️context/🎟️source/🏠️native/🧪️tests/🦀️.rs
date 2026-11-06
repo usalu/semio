@@ -31,10 +31,10 @@ fn native_parent_survives_foreign_context_cancellation_and_return(){
  assert!(caller.turn(grant,|cx|owner.as_ref().unwrap().lend(cx,&mut child)).unwrap());
  assert!(foreign.turn(grant,|cx|child.as_mut().unwrap().with_native(cx,|_,_|Ok(()))).is_err());
  caller.cancel().cancel_now();
- while !owner.as_ref().unwrap().terminal_is_empty(){caller.turn(grant,|cx|owner.as_mut().unwrap().return_step(cx)).unwrap();}
+ while owner.is_some(){caller.turn(grant,|cx|OriginalNativeLease::return_slot_step(&mut owner,cx)).unwrap();}
  assert!(!caller.turn(grant,|cx|cx.close_original_native_step()).unwrap());assert_eq!(DROPS.load(Ordering::Relaxed),0);
  assert!(caller.turn(grant,|cx|child.as_mut().unwrap().with_native(cx,|native,_|{assert!(!native.empty);Ok(())})).unwrap());
- while !child.as_ref().unwrap().terminal_is_empty(){caller.turn(grant,|cx|child.as_mut().unwrap().return_step(cx)).unwrap();}
+ while child.is_some(){caller.turn(grant,|cx|OriginalNativeLease::return_slot_step(&mut child,cx)).unwrap();}
  let mut released=0;while !caller.turn(grant,|cx|cx.close_original_native_step()).unwrap(){released+=caller.receipt().released_bytes;}
  released+=caller.receipt().released_bytes;assert_eq!(released,birth.requested_bytes);assert_eq!(DROPS.load(Ordering::Relaxed),1);
  assert!(caller.turn(grant,|cx|{let witness=cx.original_native_retired_witness(recipient)?.unwrap();assert!(witness.proves(recipient,cx));Ok(())}).is_ok());
@@ -54,8 +54,8 @@ fn native_parent_survives_foreign_context_cancellation_and_return(){
    "foreignBorrow"=>{assert!(foreign.turn(grant,|cx|owner.as_mut().unwrap().with_native(cx,|_,_|Ok(()))).is_err());"refused"},
    "cancel"=>{caller.cancel().cancel_now();"retained"},
    "dropCaller"=>{drop(owner.take());drop(child.take());"captured"},
-   "return"=>{let loan=child.as_mut().filter(|loan|!loan.terminal_is_empty()).unwrap_or_else(||owner.as_mut().unwrap());while !loan.terminal_is_empty(){caller.turn(grant,|cx|loan.return_step(cx)).unwrap();}"acknowledged"},
-   "close"=>{if let Some(loan)=owner.as_mut(){while !loan.terminal_is_empty(){caller.turn(grant,|cx|loan.return_step(cx)).unwrap();}}loop{let before=caller.fuel_remaining();let complete=caller.turn(grant,|cx|cx.close_original_native_step()).unwrap();if complete{break "closed"}if before==caller.fuel_remaining(){break "blocked"}}},
+   "return"=>{let loan=if child.is_some(){&mut child}else{&mut owner};while loan.is_some(){caller.turn(grant,|cx|OriginalNativeLease::return_slot_step(loan,cx)).unwrap();}"returned"},
+   "close"=>{while owner.is_some(){caller.turn(grant,|cx|OriginalNativeLease::return_slot_step(&mut owner,cx)).unwrap();}loop{let before=caller.fuel_remaining();let complete=caller.turn(grant,|cx|cx.close_original_native_step()).unwrap();if complete{break "closed"}if before==caller.fuel_remaining(){break "blocked"}}},
    _=>unreachable!()};outputs.push(output);
   }
   assert_eq!(serde_json::json!(outputs),row["outputs"]);drop(owner);drop(child);caller.retire(grant);foreign.retire(grant);

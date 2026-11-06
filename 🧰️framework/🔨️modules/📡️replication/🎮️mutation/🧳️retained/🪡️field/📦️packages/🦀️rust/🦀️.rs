@@ -8,7 +8,7 @@ pub use semio_framework_mutation_diff::ApplyCapability;
 /// 📹️ Sparse and record field changes under central grant admission.
 #[path = "../../🦀️.rs"]
 pub mod field;
-pub use field::{RetainedFieldPreparation, RetainedFieldChange, RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field};
+pub use field::{RetainedFieldPreparation, RetainedFieldChange, RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldProjection, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field};
 
 /// 🎟️ Independent five-axis admission precedes every action.
 pub fn retained_mutation_demand_fits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}

@@ -11,3 +11,11 @@ impl OriginalSourceBinding{
  pub fn operation(self)->OperationId{self.operation}
  pub fn generation(self)->Generation{self.generation}
 }
+
+impl semio_framework_value_retained_clone::retirement::RetireOwned for OriginalSourceBinding{
+ type Retirement=semio_framework_value_retained_clone::retirement::Leaf<Self>;
+ fn retirement(self)->Self::Retirement{semio_framework_value_retained_clone::retirement::leaf(self)}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value_retained_clone::retirement::leaf_birth_bytes::<Self>())}
+ fn controlled_retirement_supported()->bool{true}
+ fn retirement_element_copy_bytes()->usize{std::mem::size_of::<Self>()}
+}

@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "key",
+          "name",
+          "equal",
+          "maximumBytesPerTurn",
+          "deniedWork"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "equal": {
+            "type": "boolean"
+          },
+          "maximumBytesPerTurn": {
+            "const": 1
+          },
+          "deniedWork": {
+            "const": 0
+          }
+        }
+      }
+    }
+  }
+}

@@ -20,7 +20,7 @@ import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import {decodeRemodelingSnapshot, remodelingSnapshotToJsonText} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import {defaultRemodelingScene, type RemodelingSnapshot} from "../../📸️snapshot/🟦️.ts";
-import {applyRemodelingDiff, remodelingDiffLanes} from "../../🔺️diff/🟦️.ts";
+import {applyRemodelingDiff, remodelingDiffLanes, remodelingLane, type RemodelingContentRow} from "../../🔺️diff/🟦️.ts";
 import {decodeRemodelingDiff, remodelingDiffToJsonText} from "../../../🚪️io/📝️text/🔺️diff/🔣️json/🟦️.ts";
 import {REMODELING_MUTATION_TAGS, applyRemodelingMutation, remodelingMutationOutcome} from "../../🧬️mutations/🟦️.ts";
 import {decodeRemodelingMutation} from "../../../🚪️io/📝️text/🧬️mutations/🔣️json/🟦️.ts";
@@ -28,6 +28,23 @@ import {remodelingArtifactFromSnapshot, remodelingArtifactToSnapshot} from "../.
 import { remodelingSnapshotFromDslText } from "../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+describe("portable durable content rows", () => {
+  const fixture = JSON.parse(readFileSync(join(here, "../../🔺️diff/🧪️tests/🧫️durable-content/🔣️.json"), "utf8")) as { cases: { id: string; initial: string[]; present?: boolean; rows: { operation: string; chunks?: string[]; from?: number }[]; expected?: string[]; refused?: boolean }[] };
+  const bytes = (chunks: string[]) => chunks.map(chunk => new TextEncoder().encode(chunk));
+  it.each(fixture.cases)("applies $id without changing the original", vector => {
+    const base = defaultRemodelingScene();
+    if (vector.initial.length || vector.present) base.durableArtifacts.asset = { kind: "mesh", mime: null, width: 0, height: 0, chunks: bytes(vector.initial) };
+    const original = structuredClone(base);
+    const rows: RemodelingContentRow[] = vector.rows.map(row => row.operation === "truncate"
+      ? { row: "truncate", id: "asset", from: BigInt(row.from!) }
+      : { row: "append", id: "asset", header: row.operation === "create" ? { kind: "mesh", mime: null, width: 0, height: 0 } : null, chunks: bytes(row.chunks!) });
+    const apply = () => applyRemodelingDiff(remodelingLane({ durableArtifacts: { rows } }), base);
+    if (vector.refused) expect(apply).toThrow();
+    else expect(apply().durableArtifacts.asset?.chunks ?? []).toEqual(bytes(vector.expected!));
+    expect(base).toEqual(original);
+  });
+});
 const subset = join(here, "../../..");
 const mutationsRoot = join(subset, "🧬️schema/🧬️mutations");
 const vectorsRoot = join(subset, "🧪️tests/🧫️fixtures/🧬️mutations");

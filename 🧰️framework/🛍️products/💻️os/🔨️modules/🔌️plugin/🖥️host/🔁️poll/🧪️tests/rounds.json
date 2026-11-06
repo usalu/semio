@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "source": "same actual producer Source",
+  "instance": "same actual guest instance",
+  "rounds": 2,
+  "blocked": ["unopened", "zero-items", "zero-copy", "zero-work", "pending-cause", "unsettled-return", "cancelled", "retiring"],
+  "before": "Complete",
+  "after": "Encode",
+  "preserves": ["source-binding", "frame-address", "receiver", "guest-context", "guest-state"],
+  "births": 0,
+  "work": 1
+}

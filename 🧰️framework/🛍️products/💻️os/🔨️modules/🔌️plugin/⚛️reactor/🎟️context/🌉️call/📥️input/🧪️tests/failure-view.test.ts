@@ -1,0 +1,4 @@
+/** 🔎️ SQL independently preserves every retained failure branch in projection order. */
+import{test,expect}from"bun:test";import{Database}from"bun:sqlite";import Ajv from"ajv";
+import rows from"./failure-view.json";import schema from"./failure-view.schema.json";
+test("input failure projection keeps independent causes without success mirrors",()=>{expect(new Ajv({strict:true}).compile(schema)(rows)).toBe(true);const db=new Database(":memory:");try{const q=db.query("WITH branches(ordinal,key,present) AS (VALUES (0,'outcomeValue',?),(1,'outcomeReceiving',?),(2,'settlementValue',?),(3,'settlementReceiving',?)) SELECT key FROM branches WHERE present ORDER BY ordinal");for(const row of rows.cases){expect(q.all(...row.present.map(Number)).map(value=>(value as{key:string}).key)).toEqual(row.keys);expect(row.keys.length>0).toBe(row.present.some(Boolean));}}finally{db.close()}});

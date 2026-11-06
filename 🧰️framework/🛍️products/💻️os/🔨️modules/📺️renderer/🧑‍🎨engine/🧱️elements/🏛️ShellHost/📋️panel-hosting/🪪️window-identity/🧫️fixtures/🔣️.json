@@ -1,0 +1,21 @@
+[
+  {
+    "app": "example.editor",
+    "role": "editor",
+    "instance": 17,
+    "window": "copy",
+    "kind": "model",
+    "document": {
+      "spaceId": "space-a",
+      "documentId": "artifact-a"
+    }
+  },
+  {
+    "app": "example.viewer",
+    "role": "viewer",
+    "instance": 18,
+    "window": "report",
+    "kind": "report",
+    "document": null
+  }
+]

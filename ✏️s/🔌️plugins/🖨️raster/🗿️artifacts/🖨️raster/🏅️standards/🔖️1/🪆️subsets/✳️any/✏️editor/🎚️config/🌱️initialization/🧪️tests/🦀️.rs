@@ -34,7 +34,7 @@ fn original_config_pack_restores_flat_coverage_and_retires_cancelled_prefixes(){
             let output=output.unwrap();assert_eq!(output,state);let mutation=Mutation::SetPixelSelection(SetPixelSelectionEdit{selection:output.pixel_selection.clone()});assert!(mutation.payload_bytes()>0);retire(&mut caller,mutation);retire(&mut caller,output);
         }else{caller.cancel().cancel_now();}
         retire(&mut caller,owner);
-        for _ in 0..500_000{if decoder.terminal_is_empty(){break;}caller.turn(loan(),|cx|{let demand=decoder.retirement_demands(32768)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|decoder.close_step(grant))?;Ok(())}).unwrap();}assert!(decoder.terminal_is_empty());caller.retire(stock());
+        for _ in 0..500_000{if decoder.terminal_is_empty(){break;}caller.turn(loan(),|cx|{let demand=decoder.retirement_demands(32768)?;decoder.close_on_source(cx)?;Ok(())}).unwrap();}assert!(decoder.terminal_is_empty());caller.retire(stock());
     }
     let mut fixture=OriginalWorkFixture::new();fixture.retire_owned(state,loan());fixture.finish();
 }

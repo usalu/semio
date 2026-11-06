@@ -128,7 +128,7 @@ fn concrete_original_registration_captures_same_rows_and_closes_each_cancelled_p
                 .turn(HEADER, |cx| {
                     cx.with_original_retirement(|cx| {
                         let d = decoder.retirement_demands(4096)?;
-                        close_original_retained_step(cx, d, |g| decoder.close_step(g))?;
+                        decoder.close_on_source(cx)?;
                         Ok(())
                     })
                 })

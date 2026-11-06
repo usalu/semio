@@ -12,9 +12,9 @@ fn make(case:&serde_json::Value,law:&serde_json::Value)->PersistentList<Row>{
  let mut rank=0;let mut pages=Vec::new();
  for len in std::iter::repeat_n(PERSISTENT_PAGE_FANOUT,case["fullLeaves"].as_u64().unwrap()as usize).chain(case["tailLeaves"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as usize)){
   let rows=std::array::from_fn(|slot|if slot<len{let row=Row{rank:rank*law["stride"].as_i64().unwrap(),label:format!("{}{rank}",law["prefix"].as_str().unwrap())};rank+=1;Some(wallet::paid(SealedShared::admit(row,SharedIssuer::owned(),grant())).result.unwrap_or_else(|_|panic!("table row issuance")).0)}else{None});
-  pages.push(wallet::paid(PersistentList::admit_leaf(rows,len,grant())).result.unwrap_or_else(|_|panic!("table leaf issuance")).0);
+  pages.push(wallet::paid(PersistentList::admit_leaf(rows,len,grant(),&mut None)).result.unwrap_or_else(|_|panic!("table leaf issuance")).0);
  }
- while pages.len()>1{let mut originals=pages.into_iter();let mut parents=Vec::new();loop{let children=std::array::from_fn(|_|originals.next());if children[0].is_none(){break;}parents.push(wallet::paid(PersistentList::admit_branch(children,grant())).result.unwrap_or_else(|_|panic!("table branch issuance")).0);}pages=parents;}
+ while pages.len()>1{let mut originals=pages.into_iter();let mut parents=Vec::new();loop{let children=std::array::from_fn(|_|originals.next());if children[0].is_none(){break;}parents.push(wallet::paid(PersistentList::admit_branch(children,grant(),&mut None)).result.unwrap_or_else(|_|panic!("table branch issuance")).0);}pages=parents;}
  pages.pop().unwrap_or_default()
 }
 fn close<T:RetireOwned+Send+Sync+'static>(source:&mut RetainedCloneSource<T>){

@@ -1,0 +1,1 @@
+{"contract":"semio.original-inline-retirement/v1","text":"original β🙂","numbers":[3,5,8],"kinds":["scalar","utf8","vector","tuple","array","struct"],"maximumTurns":4096,"stock":{"items":10000,"copyBytes":1048576,"capacityBytes":1048576,"releaseBytes":1048576,"depth":128,"work":100000},"expected":{"values":3,"utf8Bytes":15}}

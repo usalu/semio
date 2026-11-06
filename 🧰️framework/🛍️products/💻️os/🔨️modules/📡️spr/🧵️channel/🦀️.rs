@@ -14,6 +14,10 @@
 //! the app-engine channel is a single logical stream, not split into causally-ordered vs.
 //! best-effort lanes.
 
+#[path="🎞️app-frame/📬️reply-prefix/🦀️.rs"]
+mod reply_prefix;
+pub use reply_prefix::{AppFrameReplyPrefix,app_frame_reply_prefix};
+
 //#region 🔖️Version
 /// 🔢️ The channel wire format's own version, pinned against the shared cross-language
 /// fixture `🔖️channel-version.json` so a half-done bump fails a test instead of drifting silently.

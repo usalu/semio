@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "plans",
+    "cases",
+    "refusals"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "plans": {
+      "type": "array",
+      "minItems": 33,
+      "maxItems": 33,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tag",
+          "name",
+          "fields"
+        ],
+        "properties": {
+          "tag": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 32
+          },
+          "name": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "string",
+            "pattern": "^[nbteocvwqahudi]+$"
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "wire",
+          "tag",
+          "numbers",
+          "texts",
+          "bytes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "wire": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "tag": {
+            "type": "integer"
+          },
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "texts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bytes": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "wire"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "wire": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

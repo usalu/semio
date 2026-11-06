@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "admitted",
+      "allocationFails",
+      "constructed",
+      "marker"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "admitted": {
+        "type": "boolean"
+      },
+      "allocationFails": {
+        "type": "boolean"
+      },
+      "constructed": {
+        "type": "boolean"
+      },
+      "marker": {
+        "enum": [
+          "none",
+          "failed",
+          "bytes"
+        ]
+      }
+    }
+  }
+}

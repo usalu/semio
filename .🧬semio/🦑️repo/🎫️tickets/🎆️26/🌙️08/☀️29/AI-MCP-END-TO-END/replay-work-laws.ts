@@ -1,0 +1,13 @@
+import{readFileSync,writeFileSync,renameSync}from'node:fs';import{dirname,join}from'node:path';
+const ticket=dirname(import.meta.path),base='🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/';
+function edit(path:string,fn:(s:string)=>string){const old=readFileSync(base+path,'utf8'),next=fn(old),tmp=join(ticket,'🗑️generated/replay-law-'+Date.now()+'.rs');writeFileSync(tmp,next);if(readFileSync(base+path,'utf8')!==old)throw Error('concurrent '+path);renameSync(tmp,base+path)}
+edit('🧪️tests/🔬️unit/🦀️.rs',s=>s.replaceAll('fn advance_demands(&self,_body:usize)','fn advance_demands(&self,_body:usize,_maximum_work_units:u64)').replaceAll('fn advance_demands(&self,_:usize)','fn advance_demands(&self,_:usize,_:u64)').replaceAll('task.demands(7,[9;32],4096)','task.demands(7,[9;32],4096,1)').replaceAll('task.demands(8,[9;32],4096)','task.demands(8,[9;32],4096,1)'));
+edit('🧬️native/🧪️tests/🦀️.rs',s=>s.replace('impl OriginalLawCaller{','impl OriginalLawCaller{\n const WORK:u64=1024;').replace('self.native_work(g,1024,run)','self.native_work(g,Self::WORK,run)').replaceAll('cursor.advance_demands(4096)','cursor.advance_demands(4096,OriginalLawCaller::WORK)').replaceAll('cursor.demands(4096)','cursor.demands(4096,OriginalLawCaller::WORK)'));
+edit('🌱️derived/🧪️tests/🦀️.rs',s=>{
+ s=s.replace('fn advance_demands(&self,_:usize)','fn advance_demands(&self,_:usize,_:u64)').replace('self.advance_demands(4096)','self.advance_demands(4096,c.available_work_units()?)').replaceAll('owner.demands(7,[9;32],4096)','owner.demands(7,[9;32],4096,1024)');
+ const start='let ledger=receiving.ledger_identity();',end='assert_eq!((semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner)).1.requested_bytes),0);';
+ if(s.split(start).length!==2||s.split(end).length!==2)throw Error('derived actual loan anchor');
+ s=s.replace(start,'struct Work;impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{Ok(1024u64.checked_sub(observed).unwrap_or(0))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=1024))}}let mut issuer=semio_framework_value_native_owned::native_decoding::NativeDecodeWorkIssuer::new();let mut work=Work;let mut loan=issuer.loan(&mut work);receiving.with_work_recipient(&mut loan,|mut receiving|{'+start);
+ return s.replace(end,end+'Ok::<_,ValueError>(())}).unwrap();');
+});
+console.log('Replay native laws use the same explicit finite original work loan for quoting and execution');

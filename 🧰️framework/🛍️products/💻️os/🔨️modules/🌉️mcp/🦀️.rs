@@ -40,6 +40,8 @@ use semio_os_mcp_hub_remote::remote::exchange_delegated_session_v1;
 use semio_os_mcp_routing::routing_and_shell_routed::capability_instance_slot;
 
 
+pub use semio_os_mcp_process_arena::ProcessRunFailure;
+
 fn parse_capability_kind(raw: &str) -> Option<CapabilityKind> {
     match raw.to_ascii_lowercase().as_str() {
         "mutation" => Some(CapabilityKind::Mutation),
@@ -730,7 +732,8 @@ impl Drop for StdioBridgeAttachment {
 }
 
 /// 🚪️ Serves real stdio until EOF or an I/O failure, recording diagnostics only on stderr.
-pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
+pub fn run_stdio(options:StdioOptions)->Result<(),ProcessRunFailure>{semio_os_mcp_process_arena::serve(options.host_driver_policy,options.operation_policy,||run_stdio_serving(options))}
+fn run_stdio_serving(options: StdioOptions) -> Result<(), GatewayError> {
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "stdio agent", &options.scopes, None);
     if principal.scopes.is_empty() {
         eprintln!(
@@ -753,6 +756,7 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
         .publishing_elicitation_into(elicitation, features)
         .publishing_notifications_into(notifications);
     let result = transport.serve(server);
+    if let Some(attachment)=attachment.as_ref(){attachment.run.cancel();attachment.run.completion().wait();}
     drop(attachment);
     result
 }
@@ -776,7 +780,8 @@ pub struct HttpOptions {
 }
 
 /// 🌐️ Serves MCP and its bridge on the same retained HTTP transport until cancellation.
-pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
+pub fn run_http(options:HttpOptions)->Result<(),ProcessRunFailure>{semio_os_mcp_process_arena::serve(options.host_driver_policy,options.operation_policy,||run_http_serving(options))}
+fn run_http_serving(options: HttpOptions) -> Result<(), GatewayError> {
     let audit_dir = options.audit_dir.clone().map(std::path::PathBuf::from).unwrap_or_else(default_audit_dir);
     let audit: std::sync::Arc<AuditSinks> = std::sync::Arc::new(AuditSinks::File(FileAuditSink::new(audit_dir)?));
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "http agent", &options.scopes, None);

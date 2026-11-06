@@ -1,10 +1,9 @@
 //! 🎟️ A parent retains genuine returned flat allocations until their complete physical release grant.
 #![feature(allocator_api)]
 use semio_framework_value_control_contract::{ValueError,ValueRefusalKind};
+pub use semio_framework_value_control_contract::{RetirementDemand,RetainedCloneStep,RetainedWorkOutcome};
+pub use semio_framework_value_control_contract as retained_clone;
 use std::{alloc::Layout,mem::ManuallyDrop,ptr::NonNull};
-
-/// 🫧️ Fallibly admits one uninitialized standard shared allocation through its existing allocator owner.
-pub fn try_uninitialized_arc<T>()->Result<std::sync::Arc<std::mem::MaybeUninit<T>>,ValueError>{std::sync::Arc::<T>::try_new_uninit().map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native Arc birth allocation failed"))}
 
 struct ReturnedAllocation{pointer:NonNull<u8>,layout:Layout}
 trait AllocationRelease{unsafe fn release(pointer:NonNull<u8>,layout:Layout);}
@@ -86,4 +85,7 @@ mod tests;
 
 #[path="🔗️shared/🦀️.rs"]
 mod shared;
-pub use shared::{admit_shared_allocation,shared_allocation_bytes,SharedAllocation};
+pub use shared::{admit_shared_allocation,admit_shared_allocation_from,try_uninitialized_arc,shared_uninitialized_demand,shared_allocation_value_demand,shared_allocation_slot_demand,shared_allocation_bytes,SharedAllocation};
+
+#[path="🔗️shared/📦️original/🦀️.rs"]
+pub mod original;

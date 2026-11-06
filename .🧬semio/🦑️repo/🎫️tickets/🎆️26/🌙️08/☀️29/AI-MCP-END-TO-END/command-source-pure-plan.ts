@@ -1,0 +1,13 @@
+import fs from"node:fs";const p="🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🗃️page-set-and-reader-behavior/🦀️.rs";const old=fs.readFileSync(p,"utf8");let next=old;
+const start=next.indexOf("    fn checked_push_byte_len("),end=next.indexOf("    fn push_validated(",start);if(start<0||end<0)throw Error("checked plan seam");
+next=next.slice(0,start)+`    fn source_push_byte_len(&self,page:&FixedCommandPage)->Option<usize>{
+        if self.pages.len()>=self.declared{return None}
+        self.byte_len.checked_add(page.len()).filter(|total|*total<=COMMAND_MAXIMUM_BYTES)
+    }
+    fn checked_push_byte_len(&self,page:&FixedCommandPage)->Result<usize,semio_framework_diagnostic::Fault>{
+        self.source_push_byte_len(page).ok_or_else(||semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework,semio_framework_diagnostic::FaultCode::new(if self.pages.len()>=self.declared{"plugin.command-page-count"}else{"plugin.command-byte-cap"}),if self.pages.len()>=self.declared{"command page authority is saturated"}else{"command exceeds the assembled host-answer authority a guest may be handed"}))
+    }
+`+next.slice(end);
+const needle='let bytes=match self.checked_push_byte_len(page){Ok(bytes)=>bytes,Err(_)=>return Turn{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"command page Source has no slot or byte authority")),work:0}};';
+if(!next.includes(needle))throw Error("capture plan");next=next.replace(needle,'let Some(bytes)=self.source_push_byte_len(page)else{return Turn{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"command page Source has no slot or byte authority")),work:0}};');
+if(fs.readFileSync(p,"utf8")!==old)throw Error("stale");fs.writeFileSync(import.meta.dir+"/🗑️generated/command-source-plan.rs",next);fs.renameSync(import.meta.dir+"/🗑️generated/command-source-plan.rs",p);fs.appendFileSync(import.meta.dir+"/command-input-custody-2026-11-05.md","\n## Source-Funded Page Ownership — 2026-11-06\nAdded exact target-sized page-set birth and original-page capture methods. They retain actual allocation before returning full retained progress (including an over-quote refusal), keep denied input/output untouched, preserve original page pointers, and avoid allocating a diagnostic Fault on Source admission rejection. Native allocator laws cover zero item/copy/capacity/depth, real deque backing and denied/accepted capture. They are authored and currently uncompiled; actual reactor Source-lease custody and borrowed kernel call migration remain incomplete.\n");console.log("Removed heap-allocating rejection from Source page capture.");

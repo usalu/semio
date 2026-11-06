@@ -666,7 +666,10 @@
             "scope": "test"
           }
         }
-      }
+      },
+      "dependsOn": [
+        "test-paged-refusal-source"
+      ]
     },
     "test-controlled-construction": {
       "executor": "repo:script",
@@ -1807,6 +1810,55 @@
             "description": {
               "en": "Check exclusive owned cursor transfer and shared source query admission against independent SQL.",
               "de": "Prüft exklusive Cursorübergabe und gemeinsame Quellenabfragen anhand unabhängiger SQL-Referenzen."
+            }
+          }
+        }
+      }
+    },
+    "test-paged-refusal-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/⚠️refusal/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/⚠️refusal/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/⚠️refusal/🦀️.rs",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test-paged-refusal-source",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/⚠️refusal/🟦️.ts"
+          ],
+          "dashboard": {
+            "title": {
+              "en": "Test Page Refusals",
+              "de": "Seitenablehnungen Testen"
+            },
+            "description": {
+              "en": "Check the native refusal corpus against its schema and independent SQL oracle.",
+              "de": "Prüft den nativen Ablehnungskorpus mit Schema und unabhängiger SQL-Referenz."
             }
           }
         }

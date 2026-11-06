@@ -1,0 +1,7 @@
+# Public viewer Open With source audit
+
+The framework workbench artifact tree (📤️document-transfer-tabs/🟠️workbench-left-tabs/🟦️.tsx:21–28, 41–54 under ShellHost) registers a viewer group when matching entries exist, with item ID rtifact.openWith.viewer... The entries use the current session dialect and the current catalog closure (📬️artifact-opening/🟠️open-entries/🟦️.ts:36–54). The tree is suppressed if a plugin supplies its own artifact tab, or in the documented host mode early return. Runtime presence is unverified.
+
+The click calls openArtifactWithAppRef with only app, dialect and role. Despite its same-artifact comment, this function creates and publishes a new instance without opening the current document (📬️artifact-opening/🔸️open-artifact-app/🟦️.ts:25–48). Publication clears the pending document receipt when absent and sets the session (📬️artifact-opening/🔶️catalog/🟦️.ts:198–210). By contrast the resolved-artifact route explicitly opens document ID/schema/space and publishes its receipt (open-artifact-app/🟦️.ts:68–80). Therefore chooser presence is not proof that the viewer has the same saved artifact; a real scoped document witness is required. No membership mutation is in the chooser path. This is source inspection, not a runtime result.
+
+ArtifactStoreSnapshot::native_pack_source is an instance method the self-receiver returning an optional borrowed OriginalSnapshotPackView, in 🏪️store/🚪️io/🦀️.rs:36–38.

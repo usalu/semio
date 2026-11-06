@@ -35,7 +35,7 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
     let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(
         files.pack.clone(),
         history,
-        expected,
+        {let declared=expected;PersistedDocumentHydrationIdentity{id:declared.artifact_id,dialect:Some(declared.dialect)}},
         None,
         "demo/v1".into(),
         fixture_demo_owners(),
@@ -108,7 +108,7 @@ async fn retained_hydration_preserves_the_original_opened_actor_across_stored_au
         } else {
             let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: source.envelope().id.clone(), dialect: source.envelope().dialect.clone().unwrap() };
             let (operation, generation) = (semio_framework_job::OperationId(700), semio_framework_job::Generation(1));
-            let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(files.pack, history, expected, None, "demo/v1".into(), fixture_demo_owners(), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, ActorId(opened.into()));
+            let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(files.pack, history, {let declared=expected;PersistedDocumentHydrationIdentity{id:declared.artifact_id,dialect:Some(declared.dialect)}}, None, "demo/v1".into(), fixture_demo_owners(), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, ActorId(opened.into()));
             let mut sequence = 0;
             let original_grant=fixture_hydration_grant();let mut hydration_receipts=semio_framework_value::retained_clone::RetainedCloneProgress::default();
             for _ in 0..fixture["maximumTurns"].as_u64().unwrap() {
@@ -140,7 +140,7 @@ async fn cancelled_hydration_retires_the_same_original_opened_actor_owner() {
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: source.envelope().id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
     let mut receipts = Vec::new();
     for actor in fixture["retiredActors"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()) {
-        let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(files.pack.clone(), history.clone(), expected.clone(), None, "demo/v1".into(), fixture_demo_owners(), semio_framework_job::OperationId(701), semio_framework_job::Generation(1), u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, ActorId(actor.into()));
+        let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(files.pack.clone(), history.clone(), {let declared=expected.clone();PersistedDocumentHydrationIdentity{id:declared.artifact_id,dialect:Some(declared.dialect)}}, None, "demo/v1".into(), fixture_demo_owners(), semio_framework_job::OperationId(701), semio_framework_job::Generation(1), u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, ActorId(actor.into()));
         let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};
         assert_eq!(hydration.close_step(zero).result.unwrap(),RetainedCloneStep::Progress(Default::default()));
         let grant=|key:&str|{let n=|axis:&str|fixture[key][axis].as_u64().unwrap()as usize;RetainedCloneGrant{maximum_items:n("items"),maximum_copy_bytes:n("copy"),maximum_capacity_bytes:n("capacity"),maximum_release_bytes:n("release"),maximum_depth:n("depth")}};

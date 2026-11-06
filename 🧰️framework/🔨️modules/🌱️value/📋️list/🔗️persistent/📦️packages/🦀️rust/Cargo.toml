@@ -42,3 +42,7 @@ semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/�
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+
+[[test]]
+name = "original-ranked-updates-and-reads"
+path = "../../🎟️update/🧪️tests/owning.rs"

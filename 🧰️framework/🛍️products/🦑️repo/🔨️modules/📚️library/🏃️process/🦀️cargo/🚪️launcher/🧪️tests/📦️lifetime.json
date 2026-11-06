@@ -1,0 +1,1 @@
+{"version":1,"publication":"cargo:configuration-publication","cases":[{"mode":"shared","waitAllowed":true,"sweepAllowed":false},{"mode":"exclusive","waitAllowed":false,"sweepAllowed":false}],"atomicDirectoryBirth":true}

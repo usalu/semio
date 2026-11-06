@@ -1,0 +1,5 @@
+import * as fs from "node:fs";
+const file="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📣️macros/⚛️wp4-reactor/🦀️.rs",before=fs.readFileSync(file,"utf8");let text=before;
+const names=["publish_actor_failure","read_actor_failure","acknowledge_actor_failure","acknowledge_actor_failure_chunk","borrow_actor_failure"];
+for(const name of names){const marker="pub extern \"C\" fn semio_owned_"+name+"_v1(",start=text.indexOf(marker),end=text.indexOf("\n",start);if(start<0||end<start)throw Error("failure scalar macro changed: "+name);let line=text.slice(start,end);if(!line.includes("(job:u64,"))throw Error("failure selector prefix already changed: "+name);line=line.replace("(job:u64,","(failed_epoch:u64,call_kind:u64,").replace(name+"_owned(job,",name+"_owned(failed_epoch,call_kind,");text=text.slice(0,start)+line+text.slice(end);}
+if(fs.readFileSync(file,"utf8")!==before)throw Error("concurrent macro edit");const temp=import.meta.dir+"/🗑️generated/actor-failure-macro.tmp";fs.writeFileSync(temp,text);fs.renameSync(temp,file);

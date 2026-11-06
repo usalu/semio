@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "work": 1,
+  "maximumWork": 16,
+  "newCapacity": 0,
+  "cases": [
+    {
+      "operation": "grant",
+      "phase": "grant-started",
+      "sameRecipient": true,
+      "accepted": true
+    },
+    {
+      "operation": "grant",
+      "phase": "grant-started",
+      "sameRecipient": false,
+      "accepted": false
+    },
+    {
+      "operation": "allocation",
+      "phase": "effect-started",
+      "sameRecipient": true,
+      "accepted": true
+    },
+    {
+      "operation": "receipt",
+      "phase": "receipt-started",
+      "sameRecipient": true,
+      "accepted": true
+    },
+    {
+      "operation": "receipt",
+      "phase": "receipt-started",
+      "sameRecipient": false,
+      "accepted": false
+    },
+    {
+      "operation": "receipt",
+      "phase": "effect-finished",
+      "sameRecipient": true,
+      "accepted": false
+    },
+    {
+      "operation": "finish",
+      "phase": "settled",
+      "sameRecipient": true,
+      "accepted": true
+    },
+    {
+      "operation": "finish",
+      "phase": "settled",
+      "sameRecipient": false,
+      "accepted": false
+    }
+  ],
+  "roles": [
+    "allocation",
+    "retirement"
+  ],
+  "newSemanticAdmission": false
+}

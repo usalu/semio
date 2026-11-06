@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-native-shared-field"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "value-native-shared-field"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value-native-decoding = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-shared-issuance = { path = "../../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
+semio-framework-value-native-shared-slots = { path = "../../../🧳️slots/📦️packages/🦀️rust" }
+semio-framework-value-native-receiving-contract = { path = "../../../../🧳️owned/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-source = { path = "../../../../🧳️owned/🌳️value/📖️source/📦️packages/🦀️rust" }

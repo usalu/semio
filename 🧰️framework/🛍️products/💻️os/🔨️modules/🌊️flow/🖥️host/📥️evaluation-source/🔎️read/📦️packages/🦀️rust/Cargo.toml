@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job-owned-text = { path = "../../../../../../../../../🔨️modules/🧵️job/📝️text/🧳️owned/📦️packages/🦀️rust" }
 semio-os-flow-host-core = { path = "../../../../🧱️flow-host-model/📦️packages/🦀️rust" }
 semio-os-flow-host-source = { path = "../../../📦️packages/🦀️rust" }
 semio-os-flow-operators = { path = "../../../../../🗃️operators/📦️packages/🦀️rust" }

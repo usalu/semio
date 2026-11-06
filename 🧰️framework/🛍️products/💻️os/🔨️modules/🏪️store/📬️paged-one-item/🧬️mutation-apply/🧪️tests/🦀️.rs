@@ -242,7 +242,7 @@ impl Receiver {
             if self.owner.terminal_is_empty() {let stock=self.caller.stock();self.caller.retire(stock);return;}
             let demand = self.owner.retirement_demands(WIDE).unwrap();
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            self.caller.turn(grant,|cx|cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,demand,|grant|self.owner.close_step(grant))?;Ok(())})).unwrap();
+            self.caller.turn(grant,|cx|cx.with_original_retirement(|cx|{self.owner.close_on_source(cx)?;Ok(())})).unwrap();
         }
         panic!("original receiving owner did not close");
     }

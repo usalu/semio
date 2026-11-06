@@ -1,0 +1,11 @@
+{
+  "maxElements": 64,
+  "maxAttributes": 16,
+  "maxValueChars": 8192,
+  "maxObservationChars": 262144,
+  "maxFiles": 256,
+  "maxPathChars": 256,
+  "maxReturnedBytes": 67108864,
+  "operationTimeoutMs": 30000,
+  "selectorTimeoutMs": 15000
+}

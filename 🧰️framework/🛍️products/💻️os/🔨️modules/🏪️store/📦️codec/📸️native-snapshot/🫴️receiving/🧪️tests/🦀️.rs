@@ -23,7 +23,7 @@ fn receive(cx:&mut StepContext<'_>,_demand:RetirementDemand,run:impl FnOnce(&mut
  let receipt=cx.consume_receiving_retained(grant,progress);cx.consume_fuel(work);
  match result { Ok(step)=>{receipt?;Ok(step.progress())},Err(primary)=>Err(native_failure(primary,receipt.err())) }
 }
-fn finish(mut caller:OriginalJobFixtureCaller,mut decoder:OriginalJobDecodeOwner){while !decoder.terminal_is_empty(){caller.turn(stock(),|cx|{let turn=decoder.close_step(cx.retained_grant());let step=turn.result?;cx.consume_retained(step.progress())?;cx.consume_fuel(turn.work);Ok(())}).unwrap();}caller.retire(stock());}
+fn finish(mut caller:OriginalJobFixtureCaller,mut decoder:OriginalJobDecodeOwner){while !decoder.terminal_is_empty(){caller.turn(stock(),|cx|{decoder.close_on_source(cx)?;Ok(())}).unwrap();}caller.retire(stock());}
 #[test]
 fn original_snapshot_pack_receiving_preserves_same_source_control_and_paid_close(){
  let neutral=include_str!("../../../../../../../../🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json");let row:serde_json::Value=serde_json::from_str(neutral).unwrap();let expected:OriginalRecord=serde_json::from_value(serde_json::json!({"text":row["text"],"items":row["items"]})).unwrap();let body=semio_os_pack::record::encode_document(&OriginalRecord::__dsl_spec(),&expected.__dsl_to_record(),&Default::default()).unwrap();let envelope=semio_framework_os_semio::SemioEnvelope::from_envelope_id("test.original",semio_framework_os_semio::Component::Pack,1).unwrap();let source=semio_framework_os_semio::wrap_binary(&envelope,&body);let pointer=source.as_ptr();let mut original=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut owner:Option<OriginalSnapshotRecordReceiving<OriginalRecord>>=None;

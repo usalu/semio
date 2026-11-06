@@ -1,0 +1,30 @@
+[
+  {
+    "before": "aa",
+    "final": "bb",
+    "undo": "aa",
+    "redo": "bb",
+    "pass": true
+  },
+  {
+    "before": "aa",
+    "final": "aa",
+    "undo": "aa",
+    "redo": "aa",
+    "pass": false
+  },
+  {
+    "before": "aa",
+    "final": "bb",
+    "undo": "cc",
+    "redo": "bb",
+    "pass": false
+  },
+  {
+    "before": "aa",
+    "final": "bb",
+    "undo": "aa",
+    "redo": "cc",
+    "pass": false
+  }
+]

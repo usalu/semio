@@ -1,0 +1,3 @@
+/** 🪙️ Independent SQL separates initial treasury from scoped physical birth and debt. */
+import{test,expect}from"bun:test";import{Database}from"bun:sqlite";import Ajv from"ajv";import rows from"./treasury.json";import schema from"./treasury.schema.json";
+test("actor Source treasury never refills bootstrap debt or widens a birth scope",()=>{expect(new Ajv({strict:true}).compile(schema)(rows)).toBe(true);const db=new Database(":memory:");try{for(const row of rows.cases)expect(Boolean((db.query("SELECT (? >= ? AND ? >= ? AND ? - ? >= ?) AS allowed").get(row.initial,row.scoped,row.scoped,row.birth,row.initial,row.debt,row.enter)as{allowed:number}).allowed)).toBe(row.allowed);}finally{db.close()}});

@@ -91,6 +91,12 @@ export const IMPORT_ARTIFACT_DOCUMENT_ACTION_ID = "importArtifactDocument";
 /** 💾️ The shell-intercepted action that writes a mounted natural file codec's bytes. */
 export const SAVE_ARTIFACT_FILE_ACTION_ID = "saveArtifactFile";
 
+/** 📤️ The shell-intercepted action that downloads a declared output through the checked media broker. */
+export const EXPORT_MEDIA_FILE_ACTION_ID = "exportMediaFile";
+
+/** 📸️ The shell-intercepted action that downloads the current materialized snapshot through its declared broker port. */
+export const EXPORT_SNAPSHOT_FILE_ACTION_ID = "exportSnapshotFile";
+
 /** 📂️ The shell-intercepted action that opens natural bytes as a new document owner. */
 export const OPEN_ARTIFACT_FILE_ACTION_ID = "openArtifactFile";
 

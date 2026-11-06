@@ -3,6 +3,7 @@
 use super::{AppCommand, AppFrame, DocumentArchivePack, malformed};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum DocumentArchiveLoadState {
     Pending,
     Running,
@@ -35,6 +36,7 @@ impl DocumentArchiveLoadState {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct DocumentArchiveLoadStatus {
     pub operation: u64,
     pub state: DocumentArchiveLoadState,

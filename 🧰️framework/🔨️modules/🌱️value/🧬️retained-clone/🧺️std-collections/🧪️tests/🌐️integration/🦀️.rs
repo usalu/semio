@@ -1,4 +1,4 @@
-//! 🧪️ Standard collection clones equal the `Clone` oracle and the serde_json oracle under entry-sized grants and early cancellation.
+const MAXIMUM_CLONE_WORK:u64=4096;
 use semio_framework_test_fixtures::fixture_text;
 use crate::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneEntries,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use std::collections::{BTreeMap,BTreeSet,HashMap,HashSet};
@@ -58,21 +58,21 @@ fn clone_exactly<M: RetainedCloneEntries + Clone + PartialEq + Debug + Serialize
     while output.is_none() {
         turns += 1;
         assert!(turns < 100_000, "standard collection clone did not terminate");
-        let grant = match cursor.advance_demands(source.borrow(), 1 << 16) {
+        let grant = match cursor.advance_demands(source.borrow(), 1 << 16,MAXIMUM_CLONE_WORK) {
             Ok(demand) => {
                 let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
                 for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }] {
-                    assert_eq!(cursor.advance(source.borrow(), 1 << 16, denied).unwrap().progress(), RetainedCloneProgress::default());
+                    assert_eq!(cursor.advance(source.borrow(), 1 << 16,MAXIMUM_CLONE_WORK, denied).result.unwrap().progress(), RetainedCloneProgress::default());
                 }
                 if demand.copy_bytes > 0 {
-                    let selected_body=demand.copy_bytes-1;let smaller=RetainedCloneGrant{maximum_copy_bytes:selected_body,..grant};let selected=cursor.advance_demands(source.borrow(),selected_body).unwrap();let step=cursor.advance(source.borrow(), selected_body, smaller).unwrap();assert!(step.progress().fits(smaller));assert!(step.progress().copied_bytes<=selected.copy_bytes);if selected.copy_bytes>smaller.maximum_copy_bytes{assert_eq!(step.progress(),RetainedCloneProgress::default(),"selected atomic copy demand {selected:?} must be binding");}
+                    let selected_body=demand.copy_bytes-1;let smaller=RetainedCloneGrant{maximum_copy_bytes:selected_body,..grant};let selected=cursor.advance_demands(source.borrow(),selected_body,MAXIMUM_CLONE_WORK).unwrap();let step=cursor.advance(source.borrow(), selected_body,MAXIMUM_CLONE_WORK, smaller).result.unwrap();assert!(step.progress().fits(smaller));assert!(step.progress().copied_bytes<=selected.copy_bytes);if selected.copy_bytes>smaller.maximum_copy_bytes{assert_eq!(step.progress(),RetainedCloneProgress::default(),"selected atomic copy demand {selected:?} must be binding");}
                 }
                 quoted += 1;
                 grant
             }
             Err(_) => wide(),
         };
-        let step = cursor.advance(source.borrow(), 1 << 16, grant).unwrap();
+        let step = cursor.advance(source.borrow(), 1 << 16,MAXIMUM_CLONE_WORK, grant).result.unwrap();
         assert!(step.progress().fits(grant));
         copied_items += step.progress().copied_items;
         if let RetainedCloneStep::Complete(_) = step { output = cursor.take(); }
@@ -90,7 +90,7 @@ fn cancel_midway<M: RetainedCloneEntries + Clone>(original: M, stop_after: usize
     let source = Held::new(original);
     let mut cursor = M::retained_clone_cursor();
     for _ in 0..stop_after {
-        if let RetainedCloneStep::Complete(_) = cursor.advance(source.borrow(), 1 << 16, wide()).unwrap() { break; }
+        if let RetainedCloneStep::Complete(_) = cursor.advance(source.borrow(), 1 << 16,MAXIMUM_CLONE_WORK, wide()).result.unwrap() { break; }
     }
     close_all::<M>(&mut cursor);
 }

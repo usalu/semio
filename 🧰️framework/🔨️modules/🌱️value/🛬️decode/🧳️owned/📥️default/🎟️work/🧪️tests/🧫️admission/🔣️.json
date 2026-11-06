@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "kind": "cursor_header",
+      "budget": 0,
+      "progress": false
+    },
+    {
+      "kind": "cursor_header",
+      "budget": 1,
+      "progress": true
+    },
+    {
+      "kind": "boolean",
+      "budget": 0,
+      "progress": false
+    },
+    {
+      "kind": "boolean",
+      "budget": 1,
+      "progress": true
+    },
+    {
+      "kind": "empty_text",
+      "budget": 0,
+      "progress": false
+    },
+    {
+      "kind": "empty_text",
+      "budget": 1,
+      "progress": true
+    }
+  ]
+}

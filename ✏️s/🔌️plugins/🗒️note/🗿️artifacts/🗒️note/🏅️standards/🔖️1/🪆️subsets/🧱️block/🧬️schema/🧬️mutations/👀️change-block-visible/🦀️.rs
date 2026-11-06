@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 👀 `change-block-visible` payload — sets a block's visibility.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]

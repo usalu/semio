@@ -16,3 +16,5 @@ pub use component::*;
 mod kernel_host;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use kernel_host::KernelHost;
+
+pub use semio_framework_actor_failure::{ActorFailureCallKind,ActorFailureCallReference,ActorFailureOutcome,ActorFailureChunk,ActorFailureCallFailure};

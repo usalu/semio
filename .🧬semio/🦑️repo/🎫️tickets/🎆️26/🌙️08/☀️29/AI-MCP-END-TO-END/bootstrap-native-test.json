@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📤️receipt/📦️packages/🦀️rust/Cargo.toml","-p","semio-framework-actor-receipt","--lib"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"codex-guest-bootstrap-receipt"}}

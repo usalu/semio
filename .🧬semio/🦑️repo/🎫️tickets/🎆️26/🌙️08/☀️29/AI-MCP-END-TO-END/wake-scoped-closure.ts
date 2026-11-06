@@ -1,0 +1,23 @@
+import{readFileSync,writeFileSync,renameSync,readdirSync}from'node:fs';import{dirname,join}from'node:path';
+const root='🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/',generated=join(dirname(import.meta.path),'🗑️generated');
+function rep(s:string,a:string,b:string){if(s.split(a).length!==2)throw Error('anchor '+a.slice(0,100));return s.replace(a,b)}
+function edit(file:string,f:(s:string)=>string){const old=readFileSync(file,'utf8'),next=f(old);if(next===old)return;const tmp=join(generated,'scoped-close-'+Date.now()+'.rs');writeFileSync(tmp,next);if(readFileSync(file,'utf8')!==old)throw Error('concurrent '+file);renameSync(tmp,file)}
+edit(root+'📃️policy/📥️operation/🦀️.rs',s=>{
+ s=rep(s,'pub struct GuestRelayAdmissionFailure {pub primary:', 'pub struct GuestRelayAdmissionFailure {pub closure:Option<semio_framework_actor::retained_context::OriginalActorContextError>,pub primary:');
+ s=rep(s,'self.primary.as_ref().or(self.settlement.as_ref()).map_or(Default::default(),semio_framework_job::OriginalTurnFailure::retained_progress)','self.primary.as_ref().map(semio_framework_job::OriginalTurnFailure::retained_progress).or_else(||self.closure.as_ref().map(semio_framework_actor::retained_context::OriginalActorContextError::retained_progress)).or_else(||self.settlement.as_ref().map(semio_framework_job::OriginalTurnFailure::retained_progress)).unwrap_or_default()');
+ s=rep(s,'Self{primary:Some(primary),settlement:None}','Self{closure:None,primary:Some(primary),settlement:None}');return s;
+});
+edit(root+'🎟️root/🦀️.rs',s=>{
+ const a=s.indexOf(' pub fn close_step('),b=s.indexOf('\n pub fn terminal_is_empty(',a);if(a<0||b<0)throw Error('root close');
+ return s.slice(0,a)+` pub fn close_step(&mut self,input:RetainedTurnInput,budget:StepBudget)->Result<RetainedCloneStep,crate::GuestRelayAdmissionFailure>{let issued=self.issued_budget(input,budget.retained)?;if budget.fuel>issued.fuel||budget.deadline_us>issued.deadline_us{return Err(refusal("original Host close exceeds its issued work scope").into())}let call=self.context.close_step(input,budget);let progress=call.receipt_spent;let returned=input.return_original(progress,call.work_units_spent);if let Ok(receipt)=&returned{self.grant_remaining=receipt.remaining;self.fuel_remaining=receipt.remaining_fuel}if self.context.terminal_is_empty(){self.ready=false}match(call.result,returned){(Ok(step),Ok(_))=>Ok(step),(result,returned)=>Err(crate::GuestRelayAdmissionFailure{closure:result.err(),primary:None,settlement:returned.err().map(|error|OriginalTurnFailure::from(error.with_retained_progress(progress)))})}}
+`+s.slice(b);
+});
+edit(root+'📃️policy/🦀️.rs',s=>{
+ const before='let result=original.root.close_step(input,turn.grant);let spent=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};original.treasury.return_turn(turn,spent)?;result?;Ok(original.root.terminal_is_empty())';
+ const after='let budget=operation::scope_budget(&original,original.root.issued_budget(input,turn.grant)?,true)?;let result=original.root.close_step(input,budget);let spent=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};let returned=original.treasury.return_turn(turn,spent);match(result,returned){(Ok(_),Ok(()))=>Ok(original.root.terminal_is_empty()),(Err(error),Ok(()))=>Err(error),(result,Err(post))=>{let mut error=match result{Err(error)=>error,Ok(_)=>GuestRelayAdmissionFailure{closure:None,primary:None,settlement:None}};let post=post.with_retained_progress(spent);if let Some(original)=error.settlement.as_mut(){original.receipt_refusal=Some(post)}else{error.settlement=Some(post.into())}Err(error)}}';
+ return rep(s,before,after);
+});
+function walk(path:string){for(const entry of readdirSync(path,{withFileTypes:true})){const f=path+'/'+entry.name;if(entry.isDirectory()){if(!['target','node_modules','.cache','.git'].includes(entry.name))walk(f)}else if(entry.name.endsWith('.rs'))edit(f,s=>s.replace(/GuestRelayAdmissionFailure\s*\{\s*(primary|settlement)\s*:/g,match=>match.replace('{','{closure:None,')));}}
+for(const path of ['🧰️framework/🔨️modules','🧰️framework/🛍️products/💻️os/🔨️modules','✏️s/🔌️plugins'])walk(path);
+edit(root+'🎟️root/🧪️tests/🦀️.rs',s=>s.replaceAll('root.close_step(input,call_policy(grant,input.grant))','root.close_step(input,root.issued_budget(input,call_policy(grant,input.grant)).unwrap())').replaceAll('root.close_step(root.issued_input(epoch).unwrap(),call_policy(grant,root.remaining_grant()))','root.close_step(root.issued_input(epoch).unwrap(),root.issued_budget(root.issued_input(epoch).unwrap(),call_policy(grant,root.remaining_grant())).unwrap())'));
+console.log('Root closure carries actual scoped fuel/deadline and complete cancellation plus posting owners');

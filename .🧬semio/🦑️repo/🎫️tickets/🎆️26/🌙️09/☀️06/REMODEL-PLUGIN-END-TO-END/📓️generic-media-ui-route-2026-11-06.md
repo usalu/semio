@@ -1,0 +1,15 @@
+# Generic Media UI Route — 2026-11-06
+
+Remodel editor 🔌️io-and-commands/🦀️.rs:29–68 declares AppIo mesh:out, direction Out, media class ThreeD/form Mesh, kind 3d.mesh, label Mesh; export_formats is empty. That port declaration alone does not create a visible download action. The prior export_media mesh:out implementation is batch and must not be substituted for the checked job.
+
+ShellHost 🖱️shell-actions/🧭️input-funnel/🟦️.ts:67–86 intercepts existing framework document export/import and natural Save/Open IDs. 📤️document-transfer-tabs/🔶️scope/🟦️.tsx:272–301 natural Save selects artifact:native; document archive export is separate at :89–100. No generic user-visible action to choose arbitrary output port was found in the inspected ShellHost path. Existing 🌉️agent-artifact-route/🟦️.ts:205–269 handles exportMedia through document identity, checked submit/poll/chunk/cancel but returns an agent frame, not a user download. 🎬️MediaTransportHost calls the generic checked lifecycle for playback; ⚡️host-effects/📤️export-effects handles a guest DownloadMediaExport effect. These are distinct routes.
+
+Window action UI assembly in ShellHelpers/🪟️window-panes/🟦️.tsx:69–110 derives action.<id>, localized action label and, for staged forms, childElementId using actual window instance. Existing Remodel manifest uses LocalizedLabel::native for English/German. Existing checked agent route fixture/tests are under 🌉️agent-artifact-route/🧪️tests; renderer engine checked-media-export neutral fixture and XState test cover its new collector separately. Root corrected broad catch after review; no live host result is inferred.
+
+Renderer React 🧪️tests/🎚️config/🟦️.ts now registers engineSuite 📤️checked-media-export adjacent to media-export-and-natural-files; the existing config selects engine suites outside fundamental/quick. No tests were run by this review.
+
+## Action and Reference Owners
+
+Framework manifest 🕹️actions/🗃️utility-tool-and-document-actions/🦀️.rs:68–92 owns Rust document/natural action IDs and localized document transfer definitions; TS twin 🔘️definitions-action-ids-and-shell-brand/🟦️.ts:85–92 owns constants. OS plugin 📜️declaration/🧩️app/🗂️natural-file-and-media-artifacts/🦀️.rs:78–102 provides existing hidden ActionArgDef defaults with resumable_framework Shell category transfer, Chrome audience and English/German labels, then mounts definitions. App builder 🏗️builder/🧩️app/🏗️try-build-definition/🦀️.rs:536–550 injects framework document-transfer definitions into windows. AppIo media ports carry class/form/kind/label but not filename or MIME, so those need explicit authority from validated declarations and completed descriptor.
+
+ShellHost 🧩️shell-core-state/🟦️.ts:131–138 owns the documentTransferRef forward shape; 📤️document-transfer-tabs/🔸️document-transfer-ref/🟦️.tsx:23–26 constructs and refreshes its actual object. A bounded elements search found no separate placeholder initializer. The scope return and document-transfer-tabs/🟦️.tsx destructuring feed that hook.

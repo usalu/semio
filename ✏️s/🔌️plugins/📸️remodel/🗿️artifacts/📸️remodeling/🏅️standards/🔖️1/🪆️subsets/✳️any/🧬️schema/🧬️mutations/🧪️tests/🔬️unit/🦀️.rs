@@ -25,6 +25,50 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use protocol::SemanticMutation;
 use semio_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law;
 
+#[test]
+fn retained_parameter_vectors_match_cold_decisions() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️retained-params/🧪️.json")).unwrap();
+    let base = default_remodeling_scene();
+    for case in cases.as_array().unwrap() {
+        let change = case["change"].as_object().unwrap();
+        let value = change.values().next();
+        let op = match case["facet"].as_str().unwrap() {
+            "ingest" => { let mut p = base.params.ingest.clone(); if let Some(v) = value { p.frame_sample_stride = v.as_u64().unwrap() as u32; } update_ingest_params(p) },
+            "feature" => { let mut p = base.params.feature.clone(); if let Some(v) = value { p.target_count = v.as_u64().unwrap() as u32; } update_feature_params(p) },
+            "matching" => { let mut p = base.params.matching.clone(); if let Some(v) = value { if change.contains_key("ratio_test") { p.ratio_test = v.as_f64().unwrap() as f32; } else { p.sequential_window = v.as_u64().unwrap() as u32; } } update_match_params(p) },
+            "sfm" => { let mut p = base.params.sfm.clone(); if let Some(v) = value { if v.is_string() { p.ransac_threshold_px = f32::NAN; } else { p.ransac_iterations = v.as_u64().unwrap() as u32; } } update_sfm_params(p) },
+            "dense" => { let mut p = base.params.dense.clone(); if let Some(v) = value { if v.is_string() { p.confidence_threshold = f32::NAN; } else { p.max_points = v.as_u64().unwrap() as u32; } } update_dense_params(p) },
+            "mesh" => { let mut p = base.params.mesh.clone(); if let Some(v) = value { if v.is_string() { p.tsdf_voxel_size_mm = f32::NAN; } else { p.texture_size = v.as_u64().unwrap() as u32; } } update_mesh_params(p) },
+            "motion" => { let mut p = base.params.motion.clone(); if let Some(v) = value { if v.is_string() { p.min_track_quality = f32::NAN; } else { p.enabled = v.as_bool().unwrap(); } } update_motion_params(p) },
+            "geo" => { let mut p = base.params.geo.clone(); if let Some(v) = value { if v.is_boolean() { p.enabled = v.as_bool().unwrap(); } else { p.gsd_m = v.as_f64().unwrap() as f32; } } update_geo_params(p) },
+            other => panic!("unknown facet {other}"),
+        };
+        let outcome = op.diff(&base);
+        let actual = if outcome.messages().iter().any(|m| matches!(m.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) { "refused" } else if outcome.messages().iter().any(|m| matches!(m.level, semio_framework_diagnostic::Severity::Warning)) { "unchanged" } else { "admitted" };
+        assert_eq!(actual, case["expected"].as_str().unwrap(), "{case}");
+    }
+}
+
+#[test]
+fn retained_parameter_message_vectors_match_cold_diagnostics() {
+    fn float(value: &serde_json::Value) -> f32 {
+        match value.as_str() { Some("NaN") => f32::NAN, Some("inf") => f32::INFINITY, Some("-inf") => f32::NEG_INFINITY, Some(other) => panic!("unknown float {other}"), None => value.as_f64().unwrap() as f32 }
+    }
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️retained-params/💬️.json")).unwrap();
+    let base = default_remodeling_scene();
+    for case in cases.as_array().unwrap() {
+        let op = match case["facet"].as_str().unwrap() {
+            "ingest" => { let mut p = base.params.ingest.clone(); p.min_sharpness = float(&case["a"]); p.max_frames = case["b"].as_u64().unwrap() as u32; p.frame_sample_stride = case["c"].as_u64().unwrap() as u32; update_ingest_params(p) },
+            "feature" => { let mut p = base.params.feature.clone(); p.target_count = case["a"].as_u64().unwrap() as u32; p.edge_threshold = float(&case["b"]); update_feature_params(p) },
+            "matching" => { let mut p = base.params.matching.clone(); p.ratio_test = float(&case["a"]); update_match_params(p) },
+            other => panic!("unknown facet {other}"),
+        };
+        let outcome = op.diff(&base);
+        assert_eq!(outcome.messages().len(), 1, "{case}");
+        assert_eq!(outcome.messages()[0].message, case["message"].as_str().unwrap(), "{case}");
+    }
+}
+
 /// ⚖️ Both inverse laws at once: sequential replay restores the base, and the inverse rows' diffs sum to the negative diff.
 async fn laws<P, Op>(base: &P, mutation: &Op)
 where
@@ -375,3 +419,9 @@ async fn every_mutation_variant_roundtrips_through_op_text() {
     store::os_store::test_support::assert_op_line_round_trip(&replace_qc(None));
 }
 //#endregion 🔖️OpText
+
+#[test]fn neutral_result_cases_match_cold_decisions_and_exact_inverse(){use protocol::ColdMutation;let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️retained-results/🔣️.json")).unwrap();let mut checked=0;for case in fixture["cases"].as_array().unwrap(){let field=case["field"].as_str().unwrap();if field=="mesh"{continue}let mut base=default_remodeling_scene();let original=case["original"].clone();let replacement=case["replacement"].clone();let op:RemodelingMutation=match field{"sparse"=>{base.results.sparse=serde_json::from_value(original).unwrap();replace_sparse(serde_json::from_value(replacement).unwrap())},"dense"=>{base.results.dense=serde_json::from_value(original).unwrap();replace_dense(serde_json::from_value(replacement).unwrap())},"trajectory"=>{base.results.trajectory=serde_json::from_value(original).unwrap();replace_trajectory(serde_json::from_value(replacement).unwrap())},"geo"=>{base.results.geo=serde_json::from_value(original).unwrap();replace_geo_products(serde_json::from_value(replacement).unwrap())},"qc"=>{base.results.qc=serde_json::from_value(original).unwrap();replace_qc(serde_json::from_value(replacement).unwrap())},"tracks"=>{base.results.tracks=serde_json::from_value(original).unwrap();replace_tracks(serde_json::from_value(replacement).unwrap())},_=>panic!("unknown result fixture")};let outcome=ColdMutation::diff(&op,&base);let actual=if outcome.messages().iter().any(|m|matches!(m.level,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal)){"missing"}else if outcome.messages().iter().any(|m|matches!(m.level,semio_framework_diagnostic::Severity::Warning)){"no-op"}else{"changed"};assert_eq!(actual,case["status"].as_str().unwrap(),"{case}");if actual!="changed"{assert_eq!(outcome.messages().len(),1);assert_eq!(outcome.messages()[0].message,case["message"].as_str().unwrap());assert_eq!(outcome.messages()[0].code.0,case["code"].as_str().unwrap());}if actual=="missing"{assert_eq!(outcome.messages()[0].target,vec![base.id.clone()]);}let inverse=ColdMutation::inverse(&op,&base).unwrap();assert_eq!(inverse.len(),1);let inverse_value=match &inverse[0]{RemodelingMutation::ReplaceSparse(v)=>serde_json::to_value(&v.sparse).unwrap(),RemodelingMutation::ReplaceDense(v)=>serde_json::to_value(&v.dense).unwrap(),RemodelingMutation::ReplaceTrajectory(v)=>serde_json::to_value(&v.trajectory).unwrap(),RemodelingMutation::ReplaceGeoProducts(v)=>serde_json::to_value(&v.geo).unwrap(),RemodelingMutation::ReplaceQc(v)=>serde_json::to_value(&v.qc).unwrap(),RemodelingMutation::ReplaceTracks(v)=>serde_json::to_value(&v.tracks).unwrap(),_=>panic!("wrong inverse variant")};assert_eq!(inverse_value,case["inverse"],"{case}");if actual=="changed"{let next=protocol::apply_diff_cold(outcome.diff(),&base).unwrap();let back=ColdMutation::diff(&inverse[0],&next);let restored=protocol::apply_diff_cold(back.diff(),&next).unwrap();assert_eq!(restored,base,"{case}");}checked+=1;}assert_eq!(checked,24);}
+
+#[test]fn neutral_mesh_cases_use_actual_handles_and_durable_content(){use protocol::ColdMutation;use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{placeholder_remodeling_mesh_handle,remodeling_mesh_content_handle,remodeling_content_is_complete,RemodelingDurableArtifact};fn projection(mesh:&RemodelingMesh)->serde_json::Value{serde_json::json!({"childId":&mesh.mesh.child_id,"handle":&mesh.mesh.target.artifact_id,"source":match mesh.source{MeshSource::Placeholder=>"placeholder",MeshSource::Reconstructed=>"reconstructed",MeshSource::Imported=>"imported"},"textureAssetId":&mesh.texture_asset_id})}let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️retained-results/🔣️.json")).unwrap();let mut checked=0;for case in fixture["cases"].as_array().unwrap().iter().filter(|c|c["field"]=="mesh"){let mut base=default_remodeling_scene();let content=case["durable"].as_str().unwrap();let mut old=RemodelingMesh::default();old.mesh=if content=="none"{placeholder_remodeling_mesh_handle()}else{remodeling_mesh_content_handle("mesh-content-1",1)};if content=="complete"{base.durable_artifacts.insert("mesh-content-1".into(),RemodelingDurableArtifact{kind:RemodelingContentKind::Mesh.wire().to_owned(),chunks:vec![ByteBuffer(vec![0])],..Default::default()});assert!(remodeling_content_is_complete(&base.durable_artifacts,"mesh-content-1",RemodelingContentKind::Mesh,1));}assert_eq!(projection(&old),case["original"]);base.results.mesh=old.clone();let mut replacement=old;replacement.source=if case["replacement"]["source"]=="imported"{MeshSource::Imported}else{MeshSource::Placeholder};assert_eq!(projection(&replacement),case["replacement"]);let op:RemodelingMutation=replace_mesh_result(Box::new(replacement));let outcome=ColdMutation::diff(&op,&base);let actual=if outcome.messages().iter().any(|m|matches!(m.level,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal)){"mismatch"}else if outcome.messages().iter().any(|m|matches!(m.level,semio_framework_diagnostic::Severity::Warning)){"no-op"}else{"changed"};assert_eq!(actual,case["status"].as_str().unwrap(),"{case}");if actual!="changed"{assert_eq!(outcome.messages().len(),1);assert_eq!(outcome.messages()[0].message,case["message"].as_str().unwrap());assert_eq!(outcome.messages()[0].code.0,case["code"].as_str().unwrap());}if actual=="mismatch"{assert_eq!(outcome.messages()[0].target,vec![case["target"].as_str().unwrap().to_owned()]);}let inverse=ColdMutation::inverse(&op,&base).unwrap();assert_eq!(inverse.len(),1);let inverse_value=match &inverse[0]{RemodelingMutation::ReplaceMeshResult(value)=>projection(&value.mesh),_=>panic!("wrong mesh inverse variant")};assert_eq!(inverse_value,case["inverse"]);if actual=="changed"{let next=protocol::apply_diff_cold(outcome.diff(),&base).unwrap();let back=ColdMutation::diff(&inverse[0],&next);let restored=protocol::apply_diff_cold(back.diff(),&next).unwrap();assert_eq!(restored,base);}checked+=1;}assert_eq!(checked,4);}
+
+#[test]fn neutral_sparse_nan_is_not_equal_to_itself(){use protocol::ColdMutation;let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️retained-results/🔣️.json")).unwrap();let case=&f["ieeeCases"][0];assert_eq!(case["sample"],"NaN");let cloud=SparseCloud{points:Float32Buffer::Inline{values:vec![f32::NAN]},colors:None};assert!(!(cloud==cloud));let mut base=default_remodeling_scene();base.results.sparse=Some(cloud.clone());let op:RemodelingMutation=replace_sparse(Some(cloud));let outcome=ColdMutation::diff(&op,&base);assert!(outcome.messages().is_empty());assert!(outcome.diff().results.as_ref().and_then(|results|results.sparse.as_ref()).is_some());assert_eq!(case["status"],"changed");}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["$schema", "actionId", "port", "schema", "envelopeId", "mimeType", "filename", "streamName", "cancelAfterTurns"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "actionId": { "const": "exportSnapshotFile" },
+    "port": { "const": "semio.snapshot.pack" },
+    "schema": { "const": "semio.snapshot.pack.v1" },
+    "envelopeId": { "const": "remodeling.remodeling" },
+    "mimeType": { "const": "application/vnd.semio.pack" },
+    "filename": { "const": "remodeling-snapshot.pack" },
+    "streamName": { "type": "string", "minLength": 1 },
+    "cancelAfterTurns": { "type": "array", "uniqueItems": true, "minItems": 1, "items": { "type": "integer", "minimum": 0 } }
+  }
+}

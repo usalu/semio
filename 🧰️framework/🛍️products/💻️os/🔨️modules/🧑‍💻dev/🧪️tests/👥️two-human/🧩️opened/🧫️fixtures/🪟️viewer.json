@@ -1,0 +1,125 @@
+[
+  {
+    "a": [
+      {
+        "role": "editor",
+        "space": "s",
+        "document": "d",
+        "visible": true,
+        "instance": "i",
+        "window": "w"
+      }
+    ],
+    "b": [
+      {
+        "role": "viewer",
+        "space": "s",
+        "document": "d",
+        "visible": true,
+        "instance": "i",
+        "window": "w"
+      }
+    ],
+    "pass": true
+  },
+  {
+    "a": [
+      {
+        "role": "editor",
+        "space": "s",
+        "document": "d",
+        "visible": true,
+        "instance": "i",
+        "window": "w"
+      }
+    ],
+    "b": [
+      {
+        "role": "viewer",
+        "space": "s",
+        "document": "d",
+        "visible": true,
+        "instance": "i",
+        "window": "w"
+      },
+      {
+        "role": "editor",
+        "space": "s",
+        "document": "d",
+        "visible": true,
+        "instance": "i",
+        "window": "w"
+      }
+    ],
+    "pass": false
+  },
+  {
+    "a": [
+      {
+        "role": "editor",
+        "space": "s",
+        "document": "d",
+        "visible": true,
+        "instance": "i",
+        "window": "w"
+      }
+    ],
+    "b": [
+      {
+        "role": "viewer",
+        "space": "other",
+        "document": "d",
+        "visible": true,
+        "instance": "i",
+        "window": "w"
+      }
+    ],
+    "pass": false
+  },
+  {
+    "a": [
+      {
+        "role": "editor",
+        "space": "s",
+        "document": "d",
+        "visible": true,
+        "instance": "i",
+        "window": "w"
+      }
+    ],
+    "b": [
+      {
+        "role": "viewer",
+        "space": "s",
+        "document": "d",
+        "visible": true,
+        "instance": "",
+        "window": "w"
+      }
+    ],
+    "pass": false
+  },
+  {
+    "a": [
+      {
+        "role": "editor",
+        "space": "s",
+        "document": "d",
+        "visible": true,
+        "instance": "i",
+        "window": "w"
+      }
+    ],
+    "b": [
+      {
+        "role": "viewer",
+        "space": "s",
+        "document": "d",
+        "visible": false,
+        "instance": "i",
+        "window": "w"
+      }
+    ],
+    "pass": false
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 7,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["facet", "a", "message"],
+    "properties": {
+      "facet": { "enum": ["ingest", "feature", "matching"] },
+      "a": { "$ref": "#/$defs/scalar" },
+      "b": { "$ref": "#/$defs/scalar" },
+      "c": { "$ref": "#/$defs/scalar" },
+      "message": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": { "scalar": { "oneOf": [{ "type": "number" }, { "enum": ["NaN", "inf", "-inf"] }] } }
+}

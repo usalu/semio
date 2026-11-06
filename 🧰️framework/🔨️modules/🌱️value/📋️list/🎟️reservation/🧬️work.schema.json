@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "rows",
+          "deniedWork",
+          "maximumEvents"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "deniedWork": {
+            "const": 0
+          },
+          "maximumEvents": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

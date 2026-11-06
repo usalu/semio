@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "order": [
+    "aggregateOrigins",
+    "aggregatePurposes",
+    "validateOriginScopes",
+    "redeemBootstrapTransition",
+    "applyIssuerLedger",
+    "commitJournal"
+  ],
+  "requiredBefore": [
+    [
+      "aggregateOrigins",
+      "aggregatePurposes"
+    ],
+    [
+      "aggregatePurposes",
+      "validateOriginScopes"
+    ],
+    [
+      "validateOriginScopes",
+      "applyIssuerLedger"
+    ],
+    [
+      "redeemBootstrapTransition",
+      "applyIssuerLedger"
+    ],
+    [
+      "applyIssuerLedger",
+      "commitJournal"
+    ]
+  ]
+}

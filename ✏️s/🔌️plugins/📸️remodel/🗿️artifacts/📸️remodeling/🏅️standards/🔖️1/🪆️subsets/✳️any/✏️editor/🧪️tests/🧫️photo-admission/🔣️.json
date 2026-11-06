@@ -120,5 +120,22 @@
       255,
       255
     ]
+  },
+  "$schema": "./🧬️schema/🔣️.json",
+  "notice": {
+    "name": "invalid.png",
+    "locales": [
+      {
+        "locale": "en",
+        "message": "Cannot import invalid.png: unsupported or corrupt image or video data."
+      },
+      {
+        "locale": "de",
+        "message": "„invalid.png“ kann nicht importiert werden: nicht unterstützte oder beschädigte Bild- oder Videodaten."
+      }
+    ],
+    "batchTotal": 2,
+    "warningCount": 1,
+    "artifactMutations": 0
   }
 }

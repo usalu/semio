@@ -29,6 +29,7 @@ semio-s-artifact-remodel-remodeling-model-diff = { workspace = true }
 serde = { workspace = true }
 
 [dev-dependencies]
+serde_json = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

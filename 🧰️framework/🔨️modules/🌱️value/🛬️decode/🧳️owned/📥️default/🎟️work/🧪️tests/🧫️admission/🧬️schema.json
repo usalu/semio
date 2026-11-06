@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "budget",
+          "progress"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "boolean",
+              "empty_text",
+              "cursor_header"
+            ]
+          },
+          "budget": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "progress": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,331 @@
+{
+  "version": 1,
+  "plans": [
+    {
+      "tag": 0,
+      "name": "Done",
+      "fields": "n"
+    },
+    {
+      "tag": 1,
+      "name": "Invocation",
+      "fields": "nbbbbbbb"
+    },
+    {
+      "tag": 2,
+      "name": "DocumentChanged",
+      "fields": "et"
+    },
+    {
+      "tag": 3,
+      "name": "Document",
+      "fields": "nbbt"
+    },
+    {
+      "tag": 4,
+      "name": "Config",
+      "fields": "nbbt"
+    },
+    {
+      "tag": 5,
+      "name": "ConfigChanged",
+      "fields": "et"
+    },
+    {
+      "tag": 6,
+      "name": "ContextMenu",
+      "fields": "nb"
+    },
+    {
+      "tag": 7,
+      "name": "Media",
+      "fields": "ntbb"
+    },
+    {
+      "tag": 8,
+      "name": "MediaFingerprint",
+      "fields": "ntb"
+    },
+    {
+      "tag": 9,
+      "name": "Error",
+      "fields": "obb"
+    },
+    {
+      "tag": 10,
+      "name": "Emit",
+      "fields": "nbbbbbb"
+    },
+    {
+      "tag": 11,
+      "name": "Draft",
+      "fields": "nbbt"
+    },
+    {
+      "tag": 12,
+      "name": "Children",
+      "fields": "nc"
+    },
+    {
+      "tag": 13,
+      "name": "Ephemeral",
+      "fields": "bnnbbb"
+    },
+    {
+      "tag": 14,
+      "name": "HistorySnapshot",
+      "fields": "nb"
+    },
+    {
+      "tag": 15,
+      "name": "TransactionProposal",
+      "fields": "ntvv"
+    },
+    {
+      "tag": 16,
+      "name": "TransactionPrepared",
+      "fields": "tvb"
+    },
+    {
+      "tag": 17,
+      "name": "TransactionCommitted",
+      "fields": "tt"
+    },
+    {
+      "tag": 18,
+      "name": "TransactionRolledBack",
+      "fields": "t"
+    },
+    {
+      "tag": 19,
+      "name": "MergeReport",
+      "fields": "ob"
+    },
+    {
+      "tag": 20,
+      "name": "Conflicts",
+      "fields": "ob"
+    },
+    {
+      "tag": 21,
+      "name": "UiPatch",
+      "fields": "ottnnb"
+    },
+    {
+      "tag": 22,
+      "name": "UiSnapshotEnd",
+      "fields": "n"
+    },
+    {
+      "tag": 23,
+      "name": "LocalInteractionQuery",
+      "fields": "q"
+    },
+    {
+      "tag": 24,
+      "name": "WindowConfigs",
+      "fields": "nw"
+    },
+    {
+      "tag": 25,
+      "name": "OperationCompleted",
+      "fields": "nnbb"
+    },
+    {
+      "tag": 26,
+      "name": "DocumentArchive",
+      "fields": "na"
+    },
+    {
+      "tag": 27,
+      "name": "DocumentArchiveLoad",
+      "fields": "nnunnnb"
+    },
+    {
+      "tag": 28,
+      "name": "MediaExportSubmitted",
+      "fields": "nh"
+    },
+    {
+      "tag": 29,
+      "name": "MediaExportStatus",
+      "fields": "nhunutntb"
+    },
+    {
+      "tag": 30,
+      "name": "MediaExportChunk",
+      "fields": "nhbu"
+    },
+    {
+      "tag": 31,
+      "name": "DocumentIdentity",
+      "fields": "nnitn"
+    },
+    {
+      "tag": 32,
+      "name": "ChildHeads",
+      "fields": "nd"
+    }
+  ],
+  "cases": [
+    {
+      "name": "done",
+      "wire": [
+        0,
+        7
+      ],
+      "tag": 0,
+      "numbers": [
+        7
+      ],
+      "texts": [],
+      "bytes": []
+    },
+    {
+      "name": "invocation-empty",
+      "wire": [
+        1,
+        7,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": 1,
+      "numbers": [
+        7
+      ],
+      "texts": [],
+      "bytes": [
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "name": "document-unicode",
+      "wire": [
+        3,
+        7,
+        2,
+        1,
+        2,
+        1,
+        3,
+        2,
+        195,
+        169
+      ],
+      "tag": 3,
+      "numbers": [
+        7
+      ],
+      "texts": [
+        "é"
+      ],
+      "bytes": [
+        [
+          1,
+          2
+        ],
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "name": "ui-patch",
+      "wire": [
+        21,
+        0,
+        1,
+        97,
+        1,
+        98,
+        2,
+        1,
+        0
+      ],
+      "tag": 21,
+      "numbers": [
+        null,
+        2,
+        1
+      ],
+      "texts": [
+        "a",
+        "b"
+      ],
+      "bytes": [
+        []
+      ]
+    },
+    {
+      "name": "error",
+      "wire": [
+        9,
+        1,
+        7,
+        0,
+        0
+      ],
+      "tag": 9,
+      "numbers": [
+        7
+      ],
+      "texts": [],
+      "bytes": [
+        [],
+        []
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "name": "unknown",
+      "wire": [
+        255
+      ]
+    },
+    {
+      "name": "truncated",
+      "wire": [
+        3,
+        7,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "trailing",
+      "wire": [
+        0,
+        7,
+        0
+      ]
+    },
+    {
+      "name": "overflow",
+      "wire": [
+        0,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        2
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "rows": 0,
+      "deniedWork": 0,
+      "maximumEvents": 1000
+    },
+    {
+      "id": "single-page",
+      "rows": 4,
+      "deniedWork": 0,
+      "maximumEvents": 1000
+    },
+    {
+      "id": "nested-pages",
+      "rows": 4096,
+      "deniedWork": 0,
+      "maximumEvents": 100000
+    }
+  ]
+}

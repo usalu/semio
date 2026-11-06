@@ -5,7 +5,10 @@
     "exact-original-recipient",
     "independent-turn-capacity",
     "construction-debits-once",
-    "same-original-cx","retirement-only-after-cancel","retirement-deadline-and-fuel","original-retirement-ledger"
+    "same-original-cx",
+    "retirement-only-after-cancel",
+    "retirement-deadline-and-fuel",
+    "original-retirement-ledger"
   ],
   "cases": [
     {
@@ -42,5 +45,35 @@
     "parentCopy": 1,
     "childCopy": 24,
     "expectedCopy": 25
-  }
-,"retirementCases":[{"name":"open","cancelled":false,"deadlineOpen":true,"fuel":1,"visited":true},{"name":"cancelled-born-custody","cancelled":true,"deadlineOpen":true,"fuel":1,"visited":true},{"name":"original-deadline-closed","cancelled":true,"deadlineOpen":false,"fuel":1,"visited":false},{"name":"original-fuel-empty","cancelled":true,"deadlineOpen":true,"fuel":0,"visited":false}]}
+  },
+  "retirementCases": [
+    {
+      "name": "open",
+      "cancelled": false,
+      "deadlineOpen": true,
+      "fuel": 6,
+      "visited": true
+    },
+    {
+      "name": "cancelled-born-custody",
+      "cancelled": true,
+      "deadlineOpen": true,
+      "fuel": 6,
+      "visited": true
+    },
+    {
+      "name": "original-deadline-closed",
+      "cancelled": true,
+      "deadlineOpen": false,
+      "fuel": 1,
+      "visited": false
+    },
+    {
+      "name": "original-fuel-empty",
+      "cancelled": true,
+      "deadlineOpen": true,
+      "fuel": 0,
+      "visited": false
+    }
+  ]
+}

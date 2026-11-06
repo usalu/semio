@@ -36,7 +36,7 @@ pub async fn poll_with_patch_output_fault<PA: semio_plugin_reactor_app::PluginAp
     let result = turn::poll_kernel_output(
         runtime,
         events,
-        None,
+        &mut None,
         None,
         budget,
         |result| {
@@ -56,7 +56,7 @@ pub async fn poll_with_patch_output_fault<PA: semio_plugin_reactor_app::PluginAp
 
 #[doc(hidden)]
 pub async fn poll_with_output_failure<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, events: Vec<Event>, budget: semio_framework::kernel::Budget) -> Result<(), semio_framework::Fault> {
-    turn::poll_kernel_output(runtime, events, None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| (), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await
+    turn::poll_kernel_output(runtime, events, &mut None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| (), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await
 }
 
 /// ▶️ The exact `run_until_idle` call `poll` makes after routing events, exposed directly.

@@ -216,7 +216,17 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🔤️encoding/🧬️schema/🔣️.json",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/🎟️original-actor-context/🧊️cold-job/🧪️tests/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/🎟️original-actor-context/🧊️cold-job/🧪️tests/🧫️fixtures/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/🎟️original-actor-context/🧊️cold-job/🧬️schema/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/🎟️original-actor-context/🧊️cold-job/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🌱️process-arena/**/*",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🌱️process-arena/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🎟️root/📃️policy/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📥️input/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/📃️/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚠️failure/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/⚠️failure/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📦️packages/🦀️rust/Cargo.toml"
       ],
       "outputs": [],
       "options": {
@@ -246,7 +256,8 @@
             "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📃️policy/📥️operation/🪙️guest/🧪️tests/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/📤️output/🧪️tests/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🔤️encoding/🧪️tests/🟦️.ts",
-            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/🎟️original-actor-context/🧊️cold-job/🧪️tests/🟦️.ts"
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/🎟️original-actor-context/🧊️cold-job/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🌱️process-arena/🟦️.ts"
           ]
         }
       }

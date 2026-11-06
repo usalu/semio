@@ -1,0 +1,84 @@
+{
+  "cases": [
+    {
+      "name": "config-explicit-no-dialect",
+      "expectedId": "cfg",
+      "actualId": "cfg",
+      "expected": null,
+      "actual": null,
+      "accepted": true
+    },
+    {
+      "name": "artifact",
+      "expectedId": "doc",
+      "actualId": "doc",
+      "expected": {
+        "artifactKind": "kind",
+        "standard": "standard",
+        "subset": "subset"
+      },
+      "actual": {
+        "artifactKind": "kind",
+        "standard": "standard",
+        "subset": "subset"
+      },
+      "accepted": true
+    },
+    {
+      "name": "unexpected-dialect",
+      "expectedId": "cfg",
+      "actualId": "cfg",
+      "expected": null,
+      "actual": {
+        "artifactKind": "kind",
+        "standard": "standard",
+        "subset": "subset"
+      },
+      "accepted": false
+    },
+    {
+      "name": "missing-dialect",
+      "expectedId": "doc",
+      "actualId": "doc",
+      "expected": {
+        "artifactKind": "kind",
+        "standard": "standard",
+        "subset": "subset"
+      },
+      "actual": null,
+      "accepted": false
+    },
+    {
+      "name": "foreign-dialect",
+      "expectedId": "doc",
+      "actualId": "doc",
+      "expected": {
+        "artifactKind": "kind",
+        "standard": "standard",
+        "subset": "subset"
+      },
+      "actual": {
+        "artifactKind": "kind",
+        "standard": "standard",
+        "subset": "foreign"
+      },
+      "accepted": false
+    },
+    {
+      "name": "foreign-id",
+      "expectedId": "doc",
+      "actualId": "other",
+      "expected": {
+        "artifactKind": "kind",
+        "standard": "standard",
+        "subset": "subset"
+      },
+      "actual": {
+        "artifactKind": "kind",
+        "standard": "standard",
+        "subset": "subset"
+      },
+      "accepted": false
+    }
+  ]
+}

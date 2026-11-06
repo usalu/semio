@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust/Cargo.toml","-p","semio-framework-value-snapshot-projection","--lib"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"codex-guest-snapshot-projection"}}

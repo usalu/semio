@@ -1,4 +1,4 @@
-use super::*;
+use semio_plugin_host_guest_runtime::*;
 use semio_framework::kernel::Budget;
 use semio_framework_actor::{PackageHash, PackageId, ActorId as RuntimeActorId};
 use semio_plugin_guest_contract::TurnFault;

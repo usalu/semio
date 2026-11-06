@@ -1,4 +1,6 @@
 #!/usr/bin/env repo
+import { typecheckAdmittedProjectV1 } from "../../../../../../📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
+import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🧭️ Routes OS development commands to their semantic owners. */
@@ -68,8 +70,16 @@ class TicketProbeScript extends BundleScript {
 }
 
 
+/** 🔍 Checks this owner's TypeScript through its issued repository compiler control. */
+class TypecheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await typecheckAdmittedProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control: createIssuedResourceControlV1(this.invocation, "typecheck:entry", 0), cwd: this.root, project: "tsconfig.json", owner: "framework-os-dev:typescript", args: segments, timeoutMs: 120_000 });
+  }
+}
+
 const router = new ScriptRouter(import.meta.dirname)
   .registerLazy("verify-staged", async () => (await import("../../🔎️verification/🧾️convergence/🟦️.ts")).VerifyStagedScript)
+  .register("typecheck", TypecheckScript)
   .register("ticket-probe", TicketProbeScript)
   .register("playground-session", PlaygroundSessionScript)
   .register("publication-check", PublicationCheckScript)

@@ -3,7 +3,7 @@ import { ownedCallerViewContextV1 } from "../../📨️program-invocation/🟦�
  *
  * 🧱️ Child module of {@link ../🟦️.ts | useShellActions}: the body of the shell input funnel (`onAction`) after its ledger entry is issued, moved verbatim. */
 import { type ShellDialogOriginV1 } from "../../🗨️dialog-origin/🟦️.ts";
-import { type ActionDispatchLifecycleV1, SURFACE_FAULT_CODES, RECORD_TUTORIAL_ACTION_ID, resolveWindowActions, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, FOCUS_ROW_CONTROL_ACTION_ID, FOCUS_WINDOW_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, hostArmedViewContext } from "@semio-tech/framework";
+import { type ActionDispatchLifecycleV1, SURFACE_FAULT_CODES, RECORD_TUTORIAL_ACTION_ID, resolveWindowActions, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, EXPORT_MEDIA_FILE_ACTION_ID, EXPORT_SNAPSHOT_FILE_ACTION_ID, FOCUS_ROW_CONTROL_ACTION_ID, FOCUS_WINDOW_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, hostArmedViewContext } from "@semio-tech/framework";
 import { FRAMEWORK_SYNC_CONTROLLER_ID } from "@semio-tech/framework/backbone";
 import { spawnedProgramViewStateV1, guestWindowIdV1, spawnedIdOfWindowInstanceV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { INPUT_IDENTITY_SETTLE_BOUND_MS_V1, inputAwaitsHubIdentityV1, inputIdentitySettleNoticeTextV1, type InputCommitReceiptV1, type InputDiagnosticV1, type InputDraftDispositionV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1 } from "../../🎯️input-ledger/🟦️.ts";
@@ -173,6 +173,12 @@ export async function runShellInput({ clipboardFragmentRef, primaryPluginId, dis
   const actionOwner = captureEffectOwner(targetSession, actionOrigin, entry.provenance.inputSeq);
   if (!isCurrentEffectOwner(actionOwner)) {
     return refuse("owner-mismatch", "effect owner is not current");
+  }
+
+  if (!action.commandAddress && (action.action === EXPORT_MEDIA_FILE_ACTION_ID || action.action === EXPORT_SNAPSHOT_FILE_ACTION_ID)) {
+    if (action.controllerId !== targetSession.app.controllerId) return refuse("owner-mismatch", "media export controller is not current");
+    await core.documentTransferRef.current.exportMediaFile(targetSession, () => isCurrentEffectOwner(actionOwner), action.action);
+    return applied();
   }
 
   const { baseDispatchViewState, dispatchWindowId, dispatchExtraInstances } = targetContributor

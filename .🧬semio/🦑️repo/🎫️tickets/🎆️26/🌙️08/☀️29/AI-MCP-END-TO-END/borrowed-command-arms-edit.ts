@@ -1,0 +1,4 @@
+import * as fs from "node:fs";
+const root="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🔄️exchange/🔀️plugin-exchange/";
+const files=["🎯️document-and-child-commands/🦀️.rs","📦️document-archive-commands/🦀️.rs","⚙️config-commands/🦀️.rs","🎞️media-commands/🦀️.rs","🔁️transaction-commands/🦀️.rs","🌐️relay-and-conflict-commands/🦀️.rs"];
+for(let i=0;i<files.length;i++){const path=root+files[i],before=fs.readFileSync(path,"utf8");let text=before.replaceAll("command: protocol::AppCommand,","command: &mut protocol::AppCommand,");text=text.replace(/(let protocol::AppCommand::[^\n]+ = command else \{[^\n]+\};)/g,"$1\n    let seq=*seq;");if(fs.readFileSync(path,"utf8")!==before)throw Error("concurrent arm edit: "+path);const temp=import.meta.dir+"/🗑️generated/command-arm-"+i+".tmp";fs.writeFileSync(temp,text);fs.renameSync(temp,path);}

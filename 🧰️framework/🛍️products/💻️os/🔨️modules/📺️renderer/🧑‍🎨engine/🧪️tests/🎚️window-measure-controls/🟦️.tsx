@@ -7,7 +7,7 @@
  * pre-click value for that whole window, so the gesture reads as ignored and the next click is aimed at
  * a value the program has already left behind. `WindowMeasureSlider` has always held a draft for
  * exactly this reason; these are the other two control kinds. */
-import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
+import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import { createElement } from "react";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -101,6 +101,19 @@ const selectMeasure = (value: string) =>
   }) as never;
 
 const countAction = { controllerId: "puzzle3d-play", action: "setFillCount" } as const;
+
+it("names a window slider from its localized label and dispatches a keyboard step", async () => {
+  for (const label of ["Frame", "Bild"]) {
+    const actions: { readonly args?: unknown }[] = [];
+    const measure = { kind: "slider", id: "frame-index", label, value: 0, min: 0, max: 5, step: 1, onChange: { controllerId: "remodel", action: "setFrameCursor" } } as never;
+    const view = render(renderWindowMeasuresTree([measure], action => { actions.push(action); }));
+    const slider = view.getByRole("slider", { name: label });
+    fireEvent.keyDown(slider, { key: "ArrowRight" });
+    fireEvent.keyUp(slider, { key: "ArrowRight" });
+    await waitFor(() => expect(actions[0]?.args).toMatchObject({ value: 1 }));
+    cleanup();
+  }
+});
 
 /** 🔢️ An unbounded count: a floor but deliberately NO ceiling, which is the whole point of `number`. */
 const numberMeasure = (value: number) => ({ kind: "number", id: "puzzle3d-fill-count", label: "Count", value, min: 0, step: 1, ready: 42, loading: true, onChange: countAction }) as never;

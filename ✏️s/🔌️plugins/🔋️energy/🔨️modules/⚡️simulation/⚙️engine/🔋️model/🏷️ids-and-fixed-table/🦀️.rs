@@ -35,6 +35,7 @@ impl semio_framework_value::retained_clone::RetainedClone for EntityId{
 impl<I:semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarValue<I> for EntityId{
  fn read(original:&I)->Result<Self,semio_framework_value::ValueError>{<u32 as semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarValue<I>>::read(original).map(Self)}
  fn read_copy_bytes(_: &I)->Result<usize,semio_framework_value::ValueError>{Ok(std::mem::size_of::<Self>())}
+ fn read_work_demand(original:&I)->Result<u64,semio_framework_value::ValueError>{<u32 as semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarValue<I>>::read_work_demand(original)?.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"entity id conversion work overflow"))}
 }
 impl<I:semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value_native_owned::native_decoding::NativeReceive<I> for EntityId{
  type Receiver=semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarReceiver<I,Self>;
@@ -291,7 +292,7 @@ impl<K: Ord, V> FixedTable<K, V> {
 // #endregion 🔖️FixedTable
 impl semio_framework_dsl_record::BorrowedDslField for EntityId { const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::UInt; }
 
-impl semio_framework_value_persistent::RetainedEqualityElement for EntityId{fn inline_eq(left:&Self,right:&Self)->bool{left.0==right.0}}
-impl semio_framework_value_persistent::RetainedEquality for EntityId{type Equality=semio_framework_value_persistent::retained_equality::RetainedInlineEquality<Self>;const INLINE_PAIR_BYTES:Option<usize>=Some(2*std::mem::size_of::<Self>());fn equality_cursor()->Self::Equality{Self::Equality::new()}fn inline_equal(left:&Self,right:&Self)->Option<bool>{Some(left.0==right.0)}}
+impl semio_framework_value_persistent::RetainedEqualityElement for EntityId{const WORK:u64=1;fn inline_eq(left:&Self,right:&Self)->bool{left.0==right.0}}
+impl semio_framework_value_persistent::RetainedEquality for EntityId{type Equality=semio_framework_value_persistent::retained_equality::RetainedInlineEquality<Self>;const CURSOR_BIRTH_WORK:u64=2;const INLINE_PAIR_BYTES:Option<usize>=Some(2*std::mem::size_of::<Self>());const INLINE_PAIR_WORK:Option<u64>=Some(1);fn equality_cursor()->Self::Equality{Self::Equality::new()}fn inline_equal(left:&Self,right:&Self)->Option<bool>{Some(left.0==right.0)}}
 
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod native_receiving_tests;

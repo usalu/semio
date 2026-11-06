@@ -4,6 +4,8 @@ use crate::native_receiving::span::{OriginalCheckpointRequest,OriginalRecordedId
 #[path="🧭️span/🦀️.rs"]
 mod span;
 pub use span::{OriginalSourceCheckpointState,OriginalSourceProgressState};
+#[path="♻️retirement/🦀️.rs"]mod owned_retirement;
+pub use owned_retirement::NativeEncodeRetirement;
 #[path="🔭️observer/🦀️.rs"]
 mod observer;
 #[path="🎟️action/🦀️.rs"]
@@ -68,7 +70,7 @@ impl crate::retirement::RetireOwned for NativeEncodeContinuation{
  fn retirement_seed(self)->Self::RetirementCursor{EncodeContinuationRetirement(Some(self))}
  fn retirement_birth_bytes(&self)->Option<usize>{crate::retirement::RetireOwned::retirement_ready(self).then_some(size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{true}
- fn retirement_element_copy_bytes()->usize{0}
+ fn retirement_element_copy_bytes()->usize{std::mem::size_of::<Self>()}
 }
 
 /// 🧮️ One ownership ceiling persists through typed fields, physical output and its envelope.

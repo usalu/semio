@@ -38,6 +38,8 @@ impl<I:NativeValueSource+?Sized>Drop for NativeVariantSelector<I>{fn drop(&mut s
 pub use unit::{NativeUnitVariants,NativeUnitEnumReceiver};
 
 use crate::owned::{NativeReceive,NativeReceiver,tree::{NativeReceiveSlot}};
+use crate::retained_clone::{RetainedOwnedProjection,RetainedCloneClose};
+use std::mem::ManuallyDrop;
 fn result_variant(index:usize)->Option<NativeRecordSchema>{["Ok","Err"].get(index).map(|name|NativeRecordSchema::Leaf(NativeSchemaLeaf{name,ordinal:index as u32}))}
 fn result_unit(index:usize)->Option<NativeRecordSchema>{(index<2).then_some(NativeRecordSchema::Skip)}
 pub struct NativeResultReceiver<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,E:NativeReceive<dyn NativeValueSource>>{selector:NativeVariantSelector<I>,ok:NativeReceiveSlot<dyn NativeValueSource,T>,err:NativeReceiveSlot<dyn NativeValueSource,E>,staged_ok:std::mem::ManuallyDrop<Option<T>>,staged_err:std::mem::ManuallyDrop<Option<E>>,retirement:RetainedCloneClose,closing:bool,taken:bool}

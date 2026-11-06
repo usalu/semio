@@ -4,11 +4,11 @@ use std::mem::size_of;
 use semio_framework_value::{RetainedWorkOutcome,retained_clone::RetainedCloneRef};
 fn construction(d:RetirementDemand)->OriginalConstructionDemand{OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth}}
 fn construct<O>(cx:&mut StepContext<'_>,output:&mut Option<O>,d:RetirementDemand,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<bool,OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,construction(d),run)}
-fn event(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome)->Result<bool,OriginalTurnFailure>{
+pub(super) fn event(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant)->RetainedWorkOutcome)->Result<bool,OriginalTurnFailure>{
  let g=cx.retained_grant();let mut accepted=None;
- let mut quote=construction(d);quote.items=g.maximum_items;semio_framework_job::admit_original_construction(cx,&mut accepted,quote,|_|{let turn=run(g);RetainedWorkOutcome{result:turn.result.map(|step|((),step.progress())),work:turn.work}})
+ let mut quote=construction(d);quote.items=g.maximum_items;semio_framework_job::admit_original_construction(cx,&mut accepted,quote,|native|{let turn=run(native,g);RetainedWorkOutcome{result:turn.result.map(|step|((),step.progress())),work:turn.work}})
 }
-fn metadata(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce())->Result<bool,OriginalTurnFailure>{event(cx,d,|_|{run();RetainedWorkOutcome{result:Ok(step(d)),work:1}})}
+fn metadata(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce())->Result<bool,OriginalTurnFailure>{event(cx,d,|_,_|{run();RetainedWorkOutcome{result:Ok(step(d)),work:1}})}
 pub(super) fn retire(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome)->Result<semio_framework_job::InteractiveJobCloseStep,OriginalTurnFailure>{cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,run))}
 pub(super) fn retire_metadata(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce())->Result<bool,OriginalTurnFailure>{
  let mut advanced=false;
@@ -70,7 +70,7 @@ impl OriginalSurfaceViewRead{
    },
    3=>{
     let admission=self.admission.as_ref().ok_or_else(invalid)?;let d=admission.next_demand()?;
-    event(cx,d,|g|{
+    event(cx,d,|_,g|{
      let admission=self.admission.as_mut().unwrap();
      let turn=if admission.phase()=="ready"{admission.take_output(&mut registry.cached_source,g)}else{admission.advance(g)};
      if admission.terminal_is_empty(){self.admission=None}
@@ -142,7 +142,7 @@ impl OriginalSurfaceViewCapture{
     if self.cursor.output_ready(){
      let d=self.cursor.take_demand()?;let g=cx.retained_grant();
      if construct(cx,&mut *self.output,d,|_|{let turn=self.cursor.take(g);RetainedWorkOutcome{result:turn.result.and_then(|value|value.ok_or_else(invalid)),work:turn.work}})?{self.cursor.begin_close();self.phase=2}
-    }else{let d=self.cursor.advance_demands(source,self.read.body)?;event(cx,d,|g|self.cursor.advance(source,self.read.body,g))?;}
+    }else{let maximum_work_units=cx.fuel_remaining();let d=self.cursor.advance_demands(source,self.read.body,maximum_work_units)?;event(cx,d,|native,g|match native.available_work_units(){Ok(work)=>self.cursor.advance(source,self.read.body,work,g),Err(error)=>RetainedWorkOutcome{result:Err(error),work:0}})?;}
    },
    2=>{if self.cursor.terminal_is_empty(){metadata(cx,demand::<u8>(),||self.phase=3)?;}else{let d=self.cursor.close_demands(self.read.body)?;retire(cx,d,|g|self.cursor.close_step(g))?;}},
    3=>{if self.read.terminal_is_empty(){metadata(cx,demand::<u8>(),||self.phase=4)?;}else{self.read.close_step(registry,cx)?;}},

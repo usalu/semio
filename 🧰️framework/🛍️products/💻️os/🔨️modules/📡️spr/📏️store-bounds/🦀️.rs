@@ -7,7 +7,7 @@ pub trait StoreState: Clone + ToValue + FromValue + Send + Sync + 'static {}
 
 impl<T: Clone + ToValue + FromValue + Send + Sync + 'static> StoreState for T {}
 
-/// 🧬️ What a mutation over the state `P` must be for the Store to log, replay, diff and encode it.
-pub trait StoreMutationFor<P>: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P> + OpBinary + OpText + Send + 'static {}
+/// 🧬️ Persistent mutations declare original bounded binary receiving and retirement alongside log, replay and encoding.
+pub trait StoreMutationFor<P>: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P> + protocol::OpBinaryReceiving + OpBinary + OpText + Send + 'static {}
 
-impl<P, T: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P> + OpBinary + OpText + Send + 'static> StoreMutationFor<P> for T {}
+impl<P, T: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P> + protocol::OpBinaryReceiving + OpBinary + OpText + Send + 'static> StoreMutationFor<P> for T {}

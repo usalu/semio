@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-value-native-reservation"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "value-native-reservation"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-decoding = { path = "../../../../../📦️packages/🦀️rust" }
+semio-framework-value-native-receiving-contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-paged-list = { path = "../../../../../../📋️list/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../✨️derive/📦️packages/🦀️rust" }
+
+semio-framework-value-native-source = { path = "../../../📖️source/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-trace-memory-testing = { path = "../../../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

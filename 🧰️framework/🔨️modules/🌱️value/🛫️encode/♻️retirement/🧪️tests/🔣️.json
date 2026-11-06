@@ -1,0 +1,134 @@
+{
+  "cases": [
+    {
+      "id": "allocation-settled",
+      "kind": "allocation",
+      "pending": false,
+      "fields": [
+        "request",
+        "admitted",
+        "primary",
+        "forwardedQuote",
+        "scopedQuote",
+        "extentRefusal",
+        "forwardedRefusal",
+        "scopedRefusal",
+        "actual"
+      ],
+      "birthHeap": 0,
+      "closeAllowed": true
+    },
+    {
+      "id": "allocation-pending",
+      "kind": "allocation",
+      "pending": true,
+      "fields": [
+        "request",
+        "phase",
+        "actual"
+      ],
+      "birthHeap": 0,
+      "closeAllowed": false
+    },
+    {
+      "id": "settlement-settled",
+      "kind": "settlement",
+      "pending": false,
+      "fields": [
+        "workFailure",
+        "physicalFailure",
+        "invariantFailure"
+      ],
+      "birthHeap": 0,
+      "closeAllowed": true,
+      "selectedWork": 7,
+      "actualWork": 3,
+      "unspentWork": 4
+    },
+    {
+      "id": "settlement-work-pending",
+      "kind": "settlement",
+      "pending": true,
+      "fields": [
+        "workFailure",
+        "physicalFailure",
+        "invariantFailure"
+      ],
+      "birthHeap": 0,
+      "closeAllowed": false,
+      "selectedWork": 7,
+      "actualWork": 3,
+      "unspentWork": 4
+    },
+    {
+      "id": "settlement-physical-pending",
+      "kind": "settlement",
+      "pending": true,
+      "fields": [
+        "workFailure",
+        "physicalFailure",
+        "invariantFailure"
+      ],
+      "birthHeap": 0,
+      "closeAllowed": false,
+      "selectedWork": 7,
+      "actualWork": 3,
+      "unspentWork": 4
+    },
+    {
+      "id": "continuation-settled",
+      "kind": "continuation",
+      "pending": false,
+      "fields": [
+        "actualWork",
+        "receiving",
+        "maximumBytes",
+        "ownedBytes",
+        "completed",
+        "total",
+        "stage"
+      ],
+      "birthHeap": 0,
+      "closeAllowed": true
+    },
+    {
+      "id": "continuation-pause-refused",
+      "kind": "pauseRefused",
+      "pending": true,
+      "fields": [
+        "originalControl",
+        "pendingPorts"
+      ],
+      "birthHeap": null,
+      "closeAllowed": false
+    },
+    {
+      "id": "operation-failure",
+      "kind": "failure",
+      "pending": false,
+      "fields": [
+        "primary",
+        "workRefusal"
+      ],
+      "birthHeap": 0,
+      "closeAllowed": true
+    },
+    {
+      "id": "effect-failure",
+      "kind": "failure",
+      "pending": false,
+      "fields": [
+        "primary",
+        "invariant",
+        "physicalInvariant",
+        "capacityInvariant",
+        "work",
+        "local",
+        "physical",
+        "allocation"
+      ],
+      "birthHeap": 0,
+      "closeAllowed": true
+    }
+  ]
+}

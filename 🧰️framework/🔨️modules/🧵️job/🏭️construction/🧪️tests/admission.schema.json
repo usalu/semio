@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "controller",
+    "attempts",
+    "status",
+    "failure"
+  ],
+  "properties": {
+    "controller": {
+      "const": {
+        "sourceItems": 2,
+        "sourceWork": 2,
+        "captureItems": 1,
+        "captureWork": 1,
+        "candidateItems": 1,
+        "candidateWork": 1
+      }
+    },
+    "attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "bodyItems",
+          "bodyWork",
+          "candidate",
+          "items",
+          "work"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "bodyItems": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bodyWork": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "candidate": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "status": {
+      "const": [
+        "Pending",
+        "Ready",
+        "Failed"
+      ]
+    },
+    "failure": {
+      "const": [
+        "source.call.operation",
+        "source.call.context",
+        "source.call.receipt_refusal",
+        "source.source_refusal",
+        "child"
+      ]
+    }
+  }
+}

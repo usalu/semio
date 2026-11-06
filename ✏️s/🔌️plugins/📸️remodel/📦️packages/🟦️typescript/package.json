@@ -12,7 +12,11 @@
   "dependencies": {},
   "devDependencies": {
     "typescript": "^5.9.3",
-    "@semio-tech/framework": "workspace:*"
+    "@types/bun": "^1.4.2",
+    "ajv": "8.20.0",
+    "vitest": "^4.0.17",
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-os-dev": "workspace:*"
   },
   "author": {
     "name": "Ueli Saluz",

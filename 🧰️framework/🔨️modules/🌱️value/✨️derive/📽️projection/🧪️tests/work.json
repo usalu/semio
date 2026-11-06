@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "action": "bind",
+      "child": 0,
+      "parent": 1,
+      "maxWork": 0,
+      "selected": 0
+    },
+    {
+      "action": "bind",
+      "child": 0,
+      "parent": 1,
+      "maxWork": 1,
+      "selected": 1
+    },
+    {
+      "action": "field",
+      "child": 1,
+      "parent": 0,
+      "maxWork": 1,
+      "selected": 1
+    },
+    {
+      "action": "place",
+      "child": 1,
+      "parent": 2,
+      "maxWork": 1,
+      "selected": 0
+    },
+    {
+      "action": "place",
+      "child": 1,
+      "parent": 2,
+      "maxWork": 2,
+      "selected": 0
+    },
+    {
+      "action": "place",
+      "child": 1,
+      "parent": 2,
+      "maxWork": 3,
+      "selected": 3
+    },
+    {
+      "action": "close-intent",
+      "child": 1,
+      "parent": 0,
+      "maxWork": 0,
+      "selected": 0
+    },
+    {
+      "action": "close-intent",
+      "child": 1,
+      "parent": 0,
+      "maxWork": 1,
+      "selected": 1
+    },
+    {
+      "action": "release-field",
+      "child": 0,
+      "parent": 3,
+      "maxWork": 2,
+      "selected": 0
+    },
+    {
+      "action": "release-field",
+      "child": 0,
+      "parent": 3,
+      "maxWork": 3,
+      "selected": 3
+    }
+  ]
+}

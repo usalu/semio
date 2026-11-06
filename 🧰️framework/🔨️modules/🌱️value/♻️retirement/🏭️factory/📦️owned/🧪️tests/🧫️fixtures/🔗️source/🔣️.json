@@ -51,5 +51,7 @@
     "copy",
     "depth"
   ],
-  "sourceAdmissionWork": 8
+  "sourceAdmissionWork": 12,
+  "markerClearItems": 3,
+  "markerClearWork": 3
 }

@@ -1,0 +1,44 @@
+{
+  "type": "array",
+  "minItems": 2,
+  "items": {
+    "type": "object",
+    "required": [
+      "locale",
+      "stream",
+      "frame",
+      "table",
+      "tables"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "locale": {
+        "enum": [
+          "en",
+          "de"
+        ]
+      },
+      "stream": {
+        "type": "string",
+        "minLength": 1
+      },
+      "frame": {
+        "type": "string",
+        "minLength": 1
+      },
+      "table": {
+        "type": "string",
+        "minLength": 1
+      },
+      "tables": {
+        "type": "array",
+        "minItems": 6,
+        "maxItems": 6,
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

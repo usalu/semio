@@ -50,12 +50,12 @@ fn output_ready(&self)->bool{!self.state.closing&&!self.state.spent&&self.state.
  fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
  fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(|| -> Result<RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>{
+ fn close_step(&mut self,grant:RetainedCloneGrant,actual:&mut Option<usize>)->semio_framework_value_retirement::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>{
   if !self.state.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original immutable root clone requires closing intent").into());}
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.close_demands(grant.maximum_copy_bytes)?;if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let state=&mut *self.state;
-  let step=if !state.close.is_empty(){{let turn=state.close.step_granted(grant);work+=turn.work;turn.result}?}else if let Some(step)={let turn=state.close.begin_granted(&mut state.output,grant);work+=turn.work;turn.result}?{step}else{{let turn=crate::retained_clone::close_retained_binding(&mut state.source,grant);work+=turn.work;turn.result}?};
+  let step=if !state.close.is_empty(){{let turn=state.close.step_granted(grant,actual);work+=turn.work;turn.result}?}else if let Some(step)={let turn=state.close.begin_granted(&mut state.output,grant,actual);work+=turn.work;turn.result}?{step}else{{let turn=crate::retained_clone::close_retained_binding(&mut state.source,grant,actual);work+=turn.work;turn.result}?};
   crate::retained_clone::admit_retained_clone_close(grant,step,self.terminal_is_empty(),"original immutable root clone closure").map_err(Into::into)
  })();crate::RetainedWorkOutcome{result,work}}
 }
@@ -64,7 +64,7 @@ impl<S:RetainedClone+ImmutableRootProjection> Drop for ImmutableRootCloneCursor<
 struct ImmutableRootCloneRetirement<S:RetainedClone+ImmutableRootProjection>{cursor:ManuallyDrop<ImmutableRootCloneCursor<S>>}
 impl<S:RetainedClone+ImmutableRootProjection> RetirementCursor for ImmutableRootCloneRetirement<S>{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.cursor.close_demands(body)}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();let turn=self.cursor.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant,actual:&mut Option<usize>)->RetirementStep{let turn=self.cursor.close_step(grant,actual);match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
  fn terminal_is_empty(&self)->bool{self.cursor.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.cursor.next_close_copy_byte_demand()}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.cursor.next_close_capacity_byte_demand(body).ok()}

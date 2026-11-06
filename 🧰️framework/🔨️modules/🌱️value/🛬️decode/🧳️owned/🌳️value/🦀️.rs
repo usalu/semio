@@ -3,6 +3,9 @@ use crate::OriginalReceivingPrimary;
 use crate::RetainedWorkOutcome;
 use crate::{DslValue,Number,NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,RetainedFieldCursor,RetainedCloneCursor,retained_clone_grant_admits}};
 use super::{NativeReceive,NativeReceiver};
+pub use semio_framework_value_native_receiving_contract::{native_work_limit,work_sum,selected_native_work};
+use crate::native_decoding::NativeReceivingEffect;
+use crate::OriginalRetirementFailure;
 use std::mem::{ManuallyDrop,size_of};
 pub use semio_framework_value_native_schema_engine::source::{NativeTreeKind,NativeValueSource,NativeScalarQuery,NativeSourceScalar,NativeScalarQueryProducer,NativeScalarQueryOperation,invalid,fixed,receipt,nested,child_grant,add_receipt};
 use semio_framework_value_native_receiver_protocol::{NativeSlotOperation,NativeSlotProducer};
@@ -142,7 +145,7 @@ impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,C:NativeS
  fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{if !self.child.terminal_is_empty()&&self.child.requires_original_control(){return self.child.close_original_step(original,effect)}if self.child.terminal_is_empty()&&self.retirement.requires_original_control(){return self.retirement.step_original(original,effect)}self.close_step(effect)}
  fn terminal_is_empty(&self)->bool{self.child.terminal_is_empty()&&self.pending.is_none()&&self.storage.is_none()&&self.output.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
 }
-impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,C:NativeSequenceCollection<T>,S:NativeSequenceInput<I>> Drop for NativeSequenceReceiver<I,T,C,S>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native sequence receiving requires funded closure");}}
+impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,C:NativeSequenceCollection<T>,S:NativeSequenceInput<I>> Drop for NativeSequenceReceiver<I,T,C,S>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native sequence requires funded closure")}}
 impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>> NativeReceive<I> for Vec<T>{type Receiver=NativeSequenceReceiver<I,T,Self>;fn receiver()->Self::Receiver{Self::Receiver::new()}}
 
 #[path="👥️tuple/🦀️.rs"]pub mod tuple;
@@ -150,21 +153,8 @@ pub use semio_framework_value_native_tree_engine as bulk;
 impl<I:NativeValueSource+?Sized> NativeReceive<I> for DslValue{type Receiver=bulk::NativeTreeReceiver<I,Self>;fn receiver()->Self::Receiver{Self::Receiver::new()}}
 
 
-impl<T:RetireOwned,const N:usize> NativeSequenceCollection<T> for semio_framework_value_persistent::list::PagedList<T,N>{
- type Storage=Self;
- fn storage_demand(count:usize)->Result<RetirementDemand,ValueError>{if count>N{return Err(invalid())}Ok(fixed(0))}
- fn admit_storage(output:&mut Option<Self>,count:usize,_:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{if output.is_some(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=match <Self as NativeSequenceCollection<T>>::storage_demand(count){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some(Self::new());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}}
- fn reserve_demand(storage:&Self,_:usize)->Result<Option<RetirementDemand>,ValueError>{if storage.has_reserved_slot(){return Ok(None)}Ok(Some(RetirementDemand{copy_bytes:storage.next_reserve_copy_byte_demand().map_err(|_|invalid())?,capacity_bytes:storage.next_allocation_bytes().map_err(|_|invalid())?,depth:storage.next_reserve_depth_demand().map_err(|_|invalid())?,..Default::default()}))}
- fn reserve_step(storage:&mut Self,_:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress>{let d=match <Self as NativeSequenceCollection<T>>::reserve_demand(storage,storage.len()){Ok(Some(d))=>d,Ok(None)=>return RetainedWorkOutcome{result:Ok(Default::default()),work:0},Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}match storage.reserve_one(grant.maximum_capacity_bytes){Ok(p)=>RetainedWorkOutcome{work:p.work,result:Ok(RetainedCloneProgress{copied_items:usize::from(p.progressed),copied_bytes:if p.progressed{d.copy_bytes}else{0},retained_capacity_bytes:p.allocated_bytes,released_bytes:p.released_allocation_bytes})},Err(error)=>RetainedWorkOutcome{work:error.work,result:Err(invalid().with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}))}}}
- fn push_depth(storage:&Self,_:usize)->Result<usize,ValueError>{storage.next_push_depth_demand().map_err(|_|invalid())}
- fn push_step(storage:&mut Self,index:usize,input:&mut Option<T>,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<RetainedCloneProgress>>{let depth=match Self::push_depth(storage,index){Ok(depth)=>depth,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};push_native_sequence_value(input,g,RetirementDemand{copy_bytes:size_of::<T>(),depth,..Default::default()},|value|storage.push_reserved(value))}
- fn finish(storage:Self)->Self{storage}
-}
 impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,const N:usize> NativeReceive<I> for semio_framework_value_persistent::list::PagedList<T,N>{type Receiver=NativeSequenceReceiver<I,T,Self>;fn receiver()->Self::Receiver{Self::Receiver::new()}}
 
-#[cfg(test)]
-#[path="📦️storage/🧪️tests/🦀️.rs"]
-mod sequence_storage_work_tests;
 
 #[path="🔀️variant/🦀️.rs"]pub mod variant;
 

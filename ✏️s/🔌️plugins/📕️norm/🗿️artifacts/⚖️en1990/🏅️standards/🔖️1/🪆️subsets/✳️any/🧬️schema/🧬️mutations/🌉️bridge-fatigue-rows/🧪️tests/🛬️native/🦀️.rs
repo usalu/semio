@@ -43,7 +43,7 @@ impl Fixture{
   }).unwrap()
  }
  fn close(&mut self,owner:&mut NativeReceivingOriginal<DslValue,InsertBridgeSls>){
-  owner.begin_close();
+  owner.begin_close().unwrap();
   for _ in 0..100_000{if owner.terminal_is_empty(){return;}self.paid(||owner.close_step(grant()));}
   panic!("native leaf original ownership did not retire");
  }
@@ -54,7 +54,7 @@ impl Fixture{
  }
  fn finish(mut self){
   for _ in 0..100_000{if self.decoder.terminal_is_empty(){self.caller.retire(stock());return;}
-   self.caller.turn(stock(),|cx|cx.with_original_retirement(|cx|{let d=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,d,|g|self.decoder.close_step(g))?;Ok(())})).unwrap();
+   self.caller.turn(stock(),|cx|cx.with_original_retirement(|cx|{let d=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;self.decoder.close_on_source(cx)?;Ok(())})).unwrap();
   }panic!("original decoder did not retire");
  }
 }

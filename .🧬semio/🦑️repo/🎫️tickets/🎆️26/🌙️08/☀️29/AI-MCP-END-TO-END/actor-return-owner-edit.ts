@@ -1,0 +1,20 @@
+import * as fs from "node:fs";
+const command="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🎞️command/📥️custody/🎟️source/";
+const actor="🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/📦️return/";
+const file=command+"🦀️.rs",before=fs.readFileSync(file,"utf8"),start=before.indexOf("/// 📮️ One Source prepays"),end=before.indexOf("#[cfg(test)]\nmod tests",start);
+const testStart=before.indexOf(" #[test]\n fn inline_return_"),fnStart=before.indexOf("fn inline_return_",testStart),brace=before.indexOf("{",fnStart);let depth=1,testEnd=brace+1;
+for(;testEnd<before.length&&depth;testEnd++){if(before[testEnd]==="{")depth++;else if(before[testEnd]==="}")depth--;}
+if(start<0||end<start||testStart<end||depth)throw Error("actor return extraction changed");
+const rename=(s:string)=>s.replaceAll("OriginalCommandReturnSlot","OriginalActorReturnSlot").replaceAll("CommandReturnTarget","ActorReturnTarget");
+const imports=`//! 📮️ Actor-local owners return to their exact pinned Source-funded home before settlement.\nuse semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};\nuse semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};\nuse std::mem::{ManuallyDrop,size_of};\nfn refused()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"actor return differs from its actual Source or pinned donor")}\n`;
+const nativeTest=`\n#[cfg(test)]\nmod tests{\n use super::*;\n use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};\n use semio_framework_value::RetainedCloneGrant;\n fn clock()->Option<u64>{Some(1)}\n`+rename(before.slice(testStart,testEnd))+"\n}\n";
+fs.mkdirSync(actor,{recursive:true});if(fs.existsSync(actor+"🦀️.rs"))throw Error("actor return owner already exists");
+const write=(path:string,value:string,name:string)=>{const temp=import.meta.dir+"/🗑️generated/"+name+".tmp";fs.writeFileSync(temp,value);fs.renameSync(temp,path)};
+write(actor+"🦀️.rs",imports+rename(before.slice(start,end))+nativeTest,"actor-return-owner");
+if(fs.readFileSync(file,"utf8")!==before)throw Error("concurrent command Source owner edit");write(file,before.slice(0,start)+before.slice(end,testStart)+before.slice(testEnd),"command-origin-owner");
+const tsFile=command+"🟦️.test.ts",ts=fs.readFileSync(tsFile,"utf8"),tsStart=ts.indexOf('import returns from"./return_cases.json"');if(tsStart<0)throw Error("return oracle changed");
+write(actor+"🟦️.test.ts",'/** 📮️ Independent SQL validates actual write observation and armed returns. */\nimport{test,expect}from"bun:test";import{Database}from"bun:sqlite";import Ajv from"ajv";\n'+ts.slice(tsStart).replaceAll('"./return_cases.json"','"./cases.json"').replaceAll('"./return_schema.json"','"./🔣️.json"'),"actor-return-oracle");
+write(tsFile,ts.slice(0,tsStart),"command-origin-oracle");fs.renameSync(command+"return_cases.json",actor+"cases.json");fs.renameSync(command+"return_schema.json",actor+"🔣️.json");
+const root="🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🦀️.rs",source=fs.readFileSync(root,"utf8");if(source.includes("mod actor_return"))throw Error("actor return already mounted");write(root,source+'\n#[path="📦️return/🦀️.rs"]\nmod actor_return;\npub use actor_return::OriginalActorReturnSlot;\n',"actor-return-root");
+const life="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🚪️lifetime/🦀️.rs",l=fs.readFileSync(life,"utf8"),old="pub use command_source::{OriginalCommandOrigin,OriginalCommandReturnSlot};";if(l.split(old).length!==2)throw Error("lifecycle export changed");write(life,l.replace(old,"pub use command_source::OriginalCommandOrigin;\npub use semio_framework_actor::retained_context::OriginalActorReturnSlot;"),"actor-return-export");
+const turn="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs",t=fs.readFileSync(turn,"utf8");write(turn,t.replaceAll("OriginalCommandReturnSlot","OriginalActorReturnSlot"),"actor-return-consumer");

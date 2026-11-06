@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "name": "ascii",
+      "id": "edit-1",
+      "startedAt": "2026-11-06",
+      "line": "line",
+      "verb": "write",
+      "finishedAt": "done",
+      "sequence": 1
+    },
+    {
+      "name": "unicode",
+      "id": "änderung-🌱",
+      "startedAt": "now",
+      "line": null,
+      "verb": "öffnen",
+      "finishedAt": null,
+      "sequence": 3
+    }
+  ]
+}

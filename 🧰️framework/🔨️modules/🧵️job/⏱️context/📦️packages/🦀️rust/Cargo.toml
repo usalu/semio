@@ -23,13 +23,16 @@ name = "semio_framework_job_context"
 path = "🦀️.rs"
 
 [features]
-testkit = ["semio-framework-async/testkit"]
+testkit = ["semio-framework-async/testkit", "semio-framework-job-receiving/testkit"]
 
 [dependencies]
 semio-framework-job-return-book = { path = "../../../📬️outcome/⏸️continuation/🎟️source/📒️book/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-call = { path = "../../../../🌱️value/♻️retirement/📦️call/📦️packages/🦀️rust" }
 semio-framework-job-outcome-borrow = { path = "../../../📬️outcome/🤝️loan/📦️packages/🦀️rust" }
+semio-framework-job-work-grant = { path = "../../../🏃️work/🎟️grant/📦️packages/🦀️rust" }
+semio-framework-job-return-escrow-publication = { path = "../../../📬️outcome/📤️publication/🪙️escrow/📦️packages/🦀️rust" }
+semio-framework-job-return-budget = { path = "../../../📬️outcome/🪙️budget/📦️packages/🦀️rust" }
 semio-framework-job-failure = { workspace = true }
 semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-job-receiving = { workspace = true }
@@ -46,6 +49,7 @@ semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packa
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job-receiving = { workspace = true, features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-job-testing-caller = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
@@ -99,3 +103,12 @@ path = "../../🎟️source/🏠️native/🧪️tests/🦀️.rs"
 [[test]]
 name = "original_source_dispatch"
 path = "../../🎟️source/🧪️tests/dispatch.rs"
+[[test]]
+name = "original-native-targeted-retirement"
+required-features = ["testkit"]
+path = "../../🎟️source/🏠️native/🧪️tests/🎯️recipient/🦀️.rs"
+
+[[test]]
+name = "original-native-pair-slot"
+required-features = ["testkit"]
+path = "../../🎟️source/🏠️native/🧪️tests/🎟️pair-slot/🦀️.rs"

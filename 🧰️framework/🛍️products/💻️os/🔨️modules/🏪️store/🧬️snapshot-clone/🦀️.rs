@@ -338,7 +338,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
         Ok(true)
     }
 
-    pub fn advance_original(&mut self,  body:usize, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalRetirementFailure> {
+    pub fn advance_original(&mut self,  body:usize, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
         self.ownership=RetainedCloneProgress::default();
         self.last_work=0;
         if self.cancelled || self.closing || !grant.permits_one() {
@@ -511,7 +511,7 @@ where
     M: ArtifactCanonicalJsonTree + RetireOwned + Send + Sync + 'static,
     E: RetainedCloneEdit<P, M>,
 {
-    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalRetirementFailure> {
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
         self.last_work=0;self.ownership=Default::default();
         if self.cancelled||self.closing||!grant.permits_one(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         let native= self.phase==RetainedClonePreparationPhase::Seal;

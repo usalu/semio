@@ -1,0 +1,45 @@
+{
+  "work": 1,
+  "capacity": 8,
+  "cases": [
+    {
+      "pendingWork": false,
+      "maximumWork": 1,
+      "maximumCapacity": 8,
+      "entered": true
+    },
+    {
+      "pendingWork": true,
+      "maximumWork": 1,
+      "maximumCapacity": 8,
+      "entered": false
+    },
+    {
+      "pendingWork": false,
+      "maximumWork": 0,
+      "maximumCapacity": 8,
+      "entered": false
+    },
+    {
+      "pendingWork": false,
+      "maximumWork": 1,
+      "maximumCapacity": 7,
+      "entered": false
+    }
+  ],
+  "view": [
+    "checkpoint",
+    "available_work_units",
+    "ledger_identity",
+    "retirement_recipient_identity",
+    "retained_grant",
+    "with_limits"
+  ],
+  "forbidden": [
+    "charge",
+    "admit_turn_capacity",
+    "prepare_work",
+    "commit_work",
+    "receive_allocation"
+  ]
+}

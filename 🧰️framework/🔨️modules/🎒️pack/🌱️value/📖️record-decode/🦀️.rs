@@ -480,7 +480,7 @@ mod tag_work_tests{
  use super::*;
  use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
  struct Loan(u64);
- impl OriginalWorkRecipient for Loan{type Context<'turn,'source>=() where 'source:'turn;fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}fn admits<'a,'turn,'source>(&mut self,_:&mut (),quote:OriginalWorkQuote<'a>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'a>where 'source:'turn{quote.complete(Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0)))}}
+ impl NativeDecodeWorkRecipient for Loan{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
  #[test]
  fn original_record_tag_work_follows_the_actual_reader_position(){
   let f:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🎟️work.json")).unwrap();

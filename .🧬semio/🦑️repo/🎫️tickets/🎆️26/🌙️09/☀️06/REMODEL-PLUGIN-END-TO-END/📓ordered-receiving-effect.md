@@ -1,0 +1,5 @@
+# Ordered receiving effect integration
+
+NativeDecodeControl receive_allocation and finish_receiving in decode/🏭️construction/🦀️.rs:105-121 are the existing recoverable template. NativeSharedAdmission retains NativeReceivingEffect across calls and refuses close with unresolved callbacks. The effect quotes the original construction recipient, pre-funds actual work, receives the real allocation marker through effect or uses effect_unallocated, settles work, receipts, and takes the exact owned failure into OriginalReceivingPrimary.
+
+UpdateCursor must preserve this frame across interrupted callback phases and pass the actual marker through entry/node allocation. Its map and set receiving callers must retain and propagate the frame and its error, under the actual work and construction loans. Existing helper is private and returns progress, so reuse must preserve updater completion and child error. No implementation or execution claimed.

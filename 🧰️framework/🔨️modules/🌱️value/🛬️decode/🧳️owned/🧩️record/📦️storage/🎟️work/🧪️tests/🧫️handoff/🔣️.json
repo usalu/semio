@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "fields": 2,
+      "initialized": 0,
+      "work": 0,
+      "canCommit": false
+    },
+    {
+      "fields": 2,
+      "initialized": 1,
+      "work": 1,
+      "canCommit": false
+    },
+    {
+      "fields": 2,
+      "initialized": 2,
+      "work": 0,
+      "canCommit": false
+    },
+    {
+      "fields": 2,
+      "initialized": 2,
+      "work": 1,
+      "canCommit": false
+    },
+    {
+      "fields": 0,
+      "initialized": 0,
+      "work": 1,
+      "canCommit": false
+    },
+    {
+      "fields": 2,
+      "initialized": 2,
+      "work": 4,
+      "canCommit": true
+    },
+    {
+      "fields": 0,
+      "initialized": 0,
+      "work": 4,
+      "canCommit": true
+    }
+  ]
+}

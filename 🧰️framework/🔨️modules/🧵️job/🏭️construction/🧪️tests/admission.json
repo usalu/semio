@@ -1,0 +1,40 @@
+{
+  "controller": {
+    "sourceItems": 2,
+    "sourceWork": 2,
+    "captureItems": 1,
+    "captureWork": 1,
+    "candidateItems": 1,
+    "candidateWork": 1
+  },
+  "attempts": [
+    {
+      "name": "refused",
+      "bodyItems": 0,
+      "bodyWork": 1,
+      "candidate": false,
+      "items": 3,
+      "work": 4
+    },
+    {
+      "name": "born",
+      "bodyItems": 1,
+      "bodyWork": 1,
+      "candidate": true,
+      "items": 5,
+      "work": 5
+    }
+  ],
+  "status": [
+    "Pending",
+    "Ready",
+    "Failed"
+  ],
+  "failure": [
+    "source.call.operation",
+    "source.call.context",
+    "source.call.receipt_refusal",
+    "source.source_refusal",
+    "child"
+  ]
+}

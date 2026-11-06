@@ -33,7 +33,7 @@ pub fn drain_and_close_fixture(app: &mut VcsArtifactApp<TestApp>, mounted_policy
         for _ in 0..64 {
             for _ in 0..MAINTENANCE_STAGES {
                 let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
-                let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes).expect("original fixture maintenance quote");
+                let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes,cx.fuel_remaining()).expect("original fixture maintenance quote");
                 semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(app,same,grant)?,app.maintenance_terminal_is_empty()))).expect("original fixture maintenance turn");
             }
         }
@@ -46,7 +46,7 @@ pub fn drain_and_close_composed_fixture(app: &mut VcsArtifactApp<TestApp, TestMe
         for _ in 0..64 {
             for _ in 0..MAINTENANCE_STAGES {
                 let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
-                let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes).expect("original fixture maintenance quote");
+                let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes,cx.fuel_remaining()).expect("original fixture maintenance quote");
                 semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(app,same,grant)?,app.maintenance_terminal_is_empty()))).expect("original fixture maintenance turn");
             }
         }

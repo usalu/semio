@@ -16,6 +16,6 @@ fn turn<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOw
   for index in 0..1048576{if birth.terminal_is_empty(){break}turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|birth.close_step(cx)));assert!(index<1048575);}
   turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|{let d=Birth::boxed_release_demands();close_original_retained_step(cx,d,|_|{drop(birth);Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})}));
   if let Some(store)=store.as_mut(){for index in 0..1048576{if store.terminal_is_empty(){break}turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|store.close_step(cx)));assert!(index<1048575);}}
-  while !decoder.terminal_is_empty(){caller.turn(TURN,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(32768)?;close_original_retained_step(cx,d,|g|decoder.close_step(g))?;Ok(())})).unwrap();}caller.retire(TURN);
+  while !decoder.terminal_is_empty(){caller.turn(TURN,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(32768)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(TURN);
  }
 }

@@ -1,3 +1,6 @@
+#[path = "../📸️snapshot-export/🦀️.rs"]
+mod snapshot_export_tests;
+
 pub(crate) mod context {
     use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::{analyze, capture, model};
     use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::*;
@@ -676,6 +679,20 @@ async fn the_action_bridge_coerces_select_strings_and_both_camera_arg_shapes() {
     assert_eq!(example, RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo-session".into() }));
 }
 
+#[semio_framework_async_macros::async_test]
+async fn window_controls_route_published_values_to_addressed_view_commands() {
+    let rows: serde_json::Value = serde_json::from_str(include_str!("../../🎭️modes/🧪️tests/🧫️controls/🕹️actions.json")).unwrap();
+    for row in rows.as_array().unwrap() {
+        let mut args = Some(semio_framework_value::DslValue::from(&row["args"]));
+        let command = RemodelingPlayApp::command_from_action(row["action"].as_str().unwrap(), &mut args, &mut None).unwrap();
+        match command {
+            RemodelingCommand::SetFrameCursor(payload) => { assert_eq!(payload.stream_id.as_deref(), row["stream"].as_str()); assert_eq!(u64::from(payload.frame_index), row["frame"].as_u64().unwrap()); }
+            RemodelingCommand::SetReportTable(payload) => assert_eq!(payload.table, row["table"].as_str().unwrap()),
+            _ => panic!("unexpected window-control command"),
+        }
+    }
+}
+
 //#endregion 🔖️CommandSurface
 
 /// 🖼️ Render smoke test: every window/panel body key this app declares must render without panicking.
@@ -810,6 +827,72 @@ async fn export_media_mesh_out_exports_a_structured_3d_mesh() {
         MediaPayload::Intrinsic { .. } => panic!("expected a Structured payload"),
     }
 }
+
+#[semio_framework_async_macros::async_test]
+async fn neutral_mesh_export_triangle_agrees_with_independent_gltf() {
+    use semio_plugin::mesh_io::{GlbExporter, MeshExporter};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️mesh-export/🔣️.json")).unwrap();
+    let positions: Vec<f32> = fixture["positions"].as_array().unwrap().iter().map(|value| value.as_f64().unwrap() as f32).collect();
+    let indices: Vec<u32> = fixture["indices"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u32).collect();
+    let mesh = semio_framework::MeshData { positions: positions.clone(), indices: indices.clone(), ..Default::default() };
+    let bytes = GlbExporter.export(&mesh).expect("batch reference GLB");
+    let glb = gltf::Gltf::from_slice(&bytes).expect("independent GLB decoder");
+    let primitive = glb.meshes().next().unwrap().primitives().next().unwrap();
+    let reader = primitive.reader(|buffer| (buffer.index() == 0).then_some(glb.blob.as_deref().unwrap()));
+    assert_eq!(reader.read_positions().unwrap().flatten().collect::<Vec<_>>(), positions);
+    assert_eq!(reader.read_indices().unwrap().into_u32().collect::<Vec<_>>(), indices);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn checked_mesh_media_export_is_resumable_and_matches_independent_gltf() {
+    use semio_plugin::artifact_app_laws::{fixture_close_grant, poll_fixture_media_export, retain_fixture_media_export_result, take_fixture_media_export_chunk, OriginalFixtureCaller};
+    use semio_plugin::{ArtifactMediaExportPoll, PluginApp};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️mesh-export/🔣️.json")).unwrap();
+    let cuts = std::iter::once(None).chain(fixture["cancelAfterTurns"].as_array().unwrap().iter().map(|cut| Some(cut.as_u64().unwrap() as usize)));
+    for cut in cuts {
+        let mut app = app().await;
+        let before = app.snapshot().expect("original mesh snapshot");
+        let expected = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&before.durable_artifacts, &before.results.mesh.mesh).expect("original mesh");
+        let close = fixture_close_grant(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+        let document = app.0.document_identity().expect("live document identity");
+        let revision = app.0.document_base_revision().expect("live document revision");
+        let mut receiver = None;
+        for _ in 0..OriginalFixtureCaller::maximum_turns() {
+            if app.0.submit_media_export_checked(fixture["port"].as_str().unwrap(), &document, revision, None, &mut receiver, app.1.cx()).await.expect("original checked media producer") { break; }
+            app.0.maintenance_step(app.1.cx(), close).expect("media submission maintenance");
+        }
+        let handle = receiver.expect("checked media handle");
+        let mut progress = 0;
+        let mut cancelled = false;
+        let mut terminal = false;
+        for turn in 0..OriginalFixtureCaller::maximum_turns() {
+            if cut == Some(turn) { app.0.cancel_media_export(&handle).await.expect("cancel original media export"); cancelled = true; }
+            match poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), close).await.expect("original media poll") {
+                ArtifactMediaExportPoll::Running { applied_progress, .. } => { assert!(applied_progress >= progress); progress = applied_progress; }
+                ArtifactMediaExportPoll::Cancelled => { assert!(cancelled); terminal = true; break; }
+                ArtifactMediaExportPoll::Complete(result) => {
+                    assert!(!cancelled && cut.is_none());
+                    assert_eq!(result.schema, fixture["schema"].as_str().unwrap());
+                    assert_eq!(result.mime_type, fixture["mimeType"].as_str().unwrap());
+                    let status = retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx(), close).await.expect("publish segmented media");
+                    let mut bytes = Vec::new();
+                    let mut done = false;
+                    while !done { if let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut done, app.1.cx(), close).await.expect("media chunk") { bytes.extend_from_slice(&chunk); } }
+                    assert_eq!(bytes.len() as u64, status.total_bytes);
+                    let glb = gltf::Gltf::from_slice(&bytes).expect("independent GLB decoder");
+                    let primitive = glb.meshes().next().expect("one mesh").primitives().next().expect("one primitive");
+                    let reader = primitive.reader(|buffer| (buffer.index() == 0).then_some(glb.blob.as_deref().unwrap()));
+                    assert_eq!(reader.read_positions().expect("positions").flatten().collect::<Vec<_>>(), expected.positions);
+                    assert_eq!(reader.read_indices().expect("indices").into_u32().collect::<Vec<_>>(), expected.indices);
+                    terminal = true; break;
+                }
+                ArtifactMediaExportPoll::Failed(reason) => panic!("mesh export failed: {reason}"),
+            }
+        }
+        assert!(terminal, "media export reaches a terminal state");
+        assert_eq!(app.snapshot().unwrap(), before, "export and cancellation do not mutate the document");
+    }
+}
 //#endregion 🔖️MediaPortTests
 
 //#region 🔖️IoTests
@@ -859,6 +942,36 @@ fn photo_import_rejects_undecodable_sources_atomically() {
         let payload = semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frame_payload::ImportFramePayload { payload: format!("data:{};base64,{}", case["mime"].as_str().expect("mime"), encoded), name: "invalid.png".into(), index: 0, total: 1 };
         let emit = semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frame_payload::handle(&payload, &doc, &ConfigView { snapshot: &NoConfig, window: None }).expect("undecodable files are skipped");
         assert_eq!(emit.artifact_mutations.len(), case["frames"].as_u64().expect("frames") as usize, "{}", case["id"]);
+    }
+}
+
+/// 📣️ Invalid input warns in the actual UI language and still settles every file in its batch.
+#[test]
+fn invalid_media_notifies_each_locale_without_editing_or_leaving_a_pending_batch() {
+    use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingWindowTransient;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️photo-admission/🔣️.json")).unwrap();
+    let scene = RemodelingSnapshot::default();
+    let history = HistoryView::empty();
+    let document = ArtifactView::new(&scene, &history);
+    let config = ConfigView { snapshot: &NoConfig, window: None };
+    for terminology in semio_ui_locale::Terminology::ALL {
+        for row in fixture["notice"]["locales"].as_array().unwrap() {
+            let locale = match row["locale"].as_str().unwrap() { "en" => semio_ui_locale::Locale::En, "de" => semio_ui_locale::Locale::De, _ => unreachable!() };
+            let view = ViewModel { locale, terminology, ..ViewModel::default() };
+            for case in fixture["cases"].as_array().unwrap() {
+                let mut window = RemodelingWindowTransient::default();
+                for index in 0..fixture["notice"]["batchTotal"].as_u64().unwrap() as u32 {
+                    let payload = import_frame_payload::ImportFramePayload { payload: format!("data:{};base64,{}", case["mime"].as_str().unwrap(), case["base64"].as_str().unwrap()), name: fixture["notice"]["name"].as_str().unwrap().into(), index, total: fixture["notice"]["batchTotal"].as_u64().unwrap() as u32 };
+                    let (emit, next) = import_frame_payload::handle_in_window(&payload, &document, &config, &window, Some(&view)).unwrap();
+                    assert_eq!(emit.artifact_mutations.len(), fixture["notice"]["artifactMutations"].as_u64().unwrap() as usize);
+                    assert_eq!(emit.effects.len(), fixture["notice"]["warningCount"].as_u64().unwrap() as usize);
+                    assert!(matches!(&emit.effects[0], Effect::Notify { message } if message == row["message"].as_str().unwrap()));
+                    window = next;
+                    if index + 1 < payload.total { assert_eq!(window.import.as_ref().unwrap().done, index + 1); }
+                }
+                assert_eq!(window, RemodelingWindowTransient::default());
+            }
+        }
     }
 }
 

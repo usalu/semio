@@ -1,6 +1,10 @@
 //#region 🚪️GuestLifecycleAuthority
 use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest};
 use std::mem::ManuallyDrop;
+#[path="../🏃️runtime/🎞️command/📥️custody/🎟️source/🦀️.rs"]
+mod command_source;
+pub use command_source::OriginalCommandOrigin;
+pub use semio_framework_actor::retained_context::OriginalActorReturnSlot;
 
 /// 🔗️ Process-local descendant identity; its captured weak app lease keeps the allocation address reserved.
 #[doc(hidden)]
@@ -430,9 +434,14 @@ impl<PA: semio_plugin_reactor_app::PluginApp> GuestLifetimeOwner for NativeLifet
 
 pub struct NativeLifetimeSlot<PA: semio_plugin_reactor_app::PluginApp> {
     pub cell: NativeCell<PA>,
+    pub command_origin:OriginalCommandOrigin,
     pub native_created: bool,
     pub pending_creation: ManuallyDrop<Option<crate::life_cleanup_pumps::PendingNativeCreation<PA>>>,
     pub patch_sequence: u64,
+}
+impl<PA:semio_plugin_reactor_app::PluginApp> NativeLifetimeSlot<PA>{
+ /// 📮️ The actual instance and every close peer prove retirement before their Source alias can return.
+ pub fn close_command_origin<P:ClosePeers+?Sized>(&mut self,peers:&P,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if self.command_origin.terminal_is_empty(){return Ok(true)}if !matches!(self.cell.phase,Phase::Closing|Phase::Retired){return Ok(false)}let Some(owner)=self.cell.owner()else{return Ok(false)};if !owner.terminal_is_empty(peers)?{return Ok(false)}cx.with_original_retirement(|cx|self.command_origin.return_step(cx))}
 }
 
 /// 🗃️ Fixed allocation-bound ownership belongs to the typed runtime, never a copied thread-local key.
@@ -462,7 +471,7 @@ impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
             return Err("lifecycle backing unavailable");
         }
         let cell = NativeCell::admit(open, self.serial.next()?)?;
-        self.slots.insert_admitted(index, NativeLifetimeSlot { cell, native_created: false, pending_creation:ManuallyDrop::new(None), patch_sequence: 0 });
+        self.slots.insert_admitted(index, NativeLifetimeSlot { cell, command_origin:OriginalCommandOrigin::empty(), native_created: false, pending_creation:ManuallyDrop::new(None), patch_sequence: 0 });
         Ok(true)
     }
     pub fn get(&self, instance: u32) -> Option<&NativeLifetimeSlot<PA>> {
@@ -497,6 +506,7 @@ impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
     }
     pub fn prepare_turn<P: ClosePeers + ?Sized>(&mut self, instance: u32, peers: &P) -> Result<Option<ActorInstanceLifecycleReceipt>, semio_framework::Fault> {
         let slot = self.get_mut(instance).ok_or_else(|| crate::life_reactor_close::reactor_close_fault("turn lifecycle missing"))?;
+        if matches!(slot.cell.phase,Phase::Closing|Phase::Retired)&&!slot.command_origin.terminal_is_empty(){return Ok(None)}
         slot.cell.prepare_retired(peers)?;
         slot.cell.release_owner_step(1, 4096, peers)?;
         if slot.cell.staged_ack.is_some() && (slot.cell.phase != Phase::Retired || slot.cell.owner_released) {

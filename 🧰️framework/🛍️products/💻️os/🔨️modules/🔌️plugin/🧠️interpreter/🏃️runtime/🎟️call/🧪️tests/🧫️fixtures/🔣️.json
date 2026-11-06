@@ -10,7 +10,7 @@
   ],
   "expectedVm": 2,
   "noBudgetContext": true,
-  "maximumArguments": 22,
+  "maximumArguments": 23,
   "budgetArguments": 19,
-  "prefixArguments": 3
+  "prefixArguments": 4
 }

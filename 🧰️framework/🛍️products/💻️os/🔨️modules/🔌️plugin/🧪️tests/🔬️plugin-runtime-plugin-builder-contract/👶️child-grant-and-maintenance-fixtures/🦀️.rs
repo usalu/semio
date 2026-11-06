@@ -63,7 +63,7 @@ pub fn drive_job_close<J:semio_framework_job::InteractiveJob+?Sized>(job:&mut J,
     /// 🎟️ Spends exactly the quoted maintenance turn of a hosted app.
     #[doc(hidden)]
 pub fn app_maintenance_turn<P: PluginApp>(app: &mut P,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
-        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
+        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,cx.fuel_remaining())?;
         let grant = semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance;
         assert!(grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"app demand exceeds its original fixture maintenance policy");
         let step = semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((app.maintenance_step(same,grant)?,app.maintenance_terminal_is_empty())))?;

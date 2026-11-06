@@ -1,0 +1,46 @@
+{
+  "rows": [
+    {
+      "name": "semio-plugin-host-wake-policy",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🎟️root/📃️policy/📦️packages/🦀️rust/Cargo.toml",
+      "owner": "🧰️framework/Cargo.toml",
+      "role": "product",
+      "explicitContribution": true
+    },
+    {
+      "name": "semio-plugin-actor-input",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📥️input/📦️packages/🦀️rust/Cargo.toml",
+      "owner": "🧰️framework/Cargo.toml",
+      "role": "framework",
+      "explicitContribution": true
+    },
+    {
+      "name": "semio-framework-plugin-result-page",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/📃️/📦️packages/🦀️rust/Cargo.toml",
+      "owner": "🧰️framework/Cargo.toml",
+      "role": "framework",
+      "explicitContribution": true
+    },
+    {
+      "name": "semio-plugin-host-actor-failure",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚠️failure/📦️packages/🦀️rust/Cargo.toml",
+      "owner": "🧰️framework/Cargo.toml",
+      "role": "framework",
+      "explicitContribution": true
+    },
+    {
+      "name": "semio-framework-actor-failure",
+      "manifest": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/⚠️failure/📦️packages/🦀️rust/Cargo.toml",
+      "owner": "🧰️framework/Cargo.toml",
+      "role": "framework",
+      "explicitContribution": false
+    },
+    {
+      "name": "semio-plugin-host-poll",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📦️packages/🦀️rust/Cargo.toml",
+      "owner": "Cargo.toml",
+      "role": "product",
+      "explicitContribution": false
+    }
+  ]
+}

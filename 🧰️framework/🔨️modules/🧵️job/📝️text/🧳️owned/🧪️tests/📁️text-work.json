@@ -1,0 +1,59 @@
+{
+  "cases": [
+    {
+      "id": "ascii",
+      "source": "abcdefghi",
+      "payloadBytes": 4,
+      "chunks": [
+        4,
+        4,
+        1
+      ]
+    },
+    {
+      "id": "unicode-four",
+      "source": "aé🦑中z",
+      "payloadBytes": 4,
+      "chunks": [
+        3,
+        4,
+        4
+      ]
+    },
+    {
+      "id": "unicode-five",
+      "source": "aé🦑中z",
+      "payloadBytes": 5,
+      "chunks": [
+        3,
+        4,
+        4
+      ]
+    },
+    {
+      "id": "unicode-seven",
+      "source": "aé🦑中z",
+      "payloadBytes": 7,
+      "chunks": [
+        7,
+        4
+      ]
+    },
+    {
+      "id": "two-byte-boundary",
+      "source": "ééé",
+      "payloadBytes": 5,
+      "chunks": [
+        4,
+        2
+      ]
+    },
+    {
+      "id": "empty",
+      "source": "",
+      "payloadBytes": 4,
+      "chunks": []
+    }
+  ],
+  "maximumEvents": 1024
+}

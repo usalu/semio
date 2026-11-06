@@ -1,0 +1,36 @@
+{
+  "placementItems": 2,
+  "placementWork": 2,
+  "cases": [
+    {
+      "occupied": false,
+      "items": 1,
+      "work": 3,
+      "entered": false
+    },
+    {
+      "occupied": false,
+      "items": 2,
+      "work": 1,
+      "entered": false
+    },
+    {
+      "occupied": true,
+      "items": 3,
+      "work": 3,
+      "entered": false
+    },
+    {
+      "occupied": false,
+      "items": 3,
+      "work": 3,
+      "entered": true
+    }
+  ],
+  "causes": [
+    "operation",
+    "context",
+    "receipt_refusal",
+    "source_refusal"
+  ]
+}

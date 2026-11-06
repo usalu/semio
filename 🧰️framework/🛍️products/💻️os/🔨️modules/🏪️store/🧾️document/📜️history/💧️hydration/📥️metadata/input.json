@@ -1,0 +1,98 @@
+{
+  "cases": [
+    {
+      "name": "valid",
+      "id": "op",
+      "author": "a",
+      "timestamp": [
+        1,
+        20,
+        0
+      ],
+      "levels": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "accepted": true,
+      "undoPolicy": 0
+    },
+    {
+      "name": "missing identity",
+      "id": " ",
+      "author": "a",
+      "timestamp": [
+        1,
+        20,
+        0
+      ],
+      "levels": [],
+      "accepted": false,
+      "undoPolicy": 0
+    },
+    {
+      "name": "missing author",
+      "id": "op",
+      "author": " ",
+      "timestamp": [
+        1,
+        20,
+        0
+      ],
+      "levels": [],
+      "accepted": false,
+      "undoPolicy": 0
+    },
+    {
+      "name": "negative physical clock",
+      "id": "op",
+      "author": "a",
+      "timestamp": [
+        1,
+        -1,
+        0
+      ],
+      "levels": [],
+      "accepted": false,
+      "undoPolicy": 0
+    },
+    {
+      "name": "missing timestamp",
+      "id": "op",
+      "author": "a",
+      "timestamp": null,
+      "levels": [],
+      "accepted": false,
+      "undoPolicy": 0
+    },
+    {
+      "name": "unknown severity",
+      "id": "op",
+      "author": "a",
+      "timestamp": [
+        1,
+        20,
+        0
+      ],
+      "levels": [
+        4
+      ],
+      "accepted": false,
+      "undoPolicy": 0
+    },
+    {
+      "name": "unknown undo policy",
+      "id": "op",
+      "author": "a",
+      "timestamp": [
+        1,
+        20,
+        0
+      ],
+      "levels": [],
+      "undoPolicy": 4,
+      "accepted": false
+    }
+  ]
+}

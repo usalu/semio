@@ -416,9 +416,9 @@ fn fixture_lifecycle_grant(demand: semio_framework_value::RetirementDemand) -> s
 pub fn drain_maintenance_pressure<P: PluginApp>(app: &mut P,cx:&mut semio_framework_job::StepContext<'_>) {
     let mut idle_stages = 0;
     while app.maintenance_under_pressure() {
-        let grant = fixture_lifecycle_grant(PluginApp::maintenance_retirement_demands(app, fixture_mounted_policy().maintenance.maximum_copy_bytes).expect("quoted maintenance demand"));
+        let grant = fixture_lifecycle_grant(PluginApp::maintenance_retirement_demands(app, fixture_mounted_policy().maintenance.maximum_copy_bytes,cx.fuel_remaining()).expect("quoted maintenance demand"));
         if cx.should_yield(){return}
-        let demand=PluginApp::maintenance_retirement_demands(app,grant.maximum_copy_bytes).expect("original maintenance quote");
+        let demand=PluginApp::maintenance_retirement_demands(app,grant.maximum_copy_bytes,cx.fuel_remaining()).expect("original maintenance quote");
         match semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|Ok((PluginApp::maintenance_step(app,same,loan)?,PluginApp::maintenance_terminal_is_empty(app)))).expect("original bounded maintenance") {
             semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress != semio_framework_value::retained_clone::RetainedCloneProgress::default() => idle_stages = 0,
             _ => idle_stages += 1,

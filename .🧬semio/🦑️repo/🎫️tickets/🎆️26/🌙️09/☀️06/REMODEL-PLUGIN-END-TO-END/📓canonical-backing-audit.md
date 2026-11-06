@@ -1,0 +1,5 @@
+# Canonical backing audit
+
+Layout::array validates overflow and alignment. Nonzero backing uses the same Layout for alloc and Vec capacity; zero and zero-size types return Vec::new; empty u8 backing forms valid String. Neutral schema matches current fixture shape. Existing tests verify lengths, pointer stability, alignment type and overflow but do not observe actual allocations. No test execution.
+
+The helper accepts no actual-attempt marker: a consuming owner must distinguish no allocation from an attempted failed allocation. Indexed replacement currently sets its marker only after success, so a null allocation loses Some(0) attempt evidence. Browser owner notified. FlowText and RowsBuffer currently do not expose a marker through their construction callback. Job admit_original_construction is callback-local and records progress after effects, with no persistent callback phase or actual marker; no reusable Job construction frame found in scoped source.

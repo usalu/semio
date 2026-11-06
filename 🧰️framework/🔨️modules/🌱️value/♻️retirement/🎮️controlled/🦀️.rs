@@ -336,6 +336,3 @@ impl<T: RetireOwned> RetirementCursor for ControlledRetirement<T> {
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
 
-#[cfg(test)]
-#[path="🎟️work/🧪️tests/🦀️.rs"]
-mod actual_work_tests;

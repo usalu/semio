@@ -70,7 +70,7 @@ fn original_receiving_refusal_keeps_the_raw_semantic_owner(){
    let(failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||result.unwrap_err().with_receiving_receipt(receipt));
    assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(pointer(&failure),original_pointer);assert!(failure.receipt_refusal.is_some());assert!(failure.context_refusal.is_none()&&failure.work_refusal.is_none());assert_eq!(cx.retained_progress(),Default::default());paired=Some(failure);Ok(())
   }).unwrap();
-  while !decoder.terminal_is_empty(){caller.turn(stock,|cx|{semio_framework_job::close_original_retained_step(cx,decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?,|grant|decoder.close_step(grant))?;Ok(())}).unwrap();}
+  while !decoder.terminal_is_empty(){caller.turn(stock,|cx|{decoder.close_on_source(cx)?;Ok(())}).unwrap();}
   let mut retirement=semio_framework_value::retained_clone::RetainedCloneClose::default();
   while paired.is_some()||!retirement.is_empty(){
    caller.turn(stock,|cx|{

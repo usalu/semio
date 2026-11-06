@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "name": "null",
+      "source": "null",
+      "accepted": true,
+      "expected": null
+    },
+    {
+      "name": "unicode object",
+      "source": "{\"title\":\"Notiz 🌱\",\"items\":[1,true,null]}",
+      "accepted": true,
+      "expected": {
+        "title": "Notiz 🌱",
+        "items": [
+          1,
+          true,
+          null
+        ]
+      }
+    },
+    {
+      "name": "duplicate member",
+      "source": "{\"a\":1,\"a\":2}",
+      "accepted": false
+    },
+    {
+      "name": "truncated object",
+      "source": "{\"a\":",
+      "accepted": false
+    },
+    {
+      "name": "trailing data",
+      "source": "null false",
+      "accepted": false
+    },
+    {
+      "name": "nonfinite number",
+      "source": "1e999",
+      "accepted": false
+    }
+  ],
+  "stock": {
+    "items": 100000,
+    "copyBytes": 10485760,
+    "capacityBytes": 10485760,
+    "releaseBytes": 10485760,
+    "depth": 256,
+    "fuel": 1000000
+  },
+  "cleanup": {
+    "items": 100000,
+    "copyBytes": 10485760,
+    "capacityBytes": 10485760,
+    "releaseBytes": 10485760,
+    "depth": 256,
+    "fuel": 1000000
+  },
+  "turn": {
+    "items": 1,
+    "copyBytes": 65536,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 256,
+    "work": 2
+  }
+}

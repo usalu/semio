@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "pair",
+    "cause",
+    "json",
+    "message",
+    "offset"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "pair": {
+      "const": [
+        "cause",
+        "progress",
+        "receiptRefusal"
+      ]
+    },
+    "cause": {
+      "const": [
+        "kind",
+        "original"
+      ]
+    },
+    "json": {
+      "const": [
+        [
+          "Native",
+          "kind",
+          "original"
+        ],
+        [
+          "UnexpectedEof",
+          "kind"
+        ],
+        [
+          "UnexpectedByte",
+          "kind",
+          "found",
+          "offset"
+        ],
+        [
+          "InvalidNumber",
+          "kind",
+          "offset"
+        ],
+        [
+          "InvalidEscape",
+          "kind",
+          "offset"
+        ],
+        [
+          "InvalidUnicodeEscape",
+          "kind",
+          "offset"
+        ],
+        [
+          "UnpairedSurrogate",
+          "kind",
+          "offset"
+        ],
+        [
+          "ControlCharacterInString",
+          "kind",
+          "byte",
+          "offset"
+        ],
+        [
+          "InvalidUtf8",
+          "kind"
+        ],
+        [
+          "TrailingData",
+          "kind",
+          "offset"
+        ],
+        [
+          "MaxDepthExceeded",
+          "kind",
+          "depth"
+        ],
+        [
+          "DuplicateMember",
+          "kind",
+          "name",
+          "offset"
+        ]
+      ]
+    },
+    "message": {
+      "const": "duplicate 源"
+    },
+    "offset": {
+      "const": 73
+    }
+  }
+}

@@ -357,8 +357,6 @@ pub fn run_mcp_entrypoint(services:Vec<RemoteInferenceProtocolV1>, credentials: 
         Mode::Http(options) => run_http(options),
         Mode::Audit { .. } => unreachable!("handled above"),
     };
-    if let Err(error) = result {
-        eprintln!("[semio-os-mcp] {:?}: {}", error.code, error.message);
-        std::process::exit(1);
-    }
+    if let Err(error)=result{error.exit()}
+
 }

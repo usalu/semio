@@ -7,10 +7,10 @@
     "smallArray",
     "largeZeroSizedCount",
     "minimumLargeWork",
-    "emptyArrayRefuses",
+    "emptyArray",
     "cancelCuts",
     "tuple",
-    "freshPayloadCopyBytes"
+    "freshDefaultValues"
   ],
   "properties": {
     "stock": {
@@ -37,8 +37,8 @@
     "minimumLargeWork": {
       "const": 4097
     },
-    "emptyArrayRefuses": {
-      "const": true
+    "emptyArray": {
+      "const": []
     },
     "cancelCuts": {
       "const": [
@@ -56,13 +56,13 @@
         false
       ]
     },
-    "freshPayloadCopyBytes": {
+    "freshDefaultValues": {
       "const": {
-        "bool": 1,
-        "u64": 8,
-        "f64": 8,
-        "string": 0,
-        "unit": 0
+        "bool": false,
+        "u64": 0,
+        "f64": 0.0,
+        "string": "",
+        "unit": null
       }
     }
   }

@@ -1,0 +1,66 @@
+{
+  "pageSlots": 64,
+  "releasePageBytes": 4096,
+  "cases": [
+    {
+      "name": "first64",
+      "word": 8,
+      "len": 0,
+      "pages": 0,
+      "copy": 2666,
+      "capacity": 2576,
+      "depth": 2,
+      "work": 194
+    },
+    {
+      "name": "existing64",
+      "word": 8,
+      "len": 1,
+      "pages": 1,
+      "copy": 80,
+      "capacity": 0,
+      "depth": 2,
+      "work": 1
+    },
+    {
+      "name": "nextPage64",
+      "word": 8,
+      "len": 64,
+      "pages": 1,
+      "copy": 1642,
+      "capacity": 1552,
+      "depth": 2,
+      "work": 67
+    },
+    {
+      "name": "nextDirectory64",
+      "word": 8,
+      "len": 8064,
+      "pages": 126,
+      "copy": 2666,
+      "capacity": 2576,
+      "depth": 3,
+      "work": 196
+    },
+    {
+      "name": "first32",
+      "word": 4,
+      "len": 0,
+      "pages": 0,
+      "copy": 1846,
+      "capacity": 1800,
+      "depth": 2,
+      "work": 322
+    },
+    {
+      "name": "existing32",
+      "word": 4,
+      "len": 1,
+      "pages": 1,
+      "copy": 40,
+      "capacity": 0,
+      "depth": 2,
+      "work": 1
+    }
+  ]
+}

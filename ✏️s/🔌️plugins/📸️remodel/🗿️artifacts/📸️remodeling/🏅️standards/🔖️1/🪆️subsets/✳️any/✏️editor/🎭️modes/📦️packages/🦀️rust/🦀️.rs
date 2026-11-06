@@ -3,6 +3,10 @@
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 
+#[cfg(test)]
+#[path = "🧪️tests/🎛️controls/🦀️.rs"]
+mod window_controls_tests;
+
 #[path = "."]
 pub mod editor {
     #[path = "."]

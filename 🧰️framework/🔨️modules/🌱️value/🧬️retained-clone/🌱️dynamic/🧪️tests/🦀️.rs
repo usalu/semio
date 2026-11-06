@@ -1,3 +1,4 @@
+const MAXIMUM_CLONE_WORK:u64=4096;
 use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use super::protocol::*;
@@ -58,7 +59,7 @@ fn selected_dynamic_close_preserves_body_before_narrow_grant(){
     let demand=RetainedCloneSource::<DslValue>::owned_constructor_demand::<()>();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<DslValue>::constructor_copy_bytes(),maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};
     let(outcome,heap)=observe(||RetainedCloneSource::admit_owned(owner,(),g));let work=outcome.work;let(mut source,p)=outcome.result.map_err(|(error,_,_)|error).unwrap();assert!(work>0);assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=heap.0;freed+=heap.1;
     let identity=source.borrow().get()as*const DslValue;let mut cursor=DslValue::retained_clone_cursor();
-    for _ in 0..bound{if cursor.output_ready(){break}let d=cursor.advance_demands(source.borrow(),body).unwrap();let g=grant(d,body);let(outcome,heap)=observe(||cursor.advance(source.borrow(),body,g));check(outcome,heap,g);born+=heap.0;freed+=heap.1;}
+    for _ in 0..bound{if cursor.output_ready(){break}let d=cursor.advance_demands(source.borrow(),body,MAXIMUM_CLONE_WORK).unwrap();let g=grant(d,body);let(outcome,heap)=observe(||cursor.advance(source.borrow(),body,MAXIMUM_CLONE_WORK,g));check(outcome,heap,g);born+=heap.0;freed+=heap.1;}
     assert!(cursor.output_ready());cursor.begin_close();let mut reached=false;
     for _ in 0..bound{let d=cursor.close_demands(body).unwrap();if d.copy_bytes==body&&d.capacity_bytes==0&&d.release_bytes==0{reached=true;break}let g=grant(d,body);let(outcome,heap)=observe(||cursor.close_selected(body,g));check(outcome,heap,g);born+=heap.0;freed+=heap.1;}
     assert!(reached);let d=cursor.close_demands(body).unwrap();let denied=RetainedCloneGrant{maximum_copy_bytes:law["deniedCopy"].as_u64().unwrap()as usize,..grant(d,body)};

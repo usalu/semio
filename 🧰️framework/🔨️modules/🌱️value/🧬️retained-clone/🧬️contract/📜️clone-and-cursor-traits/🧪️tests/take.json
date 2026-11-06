@@ -4,7 +4,8 @@
     "copy": 16777216,
     "capacity": 16777216,
     "release": 16777216,
-    "depth": 128
+    "depth": 128,
+    "work": 1000000
   },
   "maximumTurns": 4096,
   "body": 256,
@@ -49,5 +50,7 @@
     ]
   },
   "oneBank": true,
-  "closeAllSourcesAndOutputs": true
+  "closeAllSourcesAndOutputs": true,
+  "maximumItemsPerTurn": 8,
+  "maximumWorkPerTurn": 4096
 }

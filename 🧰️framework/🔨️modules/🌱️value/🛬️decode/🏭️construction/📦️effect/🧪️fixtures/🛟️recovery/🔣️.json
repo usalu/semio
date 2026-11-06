@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "phase": "Empty",
+      "closeAllowed": true,
+      "outputAllowed": true
+    },
+    {
+      "phase": "GrantStarted",
+      "closeAllowed": false,
+      "outputAllowed": false
+    },
+    {
+      "phase": "Granted",
+      "closeAllowed": false,
+      "outputAllowed": false
+    },
+    {
+      "phase": "EffectStarted",
+      "closeAllowed": false,
+      "outputAllowed": false
+    },
+    {
+      "phase": "EffectFinished",
+      "closeAllowed": false,
+      "outputAllowed": false
+    },
+    {
+      "phase": "ReceiptStarted",
+      "closeAllowed": false,
+      "outputAllowed": false
+    },
+    {
+      "phase": "Settled",
+      "closeAllowed": false,
+      "outputAllowed": false
+    }
+  ]
+}

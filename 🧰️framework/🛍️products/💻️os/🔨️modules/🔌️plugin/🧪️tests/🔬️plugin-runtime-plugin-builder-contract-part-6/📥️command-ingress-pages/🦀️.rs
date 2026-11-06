@@ -31,7 +31,7 @@
         let mut carried = driver.next_page().expect("the host owner produces its first page");
         loop {
             declared = declared.max(carried.as_ref().map_or(0, |(cursor, _)| cursor.page_count as usize));
-            let result = semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut None, carried.take(), None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+            let result = semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut None, &mut carried, None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
             turns += 1;
             match result.command_ingress {
                 semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns, declared),
@@ -161,7 +161,7 @@
             assert_eq!(pages.len(), row.pages, "row {} must cut into {} pages", row.name, row.pages);
             for (delivery, page_index) in row.deliver.iter().copied().enumerate() {
                 let (cursor, page) = pages[page_index].clone();
-                let result = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, Some((cursor, page)), None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+                let result = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, &mut Some((cursor, page)), None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
                 match (&result.command_ingress, delivery == row.rejected_delivery) {
                     (semio_framework::kernel::CommandIngressStatus::Fault { fault, .. }, true) => {
                         assert_eq!(fault.as_slice(), b"plugin.command-page-order", "row {} delivery {delivery} must be refused by its order", row.name);
@@ -213,7 +213,7 @@
         let line = "p".repeat(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES + 1);
         let mut abandoned = command_page_authority_driver(instance, abandoned_seq, &protocol::AppCommand::CommandText { seq: abandoned_seq, line }).await;
         let first = abandoned.next_page().expect("the abandoned owner produces its first page").expect("a two-page command has a first page");
-        let opened = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, Some(first), None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+        let opened = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, &mut Some(first), None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
         assert!(
             matches!(opened.command_ingress, semio_framework::kernel::CommandIngressStatus::PageAccepted(_)),
             "the guest accepts the first page of a two-page command: {:?}",
@@ -226,8 +226,8 @@
         let mut driver = command_page_authority_driver(instance, seq, &protocol::AppCommand::CommandText { seq, line: "after the abandoned owner".into() }).await;
         let mut completed = false;
         for turn in 0..INGRESS_TURNS_PER_COMMAND {
-            let carried = driver.next_page().expect("the host owner produces its pages");
-            let result = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, carried, None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+            let mut carried = driver.next_page().expect("the host owner produces its pages");
+            let result = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, &mut carried, None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
             let progress = driver.observe(&result.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).unwrap_or_else(|fault| {
                 panic!("turn {turn}: the guest answered {:?} for the command this host owns as seq {seq}: {}: {}", result.command_ingress, fault.code.0, fault.message)
             });
@@ -245,7 +245,7 @@
             if semio_framework_plugin_reactor_turn::retained_command_ingress_occupancy() == 0 {
                 break;
             }
-            semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, None, None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+            semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, &mut None, None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
         }
         assert_eq!(semio_framework_plugin_reactor_turn::retained_command_ingress_occupancy(), 0, "the superseded owner retires on its own budget instead of pinning the authority");
         reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;

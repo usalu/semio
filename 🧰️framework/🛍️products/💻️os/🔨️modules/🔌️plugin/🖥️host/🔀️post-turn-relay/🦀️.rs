@@ -1,115 +1,35 @@
-//! 🔀️ Source-funded guest operations and their original result recipients.
+//! 🔀️ Source-owned guest operations and their original result recipients.
 pub use semio_framework_plugin_host_source_json::{SourceJsonEncoder,OriginalJobBudgetJson};
-#[path="🎟️unit/🦀️.rs"]
-mod original_unit_flow;
-pub use original_unit_flow::{GuestRelayUnitFlow,GuestRelayUnitStatus};
+use semio_framework_actor::ActorId as RuntimeActorId;
+use semio_plugin_host_guest_runtime::{GuestInstance,GuestRuntimes};
+use semio_plugin_host_wake::GuestRelayWakeDriver;
 #[path="📤️output/🦀️.rs"]
 mod original_output;
+#[path="📤️output/🧯️actor-failure.rs"]
+mod actor_failure;
+pub use actor_failure::ActorFailureCapsule;
 pub use original_output::{GuestRelayOutput,GuestRelayOutputHome,GuestRelayFaultHome,GuestRelayFault,GuestRelayResult};
-
-//#region 🔀️PostTurnRelay
-
-#[path = "🏊️pool-future-requests-and-completion-slot/🦀️.rs"]
-mod pool_future_requests_and_completion_slot;
-pub use pool_future_requests_and_completion_slot::RELAY_JOB_BUDGET;
-use pool_future_requests_and_completion_slot::{
-    RELAY_JOB_WORK_FUEL,
-    GuestRelayCompletionSender, GuestRelayCompletionSlot, GuestRelayInlineRequest,
-    GuestRelayOwnedBytes, GuestRelayPoolFailure, GuestRelayPoolFuture, GuestRelayRequest,
-    GuestRelayRequestKind, GuestRelayStepCompletion,
-};
-pub(crate) use pool_future_requests_and_completion_slot::GuestRelayCompletion;
-
-#[path = "🎟️instance-slots-leases-and-cancel-helpers/🦀️.rs"]
-mod instance_slots_leases_and_cancel_helpers;
-use instance_slots_leases_and_cancel_helpers::{
-    cancel_guest_job_once, foreground_cancel_completion, guest_relay_cleanup_pending_detail,
-    mark_guest_cleanup_pending, quarantine_guest_instance, start_guest_job, step_guest_job,
-    GuestInstanceLease, GuestInstanceSlot,
-};
-
-#[path = "📡️relay-attempts-and-publication/🦀️.rs"]
-mod relay_attempts_and_publication;
-use relay_attempts_and_publication::{
-    receive_relay_close, recover_guest_relay_failure, run_guest_relay_request, GuestRelayAttempt,
-    GuestRelayPublication, GuestRelayPublicationKind,
-};
-
-#[path = "🥶️cold-relay-job/📨️original-crossing/🦀️.rs"]
-mod original_crossing;
-use original_crossing::GuestRelayNativeResponse;
-
+#[path="🎟️unit/🌱️canonical.rs"]
+mod original_unit_flow;
+pub use original_unit_flow::{GuestRelayUnitFlow,GuestRelayUnitStatus,GuestRelayJobInput,GuestRelayInferenceInput,GuestRelayInferenceSource,ColdJobCallPlan,GuestRelayJsonSource,GuestRelayByteSource,GuestRelayBorrowedJson,GuestRelayBorrowedBytes,GuestRelayJsonTransform,GuestRelayTransformedOutput,GuestRelayColdController};
 #[path="🏠️native/🦀️.rs"]
 mod native_home;
-pub use native_home::{GuestRelayNativeHome,GuestRelayNativeOrigin,GuestRelayNativeResolver,GuestRelayNativeCustody,GuestRelayNativeState,NativeInstanceHome,NativeInstanceRetirement};
-
-#[path = "🥶️cold-relay-job/🦀️.rs"]
-mod cold_relay_job;
-use cold_relay_job::GuestColdRelayJob;
-
-#[path = "🔬️lifecycle-probe-and-refused-source/🦀️.rs"]
-mod lifecycle_probe_and_refused_source;
-use lifecycle_probe_and_refused_source::{
-    GuestRelayLifecycleProbeControl, GuestRelayLifecycleProbeJob,
-};
-
-#[path = "🧾️mounted-session-types-and-registry-struct/🦀️.rs"]
-mod mounted_session_types_and_registry_struct;
-use mounted_session_types_and_registry_struct::{
-    close_relay_session, GuestRelayAdmission, GuestRelayMountedClose, GuestRelayMountedLifecycle,
-    GuestRelayMountedOutput, GuestRelayMountedOwner, GuestRelayMountedRegistry,
-    GuestRelayMountedSession, GuestRelayMountedSlot, GuestRelayMountedTerminal,
-    GuestRelayOutcomeKind, GuestRelayOutcomeStage, GuestRelayWakeCustody, GUEST_RELAY_MOUNTED_SLOTS,
-    GUEST_RELAY_REAPER_FALLBACK_MS,
-};
-pub use mounted_session_types_and_registry_struct::GuestRelayWakeAuthority;
-
-#[path = "🗂️mounted-registry-lifecycle/🦀️.rs"]
-mod mounted_registry_lifecycle;
-
-#[path = "⚙️mounted-registry-pump-and-reaper/🦀️.rs"]
-mod mounted_registry_pump_and_reaper;
-#[cfg(test)]
-use mounted_registry_pump_and_reaper::{
-    read_guest_relay_outcome_page, step_guest_relay_owner, GuestRelayStep,
-};
-use mounted_registry_pump_and_reaper::{
-    GuestRelayMountedFuture, GuestRelayMountedReap, GuestRelayMountedReaper,
-};
-
-#[path = "🧪️lifecycle-trace-exercises/🦀️.rs"]
-mod lifecycle_trace_exercises;
-pub use lifecycle_trace_exercises::exercise_relay_lifecycle_trace;
-
-#[path = "🔌️plugin-instance-handle/🦀️.rs"]
+pub use native_home::{with_bootstrap_history_parts,attest_bootstrap_header_return,with_frozen_history_parts,attest_header_return,attest_actor_failure_if_needed,FrozenReceiptFrontier,GuestRelayNativeHome,GuestRelayNativeOrigin,GuestRelayNativeResolver,GuestRelayNativeCustody,GuestRelayNativeState,NativeInstanceHome,NativeInstanceRetirement};
+#[path="🌱️native-admission/🦀️.rs"]
+mod native_admission;
+pub use native_admission::PluginInstanceHandleAdmission;
+#[path="🌱️native-admission/🏠️generic.rs"]
+mod native_home_admission;
+pub use native_home_admission::NativeHomeAdmission;
+#[path="🔌️plugin-instance-handle/🦀️.rs"]
 mod plugin_instance_handle;
 pub use plugin_instance_handle::PluginInstanceHandle;
-#[cfg(any(test,feature="testkit"))]
-pub use plugin_instance_handle::{test_relay_original_input,test_relay_wake_authority};
-#[cfg(any(test,feature="testkit"))]
-use plugin_instance_handle::wait_for_scripted_guest_relay_release;
-
-#[cfg(test)]
-#[path="../♻️publication/🧪️tests/🦀️.rs"]
-mod original_publication_source_tests;
-
-use semio_plugin_host_wake::{GuestRelayWakeDriver, GuestRelayWakeReceiptLedger, GuestRelayWakeTurnGrant};
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::AtomicBool;
-use semio_plugin_host_guest_runtime::{GuestInstance, GuestRuntimes, JobFunds};
-use semio_plugin_host_wake::GuestRelayWakeReceipt;
-use semio_plugin_guest_contract::{identity_turn_fault, JobBudget, JobStep, PluginHostError, TurnFault};
-use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
-use semio_framework_actor::ActorId as RuntimeActorId;
-use semio_framework_value_derive::ToValue;
-use semio_plugin_host_engine::plugin_host_worker_pool;
-use semio_plugin_host_guest_runtime::GuestRuntime as _;
-use semio_plugin_host_wake::GuestRelayWakeReceiptReceiver as _;
+#[path="🔌️plugin-instance-handle/📦️operation.rs"]
+mod operation;
+pub use operation::{GuestRelayOperation,GuestRelayOperationStatus};
+#[path="🔌️plugin-instance-handle/🎫️operation-admission.rs"]
+mod operation_admission;
+pub use operation_admission::GuestRelayOperationAdmission;
 #[cfg(test)]
 #[global_allocator]
 static HOST_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️guest-cold-relay/🦀️.rs"]
-mod guest_cold_relay_tests;
-//#endregion 🔀️PostTurnRelay

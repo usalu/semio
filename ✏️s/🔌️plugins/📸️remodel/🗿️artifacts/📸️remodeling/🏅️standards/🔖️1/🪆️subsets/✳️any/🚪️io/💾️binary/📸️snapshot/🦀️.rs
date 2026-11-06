@@ -32,6 +32,9 @@ impl pack::snapshot::ArtifactPack for RemodelingSnapshot {
     }
 }
 impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RemodelingSnapshot {
+    fn native_pack_source(&self) -> Option<store::os_store::serialization::OriginalSnapshotPackView<'_>> {
+        Some(store::os_store::serialization::OriginalSnapshotPackView { source: self, spec: <Self as semio_framework_dsl_record::BorrowedDslRecord>::RECORD, envelope: <Self as pack::snapshot::ArtifactDsl>::envelope_id() })
+    }
     fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}

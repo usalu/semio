@@ -1,0 +1,30 @@
+[
+  {
+    "locale": "en",
+    "stream": "Stream",
+    "frame": "Frame",
+    "table": "Report table",
+    "tables": [
+      "Frames",
+      "Cameras",
+      "Tracks",
+      "Ground control points",
+      "Quality",
+      "Matches"
+    ]
+  },
+  {
+    "locale": "de",
+    "stream": "Stream",
+    "frame": "Bild",
+    "table": "Berichtstabelle",
+    "tables": [
+      "Bilder",
+      "Kameras",
+      "Spuren",
+      "Passpunkte",
+      "Qualität",
+      "Zuordnungen"
+    ]
+  }
+]

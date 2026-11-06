@@ -1,0 +1,44 @@
+[
+  {
+    "name": "remodeling-snapshot.pack",
+    "mime": "application/vnd.semio.pack",
+    "hex": "8953454d0d0a1a0a1d00000072656d6f64656c696e672e72656d6f64656c696e672e7061636b207631010203",
+    "valid": true
+  },
+  {
+    "name": "wrong.pack",
+    "mime": "application/vnd.semio.pack",
+    "hex": "8953454d0d0a1a0a1d00000072656d6f64656c696e672e72656d6f64656c696e672e7061636b207631010203",
+    "valid": false
+  },
+  {
+    "name": "remodeling-snapshot.pack",
+    "mime": null,
+    "hex": "8953454d0d0a1a0a1d00000072656d6f64656c696e672e72656d6f64656c696e672e7061636b207631010203",
+    "valid": false
+  },
+  {
+    "name": "remodeling-snapshot.pack",
+    "mime": "application/vnd.semio.pack",
+    "hex": "8953454d0d0a1a0a1d00000072",
+    "valid": false
+  },
+  {
+    "name": "remodeling-snapshot.pack",
+    "mime": "application/vnd.semio.pack",
+    "hex": "8953454d0d0a1a0a1d00000072656d6f64656c696e672e72656d6f64656c696e672e7061636b207631",
+    "valid": false
+  },
+  {
+    "name": "remodeling-snapshot.pack",
+    "mime": "application/vnd.semio.pack",
+    "hex": "0053454d0d0a1a0a1d00000072656d6f64656c696e672e72656d6f64656c696e672e7061636b207631010203",
+    "valid": false
+  },
+  {
+    "name": "remodeling-snapshot.pack",
+    "mime": "application/vnd.semio.pack",
+    "hex": "8953454d0d0a1a0a1d00000078656d6f64656c696e672e72656d6f64656c696e672e7061636b207631010203",
+    "valid": false
+  }
+]

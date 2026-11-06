@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "stock": 7,
+  "reserved": 3,
+  "committed": 2,
+  "cancelled": 2,
+  "views": [7, 3, 5, 5, 5],
+  "nextScope": 5,
+  "actual": 2,
+  "admissionCalls": 2
+}

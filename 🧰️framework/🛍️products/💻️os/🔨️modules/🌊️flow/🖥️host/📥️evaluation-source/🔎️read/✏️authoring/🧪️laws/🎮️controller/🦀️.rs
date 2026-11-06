@@ -69,7 +69,7 @@ fn original_authoring_matches_actual_host_all_six_operations_and_cancel_custody(
     work.begin_close();for turn in 0..10000{if work.terminal_is_empty(){break}native(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{let d=work.next_close_demands(g.maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|work.close_step(grant))?;Ok(())}));assert!(turn+1<10000)}
     assert!(work.terminal_is_empty());drop(work);let mut close=RetainedCloneClose::default();
     for turn in 0..10000{if output.is_none()&&close.is_empty(){break}native(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{let d=close.next_owner_demands::<FlowAuthoringOutcome>(output.is_some(),&None,g.maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|if close.is_empty(){let turn=close.begin_granted(&mut output,grant);RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}else{close.step_granted(grant)})?;Ok(())}));assert!(turn+1<10000)}
-    while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(g.maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|decoder.close_step(grant))?;Ok(())})).unwrap();}caller.retire(g);
+    while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(g.maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(g);
    }
   }
   assert!(host.retire_cold().is_ok(),"genuine authoring oracle closes");source.retire_cold();

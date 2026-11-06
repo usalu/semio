@@ -78,7 +78,7 @@ impl Owner{
   match &mut self.decoder{
    Decoder::Fixture(decoder)=>{for _ in 0..2_000_000{if decoder.terminal_is_empty(){return}self.caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{
     let demand=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
-    semio_framework_job::close_original_retained_step(cx,demand,|grant|decoder.close_step(grant))?;Ok(())
+    decoder.close_on_source(cx)?;Ok(())
    })).unwrap()}},
    Decoder::Original(decoder)=>{for _ in 0..100_000{
     if decoder.terminal_is_empty(){return}

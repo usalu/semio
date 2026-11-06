@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "pageItems": 4096,
+  "cases": [
+    {
+      "length": 0,
+      "rootHeight": 0,
+      "appendWork": 3
+    },
+    {
+      "length": 1,
+      "rootHeight": 0,
+      "appendWork": 3
+    },
+    {
+      "length": 4095,
+      "rootHeight": 0,
+      "appendWork": 3
+    },
+    {
+      "length": 4096,
+      "rootHeight": 1,
+      "appendWork": 5
+    }
+  ],
+  "stock": {
+    "items": 1000000,
+    "copyBytes": 16777216,
+    "capacityBytes": 16777216,
+    "releaseBytes": 16777216,
+    "depth": 128,
+    "fuel": 1000000
+  },
+  "value": 42
+}

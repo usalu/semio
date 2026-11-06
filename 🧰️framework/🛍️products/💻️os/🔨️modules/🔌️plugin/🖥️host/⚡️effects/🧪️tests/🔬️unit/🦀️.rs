@@ -5,7 +5,7 @@ struct OriginalRouterFixture{caller:semio_framework_job::OriginalJobFixtureCalle
 impl OriginalRouterFixture{
  fn new()->Self{Self{caller:semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(7301),semio_framework_job::Generation(17),ROUTER_ORIGINAL_STOCK,||Some(1),u64::MAX,1<<20),decoder:semio_framework_job::OriginalJobDecodeOwner::empty()}}
  fn close<J:InteractiveJob>(&mut self,job:&mut J,grant:semio_framework_job::RetainedCloneGrant)->InteractiveJobCloseStep{self.caller.turn_with_decoder(grant,&mut self.decoder,|cx|cx.with_original_retirement(|cx|job.close_step(cx))).expect("router original close preserves complete failure")}
- fn finish(mut self){for _ in 0..4096{if self.decoder.terminal_is_empty(){break}self.caller.turn(ROUTER_ORIGINAL_STOCK,|cx|{let demand=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|loan|self.decoder.close_step(loan))?;Ok(())}).expect("router original decoder close");}assert!(self.decoder.terminal_is_empty());self.caller.retire(ROUTER_ORIGINAL_STOCK);}
+ fn finish(mut self){for _ in 0..4096{if self.decoder.terminal_is_empty(){break}self.caller.turn(ROUTER_ORIGINAL_STOCK,|cx|{let demand=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;self.decoder.close_on_source(cx)?;Ok(())}).expect("router original decoder close");}assert!(self.decoder.terminal_is_empty());self.caller.retire(ROUTER_ORIGINAL_STOCK);}
 }
 
 
